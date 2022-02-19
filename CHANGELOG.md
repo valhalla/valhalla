@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
 * **Bug Fix**
+   * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
    * FIXED: Fix precision losses while encoding-decoding distance parameter in openlr [#3374](https://github.com/valhalla/valhalla/pull/3374)
    * FIXED: Fix bearing calculation for openlr records [#3379](https://github.com/valhalla/valhalla/pull/3379)
@@ -63,6 +64,7 @@
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
    * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
+   * CHANGED: Remove many oneof uses from the protobuf api where the semantics of optional vs required isnt necessary [#3527](https://github.com/valhalla/valhalla/pull/3527)
    * ADDED: indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4

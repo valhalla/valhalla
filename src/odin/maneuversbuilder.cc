@@ -186,10 +186,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   std::string last_name = (trip_path_->GetCurrEdge(last_node_index)->name_size() == 0)
                               ? ""
                               : trip_path_->GetCurrEdge(last_node_index)->name(0).value();
-  std::string units =
-      (options_.has_units_case())
-          ? ((options_.units() == valhalla::Options::kilometers) ? "kilometers" : "miles")
-          : "miles";
+  std::string units = options_.units() == valhalla::Options::kilometers ? "kilometers" : "miles";
   LOG_DEBUG((boost::format("ROUTE_REQUEST|-j "
                            "'{\"locations\":[{\"lat\":%1$.6f,\"lon\":%2$.6f,\"street\":\"%3%\"},{"
                            "\"lat\":%4$.6f,\"lon\":%5$.6f,\"street\":\"%6%\"}],\"costing\":"

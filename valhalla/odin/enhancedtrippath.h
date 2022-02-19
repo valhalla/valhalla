@@ -186,7 +186,7 @@ public:
   }
 
   bool has_vehicle_type() const {
-    return mutable_edge_->has_vehicle_type_case();
+    return mutable_edge_->travel_mode() == kDrive;
   }
 
   ::valhalla::VehicleType vehicle_type() const {
@@ -194,7 +194,7 @@ public:
   }
 
   bool has_pedestrian_type() const {
-    return mutable_edge_->has_pedestrian_type_case();
+    return mutable_edge_->travel_mode() == kPedestrian;
   }
 
   ::valhalla::PedestrianType pedestrian_type() const {
@@ -202,7 +202,7 @@ public:
   }
 
   bool has_bicycle_type() const {
-    return mutable_edge_->has_bicycle_type_case();
+    return mutable_edge_->travel_mode() == kBicycle;
   }
 
   ::valhalla::BicycleType bicycle_type() const {
@@ -210,7 +210,7 @@ public:
   }
 
   bool has_transit_type() const {
-    return mutable_edge_->has_transit_type_case();
+    return mutable_edge_->travel_mode() == kTransit;
   }
 
   ::valhalla::TransitType transit_type() const {
@@ -259,10 +259,6 @@ public:
 
   const ::valhalla::TripSign& sign() const {
     return mutable_edge_->sign();
-  }
-
-  bool has_travel_mode() const {
-    return mutable_edge_->has_travel_mode_case();
   }
 
   ::valhalla::TravelMode travel_mode() const {
@@ -351,10 +347,6 @@ public:
 
   bool destination_only() const {
     return mutable_edge_->destination_only();
-  }
-
-  bool has_is_urban() const {
-    return mutable_edge_->has_is_urban_case();
   }
 
   bool is_urban() const {
@@ -496,10 +488,6 @@ public:
     return mutable_intersecting_edge_->walkability();
   }
 
-  bool has_use() const {
-    return mutable_intersecting_edge_->has_use_case();
-  }
-
   ::valhalla::TripLeg_Use use() const {
     return mutable_intersecting_edge_->use();
   }
@@ -613,10 +601,6 @@ public:
 
   double elapsed_time() const {
     return mutable_node_->cost().elapsed_cost().seconds();
-  }
-
-  bool has_admin_index() const {
-    return mutable_node_->has_admin_index_case();
   }
 
   uint32_t admin_index() const {

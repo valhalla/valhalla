@@ -432,7 +432,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
   if (!FORWARD) {
     // date_time must be set on the destination. Log an error but allow routes for now.
-    if (!destination.has_date_time_case()) {
+    if (destination.date_time().empty()) {
       LOG_ERROR("TimeDepReverse called without time set on the destination location");
       // return {};
     }
