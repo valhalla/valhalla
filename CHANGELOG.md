@@ -25,6 +25,7 @@
    * FIXED: fix one more protobuf unstable 3.x API [#3501](https://github.com/valhalla/valhalla/pull/3501)
    * FIXED: Fix valhalla_build_tiles imports only bss from last osm file [#3503](https://github.com/valhalla/valhalla/pull/3503)
    * FIXED: Fix total_run_stat.sh script. [#3511](https://github.com/valhalla/valhalla/pull/3511)
+   * FIXED: fix valhalla_export_edges: missing null columns separator [#3543](https://github.com/valhalla/valhalla/pull/3543)
    
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
