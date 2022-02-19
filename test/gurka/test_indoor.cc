@@ -26,10 +26,10 @@ protected:
               C---------x--------y
               |                  |
     D----E----F----G----H----I---J
-              |
-              K
-              |
-              L
+    |         |
+    N         K
+    |         |
+    O         L
               |
               M
     )";
@@ -52,9 +52,12 @@ protected:
         {"HI", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "2"}}},
         {"IJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
 
+        {"DN", {{"highway", "steps"}}},
+        {"NO", {{"highway", "footway"}}},
+
         {"Cx", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "1;2"}}},
         {"xy", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "2;3"}}},
-        {"yJ", {{"highway", "steps"}, {"indoor", "yes"}, {"level", "3"}}},
+        {"yJ", {{"highway", "corridor"}, {"indoor", "yes"}, {"level", "3"}}},
     };
 
     const gurka::nodes nodes = {
@@ -144,4 +147,138 @@ TEST_F(Indoor, ElevatorPenalty) {
   result = gurka::do_action(valhalla::Options::route, map, {"E", "J"}, "pedestrian",
                             {{"/costing_options/pedestrian/elevator_penalty", "3600"}});
   gurka::assert::raw::expect_path(result, {"EF", "CF", "Cx", "xy", "yJ"});
+}
+
+TEST_F(Indoor, ElevatorManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"FG", "GH", "HI", "IJ"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kElevatorEnter,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kElevatorEnter,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify single maneuver prior to elevator
+  int maneuver_index = 0;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Walk east on FG.", "Walk east.", "",
+                                                            "Walk east on FG.",
+                                                            "Continue for 500 meters.");
+
+  // Verify elevator as a way instructions
+  maneuver_index += 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the elevator to Level 2.", "", "",
+                                                            "", "");
+
+  // Verify elevator as a node instructions
+  maneuver_index += 2;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the elevator to Level 3.", "", "",
+                                                            "", "");
+}
+
+TEST_F(Indoor, IndoorStepsManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "A"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"CF", "BC", "AB"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStepsEnter,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify steps instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the stairs to Parking.", "", "", "",
+                                                            "");
+}
+
+TEST_F(Indoor, OutdoorStepsManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"E", "O"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"DE", "DN", "NO"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kLeft,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify steps instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Turn left onto DN.", "Turn left.",
+                                                            "Turn left onto DN.",
+                                                            "Turn left onto DN.",
+                                                            "Continue for 200 meters.");
+}
+
+TEST_F(Indoor, EscalatorManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "M"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"FK", "KL", "LM"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kEscalatorEnter,
+                                                DirectionsLeg_Maneuver_Type_kContinue,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify escalator instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the escalator to Level 2.", "", "",
+                                                            "", "");
+}
+
+TEST_F(Indoor, EnterBuildingManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"DE", "EF"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kBuildingEnter,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify enter building instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Enter the building, and continue on EF.",
+                                                            "", "", "", "");
+}
+
+TEST_F(Indoor, ExitBuildingManeuver) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "D"}, "pedestrian");
+  gurka::assert::raw::expect_path(result, {"EF", "DE"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kBuildingExit,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify exit building instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Exit the building, and continue on DE.",
+                                                            "", "", "", "");
+}
+
+TEST_F(Indoor, CombineStepsManeuvers) {
+  auto result = gurka::do_action(valhalla::Options::route, map, {"F", "J"}, "pedestrian",
+                                 {{"/costing_options/pedestrian/elevator_penalty", "3600"}});
+  gurka::assert::raw::expect_path(result, {"CF", "Cx", "xy", "yJ"});
+
+  // Verify maneuver types
+  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
+                                                DirectionsLeg_Maneuver_Type_kStepsEnter,
+                                                DirectionsLeg_Maneuver_Type_kRight,
+                                                DirectionsLeg_Maneuver_Type_kDestination});
+
+  // Verify steps instructions
+  int maneuver_index = 1;
+  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+                                                            "Take the stairs to Level 3.", "", "", "",
+                                                            "");
 }

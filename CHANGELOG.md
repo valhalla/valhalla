@@ -65,6 +65,7 @@
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
    * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
    * CHANGED: Remove many oneof uses from the protobuf api where the semantics of optional vs required isnt necessary [#3527](https://github.com/valhalla/valhalla/pull/3527)
+   * ADDED: indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

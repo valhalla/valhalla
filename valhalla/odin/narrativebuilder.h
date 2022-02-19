@@ -411,6 +411,17 @@ protected:
       const std::string& delim = kVerbalDelim);
 
   /////////////////////////////////////////////////////////////////////////////
+  std::string FormElevatorInstruction(Maneuver& maneuver);
+
+  std::string FormStepsInstruction(Maneuver& maneuver);
+
+  std::string FormEscalatorInstruction(Maneuver& maneuver);
+
+  std::string FormEnterBuildingInstruction(Maneuver& maneuver);
+
+  std::string FormExitBuildingInstruction(Maneuver& maneuver);
+
+  /////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the transit stop count label based on the value of the specified
    * stop count and language rules.

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <utility>
 
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
@@ -73,7 +74,12 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
                                                            {35, "kTransitConnectionDestination"},
                                                            {36, "kPostTransitConnectionDestination"},
                                                            {37, "kMergeRight"},
-                                                           {38, "kMergeLeft"}};
+                                                           {38, "kMergeLeft"},
+                                                           {39, "kElevatorEnter"},
+                                                           {40, "kStepsEnter"},
+                                                           {41, "kEscalatorEnter"},
+                                                           {42, "kBuildingEnter"},
+                                                           {43, "kBuildingExit"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error(
@@ -135,7 +141,9 @@ Maneuver::Maneuver()
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false), has_long_street_name_(false) {
+      pedestrian_crossing_(false), has_long_street_name_(false), elevator_(false),
+      indoor_steps_(false), escalator_(false), building_enter_(false), building_exit_(false),
+      end_level_ref_("") {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -1125,6 +1133,54 @@ const BikeShareStationInfo& Maneuver::bss_info() const {
 
 void Maneuver::set_bss_info(const BikeShareStationInfo& bss_info) {
   bss_info_ = bss_info;
+}
+
+bool Maneuver::indoor_steps() const {
+  return indoor_steps_;
+}
+
+void Maneuver::set_indoor_steps(bool indoor_steps) {
+  indoor_steps_ = indoor_steps;
+}
+
+bool Maneuver::elevator() const {
+  return elevator_;
+}
+
+void Maneuver::set_elevator(bool elevator) {
+  elevator_ = elevator;
+}
+
+bool Maneuver::escalator() const {
+  return escalator_;
+}
+
+void Maneuver::set_escalator(bool escalator) {
+  escalator_ = escalator;
+}
+
+bool Maneuver::building_enter() const {
+  return building_enter_;
+}
+
+void Maneuver::set_building_enter(bool building_enter) {
+  building_enter_ = building_enter;
+}
+
+bool Maneuver::building_exit() const {
+  return building_exit_;
+}
+
+void Maneuver::set_building_exit(bool building_exit) {
+  building_exit_ = building_exit;
+}
+
+std::string Maneuver::end_level_ref() const {
+  return end_level_ref_;
+}
+
+void Maneuver::set_end_level_ref(std::string end_level_ref) {
+  end_level_ref_ = std::move(end_level_ref);
 }
 
 #ifdef LOGGING_LEVEL_TRACE

@@ -84,6 +84,11 @@ message DirectionsLeg {
       kPostTransitConnectionDestination = 36;
       kMergeRight = 37;
       kMergeLeft = 38;
+      kElevatorEnter = 39;
+      kStepsEnter = 40;
+      kEscalatorEnter = 41;
+      kBuildingEnter = 42;
+      kBuildingExit = 43;
     }
 
     enum BssManeuverType{
