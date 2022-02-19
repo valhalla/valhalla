@@ -150,10 +150,11 @@ int main(int argc, char* argv[]) {
       "valhalla_export_edges is a simple command line test tool which\n"
       "dumps information about each graph edge.\n\n");
 
+    using namespace std::string_literals;
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"))
+      ("c,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"s))
       ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>(row_separator)->default_value("\n"))
       ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>(ferries)->default_value("false"))
       ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"))
