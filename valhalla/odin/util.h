@@ -23,6 +23,27 @@ constexpr uint32_t kVerbalPreElementMaxCount = 2;
 constexpr uint32_t kVerbalPostElementMaxCount = 2;
 const std::string kVerbalDelim = ", ";
 
+struct Bcp47Locale {
+  std::string langtag;
+  std::string language;
+  std::string script;
+  std::string region;
+  std::string privateuse;
+
+  std::string get_lang_script() {
+    std::string lang_script = language;
+    if (!script.empty()) {
+      lang_script += "-";
+      lang_script += script;
+    }
+    return lang_script;
+  }
+
+  bool valid() {
+    return !langtag.empty();
+  }
+};
+
 /**
  * Returns the specified item surrounded with quotes.
  * @param item  specified text to surround with quotes
@@ -67,6 +88,8 @@ const locales_singleton_t& get_locales();
  * @return the map of locales to json strings
  */
 const std::unordered_map<std::string, std::string>& get_locales_json();
+
+Bcp47Locale parse_string_into_locale(const std::string& locale_string);
 
 /**
  * Returns the string representation for a turn lane direction.
