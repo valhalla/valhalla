@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
   // Show locations
   bool show_locations = options.show_locations();
 
-  // reverse (arrive-by) isochrone 
+  // reverse (arrive-by) isochrone
   bool reverse = options.isochrone_type() == valhalla::Options::reverse;
 
   // Get Contours
