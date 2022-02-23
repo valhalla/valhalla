@@ -362,7 +362,7 @@ message Options {
   }
 
   enum IsochroneType {
-    normal = 0;
+    forward = 0;
     reverse = 1;
   }
 
@@ -493,7 +493,5 @@ message Options {
   }
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
-  oneof has_isochrone_type {
-    IsochroneType isochrone_type = 53;                             // a option for normal isochrone or reverse isochrone
-  }
+  IsochroneType isochrone_type = 53;                             // a option for normal isochrone or reverse isochrone
 }
