@@ -10,6 +10,7 @@
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
 #include <cassert>
+#include "midgard/logging.h"
 
 #ifdef INLINE_TEST
 #include "test.h"
@@ -80,6 +81,8 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
+constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
+                                                        baldr::kMaxSpeedKph};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -340,6 +343,7 @@ public:
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
+  float fixed_speed_;
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -409,6 +413,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle attributes
   height_ = costing_options.height();
   width_ = costing_options.width();
+  fixed_speed_ = costing_options.fixed_speed();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -498,6 +503,11 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
                                    time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
+
+  if(fixed_speed_ != 140){
+    final_speed = fixed_speed_;
+  }
+
   float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
@@ -708,6 +718,8 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
+  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/fixed_speed", fixed_speed);
+
 }
 
 cost_ptr_t CreateAutoCost(const Costing& costing_options) {
@@ -1050,6 +1062,7 @@ public:
   using AutoCost::service_penalty_;
   using AutoCost::toll_booth_cost_;
   using AutoCost::width_;
+  using AutoCost::fixed_speed_;
 };
 
 template <class T>

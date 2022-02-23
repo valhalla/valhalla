@@ -960,6 +960,7 @@ protected:
   bool ignore_access_{false};
   bool ignore_closures_{false};
   uint32_t top_speed_;
+  uint32_t fixed_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
@@ -1059,6 +1060,8 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+    // Set the fixed speed a vehicle can go
+    fixed_speed_ = costing_options.fixed_speed();
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 

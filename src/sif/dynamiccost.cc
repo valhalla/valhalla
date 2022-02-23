@@ -14,6 +14,7 @@
 #include "worker.h"
 #include <utility>
 
+
 using namespace valhalla::baldr;
 
 namespace {
@@ -148,6 +149,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
       top_speed_(costing.options().top_speed()),
+      fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
@@ -382,6 +384,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
+
+  // fixed speed
+  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/fixed_speed", fixed_speed);
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
