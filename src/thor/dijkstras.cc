@@ -355,7 +355,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.edgeid());
       if (opp_pred_edge == nullptr) {
         continue;
       }
