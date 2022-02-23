@@ -276,6 +276,7 @@ public:
   float height_;    // Vehicle height in meters
   float width_;     // Vehicle width in meters
   float length_;    // Vehicle length in meters
+  float fixed_speed_; // Vehicle speed in kmph 
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -302,6 +303,7 @@ TruckCost::TruckCost(const Costing& costing)
   height_ = costing_options.height();
   width_ = costing_options.width();
   length_ = costing_options.length();
+  fixed_speed_ = costing_options.fixed_speed();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -433,7 +435,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto final_speed = std::min(edge_speed, top_speed_);
 
   //If fixed speed is set override the final speed
-  if(fixed_speed_ != 0){
+  if(fixed_speed_ != 140){
     final_speed = fixed_speed_;
   }
 
@@ -643,6 +645,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/fixed_speed", fixed_speed);
+
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {
@@ -674,6 +678,7 @@ public:
   using TruckCost::service_factor_;
   using TruckCost::service_penalty_;
   using TruckCost::toll_booth_cost_;
+  using TruckCost::fixed_speed_;
 };
 
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {

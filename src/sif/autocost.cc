@@ -10,7 +10,6 @@
 #include "sif/dynamiccost.h"
 #include "sif/osrm_car_duration.h"
 #include <cassert>
-#include "midgard/logging.h"
 
 #ifdef INLINE_TEST
 #include "test.h"

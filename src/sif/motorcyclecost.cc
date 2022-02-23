@@ -272,6 +272,7 @@ public:
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
+  float fixed_speed_;
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -290,6 +291,8 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
 
   // Get the base costs
   get_base_costs(costing);
+
+  fixed_speed_ = costing_options.fixed_speed();
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
@@ -401,6 +404,11 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
                                    time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
+
+  //If fixed speed is set override the final speed
+  if(fixed_speed_ != 140){
+    final_speed = fixed_speed_;
+  }
 
   float sec = (edge->length() * speedfactor_[final_speed]);
 
@@ -579,6 +587,8 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/fixed_speed", fixed_speed);
+
 }
 
 cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
@@ -610,6 +620,7 @@ public:
   using MotorcycleCost::service_factor_;
   using MotorcycleCost::service_penalty_;
   using MotorcycleCost::toll_booth_cost_;
+  using MotorcycleCost::fixed_speed_;
 };
 
 TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float testVal) {

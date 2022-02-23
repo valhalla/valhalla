@@ -14,7 +14,6 @@
 #include "worker.h"
 #include <utility>
 
-
 using namespace valhalla::baldr;
 
 namespace {
