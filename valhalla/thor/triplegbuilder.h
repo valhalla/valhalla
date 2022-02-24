@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
@@ -13,7 +14,6 @@
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/costfactory.h>
-#include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
@@ -51,7 +51,7 @@ public:
    * @return
    */
   static void Build(const valhalla::Options& options,
-                    const AttributesController& controller,
+                    const baldr::AttributesController& controller,
                     baldr::GraphReader& graphreader,
                     const sif::mode_costing_t& mode_costing,
                     const std::vector<PathInfo>::const_iterator path_begin,

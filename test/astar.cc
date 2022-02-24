@@ -24,7 +24,6 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
-#include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
 #include "thor/triplegbuilder.h"

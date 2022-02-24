@@ -250,16 +250,11 @@ int main(int argc, char* argv[]) {
 
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
-          loc.city_ = pt.get<std::string>("city", "");
-          loc.state_ = pt.get<std::string>("state", "");
-          loc.zip_ = pt.get<std::string>("postal_code", "");
-          loc.country_ = pt.get<std::string>("country", "");
 
           loc.date_time_ = pt.get_optional<std::string>("date_time");
           loc.heading_ = pt.get_optional<float>("heading");
           loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
-          loc.way_id_ = pt.get_optional<long double>("way_id");
 
           loc.min_outbound_reach_ = loc.min_inbound_reach_ =
               pt.get<unsigned int>("minimum_reachability", 50);

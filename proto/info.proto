@@ -16,27 +16,15 @@ enum StatisticType {
 // action.worker_name.metric so that we can tell what type of request it was and where in the pipeline it happened
 
 message Statistic {
-  oneof has_key {
-    string key = 1;          // the key/name of the statistic
-  }
-  oneof has_value {
-    double value = 2;        // the value of the statistic
-  }
-  oneof has_frequency {
-    float frequency = 3;     // how often to report the statistic [0-1]
-  }
-  oneof has_type {
-    StatisticType type = 4;  // what type is it
-  }
+  string key = 1;          // the key/name of the statistic
+  double value = 2;        // the value of the statistic
+  float frequency = 3;     // how often to report the statistic [0-1]
+  StatisticType type = 4;  // what type is it
 }
 
 message CodedDescription {
-  oneof has_description {
-    string description = 1;
-  }
-  oneof has_code {
-    uint64 code = 2;
-  }
+  string description = 1;
+  uint64 code = 2;
 }
 
 message Info {

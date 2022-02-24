@@ -392,8 +392,16 @@ bool EnhancedTripLeg_Edge::IsPedestrianCrossingUse() const {
   return (use() == TripLeg_Use_kPedestrianCrossingUse);
 }
 
+bool EnhancedTripLeg_Edge::IsElevatorUse() const {
+  return (use() == TripLeg_Use_kElevatorUse);
+}
+
 bool EnhancedTripLeg_Edge::IsStepsUse() const {
   return (use() == TripLeg_Use_kStepsUse);
+}
+
+bool EnhancedTripLeg_Edge::IsEscalatorUse() const {
+  return (use() == TripLeg_Use_kEscalatorUse);
 }
 
 bool EnhancedTripLeg_Edge::IsPathUse() const {
@@ -513,6 +521,21 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
     name_list.push_back({name.value(), name.is_route_number()});
   }
   return name_list;
+}
+
+std::string EnhancedTripLeg_Edge::GetLevelRef() const {
+  std::string level_ref;
+  if (!tagged_value().empty()) {
+    for (uint32_t t = 0; t < tagged_value().size(); ++t) {
+      if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
+        level_ref = tagged_value().Get(t).value();
+        break;
+      } else if (tagged_value().Get(t).type() == TaggedValue_Type_kLevel) {
+        level_ref = "Level " + tagged_value().Get(t).value();
+      }
+    }
+  }
+  return level_ref;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
@@ -1130,33 +1153,31 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += SignElementsToParameterString(this->sign().guidance_view_signboards());
 
   str += delim;
-  if (this->has_travel_mode()) {
-    str += "TripLeg_TravelMode_";
-    str += TripLeg_TravelMode_Name(travel_mode());
-  }
+  str += "TripLeg_TravelMode_";
+  str += TripLeg_TravelMode_Name(travel_mode());
 
   // NOTE: Current PopulateEdge implementation
 
   str += delim;
-  if (this->has_vehicle_type()) {
+  if (travel_mode() == kDrive) {
     str += "TripLeg_VehicleType_";
     str += TripLeg_VehicleType_Name(vehicle_type());
   }
 
   str += delim;
-  if (this->has_pedestrian_type()) {
+  if (travel_mode() == kPedestrian) {
     str += "TripLeg_PedestrianType_";
     str += TripLeg_PedestrianType_Name(pedestrian_type());
   }
 
   str += delim;
-  if (this->has_bicycle_type()) {
+  if (travel_mode() == kBicycle) {
     str += "TripLeg_BicycleType_";
     str += TripLeg_BicycleType_Name(bicycle_type());
   }
 
   str += delim;
-  if (this->has_transit_type()) {
+  if (travel_mode() == kTransit) {
     str += "TripLeg_TransitType_";
     str += TripLeg_TransitType_Name(transit_type());
   }
@@ -1168,7 +1189,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(surface());
 
   str += delim;
-  if (transit_route_info().has_onestop_id_case()) {
+  if (!transit_route_info().onestop_id().empty()) {
     str += "\"";
     str += transit_route_info().onestop_id();
     str += "\"";
@@ -1181,21 +1202,21 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(transit_route_info().trip_id());
 
   str += delim;
-  if (transit_route_info().has_short_name_case()) {
+  if (!transit_route_info().short_name().empty()) {
     str += "\"";
     str += transit_route_info().short_name();
     str += "\"";
   }
 
   str += delim;
-  if (transit_route_info().has_long_name_case()) {
+  if (!transit_route_info().long_name().empty()) {
     str += "\"";
     str += transit_route_info().long_name();
     str += "\"";
   }
 
   str += delim;
-  if (transit_route_info().has_headsign_case()) {
+  if (!transit_route_info().headsign().empty()) {
     str += "\"";
     str += transit_route_info().headsign();
     str += "\"";
@@ -1208,7 +1229,7 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
   str += std::to_string(transit_route_info().text_color());
 
   str += delim;
-  if (transit_route_info().has_operator_onestop_id_case()) {
+  if (!transit_route_info().operator_onestop_id().empty()) {
     str += "\"";
     str += transit_route_info().operator_onestop_id();
     str += "\"";
@@ -1805,7 +1826,7 @@ uint32_t EnhancedTripLeg_Node::GetStraightestTraversableIntersectingEdgeTurnDegr
       staightest_delta = straight_delta;
       staightest_turn_degree = intersecting_turn_degree;
       // If a use pointer was passed in and the intersecting edge has a use then set
-      if ((use != nullptr) && xedge->has_use()) {
+      if (use != nullptr) {
         *use = xedge->use();
       }
     }
@@ -1960,6 +1981,14 @@ bool EnhancedTripLeg_Node::IsTollGantry() const {
 
 bool EnhancedTripLeg_Node::IsSumpBuster() const {
   return (type() == TripLeg_Node_Type_kSumpBuster);
+}
+
+bool EnhancedTripLeg_Node::IsBuildingEntrance() const {
+  return (type() == TripLeg_Node_Type_kBuildingEntrance);
+}
+
+bool EnhancedTripLeg_Node::IsElevator() const {
+  return (type() == TripLeg_Node_Type_kElevator);
 }
 
 std::string EnhancedTripLeg_Node::ToString() const {
