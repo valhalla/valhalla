@@ -618,9 +618,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
-  auto isochrone_type = rapidjson::get_optional<std::string>(doc, "/isochrone_type");
-  if (isochrone_type && *isochrone_type == "reverse") {
-    options.set_isochrone_type(Options::reverse);
+  auto reverse = rapidjson::get_optional<bool>(doc, "/reverse");
+  if (reverse) {
+    options.set_reverse(*reverse);
+  } else {
+    options.set_reverse(false);
   }
 
   auto language = rapidjson::get_optional<std::string>(doc, "/language");

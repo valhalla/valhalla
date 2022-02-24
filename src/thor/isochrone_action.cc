@@ -27,7 +27,7 @@ std::string thor_worker_t::isochrones(Api& request) {
     }
   }
 
-  bool reverse = options.isochrone_type() == valhalla::Options::reverse;
+  bool reverse = options.reverse();
   // If no generalization is requested an optimal factor is computed (based on the isotile grid size).
   if (!options.has_generalize_case()) {
     options.set_generalize(kOptimalGeneralization);
