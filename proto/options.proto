@@ -361,10 +361,6 @@ message Options {
     invariant = 3;
   }
 
-  enum IsochroneType {
-    forward = 0;
-    reverse = 1;
-  }
 
   enum ExpansionProperties {
     costs = 0;
@@ -493,5 +489,5 @@ message Options {
   }
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
-  IsochroneType isochrone_type = 53;                             // a option for normal isochrone or reverse isochrone
+  bool reverse = 53;                             // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
 }
