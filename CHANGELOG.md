@@ -62,6 +62,7 @@
    * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: expose reverse isochrone parameter. [#3528](https://github.com/valhalla/valhalla/pull/3528)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
