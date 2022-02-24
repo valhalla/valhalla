@@ -80,8 +80,8 @@ constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
-constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                        baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, 0, baldr::kMaxSpeedKph};                                                    
+
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -503,7 +503,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                                    time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  if(fixed_speed_ != 140){
+  if(fixed_speed_ != 0){
     final_speed = fixed_speed_;
   }
 
@@ -717,7 +717,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/fixed_speed", fixed_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 
 }
 

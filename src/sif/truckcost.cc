@@ -72,8 +72,7 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
-                                                        baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, 0, baldr::kMaxSpeedKph};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -617,7 +616,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  if(fixed_speed_ != 140){
+  if(fixed_speed_ != 0){
     return speedfactor_[fixed_speed_];
   }
   return speedfactor_[top_speed_];
@@ -647,7 +646,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/fixed_speed", fixed_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 
 }
 

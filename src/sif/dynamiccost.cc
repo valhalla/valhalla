@@ -105,6 +105,7 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, 0, baldr::kMaxSpeedKph};                                                    
 } // namespace
 
 /*
@@ -385,7 +386,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 
   // fixed speed
-  JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/fixed_speed", fixed_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
