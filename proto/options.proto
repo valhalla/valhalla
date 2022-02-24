@@ -361,10 +361,6 @@ message Options {
     invariant = 3;
   }
 
-  enum IsochroneType {
-    forward = 0;
-    reverse = 1;
-  }
 
   enum ExpansionProperties {
     costs = 0;
