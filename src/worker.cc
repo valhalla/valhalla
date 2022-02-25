@@ -585,12 +585,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_units(Options::miles);
   }
 
-  auto reverse = rapidjson::get_optional<bool>(doc, "/reverse");
-  if (reverse) {
-    options.set_reverse(*reverse);
-  } else {
-    options.set_reverse(false);
-  }
+  // Whether or not to run isochrones in reverse in absence of time dependence
+  options.set_reverse(rapidjson::get<bool>(doc, "/reverse", false));
 
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
   if (language && odin::get_locales().find(*language) != odin::get_locales().end()) {
