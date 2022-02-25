@@ -126,8 +126,8 @@ int main(int argc, char* argv[]) {
   // Show locations
   bool show_locations = options.show_locations();
 
-  // reverse (arrive-by) isochrone
-  bool reverse = options.reverse();
+  // reverse or time dependent (arrive-by) isochrone
+  bool reverse = options.date_time_type() == valhalla::Options::arrive_by
 
   // Get Contours
   std::vector<GriddedData<2>::contour_interval_t> contour_times;
