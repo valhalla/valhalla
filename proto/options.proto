@@ -361,7 +361,6 @@ message Options {
     invariant = 4;
   }
 
-
   enum ExpansionProperties {
     costs = 0;
     durations = 1;
