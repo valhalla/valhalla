@@ -166,6 +166,9 @@ echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
 
 You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
 
+> **_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
+
+
 #### Installing dependencies
 
 To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
