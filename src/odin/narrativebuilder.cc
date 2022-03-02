@@ -464,6 +464,31 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
         maneuver.set_verbal_arrive_instruction(FormVerbalArriveInstruction(maneuver));
         break;
       }
+      case DirectionsLeg_Maneuver_Type_kElevatorEnter: {
+        // Set instruction
+        maneuver.set_instruction(FormElevatorInstruction(maneuver));
+        break;
+      }
+      case DirectionsLeg_Maneuver_Type_kStepsEnter: {
+        // Set instruction
+        maneuver.set_instruction(FormStepsInstruction(maneuver));
+        break;
+      }
+      case DirectionsLeg_Maneuver_Type_kEscalatorEnter: {
+        // Set instruction
+        maneuver.set_instruction(FormEscalatorInstruction(maneuver));
+        break;
+      }
+      case DirectionsLeg_Maneuver_Type_kBuildingEnter: {
+        // Set instruction
+        maneuver.set_instruction(FormEnterBuildingInstruction(maneuver));
+        break;
+      }
+      case DirectionsLeg_Maneuver_Type_kBuildingExit: {
+        // Set instruction
+        maneuver.set_instruction(FormExitBuildingInstruction(maneuver));
+        break;
+      }
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
         // Set instruction
@@ -4143,6 +4168,135 @@ std::string NarrativeBuilder::FormVerbalSuccinctExitRoundaboutTransitionInstruct
   if (articulated_preposition_enabled_) {
     FormArticulatedPrepositions(instruction);
   }
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormElevatorInstruction(Maneuver& maneuver) {
+  // "0": "Take the elevator.",
+  // "1": "Take the elevator to <LEVEL>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string end_level;
+
+  if (!maneuver.end_level_ref().empty()) {
+    phrase_id += 1;
+    end_level = maneuver.end_level_ref();
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.elevator_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormStepsInstruction(Maneuver& maneuver) {
+  // "0": "Take the stairs.",
+  // "1": "Take the stairs to <LEVEL>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string end_level;
+
+  if (!maneuver.end_level_ref().empty()) {
+    phrase_id += 1;
+    end_level = maneuver.end_level_ref();
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.steps_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormEscalatorInstruction(Maneuver& maneuver) {
+  // "0": "Take the escalator.",
+  // "1": "Take the escalator to <LEVEL>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string end_level;
+
+  if (!maneuver.end_level_ref().empty()) {
+    phrase_id += 1;
+    end_level = maneuver.end_level_ref();
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.escalator_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kLevelTag, end_level);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormEnterBuildingInstruction(Maneuver& maneuver) {
+  // "0": "Enter the building.",
+  // "1": "Enter the building, and continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Assign the street names
+  std::string street_names =
+      FormStreetNames(maneuver, maneuver.street_names(),
+                      &dictionary_.enter_building_subset.empty_street_name_labels, true);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id += 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.enter_building_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
+
+  return instruction;
+}
+
+std::string NarrativeBuilder::FormExitBuildingInstruction(Maneuver& maneuver) {
+  // "0": "Exit the building.",
+  // "1": "Exit the building, and continue on <STREET_NAMES>."
+
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Assign the street names
+  std::string street_names =
+      FormStreetNames(maneuver, maneuver.street_names(),
+                      &dictionary_.exit_building_subset.empty_street_name_labels, true);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  if (!street_names.empty()) {
+    phrase_id += 1;
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.exit_building_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kStreetNamesTag, street_names);
 
   return instruction;
 }

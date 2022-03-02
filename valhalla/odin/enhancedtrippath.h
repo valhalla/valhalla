@@ -353,6 +353,10 @@ public:
     return mutable_edge_->is_urban();
   }
 
+  bool indoor() const {
+    return mutable_edge_->indoor();
+  }
+
   bool IsUnnamed() const;
 
   // Use
@@ -370,7 +374,9 @@ public:
   bool IsMountainBikeUse() const;
   bool IsSidewalkUse() const;
   bool IsFootwayUse() const;
+  bool IsElevatorUse() const;
   bool IsStepsUse() const;
+  bool IsEscalatorUse() const;
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
@@ -408,6 +414,8 @@ public:
   bool IsStraightest(uint32_t prev2curr_turn_degree, uint32_t straightest_xedge_turn_degree) const;
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
+
+  std::string GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
 
@@ -730,6 +738,8 @@ public:
   bool IsBorderControl() const;
   bool IsTollGantry() const;
   bool IsSumpBuster() const;
+  bool IsBuildingEntrance() const;
+  bool IsElevator() const;
 
   std::string ToString() const;
 
