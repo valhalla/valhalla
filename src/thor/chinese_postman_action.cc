@@ -98,30 +98,49 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
 
   // get all the path locations for all the nodes
   google::protobuf::RepeatedPtrField<valhalla::Location> sources, targets;
-  graph_tile_ptr tile, opp_tile;
-  for (const auto& node_id : graph_ids) {
+  graph_tile_ptr seed_tile, opp_tile;
+  for (const auto& seed_node_id : graph_ids) {
+    std::cout << seed_node_id << " | ";
     // skip missing tiles
-    if (!reader->GetGraphTile(node_id, tile))
+    if (!reader->GetGraphTile(seed_node_id, seed_tile))
       continue;
 
     // set up a basic path location for a node in the graph
-    const auto* node = tile->node(node_id);
-    if (!costing->Allowed(node))
+    const auto* seed_node = seed_tile->node(seed_node_id);
+    if (!costing->Allowed(seed_node))
       continue;
-    auto ll = node->latlng(tile->header()->base_ll());
+    auto ll = seed_node->latlng(seed_tile->header()->base_ll());
     PathLocation source(ll), target(ll);
+    source.edges.reserve(seed_node->edge_count());
+    target.edges.reserve(seed_node->edge_count());
 
-    // get all the edges leaving the source and entering the target
-    source.edges.reserve(node->edge_count());
-    target.edges.reserve(node->edge_count());
-    for (const auto& edge : tile->GetDirectedEdges(node)) {
-      if (!costing->Allowed(&edge, tile, kDisallowShortcut))
+    // all nodes that represent this node across all hierarchies
+    auto all_nodes = seed_tile->GetNodesAcrossLevels(seed_node_id);
+    for (const auto& node_id : all_nodes) {
+      // resolve the tile and node on their level
+      auto tile = seed_tile;
+      if (!node_id.Is_Valid() || !reader->GetGraphTile(node_id, tile))
         continue;
-      auto edge_id = tile->id(&edge);
-      source.edges.emplace_back(edge_id, 0, ll, 0);
-      auto opp_id = reader->GetOpposingEdgeId(edge_id, opp_tile);
-      if (opp_id)
-        target.edges.emplace_back(opp_id, 1, ll, 0);
+      const auto* node = tile->node(node_id);
+
+      // get all the edges leaving the source and entering the target
+      for (const auto& edge : tile->GetDirectedEdges(node)) {
+        // leaving the node as a source
+        auto edge_id = tile->id(&edge);
+        if (costing->Allowed(&edge, tile, kDisallowShortcut)) {
+          source.edges.emplace_back(edge_id, 0, ll, 0);
+          std::cout << edge_id << " ";
+        }
+
+        // entering the node as a target
+        const DirectedEdge* opp_edge = nullptr;
+        auto opp_id = reader->GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+        if (opp_id && costing->Allowed(opp_edge, opp_tile, kDisallowShortcut)) {
+          target.edges.emplace_back(opp_id, 1, ll, 0);
+          std::cout << opp_id << " ";
+        }
+      }
+      std::cout << std::endl << std::endl;
     }
 
     // convert it back to pbf for the matrix api
