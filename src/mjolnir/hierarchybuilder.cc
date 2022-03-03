@@ -421,7 +421,7 @@ void CreateNodeAssociations(GraphReader& reader,
     if (base_tile_id.level() == TileHierarchy::GetTransitLevel()) {
       continue;
     }
-    
+
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
     graph_tile_ptr tile = reader.GetGraphTile(base_tile_id);
     if (!tile) {
