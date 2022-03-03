@@ -418,7 +418,7 @@ void CreateNodeAssociations(GraphReader& reader,
   auto local_tiles = reader.GetTileSet();
   for (const auto& base_tile_id : local_tiles) {
     // We keep all transit data inside the transit hierarchy
-    if (base_tile_id.level() == TileHierarchy::GetTransitLevel()) {
+    if (base_tile_id.level() == TileHierarchy::GetTransitLevel().level) {
       continue;
     }
 
