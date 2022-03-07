@@ -227,13 +227,13 @@ int main(int argc, char* argv[]) {
 
   // Timing with CostMatrix
   std::vector<TimeDistance> res;
+  CostMatrix matrix;
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    CostMatrix matrix;
     res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                 max_distance);
-    matrix.Clear();
+    matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -242,12 +242,12 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, res);
 
   // Run with TimeDistanceMatrix
+  TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    TimeDistanceMatrix tdm;
     res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                              max_distance);
-    tdm.Clear();
+    tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
