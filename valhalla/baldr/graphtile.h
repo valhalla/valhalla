@@ -379,6 +379,14 @@ public:
   }
 
   /**
+   * Get an iterable set of edge extensions in this tile
+   * @return returns an iterable collection of edge extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
+    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_, header_->directededgecount()};
+  }
+
+  /**
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
