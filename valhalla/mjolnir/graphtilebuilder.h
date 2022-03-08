@@ -88,6 +88,12 @@ public:
   std::vector<DirectedEdge>& directededges();
 
   /**
+   * Gets the current list of directed edge extension (builders).
+   * @return  Returns the directed edge extension builders.
+   */
+  std::vector<DirectedEdgeExt>& directededges_ext();
+
+  /**
    * Gets the current list of node transition (builders).
    * @return  Returns a reference to node transition builders.
    */

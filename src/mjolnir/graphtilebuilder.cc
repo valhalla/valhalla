@@ -459,6 +459,11 @@ std::vector<DirectedEdge>& GraphTileBuilder::directededges() {
   return directededges_builder_;
 }
 
+// Gets the current list of directed edge extension (builders).
+std::vector<DirectedEdgeExt>& GraphTileBuilder::directededges_ext() {
+  return directededges_ext_builder_;
+}
+
 // Add a transit departure.
 void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
   departure_builder_.emplace_back(std::move(departure));
