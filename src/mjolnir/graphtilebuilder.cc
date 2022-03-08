@@ -91,6 +91,13 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
 
   // Add extended directededge attributes (if available)
+  if (header_->has_ext_directededge()) {
+    // Copy extended directed edges to the builder list
+    // NOTE: directed edge and directed edge extensions are assumed to have the
+    // same length
+    directededges_ext_builder_.reserve(n);
+    std::copy(ext_directededges_, ext_directededges_ + n, std::back_inserter(directededges_ext_builder_));
+  }
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
