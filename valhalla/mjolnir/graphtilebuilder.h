@@ -340,6 +340,13 @@ public:
   DirectedEdge& directededge(const size_t idx);
 
   /**
+   * Gets a directed edge extension from existing tile data.
+   * @param  idx  Index of the directed edge extension within the tile.
+   * @return  Returns a reference to the directed edge extension.
+   */
+  DirectedEdgeExt& directededge_ext(const size_t idx);
+
+  /**
    * Gets a pointer to directed edges within the list being built.
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a pointer to the directed edge builder (allows
