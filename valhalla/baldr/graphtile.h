@@ -245,7 +245,7 @@ public:
    * @param  idx  Index of the directed edge within the current tile.
    * @return  Returns a pointer to the edge.
    */
-  const DirectedEdge* directededge(const size_t idx) const {
+  const DirectedEdgeExt* ext_directededge(const size_t idx) const {
     // Testing against directededgecount since the number of directed edges
     // should be the same as the number of directed edge extensions
     if (idx < header_->directededgecount()) {
@@ -280,6 +280,30 @@ public:
    * @return returns an iterable collection of directed edges
    */
   midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  Node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * WARNING: this only returns edge extensions in this tile, edges at this node on another level
+   *          will not be returned by this method, node transitions must be used
+   *
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.

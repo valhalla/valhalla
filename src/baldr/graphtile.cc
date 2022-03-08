@@ -626,6 +626,41 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
   return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* node) const {
+  if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
+  }
+  const auto* edge_ext = ext_directededges_ + node->edge_index();
+  return iterable_t<const DirectedEdgeExt>{edge_ext, node->edge_count()};
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
+  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::to_string(node.level()) + "," + std::to_string(node.id()) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto* nodeinfo = nodes_ + node.id();
+  return GetDirectedEdgeExts(nodeinfo);
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t idx) const {
+  if (idx >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto& nodeinfo = nodes_[idx];
+  const auto* edge_ext = ext_directededge(nodeinfo.edge_index());
+  return iterable_t<const DirectedEdgeExt>{edge_ext, nodeinfo.edge_count()};
+}
+
 EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
   return EdgeInfo(edgeinfo_ + edge->edgeinfo_offset(), textlist_, textlist_size_);
 }
