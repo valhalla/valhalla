@@ -67,6 +67,11 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // construction.
 void CostMatrix::clear() {
   // Clear the target edge markings
+  for (auto& iter : *targets_) {
+    iter.second.clear();
+    iter.second.resize(0);
+    iter.second.shrink_to_fit();
+  }
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
