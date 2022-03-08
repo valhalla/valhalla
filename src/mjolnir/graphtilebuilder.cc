@@ -938,6 +938,14 @@ const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Gets a pointer to directed edge extensions within the list being built.
+const DirectedEdgeExt* GraphTileBuilder::directededges_ext(const size_t idx) const {
+  if (idx < header_->directededgecount()) {
+    return &directededges_ext_builder_[idx];
+  }
+  throw std::runtime_error("GraphTile DirectedEdgeExt id out of bounds");
+}
+
 // Get the directed edge builder at the specified index.
 DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
   if (idx < header_->directededgecount()) {

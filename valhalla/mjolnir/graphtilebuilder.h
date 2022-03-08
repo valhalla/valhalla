@@ -355,6 +355,14 @@ public:
   const DirectedEdge* directededges(const size_t idx) const;
 
   /**
+   * Gets a pointer to directed edge extensions within the list being built.
+   * @param  idx  Index of the directed edge within the tile.
+   * @return  Returns a pointer to the directed edge extension builder (allows
+   *          accessing all directed edge extensions from a node).
+   */
+  const DirectedEdgeExt* directededges_ext(const size_t idx) const;
+
+  /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
