@@ -234,10 +234,11 @@ public:
     if (edge.id() < header_->directededgecount()) {
       return &ext_directededges_[edge.id()];
     }
-    throw std::runtime_error(
-        "GraphTile DirectedEdgeExt index out of bounds: " + std::to_string(header_->graphid().tileid()) +
-        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(edge.id()) +
-        " directededgecount= " + std::to_string(header_->directededgecount()));
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(edge.id()) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
   }
 
   /**
@@ -251,10 +252,10 @@ public:
     if (idx < header_->directededgecount()) {
       return &ext_directededges_[idx];
     }
-    throw std::runtime_error(
-        "GraphTile DirectedEdgeExt index out of bounds: " + std::to_string(header_->graphid().tileid()) +
-        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
-        " directededgecount= " + std::to_string(header_->directededgecount()));
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
   }
 
   /**
@@ -383,7 +384,8 @@ public:
    * @return returns an iterable collection of edge extensions
    */
   midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
-    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_, header_->directededgecount()};
+    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_,
+                                                      header_->directededgecount()};
   }
 
   /**

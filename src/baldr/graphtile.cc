@@ -703,8 +703,9 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
 }
 
 // Get the directed edge extensions outbound from the specified node index.
-const DirectedEdgeExt*
-GraphTile::GetDirectedEdgeExts(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const {
+const DirectedEdgeExt* GraphTile::GetDirectedEdgeExts(const uint32_t node_index,
+                                                      uint32_t& count,
+                                                      uint32_t& edge_index) const {
   const NodeInfo* nodeinfo = node(node_index);
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();

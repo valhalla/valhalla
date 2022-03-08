@@ -96,7 +96,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
     // NOTE: directed edge and directed edge extensions are assumed to have the
     // same length
     directededges_ext_builder_.reserve(n);
-    std::copy(ext_directededges_, ext_directededges_ + n, std::back_inserter(directededges_ext_builder_));
+    std::copy(ext_directededges_, ext_directededges_ + n,
+              std::back_inserter(directededges_ext_builder_));
   }
 
   // Create access restriction list
