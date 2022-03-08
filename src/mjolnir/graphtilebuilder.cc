@@ -954,6 +954,14 @@ DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Get the directed edge extension builder at the specified index.
+DirectedEdgeExt& GraphTileBuilder::directededge_ext_builder(const size_t idx) {
+  if (idx < header_->directededgecount()) {
+    return directededges_ext_builder_[idx];
+  }
+  throw std::runtime_error("GraphTile DirectedEdgeExt id out of bounds");
+}
+
 // Gets a non-const access restriction from existing tile data.
 AccessRestriction& GraphTileBuilder::accessrestriction(const size_t idx) {
   if (idx < header_->access_restriction_count()) {

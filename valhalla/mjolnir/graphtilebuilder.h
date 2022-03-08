@@ -369,8 +369,12 @@ public:
    */
   DirectedEdge& directededge_builder(const size_t idx);
 
-  // TODO - add access method to directededge_ext_builder if extended directed edge
-  // attributes are needed.
+  /**
+   * Get the directed edge extension builder at the specified index.
+   * @param  idx  Index of the directed edge extension builder.
+   * @return  Returns a reference to the directed edge extension builder.
+   */
+  DirectedEdgeExt& directededge_ext_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.
