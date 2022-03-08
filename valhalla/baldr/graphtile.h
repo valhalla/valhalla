@@ -222,6 +222,25 @@ public:
   }
 
   /**
+   * Get a pointer to an edge extension .
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge extension.
+   */
+  const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
+    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+
+    // Testing against directededgecount since the number of directed edges
+    // should be the same as the number of directed edge extensions
+    if (edge.id() < header_->directededgecount()) {
+      return &ext_directededges_[edge.id()];
+    }
+    throw std::runtime_error(
+        "GraphTile DirectedEdgeExt index out of bounds: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(edge.id()) +
+        " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
+
+  /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges
