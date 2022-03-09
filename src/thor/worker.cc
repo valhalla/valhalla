@@ -293,47 +293,13 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> country_iso;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
-      if (admin.has_state_code_case()) {
+      if (!admin.state_code().empty()) {
         state_iso.insert(admin.state_code());
       }
-      if (admin.has_country_code_case()) {
+      if (!admin.country_code().empty()) {
         country_iso.insert(admin.country_code());
       }
     }
-  }
-}
-
-/*
- * Apply attribute filters from the request to the AttributesController. These filters
- * allow including or excluding specific attributes from the response in route,
- * trace_route, and trace_attributes actions.
- */
-void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_filter) {
-  // Set default controller
-  controller = AttributesController();
-  const auto& options = request.options();
-
-  switch (options.filter_action()) {
-    case (FilterAction::include): {
-      if (is_strict_filter)
-        controller.disable_all();
-      for (const auto& filter_attribute : options.filter_attributes()) {
-        try {
-          controller.attributes.at(filter_attribute) = true;
-        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-      }
-      break;
-    }
-    case (FilterAction::exclude): {
-      for (const auto& filter_attribute : options.filter_attributes()) {
-        try {
-          controller.attributes.at(filter_attribute) = false;
-        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-      }
-      break;
-    }
-    default:
-      break;
   }
 }
 

@@ -355,7 +355,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
 
     const baldr::DirectedEdge* opp_pred_edge = nullptr;
     if (expansion_direction == ExpansionType::reverse) {
-      opp_pred_edge = graphreader.GetOpposingEdge(pred.opp_edgeid());
+      opp_pred_edge = graphreader.GetOpposingEdge(pred.edgeid());
       if (opp_pred_edge == nullptr) {
         continue;
       }
@@ -701,7 +701,7 @@ void Dijkstras::ComputeMultiModal(
   max_transfer_distance_ = 99999.0f; // costing->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
-  if (!origin_locations.Get(0).has_date_time_case()) {
+  if (origin_locations.Get(0).date_time().empty()) {
     LOG_ERROR("No date time set on the origin location");
     return;
   }

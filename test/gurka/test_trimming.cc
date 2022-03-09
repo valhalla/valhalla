@@ -93,7 +93,7 @@ TEST(Trimming, routes) {
   // and actual length of edge shape. this would lead to the trimmer not trimming anything at the
   // beginning or end of the edge and you getting the whole shape when what you wanted was just a tiny
   // sliver of the end of the edge
-  thor::AttributesController c;
+  baldr::AttributesController c;
   valhalla::TripLeg leg;
   thor::TripLegBuilder::Build({}, c, reader, mode_costings, path.cbegin(), path.cend(), origin, dest,
                               leg, {});

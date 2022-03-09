@@ -22,9 +22,9 @@ void thor_worker_t::optimized_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   parse_locations(request);
-  parse_filter_attributes(request);
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
+  controller = AttributesController(options);
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;

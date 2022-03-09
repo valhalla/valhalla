@@ -314,6 +314,27 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   LOG_TRACE("Populate approach_verbal_alert_subset...");
   // Populate approach_verbal_alert_subset
   Load(approach_verbal_alert_subset, narrative_pt.get_child(kApproachVerbalAlertKey));
+
+  ///////////////////////////////////////////////////////////////////////////
+  LOG_TRACE("Populate elevator_subset");
+  // Populate elevator_subset
+  Load(elevator_subset, narrative_pt.get_child(kElevatorKey));
+
+  LOG_TRACE("Populate steps_subset");
+  // Populate steps_subset
+  Load(steps_subset, narrative_pt.get_child(kStepsKey));
+
+  LOG_TRACE("Populate escalator_subset");
+  // Populate escalator_subset
+  Load(escalator_subset, narrative_pt.get_child(kEscalatorKey));
+
+  LOG_TRACE("Populate enter_building_subset");
+  // Populate enter_building_subset
+  Load(enter_building_subset, narrative_pt.get_child(kEnterBuildingKey));
+
+  LOG_TRACE("Populate exit_building_subset");
+  // Populate exit_building_subset
+  Load(exit_building_subset, narrative_pt.get_child(kExitBuildingKey));
 }
 
 void NarrativeDictionary::Load(PhraseSet& phrase_handle,
@@ -546,6 +567,28 @@ void NarrativeDictionary::Load(ApproachVerbalAlertSubset& approach_verbal_alert_
   // Populate us_customary_lengths
   approach_verbal_alert_handle.us_customary_lengths =
       as_vector<std::string>(approach_verbal_alert_subset_pt, kUsCustomaryLengthsKey);
+}
+
+void NarrativeDictionary::Load(EnterBuildingSubset& enter_building_handle,
+                               const boost::property_tree::ptree& enter_building_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(enter_building_handle), enter_building_subset_pt);
+
+  // Populate empty_street_name_labels
+  enter_building_handle.empty_street_name_labels =
+      as_vector<std::string>(enter_building_subset_pt, kEmptyStreetNameLabelsKey);
+}
+
+void NarrativeDictionary::Load(ExitBuildingSubset& exit_building_handle,
+                               const boost::property_tree::ptree& exit_building_subset_pt) {
+
+  // Populate phrases
+  Load(static_cast<PhraseSet&>(exit_building_handle), exit_building_subset_pt);
+
+  // Populate empty_street_name_labels
+  exit_building_handle.empty_street_name_labels =
+      as_vector<std::string>(exit_building_subset_pt, kEmptyStreetNameLabelsKey);
 }
 
 const std::locale& NarrativeDictionary::GetLocale() const {

@@ -1,11 +1,11 @@
 
-#include "thor/attributes_controller.h"
+#include "baldr/attributes_controller.h"
 #include "config.h"
 
 #include "test.h"
 
 using namespace std;
-using namespace valhalla::thor;
+using namespace valhalla::baldr;
 
 namespace {
 

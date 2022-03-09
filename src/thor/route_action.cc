@@ -1,6 +1,7 @@
 #include "thor/worker.h"
 #include <cstdint>
 
+#include "baldr/attributes_controller.h"
 #include "baldr/json.h"
 #include "baldr/rapidjson_utils.h"
 #include "midgard/constants.h"
@@ -9,7 +10,6 @@
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/pedestriancost.h"
-#include "thor/attributes_controller.h"
 
 #include "proto/common.pb.h"
 
@@ -181,7 +181,7 @@ void thor_worker_t::centroid(Api& request) {
   auto _ = measure_scope_time(request);
 
   parse_locations(request);
-  parse_filter_attributes(request);
+  controller = AttributesController(request.options());
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
   auto& locations = *options.mutable_locations();
@@ -215,13 +215,13 @@ void thor_worker_t::route(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  parse_locations(request);
-  parse_filter_attributes(request);
-  auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
+  parse_locations(request);
+  controller = AttributesController(options);
+  auto costing = parse_costing(request);
 
   // get all the legs
-  if (options.has_date_time_type_case() && options.date_time_type() == Options::arrive_by) {
+  if (options.date_time_type() == Options::arrive_by) {
     path_arrive_by(request, costing);
   } else {
     path_depart_at(request, costing);
@@ -255,7 +255,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
-  if (origin.has_date_time_case() && options.date_time_type() != Options::invariant &&
+  if (!origin.date_time().empty() && options.date_time_type() != Options::invariant &&
       !options.prioritize_bidirectional()) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
@@ -266,7 +266,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // If the destination has date_time set use timedep_reverse method if the distance
   // between location is below some maximum distance (TBD).
-  if (destination.has_date_time_case() && options.date_time_type() != Options::invariant) {
+  if (!destination.date_time().empty() && options.date_time_type() != Options::invariant) {
     PointLL ll1(origin.ll().lng(), origin.ll().lat());
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
@@ -381,7 +381,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // back propagate time information
-      if (destination->has_date_time_case() &&
+      if (!destination->date_time().empty() &&
           options.date_time_type() != valhalla::Options::invariant) {
         auto origin_dt = offset_date(*reader, destination->date_time(), temp_path.back().edgeid,
                                      -temp_path.back().elapsed_cost.secs, temp_path.front().edgeid);
@@ -537,7 +537,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 
     for (auto& temp_path : temp_paths) {
       // forward propagate time information
-      if (origin->has_date_time_case() && options.date_time_type() != valhalla::Options::invariant) {
+      if (!origin->date_time().empty() && options.date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
                         temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);

@@ -18,7 +18,7 @@ void get_samples(valhalla::skadi::sample& sample,
   auto values = sample.get_all(postings);
   size_t no_data_value = 0;
   for (auto v : values) {
-    no_data_value += v == valhalla::skadi::sample::get_no_data_value();
+    no_data_value += v == valhalla::skadi::get_no_data_value();
   }
   LOG_INFO("Thread" + std::to_string(id) + " finished with " + std::to_string(no_data_value) +
            " no data values");
