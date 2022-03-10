@@ -72,6 +72,7 @@
    * CHANGED: Remove many oneof uses from the protobuf api where the semantics of optional vs required isnt necessary [#3527](https://github.com/valhalla/valhalla/pull/3527)
    * ADDED: Indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
    * ADDED: Expose reverse isochrone parameter for reverse expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
+   * CHANGED: Add matrix classes to thor worker so they persist between requests. [#3560](https://github.com/valhalla/valhalla/pull/3560)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
