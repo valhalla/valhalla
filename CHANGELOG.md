@@ -30,6 +30,7 @@
    * FIXED: Wrong predecessor opposing edge in dijkstra's expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
    * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
    * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)
+   * FIXED: Fix "no elevation" values and /locate elevation response [#3571](https://github.com/valhalla/valhalla/pull/3571)
    
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)

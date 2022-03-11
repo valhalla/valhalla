@@ -313,11 +313,17 @@ std::string EdgeInfo::level_ref() const {
 json::MapPtr EdgeInfo::json() const {
   json::MapPtr edge_info = json::map({
       {"way_id", static_cast<uint64_t>(wayid())},
-      {"mean_elevation", static_cast<uint64_t>(mean_elevation())},
       {"bike_network", bike_network_json(bike_network())},
       {"names", names_json(GetNames())},
       {"shape", midgard::encode(shape())},
   });
+  // add the mean_elevation depending on its validity
+  const auto elev = mean_elevation();
+  if (elev == kNoElevationData) {
+    edge_info->emplace("mean_elevation", nullptr);
+  } else {
+    edge_info->emplace("mean_elevation", static_cast<int64_t>(elev));
+  }
 
   if (speed_limit() == kUnlimitedSpeedLimit) {
     edge_info->emplace("speed_limit", std::string("unlimited"));

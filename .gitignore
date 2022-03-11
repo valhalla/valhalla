@@ -1,5 +1,6 @@
 # editor temporary / backup files
 *~
+.venv
 
 # built objects
 valhalla_run_map_match
