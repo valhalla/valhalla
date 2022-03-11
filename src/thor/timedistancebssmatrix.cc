@@ -47,7 +47,7 @@ float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) c
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void TimeDistanceBSSMatrix::Clear() {
+void TimeDistanceBSSMatrix::clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -456,14 +456,14 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::SourceToTarget(
       std::vector<TimeDistance> td =
           OneToMany(origin, target_location_list, graphreader, mode_costing, _, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   } else {
     for (const auto& destination : target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list, graphreader,
                                                mode_costing, _, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   }
   return many_to_many;
