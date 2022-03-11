@@ -199,7 +199,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                               ".max_matrix_distance"));
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
-                                                               ".max_matrix_locations_total"));
+                                                               ".max_matrix_location_pairs"));
     }
   }
   // this should never happen
@@ -216,7 +216,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   }
 
   if (max_matrix_locations.empty()) {
-    throw std::runtime_error("Missing max_matrix_locations_total configuration");
+    throw std::runtime_error("Missing max_matrix_location_pairs configuration");
   }
 
   min_transit_walking_dis =
