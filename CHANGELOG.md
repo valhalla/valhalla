@@ -73,6 +73,7 @@
    * ADDED: Indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
    * ADDED: Expose reverse isochrone parameter for reverse expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
    * CHANGED: Add matrix classes to thor worker so they persist between requests. [#3560](https://github.com/valhalla/valhalla/pull/3560)
+   * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
