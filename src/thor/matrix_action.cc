@@ -32,30 +32,26 @@ std::string thor_worker_t::matrix(Api& request) {
   auto costing = parse_costing(request);
   const auto& options = request.options();
 
-  // Parse out units; if none specified, use kilometers
-  double distance_scale = kKmPerMeter;
-  if (options.units() == Options::miles) {
-    distance_scale = kMilePerMeter;
-  }
+  // Distance scaling (miles or km)
+  double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
 
-  json::MapPtr json;
-  // do the real work
+  // lambdas to do the real work
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
-    thor::CostMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                 max_matrix_distance.find(costing)->second);
+    return costmatrix_.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing,
+                                      mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    thor::TimeDistanceMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                 max_matrix_distance.find(costing)->second);
+    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                mode_costing, mode,
+                                                max_matrix_distance.find(costing)->second);
   };
+
   if (costing == "bikeshare") {
-    thor::TimeDistanceBSSMatrix matrix;
     time_distances =
-        matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                              max_matrix_distance.find(costing)->second);
+        time_distance_bss_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                 mode_costing, mode,
+                                                 max_matrix_distance.find(costing)->second);
     return tyr::serializeMatrix(request, time_distances, distance_scale);
   }
   switch (source_to_target_algorithm) {
