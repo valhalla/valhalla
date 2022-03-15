@@ -637,13 +637,16 @@ void from_json(rapidjson::Document& doc, Options& options) {
   if (encoded_polyline) {
     options.set_encoded_polyline(*encoded_polyline);
 
-    // Set the precision to use when decoding the polyline. For height actions (only)
-    // either polyline6 (default) or polyline5 are supported. All other actions only
-    // support polyline6 inputs at this time.
-    double precision = 1e-6;
-    if (options.action() == Options::height) {
-      precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
-    }
+    // // Set the precision to use when decoding the polyline. For height actions (only)
+    // // either polyline6 (default) or polyline5 are supported. All other actions only
+    // // support polyline6 inputs at this time.
+    // double precision = 1e-6;
+    // if (options.action() == Options::height) {
+    //   precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
+    // }
+
+    // support polyline5 or polyline6 for all actions
+    double precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
 
     auto decoded = midgard::decode<std::vector<midgard::PointLL>>(*encoded_polyline, precision);
     for (const auto& ll : decoded) {
