@@ -239,8 +239,8 @@ public:
 
   TrafficTile(std::unique_ptr<const GraphMemory> memory)
       : memory_(std::move(memory)),
-        header(memory_ ? reinterpret_cast<volatile TrafficTileHeader*>(memory_->data) : nullptr),
-        speeds(memory_ ? reinterpret_cast<volatile TrafficSpeed*>(memory_->data +
+        header(memory_ ? reinterpret_cast<volatile const TrafficTileHeader*>(memory_->data) : nullptr),
+        speeds(memory_ ? reinterpret_cast<volatile const TrafficSpeed*>(memory_->data +
                                                                   sizeof(TrafficTileHeader))
                        : nullptr) {
   }
@@ -270,8 +270,8 @@ public:
   // the pointer values won't change.  The pointer targets are marked
   // as const volatile because they can be modified by code outside
   // our control (another process accessing a mmap'd file for example)
-  volatile TrafficTileHeader* header;
-  volatile TrafficSpeed* speeds;
+  volatile const TrafficTileHeader* header;
+  volatile const TrafficSpeed* speeds;
 };
 
 } // namespace baldr

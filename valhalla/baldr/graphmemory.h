@@ -11,7 +11,7 @@ protected:
 public:
   virtual ~GraphMemory() = default;
 
-  char* data;
+  const char* data;
   size_t size;
 };
 

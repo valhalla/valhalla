@@ -332,7 +332,7 @@ public:
    * @return  Returns the vector of complex restrictions in the order requested
    *          based on the id and modes.
    */
-  std::vector<ComplexRestriction*>
+  std::vector<const ComplexRestriction*>
   GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const;
 
   /**
@@ -443,7 +443,7 @@ public:
    * Get the departures based on the line Id
    * @return  Returns a map of lineids to departures.
    */
-  std::unordered_map<uint32_t, TransitDeparture*> GetTransitDepartures() const;
+  std::unordered_map<uint32_t, const TransitDeparture*> GetTransitDepartures() const;
 
   /**
    * Get the stop onestop Ids in this tile.
@@ -506,14 +506,14 @@ public:
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
+  midgard::iterable_t<const GraphId> GetBin(size_t column, size_t row) const;
 
   /**
    * Get an iteratable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */
-  midgard::iterable_t<GraphId> GetBin(size_t index) const;
+  midgard::iterable_t<const GraphId> GetBin(size_t index) const;
 
   /**
    * Get lane connections ending on this edge.
@@ -704,83 +704,83 @@ protected:
   std::unique_ptr<const GraphMemory> memory_;
 
   // Header information for the tile
-  GraphTileHeader* header_{};
+  const GraphTileHeader* header_{};
 
   // List of nodes. Fixed size structure, indexed by Id within the tile.
-  NodeInfo* nodes_{};
+  const NodeInfo* nodes_{};
 
   // List of transitions between nodes on different levels. NodeInfo contains
   // an index and count of transitions.
-  NodeTransition* transitions_{};
+  const NodeTransition* transitions_{};
 
   // List of directed edges. Fixed size structure indexed by Id within the tile.
-  DirectedEdge* directededges_{};
+  const DirectedEdge* directededges_{};
 
   // Extended directed edge records. For expansion. These are indexed by the same
   // Id as the directed edge.
-  DirectedEdgeExt* ext_directededges_{};
+  const DirectedEdgeExt* ext_directededges_{};
 
   // Access restrictions, 1 or more per edge id
-  AccessRestriction* access_restrictions_{};
+  const AccessRestriction* access_restrictions_{};
 
   // Transit departures, many per index (indexed by directed edge index and
   // sorted by departure time)
-  TransitDeparture* departures_{};
+  const TransitDeparture* departures_{};
 
   // Transit stops (indexed by stop index within the tile)
-  TransitStop* transit_stops_{};
+  const TransitStop* transit_stops_{};
 
   // Transit route (indexed by route index within the tile)
-  TransitRoute* transit_routes_{};
+  const TransitRoute* transit_routes_{};
 
   // Transit schedules (index by schedule index within the tile)
-  TransitSchedule* transit_schedules_{};
+  const TransitSchedule* transit_schedules_{};
 
   // Transit transfer records.
-  TransitTransfer* transit_transfers_{};
+  const TransitTransfer* transit_transfers_{};
 
   // Signs (indexed by directed edge index)
-  Sign* signs_{};
+  const Sign* signs_{};
 
   // Turn lanes (indexed by directed edge index)
-  TurnLanes* turnlanes_{};
+  const TurnLanes* turnlanes_{};
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
-  Admin* admins_{};
+  const Admin* admins_{};
 
   // List of complex_restrictions in the forward direction.
-  char* complex_restriction_forward_{};
+  const char* complex_restriction_forward_{};
 
   // Size of the complex restrictions in the forward direction
   std::size_t complex_restriction_forward_size_{};
 
   // List of complex_restrictions in the reverse direction.
-  char* complex_restriction_reverse_{};
+  const char* complex_restriction_reverse_{};
 
   // Size of the complex restrictions in the reverse direction
   std::size_t complex_restriction_reverse_size_{};
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
-  char* edgeinfo_{};
+  const char* edgeinfo_{};
 
   // Size of the edgeinfo data
   std::size_t edgeinfo_size_{};
 
   // Street names as sets of null-terminated char arrays. Edge info has
   // offsets into this array.
-  char* textlist_{};
+  const char* textlist_{};
 
   // Number of bytes in the text/name list
   std::size_t textlist_size_{};
 
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
-  GraphId* edge_bins_{};
+  const GraphId* edge_bins_{};
 
   // Lane connectivity data.
-  LaneConnectivity* lane_connectivity_{};
+  const LaneConnectivity* lane_connectivity_{};
 
   // Number of bytes in lane connectivity data.
   std::size_t lane_connectivity_size_{};

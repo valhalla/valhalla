@@ -257,7 +257,7 @@ void GraphTile::Initialize(const GraphId& graphid) {
     throw std::runtime_error("Missing tile data");
   }
 
-  char* const tile_ptr = memory_->data;
+  const char *tile_ptr = memory_->data;
   const size_t tile_size = memory_->size;
 
   if (tile_size < sizeof(GraphTileHeader)) {
@@ -265,8 +265,8 @@ void GraphTile::Initialize(const GraphId& graphid) {
                              ". Tile file might me corrupted");
   }
 
-  char* ptr = tile_ptr;
-  header_ = reinterpret_cast<GraphTileHeader*>(ptr);
+  const char *ptr = tile_ptr;
+  header_ = reinterpret_cast<const GraphTileHeader*>(ptr);
   ptr += sizeof(GraphTileHeader);
 
   if (header_->end_offset() != tile_size)
@@ -277,61 +277,61 @@ void GraphTile::Initialize(const GraphId& graphid) {
   // TODO check version
 
   // Set a pointer to the node list
-  nodes_ = reinterpret_cast<NodeInfo*>(ptr);
+  nodes_ = reinterpret_cast<const NodeInfo*>(ptr);
   ptr += header_->nodecount() * sizeof(NodeInfo);
 
   // Set a pointer to the node transition list
-  transitions_ = reinterpret_cast<NodeTransition*>(ptr);
+  transitions_ = reinterpret_cast<const NodeTransition*>(ptr);
   ptr += header_->transitioncount() * sizeof(NodeTransition);
 
   // Set a pointer to the directed edge list
-  directededges_ = reinterpret_cast<DirectedEdge*>(ptr);
+  directededges_ = reinterpret_cast<const DirectedEdge*>(ptr);
   ptr += header_->directededgecount() * sizeof(DirectedEdge);
 
   // Extended directed edge attribution (if available).
   if (header_->has_ext_directededge()) {
-    ext_directededges_ = reinterpret_cast<DirectedEdgeExt*>(ptr);
+    ext_directededges_ = reinterpret_cast<const DirectedEdgeExt*>(ptr);
     ptr += header_->directededgecount() * sizeof(DirectedEdgeExt);
   }
 
   // Set a pointer access restriction list
-  access_restrictions_ = reinterpret_cast<AccessRestriction*>(ptr);
+  access_restrictions_ = reinterpret_cast<const AccessRestriction*>(ptr);
   ptr += header_->access_restriction_count() * sizeof(AccessRestriction);
 
   // Set a pointer to the transit departure list
-  departures_ = reinterpret_cast<TransitDeparture*>(ptr);
+  departures_ = reinterpret_cast<const TransitDeparture*>(ptr);
   ptr += header_->departurecount() * sizeof(TransitDeparture);
 
   // Set a pointer to the transit stop list
-  transit_stops_ = reinterpret_cast<TransitStop*>(ptr);
+  transit_stops_ = reinterpret_cast<const TransitStop*>(ptr);
   ptr += header_->stopcount() * sizeof(TransitStop);
 
   // Set a pointer to the transit route list
-  transit_routes_ = reinterpret_cast<TransitRoute*>(ptr);
+  transit_routes_ = reinterpret_cast<const TransitRoute*>(ptr);
   ptr += header_->routecount() * sizeof(TransitRoute);
 
   // Set a pointer to the transit schedule list
-  transit_schedules_ = reinterpret_cast<TransitSchedule*>(ptr);
+  transit_schedules_ = reinterpret_cast<const TransitSchedule*>(ptr);
   ptr += header_->schedulecount() * sizeof(TransitSchedule);
 
   // Set a pointer to the transit transfer list
-  transit_transfers_ = reinterpret_cast<TransitTransfer*>(ptr);
+  transit_transfers_ = reinterpret_cast<const TransitTransfer*>(ptr);
   ptr += header_->transfercount() * sizeof(TransitTransfer);
 
   // Set a pointer to the sign list
-  signs_ = reinterpret_cast<Sign*>(ptr);
+  signs_ = reinterpret_cast<const Sign*>(ptr);
   ptr += header_->signcount() * sizeof(Sign);
 
   // Start of turn lane data.
-  turnlanes_ = reinterpret_cast<TurnLanes*>(ptr);
+  turnlanes_ = reinterpret_cast<const TurnLanes*>(ptr);
   ptr += header_->turnlane_count() * sizeof(TurnLanes);
 
   // Set a pointer to the admininstrative information list
-  admins_ = reinterpret_cast<Admin*>(ptr);
+  admins_ = reinterpret_cast<const Admin*>(ptr);
   ptr += header_->admincount() * sizeof(Admin);
 
   // Set a pointer to the edge bin list
-  edge_bins_ = reinterpret_cast<GraphId*>(ptr);
+  edge_bins_ = reinterpret_cast<const GraphId*>(ptr);
 
   // Start of forward restriction information and its size
   complex_restriction_forward_ = tile_ptr + header_->complex_restriction_forward_offset();
@@ -353,15 +353,15 @@ void GraphTile::Initialize(const GraphId& graphid) {
 
   // Start of lane connections and their size
   lane_connectivity_ =
-      reinterpret_cast<LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
+      reinterpret_cast<const LaneConnectivity*>(tile_ptr + header_->lane_connectivity_offset());
   lane_connectivity_size_ = header_->predictedspeeds_offset() - header_->lane_connectivity_offset();
 
   // Start of predicted speed data.
   if (header_->predictedspeeds_count() > 0) {
-    char* ptr1 = tile_ptr + header_->predictedspeeds_offset();
-    char* ptr2 = ptr1 + (header_->directededgecount() * sizeof(int32_t));
-    predictedspeeds_.set_offset(reinterpret_cast<uint32_t*>(ptr1));
-    predictedspeeds_.set_profiles(reinterpret_cast<int16_t*>(ptr2));
+    auto ptr1 = tile_ptr + header_->predictedspeeds_offset();
+    auto ptr2 = ptr1 + (header_->directededgecount() * sizeof(int32_t));
+    predictedspeeds_.set_offset(reinterpret_cast<const uint32_t*>(ptr1));
+    predictedspeeds_.set_profiles(reinterpret_cast<const int16_t*>(ptr2));
 
     lane_connectivity_size_ = header_->predictedspeeds_offset() - header_->lane_connectivity_offset();
   } else {
@@ -632,14 +632,13 @@ EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
 
 // Get the complex restrictions in the forward or reverse order based on
 // the id and modes.
-std::vector<ComplexRestriction*>
+std::vector<const ComplexRestriction*>
 GraphTile::GetRestrictions(const bool forward, const GraphId id, const uint64_t modes) const {
   size_t offset = 0;
-  std::vector<ComplexRestriction*> cr_vector;
+  std::vector<const ComplexRestriction*> cr_vector;
   if (forward) {
     while (offset < complex_restriction_forward_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_forward_ + offset);
+      auto cr = reinterpret_cast<const ComplexRestriction*>(complex_restriction_forward_ + offset);
       if (cr->to_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
       }
@@ -647,8 +646,7 @@ GraphTile::GetRestrictions(const bool forward, const GraphId id, const uint64_t 
     }
   } else {
     while (offset < complex_restriction_reverse_size_) {
-      ComplexRestriction* cr =
-          reinterpret_cast<ComplexRestriction*>(complex_restriction_reverse_ + offset);
+      auto cr = reinterpret_cast<const ComplexRestriction*>(complex_restriction_reverse_ + offset);
       if (cr->from_graphid() == id && (cr->modes() & modes)) {
         cr_vector.push_back(cr);
       }
@@ -1037,9 +1035,9 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
 }
 
 // Get a map of departures based on lineid.  No dups exist in the map.
-std::unordered_map<uint32_t, TransitDeparture*> GraphTile::GetTransitDepartures() const {
+std::unordered_map<uint32_t, const TransitDeparture*> GraphTile::GetTransitDepartures() const {
 
-  std::unordered_map<uint32_t, TransitDeparture*> deps;
+  std::unordered_map<uint32_t, const TransitDeparture*> deps;
   deps.reserve(header_->departurecount());
 
   for (uint32_t i = 0; i < header_->departurecount(); i++) {
@@ -1146,14 +1144,14 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
 }
 
 // Get the array of graphids for this bin
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t column, size_t row) const {
+midgard::iterable_t<const GraphId> GraphTile::GetBin(size_t column, size_t row) const {
   auto offsets = header_->bin_offset(column, row);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return iterable_t<const GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
-midgard::iterable_t<GraphId> GraphTile::GetBin(size_t index) const {
+midgard::iterable_t<const GraphId> GraphTile::GetBin(size_t index) const {
   auto offsets = header_->bin_offset(index);
-  return iterable_t<GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
+  return iterable_t<const GraphId>{edge_bins_ + offsets.first, edge_bins_ + offsets.second};
 }
 
 // Get turn lanes for this edge.

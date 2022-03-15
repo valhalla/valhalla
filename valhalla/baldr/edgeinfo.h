@@ -80,7 +80,7 @@ public:
    * @param  names_list  Pointer to the start of the text/names list.
    * @param  names_list_length  Length (bytes) of the text/names list.
    */
-  EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length);
+  EdgeInfo(const char* ptr, const char* names_list, const size_t names_list_length);
 
   /**
    * Destructor

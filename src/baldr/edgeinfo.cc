@@ -37,14 +37,14 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
 namespace valhalla {
 namespace baldr {
 
-EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_length)
+EdgeInfo::EdgeInfo(const char* ptr, const char* names_list, const size_t names_list_length)
     : names_list_(names_list), names_list_length_(names_list_length) {
 
-  ei_ = *reinterpret_cast<EdgeInfoInner*>(ptr);
+  ei_ = *reinterpret_cast<const EdgeInfoInner*>(ptr);
   ptr += sizeof(EdgeInfoInner);
 
   // Set name info list pointer
-  name_info_list_ = reinterpret_cast<NameInfo*>(ptr);
+  name_info_list_ = reinterpret_cast<const NameInfo*>(ptr);
   ptr += (name_count() * sizeof(NameInfo));
 
   // Set encoded_shape_ pointer
