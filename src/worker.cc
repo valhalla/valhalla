@@ -748,13 +748,16 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
   if (options.has_encoded_polyline_case()) {
 
-    // Set the precision to use when decoding the polyline. For height actions (only)
-    // either polyline6 (default) or polyline5 are supported. All other actions only
-    // support polyline6 inputs at this time.
-    double precision = 1e-6;
-    if (options.action() == Options::height) {
-      precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
-    }
+    // // Set the precision to use when decoding the polyline. For height actions (only)
+    // // either polyline6 (default) or polyline5 are supported. All other actions only
+    // // support polyline6 inputs at this time.
+    // double precision = 1e-6;
+    // if (options.action() == Options::height) {
+    //   precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
+    // }
+
+    // support polyline5 or polyline6 for all actions
+    double precision = options.shape_format() == valhalla::polyline5 ? 1e-5 : 1e-6;
 
     options.mutable_shape()->Clear();
     auto decoded =
