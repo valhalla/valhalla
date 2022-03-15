@@ -16,6 +16,10 @@
 #include "config.h"
 #include "microtar.h"
 
+#include <chrono>
+#include <cstdlib>
+#include <thread>
+
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
@@ -118,10 +122,10 @@ std::vector<CSV_Speed> ParseTrafficFile(const std::string filename,
             tileid = baldr::GraphId{std::stoull(t)};
             break;
           case 1:
-            index = std::stoi(t);
+            index = std::stol(t);
             break;
           case 2:
-            speed = std::stoi(t);
+            speed = std::stol(t);
             break;
           default:
             break;
@@ -581,6 +585,7 @@ int main(int argc, char** argv) {
 
   std::string config_file_path;
   std::string csv_file_path;
+  std::string bash_cmd;
 
   bpo::options_description options(
       "valhalla_update_live_traffic \n"
@@ -591,12 +596,14 @@ int main(int argc, char** argv) {
       "\n"
       "\n");
 
-  options.add_options()("help,h", "Print this help message.")(
-      "config,c", boost::program_options::value<std::string>(&config_file_path),
-      "Path to the json configuration file.")("traffic,t",
-                                              boost::program_options::value<std::string>(
-                                                  &csv_file_path),
-                                              "Path to the csv traffic file");
+  options.add_options()("help,h",
+                        "Print this help message.")("config,c",
+                                                    boost::program_options::value<std::string>(
+                                                        &config_file_path),
+                                                    "Path to the json configuration file.")(
+      "traffic,t", boost::program_options::value<std::string>(&csv_file_path),
+      "Path to the csv traffic file")("bash,b", boost::program_options::value<std::string>(&bash_cmd),
+                                      "Bash command for download from azure");
 
   // config_file_path = "/SDD_datadrive/valhalla/deu/valhalla_deu.json";
   // csv_file_path = "/SDD_datadrive/here-traffic/traffic_speed_deu.csv";
@@ -631,7 +638,7 @@ int main(int argc, char** argv) {
     LOG_INFO("Generated " + pt.get<std::string>("mjolnir.traffic_extract") + " succesfully");
   } else {
     // update the traffic of all edges in all tiles to dummy value
-    if (!vm.count("traffic")) {
+    if (vm.count("traffic")) {
       valhalla::baldr::TrafficSpeed speed = {};
       customize_live_traffic_data(pt, speed);
       LOG_INFO("Updated " + pt.get<std::string>("mjolnir.traffic_extract") + " to default value!");
@@ -639,19 +646,33 @@ int main(int argc, char** argv) {
   }
 
   if (vm.count("traffic")) {
-    if (!filesystem::is_regular_file(csv_file_path)) {
-      LOG_ERROR("Traffic file " + csv_file_path + " does not exist!");
-      return EXIT_FAILURE;
+    using namespace std::chrono_literals;
+    while (true) {
+      auto start = std::chrono::high_resolution_clock::now();
+      if (vm.count("bash")) {
+        LOG_INFO("Download traffic from Azure!");
+        // auto result = std::system("/home/router/valhalla/load_here_traffic_weu.sh");
+        auto result = std::system(bash_cmd.c_str());
+        std::this_thread::sleep_for(2000ms);
+      }
+      if (!filesystem::is_regular_file(csv_file_path)) {
+        LOG_ERROR("Traffic file " + csv_file_path + " does not exist!");
+        return EXIT_FAILURE;
+      }
+      auto ts = ParseTrafficFile(csv_file_path, pt);
+      customize_live_traffic_data(pt, ts);
+      LOG_INFO("Updated edge speed succesfully!");
+      customize_live_traffic_data_shortcut(pt);
+      LOG_INFO("Updated shortcut speed succesfully!");
+      LOG_INFO("Updated " + pt.get<std::string>("mjolnir.traffic_extract") + " succesfully!");
+      // return EXIT_SUCCESS;
+
+      auto end = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double, std::milli> elapsed = end - start;
+      LOG_INFO("Update Traffic takes " + std::to_string(elapsed.count()) + " ms");
+      LOG_INFO("=========================================");
+      std::this_thread::sleep_for(120000ms - elapsed);
     }
-
-    auto ts = ParseTrafficFile(csv_file_path, pt);
-    customize_live_traffic_data(pt, ts);
-    LOG_INFO("Updated edge speed succesfully!");
-    customize_live_traffic_data_shortcut(pt);
-    LOG_INFO("Updated shortcut speed succesfully!");
-    LOG_INFO("Updated " + pt.get<std::string>("mjolnir.traffic_extract") + " succesfully!");
-    return EXIT_SUCCESS;
   }
-
   return EXIT_FAILURE;
 }
