@@ -1744,7 +1744,12 @@ void TripLegBuilder::Build(
 
   // Set shape if requested
   if (controller.attributes.at(kShape)) {
-    trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
+    if (options.shape_format() == polyline5) {
+      // support google polyline
+      trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape, 1e5));
+    } else {
+      trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
+    }
   }
 
   if (osmchangeset != 0 && controller.attributes.at(kOsmChangeset)) {
