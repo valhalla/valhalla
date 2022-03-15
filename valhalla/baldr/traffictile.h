@@ -239,9 +239,10 @@ public:
 
   TrafficTile(std::unique_ptr<const GraphMemory> memory)
       : memory_(std::move(memory)),
-        header(memory_ ? reinterpret_cast<volatile const TrafficTileHeader*>(memory_->data) : nullptr),
+        header(memory_ ? reinterpret_cast<volatile const TrafficTileHeader*>(memory_->data)
+                       : nullptr),
         speeds(memory_ ? reinterpret_cast<volatile const TrafficSpeed*>(memory_->data +
-                                                                  sizeof(TrafficTileHeader))
+                                                                        sizeof(TrafficTileHeader))
                        : nullptr) {
   }
 

@@ -257,7 +257,7 @@ void GraphTile::Initialize(const GraphId& graphid) {
     throw std::runtime_error("Missing tile data");
   }
 
-  const char *tile_ptr = memory_->data;
+  const char* tile_ptr = memory_->data;
   const size_t tile_size = memory_->size;
 
   if (tile_size < sizeof(GraphTileHeader)) {
@@ -265,7 +265,7 @@ void GraphTile::Initialize(const GraphId& graphid) {
                              ". Tile file might me corrupted");
   }
 
-  const char *ptr = tile_ptr;
+  const char* ptr = tile_ptr;
   header_ = reinterpret_cast<const GraphTileHeader*>(ptr);
   ptr += sizeof(GraphTileHeader);
 
