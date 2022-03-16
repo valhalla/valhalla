@@ -199,7 +199,7 @@ constexpr uint32_t kMaxAddedTime = 255;
 
 // Elevation constants
 // this is the minimum we support, i.e. -500 m would result in "no elevation"
-constexpr float kNoElevationData = -500;
+constexpr float kNoElevationData = -500.0f;
 
 // Node types.
 enum class NodeType : uint8_t {

@@ -31,12 +31,15 @@ weighted_grade(const std::vector<double>& heights,
   double max_up_grade = 0.0;
   double max_down_grade = 0.0;
 
+  bool has_only_no_data = true;
+
   // Accumulate elevation - to compute mean_elevation
   uint32_t n = 0;
   double total_elev = 0.0;
   if (heights.front() != NO_DATA_VALUE) {
     total_elev += heights.front();
     n++;
+    has_only_no_data = false;
   }
 
   // multiply grades by 100 to move from 0-1 into 0-100 for grade percentage
@@ -54,6 +57,7 @@ weighted_grade(const std::vector<double>& heights,
     if (*h != NO_DATA_VALUE) {
       total_elev += *h;
       n++;
+      has_only_no_data = false;
     }
 
     // Update max grades. TODO - do we need to filter or smooth these?
@@ -71,7 +75,8 @@ weighted_grade(const std::vector<double>& heights,
   // Get the average weighted grade by homogenizing total weight. Return
   // max grades (up and down) and mean elevation.
   return std::make_tuple(total_grade * (1.0 / total_weight), max_up_grade, max_down_grade,
-                         (total_elev / n));
+                         (has_only_no_data ? static_cast<double>(baldr::kNoElevationData)
+                                           : total_elev / n));
 }
 
 } // namespace skadi
