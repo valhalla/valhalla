@@ -50,8 +50,8 @@ TEST(EdgeInfoBuilder, TestWriteRead) {
   // Make a builder to write the info to disk
   EdgeInfoBuilder eibuilder;
 
-  eibuilder.set_mean_elevation(kMinElevation - 100.0f);
-  EXPECT_EQ(eibuilder.mean_elevation(), kMinElevation);
+  eibuilder.set_mean_elevation(kNoElevationData - 100.0f);
+  EXPECT_EQ(eibuilder.mean_elevation(), kNoElevationData);
 
   eibuilder.set_mean_elevation(kMaxElevation + 100.0f);
   EXPECT_EQ(eibuilder.mean_elevation(), kMaxElevation);

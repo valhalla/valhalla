@@ -734,9 +734,9 @@ void BuildTileSet(const std::string& ways_file,
 
             edge_info_offset =
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), 0, bike_network,
-                                      speed_limit, shape, names, tagged_values, pronunciations, types,
-                                      added, dual_refs);
+                                      (*nodes[target]).graph_id, w.way_id(), kNoElevationData,
+                                      bike_network, speed_limit, shape, names, tagged_values,
+                                      pronunciations, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }

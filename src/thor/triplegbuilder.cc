@@ -1104,13 +1104,9 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     }
   }
 
-  // Set mean elevation if requested (set to kNoElevationData if unavailable)
+  // Set mean elevation if requested (will be kNoElevationData if unavailable)
   if (controller(kEdgeMeanElevation)) {
-    if (graphtile->header()->has_elevation()) {
-      trip_edge->set_mean_elevation(edgeinfo.mean_elevation());
-    } else {
-      trip_edge->set_mean_elevation(kNoElevationData);
-    }
+    trip_edge->set_mean_elevation(edgeinfo.mean_elevation());
   }
 
   if (controller(kEdgeLaneCount)) {

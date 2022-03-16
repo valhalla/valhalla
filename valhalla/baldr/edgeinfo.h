@@ -22,8 +22,7 @@ constexpr size_t kMaxEncodedShapeSize = 65535;
 // from -500 meters to 7683 meters.
 constexpr uint32_t kMaxStoredElevation = 4095; // 12 bits
 constexpr float kElevationBinSize = 2.0f;
-constexpr float kMinElevation = -500.0f;
-constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredElevation);
+constexpr float kMaxElevation = kNoElevationData + (kElevationBinSize * kMaxStoredElevation);
 
 // Name information. Information about names added to the names list within
 // the tile. A name can have a textual representation followed by optional
@@ -103,7 +102,7 @@ public:
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
+    return kNoElevationData + (ei_.mean_elevation_ * kElevationBinSize);
   }
 
   /**

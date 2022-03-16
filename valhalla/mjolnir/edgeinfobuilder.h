@@ -35,7 +35,7 @@ public:
    * @return  Returns mean elevation in meters relative to sea level.
    */
   float mean_elevation() const {
-    return kMinElevation + (ei_.mean_elevation_ * kElevationBinSize);
+    return kNoElevationData + (ei_.mean_elevation_ * kElevationBinSize);
   }
 
   /**
