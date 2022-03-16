@@ -119,6 +119,7 @@
    * ADDED: Added `exclude_cash_only_tolls` request parameter [#3341](https://github.com/valhalla/valhalla/pull/3341)
    * CHANGED: Update api-reference for street_names [#3342](https://github.com/valhalla/valhalla/pull/3342)
    * ADDED: Disable msse2 flags when building on Apple Silicon chip [#3327](https://github.com/valhalla/valhalla/pull/3327)
+   * ADDED: Fixed Speed costing option [#3576](https://github.com/valhalla/valhalla/pull/3576)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
 * **Removed**
