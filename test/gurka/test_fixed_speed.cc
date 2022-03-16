@@ -46,23 +46,23 @@ protected:
 
     gurka::assert::raw::expect_path(default_route, {"ABCD"});
     gurka::assert::raw::expect_path(capped_route, {"AEFD"});
-    gurka::assert::raw::expect_eta(capped_route, 19.8f, 0.001f);
-    ASSERT_GT(capped_time, default_time);
+    gurka::assert::raw::expect_eta(capped_route, 7.92f, 0.001f);
+    ASSERT_LT(capped_time, default_time);
   }
 };
 
 gurka::map FixedSpeedTest::speed_map = {};
 
 TEST_F(FixedSpeedTest, AutoFixedSpeed) {
-  doTests("auto", {{"/costing_options/auto/fixed_speed", "20"}});
+  doTests("auto", {{"/costing_options/auto/fixed_speed", "50"}});
 }
 
 TEST_F(FixedSpeedTest, TruckFixedSpeed) {
-  doTests("truck", {{"/costing_options/truck/fixed_speed", "20"}});
+  doTests("truck", {{"/costing_options/truck/fixed_speed", "50"}});
 }
 
 TEST_F(FixedSpeedTest, MotorcycleFixedSpeed) {
-  doTests("motorcycle", {{"/costing_options/motorcycle/fixed_speed", "20"}});
+  doTests("motorcycle", {{"/costing_options/motorcycle/fixed_speed", "50"}});
 }
 
 TEST_F(FixedSpeedTest, ClampMaxSpeed) {
