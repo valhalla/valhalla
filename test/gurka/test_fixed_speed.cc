@@ -53,15 +53,15 @@ protected:
 
 gurka::map FixedSpeedTest::speed_map = {};
 
-TEST_F(FixedSpeedTest, AutoTopSpeed) {
+TEST_F(FixedSpeedTest, AutoFixedSpeed) {
   doTests("auto", {{"/costing_options/auto/fixed_speed", "20"}});
 }
 
-TEST_F(FixedSpeedTest, TruckTopSpeed) {
-  doTests("truck", {{"/costing_options/truck/fixed_speed", "40"}});
+TEST_F(FixedSpeedTest, TruckFixedSpeed) {
+  doTests("truck", {{"/costing_options/truck/fixed_speed", "20"}});
 }
 
-TEST_F(FixedSpeedTest, MotorcycleTopSpeed) {
+TEST_F(FixedSpeedTest, MotorcycleFixedSpeed) {
   doTests("motorcycle", {{"/costing_options/motorcycle/fixed_speed", "20"}});
 }
 

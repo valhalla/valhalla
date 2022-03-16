@@ -436,7 +436,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   auto final_speed = std::min(edge_speed, top_speed_);
 
   //If fixed speed is set override the final speed
-  if(fixed_speed_ != 140){
+  if(fixed_speed_ != 0){
     final_speed = fixed_speed_;
   }
 
