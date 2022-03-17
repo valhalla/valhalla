@@ -72,7 +72,6 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
-constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, 0, baldr::kMaxSpeedKph};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -277,7 +276,6 @@ public:
   float height_;    // Vehicle height in meters
   float width_;     // Vehicle width in meters
   float length_;    // Vehicle length in meters
-  float fixed_speed_; // Vehicle speed in kmph 
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -304,7 +302,6 @@ TruckCost::TruckCost(const Costing& costing)
   height_ = costing_options.height();
   width_ = costing_options.width();
   length_ = costing_options.length();
-  fixed_speed_ = costing_options.fixed_speed();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -435,8 +432,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                                    time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  //If fixed speed is set override the final speed
-  if(fixed_speed_ != 0){
+  // If fixed speed is set override the final speed
+  if (fixed_speed_ != 0) {
     final_speed = fixed_speed_;
   }
 
@@ -616,7 +613,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  if(fixed_speed_ != 0){
+  if (fixed_speed_ != 0) {
     return speedfactor_[fixed_speed_];
   }
   return speedfactor_[top_speed_];
@@ -646,8 +643,6 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
-
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {
@@ -679,7 +674,6 @@ public:
   using TruckCost::service_factor_;
   using TruckCost::service_penalty_;
   using TruckCost::toll_booth_cost_;
-  using TruckCost::fixed_speed_;
 };
 
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {

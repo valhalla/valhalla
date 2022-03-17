@@ -54,7 +54,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
-constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, 0, baldr::kMaxSpeedKph};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -237,6 +236,9 @@ public:
    * estimate is less than the least possible time along roads.
    */
   virtual float AStarCostFactor() const override {
+    if (fixed_speed_ != 0) {
+      return speedfactor_[fixed_speed_];
+    }
     return speedfactor_[top_speed_];
   }
 
@@ -273,7 +275,6 @@ public:
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
-  float fixed_speed_;
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -292,8 +293,6 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
 
   // Get the base costs
   get_base_costs(costing);
-
-  fixed_speed_ = costing_options.fixed_speed();
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
@@ -406,8 +405,8 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                                    time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
 
-  //If fixed speed is set override the final speed
-  if(fixed_speed_ != 0){
+  // If fixed speed is set override the final speed
+  if (fixed_speed_ != 0) {
     final_speed = fixed_speed_;
   }
 
@@ -588,8 +587,6 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
-  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
-
 }
 
 cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
@@ -621,7 +618,6 @@ public:
   using MotorcycleCost::service_factor_;
   using MotorcycleCost::service_penalty_;
   using MotorcycleCost::toll_booth_cost_;
-  using MotorcycleCost::fixed_speed_;
 };
 
 TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float testVal) {
