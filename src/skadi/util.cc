@@ -1,6 +1,5 @@
 #include <algorithm>
 
-#include "baldr/graphconstants.h"
 #include "skadi/sample.h"
 #include "skadi/util.h"
 
