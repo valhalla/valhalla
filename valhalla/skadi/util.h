@@ -5,8 +5,6 @@
 #include <functional>
 #include <vector>
 
-#include "baldr/graphconstants.h"
-
 namespace valhalla {
 namespace skadi {
 

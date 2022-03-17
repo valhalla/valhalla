@@ -1,5 +1,7 @@
-#include "skadi/util.h"
 #include <algorithm>
+
+#include "baldr/graphconstants.h"
+#include "skadi/util.h"
 
 namespace {
 
@@ -7,7 +9,6 @@ template <class T> T clamp(T val, const T low, const T high) {
   return std::min<T>(std::max<T>(val, low), high);
 }
 
-constexpr double NO_DATA_VALUE = -32768;
 } // namespace
 
 namespace valhalla {
@@ -36,7 +37,7 @@ weighted_grade(const std::vector<double>& heights,
   // Accumulate elevation - to compute mean_elevation
   uint32_t n = 0;
   double total_elev = 0.0;
-  if (heights.front() != NO_DATA_VALUE) {
+  if (heights.front() != baldr::kNoElevationDataRaw) {
     total_elev += heights.front();
     n++;
     has_only_no_data = false;
@@ -46,7 +47,7 @@ weighted_grade(const std::vector<double>& heights,
   auto scale = 100.0 / interval_distance;
   for (auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
     // get the grade for this section. Ignore any invalid elevation postings
-    if (*h == NO_DATA_VALUE || *std::prev(h) == NO_DATA_VALUE) {
+    if (*h == baldr::kNoElevationDataRaw || *std::prev(h) == baldr::kNoElevationDataRaw) {
       grade = 0.0;
     } else {
       grade = (*h - *std::prev(h)) * scale;
@@ -54,7 +55,7 @@ weighted_grade(const std::vector<double>& heights,
 
     // Add the elevation so we can compute mean (assumes uniform
     // sampling along the path)
-    if (*h != NO_DATA_VALUE) {
+    if (*h != baldr::kNoElevationDataRaw) {
       total_elev += *h;
       n++;
       has_only_no_data = false;
@@ -75,7 +76,7 @@ weighted_grade(const std::vector<double>& heights,
   // Get the average weighted grade by homogenizing total weight. Return
   // max grades (up and down) and mean elevation.
   return std::make_tuple(total_grade * (1.0 / total_weight), max_up_grade, max_down_grade,
-                         (has_only_no_data ? static_cast<double>(baldr::kNoElevationData)
+                         (has_only_no_data ? static_cast<double>(baldr::kNoElevationDataRaw)
                                            : total_elev / n));
 }
 
