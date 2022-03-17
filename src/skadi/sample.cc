@@ -16,7 +16,6 @@
 #include <sys/stat.h>
 
 #include "baldr/compression_utils.h"
-#include "baldr/graphconstants.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -31,6 +30,7 @@ namespace {
 constexpr size_t HGT_DIM = 3601;
 constexpr size_t HGT_PIXELS = HGT_DIM * HGT_DIM;
 constexpr size_t HGT_BYTES = sizeof(int16_t) * HGT_PIXELS;
+constexpr int16_t NO_DATA_VALUE = -32768;
 constexpr int16_t NO_DATA_HIGH = 16384;
 constexpr int16_t NO_DATA_LOW = -16384;
 constexpr size_t TILE_COUNT = 180 * 360;
@@ -633,7 +633,7 @@ void sample::cache_initialisation(const std::string& data_source) {
 }
 
 double get_no_data_value() {
-  return baldr::kNoElevationDataRaw;
+  return NO_DATA_VALUE;
 }
 
 } // namespace skadi

@@ -1,3 +1,4 @@
+#include "skadi/sample.h"
 #include "skadi/util.h"
 
 #include "midgard/util.h"
@@ -31,7 +32,7 @@ TEST(UtilSkadi, Grade) {
 
   // check mean elevation
   elev = std::get<3>(skadi::weighted_grade({-32768, -32768}, 1.0));
-  EXPECT_EQ(elev, kNoElevationDataRaw);
+  EXPECT_EQ(elev, skadi::get_no_data_value());
 }
 
 } // namespace

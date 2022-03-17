@@ -111,9 +111,10 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
 
       // Set the mean elevation on EdgeInfo
       float mean_elevation = std::get<3>(forward_grades);
-      tilebuilder.set_mean_elevation(edge_info_offset, mean_elevation == kNoElevationDataRaw
-                                                           ? kNoElevationData
-                                                           : mean_elevation);
+      tilebuilder.set_mean_elevation(edge_info_offset,
+                                     mean_elevation == valhalla::skadi::get_no_data_value()
+                                         ? kNoElevationData
+                                         : mean_elevation);
     }
 
     // Edge elevation information. If the edge is forward (with respect to the shape)

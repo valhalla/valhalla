@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "baldr/graphconstants.h"
+#include "skadi/sample.h"
 #include "skadi/util.h"
 
 namespace {
@@ -37,7 +38,7 @@ weighted_grade(const std::vector<double>& heights,
   // Accumulate elevation - to compute mean_elevation
   uint32_t n = 0;
   double total_elev = 0.0;
-  if (heights.front() != baldr::kNoElevationDataRaw) {
+  if (heights.front() != get_no_data_value()) {
     total_elev += heights.front();
     n++;
     has_only_no_data = false;
@@ -47,7 +48,7 @@ weighted_grade(const std::vector<double>& heights,
   auto scale = 100.0 / interval_distance;
   for (auto h = heights.cbegin() + 1; h != heights.cend(); ++h) {
     // get the grade for this section. Ignore any invalid elevation postings
-    if (*h == baldr::kNoElevationDataRaw || *std::prev(h) == baldr::kNoElevationDataRaw) {
+    if (*h == get_no_data_value() || *std::prev(h) == get_no_data_value()) {
       grade = 0.0;
     } else {
       grade = (*h - *std::prev(h)) * scale;
@@ -55,7 +56,7 @@ weighted_grade(const std::vector<double>& heights,
 
     // Add the elevation so we can compute mean (assumes uniform
     // sampling along the path)
-    if (*h != baldr::kNoElevationDataRaw) {
+    if (*h != get_no_data_value()) {
       total_elev += *h;
       n++;
       has_only_no_data = false;
@@ -76,7 +77,7 @@ weighted_grade(const std::vector<double>& heights,
   // Get the average weighted grade by homogenizing total weight. Return
   // max grades (up and down) and mean elevation.
   return std::make_tuple(total_grade * (1.0 / total_weight), max_up_grade, max_down_grade,
-                         (has_only_no_data ? static_cast<double>(baldr::kNoElevationDataRaw)
+                         (has_only_no_data ? static_cast<double>(get_no_data_value())
                                            : total_elev / n));
 }
 
