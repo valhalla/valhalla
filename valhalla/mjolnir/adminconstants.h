@@ -102,11 +102,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1, -1, -1}},
                    // TODO - Netherlands allows bicycle access on trunk and trunk link without motorroad = yes
                    {"Netherlands",
-                    {(kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
-                      kMotorcycleAccess),
-                     -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
+                    {-1, -1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Norway",
                     {-1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
