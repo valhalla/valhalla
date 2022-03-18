@@ -113,6 +113,7 @@ endforeach()
 set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
+  DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
   COMMAND ${CMAKE_COMMAND} -E make_directory test/data/
   COMMAND ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones > ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp
   COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_BINARY_DIR}/test/data/tz.sqlite.tmp ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
