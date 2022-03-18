@@ -10,7 +10,6 @@
 #include <iostream>
 #include <map>
 #include <ostream>
-#include <spatialite.h>
 #include <sqlite3.h>
 #include <sstream>
 #include <string>
@@ -24,6 +23,8 @@
 #include "baldr/tilehierarchy.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
+
+#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

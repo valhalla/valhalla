@@ -23,7 +23,6 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <spatialite.h>
 #include <sqlite3.h>
 
 #include <cxxopts.hpp>
@@ -41,6 +40,8 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
+
+#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

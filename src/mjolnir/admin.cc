@@ -3,9 +3,10 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include <spatialite.h>
 #include <sqlite3.h>
 #include <unordered_map>
+
+#include <spatialite.h>
 
 namespace valhalla {
 namespace mjolnir {

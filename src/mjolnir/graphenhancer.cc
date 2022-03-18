@@ -25,7 +25,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <spatialite.h>
 #include <sqlite3.h>
 
 #include "baldr/datetime.h"
@@ -44,6 +43,8 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
+
+#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

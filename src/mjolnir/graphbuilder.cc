@@ -6,7 +6,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
-#include <spatialite.h>
 #include <sqlite3.h>
 
 #include "filesystem.h"
@@ -31,6 +30,8 @@
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
+
+#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

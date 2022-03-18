@@ -10,10 +10,10 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-#include <spatialite.h>
 #include <sqlite3.h>
 
 #include "config.h"
+#include <spatialite.h>
 
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
