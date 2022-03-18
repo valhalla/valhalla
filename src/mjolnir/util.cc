@@ -146,25 +146,6 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-bool load_spatialite(sqlite3* db_handle) {
-  sqlite3_enable_load_extension(db_handle, 1);
-  // we do a bunch of failover for changes to the module file name over the years
-  for (const auto& mod_name : std::vector<std::string>{"mod_spatialite", "mod_spatialite.so",
-                                                       "libspatialite", "libspatialite.so"}) {
-    std::string sql = "SELECT load_extension('" + mod_name + "')";
-    char* err_msg = nullptr;
-    if (sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg) == SQLITE_OK) {
-      LOG_INFO("SpatiaLite loaded as an extension");
-      return true;
-    } else {
-      LOG_WARN("load_extension() warning: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-    }
-  }
-  LOG_ERROR("sqlite3 load_extension() failed to load spatialite module");
-  return false;
-}
-
 bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,

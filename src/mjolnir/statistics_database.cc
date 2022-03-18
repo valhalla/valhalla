@@ -23,8 +23,6 @@ void statistics::build_db() {
     filesystem::remove(database);
   }
 
-  spatialite_init(0);
-
   sqlite3* db_handle = nullptr;
   char* err_msg = nullptr;
   auto ret =
@@ -36,10 +34,9 @@ void statistics::build_db() {
   }
 
   // loading SpatiaLite as an extension
-  if (!load_spatialite(db_handle)) {
-    sqlite3_close(db_handle);
-    return;
-  }
+  auto* db_cache = spatialite_alloc_connection();
+  spatialite_init_ex(db_handle, db_cache, 0);
+
   LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys
@@ -102,6 +99,8 @@ void statistics::build_db() {
   }
 
   sqlite3_close(db_handle);
+  spatialite_cleanup_ex(db_cache);
+  spatialite_shutdown();
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
 void statistics::create_tile_tables(sqlite3* db_handle) {

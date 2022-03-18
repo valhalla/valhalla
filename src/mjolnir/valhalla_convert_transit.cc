@@ -36,6 +36,7 @@
 #include "mjolnir/validatetransit.h"
 
 #include "proto/transit.pb.h"
+#include <spatialite.h>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -975,12 +976,18 @@ void build_tiles(const boost::property_tree::ptree& pt,
   stats.dep_count = 0;
   stats.midnight_dep_count = 0;
 
+  // internal spatialite cache for each thread
+  void* timezone_cache;
+
   GraphReader reader_transit_level(pt);
   auto database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = GetDBHandle(*database);
   if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
+  } else {
+    timezone_cache = spatialite_alloc_connection();
+    spatialite_init_ex(tz_db_handle, timezone_cache, 0);
   }
 
   const auto& tiles = TileHierarchy::levels().back().tiles;
@@ -1177,6 +1184,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     sqlite3_close(tz_db_handle);
   }
 
+  spatialite_cleanup_ex(timezone_cache);
+
   // Send back the statistics
   results.set_value(stats);
 }
@@ -1272,6 +1281,8 @@ void build(const ptree& pt,
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished building transit network - took " + std::to_string(secs) + " secs");
+
+  spatialite_shutdown();
 }
 
 int main(int argc, char** argv) {

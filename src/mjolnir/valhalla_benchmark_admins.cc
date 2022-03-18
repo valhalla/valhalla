@@ -23,6 +23,8 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <spatialite.h>
+#include <sqlite3.h>
 
 #include <cxxopts.hpp>
 
@@ -39,9 +41,6 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
-
-// sqlite is included in util.h and must be before spatialite
-#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -158,10 +157,11 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
   // Initialize the admin DB (if it exists)
   auto database = pt.get_optional<std::string>("admin");
+  // internal spatialite cache
+  void* db_cache;
 
   sqlite3* db_handle = nullptr;
   if (filesystem::exists(*database)) {
-    spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
@@ -171,10 +171,9 @@ void Benchmark(const boost::property_tree::ptree& pt) {
     }
 
     // loading SpatiaLite as an extension
-    if (!valhalla::mjolnir::load_spatialite(db_handle)) {
-      sqlite3_close(db_handle);
-      return;
-    }
+    db_cache = spatialite_alloc_connection();
+    spatialite_init_ex(db_handle, db_cache, 0);
+
   } else {
     LOG_ERROR("Admin db " + *database + " not found.");
     return;
@@ -204,6 +203,9 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " + std::to_string(counts[i]));
     }
   }
+  sqlite3_close(db_handle);
+  spatialite_cleanup_ex(db_cache);
+  spatialite_shutdown();
 }
 
 bool ParseArguments(int argc, char* argv[]) {

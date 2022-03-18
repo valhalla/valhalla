@@ -8,8 +8,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <sqlite3.h>
-
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
@@ -124,13 +122,6 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
  *         more curved and tighter turns.
  */
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
-
-/**
- * Loads spatialite extension for sqlite
- * @param db_handle   the handle to the open sqlite database
- * @return returns true if the module was successfully loaded
- */
-bool load_spatialite(sqlite3* db_handle);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The

@@ -10,8 +10,8 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-// sqlite is included in util.h and must be before spatialite
 #include <spatialite.h>
+#include <sqlite3.h>
 
 #include "config.h"
 
@@ -256,8 +256,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     filesystem::remove(*database);
   }
 
-  spatialite_init(0);
-
   sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
@@ -273,10 +271,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   // loading SpatiaLite as an extension
-  if (!valhalla::mjolnir::load_spatialite(db_handle)) {
-    sqlite3_close(db_handle);
-    return;
-  }
+  auto* db_cache = spatialite_alloc_connection();
+  spatialite_init_ex(db_handle, db_cache, 0);
 
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
@@ -639,6 +635,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   sqlite3_close(db_handle);
+  spatialite_cleanup_ex(db_cache);
+  spatialite_shutdown();
 
   LOG_INFO("Finished.");
 }

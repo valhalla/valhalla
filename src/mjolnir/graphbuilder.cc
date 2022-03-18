@@ -6,6 +6,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
+#include <spatialite.h>
+#include <sqlite3.h>
+
 #include "filesystem.h"
 
 #include "baldr/datetime.h"
@@ -412,12 +415,18 @@ void BuildTileSet(const std::string& ways_file,
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
+  // internal spatialite cache for each thread
+  void* admin_cache;
+  void* tz_cache;
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
   if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
+  } else {
+    admin_cache = spatialite_alloc_connection();
+    spatialite_init_ex(admin_db_handle, admin_cache, 0);
   }
 
   database = pt.get_optional<std::string>("timezone");
@@ -427,6 +436,9 @@ void BuildTileSet(const std::string& ways_file,
     LOG_WARN("Time zone db not found.  Not saving time zone information.");
   } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
+  } else {
+    tz_cache = spatialite_alloc_connection();
+    spatialite_init_ex(tz_db_handle, tz_cache, 0);
   }
 
   const auto& tiling = TileHierarchy::levels().back().tiles;
@@ -1111,10 +1123,12 @@ void BuildTileSet(const std::string& ways_file,
 
   if (admin_db_handle) {
     sqlite3_close(admin_db_handle);
+    spatialite_cleanup_ex(admin_cache);
   }
 
   if (tz_db_handle) {
     sqlite3_close(tz_db_handle);
+    spatialite_cleanup_ex(tz_cache);
   }
 
   // Let the main thread see how this thread faired
@@ -1191,6 +1205,8 @@ void BuildLocalTiles(const unsigned int thread_count,
       throw e;
     }
   }
+
+  spatialite_shutdown();
 }
 
 } // namespace
