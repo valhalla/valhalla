@@ -1338,7 +1338,7 @@ void enhance(const boost::property_tree::ptree& pt,
     LOG_WARN("Admin db not found.  Not saving admin information.");
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
-  } else {
+  } else if (admin_db_handle && use_admin_db) {
     admin_cache = spatialite_alloc_connection();
     spatialite_init_ex(admin_db_handle, admin_cache, 0);
   }
