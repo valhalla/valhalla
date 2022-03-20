@@ -11,11 +11,13 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
-#include <spatialite.h>
+#include <sqlite3.h>
 
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+
+#include <spatialite.h>
 
 // List the build stages
 void list_stages() {

@@ -1,13 +1,14 @@
 #include "filesystem.h"
 
 #include <cxxopts.hpp>
-#include <spatialite.h>
+#include <sqlite3.h>
 
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
+#include <spatialite.h>
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;

@@ -12,7 +12,7 @@
 #include <mutex>
 #include <ostream>
 #include <queue>
-#include <spatialite.h>
+#include <sqlite3.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "config.h"
+#include <spatialite.h>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
