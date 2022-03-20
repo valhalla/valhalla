@@ -12,6 +12,7 @@
 #include <mutex>
 #include <ostream>
 #include <queue>
+#include <spatialite.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -626,6 +627,8 @@ int main(int argc, char** argv) {
   }
 
   BuildStatistics(pt);
+
+  spatialite_shutdown();
 
   return EXIT_SUCCESS;
 }

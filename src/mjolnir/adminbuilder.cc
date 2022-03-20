@@ -636,7 +636,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   sqlite3_close(db_handle);
   spatialite_cleanup_ex(db_cache);
-  spatialite_shutdown();
 
   LOG_INFO("Finished.");
 }

@@ -100,7 +100,6 @@ void statistics::build_db() {
 
   sqlite3_close(db_handle);
   spatialite_cleanup_ex(db_cache);
-  spatialite_shutdown();
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
 void statistics::create_tile_tables(sqlite3* db_handle) {

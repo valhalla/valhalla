@@ -30,6 +30,7 @@
    * FIXED: Wrong predecessor opposing edge in dijkstra's expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
    * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
    * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)
+   * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
    
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -74,6 +75,7 @@
    * ADDED: Expose reverse isochrone parameter for reverse expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
    * CHANGED: Add matrix classes to thor worker so they persist between requests. [#3560](https://github.com/valhalla/valhalla/pull/3560)
    * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
+   * CHANGED: modernized spatialite syntax [#3580](https://github.com/valhalla/valhalla/pull/3580)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

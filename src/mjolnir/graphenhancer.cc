@@ -1814,8 +1814,6 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
     }
   }
 
-  spatialite_shutdown();
-
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));

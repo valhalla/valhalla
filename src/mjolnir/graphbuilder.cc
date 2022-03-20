@@ -1206,8 +1206,6 @@ void BuildLocalTiles(const unsigned int thread_count,
       throw e;
     }
   }
-
-  spatialite_shutdown();
 }
 
 } // namespace

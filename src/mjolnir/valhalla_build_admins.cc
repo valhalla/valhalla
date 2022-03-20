@@ -1,6 +1,7 @@
 #include "filesystem.h"
 
 #include <cxxopts.hpp>
+#include <spatialite.h>
 
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
@@ -85,6 +86,8 @@ int main(int argc, char** argv) {
   }
 
   valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+
+  spatialite_shutdown();
 
   return EXIT_SUCCESS;
 }

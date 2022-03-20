@@ -11,6 +11,7 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
+#include <spatialite.h>
 
 #include "filesystem.h"
 #include "midgard/logging.h"
@@ -130,7 +131,10 @@ int main(int argc, char** argv) {
   }
 
   // Build some tiles!
-  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
+  bool has_built = build_tile_set(pt, input_files, start_stage, end_stage);
+  spatialite_shutdown();
+
+  if (has_built) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;
