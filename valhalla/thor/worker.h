@@ -22,8 +22,11 @@
 #include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/timedistancebssmatrix.h>
+#include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/triplegbuilder.h>
 #include <valhalla/thor/unidirectional_astar.h>
 #include <valhalla/tyr/actor.h>
@@ -120,6 +123,11 @@ protected:
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
+
+  // Time distance matrix
+  CostMatrix costmatrix_;
+  TimeDistanceMatrix time_distance_matrix_;
+  TimeDistanceBSSMatrix time_distance_bss_matrix_;
 
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
