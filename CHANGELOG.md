@@ -31,7 +31,8 @@
    * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
    * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)
    * FIXED: Fix some country overrides in adminconstants and add a couple new countries. [#3578](https://github.com/valhalla/valhalla/pull/3578)
-   
+   * FIXED: Improve build errors reporting [#3579](https://github.com/valhalla/valhalla/pull/3579)
+
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
