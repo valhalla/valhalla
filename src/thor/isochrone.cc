@@ -313,7 +313,7 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
   UpdateIsoTile(current, graphreader, node->latlng(tile->header()->base_ll()), secs0, dist0);
 }
 
-ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
+ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
                                                 const ExpansionType route_type) {
   if (route_type == ExpansionType::multimodal) {
