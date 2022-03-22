@@ -934,9 +934,9 @@ public:
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
     auto edge_speed = fixed_speed_ == 0
-                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
-                                         &flow_sources, time_info.seconds_from_now)
-                        : fixed_speed_;
+                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                           &flow_sources, time_info.seconds_from_now)
+                          : fixed_speed_;
     auto final_speed = fixed_speed_ != 0 ? fixed_speed_ : std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
