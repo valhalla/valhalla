@@ -137,7 +137,7 @@ std::string thor_worker_t::expansion(Api& request) {
        }) {
     alg->set_track_expansion(track_expansion);
   }
-  isochrone_gen.set_track_expansion(track_expansion);
+  isochrone_gen.SetInnerExpansionCallback(track_expansion);
 
   try {
     // track the expansion
@@ -156,7 +156,7 @@ std::string thor_worker_t::expansion(Api& request) {
                                                &bidir_astar, &bss_astar}) {
     alg->set_track_expansion(nullptr);
   }
-  isochrone_gen.set_track_expansion(nullptr);
+  isochrone_gen.SetInnerExpansionCallback(nullptr);
 
   // serialize it
   return to_string(dom, 5);

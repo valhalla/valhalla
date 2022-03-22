@@ -334,15 +334,13 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& graphreader,
   if (time > max_seconds_ && distance > max_meters_)
     return ExpansionRecommendation::prune_expansion;
 
-  // log it back to expansion_action
-  if (expansion_callback_) {
-    // todo: don't call this, but set the function here
-    // std::swap with empty function
-    if (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
-        distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm)) {
-      expansion_callback_(graphreader, pred.edgeid(), "dijkstras", "s", pred.cost().secs,
-                          pred.path_distance(), pred.cost().cost);
-    }
+  // track expansion
+  if (inner_expansion_callback_ && !expansion_callback_ &&
+      (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
+       distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
+    expansion_callback_ = inner_expansion_callback_;
+  } else if (expansion_callback_) {
+    expansion_callback_ = nullptr;
   }
 
   return ExpansionRecommendation::continue_expansion;
