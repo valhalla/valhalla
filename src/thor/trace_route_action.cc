@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/attributes_controller.h"
 #include "meili/map_matcher.h"
 #include "meili/match_result.h"
 #include "midgard/util.h"
-#include "thor/attributes_controller.h"
 #include "thor/map_matcher.h"
 #include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
@@ -74,9 +74,8 @@ void thor_worker_t::trace_route(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
-  parse_filter_attributes(request);
-
   const auto& options = *request.mutable_options();
+  controller = AttributesController(options);
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
@@ -362,8 +361,9 @@ void thor_worker_t::build_route(
     int dest_match_idx = dest_segment->last_match_idx;
 
     for (int i = origin_match_idx; i <= dest_match_idx; ++i) {
-      options.mutable_shape(i)->set_route_index(route_index);
-      options.mutable_shape(i)->set_waypoint_index(std::numeric_limits<uint32_t>::max());
+      options.mutable_shape(i)->mutable_correlation()->set_route_index(route_index);
+      options.mutable_shape(i)->mutable_correlation()->set_waypoint_index(
+          std::numeric_limits<uint32_t>::max());
     }
 
     // initialize the origin and destination location for route
@@ -372,8 +372,8 @@ void thor_worker_t::build_route(
 
     // when handling multi routes, orsm serializer need to know both the
     // matching_index(route_index) and the waypoint_index(shape_index).
-    origin_location->set_waypoint_index(way_point_index);
-    destination_location->set_waypoint_index(++way_point_index);
+    origin_location->mutable_correlation()->set_waypoint_index(way_point_index);
+    destination_location->mutable_correlation()->set_waypoint_index(++way_point_index);
 
     // we fake up something that looks like the output of loki. segment edge id and matchresult edge
     // ids can disagree at node snaps but leg building requires that we refer to edges in the path.

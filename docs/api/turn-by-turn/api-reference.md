@@ -257,14 +257,14 @@ A multimodal request with a filter for certain Onestop IDs:
 
 #### Directions options
 
-Directions options should be specified at the top level of the JSON, and usage of the `directions_options` nested structure is deprecated.
+Directions options should be specified at the top level of the JSON object.
 
 | Options | Description |
 | :------------------ | :----------- |
 | `units` | Distance units for output. Allowable unit types are miles (or mi) and kilometers (or km). If no unit type is specified, the units default to kilometers. |
 | `language` | The language of the narration instructions based on the [IETF BCP 47](https://tools.ietf.org/html/bcp47) language tag string. If no language is specified or the specified language is unsupported, United States-based English (en-US) is used. [Currently supported language list](#supported-language-tags) |
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
-| `narrative` |  **DEPRECATED** Should use `directions_type` instead. Boolean to allow you to disable narrative production. Locations, shape, length, and time are still returned. The narrative production is enabled by default. Set the value to `false` to disable the narrative. |
+| `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
 
 ##### Supported language tags
 
@@ -276,8 +276,8 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `da-DK` | `da` | Danish (Denmark) |
 | `de-DE` | `de` | German (Germany) |
 | `el-GR` | `el` | Greek (Greece) |
-| `en-GB` | `engb` | English (United Kingdom) |
-| `en-US-x-pirate` | `pirate` | English (United States) Pirate |
+| `en-GB` | | English (United Kingdom) |
+| `en-US-x-pirate` | `en-x-pirate` | English (United States) Pirate |
 | `en-US` | `en` | English (United States) |
 | `es-ES` | `es` | Spanish (Spain) |
 | `et-EE` | `et` | Estonian (Estonia) |
@@ -287,10 +287,10 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `hu-HU` | `hu` | Hungarian (Hungary) |
 | `it-IT` | `it` | Italian (Italy) |
 | `ja-JP` | `ja` | Japanese (Japan) |
-| `nb-NO` | `nbno` | Bokmal (Norway) |
+| `nb-NO` | `nb` | Bokmal (Norway) |
 | `nl-NL` | `nl` | Dutch (Netherlands) |
 | `pl-PL` | `pl` | Polish (Poland) |
-| `pt-BR` | `ptbr` | Portuguese (Brazil) |
+| `pt-BR` | | Portuguese (Brazil) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
 | `ro-RO` | `ro` | Romanian (Romania) |
 | `ru-RU` | `ru` | Russian (Russia) |

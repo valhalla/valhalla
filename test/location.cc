@@ -15,17 +15,12 @@ TEST(Location, Hashing) {
   Location a({123.456789, 9.87654321}, Location::StopType::BREAK);
   a.name_ = "name";
   a.street_ = "street";
-  a.city_ = "city";
-  a.state_ = "state";
-  a.zip_ = "zip";
-  a.country_ = "country";
   a.date_time_ = "date";
   a.heading_ = 1;
-  a.way_id_ = 2;
   Location b = a;
   b.name_ = "nameb";
   Location c = a;
-  c.way_id_.reset();
+  c.heading_ = 2;
   Location d = a;
   d.latlng_.first = 123.4567;
 

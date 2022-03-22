@@ -475,7 +475,7 @@ TEST(Mapmatch, test_edges_discontinuity_with_multi_routes) {
     for (const auto& route : response.trip().routes()) {
       leg_count += route.legs_size();
       for (const auto& leg : route.legs()) {
-        if (leg.location(0).has_date_time_case()) {
+        if (!leg.location(0).date_time().empty()) {
           EXPECT_TRUE(std::get<2>(test_answers[i]))
               << "Found a leg with a start time when it shouldnt have had one";
         } else {

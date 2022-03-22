@@ -266,31 +266,6 @@ void parse_location(valhalla::Location* location,
   if (street) {
     location->set_street(*street);
   }
-  auto city = rapidjson::get_optional<std::string>(r_loc, "/city");
-  if (city) {
-    location->set_city(*city);
-  }
-  auto state = rapidjson::get_optional<std::string>(r_loc, "/state");
-  if (state) {
-    location->set_state(*state);
-  }
-  auto zip = rapidjson::get_optional<std::string>(r_loc, "/postal_code");
-  if (zip) {
-    location->set_postal_code(*zip);
-  }
-  auto country = rapidjson::get_optional<std::string>(r_loc, "/country");
-  if (country) {
-    location->set_country(*country);
-  }
-  auto phone = rapidjson::get_optional<std::string>(r_loc, "/phone");
-  if (phone) {
-    location->set_phone(*phone);
-  }
-  auto url = rapidjson::get_optional<std::string>(r_loc, "/url");
-  if (url) {
-    location->set_url(*url);
-  }
-
   auto date_time = rapidjson::get_optional<std::string>(r_loc, "/date_time");
   if (date_time) {
     location->set_date_time(*date_time);
@@ -311,10 +286,6 @@ void parse_location(valhalla::Location* location,
   if (node_snap_tolerance) {
     location->set_node_snap_tolerance(*node_snap_tolerance);
   }
-  auto way_id = rapidjson::get_optional<uint64_t>(r_loc, "/way_id");
-  if (way_id) {
-    location->set_way_id(*way_id);
-  }
   auto minimum_reachability = rapidjson::get_optional<unsigned int>(r_loc, "/minimum_reachability");
   if (minimum_reachability) {
     location->set_minimum_reachability(*minimum_reachability);
@@ -330,10 +301,8 @@ void parse_location(valhalla::Location* location,
   auto time =
       rapidjson::get<double>(r_loc, "/time", location->has_time_case() ? location->time() : -1);
   location->set_time(time);
-  auto rank_candidates = rapidjson::get<bool>(r_loc, "/rank_candidates",
-                                              location->has_skip_ranking_candidates_case()
-                                                  ? !location->skip_ranking_candidates()
-                                                  : true);
+  auto rank_candidates =
+      rapidjson::get<bool>(r_loc, "/rank_candidates", !location->skip_ranking_candidates());
   location->set_skip_ranking_candidates(!rank_candidates);
   auto preferred_side = rapidjson::get_optional<std::string>(r_loc, "/preferred_side");
   valhalla::Location::PreferredSide side;
@@ -456,7 +425,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto* loc = locations->Add();
         loc->mutable_correlation()->set_original_index(locations->size() - 1);
         parse_location(loc, r_loc, options, ignore_closures);
-        had_date_time = had_date_time || loc->has_date_time_case();
+        had_date_time = had_date_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
       }
@@ -466,7 +435,7 @@ void parse_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         loc.mutable_correlation()->set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
-        had_date_time = had_date_time || loc.has_date_time_case();
+        had_date_time = had_date_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
       }
@@ -548,11 +517,13 @@ void parse_contours(const rapidjson::Document& doc,
  */
 void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // if its a pbf request we want to keep the options and clear the rest
+  bool pbf = false;
   if (api.has_options() && doc.ObjectEmpty()) {
     api.clear_trip();
     api.clear_directions();
     api.clear_status();
     api.clear_info();
+    pbf = true;
   } // when its json we start with a blank slate and fill it all in
   else {
     api.Clear();
@@ -610,13 +581,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
-  if (units) {
-    if ((*units == "miles") || (*units == "mi")) {
-      options.set_units(Options::miles);
-    } else {
-      options.set_units(Options::kilometers);
-    }
+  if (units && ((*units == "miles") || (*units == "mi"))) {
+    options.set_units(Options::miles);
   }
+
+  // Whether or not to run isochrones in reverse in absence of time dependence
+  options.set_reverse(rapidjson::get<bool>(doc, "/reverse", false));
 
   auto language = rapidjson::get_optional<std::string>(doc, "/language");
   if (language && odin::get_locales().find(*language) != odin::get_locales().end()) {
@@ -638,79 +608,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_directions_type(directions_type);
   }
 
-  // date_time
-  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
-  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type)) {
-    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type));
-  }
-  if (options.has_date_time_type_case()) {
-    // check the type is in bounds
-    auto v = options.date_time_type();
-    if (v >= Options::DateTimeType_ARRAYSIZE)
-      throw valhalla_exception_t{163};
-    // check the value exists for depart at and arrive by
-    auto date_time_value =
-        v != Options::current
-            ? rapidjson::get<std::string>(doc, "/date_time/value", options.date_time())
-            : std::string("current");
-    if (date_time_value.empty()) {
-      if (v == Options::depart_at)
-        throw valhalla_exception_t{160};
-      else if (v == Options::arrive_by)
-        throw valhalla_exception_t{161};
-      else if (v == Options::invariant)
-        throw valhalla_exception_t{165};
-    }
-    // check the value is sane
-    if (date_time_value != "current" && !baldr::DateTime::is_iso_valid(date_time_value))
-      throw valhalla_exception_t{162};
-    options.set_date_time(date_time_value);
-  } // not specified but you want transit, then we default to current
-  else if (options.has_costing_type_case() && (options.costing_type() == Costing::multimodal ||
-                                               options.costing_type() == Costing::transit)) {
-    options.set_date_time_type(Options::current);
-    options.set_date_time("current");
-  }
-
-  // failure scenarios with respect to time dependence
-  if (options.has_date_time_type_case()) {
-    if (options.date_time_type() == Options::arrive_by ||
-        options.date_time_type() == Options::invariant) {
-      if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
-        throw valhalla_exception_t{141};
-      if (options.action() == Options::isochrone)
-        throw valhalla_exception_t{142};
-    }
-  }
-
-  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
-  // This also controls the input precision for encoded_polyline in height action
-  // TODO - this just for OSRM compatibility at the moment but could be supported
-  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
-  if (shape_format) {
-    if (*shape_format == "polyline6") {
-      options.set_shape_format(polyline6);
-    } else if (*shape_format == "polyline5") {
-      options.set_shape_format(polyline5);
-    } else if (*shape_format == "geojson") {
-      options.set_shape_format(geojson);
-    } else {
-      // Throw an error if shape format is invalid
-      throw valhalla_exception_t{164};
-    }
-  }
-  if (!options.has_shape_format_case()) {
-    options.set_shape_format(polyline6);
-  }
-
-  // whether or not to output b64 encoded openlr
-  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
-  if (linear_references) {
-    options.set_linear_references(*linear_references);
-  }
-
   // costing defaults to none which is only valid for locate
-  auto costing_str = rapidjson::get<std::string>(doc, "/costing", "none");
+  auto costing_str =
+      rapidjson::get<std::string>(doc, "/costing",
+                                  pbf ? Costing_Enum_Name(options.costing_type()) : "none");
 
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
@@ -751,19 +652,92 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
+  // set the costing based on the name given, redundant for pbf input
+  Costing::Type costing;
+  if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
+    throw valhalla_exception_t{125, "'" + costing_str + "'"};
+  else
+    options.set_costing_type(costing);
+
+  // date_time
+  auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
+  if (date_time_type && Options::DateTimeType_IsValid(*date_time_type + 1)) {
+    options.set_date_time_type(static_cast<Options::DateTimeType>(*date_time_type + 1));
+  }
+  if (options.date_time_type() != Options::no_time) {
+    // check the type is in bounds
+    auto v = options.date_time_type();
+    if (v >= Options::DateTimeType_ARRAYSIZE)
+      throw valhalla_exception_t{163};
+    // check the value exists for depart at and arrive by
+    auto date_time_value =
+        v != Options::current
+            ? rapidjson::get<std::string>(doc, "/date_time/value", options.date_time())
+            : std::string("current");
+    if (date_time_value.empty()) {
+      if (v == Options::depart_at)
+        throw valhalla_exception_t{160};
+      else if (v == Options::arrive_by)
+        throw valhalla_exception_t{161};
+      else if (v == Options::invariant)
+        throw valhalla_exception_t{165};
+    }
+    // check the value is sane
+    if (date_time_value != "current" && !baldr::DateTime::is_iso_valid(date_time_value))
+      throw valhalla_exception_t{162};
+    options.set_date_time(date_time_value);
+  } // not specified but you want transit, then we default to current
+  else if (options.costing_type() == Costing::multimodal ||
+           options.costing_type() == Costing::transit) {
+    options.set_date_time_type(Options::current);
+    options.set_date_time("current");
+  }
+
+  // failure scenarios with respect to time dependence
+  if (options.date_time_type() != Options::no_time) {
+    if (options.date_time_type() == Options::arrive_by ||
+        options.date_time_type() == Options::invariant) {
+      if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit)
+        throw valhalla_exception_t{141};
+      if (options.action() == Options::isochrone)
+        throw valhalla_exception_t{142};
+    }
+  }
+
+  // Set the output precision for shape/geometry (polyline encoding). Defaults to polyline6
+  // This also controls the input precision for encoded_polyline in height action
+  // TODO - this just for OSRM compatibility at the moment but could be supported
+  auto shape_format = rapidjson::get_optional<std::string>(doc, "/shape_format");
+  if (shape_format) {
+    if (*shape_format == "polyline6") {
+      options.set_shape_format(polyline6);
+    } else if (*shape_format == "polyline5") {
+      options.set_shape_format(polyline5);
+    } else if (*shape_format == "geojson") {
+      options.set_shape_format(geojson);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{164};
+    }
+  }
+
+  // whether or not to output b64 encoded openlr
+  auto linear_references = rapidjson::get_optional<bool>(doc, "/linear_references");
+  if (linear_references) {
+    options.set_linear_references(*linear_references);
+  }
+
   // whatever our costing is, check to see if we are going to ignore_closures
   std::stringstream ss;
   ss << "/costing_options/" << costing_str << "/ignore_closures";
   auto ignore_closures = costing_str != "multimodal"
                              ? rapidjson::get_optional<bool>(doc, ss.str().c_str())
                              : boost::none;
-  if (options.has_costing_type_case()) {
-    for (const auto& co : options.costings()) {
-      if (co.second.type() == options.costing_type() &&
-          co.second.options().has_ignore_closures_case()) {
-        ignore_closures = co.second.options().ignore_closures();
-        break;
-      }
+  for (const auto& co : options.costings()) {
+    if (co.second.type() == options.costing_type() &&
+        co.second.options().has_ignore_closures_case()) {
+      ignore_closures = co.second.options().ignore_closures();
+      break;
     }
   }
 
@@ -872,15 +846,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
 
-  // set the costing if it wasn't already set
-  Costing::Type costing;
-  if (!options.has_costing_type_case() && valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-    options.set_costing_type(costing);
-  }
-  if (!options.has_costing_type_case()) {
-    throw valhalla_exception_t{125, "'" + costing_str + "'"};
-  }
-
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
 
@@ -934,7 +899,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  if (!options.has_date_time_type_case() &&
+  if (options.date_time_type() == Options::no_time &&
       (options.shape_size() == 0 || options.shape(0).time() == -1)) {
     for (auto& costing : *options.mutable_costings()) {
       costing.second.mutable_options()->set_flow_mask(
@@ -1057,7 +1022,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       // we renamed `edge.tagged_names` to `thor::kEdgeTaggedValues` and do it for backward
       // compatibility
       if (attribute == "edge.tagged_names") {
-        attribute = thor::kEdgeTaggedValues;
+        attribute = baldr::kEdgeTaggedValues;
       }
       options.add_filter_attributes(attribute);
     }
@@ -1335,7 +1300,7 @@ void service_worker_t::enqueue_statistics(Api& api) const {
 
   // these have been filled out as the request progressed through the system
   for (const auto& stat : api.info().statistics()) {
-    float frequency = stat.has_frequency_case() ? stat.frequency() : 1.f;
+    float frequency = stat.frequency() ? stat.frequency() : 1.f;
     switch (stat.type()) {
       case count:
         statsd_client->count(stat.key(), static_cast<int>(stat.value() + 0.5), frequency,

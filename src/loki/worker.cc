@@ -67,7 +67,7 @@ void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla:
 void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   auto& options = *api.mutable_options();
   // using the costing we can determine what type of edge filtering to use
-  if (!options.has_costing_type_case() || (!allow_none && options.costing_type() == Costing::none_)) {
+  if (!allow_none && options.costing_type() == Costing::none_) {
     throw valhalla_exception_t{124};
   }
 
@@ -199,7 +199,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                               ".max_matrix_distance"));
       max_matrix_locations.emplace(kv.first, config.get<float>("service_limits." + kv.first +
-                                                               ".max_matrix_locations"));
+                                                               ".max_matrix_location_pairs"));
     }
   }
   // this should never happen
@@ -216,7 +216,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   }
 
   if (max_matrix_locations.empty()) {
-    throw std::runtime_error("Missing max_matrix_locations configuration");
+    throw std::runtime_error("Missing max_matrix_location_pairs configuration");
   }
 
   min_transit_walking_dis =
@@ -281,7 +281,7 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
     const auto& options = request.options();
 
     // check there is a valid action
-    if (!options.has_action_case() || actions.find(options.action()) == actions.cend()) {
+    if (actions.find(options.action()) == actions.cend()) {
       throw valhalla_exception_t{106, action_str};
     }
 

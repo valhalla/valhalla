@@ -79,11 +79,10 @@ std::string serializeHeight(const Api& request,
   // get the distances between the postings
   if (ranges.size()) {
     json = json::map({{"range_height", serialize_range_height(ranges, heights, precision,
-                                                              skadi::sample::get_no_data_value())}});
+                                                              skadi::get_no_data_value())}});
   } // just the postings
   else {
-    json = json::map(
-        {{"height", serialize_height(heights, precision, skadi::sample::get_no_data_value())}});
+    json = json::map({{"height", serialize_height(heights, precision, skadi::get_no_data_value())}});
   }
   // send back the shape as well
   if (request.options().has_encoded_polyline_case()) {

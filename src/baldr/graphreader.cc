@@ -549,8 +549,6 @@ private:
 // Get a pointer to a graph tile object given a GraphId. Return nullptr
 // if the tile is not found/empty
 graph_tile_ptr GraphReader::GetGraphTile(const GraphId& graphid) {
-  // TODO: clear the cache automatically once we become overcommitted by a certain amount
-
   // Return nullptr if not a valid tile
   if (!graphid.Is_Valid()) {
     return nullptr;

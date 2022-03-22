@@ -62,7 +62,8 @@ config = {
     }
   },
   'additional_data': {
-    'elevation': '/data/valhalla/elevation/'
+    'elevation': '/data/valhalla/elevation/',
+    'elevation_url': Optional(str)
   },
   'loki': {
     'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid', 'status'],
@@ -174,25 +175,25 @@ config = {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'bus': {
       'max_distance': 5000000.0,
       'max_locations': 50,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'taxi': {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'pedestrian': {
       'max_distance': 250000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50,
+      'max_matrix_location_pairs': 2500,
       'min_transit_walking_distance': 1,
       'max_transit_walking_distance': 10000
     },
@@ -200,25 +201,25 @@ config = {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'motorcycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'bicycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'multimodal': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 0.0,
-      'max_matrix_locations': 0
+      'max_matrix_location_pairs': 0
     },
     'status': {
       'allow_verbose': False
@@ -227,13 +228,13 @@ config = {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'truck': {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'skadi': {
       'max_shape': 750000,
@@ -258,7 +259,7 @@ config = {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'centroid': {
       'max_distance': 200000.0,
@@ -331,7 +332,8 @@ help_text = {
     }
   },
   'additional_data': {
-    'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
+    'elevation': 'Location of elevation tiles',
+    'elevation_url': 'Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation'
   },
   'loki': {
     'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status',
@@ -443,25 +445,25 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'bus': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'taxi': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'pedestrian': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix',
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
       'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
@@ -469,25 +471,25 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'motorcycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'status': {
       'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
@@ -496,13 +498,13 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'truck': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'skadi': {
       'max_shape': 'Maximum number of input shapes',
@@ -527,7 +529,7 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'centroid': {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',

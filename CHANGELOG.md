@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
 * **Bug Fix**
+   * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
    * FIXED: Fix precision losses while encoding-decoding distance parameter in openlr [#3374](https://github.com/valhalla/valhalla/pull/3374)
    * FIXED: Fix bearing calculation for openlr records [#3379](https://github.com/valhalla/valhalla/pull/3379)
@@ -24,7 +25,14 @@
    * FIXED: fix one more protobuf unstable 3.x API [#3501](https://github.com/valhalla/valhalla/pull/3501)
    * FIXED: Fix valhalla_build_tiles imports only bss from last osm file [#3503](https://github.com/valhalla/valhalla/pull/3503)
    * FIXED: Fix total_run_stat.sh script. [#3511](https://github.com/valhalla/valhalla/pull/3511)
-   
+   * FIXED: fix valhalla_export_edges: missing null columns separator [#3543](https://github.com/valhalla/valhalla/pull/3543)
+   * FIXED: Removed/updated narrative language aliases that are not IETF BCP47 compliant [#3546](https://github.com/valhalla/valhalla/pull/3546)
+   * FIXED: Wrong predecessor opposing edge in dijkstra's expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
+   * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
+   * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)
+   * FIXED: Fix some country overrides in adminconstants and add a couple new countries. [#3578](https://github.com/valhalla/valhalla/pull/3578)
+   * FIXED: Improve build errors reporting [#3579](https://github.com/valhalla/valhalla/pull/3579)
+
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
@@ -63,6 +71,13 @@
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
    * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: Indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
+   * CHANGED: Remove many oneof uses from the protobuf api where the semantics of optional vs required isnt necessary [#3527](https://github.com/valhalla/valhalla/pull/3527)
+   * ADDED: Indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
+   * ADDED: Expose reverse isochrone parameter for reverse expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
+   * CHANGED: Add matrix classes to thor worker so they persist between requests. [#3560](https://github.com/valhalla/valhalla/pull/3560)
+   * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
