@@ -1,6 +1,6 @@
 # editor temporary / backup files
 *~
-.venv
+
 # built objects
 valhalla_run_map_match
 valhalla_meili_worker
@@ -61,6 +61,9 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+
+# python
+.venv
 
 # clangd
 .cache/
