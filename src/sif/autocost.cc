@@ -498,13 +498,12 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                   time_info.seconds_from_now);
-  auto final_speed = std::min(edge_speed, top_speed_);
+  auto edge_speed = fixed_speed_ == 0
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
 
-  if (fixed_speed_ != 0) {
-    final_speed = fixed_speed_;
-  }
+  auto final_speed = fixed_speed_ != 0 ? fixed_speed_ : std::min(edge_speed, top_speed_);
 
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -934,13 +933,11 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                     time_info.seconds_from_now);
-    auto final_speed = std::min(edge_speed, top_speed_);
-
-    if (fixed_speed_ != 0) {
-      final_speed = fixed_speed_;
-    }
+    auto edge_speed = fixed_speed_ == 0
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
+    auto final_speed = fixed_speed_ != 0 ? fixed_speed_ : std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
 
