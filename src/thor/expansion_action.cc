@@ -64,6 +64,8 @@ std::string thor_worker_t::expansion(Api& request) {
     // unfortunately we have to call this before checking if we can skip
     // else the tile could change underneath us when we get the opposing
     auto shape = tile->edgeinfo(edge).shape();
+    auto names = tile->edgeinfo(edge).GetNames();
+    auto is_forward = edge->forward();
 
     // if requested, skip this edge in case its opposite edge has been added
     // before (i.e. lower cost) else add this edge's id to the lookup container

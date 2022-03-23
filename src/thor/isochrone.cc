@@ -335,10 +335,11 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
     return ExpansionRecommendation::prune_expansion;
 
   // track expansion
-  if (inner_expansion_callback_ && !expansion_callback_ &&
-      (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
-       distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
-    expansion_callback_ = inner_expansion_callback_;
+  if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
+                                    distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
+    if (!expansion_callback_) {
+      expansion_callback_ = inner_expansion_callback_;
+    }
   } else if (expansion_callback_) {
     expansion_callback_ = nullptr;
   }
