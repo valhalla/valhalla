@@ -1,14 +1,12 @@
 #include "statistics.h"
 #include <cstdint>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include "filesystem.h"
 #include "midgard/logging.h"
+#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
-
-// sqlite is included in util.h and must be before spatialite
-#include <spatialite.h>
-
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -34,8 +32,7 @@ void statistics::build_db() {
   }
 
   // loading SpatiaLite as an extension
-  auto* db_cache = spatialite_alloc_connection();
-  spatialite_init_ex(db_handle, db_cache, 0);
+  auto db_conn = make_spatialite_cache(db_handle);
 
   LOG_INFO("Writing statistics database");
 
@@ -99,7 +96,6 @@ void statistics::build_db() {
   }
 
   sqlite3_close(db_handle);
-  spatialite_cleanup_ex(db_cache);
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
 void statistics::create_tile_tables(sqlite3* db_handle) {

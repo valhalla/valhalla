@@ -43,7 +43,8 @@ set(sources
   servicedays.cc
   speed_assigner.h
   timeparsing.cc
-  util.cc)
+  util.cc
+  spatialite_conn.cc)
 
 set (sources_with_warnings
   admin.cc

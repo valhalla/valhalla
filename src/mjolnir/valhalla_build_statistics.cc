@@ -12,7 +12,6 @@
 #include <mutex>
 #include <ostream>
 #include <queue>
-#include <sqlite3.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -20,7 +19,6 @@
 #include <vector>
 
 #include "config.h"
-#include <spatialite.h>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -628,8 +626,6 @@ int main(int argc, char** argv) {
   }
 
   BuildStatistics(pt);
-
-  spatialite_shutdown();
 
   return EXIT_SUCCESS;
 }

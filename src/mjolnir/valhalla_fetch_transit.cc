@@ -29,10 +29,9 @@
 #include "filesystem.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/servicedays.h"
+#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/transitpbf.h"
 #include "valhalla/proto/transit.pb.h"
-
-#include <spatialite.h>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -728,9 +727,6 @@ void fetch_tiles(const ptree& pt,
   utc->tm_year += 1900;
   ++utc->tm_mon; // TODO: use timezone code?
 
-  // internal spatialite cache for each thread
-  void* timezone_cache;
-
   auto database = pt.get_optional<std::string>("mjolnir.timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
@@ -738,10 +734,8 @@ void fetch_tiles(const ptree& pt,
     LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
   } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
-  } else {
-    timezone_cache = spatialite_alloc_connection();
-    spatialite_init_ex(tz_db_handle, timezone_cache, 0);
   }
+  auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   // for each tile
   while (true) {
@@ -934,10 +928,7 @@ void fetch_tiles(const ptree& pt,
 
   if (tz_db_handle) {
     sqlite3_close(tz_db_handle);
-    spatialite_cleanup_ex(timezone_cache);
   }
-
-  spatialite_shutdown();
 }
 
 std::list<GraphId> fetch(const ptree& pt,
