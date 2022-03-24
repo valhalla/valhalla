@@ -30,9 +30,10 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
-        has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
+        closure_pruning_(0), has_measured_speed_(0), path_id_(0), restriction_idx_(0),
+        internal_turn_(0), unpaved_(0), cost_(0, 0), sortcost_(0), distance_(0),
+        transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -75,8 +76,8 @@ public:
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
-        deadend_(edge->deadend()),
+        dest_only_(edge->destonly()), origin_(0), destination_(0), toll_(edge->toll()),
+        not_thru_(edge->not_thru()), deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
@@ -270,6 +271,21 @@ public:
   void set_origin() {
     origin_ = true;
   }
+
+  /**
+   * Is this edge a destination edge?
+   * @return  Returns true if this edge is a destination edge.
+   */
+  bool destination() const {
+    return destination_;
+  }
+
+  /**
+   * Sets this edge as an origin.
+   */
+  void set_destination() {
+    destination_ = true;
+  }
   /**
    * Get the restriction idx, 255 means no restriction
    */
@@ -441,6 +457,7 @@ protected:
   uint64_t shortcut_ : 1;
   uint64_t dest_only_ : 1;
   uint64_t origin_ : 1;
+  uint64_t destination_ : 1;
   uint64_t toll_ : 1;
   uint64_t not_thru_ : 1;
   uint64_t deadend_ : 1;
@@ -456,7 +473,7 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-  uint32_t spare : 14;
+  uint32_t spare : 13;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
