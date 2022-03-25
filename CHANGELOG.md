@@ -31,10 +31,9 @@
    * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
    * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)   
    * FIXED: Fix some country overrides in adminconstants and add a couple new countries. [#3578](https://github.com/valhalla/valhalla/pull/3578)
-   * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
-   
    * FIXED: Improve build errors reporting [#3579](https://github.com/valhalla/valhalla/pull/3579)
    * FIXED: Fix "no elevation" values and /locate elevation response [#3571](https://github.com/valhalla/valhalla/pull/3571)
+   * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
