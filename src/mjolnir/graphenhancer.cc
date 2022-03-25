@@ -25,7 +25,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <sqlite3.h>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -43,8 +42,7 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
-
-#include <spatialite.h>
+#include "mjolnir/spatialite_conn.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -1330,19 +1328,14 @@ void enhance(const boost::property_tree::ptree& pt,
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
-
-  // internal spatialite cache for each thread
-  void* admin_cache;
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
   if (!database && use_admin_db) {
     LOG_WARN("Admin db not found.  Not saving admin information.");
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
-  } else if (admin_db_handle && use_admin_db) {
-    admin_cache = spatialite_alloc_connection();
-    spatialite_init_ex(admin_db_handle, admin_cache, 0);
   }
+  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   std::unordered_map<std::string, std::vector<int>> country_access =
       GetCountryAccess(admin_db_handle);
@@ -1747,7 +1740,6 @@ void enhance(const boost::property_tree::ptree& pt,
 
   if (admin_db_handle) {
     sqlite3_close(admin_db_handle);
-    spatialite_cleanup_ex(admin_cache);
   }
 
   // Send back the statistics

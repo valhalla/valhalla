@@ -23,8 +23,6 @@
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <sqlite3.h>
-
 #include <cxxopts.hpp>
 
 #include "baldr/admininfo.h"
@@ -39,9 +37,8 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
+#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
-
-#include <spatialite.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -158,8 +155,6 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
   // Initialize the admin DB (if it exists)
   auto database = pt.get_optional<std::string>("admin");
-  // internal spatialite cache
-  void* db_cache;
 
   sqlite3* db_handle = nullptr;
   if (filesystem::exists(*database)) {
@@ -171,14 +166,11 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       return;
     }
 
-    // loading SpatiaLite as an extension
-    db_cache = spatialite_alloc_connection();
-    spatialite_init_ex(db_handle, db_cache, 0);
-
   } else {
     LOG_ERROR("Admin db " + *database + " not found.");
     return;
   }
+  auto admin_conn = valhalla::mjolnir::make_spatialite_cache(db_handle);
 
   // Graphreader
   GraphReader reader(pt);
@@ -205,8 +197,6 @@ void Benchmark(const boost::property_tree::ptree& pt) {
     }
   }
   sqlite3_close(db_handle);
-  spatialite_cleanup_ex(db_cache);
-  spatialite_shutdown();
 }
 
 bool ParseArguments(int argc, char* argv[]) {

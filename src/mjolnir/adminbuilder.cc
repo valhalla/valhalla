@@ -8,12 +8,10 @@
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
+#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
 
-#include <sqlite3.h>
-
 #include "config.h"
-#include <spatialite.h>
 
 /* Need to know which geos version we have to work out which headers to include */
 #include <geos/version.h>
@@ -271,8 +269,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   // loading SpatiaLite as an extension
-  auto* db_cache = spatialite_alloc_connection();
-  spatialite_init_ex(db_handle, db_cache, 0);
+  auto db_conn = make_spatialite_cache(db_handle);
 
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";
@@ -635,7 +632,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   sqlite3_close(db_handle);
-  spatialite_cleanup_ex(db_cache);
 
   LOG_INFO("Finished.");
 }

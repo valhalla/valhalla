@@ -11,13 +11,10 @@ using namespace valhalla::mjolnir;
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <iostream>
-#include <sqlite3.h>
 
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
-
-#include <spatialite.h>
 
 // List the build stages
 void list_stages() {
@@ -133,10 +130,7 @@ int main(int argc, char** argv) {
   }
 
   // Build some tiles!
-  bool has_built = build_tile_set(pt, input_files, start_stage, end_stage);
-  spatialite_shutdown();
-
-  if (has_built) {
+  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;
