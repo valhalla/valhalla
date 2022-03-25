@@ -42,7 +42,6 @@
 #include "midgard/sequence.h"
 #include "midgard/util.h"
 #include "mjolnir/osmaccess.h"
-#include "mjolnir/spatialite_conn.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;

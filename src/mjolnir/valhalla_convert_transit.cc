@@ -33,9 +33,9 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
+#include "mjolnir/util.h"
 #include "mjolnir/validatetransit.h"
 
-#include "mjolnir/spatialite_conn.h"
 #include "proto/transit.pb.h"
 
 using namespace boost::property_tree;

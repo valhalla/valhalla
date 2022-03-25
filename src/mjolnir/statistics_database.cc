@@ -5,7 +5,6 @@
 
 #include "filesystem.h"
 #include "midgard/logging.h"
-#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::midgard;

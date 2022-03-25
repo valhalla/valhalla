@@ -27,7 +27,6 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/linkclassification.h"
 #include "mjolnir/node_expander.h"
-#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::midgard;

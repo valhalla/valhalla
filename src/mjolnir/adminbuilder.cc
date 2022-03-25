@@ -8,7 +8,6 @@
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/pbfadminparser.h"
-#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
 
 #include "config.h"

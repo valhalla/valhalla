@@ -37,7 +37,6 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
-#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::midgard;

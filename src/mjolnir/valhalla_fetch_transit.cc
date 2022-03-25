@@ -29,8 +29,8 @@
 #include "filesystem.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/spatialite_conn.h"
 #include "mjolnir/transitpbf.h"
+#include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
 
 using namespace boost::property_tree;
@@ -735,7 +735,7 @@ void fetch_tiles(const ptree& pt,
   } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
-  auto tz_conn = make_spatialite_cache(tz_db_handle);
+  auto tz_conn = valhalla::mjolnir::make_spatialite_cache(tz_db_handle);
 
   // for each tile
   while (true) {

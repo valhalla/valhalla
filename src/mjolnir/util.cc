@@ -27,6 +27,21 @@ using namespace valhalla::midgard;
 
 namespace {
 
+struct spatialite_singleton_t {
+  static const spatialite_singleton_t& get_instance() {
+    static spatialite_singleton_t s;
+    return s;
+  }
+
+private:
+  spatialite_singleton_t() {
+    spatialite_initialize();
+  }
+  ~spatialite_singleton_t() {
+    spatialite_shutdown();
+  }
+};
+
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
@@ -144,6 +159,17 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
     LOG_WARN("Neither end of the shape matches");
     return false;
   }
+}
+
+std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
+  if (!handle) {
+    return nullptr;
+  }
+
+  spatialite_singleton_t::get_instance();
+  void* conn = spatialite_alloc_connection();
+  spatialite_init_ex(handle, conn, 0);
+  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
