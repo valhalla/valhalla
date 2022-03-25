@@ -111,10 +111,18 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
         edge_map->emplace("lane_connectivity", lane_connectivity);
       }
       if (controller(kEdgeMaxDownwardGrade)) {
-        edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        if (edge.max_downward_grade() == kNoElevationData) {
+          edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
+        } else {
+          edge_map->emplace("max_downward_grade", nullptr);
+        }
       }
       if (controller(kEdgeMaxUpwardGrade)) {
-        edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        if (edge.max_downward_grade() == kNoElevationData) {
+          edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
+        } else {
+          edge_map->emplace("max_upward_grade", nullptr);
+        }
       }
       if (controller(kEdgeWeightedGrade)) {
         edge_map->emplace("weighted_grade", json::fixed_t{edge.weighted_grade(), 3});
@@ -122,10 +130,13 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       if (controller(kEdgeMeanElevation)) {
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean != kNoElevationData && options.units() == Options::miles) {
-          mean *= kFeetPerMeter;
+        if (mean == kNoElevationData) {
+          edge_map->emplace("mean_elevation", nullptr);
+        } else {
+          edge_map->emplace("mean_elevation", static_cast<int64_t>(options.units() == Options::miles
+                                                                       ? mean
+                                                                       : mean * kFeetPerMeter));
         }
-        edge_map->emplace("mean_elevation", static_cast<int64_t>(mean));
       }
       if (controller(kEdgeWayId)) {
         edge_map->emplace("way_id", static_cast<uint64_t>(edge.way_id()));
