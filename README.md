@@ -52,12 +52,6 @@ In Windows all functionality is not yet fully supported. Building the Valhalla l
 - `DATA_TOOLS`: utilities to build input data and handle transit
 - `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
 
-Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
-- no/falsy time-dependent routing
-- no border-crossing penalties
-- driving side will be off in LHT countries
-- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
-
 ## Organization
 
 The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
