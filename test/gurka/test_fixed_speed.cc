@@ -76,3 +76,12 @@ TEST_F(FixedSpeedTest, ClampMaxSpeed) {
 
   ASSERT_EQ(co.options().fixed_speed(), baldr::kDefaultFixedSpeed);
 }
+
+TEST_F(FixedSpeedTest, TopAndFixedSpeed) {
+  doTests("auto",
+          {{"/costing_options/auto/fixed_speed", "50"}, {"/costing_options/auto/top_speed", "80"}});
+  doTests("auto",
+          {{"/costing_options/auto/fixed_speed", "50"}, {"/costing_options/auto/top_speed", "50"}});
+  doTests("auto",
+          {{"/costing_options/auto/fixed_speed", "50"}, {"/costing_options/auto/top_speed", "10"}});
+}

@@ -1058,10 +1058,11 @@ protected:
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
-    // Set the top speed a vehicle wants to go
-    top_speed_ = costing_options.top_speed();
     // Set the fixed speed a vehicle can go
     fixed_speed_ = costing_options.fixed_speed();
+    // Set the top speed a vehicle wants to go
+    top_speed_ =
+        fixed_speed_ == baldr::kDefaultFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 

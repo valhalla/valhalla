@@ -428,12 +428,12 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
                          const baldr::TimeInfo& time_info,
                          uint8_t& flow_sources) const {
-  auto edge_speed = fixed_speed_ == 0
+  auto edge_speed = fixed_speed_ == baldr::kDefaultFixedSpeed
                         ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, true,
                                          &flow_sources, time_info.seconds_from_now)
                         : fixed_speed_;
 
-  auto final_speed = fixed_speed_ != 0 ? fixed_speed_ : std::min(edge_speed, top_speed_);
+  auto final_speed = std::min(edge_speed, top_speed_);
 
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -611,9 +611,6 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
 // assume the maximum speed is used to the destination such that the time
 // estimate is less than the least possible time along roads.
 float TruckCost::AStarCostFactor() const {
-  if (fixed_speed_ != 0) {
-    return speedfactor_[fixed_speed_];
-  }
   return speedfactor_[top_speed_];
 }
 
