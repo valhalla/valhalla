@@ -99,7 +99,7 @@
     "verbose": false
   },
   "mjolnir": {
-    "admin": "",
+    "admin": "test\\data\\netherlands_admin.sqlite",
     "hierarchy": true,
     "include_driveways": true,
     "logging": {
