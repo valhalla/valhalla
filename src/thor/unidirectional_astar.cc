@@ -172,7 +172,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     const EdgeMetadata& meta,
     const graph_tile_ptr& tile,
     const TimeInfo& time_info,
-    const valhalla::Location& destination,
+    const valhalla::Location& /*destination*/,
     std::pair<int32_t, float>& best_path) {
 
   // Skip shortcut edges for time dependent routes
@@ -633,7 +633,7 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     GraphReader& graphreader,
     const valhalla::Location& origin,
-    const valhalla::Location& destination,
+    const valhalla::Location& /*destination*/,
     const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
