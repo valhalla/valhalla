@@ -134,8 +134,8 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
           edge_map->emplace("mean_elevation", nullptr);
         } else {
           edge_map->emplace("mean_elevation", static_cast<int64_t>(options.units() == Options::miles
-                                                                       ? mean
-                                                                       : mean * kFeetPerMeter));
+                                                                       ? mean * kFeetPerMeter
+                                                                       : mean));
         }
       }
       if (controller(kEdgeWayId)) {
