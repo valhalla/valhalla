@@ -345,6 +345,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     return true;
   };
 
+  // add as normal edge, fixes #3585
   auto added = add_label(nullptr);
 
   auto dests = destinations_.equal_range(FORWARD ? meta.edge_id : opp_edge_id);
@@ -791,7 +792,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       adjacencylist_.add(idx);
     };
 
-    // add as normal edge
+    // add as normal edge, fixes #3585
     add_label(nullptr);
 
     auto dests = destinations_.equal_range(edgeid);
