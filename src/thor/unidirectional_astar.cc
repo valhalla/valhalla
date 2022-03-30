@@ -181,9 +181,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     return false;
   }
 
+  // TODO(derolf): what about FORWARD=true?
   if (!FORWARD) {
-    // Skip this edge if permanently labeled (best path already found to this directed edge) or if no
-    // access for this mode.
+    // Skip this edge if no access possible
     if (!(meta.edge->reverseaccess() & access_mode_)) {
       return false;
     }
@@ -224,9 +224,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     uint8_t restriction_idx = kInvalidRestriction;
-    auto is_dest = false;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, is_dest, pred, tile, meta.edge_id, time_info.local_time,
+      if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
                              nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
@@ -265,10 +264,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // Skip shortcut edges for time dependent routes, if no access is allowed to this edge
     // (based on costing method)
     uint8_t restriction_idx = kInvalidRestriction;
-    auto is_dest = !!dest_path_edge;
     if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, is_dest, pred, tile, meta.edge_id, time_info.local_time,
-                             nodeinfo->timezone(), restriction_idx) ||
+      if (!costing_->Allowed(meta.edge, dest_path_edge, pred, tile, meta.edge_id,
+                             time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
           costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
                                time_info.local_time, nodeinfo->timezone())) {
         return false;
@@ -285,7 +283,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                              : (FORWARD ? dest_path_edge->percent_along()
                                                         : 1.0f - dest_path_edge->percent_along());
 
-    auto cost = pred.cost() + edge_cost * percent_traversed;
+    auto cost = pred.cost() + transition_cost + edge_cost * percent_traversed;
     cost.cost += dest_path_edge ? dest_path_edge->distance() : 0.0f;
 
     auto dist = 0.0f;
