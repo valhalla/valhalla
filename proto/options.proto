@@ -307,6 +307,9 @@ message Costing {
     oneof has_elevator_penalty {
       float elevator_penalty = 79;
     }
+    oneof has_use_traffic {
+      bool use_traffic = 80;
+    }
   }
 
   oneof has_options {
@@ -450,6 +453,11 @@ message Options {
     bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   }
   // 42 is reserved
+
+  oneof has_shapepoints {
+    bool shapepoints = 42;                                  // Number of digits precision for heights returned [default = 0]
+  }
+  
   oneof has_height_precision {
     uint32 height_precision = 43;                                  // Number of digits precision for heights returned [default = 0]
   }
