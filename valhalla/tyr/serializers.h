@@ -16,6 +16,7 @@
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
+#include <valhalla/proto/info.pb.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/tyr/actor.h>
 
@@ -116,6 +117,13 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
  * @return the bytes representing the protobuf object
  */
 std::string serializePbf(Api& request);
+
+/**
+ * @brief Turns warnings into json
+ * @param request The protobuf warnings object
+ * @return json string
+ */
+void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
 
 } // namespace tyr
 } // namespace valhalla
