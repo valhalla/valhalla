@@ -915,6 +915,13 @@ void from_json(rapidjson::Document& doc, Options& options) {
     options.set_roundabout_exits(*roundabout_exits);
   }
 
+  // shapepoints
+  auto shapepoints = rapidjson::get_optional<bool>(doc, "/shapepoints");
+  options.set_shapepoints(true);
+  if (shapepoints) {
+    options.set_shapepoints(*shapepoints);
+  }
+
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},
