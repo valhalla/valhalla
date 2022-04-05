@@ -54,7 +54,7 @@ float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) cons
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void TimeDistanceMatrix::Clear() {
+void TimeDistanceMatrix::clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -166,7 +166,6 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   astarheuristic_.Init({origin.ll().lng(), origin.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
-  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -336,7 +335,6 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   astarheuristic_.Init({dest.ll().lng(), dest.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
-  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -412,14 +410,14 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
       std::vector<TimeDistance> td = OneToMany(origin, target_location_list, graphreader,
                                                mode_costing, mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   } else {
     for (const auto& destination : target_location_list) {
       std::vector<TimeDistance> td = ManyToOne(destination, source_location_list, graphreader,
                                                mode_costing, mode, max_matrix_distance);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   }
   return many_to_many;

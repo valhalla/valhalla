@@ -52,12 +52,6 @@ In Windows all functionality is not yet fully supported. Building the Valhalla l
 - `DATA_TOOLS`: utilities to build input data and handle transit
 - `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
 
-Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
-- no/falsy time-dependent routing
-- no border-crossing penalties
-- driving side will be off in LHT countries
-- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
-
 ## Organization
 
 The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
@@ -165,6 +159,9 @@ echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
 ```
 
 You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
+
+**_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
+
 
 #### Installing dependencies
 

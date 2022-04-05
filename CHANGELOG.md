@@ -27,7 +27,14 @@
    * FIXED: Fix total_run_stat.sh script. [#3511](https://github.com/valhalla/valhalla/pull/3511)
    * FIXED: fix valhalla_export_edges: missing null columns separator [#3543](https://github.com/valhalla/valhalla/pull/3543)
    * FIXED: Removed/updated narrative language aliases that are not IETF BCP47 compliant [#3546](https://github.com/valhalla/valhalla/pull/3546)
-   
+   * FIXED: Wrong predecessor opposing edge in dijkstra's expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
+   * FIXED: exit and exit_verbal in Russian locale should be same [#3545](https://github.com/valhalla/valhalla/pull/3545)
+   * FIXED: Skip transit tiles in hierarchy builder [#3559](https://github.com/valhalla/valhalla/pull/3559)   
+   * FIXED: Fix some country overrides in adminconstants and add a couple new countries. [#3578](https://github.com/valhalla/valhalla/pull/3578)
+   * FIXED: Improve build errors reporting [#3579](https://github.com/valhalla/valhalla/pull/3579)
+   * FIXED: Fix "no elevation" values and /locate elevation response [#3571](https://github.com/valhalla/valhalla/pull/3571)
+   * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
+
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
@@ -64,10 +71,14 @@
    * CHANGED: valhalla.h and config.h don't need cmake configuration [#3502](https://github.com/valhalla/valhalla/pull/3502)
    * ADDED: New options to control what fields of the pbf are returned when pbf format responses are requested [#3207](https://github.com/valhalla/valhalla/pull/3507)
    * CHANGED: Rename tripcommon to common [#3516](https://github.com/valhalla/valhalla/pull/3516)
-   * ADDED: indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: Indoor routing - data model, data processing. [#3509](https://github.com/valhalla/valhalla/pull/3509)
    * ADDED: On-demand elevation tile fetching [#3391](https://github.com/valhalla/valhalla/pull/3391)
    * CHANGED: Remove many oneof uses from the protobuf api where the semantics of optional vs required isnt necessary [#3527](https://github.com/valhalla/valhalla/pull/3527)
-   * ADDED: indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
+   * ADDED: Indoor routing maneuvers [#3519](https://github.com/valhalla/valhalla/pull/3519)
+   * ADDED: Expose reverse isochrone parameter for reverse expansion [#3528](https://github.com/valhalla/valhalla/pull/3528)
+   * CHANGED: Add matrix classes to thor worker so they persist between requests. [#3560](https://github.com/valhalla/valhalla/pull/3560)
+   * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
+   * CHANGED: modernized spatialite syntax [#3580](https://github.com/valhalla/valhalla/pull/3580)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

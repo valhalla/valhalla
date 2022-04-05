@@ -3,9 +3,10 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include <spatialite.h>
 #include <sqlite3.h>
 #include <unordered_map>
+
+#include <spatialite.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,18 +17,10 @@ sqlite3* GetDBHandle(const std::string& database) {
   // Initialize the admin DB (if it exists)
   sqlite3* db_handle = nullptr;
   if (!database.empty() && filesystem::exists(database)) {
-    spatialite_init(0);
-    std::string sql;
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
                                    SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return nullptr;
-    }
-
-    // loading SpatiaLite as an extension
-    if (!load_spatialite(db_handle)) {
       sqlite3_close(db_handle);
       return nullptr;
     }

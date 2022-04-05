@@ -33,6 +33,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
+#include "mjolnir/util.h"
 #include "mjolnir/validatetransit.h"
 
 #include "proto/transit.pb.h"
@@ -982,6 +983,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
   if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
+  auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   const auto& tiles = TileHierarchy::levels().back().tiles;
   // Iterate through the tiles in the queue and find any that include stops

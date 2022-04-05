@@ -272,7 +272,7 @@ public:
     }
     // if we are missing everything then give up
     if (adjust == 0) {
-      return NO_DATA_VALUE;
+      return get_no_data_value();
     }
     // if we were missing some we need to adjust by that
     return value / adjust;
