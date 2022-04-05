@@ -616,6 +616,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
+    api.mutable_info()->add_warnings()->set_description("auto shorter is deprecated and will be turned into the shortest costing option");
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
