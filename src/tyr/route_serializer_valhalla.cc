@@ -6,6 +6,7 @@
 #include "odin/util.h"
 #include "proto_conversions.h"
 #include "tyr/serializers.h"
+#include "proto/info.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -537,6 +538,9 @@ std::string serialize(const Api& api) {
 
     // summary time/distance and other stats
     summary(api, i, writer);
+    
+    // get serialized warnings
+    valhalla::tyr::serializeWarnings(api, writer);
 
     writer.end_object(); // trip
 
