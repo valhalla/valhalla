@@ -25,6 +25,7 @@
 #include "proto/incidents.pb.h"
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
+#include "proto/info.pb.h"
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -155,6 +156,12 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
     }
   }
   writer.end_array();
+}
+
+std::string serializeWarnings(Api& request){
+  if(!request.info().warnings().empty()){
+    return request.info().SerializeAsString();
+  }
 }
 
 std::string serializePbf(Api& request) {
