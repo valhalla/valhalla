@@ -617,6 +617,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
+
+    // add warnign for auto shorter
     valhalla::Info info;
     info.add_warnings()->set_description("auto shorter is deprecated and will be turned into the shotest costing option");
   
@@ -632,6 +634,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // hov costing is deprecated and will be turned into auto costing with
   // include_hov2=true costing option.
   if (costing_str == "hov") {
+
+    // add warning for hov costing
+    valhalla::Info info;
+    info.add_warnings()->set_description("hov costing is deprecated and will be turned into auto costing with hov2=true costing option");
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/hov");
