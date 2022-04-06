@@ -1047,6 +1047,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // deprecated best_paths for map matching top k
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
 
+  //add warning for deprecated best_paths
+  valhalla::Info info;
+  info.add_warnings()->set_description("best_paths has been deprecated for map matching top k");
+
   // how many alternates are desired, default to none and if its multi point its also none
   options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates",
                                                   options.has_alternates_case() ? options.alternates()
