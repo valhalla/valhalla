@@ -875,6 +875,7 @@ protected:
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
   bool shortest_;
+  bool use_traffic_{true};
 
   bool ignore_restrictions_{false};
   bool ignore_oneways_{false};

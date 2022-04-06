@@ -139,9 +139,10 @@ DynamicCost::DynamicCost(const CostingOptions& options,
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
-      shortest_(options.shortest()), ignore_restrictions_(options.ignore_restrictions()),
-      ignore_oneways_(options.ignore_oneways()), ignore_access_(options.ignore_access()),
-      ignore_closures_(options.ignore_closures()), top_speed_(options.top_speed()),
+      shortest_(options.shortest()), use_traffic_(options.use_traffic()),
+      ignore_restrictions_(options.ignore_restrictions()), ignore_oneways_(options.ignore_oneways()),
+      ignore_access_(options.ignore_access()), ignore_closures_(options.ignore_closures()),
+      top_speed_(options.top_speed()),
       filter_closures_(ignore_closures_ ? false : options.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
@@ -359,6 +360,7 @@ void ParseSharedCostOptions(const rapidjson::Value& value, CostingOptions* pbf_c
     pbf_costing_options->set_name(*name);
   }
   pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
+  pbf_costing_options->set_use_traffic(rapidjson::get<bool>(value, "/use_traffic", true));
   pbf_costing_options->set_top_speed(
       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
 }
