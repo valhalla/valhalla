@@ -651,6 +651,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_data_fix is deprecated and will be turned into
   // ignore all the things costing option. maybe remove in v4?
   if (costing_str == "auto_data_fix") {
+
+    // warning for auto data fix
+    valhalla::Info info;
+    info.add_warnings()->set_description("auto_data_fix is deprecated and will be turned to ignore all the things costing option");
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
