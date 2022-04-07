@@ -34,8 +34,8 @@ constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
-    0.f; // Avoid living streets by default. Factor between 0 and 1
-constexpr float kDefaultUseHighways = 0.5f;      // Factor between 0 and 1
+    0.f;                                    // Avoid living streets by default. Factor between 0 and 1
+constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -294,14 +294,13 @@ public:
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
-  bool hazmat_;     // Carrying hazardous materials
-  float weight_;    // Vehicle weight in metric tons
-  float axle_load_; // Axle load weight in metric tons
-  float height_;    // Vehicle height in meters
-  float width_;     // Vehicle width in meters
-  float length_;    // Vehicle length in meters
-  float surface_factor_;     // How much the surface factors are applied when using trails
-  float highway_factor_;     // Factor applied when road is a motorway or trunk
+  bool hazmat_;          // Carrying hazardous materials
+  float weight_;         // Vehicle weight in metric tons
+  float axle_load_;      // Axle load weight in metric tons
+  float height_;         // Vehicle height in meters
+  float width_;          // Vehicle width in meters
+  float length_;         // Vehicle length in meters
+  float highway_factor_; // Factor applied when road is a motorway or trunk
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -335,9 +334,6 @@ TruckCost::TruckCost(const Costing& costing)
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
   }
-
-  // Sets the surface factor for truck
-  surface_factor_ = 0.5f;
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
@@ -482,7 +478,7 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-                 surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+                 kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
                  SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
