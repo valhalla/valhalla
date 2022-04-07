@@ -154,8 +154,8 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 }
 
 // fuction to add warnings to api object
-void add_warning(valhalla::Api& api, std::string warning_text){
-  
+void add_warning(valhalla::Api& api, std::string warning_text) {
+
   auto* warning = api.mutable_info()->mutable_warnings()->Add();
   warning->set_description(warning_text);
 }
@@ -626,7 +626,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
     // add warning for auto shorter
     add_warning(api, "auto shorter is deprecated and will be turned into the shotest costing option");
-  
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
@@ -641,7 +641,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "hov") {
 
     // add warning for hov costing
-    add_warning(api, "hov costing is deprecated and will be turned into auto costing with hov2=true costing option");
+    add_warning(
+        api,
+        "hov costing is deprecated and will be turned into auto costing with hov2=true costing option");
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -657,7 +659,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "auto_data_fix") {
 
     // warning for auto data fix
-    add_warning(api, "auto_data_fix is deprecated and will be turned to ignore all the things costing option");
+    add_warning(
+        api,
+        "auto_data_fix is deprecated and will be turned to ignore all the things costing option");
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -1050,7 +1054,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // deprecated best_paths for map matching top k
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
 
-  //add warning for deprecated best_paths
+  // add warning for deprecated best_paths
   add_warning(api, "best_paths has been deprecated for map matching top k");
 
   // how many alternates are desired, default to none and if its multi point its also none
