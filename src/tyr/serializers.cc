@@ -165,6 +165,18 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
   writer.end_array();
 }
 
+std::string serializeWarnings(const valhalla::Api& api) {
+  auto warnings = json::map({});
+  auto warnings_text = json::array({});
+  for (int i = 0; i < api.info().warnings_size(); i++) {
+    warnings_text->emplace_back(api.info().warnings(i).description());
+  }
+  warnings->emplace("warnings", warnings_text);
+  std::stringstream ss;
+  ss << *warnings;
+  return ss.str();
+}
+
 std::string serializePbf(Api& request) {
   // if they dont want to select the parts just pick the obvious thing they would want based on action
   PbfFieldSelector selection = request.options().pbf_field_selector();
