@@ -128,7 +128,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // get the next closest subdivision
-  std::tuple<int32_t, unsigned short, double> next() {
+  std::tuple<int64_t, unsigned short, double> next() {
     // get the next closest one or bail
     if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");
