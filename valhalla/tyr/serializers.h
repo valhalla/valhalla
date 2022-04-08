@@ -124,7 +124,7 @@ std::string serializePbf(Api& request);
  * @return json string
  */
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
-
+std::string serializeWarnings(const valhalla::Api& api);
 } // namespace tyr
 } // namespace valhalla
 
