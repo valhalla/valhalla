@@ -195,6 +195,8 @@ std::string serializeLocate(const Api& request,
     }
   }
 
+  json->emplace_back(json::array({"warnings", valhalla::tyr::serializeWarnings(request)}));
+
   std::stringstream ss;
   ss << *json;
   return ss.str();
