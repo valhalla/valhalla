@@ -94,6 +94,8 @@ std::string serializeHeight(const Api& request,
     json->emplace("id", request.options().id());
   }
 
+  json->emplace("warnings", valhalla::tyr::serializeWarnings(request));
+
   std::stringstream ss;
   ss << *json;
   return ss.str();
