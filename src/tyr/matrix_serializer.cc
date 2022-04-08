@@ -133,7 +133,10 @@ json::MapPtr serialize(const Api& request,
     json->emplace("id", options.id());
   }
 
-  json->emplace("warnings", valhalla::tyr::serializeWarnings(request));
+  // add warnings to json response
+  if (request.info().warnings_size() >= 1) {
+    json->emplace("warnings", valhalla::tyr::serializeWarnings(request));
+  }
 
   return json;
 }

@@ -540,7 +540,9 @@ std::string serialize(const Api& api) {
     summary(api, i, writer);
 
     // get serialized warnings
-    valhalla::tyr::serializeWarnings(api, writer);
+    if (api.info().warnings_size() >= 1) {
+      valhalla::tyr::serializeWarnings(api, writer);
+    }
 
     writer.end_object(); // trip
 

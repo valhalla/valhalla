@@ -31,7 +31,10 @@ std::string serializeTransitAvailable(const Api& request,
     json->emplace_back(serialize(location, found.find(location) != found.cend()));
   }
 
-  json->emplace_back(json::map({{"warnings", valhalla::tyr::serializeWarnings(request)}}));
+  // add warnings to json response
+  if (request.info().warnings_size() >= 1) {
+    json->emplace_back(json::map({{"warnings", valhalla::tyr::serializeWarnings(request)}}));
+  }
 
   std::stringstream ss;
   ss << *json;
