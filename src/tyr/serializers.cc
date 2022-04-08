@@ -166,12 +166,12 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
 }
 
 std::string serializeWarnings(const valhalla::Api& api) {
-  auto warnings = json::map({});
+  auto warnings = json::array({});
   auto warnings_text = json::array({});
   for (int i = 0; i < api.info().warnings_size(); i++) {
     warnings_text->emplace_back(api.info().warnings(i).description());
   }
-  warnings->emplace("warnings", warnings_text);
+  warnings->emplace_back(warnings_text);
   std::stringstream ss;
   ss << *warnings;
   return ss.str();
