@@ -560,6 +560,7 @@ std::string serializeTraceAttributes(
     }
     ++route;
   }
+  json->emplace(json::map({{"warnings", valhalla::tyr::serializeWarnings(request)}}));
   std::stringstream ss;
   ss << *json;
   return ss.str();
