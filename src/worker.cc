@@ -154,7 +154,7 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 }
 
 // fuction to add warnings to api object
-void add_warning(valhalla::Api& api, const std::string warning_text) {
+void add_warning(valhalla::Api& api, const std::string& warning_text) {
 
   auto* warning = api.mutable_info()->mutable_warnings()->Add();
   warning->set_description(warning_text);
