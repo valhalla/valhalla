@@ -65,7 +65,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // How much to favor truck routes.
 constexpr float kTruckRouteFactor = 0.85f;
 
-constexpr float kMaxHighwayBiasFactor = 8.0f;
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
     0.5f, // Trunk

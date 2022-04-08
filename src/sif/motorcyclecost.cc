@@ -55,9 +55,6 @@ constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 
-// Maximum highway avoidance bias (modulates the highway factors based on road class)
-constexpr float kMaxHighwayBiasFactor = 8.0f;
-
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
     0.5f, // Trunk
