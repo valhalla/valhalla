@@ -5,6 +5,7 @@ using namespace valhalla;
 
 std::string deprecated_costing_methods[3] = {"auto_shorter", "hov", "auto_data_fix"};
 
+// test case for routes endpoint
 TEST(warnings, routes_endpoint) {
   const std::string ascii_map = R"(
           A----------B-------------C-----P
@@ -38,4 +39,36 @@ TEST(warnings, routes_endpoint) {
                                           deprecated_costing_methods[1], {{"/best_paths", "2"}});
   ASSERT_TRUE(result.info().warnings_size() != 0);
   EXPECT_EQ(result.info().warnings_size(), 2);
+}
+
+// test case for locate endpoint
+TEST(location_warnings, locate_endpoint) {
+  const std::string ascii_map = R"(
+            1------------2-----------A
+            |            |           |
+            |            |           |
+            a------------b-----------c
+            |            |           |
+            |            B-----------K
+            |  E---------|           |
+            | /          |           6
+            |/           |           |
+            D------------F-----------3
+  )";
+  const gurka::ways ways = {
+      {"AE", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"BE", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"DE", {{"highway", "motorway"}, {"name", "RT 3"}}},
+      {"BF", {{"highway", "motorway"}, {"name", "RT 4"}}},
+      {"DF", {{"highway", "motorway"}, {"name", "RT 5"}}},
+  };
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/locate_warnings");
+  for (int i = 0; i < 3; i++) {
+    valhalla::Api result =
+        gurka::do_action(valhalla::Options::locate, map, {"6"}, deprecated_costing_methods[i]);
+    ASSERT_TRUE(result.info().warnings_size() != 0);
+    EXPECT_EQ(result.info().warnings_size(), 1);
+  }
 }
