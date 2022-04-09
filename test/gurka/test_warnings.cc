@@ -3,6 +3,8 @@
 
 using namespace valhalla;
 
+std::string deprecated_costing_methods[3] = {"auto_shorter", "hov", "auto_data_fix"};
+
 TEST(warnings, routes_endpoint) {
   const std::string ascii_map = R"(
           A----------B-------------C-----P
@@ -32,8 +34,8 @@ TEST(warnings, routes_endpoint) {
   const double gridsize = 100;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/routes_warnings");
-  valhalla::Api result =
-      gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "hov", {{"/best_paths", "2"}});
+  valhalla::Api result = gurka::do_action(valhalla::Options::route, map, {"A", "L"},
+                                          deprecated_costing_methods[1], {{"/best_paths", "2"}});
   ASSERT_TRUE(result.info().warnings_size() != 0);
   EXPECT_EQ(result.info().warnings_size(), 2);
 }
