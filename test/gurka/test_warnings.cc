@@ -35,10 +35,12 @@ TEST(warnings, routes_endpoint) {
   const double gridsize = 100;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/routes_warnings");
-  valhalla::Api result = gurka::do_action(valhalla::Options::route, map, {"A", "L"},
-                                          deprecated_costing_methods[1], {{"/best_paths", "2"}});
-  ASSERT_TRUE(result.info().warnings_size() != 0);
-  EXPECT_EQ(result.info().warnings_size(), 2);
+  for (int i = 0; i < 3; i++) {
+    valhalla::Api result = gurka::do_action(valhalla::Options::route, map, {"A", "L"},
+                                            deprecated_costing_methods[i], {{"/best_paths", "2"}});
+    ASSERT_TRUE(result.info().warnings_size() != 0);
+    EXPECT_EQ(result.info().warnings_size(), 2);
+  }
 }
 
 // test case for locate endpoint
