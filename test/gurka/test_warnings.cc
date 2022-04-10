@@ -107,3 +107,34 @@ TEST(isochrone_warnings, isochrone_endpoint) {
     EXPECT_EQ(result.info().warnings_size(), 1);
   }
 }
+
+// test case for transit available endpoint
+TEST(transit_available_warnings, transit_available_endpoint) {
+  const std::string ascii_map = R"(
+            A------------B-----------C--------D
+            |            |           |        |
+            |            |           |        |
+            E------------1-----------s--------H-------------------------Q
+            |            |           |        |
+            |            |           |        |
+            I------------2-----------t--------L-------------------------R
+            |            |           |        |
+            |            |           |        |  
+            M------------N-----------O--------P
+  )";
+  const gurka::ways ways = {
+      {"AD", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"EQ", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"IR", {{"highway", "motorway"}, {"name", "RT 3"}}},
+      {"MP", {{"highway", "motorway"}, {"name", "RT 4"}}},
+      {"DP", {{"highway", "motorway"}, {"name", "RT 5"}}},
+      {"AM", {{"highway", "motorway"}, {"name", "RT 6"}}},
+  };
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/transit_available_warnings");
+  valhalla::Api result = gurka::do_action(valhalla::Options::transit_available, map, {"A"}, "",
+                                          {{"/locations/0/radius", "5"}, {"/best_paths", "2"}});
+  ASSERT_FALSE(result.info().warnings_size() == 0);
+  EXPECT_EQ(result.info().warnings_size(), 1);
+}
