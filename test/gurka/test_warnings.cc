@@ -138,3 +138,32 @@ TEST(transit_available_warnings, transit_available_endpoint) {
   ASSERT_FALSE(result.info().warnings_size() == 0);
   EXPECT_EQ(result.info().warnings_size(), 1);
 }
+
+// test case for height endpoint
+TEST(height_warnings, height_endpoint) {
+  const std::string ascii_map = R"(
+            Z---------------------------------P
+            |                                 |
+            |                                 |
+            D                                 |
+            |                                 |
+            |                                 |
+            G----------------------------------
+            |            |           |        |
+            |            |           |        |  
+            N---------------------------------Q
+  )";
+  const gurka::ways ways = {
+      {"ZP", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"NQ", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"PQ", {{"highway", "motorway"}, {"name", "RT 3"}}},
+  };
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/height_warnings");
+  // using best_paths which is not necessary or the elevation API but should generate a warning
+  valhalla::Api result = gurka::do_action(valhalla::Options::height, map, {"D", "G"}, "",
+                                          {{"/resample_distance", "15"}, {"/best_paths", "2"}});
+  ASSERT_FALSE(result.info().warnings_size() == 0);
+  EXPECT_EQ(result.info().warnings_size(), 1);
+}
