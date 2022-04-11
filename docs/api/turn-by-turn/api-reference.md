@@ -329,6 +329,7 @@ Basic trip information includes:
 | `units` | The specified units of length are returned, either kilometers or miles. |
 | `language` | The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language. |
 | `locations` | Location information is returned in the same form as it is entered with additional fields to indicate the side of the street. |
+| `warnings`  | A warnings array. This array may contain descriptive text about notices of deprecated request parameters and other notices. | 
 
 The summary JSON object includes:
 
@@ -341,9 +342,6 @@ The summary JSON object includes:
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
 
-The warnings JSON array:
-
-We now include a warnings array in the JSON response to pass information such as warnings about deprecated request parameters.
 
 ### Trip legs and maneuvers
 

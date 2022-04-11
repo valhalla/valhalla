@@ -166,6 +166,7 @@ The `trace_attributes` results contains a list of edges and, optionally, the fol
 | `shape` | The [encoded polyline](../../decoding.md) of the matched path. |
 | `matched_points` | List of match results when using the `map_snap` shape match algorithm. There is a one-to-one correspondence with the input set of latitude, longitude coordinates and this list of match results. See the list of [matched point items](#matched-point-items) for details. |
 | `units` | The specified units with the request, in either kilometers or miles. |
+| `warnings`  | A warnings array. This array may contain descriptive text about notices of deprecated request parameters and other notices. | 
 
 #### Edge items
 
