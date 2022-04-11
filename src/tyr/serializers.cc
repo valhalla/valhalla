@@ -160,7 +160,7 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("warnings");
   for (int i = 0; i < api.info().warnings_size(); i++) {
-    writer(std::to_string(i), api.info().warnings(i).description());
+    writer(api.info().warnings(i).description());
   }
   writer.end_array();
 }
