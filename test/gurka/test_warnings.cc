@@ -167,3 +167,38 @@ TEST(height_warnings, height_endpoint) {
   ASSERT_FALSE(result.info().warnings_size() == 0);
   EXPECT_EQ(result.info().warnings_size(), 1);
 }
+
+// test case for map_matching endpoint
+TEST(map_matching_warnings, map_matching_endpoint) {
+  const std::string ascii_map = R"(
+      ------A-------------       X
+      |                  |       |          ---------------D----------E   
+      |     P-----G      |       |          |                         |
+      |     |     |      |       |          |                         |
+      2     |     |      C-----------------B                          | 
+      |     |     |                                                   |
+      ------S     ----------------------------------------------------F
+  )";
+
+  const gurka::ways ways = {
+      {"GF", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"AE", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"PS", {{"highway", "motorway"}, {"name", "RT 3"}}},
+  };
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/map_matching_warnings");
+  for (int i = 0; i < 3; i++) {
+    valhalla::Api trace_route_result =
+        gurka::do_action(valhalla::Options::trace_route, map, {"D", "E", "F"},
+                         deprecated_costing_methods[i]);
+    valhalla::Api trace_attributes_result =
+        gurka::do_action(valhalla::Options::trace_attributes, map,
+                         {"A", "C", "B", "E", "E", "F", "G", "P", "S"},
+                         deprecated_costing_methods[i]);
+    ASSERT_FALSE(trace_route_result.info().warnings_size() == 0);
+    EXPECT_EQ(trace_route_result.info().warnings_size(), 1);
+    ASSERT_TRUE(trace_attributes_result.info().warnings_size() != 0);
+    EXPECT_EQ(trace_attributes_result.info().warnings_size(), 1);
+  }
+}
