@@ -341,6 +341,10 @@ The summary JSON object includes:
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
 
+The warnings JSON array:
+
+We now include a warnings array in the JSON response to pass information such as warnings about deprecated request parameters.
+
 ### Trip legs and maneuvers
 
 A `trip` contains one or more `legs`. For *n* number of `break` locations, there are *n-1* legs. `Through` locations do not create separate legs.
