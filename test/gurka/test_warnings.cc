@@ -202,3 +202,38 @@ TEST(map_matching_warnings, map_matching_endpoint) {
     EXPECT_EQ(trace_attributes_result.info().warnings_size(), 1);
   }
 }
+
+// test case for matrix endpoint
+TEST(matrix_warnings, matrix_endpoint) {
+  const std::string ascii_map = R"(
+      A----------------------------------D----------E         
+      |                                  |   
+      |                                  |
+      |                                  |
+      |                                  |----------------------------G
+      |                                                               |
+      |                                                               |
+      |                                                               |
+      B----------------------------------------------------------------     
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}, {"name", "RT 1"}}},
+      {"DG", {{"highway", "motorway"}, {"name", "RT 2"}}},
+      {"BG", {{"highway", "motorway"}, {"name", "RT 3"}}},
+  };
+  const double gridsize = 100;
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_warnings");
+  Api request;
+  for (int i = 0; i < 3; i++) {
+    std::string request_str = R"({"sources":[{"lat":)" + std::to_string(map.nodes["A"].lat()) +
+                              R"(,"lon":)" + std::to_string(map.nodes["A"].lng()) +
+                              R"(}],"targets":[{"lat":)" + std::to_string(map.nodes["G"].lat()) +
+                              R"(,"lon":)" + std::to_string(map.nodes["G"].lng()) +
+                              R"(}],"costing":")" + deprecated_costing_methods[i] + R"("})";
+    ParseApi(request_str, Options::sources_to_targets, request);
+    ASSERT_FALSE(request.info().warnings_size() == 0);
+    EXPECT_EQ(request.info().warnings_size(), 1);
+  }
+}
