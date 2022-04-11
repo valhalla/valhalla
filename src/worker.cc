@@ -153,13 +153,6 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
-// fuction to add warnings to api object
-void add_warning(valhalla::Api& api, const std::string& warning_text) {
-
-  auto* warning = api.mutable_info()->mutable_warnings()->Add();
-  warning->set_description(warning_text);
-}
-
 void add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // otherwise we do what the person was asking for
@@ -524,6 +517,12 @@ void parse_contours(const rapidjson::Document& doc,
  */
 void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // if its a pbf request we want to keep the options and clear the rest
+
+  // lambda fuction to add warnings to api object
+  auto add_warning = [](Api& api, const std::string& warning_text) {
+    api.mutable_info()->mutable_warnings()->Add()->set_description(warning_text);
+  };
+
   bool pbf = false;
   if (api.has_options() && doc.ObjectEmpty()) {
     api.clear_trip();
