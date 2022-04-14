@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_SERVICE_H__
 #define __VALHALLA_SERVICE_H__
 #include <string>
+#include <unordered_map>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -74,6 +75,15 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
+
+// unordered map for warning pairs
+const std::unordered_map<int, std::string> warnings_object = {
+    {100, "auto_shorter is deprecated and will be turned into the shotest costing option"},
+    {101,
+     "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"},
+    {102, "auto_data_fix is deprecated and will be turned to ignore all the things costing option"},
+    {103, "best_paths has been deprecated. use alternates instead"},
+};
 
 // function to add warnings to proto info object
 inline void add_warning(valhalla::Api& api, const std::string& warning_text) {
