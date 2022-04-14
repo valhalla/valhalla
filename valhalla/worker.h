@@ -86,8 +86,13 @@ const std::unordered_map<int, std::string> warnings_object = {
 };
 
 // function to add warnings to proto info object
-inline void add_warning(valhalla::Api& api, const std::string& warning_text) {
-  api.mutable_info()->mutable_warnings()->Add()->set_description(warning_text);
+inline void add_warning(valhalla::Api& api, unsigned code) {
+  auto message = warnings_object.find(code);
+  if (message != warnings_object.end()) {
+    auto* warning = api.mutable_info()->mutable_warnings()->Add();
+    warning->set_description(message->second);
+    warning->set_code(message->first);
+  }
 }
 
 #ifdef HAVE_HTTP
