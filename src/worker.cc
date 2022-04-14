@@ -617,8 +617,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
 
-    // add warning for auto shorter
-    add_warning(api, "auto shorter is deprecated and will be turned into the shotest costing option");
+    add_warning(api, 100);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -634,9 +633,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "hov") {
 
     // add warning for hov costing
-    add_warning(
-        api,
-        "hov costing is deprecated and will be turned into auto costing with hov2=true costing option");
+    add_warning(api, 101);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -652,9 +649,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "auto_data_fix") {
 
     // warning for auto data fix
-    add_warning(
-        api,
-        "auto_data_fix is deprecated and will be turned to ignore all the things costing option");
+    add_warning(api, 102);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -1048,7 +1043,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
   // add warning for deprecated best_paths
   if (rapidjson::get_optional<std::string>(doc, "/best_paths")) {
-    add_warning(api, "best_paths has been deprecated. use alternates instead");
+    add_warning(api, 103);
   }
 
   // how many alternates are desired, default to none and if its multi point its also none
