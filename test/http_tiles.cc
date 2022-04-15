@@ -18,12 +18,12 @@
 using namespace valhalla;
 
 zmq::context_t context;
+const std::string tile_remote_address{"127.0.0.1:48004"};
 
 std::string get_tile_url() {
   std::ostringstream oss;
-  oss << test_tile_server_t::server_url << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
+  oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
       << "?version=%version&access_token=%token";
-
   return oss.str();
 }
 
@@ -104,7 +104,7 @@ struct TestTileDownloadData {
     return test_tile_ids.back();
   }
 
-  const std::string tile_url_base = "127.0.0.1:8004/route-tile/v1/";
+  const std::string tile_url_base = tile_remote_address + "/route-tile/v1/";
   const std::string request_params = "?version=%version&access_token=%token";
   const std::string full_tile_url_pattern =
       tile_url_base + baldr::GraphTile::kTilePathPattern + request_params;
@@ -271,7 +271,9 @@ class HttpTilesEnv : public ::testing::Environment {
 public:
   void SetUp() override {
     // start a file server for utrecht tiles
-    test_tile_server_t::start("test/data/utrecht_tiles", context);
+    valhalla::test_tile_server_t server;
+    server.set_url(tile_remote_address);
+    server.start("test/data/utrecht_tiles", context);
   }
 
   void TearDown() override {

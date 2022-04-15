@@ -622,6 +622,23 @@ TEST(UtilMidgard, TestTangentAngle) {
   EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
 }
 
+TEST(UtilMidgard, TestTangentAngleOnSegment) {
+  std::vector<PointLL> shape{{-122.839104f, 38.3988266f},
+                             {-122.839539f, 38.3988342f},
+                             {-122.839546f, 38.3990479f}};
+  const float kTestDistance = length(shape);
+
+  float expected = shape[1].Heading(shape[2]);
+  // calculate the angle taking into account only second and third points on the curve
+  float tang = tangent_angle(1, shape[1], shape, kTestDistance, true, 1, 2);
+  EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
+
+  expected = shape[1].Heading(shape[0]);
+  // calculate the angle taking into account only first and second points on the curve
+  tang = tangent_angle(1, shape[1], shape, kTestDistance, false, 0, 1);
+  EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
+}
+
 TEST(UtilMidgard, TestExpandLocation) {
   // Expand to create a box approx 200x200 meters
   PointLL loc(-77.0f, 39.0f);

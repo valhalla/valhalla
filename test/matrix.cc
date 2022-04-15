@@ -30,7 +30,7 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
+  SimpleCost(const Costing& options) : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
@@ -79,7 +79,7 @@ public:
 
   Cost EdgeCost(const DirectedEdge* edge,
                 const graph_tile_ptr& /*tile*/,
-                const uint32_t /*seconds*/,
+                const baldr::TimeInfo& /*time_info*/,
                 uint8_t& /*flow_sources*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
@@ -116,7 +116,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
+cost_ptr_t CreateSimpleCost(const Costing& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
@@ -128,10 +128,10 @@ cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
-    {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
-    {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},     {"taxi", 43200.0f},
+    {"auto", 43200.0f},      {"auto_shorter", 43200.0f},  {"bicycle", 7200.0f},
+    {"bus", 43200.0f},       {"motor_scooter", 14400.0f}, {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f}, {"transit", 14400.0f},       {"truck", 43200.0f},
+    {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
@@ -142,10 +142,11 @@ void adjust_scores(Options& options) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
+          if (location.skip_ranking_candidates())
             candidate.set_distance(0);
           // scale the score to favor closer results more
           else
@@ -157,8 +158,9 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
           if (candidate.distance() > max_score->second)
@@ -225,13 +227,13 @@ TEST(Matrix, test_matrix) {
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results =
       cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                 mode_costing, TravelMode::kDrive, 400000.0);
+                                 mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
@@ -244,7 +246,7 @@ TEST(Matrix, test_matrix) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
@@ -269,13 +271,13 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                       reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -288,7 +290,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +

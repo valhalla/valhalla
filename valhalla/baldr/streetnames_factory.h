@@ -6,6 +6,7 @@
 #include <vector>
 
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -16,6 +17,10 @@ public:
 
   static std::unique_ptr<StreetNames> Create(const std::string& country_code,
                                              const std::vector<std::pair<std::string, bool>>& names);
+
+  static std::unique_ptr<StreetNames>
+  Create(const std::string& country_code,
+         const google::protobuf::RepeatedPtrField<valhalla::StreetName>& names);
 };
 
 } // namespace baldr

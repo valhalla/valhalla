@@ -121,7 +121,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void Clear();
+  void clear();
 
 protected:
   // Number of destinations that have been found and settled (least cost path

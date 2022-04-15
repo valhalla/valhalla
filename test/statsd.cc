@@ -36,7 +36,7 @@ public:
     valhalla_exception_t e(code);
     if (!e.statsd_key.empty()) {
       Api request;
-      jsonify_error(e, request);
+      serialize_error(e, request);
       service_worker_t::enqueue_statistics(request);
       service_worker_t::cleanup();
     }
@@ -50,6 +50,9 @@ public:
     stat->set_type(count);
     service_worker_t::enqueue_statistics(request);
     service_worker_t::cleanup();
+  }
+  std::string service_name() const override {
+    return "test";
   }
 #ifdef HAVE_HTTP
   virtual prime_server::worker_t::result_t

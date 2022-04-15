@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "filesystem.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -50,24 +51,24 @@ struct EnumHasher {
   }
 };
 const std::unordered_map<valhalla::midgard::logging::LogLevel, std::string, EnumHasher>
-    uncolored{{valhalla::midgard::logging::LogLevel::ERROR, " [ERROR] "},
-              {valhalla::midgard::logging::LogLevel::WARN, " [WARN] "},
-              {valhalla::midgard::logging::LogLevel::INFO, " [INFO] "},
-              {valhalla::midgard::logging::LogLevel::DEBUG, " [DEBUG] "},
-              {valhalla::midgard::logging::LogLevel::TRACE, " [TRACE] "}};
+    uncolored{{valhalla::midgard::logging::LogLevel::LogError, " [ERROR] "},
+              {valhalla::midgard::logging::LogLevel::LogWarn, " [WARN] "},
+              {valhalla::midgard::logging::LogLevel::LogInfo, " [INFO] "},
+              {valhalla::midgard::logging::LogLevel::LogDebug, " [DEBUG] "},
+              {valhalla::midgard::logging::LogLevel::LogTrace, " [TRACE] "}};
 const std::unordered_map<valhalla::midgard::logging::LogLevel, std::string, EnumHasher>
-    colored{{valhalla::midgard::logging::LogLevel::ERROR, " \x1b[31;1m[ERROR]\x1b[0m "},
-            {valhalla::midgard::logging::LogLevel::WARN, " \x1b[33;1m[WARN]\x1b[0m "},
-            {valhalla::midgard::logging::LogLevel::INFO, " \x1b[32;1m[INFO]\x1b[0m "},
-            {valhalla::midgard::logging::LogLevel::DEBUG, " \x1b[34;1m[DEBUG]\x1b[0m "},
-            {valhalla::midgard::logging::LogLevel::TRACE, " \x1b[37;1m[TRACE]\x1b[0m "}};
+    colored{{valhalla::midgard::logging::LogLevel::LogError, " \x1b[31;1m[ERROR]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::LogWarn, " \x1b[33;1m[WARN]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::LogInfo, " \x1b[32;1m[INFO]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::LogDebug, " \x1b[34;1m[DEBUG]\x1b[0m "},
+            {valhalla::midgard::logging::LogLevel::LogTrace, " \x1b[37;1m[TRACE]\x1b[0m "}};
 #ifdef __ANDROID__
 const std::unordered_map<valhalla::midgard::logging::LogLevel, android_LogPriority, EnumHasher>
-    android_levels{{valhalla::midgard::logging::LogLevel::ERROR, ANDROID_LOG_ERROR},
-                   {valhalla::midgard::logging::LogLevel::WARN, ANDROID_LOG_WARN},
-                   {valhalla::midgard::logging::LogLevel::INFO, ANDROID_LOG_INFO},
-                   {valhalla::midgard::logging::LogLevel::DEBUG, ANDROID_LOG_DEBUG},
-                   {valhalla::midgard::logging::LogLevel::TRACE, ANDROID_LOG_VERBOSE}};
+    android_levels{{valhalla::midgard::logging::LogLevel::LogError, ANDROID_LOG_ERROR},
+                   {valhalla::midgard::logging::LogLevel::LogWarn, ANDROID_LOG_WARN},
+                   {valhalla::midgard::logging::LogLevel::LogInfo, ANDROID_LOG_INFO},
+                   {valhalla::midgard::logging::LogLevel::LogDebug, ANDROID_LOG_DEBUG},
+                   {valhalla::midgard::logging::LogLevel::LogTrace, ANDROID_LOG_VERBOSE}};
 #endif
 
 } // namespace
@@ -238,7 +239,18 @@ protected:
         file.close();
       } catch (...) {}
       try {
+        // Ensure directory for log file exists. Otherwise, log file creation is silently skipped.
+        // e.g. if "mjolnir.logging.file_name" points to location inside "mjolnir.tile_dir"
+        const auto parent_dir = filesystem::path(file_name).parent_path();
+        if (!filesystem::is_directory(parent_dir)) {
+          if (!filesystem::create_directories(parent_dir)) {
+            throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
+          }
+        }
         file.open(file_name, std::ofstream::out | std::ofstream::app);
+        if (file.fail()) {
+          throw std::runtime_error("Cannot create log file: " + file_name);
+        }
         last_reopen = std::chrono::system_clock::now();
       } catch (std::exception& e) {
         try {

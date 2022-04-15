@@ -18,11 +18,12 @@
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))
-// Because we now throw exceptions, we need to turn of RAPIDJSON_NOEXCEPT
+// Because we now throw exceptions, we need to turn off RAPIDJSON_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
 // Enbale std::string overloads
 #define RAPIDJSON_HAS_STDSTRING 1
 
+#include <rapidjson/allocators.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
@@ -130,6 +131,15 @@ template <typename V> inline const rapidjson::Value& get_child(const V& v, const
   const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
   if (!ptr) {
     throw std::runtime_error(std::string("No child: ") + source);
+  }
+  return *ptr;
+}
+
+template <typename V>
+inline const rapidjson::Value& get_child(const V& v, const char* source, const rapidjson::Value& t) {
+  const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
+  if (!ptr) {
+    return t;
   }
   return *ptr;
 }

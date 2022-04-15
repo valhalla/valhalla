@@ -1,8 +1,8 @@
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
+#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -29,64 +29,82 @@ using namespace valhalla::loki;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
-namespace bpo = boost::program_options;
-
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description poptions(
-      "valhalla_run_isochrone " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_run_isochrone [options]\n"
-      "\n"
-      "valhalla_run_isochrone is a simple command line test tool for generating an isochrone. "
-      "\n"
-      "Use the -j option for specifying the location and isocrhone options "
-      "\n"
-      "\n");
-  std::string json, config, filename;
-  poptions.add_options()("help,h", "Print this help message.")("version,v",
-                                                               "Print the version of this software.")(
-      "json,j", boost::program_options::value<std::string>(&json),
-      "JSON Example: "
-      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984}],\"costing\":"
-      "\"auto\",\"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}'")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config),
-       "Valhalla configuration file")("file,f", bpo::value<std::string>(&filename),
-                                      "Geojson output file name.");
+  // args
+  std::string json_str, config;
+  std::string filename = "";
+  boost::property_tree::ptree pt;
 
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_run_isochrone",
+      "valhalla_run_isochrone " VALHALLA_VERSION "\n\n"
+      "valhalla_run_isochrone is a simple command line test tool for generating an isochrone.\n"
+      "Use the -j option for specifying the location and isocrhone options.\n\n");
 
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return EXIT_FAILURE;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("j,json", "JSON Example: "
+        "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984}],\"costing\":"
+        "\"auto\",\"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}'", cxxopts::value<std::string>())
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("f,file", "GeoJSON file name. If omitted program will print to stdout.", cxxopts::value<std::string>());
+    // clang-format on
 
-  // Verify args. Make sure JSON payload exists.
-  if (vm.count("help")) {
-    std::cout << poptions << "\n";
-    return EXIT_SUCCESS;
-  }
-  if (vm.count("version")) {
-    std::cout << "valhalla_run_isochrone " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-  if (vm.count("json") == 0) {
-    std::cerr << "A JSON format request must be present."
-              << "\n";
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_run_isochrone " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
+      config = result["config"].as<std::string>();
+    } else {
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
+      return EXIT_FAILURE;
+    }
+
+    // parse the config
+    rapidjson::read_json(config.c_str(), pt);
+
+    // configure logging
+    boost::optional<boost::property_tree::ptree&> logging_subtree =
+        pt.get_child_optional("thor.logging");
+    if (logging_subtree) {
+      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
+                                                     std::unordered_map<std::string, std::string>>(
+          logging_subtree.get());
+      valhalla::midgard::logging::Configure(logging_config);
+    }
+
+    if (!result.count("json")) {
+      std::cerr << "A JSON format request must be present."
+                << "\n";
+      return EXIT_FAILURE;
+    }
+    json_str = result["json"].as<std::string>();
+
+    if (result.count("file")) {
+      filename = result["file"].as<std::string>();
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
 
   // Process json request
   Api request;
-  ParseApi(json, valhalla::Options::isochrone, request);
+  ParseApi(json_str, valhalla::Options::isochrone, request);
   auto& options = *request.mutable_options();
 
   // Get the denoise parameter
@@ -98,7 +116,7 @@ int main(int argc, char* argv[]) {
 
   // Get generalize parameter
   float generalize = kOptimalGeneralization;
-  if (options.has_generalize()) {
+  if (options.has_generalize_case()) {
     generalize = options.generalize();
   }
 
@@ -108,17 +126,14 @@ int main(int argc, char* argv[]) {
   // Show locations
   bool show_locations = options.show_locations();
 
-  // reverse (arrive-by) isochrone - trigger if date time type is arrive by
-  // TODO - is this how we want to expose in the service? only support reverse
-  // for time dependent isochrones? or do we also want a flag to support for
-  // general case with no time?
-  bool reverse = options.date_time_type() == valhalla::Options::arrive_by;
+  // reverse or time dependent (arrive-by) isochrone
+  bool reverse = options.reverse() || options.date_time_type() == valhalla::Options::arrive_by;
 
   // Get Contours
   std::vector<GriddedData<2>::contour_interval_t> contour_times;
   float max_minutes = std::numeric_limits<float>::min();
   for (const auto& contour : options.contours()) {
-    if (contour.has_time()) {
+    if (contour.has_time_case()) {
       max_minutes = std::max(max_minutes, contour.time());
       contour_times.emplace_back(0, contour.time(), "time", contour.color());
     }
@@ -140,20 +155,6 @@ int main(int argc, char* argv[]) {
     LOG_INFO("No avoid locations");
   }
 
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
-
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
 
@@ -161,12 +162,12 @@ int main(int argc, char* argv[]) {
   CostFactory factory;
 
   // Get type of route - this provides the costing method to use.
-  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing_type());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
   valhalla::TripLeg trip_path;
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find locations
@@ -230,13 +231,12 @@ int main(int argc, char* argv[]) {
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
-  std::cout << std::endl;
-  if (vm.count("file")) {
+  if (!filename.empty()) {
     std::ofstream geojsonOut(filename, std::ofstream::out);
     geojsonOut << geojson;
     geojsonOut.close();
   } else {
-    std::cout << geojson << std::endl;
+    std::cout << "\n" << geojson << std::endl;
   }
 
   // Shutdown protocol buffer library

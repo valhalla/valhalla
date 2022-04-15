@@ -80,7 +80,11 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+  cs.SetTotalBytesLimit(limit);
+#else
   cs.SetTotalBytesLimit(limit, limit);
+#endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
@@ -98,7 +102,11 @@ Transit read_pbf(const std::string& file_name) {
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+  cs.SetTotalBytesLimit(limit);
+#else
   cs.SetTotalBytesLimit(limit, limit);
+#endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
@@ -127,7 +135,11 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   if (!filesystem::exists(transit_tile.parent_path())) {
     filesystem::create_directories(transit_tile.parent_path());
   }
+#if GOOGLE_PROTOBUF_VERSION >= 3001000
+  auto size = tile.ByteSizeLong();
+#else
   auto size = tile.ByteSize();
+#endif
   valhalla::midgard::mem_map<char> buffer;
   buffer.create(transit_tile.string(), size);
   if (!tile.SerializeToArray(buffer.get(), size)) {

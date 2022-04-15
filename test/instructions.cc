@@ -5,6 +5,7 @@
 
 #include "baldr/rapidjson_utils.h"
 #include "odin/directionsbuilder.h"
+#include "odin/markup_formatter.h"
 #include "tyr/serializers.h"
 
 #include "proto/api.pb.h"
@@ -17,6 +18,44 @@
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
+
+// this is useful when you modify the Options proto and need to restore it
+//#include "worker.h"
+// void fix_request(const std::string& filename, valhalla::Api& request) {
+//  auto txt = filename;
+//  txt.replace(txt.size() - 3, 3, "txt");
+//  std::string req_txt = test::load_binary_file(txt);
+//  req_txt.pop_back();
+//  req_txt.pop_back();
+//  req_txt = req_txt.substr(4);
+//
+//  // valhalla::Api api;
+//  // valhalla::ParseApi(req_txt, valhalla::Options::route, api);
+//  // request.mutable_options()->CopyFrom(api.options());
+//
+//  for (auto& loc : *request.mutable_options()->mutable_locations()) {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  for (auto& loc : *request.mutable_trip()->mutable_routes(0)->mutable_legs(0)->mutable_location())
+//  {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  std::ofstream f(filename);
+//  auto buf = request.SerializeAsString();
+//  f.write(buf.data(), buf.size());
+//}
 
 using namespace valhalla::baldr;
 
@@ -40,8 +79,10 @@ void test_instructions(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();
@@ -109,11 +150,13 @@ void test_osrm_maneuver(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Serialize to osrm json string
   auto json_str = valhalla::tyr::serializeDirections(request);
@@ -154,11 +197,13 @@ void test_osrm_destinations(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Set osrm format
   request.mutable_options()->set_format(valhalla::Options_Format_osrm);
 
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Serialize to osrm json string
   auto json_str = valhalla::tyr::serializeDirections(request);
@@ -320,7 +365,6 @@ TEST(Instructions, validate_exit_instructions) {
                     expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
                     "Take exit 8 onto A120(W)|A120(W).", "", "Take exit 8.",
                     "Take exit 8 onto A120(W)|A120(W).", "");
-
   expected_maneuvers_size = 4;
   // Test exit non-motorway in PA
   test_instructions({VALHALLA_SOURCE_DIR "test/pinpoints/instructions/exit_right_nonmotorway_pa.pbf"},

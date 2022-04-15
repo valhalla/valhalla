@@ -37,6 +37,7 @@ const std::string tile_dir = "test/data/graphbuilder_tiles";
 const size_t id_table_size = 1000;
 
 const std::string access_file = "test_access_harrisburg.bin";
+const std::string pronunciation_file = "test_pronunciation_harrisburg.bin";
 const std::string bss_file = "test_bss_nodes_harrisburg.bin";
 const std::string edges_file = "test_edges_harrisburg.bin";
 const std::string from_restriction_file = "test_from_complex_restrictions_harrisburg.bin";
@@ -63,7 +64,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
@@ -85,7 +86,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
@@ -99,7 +100,7 @@ TEST(Graphbuilder, TestDEBuilderLength) {
   ASSERT_NO_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
                                                    valhalla::midgard::length(shape1), 1, 1,
                                                    Use::kRoad, baldr::RoadClass::kMotorway, 0, false,
-                                                   0, 0, false));
+                                                   false, false, false, 0, 0, false));
 
   std::vector<PointLL> shape2{{-160.096619f, 21.997619f},
                               {-90.037697f, 41.004531},
@@ -107,7 +108,8 @@ TEST(Graphbuilder, TestDEBuilderLength) {
                               {-90.037697f, 41.004531}};
   ASSERT_THROW(DirectedEdgeBuilder edge_builder({}, GraphId(123, 2, 8), true,
                                                 valhalla::midgard::length(shape2), 1, 1, Use::kRoad,
-                                                baldr::RoadClass::kMotorway, 0, false, 0, 0, false),
+                                                baldr::RoadClass::kMotorway, 0, false, false, false,
+                                                false, 0, 0, false),
                std::runtime_error);
 }
 
@@ -120,7 +122,7 @@ public:
     const auto& mjolnir_config = config.get_child("mjolnir");
     const std::vector<std::string>& input_files = {pbf_file};
     OSMData osmdata = PBFGraphParser::ParseWays(mjolnir_config, input_files, ways_file,
-                                                way_nodes_file, access_file);
+                                                way_nodes_file, access_file, pronunciation_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
     PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);

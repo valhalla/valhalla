@@ -24,7 +24,7 @@ using namespace valhalla::thor;
 
 namespace {
 
-using end_edge_t = std::pair<valhalla::Location::PathEdge, float>;
+using end_edge_t = std::pair<valhalla::PathEdge, float>;
 using end_node_t = std::unordered_map<GraphId, end_edge_t>;
 
 // Data type to record edges and transitions that have been followed for each shape
@@ -60,10 +60,9 @@ float length_comparison(const float length, const bool exact_match) {
 //
 // Get a map of end edges and the start node
 // of each edge. This is used to terminate the edge walking method.
-end_node_t GetEndEdges(GraphReader& reader,
-                       const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
+end_node_t GetEndEdges(GraphReader& reader, const valhalla::Location& destination) {
   end_node_t end_nodes;
-  for (const auto& edge : correlated.rbegin()->path_edges()) {
+  for (const auto& edge : destination.correlation().edges()) {
     // If destination is at a node - skip any outbound edge
     GraphId graphid(edge.graph_id());
     if (edge.begin_node() || !graphid.Is_Valid()) {
@@ -188,8 +187,7 @@ bool expand_from_node(const mode_costing_t& mode_costing,
         auto transition_cost = costing->TransitionCost(de, nodeinfo, prev_edge_label);
         uint8_t flow_sources;
         auto cost =
-            transition_cost +
-            costing->EdgeCost(de, end_node_tile, offset_time_info.second_of_week, flow_sources);
+            transition_cost + costing->EdgeCost(de, end_node_tile, offset_time_info, flow_sources);
         elapsed += cost;
         // overwrite time with timestamps
         if (use_timestamps)
@@ -265,7 +263,7 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
   auto time_info = TimeInfo::invalid();
-  for (const auto& e : options.locations(0).path_edges()) {
+  for (const auto& e : options.locations(0).correlation().edges()) {
     GraphId graphid(e.graph_id());
     if (!graphid.Is_Valid() || !reader.GetGraphTile(graphid, tile))
       continue;
@@ -277,7 +275,7 @@ valhalla::baldr::TimeInfo init_time_info(valhalla::baldr::GraphReader& reader,
       if (!tz)
         continue;
       // if its timestamp based we need to convert that to a date time string on the location
-      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+      if (options.shape(0).date_time().empty() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }
@@ -328,7 +326,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
   // Process and validate end edges (can be more than 1). Create a map of
   // the end edges' start nodes and the edge information.
   // TODO: when we want to do more than one leg we need to create correlated path_edges on the fly
-  auto end_nodes = GetEndEdges(reader, options.locations());
+  const auto& destination = *options.locations().rbegin();
+  auto end_nodes = GetEndEdges(reader, destination);
 
   // We support either the epoch timestamp that came with the trace point or
   // a local date time which we convert to epoch by finding the first timezone
@@ -337,7 +336,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
   // Perform the edge walk by starting with one of the candidate edges and walking from it
   // if that walk fails we fall back to another candidate edge until we exhaust the candidates
-  for (const auto& edge : options.locations().begin()->path_edges()) {
+  for (const auto& edge : options.locations().begin()->correlation().edges()) {
     // If origin is at a node - skip any inbound edge
     if (edge.end_node()) {
       continue;
@@ -392,8 +391,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Get the cost of traversing the edge
         uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile,
-                                                                  offset_time_info.second_of_week,
+        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, offset_time_info,
                                                                   flow_sources) *
                    (1 - edge.percent_along());
         // overwrite time with timestamps
@@ -427,20 +425,41 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         if (expand_from_node(mode_costing, mode, reader, options.shape(), distances, time_info,
                              options.use_timestamps(), index, end_node_tile, de->endnode(), end_nodes,
                              prev_edge_label, elapsed, path_infos, false, end_node, followed_edges)) {
-          // If node equals stop node then when are done expanding - get the matching end edge
+          // Find the edge we stopped on at the destination, if we didnt find it the greedy algorithm
+          // hit a local maximum (made the wrong choice), TODO: we could rollback and try more
           auto n = end_nodes.find(end_node);
           if (n == end_nodes.end()) {
             return false;
           }
 
+          // When the route ends at a node in the graph we have an ambiguous case. Multiple
+          // destination edge candidates could have ended at this node but we use an unordered_map
+          // instead of a multimap, which means when we go to insert the other candidates that end
+          // there, they dont get inserted, only the first one does. This is all we really need for
+          // finding the path but it means that once we do find the path to that node, the edge that
+          // was in the value portion of the map entry might be the wrong edge. So here we need to
+          // go find the edge candidate that was actually used in the path
+          auto found_edge = destination.correlation().edges().end();
+          if (n->second.first.end_node()) {
+            found_edge = std::find_if(destination.correlation().edges().begin(),
+                                      destination.correlation().edges().end(),
+                                      [&path_infos](const auto& e) -> bool {
+                                        return e.graph_id() == path_infos.back().edgeid;
+                                      });
+            if (found_edge == destination.correlation().edges().end()) {
+              throw std::logic_error("Could not find destination candidate in shape-walked path");
+            }
+          }
+
           // TODO: when we actually have more than one leg, we have to do when we break legs
           // Store the matching edge candidates in the shapes locations
-          const auto& end_edge = n->second.first;
-          options.mutable_shape(0)->mutable_path_edges()->Add()->CopyFrom(end_edge);
-          options.mutable_shape()->rbegin()->mutable_path_edges()->Add()->CopyFrom(end_edge);
+          const auto& end_edge =
+              found_edge == destination.correlation().edges().end() ? n->second.first : *found_edge;
+          options.mutable_shape(0)->mutable_correlation()->mutable_edges()->Add()->CopyFrom(edge);
+          options.mutable_shape()->rbegin()->mutable_correlation()->mutable_edges()->Add()->CopyFrom(
+              end_edge);
 
-          // If the end edge is at a node then we are done (no partial time
-          // along a destination edge)
+          // If the end edge is at a node then we are done (no partial time along a destination edge)
           if (end_edge.end_node()) {
             return true;
           }
@@ -459,10 +478,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           nodeinfo = end_edge_tile->node(n->first);
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
           uint8_t flow_sources;
-          elapsed +=
-              transition_cost + costing->EdgeCost(end_de, end_edge_tile,
-                                                  offset_time_info.second_of_week, flow_sources) *
-                                    end_edge.percent_along();
+          elapsed += transition_cost +
+                     costing->EdgeCost(end_de, end_edge_tile, offset_time_info, flow_sources) *
+                         end_edge.percent_along();
           // overwrite time with timestamps
           if (options.use_timestamps())
             elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
@@ -483,10 +501,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
       if (end.second.first.graph_id() == edge.graph_id()) {
         // Update the elapsed time based on edge cost
         uint8_t flow_sources;
-        elapsed +=
-            mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile,
-                                                           time_info.second_of_week, flow_sources) *
-            (end.second.first.percent_along() - edge.percent_along());
+        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, time_info,
+                                                                  flow_sources) *
+                   (end.second.first.percent_along() - edge.percent_along());
         if (options.use_timestamps())
           elapsed.secs = options.shape().rbegin()->time() - options.shape(0).time();
 

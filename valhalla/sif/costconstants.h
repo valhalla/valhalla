@@ -20,6 +20,8 @@ enum class TravelMode : uint8_t {
   kPublicTransit = 3,
   kMaxTravelMode = 4
 };
+// To avoid collisions with pbf version
+using travel_mode_t = TravelMode;
 
 // Vehicle travel type
 enum class VehicleType : uint8_t {

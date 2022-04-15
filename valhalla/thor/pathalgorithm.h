@@ -32,8 +32,10 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm()
-      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_() {
+  PathAlgorithm(uint32_t max_reserved_labels_count, bool clear_reserved_memory)
+      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_(),
+        max_reserved_labels_count_(max_reserved_labels_count),
+        clear_reserved_memory_(clear_reserved_memory) {
   }
 
   PathAlgorithm(const PathAlgorithm&) = delete;
@@ -124,8 +126,8 @@ public:
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
    *                             on a given edge
    */
-  using expansion_callback_t =
-      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -143,6 +145,11 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
+  uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
+
   /**
    * Check for path completion along the same edge. Edge ID in question
    * is along both an origin and destination and origin shows up at the
@@ -155,9 +162,9 @@ protected:
   virtual bool IsTrivial(const baldr::GraphId& edgeid,
                          const valhalla::Location& origin,
                          const valhalla::Location& destination) const {
-    for (const auto& destination_edge : destination.path_edges()) {
+    for (const auto& destination_edge : destination.correlation().edges()) {
       if (destination_edge.graph_id() == edgeid) {
-        for (const auto& origin_edge : origin.path_edges()) {
+        for (const auto& origin_edge : origin.correlation().edges()) {
           if (origin_edge.graph_id() == edgeid &&
               origin_edge.percent_along() <= destination_edge.percent_along()) {
             return true;

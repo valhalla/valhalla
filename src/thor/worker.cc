@@ -70,10 +70,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
       multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
       timedep_reverse(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
-      matcher_factory(config, graph_reader), reader(graph_reader), controller{} {
-  // If we weren't provided with a graph reader make our own
-  if (!reader)
-    reader = matcher_factory.graphreader();
+      reader(graph_reader ? graph_reader
+                          : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
+      matcher_factory(config, reader), controller{} {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -83,7 +82,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
         kv.first == "skadi" || kv.first == "trace" || kv.first == "isochrone" ||
-        kv.first == "centroid") {
+        kv.first == "centroid" || kv.first == "status") {
       continue;
     }
 
@@ -177,10 +176,10 @@ thor_worker_t::work(const std::list<zmq::message_t>& job,
     }
   } catch (const valhalla_exception_t& e) {
     LOG_WARN("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error(e, info, request);
+    result = serialize_error(e, info, request);
   } catch (const std::exception& e) {
     LOG_ERROR("400::" + std::string(e.what()) + " request_id=" + std::to_string(info.id));
-    result = jsonify_error({499, std::string(e.what())}, info, request);
+    result = serialize_error({499, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client
@@ -221,7 +220,7 @@ void run_service(const boost::property_tree::ptree& config) {
 std::string thor_worker_t::parse_costing(const Api& request) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
-  auto costing = options.costing();
+  auto costing = options.costing_type();
   auto costing_str = Costing_Enum_Name(costing);
   mode_costing = factory.CreateModeCosting(options, mode);
   return costing_str;
@@ -234,10 +233,11 @@ void thor_worker_t::parse_locations(Api& request) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates()) {
+          if (location.skip_ranking_candidates()) {
             candidate.set_distance(0);
             // scale the score to favor closer results more
           } else {
@@ -251,8 +251,9 @@ void thor_worker_t::parse_locations(Api& request) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
           if (candidate.distance() > max_score->second) {
@@ -277,10 +278,10 @@ void thor_worker_t::parse_measurements(const Api& request) {
     for (const auto& pt : options.shape()) {
       trace.emplace_back(
           meili::Measurement{{pt.ll().lng(), pt.ll().lat()},
-                             pt.has_accuracy() ? pt.accuracy()
-                                               : config.emission_cost.gps_accuracy_meters,
-                             pt.has_radius() ? pt.radius()
-                                             : config.candidate_search.search_radius_meters,
+                             pt.has_accuracy_case() ? pt.accuracy()
+                                                    : config.emission_cost.gps_accuracy_meters,
+                             pt.has_radius_case() ? pt.radius()
+                                                  : config.candidate_search.search_radius_meters,
                              pt.time(),
                              PathLocation::fromPBF(pt.type())});
     }
@@ -292,45 +293,11 @@ void thor_worker_t::log_admin(const valhalla::TripLeg& trip_path) {
   std::unordered_set<std::string> country_iso;
   if (trip_path.admin_size() > 0) {
     for (const auto& admin : trip_path.admin()) {
-      if (admin.has_state_code()) {
+      if (!admin.state_code().empty()) {
         state_iso.insert(admin.state_code());
       }
-      if (admin.has_country_code()) {
+      if (!admin.country_code().empty()) {
         country_iso.insert(admin.country_code());
-      }
-    }
-  }
-}
-
-/*
- * Apply attribute filters from the request to the AttributesController. These filters
- * allow including or excluding specific attributes from the response in route,
- * trace_route, and trace_attributes actions.
- */
-void thor_worker_t::parse_filter_attributes(const Api& request, bool is_strict_filter) {
-  // Set default controller
-  controller = AttributesController();
-  const auto& options = request.options();
-
-  if (options.has_filter_action()) {
-    switch (options.filter_action()) {
-      case (FilterAction::include): {
-        if (is_strict_filter)
-          controller.disable_all();
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = true;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
-      }
-      case (FilterAction::exclude): {
-        for (const auto& filter_attribute : options.filter_attributes()) {
-          try {
-            controller.attributes.at(filter_attribute) = false;
-          } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
-        }
-        break;
       }
     }
   }
@@ -344,6 +311,9 @@ void thor_worker_t::cleanup() {
   multi_modal_astar.Clear();
   bss_astar.Clear();
   trace.clear();
+  costmatrix_.clear();
+  time_distance_matrix_.clear();
+  time_distance_bss_matrix_.clear();
   isochrone_gen.Clear();
   centroid_gen.Clear();
   matcher_factory.ClearFullCache();

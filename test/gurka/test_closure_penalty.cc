@@ -172,9 +172,6 @@ TEST_P(ClosurePenalty, AvoidClosure) {
             .str();
 
     std::vector<std::string> expected_path = {"QT", "TU", "RU", "OR", "LO", "IL", "FI", "CF"};
-    if (costing == "motor_scooter") {
-      expected_path = {"QT", "QR", "OR", "LO", "IL", "FI", "CF"};
-    }
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
     gurka::assert::raw::expect_path(result, expected_path);
@@ -193,9 +190,6 @@ TEST_P(ClosurePenalty, AvoidClosure) {
 
     std::vector<std::string> expected_path = {"QT", "TU", "RU", "OR", "LO",
                                               "IL", "FI", "CF", "BC", "BE"};
-    if (costing == "motor_scooter") {
-      expected_path = {"QT", "NQ", "KN", "HK", "EH", "BE"};
-    }
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
     gurka::assert::raw::expect_path(result, expected_path);
@@ -212,9 +206,6 @@ TEST_P(ClosurePenalty, AvoidClosure) {
             .str();
 
     std::vector<std::string> expected_path = {"QT", "ST", "PS", "MP", "JM", "GJ", "DG", "AD"};
-    if (costing == "motor_scooter") {
-      expected_path = {"QT", "PQ", "MP", "JM", "GJ", "DG", "AD"};
-    }
     auto result =
         gurka::do_action(valhalla::Options::route, closure_map, req_include_closures, reader);
     gurka::assert::raw::expect_path(result, expected_path);
@@ -239,7 +230,7 @@ TEST_P(ClosurePenalty, AvoidClosure) {
 std::vector<std::string> buildParams() {
   // Return the different costings we want to test closures against
   return {
-      "auto", "motorcycle", "motor_scooter", "bus", "truck", "hov", "taxi",
+      "auto", "motorcycle", "motor_scooter", "bus", "truck", "taxi",
   };
 }
 

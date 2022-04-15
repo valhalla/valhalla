@@ -10,8 +10,6 @@
 #include <iostream>
 #include <map>
 #include <ostream>
-#include <spatialite.h>
-#include <sqlite3.h>
 #include <sstream>
 #include <string>
 #include <unordered_map>

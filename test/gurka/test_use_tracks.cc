@@ -4,8 +4,8 @@
 
 using namespace valhalla;
 
-const std::vector<std::string>& costing = {"auto",  "hov",           "taxi",       "bus",
-                                           "truck", "motor_scooter", "motorcycle", "pedestrian"};
+const std::vector<std::string>& costing = {"auto",          "taxi",       "bus",       "truck",
+                                           "motor_scooter", "motorcycle", "pedestrian"};
 
 void validate_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -53,7 +53,7 @@ gurka::map UseTracksTest::use_tracks_map = {};
 
 TEST_F(UseTracksTest, test_default_value) {
   for (const auto& c : costing)
-    if (c == "auto" || c == "hov" || c == "taxi" || c == "bus" || c == "truck")
+    if (c == "auto" || c == "taxi" || c == "bus" || c == "truck")
       // avoid tracks by default; use tracks only if the route starts or ends at 'track' edge
       validate_path(gurka::do_action(valhalla::Options::route, use_tracks_map, {"1", "2"}, c),
                     {"AB", "BC", "CD", "DE", "EF"});

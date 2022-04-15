@@ -56,8 +56,6 @@ protected:
                                               costing, shortest_options);
     float shortest_l = getLength(shortest);
 
-    std::cout << "Lenghts: " << fastest_l << ", " << shortest_l << EOF;
-
     gurka::assert::raw::expect_path(fastest, fastest_path);
     gurka::assert::raw::expect_path(shortest, {"ABDE", "ABDE", "ABDE"});
     ASSERT_GT(fastest_l, shortest_l);
@@ -105,10 +103,11 @@ TEST(AutoShorter, deprecation) {
       R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_shorter":{"use_ferry":0.1, "use_tolls": 0.77}}})";
   ParseApi(request_str, Options::route, request);
 
-  ASSERT_EQ(request.options().costing(), valhalla::auto_);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).shortest(), true);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  ASSERT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  ASSERT_EQ(request.options().costing_type(), Costing::auto_);
+  const auto& options = request.options().costings().find(Costing::auto_)->second.options();
+  ASSERT_EQ(options.shortest(), true);
+  ASSERT_EQ(options.use_ferry(), 0.1f);
+  ASSERT_EQ(options.use_tolls(), 0.77f);
 }
 
 TEST_F(ShortestTest, AutoUseDistance) {

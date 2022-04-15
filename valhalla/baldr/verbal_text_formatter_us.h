@@ -1,12 +1,14 @@
 #ifndef VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_H_
 #define VALHALLA_BALDR_VERBAL_TEXT_FORMATTER_US_H_
 
-#include <valhalla/baldr/verbal_text_formatter.h>
-
 #include <array>
 #include <regex>
 #include <string>
 #include <utility>
+
+#include <boost/optional.hpp>
+
+#include <valhalla/baldr/verbal_text_formatter.h>
 
 namespace valhalla {
 namespace baldr {
@@ -121,6 +123,7 @@ public:
    * Returns a US text-to-speech formatted string based on the specified text.
    *
    * @param  text  the source string to transform.
+   *
    * @return a US text-to-speech formatted string based on the specified text.
    */
   std::string Format(const std::string& text) const override;

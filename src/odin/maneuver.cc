@@ -1,5 +1,6 @@
 #include <iostream>
 #include <list>
+#include <utility>
 
 #include "baldr/streetnames.h"
 #include "baldr/streetnames_us.h"
@@ -10,9 +11,9 @@
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
 
+#include "proto/common.pb.h"
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
-#include "proto/tripcommon.pb.h"
 
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
@@ -73,7 +74,12 @@ const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
                                                            {35, "kTransitConnectionDestination"},
                                                            {36, "kPostTransitConnectionDestination"},
                                                            {37, "kMergeRight"},
-                                                           {38, "kMergeLeft"}};
+                                                           {38, "kMergeLeft"},
+                                                           {39, "kElevatorEnter"},
+                                                           {40, "kStepsEnter"},
+                                                           {41, "kEscalatorEnter"},
+                                                           {42, "kBuildingEnter"},
+                                                           {43, "kBuildingExit"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error(
@@ -120,9 +126,9 @@ Maneuver::Maneuver()
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
       roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      travel_mode_(TripLeg_TravelMode_kDrive), vehicle_type_(TripLeg_VehicleType_kCar),
-      pedestrian_type_(TripLeg_PedestrianType_kFoot), bicycle_type_(TripLeg_BicycleType_kRoad),
-      transit_type_(TripLeg_TransitType_kRail), transit_connection_(false), rail_(false), bus_(false),
+      travel_mode_(TravelMode::kDrive), vehicle_type_(VehicleType::kCar),
+      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
+      transit_type_(TransitType::kRail), transit_connection_(false), rail_(false), bus_(false),
       fork_(false), begin_intersecting_edge_name_consistency_(false),
       intersecting_forward_edge_(false), tee_(false), trail_type_(TrailType::kNone),
       imminent_verbal_multi_cue_(false), distant_verbal_multi_cue_(false), to_stay_on_(false),
@@ -135,7 +141,9 @@ Maneuver::Maneuver()
       roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
       roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
       has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false), has_long_street_name_(false) {
+      pedestrian_crossing_(false), has_long_street_name_(false), elevator_(false),
+      indoor_steps_(false), escalator_(false), building_enter_(false), building_exit_(false),
+      end_level_ref_("") {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -910,43 +918,43 @@ void Maneuver::set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuve
   has_collapsed_merge_maneuver_ = has_collapsed_merge_maneuver;
 }
 
-TripLeg_TravelMode Maneuver::travel_mode() const {
+TravelMode Maneuver::travel_mode() const {
   return travel_mode_;
 }
 
-void Maneuver::set_travel_mode(TripLeg_TravelMode travel_mode) {
+void Maneuver::set_travel_mode(TravelMode travel_mode) {
   travel_mode_ = travel_mode;
 }
 
-TripLeg_VehicleType Maneuver::vehicle_type() const {
+VehicleType Maneuver::vehicle_type() const {
   return vehicle_type_;
 }
 
-void Maneuver::set_vehicle_type(TripLeg_VehicleType vehicle_type) {
+void Maneuver::set_vehicle_type(VehicleType vehicle_type) {
   vehicle_type_ = vehicle_type;
 }
 
-TripLeg_PedestrianType Maneuver::pedestrian_type() const {
+PedestrianType Maneuver::pedestrian_type() const {
   return pedestrian_type_;
 }
 
-void Maneuver::set_pedestrian_type(TripLeg_PedestrianType pedestrian_type) {
+void Maneuver::set_pedestrian_type(PedestrianType pedestrian_type) {
   pedestrian_type_ = pedestrian_type;
 }
 
-TripLeg_BicycleType Maneuver::bicycle_type() const {
+BicycleType Maneuver::bicycle_type() const {
   return bicycle_type_;
 }
 
-void Maneuver::set_bicycle_type(TripLeg_BicycleType bicycle_type) {
+void Maneuver::set_bicycle_type(BicycleType bicycle_type) {
   bicycle_type_ = bicycle_type;
 }
 
-TripLeg_TransitType Maneuver::transit_type() const {
+TransitType Maneuver::transit_type() const {
   return transit_type_;
 }
 
-void Maneuver::set_transit_type(TripLeg_TransitType transit_type) {
+void Maneuver::set_transit_type(TransitType transit_type) {
   transit_type_ = transit_type;
 }
 
@@ -1117,6 +1125,62 @@ bool Maneuver::has_long_street_name() const {
 
 void Maneuver::set_long_street_name(bool has_long_street_name) {
   has_long_street_name_ = has_long_street_name;
+}
+
+const BikeShareStationInfo& Maneuver::bss_info() const {
+  return bss_info_;
+}
+
+void Maneuver::set_bss_info(const BikeShareStationInfo& bss_info) {
+  bss_info_ = bss_info;
+}
+
+bool Maneuver::indoor_steps() const {
+  return indoor_steps_;
+}
+
+void Maneuver::set_indoor_steps(bool indoor_steps) {
+  indoor_steps_ = indoor_steps;
+}
+
+bool Maneuver::elevator() const {
+  return elevator_;
+}
+
+void Maneuver::set_elevator(bool elevator) {
+  elevator_ = elevator;
+}
+
+bool Maneuver::escalator() const {
+  return escalator_;
+}
+
+void Maneuver::set_escalator(bool escalator) {
+  escalator_ = escalator;
+}
+
+bool Maneuver::building_enter() const {
+  return building_enter_;
+}
+
+void Maneuver::set_building_enter(bool building_enter) {
+  building_enter_ = building_enter;
+}
+
+bool Maneuver::building_exit() const {
+  return building_exit_;
+}
+
+void Maneuver::set_building_exit(bool building_exit) {
+  building_exit_ = building_exit;
+}
+
+std::string Maneuver::end_level_ref() const {
+  return end_level_ref_;
+}
+
+void Maneuver::set_end_level_ref(std::string end_level_ref) {
+  end_level_ref_ = std::move(end_level_ref);
 }
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -1489,8 +1553,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(imminent_verbal_multi_cue_);
 
   //  man_str += delim;
-  //  man_str += "TripLeg_TravelMode_";
-  //  man_str += TripLeg_TravelMode_descriptor()
+  //  man_str += "TravelMode_";
+  //  man_str += TravelMode_descriptor()
   //      ->FindValueByNumber(travel_mode_)->name();
   //  bool rail_;
   //  bool bus_;

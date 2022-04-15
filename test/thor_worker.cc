@@ -1,15 +1,18 @@
 #include "test.h"
 
+#include "baldr/attributes_controller.h"
+#include "baldr/rapidjson_utils.h"
 #include "midgard/logging.h"
-#include "thor/attributes_controller.h"
 #include "thor/worker.h"
 #include "tyr/actor.h"
+#include <algorithm>
 #include <thread>
 #include <unistd.h>
 
 using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::thor;
+using namespace std::string_literals;
 
 namespace {
 
@@ -98,8 +101,7 @@ TEST(ThorWorker, test_linear_references) {
   std::vector<std::string> requests = {
       R"({"costing":"auto","linear_references":true,"locations":[
           {"lat":52.09110,"lon":5.09806},
-          {"lat":52.09098,"lon":5.09679}],
-          "action":"include"})",
+          {"lat":52.09098,"lon":5.09679}]})",
   };
   const std::vector<std::string>& expected = {
       "CwOgEyUK5SKXAP/H//wiBw==",

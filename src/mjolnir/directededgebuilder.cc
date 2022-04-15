@@ -21,6 +21,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const RoadClass rc,
                                          const uint32_t localidx,
                                          const bool signal,
+                                         const bool stop_sign,
+                                         const bool yield_sign,
+                                         const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
                                          const bool reclass_ferry)
@@ -34,10 +37,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_length(std::max(length, kMinimumEdgeLength), true);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
-  if (way.ferry()) {
+  if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);
   }
-  if (way.rail()) {
+  if (way.rail() && way.use() != Use::kConstruction) {
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
@@ -63,11 +66,19 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());
+  set_indoor(way.indoor());
   set_link(way.link());
+  set_hov_type(way.hov_type());
   set_classification(rc);
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);
+
+  set_stop_sign(stop_sign);
+  set_yield_sign(yield_sign);
+
+  // temporarily set the deadend flag to indicate if the stop or yield should be at the minor roads
+  set_deadend(minor);
 
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
@@ -140,7 +151,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps) {
+  if (way.use() != Use::kSteps && way.use() != Use::kConstruction) {
     if (way.wheelchair_tag() && way.wheelchair()) {
       forward_access |= kWheelchairAccess;
       reverse_access |= kWheelchairAccess;

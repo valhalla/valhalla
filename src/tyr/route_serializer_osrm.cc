@@ -197,7 +197,7 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 }
 */
 
-std::string guide_destinations(const valhalla::TripSign& sign);
+std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
 void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial, int route_index) {
@@ -230,8 +230,9 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   route->emplace("duration", json::fixed_t{duration, 3});
 
   route->emplace("weight", json::fixed_t{weight, 3});
-  assert(api.options().costing_options(api.options().costing()).has_name());
-  route->emplace("weight_name", api.options().costing_options(api.options().costing()).name());
+  assert(api.options().costings().find(api.options().costing_type())->second.has_name_case());
+  route->emplace("weight_name",
+                 api.options().costings().find(api.options().costing_type())->second.name());
 
   auto recosting_itr = api.options().recostings().begin();
   for (const auto& recost : recosts) {
@@ -316,9 +317,10 @@ void route_geometry(json::MapPtr& route,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
   std::vector<PointLL> shape;
-  if (options.has_generalize() && options.generalize() == 0.0f) {
+  if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);
-  } else if (!options.has_generalize() || (options.has_generalize() && options.generalize() > 0.0f)) {
+  } else if (!options.has_generalize_case() ||
+             (options.has_generalize_case() && options.generalize() > 0.0f)) {
     shape = full_shape(directions, options);
   }
   if (options.shape_format() == geojson) {
@@ -398,14 +400,14 @@ json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>&
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
-    return locs.Get(a).original_index() < locs.Get(b).original_index();
+    return locs.Get(a).correlation().original_index() < locs.Get(b).correlation().original_index();
   });
 
   // Output each location in its original index order along with its
   // waypoint index (which is the index in the optimized order).
   auto waypoints = json::array({});
   for (const auto& index : indexes) {
-    locs.Mutable(index)->set_waypoint_index(index);
+    locs.Mutable(index)->mutable_correlation()->set_waypoint_index(index);
     waypoints->emplace_back(osrm::waypoint(locs.Get(index), false, true));
   }
   return waypoints;
@@ -432,7 +434,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
                              const std::vector<PointLL>& shape,
                              uint32_t& count,
-                             const bool arrive_maneuver) {
+                             const bool arrive_maneuver,
+                             const baldr::AttributesController& controller) {
   // Iterate through the nodes/intersections of the path for this maneuver
   count = 0;
   auto intersections = json::array({});
@@ -458,14 +461,12 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     intersection->emplace("geometry_index", static_cast<uint64_t>(shape_index));
 
     // Add index into admin list
-    if (node->has_admin_index()) {
+    if (controller(kNodeAdminIndex)) {
       intersection->emplace("admin_index", static_cast<uint64_t>(node->admin_index()));
     }
 
-    if (!arrive_maneuver) {
-      if (curr_edge->has_is_urban()) {
-        intersection->emplace("is_urban", curr_edge->is_urban());
-      }
+    if (!arrive_maneuver && controller(kEdgeIsUrban)) {
+      intersection->emplace("is_urban", curr_edge->is_urban());
     }
 
     auto toll_collection = json::map({});
@@ -501,21 +502,28 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
+        std::string sign_text;
+        if (intersecting_edge->has_sign()) {
+          const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
+          // I've looked at the results from guide_destinations(), destinations(), and
+          // exit_destinations(). exit_destinations() does not contain rest-area names.
+          // guide_destinations() and destinations() return the same string value for
+          // the rest area name. So I've decided to use guide_destinations().
+          sign_text = destinations(trip_leg_sign);
+        }
+
         if (routeable && intersecting_edge->use() == TripLeg_Use_kRestAreaUse) {
           rest_stop->emplace("type", std::string("rest_area"));
-          if (intersecting_edge->has_sign()) {
-            const valhalla::TripSign& trip_leg_sign = intersecting_edge->sign();
-            // I've looked at the results from guide_destinations(), destinations(), and
-            // exit_destinations(). exit_destinations() doe not contain rest-area names.
-            // guide_destinations() and destinations() return the same string value for
-            // the rest area name. So I've decided to use guide_destinations().
-            std::string guide_destinations_str = guide_destinations(trip_leg_sign);
-            rest_stop->emplace("name", guide_destinations_str);
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
           }
           intersection->emplace("rest_stop", rest_stop);
           break;
         } else if (routeable && intersecting_edge->use() == TripLeg_Use_kServiceAreaUse) {
           rest_stop->emplace("type", std::string("service_area"));
+          if (!sign_text.empty()) {
+            rest_stop->emplace("name", sign_text);
+          }
           intersection->emplace("rest_stop", rest_stop);
           break;
         }
@@ -524,16 +532,23 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Get bearings and access to outgoing intersecting edges. Do not add
     // any intersecting edges for the first depart intersection and for
-    // the arrive step.
+    // the arrival step.
     std::vector<IntersectionEdges> edges;
 
     // Add the edge departing the node
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
+      if (i > 0) {
+        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+          auto intersecting_edge = node->GetIntersectingEdge(m);
+          bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
+          edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
+        }
+      }
     }
 
     // Add the incoming edge except for the first depart intersection.
-    // Set routeable to false except for arrive.
+    // Set routable to false except for arrive.
     // TODO - what if a true U-turn - need to set it to routeable.
     if (i > 0) {
       bool entry = (arrive_maneuver) ? true : false;
@@ -572,10 +587,10 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
-      if (curr_edge->tunnel() && !curr_edge->tagged_name().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_name().size(); ++t) {
-          if (curr_edge->tagged_name().Get(t).type() == TaggedName_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_name().Get(t).value());
+      if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
+        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
+          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
           }
         }
       }
@@ -701,11 +716,8 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incide
   rapidjson::StringBuffer stringbuffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(stringbuffer);
   writer.StartObject();
-  osrm::serializeIncidentProperties(writer, incident.metadata(),
-                                    incident.has_begin_shape_index() ? incident.begin_shape_index()
-                                                                     : -1,
-                                    incident.has_end_shape_index() ? incident.end_shape_index() : -1,
-                                    "", "");
+  osrm::serializeIncidentProperties(writer, incident.metadata(), incident.begin_shape_index(),
+                                    incident.end_shape_index(), "", "");
   writer.EndObject();
   return {stringbuffer.GetString()};
 }
@@ -1095,7 +1107,7 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
       maneuver_type = "roundabout";
     }
     // Roundabout count
-    if (maneuver.has_roundabout_exit_count()) {
+    if (maneuver.roundabout_exit_count() > 0) {
       osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
     }
   } else if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
@@ -1224,22 +1236,35 @@ std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
   // Otherwise return based on the travel mode
   switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
+    case TravelMode::kDrive: {
       return "driving";
     }
-    case DirectionsLeg_TravelMode_kPedestrian: {
+    case TravelMode::kPedestrian: {
       return "walking";
     }
-    case DirectionsLeg_TravelMode_kBicycle: {
+    case TravelMode::kBicycle: {
       return "cycling";
     }
-    case DirectionsLeg_TravelMode_kTransit: {
+    case TravelMode::kTransit: {
       return "transit";
     }
+    default:
+      return {};
   }
   auto num = static_cast<int>(maneuver.travel_mode());
   throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) +
                            " Unhandled travel_mode: " + std::to_string(num));
+}
+
+const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>&
+get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  // Roundabouts need to use the roundabout_exit_street_names
+  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
+  // TODO: in the future we may switch to use both
+  return ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
+              ? maneuver.roundabout_exit_street_names()
+              : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                        : maneuver.street_name());
 }
 
 // Get the names and ref names
@@ -1247,13 +1272,7 @@ std::pair<std::string, std::string>
 names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   std::string names, refs;
 
-  // Roundabouts need to use the roundabout_exit_street_names
-  // if a maneuver begin street name exists then use it otherwise use the maneuver street name
-  // TODO: in the future we may switch to use both
-  auto& street_names = (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
-                           ? maneuver.roundabout_exit_street_names()
-                           : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
-                                                                     : maneuver.street_name();
+  const auto& street_names = get_maneuver_street_names(maneuver);
 
   for (const auto& name : street_names) {
     // Check if the name is a ref
@@ -1272,13 +1291,32 @@ names_and_refs(const valhalla::DirectionsLeg::Maneuver& maneuver) {
 
   return std::make_pair(names, refs);
 }
+// Get the pronunciations string
+std::string get_pronunciations(const valhalla::DirectionsLeg::Maneuver& maneuver) {
+  std::string pronunciations;
+
+  const auto& street_names = get_maneuver_street_names(maneuver);
+
+  for (const auto& name : street_names) {
+    // If name has a pronunciation and is not a route number then use it
+    if (name.has_pronunciation() && !name.is_route_number()) {
+      if (!pronunciations.empty()) {
+        pronunciations += "; ";
+      }
+      pronunciations += name.pronunciation().value();
+    }
+  }
+
+  return pronunciations;
+}
 
 // Serialize each leg
 json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs,
                               const std::vector<std::string>& leg_summaries,
                               google::protobuf::RepeatedPtrField<valhalla::TripLeg>& path_legs,
                               bool imperial,
-                              const valhalla::Options& options) {
+                              const valhalla::Options& options,
+                              const baldr::AttributesController& controller) {
   auto output_legs = json::array({});
   output_legs->reserve(path_legs.size());
 
@@ -1307,6 +1345,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     std::string drive_side = "right";
     std::string name = "";
     std::string ref = "";
+    std::string pronunciation = "";
     std::string mode = "";
     std::string prev_mode = "";
     bool rotary = false;
@@ -1339,6 +1378,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         auto name_ref_pair = names_and_refs(maneuver);
         name = name_ref_pair.first;
         ref = name_ref_pair.second;
+        pronunciation = get_pronunciations(maneuver);
         mode = get_mode(maneuver, arrive_maneuver, &etp);
         if (prev_mode.empty())
           prev_mode = mode;
@@ -1375,6 +1415,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       step->emplace("name", name);
       if (!ref.empty()) {
         step->emplace("ref", ref);
+      }
+      if (!pronunciation.empty()) {
+        step->emplace("pronunciation", pronunciation);
       }
 
       // Check if speed limits were requested
@@ -1458,8 +1501,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       }
 
       // Add intersections
-      step->emplace("intersections",
-                    intersections(maneuver, &etp, shape, prev_intersection_count, arrive_maneuver));
+      step->emplace("intersections", intersections(maneuver, &etp, shape, prev_intersection_count,
+                                                   arrive_maneuver, controller));
 
       // Add step
       prev_rotary = rotary;
@@ -1499,7 +1542,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     admins->reserve(path_leg.admin_size());
     for (const auto& admin : path_leg.admin()) {
       auto admin_map = json::map({});
-      if (admin.has_country_code()) {
+      if (!admin.country_code().empty()) {
         admin_map->emplace("iso_3166_1", admin.country_code());
         auto country_iso3 = valhalla::baldr::get_iso_3166_1_alpha3(admin.country_code());
         if (!country_iso3.empty()) {
@@ -1520,7 +1563,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     }
 
     // Add via waypoints to the leg
-    output_leg->emplace("via_waypoints", osrm::via_waypoints(options, shape));
+    output_leg->emplace("via_waypoints", osrm::intermediate_waypoints(path_leg));
 
     // Add incidents to the leg
     serializeIncidents(path_leg.incidents(), *output_leg);
@@ -1618,6 +1661,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api) {
   auto& options = *api.mutable_options();
+  AttributesController controller(options);
   auto json = json::map({});
 
   // If here then the route succeeded. Set status code to OK and serialize waypoints (locations).
@@ -1673,7 +1717,7 @@ std::string serialize(valhalla::Api& api) {
     // Serialize route legs
     route->emplace("legs", serialize_legs(api.directions().routes(i).legs(), route_leg_summaries[i],
                                           *api.mutable_trip()->mutable_routes(i)->mutable_legs(),
-                                          imperial, options));
+                                          imperial, options, controller));
 
     routes->emplace_back(std::move(route));
   }

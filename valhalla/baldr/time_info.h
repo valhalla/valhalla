@@ -69,12 +69,12 @@ struct TimeInfo {
        baldr::DateTime::tz_sys_info_cache_t* tz_cache = nullptr,
        int default_timezone_index = baldr::DateTime::get_tz_db().to_index("Etc/UTC")) {
     // No time to to track
-    if (!location.has_date_time())
+    if (location.date_time().empty())
       return TimeInfo::invalid();
 
     // Find the first edge whose end node has a valid timezone index and keep it
     int timezone_index = 0;
-    for (const auto& pe : location.path_edges()) {
+    for (const auto& pe : location.correlation().edges()) {
       graph_tile_ptr tile;
       const auto* edge = reader.directededge(baldr::GraphId(pe.graph_id()), tile);
       timezone_index = reader.GetTimezone(edge->endnode(), tile);

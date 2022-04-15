@@ -49,7 +49,8 @@ public:
            const baldr::NodeType type,
            const bool traffic_signal,
            const bool tagged_access,
-           const bool private_access);
+           const bool private_access,
+           const bool cash_only_toll);
 
   /**
    * Get the latitude, longitude of the node.
@@ -278,6 +279,22 @@ public:
   }
 
   /**
+   * Is this node a cash only toll (booth/barrier)?
+   * @return  Returns true if node is a cash only toll (booth/barrier).
+   */
+  bool cash_only_toll() const {
+    return cash_only_toll_;
+  }
+
+  /**
+   * Sets cash_only_toll flag. It is true when the node is a cash only toll (booth/barrier).
+   * @param  cash_only_toll  True if node is a cash only toll (booth/barrier).
+   */
+  void set_cash_only_toll(const bool cash_only_toll) {
+    cash_only_toll_ = cash_only_toll;
+  }
+
+  /**
    * Is a mode change allowed at this node? The access data tells which
    * modes are allowed at the node. Examples include transit stops, bike
    * share locations, and parking locations.
@@ -362,6 +379,11 @@ public:
    * @return Returns heading relative to N (0-360 degrees).
    */
   inline uint32_t heading(const uint32_t localidx) const {
+    if (localidx > kMaxLocalEdgeIndex) {
+      LOG_WARN("Local index " + std::to_string(localidx) + " exceeds max value of " +
+               std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
+      return 0;
+    }
     // Make sure everything is 64 bit!
     uint64_t shift = localidx * 8; // 8 bits per index
     return static_cast<uint32_t>(std::round(
@@ -447,7 +469,8 @@ protected:
   uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
   uint64_t tagged_access_ : 1;       // Was access initially tagged?
   uint64_t private_access_ : 1;      // Is the access private?
-  uint64_t spare2_ : 18;
+  uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
+  uint64_t spare2_ : 17;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

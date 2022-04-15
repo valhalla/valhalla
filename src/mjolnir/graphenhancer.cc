@@ -25,7 +25,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <sqlite3.h>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -548,6 +547,94 @@ bool IsNotThruEdge(GraphReader& reader,
   return false;
 }
 
+// Process stop and yields where a stop sign exists at an intersection node.
+void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
+                          GraphReader& reader,
+                          std::mutex& lock,
+                          const NodeInfo& startnodeinfo,
+                          DirectedEdge& directededge) {
+
+  if (directededge.stop_sign() || directededge.yield_sign()) {
+    uint32_t ntrans = startnodeinfo.local_edge_count();
+    for (uint32_t k = 0; k < ntrans; k++) {
+      const DirectedEdge* fromedge = start_tile->directededge(startnodeinfo.edge_index() + k);
+      // get the temporarily set deadend flag to indicate if the stop or yield should be at the
+      // minor roads
+      if (directededge.deadend()) {
+        // if we are a higher class road unset the yield or stop
+        if (fromedge->classification() > directededge.classification() ||
+            (fromedge->classification() == directededge.classification() &&
+             (fromedge->use() == Use::kRamp || fromedge->use() == Use::kTurnChannel))) {
+
+          directededge.set_stop_sign(false);
+          directededge.set_yield_sign(false);
+          directededge.set_deadend(false);
+          return;
+        }
+      }
+    }
+
+    if (!(directededge.forwardaccess() & kAutoAccess)) {
+      directededge.set_stop_sign(false);
+      directededge.set_yield_sign(false);
+      directededge.set_deadend(false);
+      return;
+    }
+  }
+
+  // Get the tile at the startnode
+  graph_tile_ptr tile = start_tile;
+  // Get the tile at the end node
+  if (tile->id() != directededge.endnode().Tile_Base()) {
+    lock.lock();
+    tile = reader.GetGraphTile(directededge.endnode());
+    lock.unlock();
+  }
+  const NodeInfo* nodeinfo = tile->node(directededge.endnode());
+  if (nodeinfo->transition_index()) {
+
+    bool minor = (nodeinfo->transition_index() & kMinor);
+    bool stop = (nodeinfo->transition_index() & kStopSign);
+    bool yield = (nodeinfo->transition_index() & kYieldSign);
+    bool inbound = false;
+    RoadClass rc = directededge.classification();
+
+    if (stop || yield) {
+
+      // Iterate through inbound edges
+      const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
+        // Skip the candidate directed edge and any non-road edges. Skip any edges
+        // that are not driveable inbound.
+        if (!diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
+          continue;
+        }
+
+        if (minor) {
+          if (rc > diredge->classification()) {
+            rc = diredge->classification();
+          }
+        }
+      }
+
+      if (minor) {
+        if ((directededge.forwardaccess() & kAutoAccess) &&
+            (directededge.classification() > rc ||
+             (directededge.classification() == rc &&
+              (directededge.use() == Use::kRamp || directededge.use() == Use::kTurnChannel)))) {
+          directededge.set_stop_sign(stop);
+          directededge.set_yield_sign(yield);
+        }
+      } else if (directededge.forwardaccess() & kAutoAccess) {
+        directededge.set_stop_sign(stop);
+        directededge.set_yield_sign(yield);
+      }
+    }
+  }
+  // remove the temporarily set deadend flag
+  directededge.set_deadend(false);
+}
+
 // Test if the edge is internal to an intersection.
 bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
                             GraphReader& reader,
@@ -771,7 +858,7 @@ uint32_t GetDensity(GraphReader& reader,
         // Get all directed edges and add length
         const DirectedEdge* directededge = newtile->directededge(node->edge_index());
         for (uint32_t i = 0; i < node->edge_count(); i++, directededge++) {
-          // Exclude non-roads (parking, walkways, ferries, etc.)
+          // Exclude non-roads (parking, walkways, ferries, construction, etc.)
           if (directededge->is_road() || directededge->use() == Use::kRamp ||
               directededge->use() == Use::kTurnChannel || directededge->use() == Use::kAlley ||
               directededge->use() == Use::kEmergencyAccess) {
@@ -1048,7 +1135,7 @@ uint32_t GetStopImpact(uint32_t from,
   } else if (edges[from].use() == Use::kRamp && edges[to].use() == Use::kRamp &&
              bestrc < RoadClass::kUnclassified) {
     // Ramp may be crossing a road (not a path or service road)
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact = 4;
     } else if (count > 3) {
       stop_impact += 2;
@@ -1086,7 +1173,7 @@ uint32_t GetStopImpact(uint32_t from,
            (turn_type == Turn::Type::kSharpLeft || turn_type == Turn::Type::kLeft) &&
            from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
            edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact += 2;
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;
@@ -1095,7 +1182,7 @@ uint32_t GetStopImpact(uint32_t from,
              (turn_type == Turn::Type::kSharpRight || turn_type == Turn::Type::kRight) &&
              from_rc != edges[to].classification() && edges[to].use() != Use::kRamp &&
              edges[to].use() != Use::kTurnChannel) {
-    if (nodeinfo.traffic_signal()) {
+    if (nodeinfo.traffic_signal() || edges[from].traffic_signal() || edges[from].stop_sign()) {
       stop_impact += 2;
     } else if (abs(static_cast<int>(from_rc) - static_cast<int>(edges[to].classification())) > 1)
       stop_impact++;
@@ -1131,8 +1218,8 @@ void ProcessEdgeTransitions(const uint32_t idx,
     uint32_t left_count = 0;
     if (ntrans > 2) {
       for (uint32_t j = 0; j < ntrans; ++j) {
-        // Skip the from and to edges
-        if (j == i || j == idx) {
+        // Skip the from and to edges; also skip roads under construction
+        if (j == i || j == idx || edges[j].use() == Use::kConstruction) {
           continue;
         }
 
@@ -1240,7 +1327,6 @@ void enhance(const boost::property_tree::ptree& pt,
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
-
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
   if (!database && use_admin_db) {
@@ -1248,6 +1334,7 @@ void enhance(const boost::property_tree::ptree& pt,
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
+  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   std::unordered_map<std::string, std::vector<int>> country_access =
       GetCountryAccess(admin_db_handle);
@@ -1526,8 +1613,14 @@ void enhance(const boost::property_tree::ptree& pt,
           directededge.set_use(Use::kFootway);
         }
 
+        if (directededge.traffic_signal() && !(directededge.forwardaccess() & kAutoAccess)) {
+          directededge.set_traffic_signal(
+              false); // oneway edge...no need to have a traffic signal on the edge.
+        }
+
         // Update the named flag
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(true);
+        std::vector<uint8_t> types;
+        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(types, false);
         directededge.set_named(names.size() > 0);
 
         // Speed assignment
@@ -1538,8 +1631,9 @@ void enhance(const boost::property_tree::ptree& pt,
         uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder->directededge(nodeinfo.edge_index() + k);
+          std::vector<uint8_t> types;
           if (ConsistentNames(country_code, names,
-                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes())) {
+                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes(types, false))) {
             directededge.set_name_consistency(k, true);
           }
         }
@@ -1559,6 +1653,8 @@ void enhance(const boost::property_tree::ptree& pt,
         if (directededge.internal()) {
           stats.internalcount++;
         }
+
+        SetStopYieldSignInfo(tilebuilder, reader, lock, nodeinfo, directededge);
 
         // Enhance and add turn lanes if not an internal edge.
         if (directededge.turnlanes()) {
@@ -1606,6 +1702,8 @@ void enhance(const boost::property_tree::ptree& pt,
           nodeinfo.set_intersection(IntersectionType::kFalse);
         }
       }
+
+      nodeinfo.set_transition_index(0);
     }
 
     // Replace access restrictions
@@ -1706,6 +1804,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
       // TODO: throw further up the chain?
     }
   }
+
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));
