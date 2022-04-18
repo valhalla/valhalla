@@ -104,7 +104,7 @@ protected:
                               {"BD", {{"highway", "tertiary"}, {"name", "2nd"}}},
                               {"DE", {{"highway", "tertiary"}, {"name", "2nd"}}},
                               {"EF", {{"highway", "tertiary"}, {"name", "2nd"}}}};
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {1.0, 1.0});
     // Add low length limit for exclude_polygons so it throws an error
     avoid_map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_avoids",
                                   {{"service_limits.max_exclude_polygons_length", "1000"}});
@@ -184,9 +184,9 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
-  options.set_costing(valhalla::Costing::truck);
-  auto* co = options.add_costing_options();
-  co->set_costing(valhalla::Costing::truck);
+  options.set_costing_type(valhalla::Costing::truck);
+  auto& co = (*options.mutable_costings())[Costing::truck];
+  co.set_type(valhalla::Costing::truck);
 
   // create the polygon intersecting a shortcut
   auto* rings = options.mutable_exclude_polygons();
@@ -198,7 +198,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
     ll->set_lng(coord.lng());
   }
 
-  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  const auto costing = valhalla::sif::CostFactory{}.Create(co);
   GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well
@@ -241,6 +241,5 @@ INSTANTIATE_TEST_SUITE_P(AvoidPolyProfilesTest,
                                            "pedestrian",
                                            "motorcycle",
                                            "motor_scooter",
-                                           "hov",
                                            "taxi",
                                            "bus"));

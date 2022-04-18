@@ -203,6 +203,21 @@ void DirectedEdge::set_bridge(const bool bridge) {
   bridge_ = bridge;
 }
 
+// Sets the flag indicating this edge is indoor.
+void DirectedEdge::set_indoor(const bool indoor) {
+  indoor_ = indoor;
+}
+
+// Sets the hov type.
+void DirectedEdge::set_hov_type(const HOVEdgeType hov_type) {
+  hov_type_ = static_cast<uint32_t>(hov_type);
+}
+
+// Is this edge strictly hov? (if so, it could be hov2 or hov3, check the hov_type_)
+bool DirectedEdge::is_hov_only() const {
+  return (forwardaccess() & kHOVAccess) && !(forwardaccess() & kAutoAccess);
+}
+
 // Sets the flag indicating the  edge is part of a roundabout.
 void DirectedEdge::set_roundabout(const bool roundabout) {
   roundabout_ = roundabout;
@@ -564,7 +579,7 @@ void DirectedEdge::set_bss_connection(const bool bss_connection) {
 
 // Json representation
 json::MapPtr DirectedEdge::json() const {
-  return json::map({
+  json::MapPtr map = json::map({
       {"end_node", endnode().json()},
       {"speeds", json::map({
                      {"default", static_cast<uint64_t>(speed_)},
@@ -625,6 +640,12 @@ json::MapPtr DirectedEdge::json() const {
         {"shortcut", static_cast<bool>(is_shortcut_)},
       })},*/
   });
+
+  if (is_hov_only()) {
+    map->emplace("hov_type", to_string(static_cast<HOVEdgeType>(hov_type_)));
+  }
+
+  return map;
 }
 
 } // namespace baldr

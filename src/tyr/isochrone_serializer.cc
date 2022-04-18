@@ -93,7 +93,7 @@ std::string serializeIsochrones(const Api& request,
       // first add all snapped points as MultiPoint feature per origin point
       auto snapped_points_array = array({});
       std::unordered_set<midgard::PointLL> snapped_points;
-      for (const auto& path_edge : location.path_edges()) {
+      for (const auto& path_edge : location.correlation().edges()) {
         const midgard::PointLL& snapped_current =
             midgard::PointLL(path_edge.ll().lng(), path_edge.ll().lat());
         // remove duplicates of path_edges in case the snapped object is a node
@@ -128,7 +128,7 @@ std::string serializeIsochrones(const Api& request,
       {"features", features},
   });
 
-  if (request.options().has_id()) {
+  if (request.options().has_id_case()) {
     feature_collection->emplace("id", request.options().id());
   }
 

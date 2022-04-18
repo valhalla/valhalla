@@ -5,8 +5,8 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -17,6 +17,7 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
+#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -26,8 +27,6 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
-
-namespace bpo = boost::program_options;
 
 Transit read_pbf(const std::string& file_name) {
   std::fstream file(file_name, std::ios::in | std::ios::binary);
@@ -39,7 +38,11 @@ Transit read_pbf(const std::string& file_name) {
   google::protobuf::io::CodedInputStream cs(
       static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
   auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+  cs.SetTotalBytesLimit(limit);
+#else
   cs.SetTotalBytesLimit(limit, limit);
+#endif
   Transit transit;
   if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
@@ -359,57 +362,60 @@ GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description options(
-      "transit_stop_query\n"
-      "\nUsage: transit_stop_query [options]\n"
-      "transit_stop_query is a simple command line test tool to log transit stop info."
-      "\n");
+  // args
+  std::string config;
+  float o_lng, o_lat, d_lng, d_lat;
+  std::string o_onestop_id, d_onestop_id, time;
+  int tripid;
 
-  std::string config, o_onestop_id, d_onestop_id, time;
-  float o_lat, o_lng, d_lat, d_lng;
-  int tripid = 0;
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "o_lat,o_y",
-      boost::program_options::value<float>(
-          &o_lat))("o_lng,o_x",
-                   boost::program_options::value<float>(
-                       &o_lng))("d_lat,d_y",
-                                boost::program_options::value<float>(
-                                    &d_lat))("d_lng,d_x",
-                                             boost::program_options::value<float>(
-                                                 &d_lng))("o_onestop_id,o",
-                                                          boost::program_options::value<std::string>(
-                                                              &o_onestop_id))(
-      "d_onestop_id,d",
-      boost::program_options::value<std::string>(
-          &d_onestop_id))("tripid,i",
-                          boost::program_options::value<int>(
-                              &tripid))("time,t",
-                                        boost::program_options::value<std::string>(
-                                            &time))("conf,c", bpo::value<std::string>(&config),
-                                                    "Valhalla configuration file");
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::parse_command_line(argc, argv, options), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what();
-    return EXIT_FAILURE;
-  }
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_query_transit",
+      "valhalla_query_transit " VALHALLA_VERSION "\n\n"
+      "valhalla_query_transit is a simple command line test tool to log transit stop info.\n\n");
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("o_lat", "Origin latitude", cxxopts::value<float>(o_lat))
+      ("o_lng", "Origin longitude", cxxopts::value<float>(o_lng))
+      ("d_lat", "Destination latitude", cxxopts::value<float>(d_lat))
+      ("d_lng", "Destination longitude", cxxopts::value<float>(d_lng))
+      ("o,o_onestop_id", "Origin OneStop ID", cxxopts::value<std::string>(o_onestop_id))
+      ("d,d_onestop_id", "Destination OneStop ID", cxxopts::value<std::string>(d_onestop_id))
+      ("i,tripid", "Trip ID", cxxopts::value<int>(tripid)->default_value("0"))
+      ("t,time", "Time", cxxopts::value<std::string>(time))
+      ("c,config", "Config path", cxxopts::value<std::string>(config));
+    // clang-format on
 
-  for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
-    if (vm.count(arg) == 0) {
-      std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
-      std::cerr << options << "\n";
+    auto result = options.parse(argc, argv);
+
+    if (result.count("version")) {
+      std::cout << "valhalla_query_transit " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
+
+    for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng", "conf"}) {
+      if (result.count(arg) == 0) {
+        std::cerr << "The <" << arg << "> argument was not provided, but is mandatory\n\n";
+        std::cerr << options.help() << "\n";
+        return EXIT_FAILURE;
+      }
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+    return EXIT_FAILURE;
   }
 
   // Read config

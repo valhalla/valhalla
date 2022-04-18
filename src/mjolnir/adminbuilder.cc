@@ -10,9 +10,6 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-// sqlite is included in util.h and must be before spatialite
-#include <spatialite.h>
-
 #include "config.h"
 
 /* Need to know which geos version we have to work out which headers to include */
@@ -42,7 +39,6 @@
 #include <geos/util/GEOSException.h>
 
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 using namespace geos::geom;
@@ -54,7 +50,6 @@ using namespace geos::operation::linemerge;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
-namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 
 namespace {
@@ -258,8 +253,6 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     filesystem::remove(*database);
   }
 
-  spatialite_init(0);
-
   sqlite3* db_handle;
   sqlite3_stmt* stmt;
   uint32_t ret;
@@ -275,10 +268,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   // loading SpatiaLite as an extension
-  if (!valhalla::mjolnir::load_spatialite(db_handle)) {
-    sqlite3_close(db_handle);
-    return;
-  }
+  auto db_conn = make_spatialite_cache(db_handle);
 
   /* creating an admin POLYGON table */
   sql = "SELECT InitSpatialMetaData(1); CREATE TABLE admins (";

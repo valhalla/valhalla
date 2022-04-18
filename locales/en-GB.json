@@ -1,8 +1,6 @@
 {
   "posix_locale": "en_GB.UTF-8",
-  "aliases": [
-    "engb"
-  ],
+  "aliases": [],
   "instructions": {
     "arrive": {
       "phrases": {
@@ -2170,6 +2168,88 @@
       "example_phrases": {
         "0": [
           "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
         ]
       }
     }

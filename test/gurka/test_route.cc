@@ -102,14 +102,6 @@ TEST_F(IgnoreAccessTest, BusIgnoreOneWay) {
                                    {{IgnoreOneWaysParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, HOVIgnoreOneWay) {
-  const std::string cost = "hov";
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost,
-                                   {{IgnoreOneWaysParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, TaxiIgnoreOneWay) {
   const std::string cost = "taxi";
   EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "D"}, cost),
@@ -171,15 +163,6 @@ TEST_F(IgnoreAccessTest, BusIgnoreAccess) {
                                    {{IgnoreAccessParam(cost), "1"}}));
 }
 
-TEST_F(IgnoreAccessTest, HOVIgnoreAccess) {
-  const std::string cost = "hov";
-  // ignore edges and nodes access restriction
-  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost),
-               std::runtime_error);
-  EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "B", "D"}, cost,
-                                   {{IgnoreAccessParam(cost), "1"}}));
-}
-
 TEST_F(IgnoreAccessTest, TaxiIgnoreAccess) {
   const std::string cost = "taxi";
   // ignore edges and nodes access restriction
@@ -234,13 +217,14 @@ TEST(AutoDataFix, deprecation) {
       R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
   ParseApi(request_str, Options::route, request);
 
-  EXPECT_EQ(request.options().costing(), valhalla::auto_);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  EXPECT_EQ(request.options().costing_type(), Costing::auto_);
+  const auto& co = request.options().costings().find(Costing::auto_)->second.options();
+  EXPECT_EQ(co.ignore_access(), true);
+  EXPECT_EQ(co.ignore_closures(), true);
+  EXPECT_EQ(co.ignore_oneways(), true);
+  EXPECT_EQ(co.ignore_restrictions(), true);
+  EXPECT_EQ(co.use_ferry(), 0.1f);
+  EXPECT_EQ(co.use_tolls(), 0.77f);
 }
 
 /*************************************************************/
@@ -333,7 +317,7 @@ gurka::map AlgorithmTest::map = {};
 uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
          AlgorithmTest::freeflow = 0;
 
-uint32_t speed_from_edge(const valhalla::Api& api) {
+uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
   uint32_t kmh = -1;
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
@@ -345,7 +329,7 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1)
+    if (kmh != -1 && compare_with_previous_edge)
       EXPECT_EQ(kmh, new_kmh);
     kmh = new_kmh;
   }
@@ -420,7 +404,9 @@ TEST_F(AlgorithmTest, Bidir) {
                                  {"/date_time/value", "2020-10-30T09:00"},
                                  {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
-    EXPECT_EQ(speed_from_edge(api), current);
+    // Because of live-traffic smoothing, speed will be mixed with default edge speed in the end of
+    // the route.
+    EXPECT_LE(speed_from_edge(api, false), current);
   }
 
   {
@@ -847,7 +833,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
                             {"DA", {{"highway", "primary"}}},
                             {"AY", {{"highway", "primary"}}},
                             {"YZ", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_swap_dest_only");
 
   // Notes on this test:
   // * We want the first leg to choose bidir A*:
@@ -902,7 +888,30 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
   std::vector<int> actual_path_edge_sizes;
   actual_path_edge_sizes.reserve(api.options().locations_size());
   for (int i = 0; i < api.options().locations_size(); i++) {
-    actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
+    actual_path_edge_sizes.emplace_back(api.options().locations(i).correlation().edges().size());
   }
   ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
+}
+
+TEST(AlgorithmTestTrivial, unidirectional_regression) {
+  constexpr double gridsize_metres = 10;
+  const std::string ascii_map = R"(A1234B5678C)";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "primary"}}},
+      {"BC", {{"highway", "primary"}}},
+  };
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.00, 0.00});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_trivial_regression");
+
+  // the code used to remove one of the origin edge candidates which then forced a uturn
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "3"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB"});
+
+  // again with reverse a* search direction
+  result = gurka::do_action(valhalla::Options::route, map, {"3", "A"}, "auto",
+                            {
+                                {"/date_time/type", "2"},
+                                {"/date_time/value", "2111-11-11T11:11"},
+                            });
+  gurka::assert::raw::expect_path(result, {"AB"});
 }

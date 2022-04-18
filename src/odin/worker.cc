@@ -27,7 +27,8 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace odin {
 
-odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config) : service_worker_t(config) {
+odin_worker_t::odin_worker_t(const boost::property_tree::ptree& config)
+    : service_worker_t(config), markup_formatter_(config) {
   // signal that the worker started successfully
   started();
 }
@@ -41,7 +42,7 @@ std::string odin_worker_t::narrate(Api& request) const {
 
   // get some annotated directions
   try {
-    odin::DirectionsBuilder().Build(request);
+    odin::DirectionsBuilder().Build(request, markup_formatter_);
   } catch (...) { throw valhalla_exception_t{202}; }
 
   // serialize those to the proper format
@@ -90,14 +91,12 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
       default: {
         // narrate them and serialize them along
         auto response = narrate(request);
-        const bool as_gpx = request.options().format() == Options::gpx;
-        result = to_response(response, info, request, as_gpx ? worker::GPX_MIME : worker::JSON_MIME,
-                             as_gpx);
+        result = to_response(response, info, request);
         break;
       }
     }
   } catch (const std::exception& e) {
-    result = jsonify_error({299, std::string(e.what())}, info, request);
+    result = serialize_error({299, std::string(e.what())}, info, request);
   }
 
   // keep track of the metrics if the request is going back to the client (this should be the case)

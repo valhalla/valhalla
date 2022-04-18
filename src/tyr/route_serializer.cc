@@ -84,6 +84,8 @@ std::string serializeDirections(Api& request) {
       return pathToGPX(request.trip().routes(0).legs());
     case Options_Format_json:
       return valhalla_serializers::serialize(request);
+    case Options_Format_pbf:
+      return serializePbf(request);
     default:
       throw;
   }

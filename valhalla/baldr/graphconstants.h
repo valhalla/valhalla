@@ -41,7 +41,6 @@ constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
-constexpr uint16_t kSpareAccess = 2048; // Unused so far
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
@@ -199,7 +198,8 @@ constexpr uint32_t kMaxCurvatureFactor = 15;
 constexpr uint32_t kMaxAddedTime = 255;
 
 // Elevation constants
-constexpr float kNoElevationData = 32768.0f;
+// this is the minimum we support, i.e. -500 m would result in "no elevation"
+constexpr float kNoElevationData = -500.0f;
 
 // Node types.
 enum class NodeType : uint8_t {
@@ -216,7 +216,9 @@ enum class NodeType : uint8_t {
   kMotorWayJunction = 9,        // Highway = motorway_junction
   kBorderControl = 10,          // Border control
   kTollGantry = 11,             // Toll gantry
-  kSumpBuster = 12              // Sump Buster
+  kSumpBuster = 12,             // Sump Buster
+  kBuildingEntrance = 13,       // Building entrance
+  kElevator = 14,               // Elevator
 };
 inline std::string to_string(NodeType n) {
   static const std::unordered_map<uint8_t, std::string> NodeTypeStrings =
@@ -232,7 +234,9 @@ inline std::string to_string(NodeType n) {
        {static_cast<uint8_t>(NodeType::kMotorWayJunction), "motor_way_junction"},
        {static_cast<uint8_t>(NodeType::kBorderControl), "border_control"},
        {static_cast<uint8_t>(NodeType::kTollGantry), "toll_gantry"},
-       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"}};
+       {static_cast<uint8_t>(NodeType::kSumpBuster), "sump_buster"},
+       {static_cast<uint8_t>(NodeType::kBuildingEntrance), "building_entrance"},
+       {static_cast<uint8_t>(NodeType::kElevator), "elevator"}};
 
   auto i = NodeTypeStrings.find(static_cast<uint8_t>(n));
   if (i == NodeTypeStrings.cend()) {
@@ -297,6 +301,8 @@ enum class Use : uint8_t {
   kPedestrian = 28,
   kBridleway = 29,
   kPedestrianCrossing = 32, // cross walks
+  kElevator = 33,
+  kEscalator = 34,
 
   // Rest/Service Areas
   kRestArea = 30,
@@ -309,13 +315,14 @@ enum class Use : uint8_t {
   kFerry = 41,
   kRailFerry = 42,
 
+  kConstruction = 43, // Road under construction
+
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
   kEgressConnection = 52,   // Connection to a egress node
   kPlatformConnection = 53, // Connection to a platform node
   kTransitConnection = 54,  // Connection to multi-use transit stop
-
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
@@ -335,10 +342,13 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kMountainBike), "mountain_bike"},
       {static_cast<uint8_t>(Use::kSidewalk), "sidewalk"},
       {static_cast<uint8_t>(Use::kFootway), "footway"},
+      {static_cast<uint8_t>(Use::kElevator), "elevator"},
       {static_cast<uint8_t>(Use::kSteps), "steps"},
+      {static_cast<uint8_t>(Use::kEscalator), "escalator"},
       {static_cast<uint8_t>(Use::kPath), "path"},
       {static_cast<uint8_t>(Use::kPedestrian), "pedestrian"},
       {static_cast<uint8_t>(Use::kBridleway), "bridleway"},
+      {static_cast<uint8_t>(Use::kPedestrianCrossing), "pedestrian_crossing"},
       {static_cast<uint8_t>(Use::kRestArea), "rest_area"},
       {static_cast<uint8_t>(Use::kServiceArea), "service_area"},
       {static_cast<uint8_t>(Use::kOther), "other"},
@@ -349,6 +359,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
       {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
+      {static_cast<uint8_t>(Use::kConstruction), "construction"},
   };
 
   auto i = UseStrings.find(static_cast<uint8_t>(u));
@@ -358,10 +369,28 @@ inline std::string to_string(Use u) {
   return i->second;
 }
 
-enum class TaggedName : uint8_t { // must start at 1 due to nulls
-  kTunnel = 1,
-  kBridge = 2
+enum class TaggedValue : uint8_t { // must start at 1 due to nulls
+  kLayer = 1,
+  kPronunciation = 2,
+  kBssInfo = 3,
+  kLevel = 4,
+  kLevelRef = 5,
+  // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
+  // see https://github.com/valhalla/valhalla/issues/3262
+  kTunnel = static_cast<uint8_t>('1'),
+  kBridge = static_cast<uint8_t>('2'),
+
 };
+
+enum class PronunciationAlphabet : uint8_t {
+  kNone = 0,
+  kIpa = 1,
+  kXKatakana = 2,
+  kXJeita = 3,
+  kNtSampa = 4
+};
+// must start at 1 due to nulls
+enum class Language : uint8_t { kNone = 1 };
 
 // Speed type
 enum class SpeedType : uint8_t {
@@ -538,7 +567,9 @@ enum class RestrictionType : uint8_t {
   kOnlyStraightOn = 6,
   kNoEntry = 7,
   kNoExit = 8,
-  kNoTurn = 9
+  kNoTurn = 9,
+  kOnlyProbable = 10,
+  kNoProbable = 11
 };
 
 // Access Restriction types. Maximum value supported is 31. DO NOT EXCEED.
@@ -551,7 +582,7 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8,
+  kDestinationAllowed = 8
 };
 
 // Minimum meters offset from start/end of shape for finding heading
@@ -616,6 +647,20 @@ constexpr uint8_t kDefaultFlowMask =
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
 constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+
+// There is only 1 bit to store these values, do not exceed the value 1.
+enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };
+
+inline std::string to_string(HOVEdgeType h) {
+  static const std::unordered_map<uint8_t, std::string> HOVEdgeTypeStrings =
+      {{static_cast<uint8_t>(HOVEdgeType::kHOV2), "HOV-2"},
+       {static_cast<uint8_t>(HOVEdgeType::kHOV3), "HOV-3"}};
+  auto i = HOVEdgeTypeStrings.find(static_cast<uint8_t>(h));
+  if (i == HOVEdgeTypeStrings.cend()) {
+    return "null";
+  }
+  return i->second;
+}
 
 } // namespace baldr
 } // namespace valhalla

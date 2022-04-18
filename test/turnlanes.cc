@@ -9,6 +9,7 @@
 #include "baldr/turnlanes.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
+#include "odin/markup_formatter.h"
 
 #include "proto/api.pb.h"
 #include "proto/directions.pb.h"
@@ -20,6 +21,43 @@
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
 #endif
+
+// this is useful when you modify the Options proto and need to restore it
+//#include "worker.h"
+// void fix_request(const std::string& filename, valhalla::Api& request) {
+//  auto txt = filename;
+//  txt.replace(txt.size() - 3, 3, "txt");
+//  std::string req_txt = test::load_binary_file(txt);
+//  req_txt.pop_back();
+//  req_txt.pop_back();
+//  req_txt = req_txt.substr(4);
+//
+//  //  valhalla::Api api;
+//  //  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
+//  //  request.mutable_options()->set_action(valhalla::Options::route);
+//  for (auto& loc : *request.mutable_options()->mutable_locations()) {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  for (auto& loc : *request.mutable_trip()->mutable_routes(0)->mutable_legs(0)->mutable_location())
+//  {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  std::ofstream f(filename);
+//  auto buf = request.SerializeAsString();
+//  f.write(buf.data(), buf.size());
+//}
 
 using namespace valhalla::baldr;
 
@@ -93,8 +131,10 @@ void test_turn_lanes(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();

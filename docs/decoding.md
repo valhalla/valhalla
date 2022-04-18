@@ -223,3 +223,63 @@ decode <- function(encoded) {
   return (decoded)
 }
 ```
+
+## Go
+
+```go
+func decodePolyline(encoded *string, precisionOptional ...int) [][]float64 {
+	// default to 6 digits of precision
+	precision := 6
+	if len(precisionOptional) > 0 {
+		precision = precisionOptional[0]
+	}
+	factor := math.Pow10(precision)
+
+	// Coordinates have variable length when encoded, so just keep
+	// track of whether we've hit the end of the string. In each
+	// loop iteration, a single coordinate is decoded.
+	lat, lng := 0, 0
+	var coordinates [][]float64
+	index := 0
+	for index < len(*encoded) {
+		// Consume varint bits for lat until we run out
+		var byte int = 0x20
+		shift, result := 0, 0
+		for byte >= 0x20 {
+			byte = int((*encoded)[index]) - 63
+			result |= (byte & 0x1f) << shift
+			shift += 5
+			index++
+		}
+
+		// check if we need to go negative or not
+		if (result & 1) > 0 {
+			lat += ^(result >> 1)
+		} else {
+			lat += result >> 1
+		}
+
+		// Consume varint bits for lng until we run out
+		byte = 0x20
+		shift, result = 0, 0
+		for byte >= 0x20 {
+			byte = int((*encoded)[index]) - 63
+			result |= (byte & 0x1f) << shift
+			shift += 5
+			index++
+		}
+
+		// check if we need to go negative or not
+		if (result & 1) > 0 {
+			lng += ^(result >> 1)
+		} else {
+			lng += result >> 1
+		}
+
+		// scale the int back to floating point and store it
+		coordinates = append(coordinates, []float64{float64(lat) / factor, float64(lng) / factor})
+	}
+
+	return coordinates
+}
+```

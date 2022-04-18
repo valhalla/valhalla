@@ -67,6 +67,7 @@ TEST(locate, basic_properties) {
   std::vector<std::string> way_names = {
       "AB", "BC", "AD", "BE", "CF", "DE", "EF", "DG", "EH", "FI", "GH", "HI",
   };
+  std::vector<int> allowed_headings = {0, 90, 180, 270, 360};
   // check each locations resulting info
   for (size_t i = 0; i < 12; ++i) {
     // get some info
@@ -83,6 +84,14 @@ TEST(locate, basic_properties) {
     // check both directions of the edge
     auto edges = rapidjson::Pointer("/" + std::to_string(i) + "/edges").Get(response)->GetArray();
     ASSERT_EQ(edges.Size(), 2);
+
+    // check if headings make sense
+    auto h1 = static_cast<int>(
+        rapidjson::Pointer("/" + std::to_string(i) + "/edges/0/heading").Get(response)->GetDouble());
+    auto h2 = static_cast<int>(
+        rapidjson::Pointer("/" + std::to_string(i) + "/edges/1/heading").Get(response)->GetDouble());
+    ASSERT_TRUE(h2 == (h1 + 180) % 360);
+
     for (const auto& edge : edges) {
       ASSERT_EQ(rapidjson::Pointer("/edge_info/names/0").Get(edge)->GetString(), way_name);
       ASSERT_EQ(rapidjson::Pointer("/edge/classification/classification").Get(edge)->GetString(),
@@ -103,6 +112,21 @@ TEST(locate, basic_properties) {
       ASSERT_EQ(rapidjson::Pointer("/live_speed/breakpoint_1").Get(edge)->GetDouble(), 0.67);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/speed_2").Get(edge)->GetInt(), 122);
       ASSERT_EQ(rapidjson::Pointer("/live_speed/congestion_2").Get(edge)->GetDouble(), 1.0);
+
+      // make sure the heading was determined correctly
+      auto heading = static_cast<int>(rapidjson::Pointer("/heading").Get(edge)->GetDouble());
+      ASSERT_TRUE(std::count(allowed_headings.begin(), allowed_headings.end(), heading));
     }
   }
+
+  // if we  search with a cutoff and a certain heading and tolerance we should end up with no results
+  result = gurka::do_action(valhalla::Options::locate, map, {"1"}, "none",
+                            {
+                                {"/locations/0/heading", "45"},
+                                {"/locations/0/heading_tolerance", "20"},
+                                {"/locations/0/search_cutoff", "1"},
+                            },
+                            reader, &json);
+  ASSERT_EQ(result.options().locations(0).heading_tolerance(), 20);
+  ASSERT_TRUE(result.options().locations(0).correlation().edges().empty());
 }

@@ -60,13 +60,13 @@
       "max_distance": 5000000,
       "max_locations": 20,
       "max_matrix_distance": 400000,
-      "max_matrix_locations": 50
+      "max_matrix_location_pairs": 2500
     },
     "auto_shorter": {
       "max_distance": 5000000,
       "max_locations": 20,
       "max_matrix_distance": 400000,
-      "max_matrix_locations": 50
+      "max_matrix_location_pairs": 2500
     },
     "isochrone": {
       "max_contours": 4,
@@ -84,13 +84,13 @@
       "max_distance": 500000,
       "max_locations": 50,
       "max_matrix_distance": 0,
-      "max_matrix_locations": 0
+      "max_matrix_location_pairs": 0
     },
     "pedestrian": {
       "max_distance": 250000,
       "max_locations": 50,
       "max_matrix_distance": 200000,
-      "max_matrix_locations": 50,
+      "max_matrix_location_pairs": 2500,
       "max_transit_walking_distance": 10000,
       "min_transit_walking_distance": 1
     },
@@ -103,8 +103,8 @@
       "max_gps_accuracy": 100,
       "max_search_radius": 100,
       "max_shape": 16000,
-      "max_best_paths": 4,
-      "max_best_paths_shape": 100
+      "max_alternates": 3,
+      "max_alternates_shape": 100
     }
   }
 }

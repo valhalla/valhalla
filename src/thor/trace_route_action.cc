@@ -7,10 +7,10 @@
 #include <utility>
 #include <vector>
 
+#include "baldr/attributes_controller.h"
 #include "meili/map_matcher.h"
 #include "meili/match_result.h"
 #include "midgard/util.h"
-#include "thor/attributes_controller.h"
 #include "thor/map_matcher.h"
 #include "thor/route_matcher.h"
 #include "thor/triplegbuilder.h"
@@ -44,8 +44,8 @@ void add_path_edge(valhalla::Location* l,
                    float percent_along,
                    const midgard::PointLL& ll,
                    float distance) {
-  l->mutable_path_edges()->Clear();
-  auto* edge = l->mutable_path_edges()->Add();
+  l->mutable_correlation()->mutable_edges()->Clear();
+  auto* edge = l->mutable_correlation()->mutable_edges()->Add();
   edge->set_graph_id(edge_id);
   edge->set_percent_along(percent_along);
   edge->mutable_ll()->set_lng(ll.first);
@@ -74,9 +74,8 @@ void thor_worker_t::trace_route(Api& request) {
   parse_locations(request);
   parse_costing(request);
   parse_measurements(request);
-  parse_filter_attributes(request);
-
   const auto& options = *request.mutable_options();
+  controller = AttributesController(options);
 
   switch (options.shape_match()) {
     // If the exact points from a prior route that was run against the Valhalla road network,
@@ -126,15 +125,6 @@ void thor_worker_t::trace_route(Api& request) {
       // clang-format on
       break;
   }
-
-  // log admin areas
-  if (!options.do_not_track()) {
-    for (const auto& route : request.trip().routes()) {
-      for (const auto& leg : route.legs()) {
-        log_admin(leg);
-      }
-    }
-  }
 }
 
 /*
@@ -166,8 +156,7 @@ void thor_worker_t::route_match(Api& request) {
       // Form the trip path based on mode costing, origin, destination, and path edges
       auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
       thor::TripLegBuilder::Build(options, controller, *reader, mode_costing, pleg.begin(),
-                                  pleg.end(), *origin, *dest, std::list<valhalla::Location>{}, leg,
-                                  {"edge_walk"}, interrupt);
+                                  pleg.end(), *origin, *dest, leg, {"edge_walk"}, interrupt);
       // Next leg
       origin = dest;
     }
@@ -192,8 +181,9 @@ thor_worker_t::map_match(Api& request) {
   }
 
   // we don't allow multi path for trace route at the moment, discontinuities force multi route
-  int topk =
-      request.options().action() == Options::trace_attributes ? request.options().best_paths() : 1;
+  int topk = request.options().action() == Options::trace_attributes
+                 ? request.options().alternates() + 1
+                 : 1;
   auto topk_match_results = matcher->OfflineMatch(trace, topk);
 
   // Process each score/match result
@@ -222,7 +212,7 @@ thor_worker_t::map_match(Api& request) {
 
         // Make one path edge from it
         reader->GetGraphTile(match.edgeid, tile);
-        auto* pe = options.mutable_shape(i)->mutable_path_edges()->Add();
+        auto* pe = options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         pe->mutable_ll()->set_lat(match.lnglat.lat());
         pe->mutable_ll()->set_lng(match.lnglat.lng());
         for (const auto& n : reader->edgeinfo(match.edgeid).GetNames()) {
@@ -235,7 +225,7 @@ thor_worker_t::map_match(Api& request) {
         }
         for (int j = 0;
              j < matcher->state_container().state(match.stateid).candidate().edges.size() - 1; ++j) {
-          options.mutable_shape(i)->mutable_path_edges()->Add();
+          options.mutable_shape(i)->mutable_correlation()->mutable_edges()->Add();
         }
       }
     }
@@ -342,8 +332,7 @@ void thor_worker_t::build_trace(
   auto& leg = *request.mutable_trip()->add_routes()->add_legs();
   thor::TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                               path_edges.begin(), path_edges.end(), *origin_location,
-                              *destination_location, std::list<valhalla::Location>{}, leg,
-                              {"map_snap"}, interrupt, &edge_trimming);
+                              *destination_location, leg, {"map_snap"}, interrupt, edge_trimming);
 }
 
 void thor_worker_t::build_route(
@@ -372,8 +361,9 @@ void thor_worker_t::build_route(
     int dest_match_idx = dest_segment->last_match_idx;
 
     for (int i = origin_match_idx; i <= dest_match_idx; ++i) {
-      options.mutable_shape(i)->set_route_index(route_index);
-      options.mutable_shape(i)->set_waypoint_index(std::numeric_limits<uint32_t>::max());
+      options.mutable_shape(i)->mutable_correlation()->set_route_index(route_index);
+      options.mutable_shape(i)->mutable_correlation()->set_waypoint_index(
+          std::numeric_limits<uint32_t>::max());
     }
 
     // initialize the origin and destination location for route
@@ -382,8 +372,8 @@ void thor_worker_t::build_route(
 
     // when handling multi routes, orsm serializer need to know both the
     // matching_index(route_index) and the waypoint_index(shape_index).
-    origin_location->set_waypoint_index(way_point_index);
-    destination_location->set_waypoint_index(++way_point_index);
+    origin_location->mutable_correlation()->set_waypoint_index(way_point_index);
+    destination_location->mutable_correlation()->set_waypoint_index(++way_point_index);
 
     // we fake up something that looks like the output of loki. segment edge id and matchresult edge
     // ids can disagree at node snaps but leg building requires that we refer to edges in the path.
@@ -426,8 +416,7 @@ void thor_worker_t::build_route(
     auto& leg = *route->mutable_legs()->Add();
     TripLegBuilder::Build(options, controller, matcher->graphreader(), mode_costing,
                           path.first.cbegin(), path.first.cend(), *origin_location,
-                          *destination_location, std::list<valhalla::Location>{}, leg, {"map_snap"},
-                          interrupt, &edge_trimming);
+                          *destination_location, leg, {"map_snap"}, interrupt, edge_trimming);
 
     if (path.second.back()->discontinuity) {
       ++route_index;

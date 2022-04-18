@@ -27,6 +27,21 @@ using namespace valhalla::midgard;
 
 namespace {
 
+struct spatialite_singleton_t {
+  static const spatialite_singleton_t& get_instance() {
+    static spatialite_singleton_t s;
+    return s;
+  }
+
+private:
+  spatialite_singleton_t() {
+    spatialite_initialize();
+  }
+  ~spatialite_singleton_t() {
+    spatialite_shutdown();
+  }
+};
+
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
@@ -34,6 +49,7 @@ const std::string nodes_file = "nodes.bin";
 const std::string edges_file = "edges.bin";
 const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
+const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
@@ -145,23 +161,15 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-bool load_spatialite(sqlite3* db_handle) {
-  sqlite3_enable_load_extension(db_handle, 1);
-  // we do a bunch of failover for changes to the module file name over the years
-  for (const auto& mod_name : std::vector<std::string>{"mod_spatialite", "mod_spatialite.so",
-                                                       "libspatialite", "libspatialite.so"}) {
-    std::string sql = "SELECT load_extension('" + mod_name + "')";
-    char* err_msg = nullptr;
-    if (sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg) == SQLITE_OK) {
-      LOG_INFO("SpatiaLite loaded as an extension");
-      return true;
-    } else {
-      LOG_WARN("load_extension() warning: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-    }
+std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
+  if (!handle) {
+    return nullptr;
   }
-  LOG_ERROR("sqlite3 load_extension() failed to load spatialite module");
-  return false;
+
+  spatialite_singleton_t::get_instance();
+  void* conn = spatialite_alloc_connection();
+  spatialite_init_ex(handle, conn, 0);
+  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
@@ -218,6 +226,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
+  std::string pronunciation_bin = tile_dir + pronunciation_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
@@ -231,7 +240,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
-                                         way_nodes_bin, access_bin);
+                                         way_nodes_bin, access_bin, pronunciation_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
@@ -312,7 +321,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, tiles);
+                        cr_to_bin, pronunciation_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -338,7 +347,10 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Build bike share stations
   if (start_stage <= BuildStage::kBss && BuildStage::kBss <= end_stage) {
-    BssBuilder::Build(config, bss_nodes_bin);
+    if (start_stage == BuildStage::kBss) {
+      osm_data.read_from_unique_names_file(tile_dir);
+    }
+    BssBuilder::Build(config, osm_data, bss_nodes_bin);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -389,6 +401,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
+    remove_temp_file(pronunciation_bin);
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);

@@ -26,10 +26,12 @@ highway = {
 ["pedestrian"] =        {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
 ["steps"] =             {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
 ["bridleway"] =         {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
-["construction"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["cycleway"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "true"},
 ["path"] =              {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "true"},
-["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"}
+["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
+["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -372,10 +374,13 @@ separated = {
 
 oneway = {
 ["no"] = "false",
+["false"] = "false",
 ["-1"] = "true",
 ["yes"] = "true",
 ["true"] = "true",
-["1"] = "true"
+["1"] = "true",
+["reversible"] = "false",
+["alternating"] = "false"
 }
 
 bridge = {
@@ -816,15 +821,46 @@ function normalize_measurement(measurement)
   return nil
 end
 
+-- Returns true if the only payment types present are cash. Example payment kv's look like:
+-- payment:cash=yes
+-- payment:credit_cards=no
+-- There can be multiple payment types on a given way/node. This routine determines
+-- if the payment types on the way/node are all cash types. There are (at the moment) 60
+-- types of payments, but only three are cash: cash, notes, coins.
+-- Examining the types of values you might find for 'payment:coins' the predominant
+-- usages are 'yes' and 'no'. However, there are also some values like '$0.35' and 'euro'.
+-- Hence, this routine considers ~'NO' an affirmative value.
+function is_cash_only_payment(kv)
+  local allows_cash_payment = false
+  local allows_noncash_payment = false
+  for key, value in pairs(kv) do
+    if string.sub(key, 1, 8) == "payment:" then
+      local payment_type = string.sub(key, 9, -1)
+      local is_cash_payment_type = payment_type == "cash" or payment_type == "notes" or payment_type == "coins"
+      if (is_cash_payment_type == true and allows_cash_payment == false) then
+        allows_cash_payment = string.upper(value) ~= "NO"
+      end
+      if (is_cash_payment_type == false and allows_noncash_payment == false) then
+        allows_noncash_payment = string.upper(value) ~= "NO"
+      end
+    end
+  end
+
+  return allows_cash_payment == true and allows_noncash_payment == false
+end
+
 --returns 1 if you should filter this way 0 otherwise
 function filter_tags_generic(kv)
 
-  if (kv["highway"] == "construction" or kv["highway"] == "proposed") then
+  if (kv["highway"] == "construction" and kv["construction"] == nil) or kv["highway"] == "proposed" then
     return 1
   end
 
   --figure out what basic type of road it is
   local forward = highway[kv["highway"]]
+  if kv["highway"] == "construction" then
+    forward = highway[kv["construction"]]
+  end
   local ferry = kv["route"] == "ferry"
   local rail = kv["route"] == "shuttle_train"
   local access = access[kv["access"]]
@@ -1039,6 +1075,7 @@ function filter_tags_generic(kv)
       kv["moped_forward"] = "false"
       kv["motorcycle_forward"] = "false"
     else
+      -- by returning 1 we will toss this way
       return 1
     end
   end
@@ -1371,17 +1408,20 @@ function filter_tags_generic(kv)
    end
 
   --set a few flags
-  local road_class = road_class[kv["highway"]]
-
-  if kv["highway"] == nil and ferry then
-    road_class = 2 --TODO:  can we weight based on ferry types?
-  elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
-    road_class = 2 --TODO:  can we weight based on rail types?
-  elseif road_class == nil then --service and other = 7
-    road_class = 7
+  local rc = road_class[kv["highway"]]
+  if kv["highway"] == "construction" then
+    rc = road_class[kv["construction"]]
   end
 
-  kv["road_class"] = road_class
+  if kv["highway"] == nil and ferry then
+    rc = 2 --TODO:  can we weight based on ferry types?
+  elseif kv["highway"] == nil and (kv["railway"] or kv["route"] == "shuttle_train") then
+    rc = 2 --TODO:  can we weight based on rail types?
+  elseif rc == nil then --service and other = 7
+    rc = 7
+  end
+
+  kv["road_class"] = rc
 
   kv["default_speed"] = default_speed[kv["road_class"]]
 
@@ -1393,7 +1433,9 @@ function filter_tags_generic(kv)
   local use = use[kv["service"]]
 
   if kv["highway"] then
-     if kv["highway"] == "track" then
+     if kv["highway"] == "construction" then
+        use = 43
+     elseif kv["highway"] == "track" then
         use = 3
      elseif kv["highway"] == "living_street" then
         use = 10
@@ -1409,6 +1451,10 @@ function filter_tags_generic(kv)
         use = 32
      elseif kv["highway"] == "footway" then
         use = 25
+     elseif kv["highway"] == "elevator" then
+        use = 33 --elevator
+     elseif (kv["highway"] == "steps" and kv["conveying"] ~= nil) then
+        use = 34 --escalator
      elseif kv["highway"] == "steps" then
         use = 26 --steps/stairs
      elseif kv["highway"] == "path" then
@@ -1434,7 +1480,8 @@ function filter_tags_generic(kv)
     use = 0 --general road, no special use
   end
 
-  if (kv["access"] == "emergency" or kv["emergency"] == "yes") and
+  -- do not override 'construction' use
+  if use ~= 43 and (kv["access"] == "emergency" or kv["emergency"] == "yes") and
       kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
       kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
       kv["bus_forward"] == "false" and kv["bus_backward"] == "false" and
@@ -1541,7 +1588,12 @@ function filter_tags_generic(kv)
   kv["cycle_lane_left_opposite"] = cycle_lane_left_opposite
 
 
-  if kv["highway"] and string.find(kv["highway"], "_link") then --*_link
+  local highway_type = kv["highway"]
+  if kv["highway"] == "construction" then
+    highway_type = kv["construction"]
+  end
+
+  if highway_type and string.find(highway_type, "_link") then --*_link
      kv["link"] = "true"  --do we need to add more?  turnlane?
      kv["link_type"] = kv["link_type"]
   end
@@ -1618,22 +1670,21 @@ function filter_tags_generic(kv)
     kv["seasonal"] = "true"
   end
 
+  kv["hov_tag"] = "true"
   if (kv["hov"] and kv["hov"] == "no") then
-    kv["hov_tag"] = "false"
     kv["hov_forward"] = "false"
     kv["hov_backward"] = "false"
   else
     kv["hov_forward"] = kv["auto_forward"]
     kv["hov_backward"] = kv["auto_backward"]
-
   end
 
   -- hov restrictions
   if ((kv["hov"] and kv["hov"] ~= "no") or kv["hov:lanes"] or kv["hov:minimum"]) then
 
-    kv["hov_tag"] = "true"
-
     local only_hov_allowed = kv["hov"] == "designated"
+
+    -- If "hov:lanes" is specified ensure all lanes are tagged "designated"
     if only_hov_allowed then
       if kv["hov:lanes"] then
         for lane in (kv["hov:lanes"] .. '|'):gmatch("([^|]*)|") do
@@ -1644,7 +1695,32 @@ function filter_tags_generic(kv)
       end
     end
 
+    -- I want to be strict with the "hov:minimum" tag: I will only accept the
+    -- values 2 or 3. We want to be strict because routing onto an HOV lane
+    -- without the correct number of occupants is illegal.
     if only_hov_allowed then
+      if (kv["hov:minimum"] == "2") then
+        kv["hov_type"] = "HOV2";
+      elseif (kv["hov:minimum"] == "3") then
+        kv["hov_type"] = "HOV3";
+      else
+        only_hov_allowed = false;
+      end
+    end
+
+    -- HOV lanes are sometimes time-conditional and can change direction. We avoid
+    -- these. Also, we expect "hov_type" to be set.
+    if only_hov_allowed then
+      local avoid_these_hovs = kv["oneway"] == "alternating" or kv["oneway"] == "reversible" or
+        kv["oneway"] == "false" or kv["oneway:conditional"] ~= nil or kv["access:conditional"] ~= nil
+      only_hov_allowed = not avoid_these_hovs;
+    end
+
+    if only_hov_allowed then
+      -- If we get here we know the way is a true hov-only-lane (not mixed).
+      -- As a result, none of the following costings can use it.
+      -- (Okay, that's not exactly true, we do some wizardry in some of the
+      -- costings to allow hov under certain conditions.)
       if (kv["auto_tag"] == nil) then
         kv["auto_forward"] = "false"
         kv["auto_backward"] = "false"
@@ -1664,6 +1740,10 @@ function filter_tags_generic(kv)
         kv["bike_forward"] = "false"
         kv["bike_backward"] = "false"
       end
+    else
+      -- This is not an hov-only lane.
+      kv["hov_forward"] = "false"
+      kv["hov_backward"] = "false"
     end
   end
 
@@ -1719,6 +1799,48 @@ function filter_tags_generic(kv)
   kv["bike_regional_ref"] = rref
   kv["bike_local_ref"] = lref
   kv["bike_network_mask"] = bike_mask
+
+  -- turn semicolon into colon due to challenges to store ";" in string
+  if kv["level"] ~= nil then
+    kv["level"] = kv["level"]:gsub(";", ":")
+  end
+
+  -- Explicitly turn off access for construction type. It's done for backward compatibility
+  -- of valhalla tiles and valhalla routing. In case we allow non-zero access then older
+  -- versions of router will work with new tiles incorrectly. They would start to route
+  -- on roads under construction because they're not aware about new 'Use::kConstruction'
+  -- and use only access mode to check if an edge is routable or not.
+  if kv["highway"] == "construction" then
+    kv["auto_forward"] = "false"
+    kv["auto_backward"] = "false"
+
+    kv["truck_forward"] = "false"
+    kv["truck_backward"] = "false"
+
+    kv["bus_forward"] = "false"
+    kv["bus_backward"] = "false"
+
+    kv["taxi_forward"] = "false"
+    kv["taxi_backward"] = "false"
+
+    kv["hov_forward"] = "false"
+    kv["hov_backward"] = "false"
+
+    kv["pedestrian_forward"] = "false"
+    kv["pedestrian_backward"] = "false"
+
+    kv["bike_forward"] = "false"
+    kv["bike_backward"] = "false"
+
+    kv["moped_forward"] = "false"
+    kv["moped_backward"] = "false"
+
+    kv["motorcycle_forward"] = "false"
+    kv["motorcycle_backward"] = "false"
+
+    kv["emergency_forward"] = "false"
+    kv["emergency_backward"] = "false"
+  end
 
   return 0
 end
@@ -1939,39 +2061,16 @@ function nodes_proc (kv, nokeys)
     kv["border_control"] = "true"
   elseif kv["barrier"] == "toll_booth" then
     kv["toll_booth"] = "true"
+    if is_cash_only_payment(kv) then
+      kv["cash_only_toll"] = "true"
+    end
   elseif kv["highway"] == "toll_gantry" then
     kv["toll_gantry"] = "true"
+  elseif kv["entrance"] == "yes" and kv["indoor"] == "yes" then
+    kv["building_entrance"] = "true"
+  elseif kv["highway"] == "elevator" then
+    kv["elevator"] = "true"
   end
-
-  local coins = toll[kv["payment:coins"]] or "false"
-  local notes = toll[kv["payment:notes"]] or "false"
-
-  --assume cash for toll, toll:*, and fee
-  local cash =  toll[kv["toll"]] or toll[kv["toll:hgv"]] or toll[kv["toll:bicycle"]] or toll[kv["toll:hov"]] or
-                toll[kv["toll:motorcar"]] or toll[kv["toll:motor_vehicle"]] or toll[kv["toll:bus"]] or
-                toll[kv["toll:motorcycle"]] or toll[kv["payment:cash"]] or toll[kv["fee"]] or "false"
-
-  local etc = toll[kv["payment:e_zpass"]] or toll[kv["payment:e_zpass:name"]] or
-              toll[kv["payment:pikepass"]] or toll[kv["payment:via_verde"]] or "false"
-
-  local cash_payment = 0
-
-  if (cash == "true" or (coins == "true" and notes == "true")) then
-    cash_payment = 3
-  elseif coins == "true" then
-    cash_payment = 1
-  elseif notes == "true" then
-    cash_payment = 2
-  end
-
-  local etc_payment = 0
-
-  if etc == "true" then
-    etc_payment = 4
-  end
-
-  --store a mask denoting payment type
-  kv["payment_mask"] = bit.bor(cash_payment, etc_payment)
 
   if kv["amenity"] == "bicycle_rental" or (kv["shop"] == "bicycle" and kv["service:bicycle:rental"] == "yes") then
     kv["bicycle_rental"] = "true"
@@ -2066,8 +2165,14 @@ function rels_proc (kv, nokeys)
   end
 
   if (kv["type"] == "route" or kv["type"] == "restriction") then
+     if kv["restriction:probable"] then
+       if kv["restriction"] or kv["restriction:conditional"] then
+         kv["restriction:probable"] = nil
+       end
+     end
 
-     local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])]
+     local restrict = restriction[kv["restriction"]] or restriction[restriction_prefix(kv["restriction:conditional"])] or
+                      restriction[restriction_prefix(kv["restriction:probable"])]
 
      local restrict_type = restriction[kv["restriction:hgv"]] or restriction[kv["restriction:emergency"]] or
                            restriction[kv["restriction:taxi"]] or restriction[kv["restriction:motorcar"]] or
@@ -2080,11 +2185,13 @@ function rels_proc (kv, nokeys)
        restrict = restrict_type
      end
 
-     if kv["type"] == "restriction" or kv["restriction:conditional"] then
+     if kv["type"] == "restriction" or kv["restriction:conditional"] or kv["restriction:probable"] then
 
        if restrict ~= nil then
 
          kv["restriction:conditional"] = restriction_suffix(kv["restriction:conditional"])
+         kv["restriction:probable"] = restriction_suffix(kv["restriction:probable"])
+
          kv["restriction:hgv"] = restriction[kv["restriction:hgv"]]
          kv["restriction:emergency"] = restriction[kv["restriction:emergency"]]
          kv["restriction:taxi"] = restriction[kv["restriction:taxi"]]

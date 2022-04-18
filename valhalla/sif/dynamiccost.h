@@ -11,6 +11,7 @@
 #include <valhalla/baldr/graphtile.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/baldr/timedomain.h>
 #include <valhalla/baldr/transitdeparture.h>
 #include <valhalla/midgard/logging.h>
@@ -23,6 +24,49 @@
 #include <memory>
 #include <rapidjson/document.h>
 #include <unordered_map>
+
+// macros aren't great but writing these out for every option is an abomination worse than this macro
+
+/**
+ * this macro takes a ranged_default_t and uses it to make sure user provided values (in json or in
+ * pbf) are in range before setting it on the costing options
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param range            ranged_default_t object which will check any provided values are in range
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_RANGED_DEFAULT(costing_options, range, json, json_key, option_name)                 \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
+                                                  costing_options->has_##option_name##_case()        \
+                                                      ? costing_options->option_name()               \
+                                                      : range.def)));                                \
+  }
+
+/**
+ * this macro takes a default value and uses it when no user provided values exist (in json or in pbf)
+ * to set the option on the costing options object
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param def              the default value which is used when neither json nor pbf is provided
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the json
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_DEFAULT(costing_options, def, json, json_key, option_name)                          \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        rapidjson::get<std::remove_cv<std::remove_reference<decltype(def)>::type>::                  \
+                           type>(json, json_key,                                                     \
+                                 costing_options->has_##option_name##_case()                         \
+                                     ? costing_options->option_name()                                \
+                                     : def));                                                        \
+  }
 
 using namespace valhalla::midgard;
 
@@ -80,7 +124,7 @@ public:
    * @param  access_mask Access mask
    * @param  penalize_uturns Should we penalize uturns?
    */
-  DynamicCost(const CostingOptions& options,
+  DynamicCost(const Costing& options,
               const TravelMode mode,
               uint32_t access_mask,
               bool penalize_uturns = false);
@@ -204,7 +248,8 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return (node->access() & access_mask_) || ignore_access_;
+    return ((node->access() & access_mask_) || ignore_access_) &&
+           !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
   /**
@@ -231,7 +276,7 @@ public:
         ((disallow_mask & kDisallowEndRestriction) && edge->end_restriction()) ||
         ((disallow_mask & kDisallowSimpleRestriction) && edge->restrictions()) ||
         ((disallow_mask & kDisallowShortcut) && edge->is_shortcut());
-    return accessible && !assumed_restricted;
+    return accessible && !assumed_restricted && (edge->use() != baldr::Use::kConstruction);
   }
 
   /**
@@ -245,9 +290,10 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return (edge->forwardaccess() & access_mask_) ||
-           (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-           (ignore_oneways_ && (edge->reverseaccess() & access_mask_));
+    return ((edge->forwardaccess() & access_mask_) ||
+            (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
+            (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
+           (edge->use() != baldr::Use::kConstruction);
   }
 
   inline virtual bool ModeSpecificAllowed(const baldr::AccessRestriction&) const {
@@ -272,12 +318,14 @@ public:
    * the time (seconds) to traverse the edge.
    * @param   edge    Pointer to a directed edge.
    * @param   tile    Pointer to the tile which contains the directed edge for speed lookup
-   * @param   seconds Seconds of week for historical speed lookup
+   * @param  time_info Time info about edge passing, uses second_of_week for historical speed lookup
+   * and seconds_from_now for live-traffic smoothing.
+   * @param   flow_sources  Which speed sources were used in this speed calculation.
    * @return  Returns the cost and time (seconds).
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const = 0;
 
   /**
@@ -409,6 +457,15 @@ public:
       // Iterate through the restrictions
       const EdgeLabel* first_pred = &pred;
       for (const auto& cr : restrictions) {
+        if (cr->type() == baldr::RestrictionType::kNoProbable ||
+            cr->type() == baldr::RestrictionType::kOnlyProbable) {
+          // A complex restriction can not have a 0 probability set.  range is 1 to 100
+          // restriction_probability_= 0 means ignore probable restrictions
+          if (restriction_probability_ == 0 || restriction_probability_ > cr->probability()) {
+            continue;
+          }
+        }
+
         // Walk the via list, move to the next restriction if the via edge
         // Ids do not match the path for this restriction.
         bool match = true;
@@ -595,7 +652,7 @@ public:
    * @param  has_left     Did we make a left (left or sharp left)
    * @param  has_right    Did we make a right (right or sharp right)
    * @param  penalize_internal_uturns   Do we want to penalize uturns on a short, internal edge
-   * @param  internal_turn              Did we make an turn on a short internal edge.
+   * @param  internal_turn              Did we make an internal turn on the previous edge.
    * @param  seconds      Time.
    */
   inline void AddUturnPenalty(const uint32_t idx,
@@ -807,6 +864,25 @@ public:
     return !ignore_closures_ && (flow_mask_ & baldr::kCurrentFlowMask) && tile->IsClosed(edge);
   }
 
+  float SpeedPenalty(const baldr::DirectedEdge* edge,
+                     const graph_tile_ptr& tile,
+                     const baldr::TimeInfo& time_info,
+                     uint8_t flow_sources,
+                     float edge_speed) const {
+    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    float average_edge_speed = edge_speed;
+    // dont use current speed layer for penalties as live speeds might be too low/too high
+    // better to use layers with smoothed/constant speeds
+    if (top_speed_ != baldr::kMaxAssumedSpeed && (flow_sources & baldr::kCurrentFlowMask)) {
+      average_edge_speed =
+          tile->GetSpeed(edge, flow_mask_ & (~baldr::kCurrentFlowMask), time_info.second_of_week);
+    }
+    float speed_penalty =
+        (average_edge_speed > top_speed_) ? (average_edge_speed - top_speed_) * 0.05f : 0.0f;
+
+    return speed_penalty;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
@@ -872,6 +948,9 @@ protected:
   // A mask which determines which flow data the costing should use from the tile
   uint8_t flow_mask_;
 
+  // percentage of allowing probable restriction a 0 probability means do not utilize them
+  uint8_t restriction_probability_{0};
+
   // Whether or not to do shortest (by length) routes
   // Note: hierarchy pruning means some costings (auto, truck, etc) won't do absolute shortest
   bool shortest_;
@@ -886,15 +965,28 @@ protected:
 
   // Should we penalize uturns on short internal edges?
   bool penalize_uturns_;
+
+  bool exclude_unpaved_{false};
+
+  bool exclude_cash_only_tolls_{false};
+
+  // HOT/HOV flags
+  bool include_hot_{false};
+  bool include_hov2_{false};
+  bool include_hov3_{false};
+
   /**
    * Get the base transition costs (and ferry factor) from the costing options.
    * @param costing_options Protocol buffer of costing options.
    */
-  void get_base_costs(const CostingOptions& costing_options) {
+  void get_base_costs(const Costing& costing) {
+    const auto& costing_options = costing.options();
     // Cost only (no time) penalties
     alley_penalty_ = costing_options.alley_penalty();
     destination_only_penalty_ = costing_options.destination_only_penalty();
     maneuver_penalty_ = costing_options.maneuver_penalty();
+
+    restriction_probability_ = costing_options.restriction_probability();
 
     // Transition costs (both time and cost)
     toll_booth_cost_ = {costing_options.toll_booth_cost() + costing_options.toll_booth_penalty(),
@@ -967,6 +1059,10 @@ protected:
     flow_mask_ = costing_options.flow_mask();
     // Set the top speed a vehicle wants to go
     top_speed_ = costing_options.top_speed();
+
+    exclude_unpaved_ = costing_options.exclude_unpaved();
+
+    exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
   /**
@@ -1070,45 +1166,37 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> use_living_streets_;
 
   ranged_default_t<float> closure_factor_;
-};
 
-/**
- * Parses the cost options from json and stores values in pbf.
- * @param object The json request represented as a DOM tree.
- * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
- */
-void ParseSharedCostOptions(const rapidjson::Value& obj, CostingOptions* pbf_costing_options);
+  bool exclude_unpaved_;
+
+  bool exclude_cash_only_tolls_ = false;
+
+  bool include_hot_ = false;
+  bool include_hov2_ = false;
+  bool include_hov3_ = false;
+};
 
 /**
  * Parses base cost options that are common for most costing models. If you use this function
  * make sure that different default values were overridden in the config. Also explicitly
  * disable options that shouldn't be parsed.
- * @param obj The json request represented as a DOM tree.
- * @param pbf_costing_options A mutable protocol buffer where the parsed json values will be stored.
- * @param base_cfg Default values with enable/disable parsing indicators for costing options.
+ * @param json The json request represented as a DOM tree.
+ * @param co A mutable protocol buffer where the parsed json values will be stored.
+ * @param cfg Default values with enable/disable parsing indicators for costing options.
  */
-void ParseBaseCostOptions(const rapidjson::Value& obj,
-                          CostingOptions* pbf_costing_options,
-                          const BaseCostingOptionsConfig& base_cfg);
-
-/**
- * Set default values of base costing options to pbf structure. Skip options that were
- * explicitly disabled.
- * @param pbf_costing_options A mutable protocol buffer where default values will be stored.
- * @param base_cfg Default values with enable/disable parsing indicators for costing options.
- */
-void SetDefaultBaseCostOptions(CostingOptions* pbf_costing_options,
-                               const BaseCostingOptionsConfig& base_cfg);
+void ParseBaseCostOptions(const rapidjson::Value& json,
+                          Costing* co,
+                          const BaseCostingOptionsConfig& cfg);
 
 /**
  * Parses all the costing options for all supported costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
- * @param options               where to store the parsed costing options
+ * @param options               where to store the parsed costing
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& costing_options_key,
-                         Options& options);
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& costing_options_key,
+                  Options& options);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1119,10 +1207,10 @@ void ParseCostingOptions(const rapidjson::Document& doc,
  * @param costing_options       where to store the parsed options
  * @param costing               specify the costing you want to parse or let it check the json
  */
-void ParseCostingOptions(const rapidjson::Document& doc,
-                         const std::string& key,
-                         CostingOptions* costing_options,
-                         Costing costing = static_cast<Costing>(Costing_ARRAYSIZE));
+void ParseCosting(const rapidjson::Document& doc,
+                  const std::string& key,
+                  Costing* costing,
+                  Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif
 

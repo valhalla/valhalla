@@ -24,7 +24,6 @@
 #include "sif/costconstants.h"
 #include "sif/dynamiccost.h"
 #include "sif/pedestriancost.h"
-#include "thor/attributes_controller.h"
 #include "thor/bidirectional_astar.h"
 #include "thor/pathalgorithm.h"
 #include "thor/triplegbuilder.h"
@@ -205,10 +204,10 @@ void make_tile() {
       << "Expected tile file didn't show up on disk - are the fixtures in the right location?";
 }
 
-void create_costing_options(Options& options, Costing costing) {
+void create_costing_options(Options& options, Costing::Type costing) {
   const rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
-  options.set_costing(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
+  options.set_costing_type(costing);
 }
 // Convert locations to format needed by PathAlgorithm
 std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
@@ -1678,6 +1677,39 @@ TEST(BiDiAstar, test_recost_path) {
     EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
                 get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
   }
+}
+
+class BiAstarTest : public thor::BidirectionalAStar {
+public:
+  explicit BiAstarTest(const boost::property_tree::ptree& config = {}) : BidirectionalAStar(config) {
+  }
+
+  void Clear() {
+    BidirectionalAStar::Clear();
+    if (clear_reserved_memory_) {
+      EXPECT_EQ(edgelabels_forward_.capacity(), 0);
+      EXPECT_EQ(edgelabels_reverse_.capacity(), 0);
+    } else {
+      EXPECT_LE(edgelabels_forward_.capacity(), max_reserved_labels_count_);
+      EXPECT_LE(edgelabels_reverse_.capacity(), max_reserved_labels_count_);
+    }
+  }
+};
+
+TEST(BiDiAstar, test_clear_reserved_memory) {
+  boost::property_tree::ptree config;
+  config.put("clear_reserved_memory", true);
+
+  BiAstarTest astar(config);
+  astar.Clear();
+}
+
+TEST(BiDiAstar, test_max_reserved_labels_count) {
+  boost::property_tree::ptree config;
+  config.put("max_reserved_labels_count", 10);
+
+  BiAstarTest astar(config);
+  astar.Clear();
 }
 
 class AstarTestEnv : public ::testing::Environment {

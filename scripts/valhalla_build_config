@@ -1,14 +1,16 @@
-#!/usr/bin/env python
-from __future__ import print_function
-import argparse
+#!/usr/bin/env python3
+from argparse import ArgumentParser, ArgumentTypeError, ArgumentDefaultsHelpFormatter
+from distutils.util import strtobool
 import json
-import pprint
+from typing import List, Union
 
-class optional:
-  def __init__(self, t=None):
-    self.type = t
 
-#global default configuration
+class Optional:
+    def __init__(self, t=None):
+        self.type = t
+
+
+# global default configuration
 config = {
   'mjolnir': {
     'max_cache_size': 1000000000,
@@ -16,23 +18,24 @@ config = {
     'use_lru_mem_cache': False,
     'lru_mem_cache_hard_control': False,
     'use_simple_mem_cache': False,
-    'user_agent': optional(str),
-    'tile_url': optional(str),
-    'tile_url_gz': optional(bool),
-    'concurrency': optional(int),
+    'user_agent': Optional(str),
+    'tile_url': Optional(str),
+    'tile_url_gz': Optional(bool),
+    'concurrency': Optional(int),
     'tile_dir': '/data/valhalla',
     'tile_extract': '/data/valhalla/tiles.tar',
     'traffic_extract': '/data/valhalla/traffic.tar',
-    'incident_dir': optional(str),
-    'incident_log': optional(str),
-    'shortcut_caching': optional(bool),
+    'incident_dir': Optional(str),
+    'incident_log': Optional(str),
+    'shortcut_caching': Optional(bool),
     'admin': '/data/valhalla/admin.sqlite',
     'timezone': '/data/valhalla/tz_world.sqlite',
     'transit_dir': '/data/valhalla/transit',
-    'transit_bounding_box': optional(str),
+    'transit_bounding_box': Optional(str),
     'hierarchy': True,
     'shortcuts': True,
     'include_driveways': True,
+    'include_construction': False,
     'include_bicycle': True,
     'include_pedestrian': True,
     'include_driving': True,
@@ -40,7 +43,7 @@ config = {
     'global_synchronized_cache': False,
     'max_concurrent_reader_users' : 1,
     'reclassify_links': True,
-    'default_speeds_config': optional(str),
+    'default_speeds_config': Optional(str),
     'data_processing': {
       'infer_internal_intersections': True,
       'infer_turn_channels': True,
@@ -49,7 +52,8 @@ config = {
       'use_direction_on_ways': False,
       'allow_alt_name': False,
       'use_urban_tag': False,
-      'use_rest_area': False
+      'use_rest_area': False,
+      'scan_tar': False
     },
     'logging': {
       'type': 'std_out',
@@ -58,7 +62,8 @@ config = {
     }
   },
   'additional_data': {
-    'elevation': '/data/valhalla/elevation/'
+    'elevation': '/data/valhalla/elevation/',
+    'elevation_url': Optional(str)
   },
   'loki': {
     'actions':['locate','route','height','sources_to_targets','optimized_route','isochrone','trace_route','trace_attributes','transit_available', 'expansion', 'centroid', 'status'],
@@ -94,6 +99,7 @@ config = {
       'proxy': 'ipc:///tmp/thor'
     },
     'max_reserved_labels_count': 1000000,
+    'clear_reserved_memory': False,
     'extended_search': False
   },
   'odin': {
@@ -104,6 +110,10 @@ config = {
     },
     'service': {
       'proxy': 'ipc:///tmp/odin'
+    },
+    'markup_formatter': {
+      'markup_enabled': False,
+      'phoneme_format': '<TEXTUAL_STRING> (<span class=<QUOTES>phoneme<QUOTES>>/<VERBAL_STRING>/</span>)'
     }
   },
   'meili': {
@@ -165,37 +175,25 @@ config = {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
-    'auto_shorter': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'bus': {
       'max_distance': 5000000.0,
       'max_locations': 50,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
-    },
-    'hov': {
-      'max_distance': 5000000.0,
-      'max_locations': 20,
-      'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'taxi': {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'pedestrian': {
       'max_distance': 250000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50,
+      'max_matrix_location_pairs': 2500,
       'min_transit_walking_distance': 1,
       'max_transit_walking_distance': 10000
     },
@@ -203,25 +201,25 @@ config = {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'motorcycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'bicycle': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'multimodal': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 0.0,
-      'max_matrix_locations': 0
+      'max_matrix_location_pairs': 0
     },
     'status': {
       'allow_verbose': False
@@ -230,13 +228,13 @@ config = {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'truck': {
       'max_distance': 5000000.0,
       'max_locations': 20,
       'max_matrix_distance': 400000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'skadi': {
       'max_shape': 750000,
@@ -254,14 +252,14 @@ config = {
       'max_gps_accuracy': 100.0,
       'max_search_radius': 100.0,
       'max_shape': 16000,
-      'max_best_paths': 4,
-      'max_best_paths_shape': 100
+      'max_alternates': 3,
+      'max_alternates_shape': 100
     },
     'bikeshare': {
       'max_distance': 500000.0,
       'max_locations': 50,
       'max_matrix_distance': 200000.0,
-      'max_matrix_locations': 50
+      'max_matrix_location_pairs': 2500
     },
     'centroid': {
       'max_distance': 200000.0,
@@ -275,11 +273,11 @@ config = {
     'max_exclude_polygons_length': 10000
   },
   'statsd': {
-    'host': optional(str),
+    'host': Optional(str),
     'port': 8125,
     'prefix': 'valhalla',
-    'batch_size': optional(int),
-    'tags': optional(list)
+    'batch_size': Optional(int),
+    'tags': Optional(list)
   }
 }
 
@@ -291,7 +289,7 @@ help_text = {
     'lru_mem_cache_hard_control': 'Use hard memory limit control for LRU memory cache (i.e. on every put) - never allow overcommit',
     'use_simple_mem_cache': 'Use memory cache within a simple hash map the clears all tiles when overcommitted',
     'user_agent': 'User-Agent http header to request single tiles',
-    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/optional/path/{tilePath}?some=optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
+    'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
     'tile_url_gz': 'Whether or not to request for compressed tiles',
     'concurrency': 'How many threads to use in the concurrent parts of tile building',
     'tile_dir': 'Location to read/write tiles to/from',
@@ -307,6 +305,7 @@ help_text = {
     'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
     'shortcuts': 'bool indicating whether shortcuts are to be built - default to True',
     'include_driveways': 'bool indicating whether private driveways are included - default to True',
+    'include_construction': 'bool indicating where roads under construction are included - default to False',
     'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
     'include_pedestrian': 'bool indicating whether pedestrian only ways are included - default to True',
     'include_driving': 'bool indicating whether driving only ways are included - default to True',
@@ -323,7 +322,8 @@ help_text = {
       'use_direction_on_ways': 'bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase',
       'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase',
       'use_urban_tag': 'bool indicating whether or not to use the urban area tag on the ways or to utilize the getDensity function within the graph enhancer phase',
-      'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways'
+      'use_rest_area': 'bool indicating whether or not to use the rest/service area tag on the ways',
+      'scan_tar': 'bool indicating whether or not to pre-scan the tar ball(s) when loading an extract with an index file, to warm up the OS page cache.'
     },
     'logging': {
       'type': 'Type of logger either std_out or file',
@@ -332,7 +332,8 @@ help_text = {
     }
   },
   'additional_data': {
-    'elevation': 'Location of srtmgl1 elevation tiles for using in valhalla_build_tiles'
+    'elevation': 'Location of elevation tiles',
+    'elevation_url': 'Http location to read elevations from. this address is used if elevation tiles were not found in the elevation directory. Ex.: http://<your_valhalla_tile_server_host>:<your_valhalla_tile_server_port>/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with an elevation path when it makes a request for that particular elevation'
   },
   'loki': {
     'actions': 'Comma separated list of allowable actions for the service, one or more of: locate, route, height, optimized_route, isochrone, trace_route, trace_attributes, transit_available, expansion, centroid, status',
@@ -367,7 +368,8 @@ help_text = {
     'service': {
       'proxy': 'IPC linux domain socket file location'
     },
-    'max_reserved_labels_count': 'Maximum capacity for edge labels reserved in path algorithm',
+    'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.',
+    'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
     'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge'
   },
   'odin': {
@@ -378,6 +380,10 @@ help_text = {
     },
     'service': {
       'proxy': 'IPC linux domain socket file location'
+    },
+    'markup_formatter': {
+      'markup_enabled': 'Boolean flag to use markup formatting',
+      'phoneme_format': 'The phoneme format string that will be used by street names and signs'
     }
   },
   'meili': {
@@ -439,37 +445,25 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
-    'auto_shorter': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'bus': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
-    },
-    'hov': {
-      'max_distance': 'Maximum b-line distance between all locations in meters',
-      'max_locations': 'Maximum number of input locations',
-      'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'taxi': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'pedestrian': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix',
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
       'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
       'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit'
     },
@@ -477,25 +471,25 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'motorcycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'bicycle': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'multimodal': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'status': {
       'allow_verbose': 'Allow verbose output for the /status endpoint, which can be computationally expensive'
@@ -504,13 +498,13 @@ help_text = {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'truck': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'skadi': {
       'max_shape': 'Maximum number of input shapes',
@@ -528,14 +522,14 @@ help_text = {
       'max_gps_accuracy': 'Maximum input gps accuracy in meters',
       'max_search_radius': 'Maximum upper bounds of the search radius in meters',
       'max_shape': 'Maximum number of input shape points',
-      'max_best_paths': 'Maximum number of best paths',
-      'max_best_paths_shape': 'Maximum number of input shape points when requesting multiple paths'
+      'max_alternates': 'Maximum number of alternate map matching',
+      'max_alternates_shape': 'Maximum number of input shape points when requesting multiple paths'
     },
     'bikeshare': {
       'max_distance': 'Maximum b-line distance between all locations in meters',
       'max_locations': 'Maximum number of input locations',
       'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
-      'max_matrix_locations': 'Maximum number of sources or targets for a matrix'
+      'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500'
     },
     'centroid': {
       'max_distance': 'Maximum b-line distance between any pair of locations in meters',
@@ -557,56 +551,65 @@ help_text = {
   }
 }
 
-#used to convert comma separated list of strings into a list
-def comma_separated_list(arg):
-  return arg.split(',')
 
-def parse_bool(arg):
-  if arg.lower() in ('yes', 'true', 't', 'y', '1'):
-    return True
-  elif arg.lower() in ('no', 'false', 'f', 'n', '0'):
-    return False
-  else:
-    raise argparse.ArgumentTypeError('Boolean value expected.')
+def add_leaf_args(path: str, tree: Union[dict, bool, str, list, Optional], leaves_: List[str], parser_: ArgumentParser, help: dict):
+    """
+    returns a list of leaves of the tree, `\0` separated, stops at non dicts
+    while doing so it also adds arguments to the parser
+    """
+    # if we are at a dict go deeper
+    if isinstance(tree, dict):
+        for k in tree:
+            v = tree[k]
+            add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves_, parser_, help)
+    # we've reached a leaf
+    else:
+        keys = path.split('\0')
+        h = help
+        for k in keys:
+            h = h[k]
 
-#returns a list of leaves of the tree, `\0` separated, stops at non dicts
-#while doing so it also adds arguments to the parser
-def add_leaf_args(path, tree, leaves, parser):
-  #if we are at a dict go deeper
-  if isinstance(tree, dict):
-    for k in tree:
-      v = tree[k]
-      add_leaf_args('\0'.join([path, k]) if len(path) else k, v, leaves, parser)
-  #we've reached a leaf
-  else:
-    keys = path.split('\0')
-    h = help_text
-    for k in keys:
-      h = h[k]
-    t = comma_separated_list if type(tree) == type([]) else (type(tree) if type(tree) != type(optional()) else tree.type)
-    arg = '--' + path.replace('_', '-').replace('\0', '-')
-    parser.add_argument(arg, type = t if t != type(bool()) else parse_bool, help=h, default=tree)
-    leaves.append(path)
+        # its either required and is the right type or optional and has a type to use
+        # lists are supported as comma separated and bools support a bunch of conventions
+        # the rest of the primatives (strings and numbers) parse automatically
+        if isinstance(tree, Optional):
+          t = tree.type
+        elif isinstance(tree, list):
+          t = lambda arg: arg.split(',')
+        elif isinstance(tree, bool):
+          t = lambda arg: bool(strtobool(arg))
+        else:
+          t = type(tree)
 
-#entry point to program
+        arg = '--' + path.replace('_', '-').replace('\0', '-')
+        parser_.add_argument(arg, type=t, help=h, default=tree)
+        leaves_.append(path)
+
+
+def override_config(args_: dict, leaves_: list, config_: dict):
+    """override the defaults given what was passed"""
+    for leaf in leaves_:
+        keys = leaf.split('\0')
+        v = config_
+        for k in keys[:-1]:
+            v = v[k]
+        v[keys[-1]] = args_.get(leaf.replace('\0', '_'))        
+        if isinstance(v[keys[-1]], type(Optional())):
+            del v[keys[-1]]
+
+
+# set up available program options
+leaves = []
+parser = ArgumentParser(description='Generate valhalla configuration', formatter_class=ArgumentDefaultsHelpFormatter)
+add_leaf_args('', config, leaves, parser, help_text)
+
+# entry point to program
 if __name__ == '__main__':
+    # TODO: add argument to set base path and use in all other path based values
+    args = parser.parse_args()
 
-  #set up program options
-  leaves = []
-  parser = argparse.ArgumentParser(description='Generate valhalla configuration', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  add_leaf_args('', config, leaves, parser)
-  #TODO: add argument to set base path and use in all other path based values
-  args = parser.parse_args()
+    # encapsulate to test easier
+    override_config(args.__dict__, leaves, config)
 
-  #override the defaults given what was passed
-  for leaf in leaves:
-    keys = leaf.split('\0')
-    v = config
-    for k in keys[:-1]:
-      v = v[k]
-    v[keys[-1]] = getattr(args, leaf.replace('\0', '_'))
-    if isinstance(v[keys[-1]], type(optional())):
-      del v[keys[-1]]
-
-  #show the config
-  print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))
+    # show the config
+    print(json.dumps(config, sort_keys=True, indent=2, separators=(',', ': ')))

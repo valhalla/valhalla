@@ -44,7 +44,7 @@ TEST(Filesystem, regular_file) {
 }
 
 void try_mkdir(const std::string& p) {
-  ASSERT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory";
+  ASSERT_EQ(mkdir(p.c_str(), perm755), 0) << "couldnt create directory " << p;
 }
 
 TEST(Filesystem, recursive_directory_listing) {
@@ -268,6 +268,65 @@ TEST(Filesystem, concurrent_folder_create_delete) {
       ASSERT_TRUE(!filesystem::exists(base_subdir));
     }
   }
+}
+
+TEST(Filesystem, has_data_member_type) {
+  auto arr = filesystem::has_data<std::array<int, 3>>::value;
+  EXPECT_TRUE(arr);
+
+  auto vc = filesystem::has_data<std::vector<int>>::value;
+  EXPECT_TRUE(vc);
+
+  auto str = filesystem::has_data<std::string>::value;
+  EXPECT_TRUE(str);
+
+  auto umap = filesystem::has_data<std::unordered_map<int, int>>::value;
+  EXPECT_FALSE(umap);
+
+  auto integer = filesystem::has_data<int>::value;
+  EXPECT_FALSE(integer);
+
+  auto lst = filesystem::has_data<std::list<int>>::value;
+  EXPECT_FALSE(lst);
+}
+
+TEST(Filesystem, save_file_valid_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gp",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  std::size_t cnt{1};
+  for (const auto& test : tests) {
+    EXPECT_TRUE(filesystem::save<std::string>(test));
+    EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+  }
+
+  filesystem::remove_all("/tmp/save_file_input/");
+}
+
+TEST(Filesystem, save_file_invalid_input) {
+  std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/"};
+
+  for (const auto& test : tests)
+    EXPECT_FALSE(filesystem::save<std::string>(test)) << "FAILED " << test;
+}
+
+TEST(Filesystem, get_files_valid_input) {
+  std::vector<std::string> tests{"/tmp/save_file_input/utrecht_tiles/0/003/196.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/1/051/305.gph",
+                                 "/tmp/save_file_input/utrecht_tiles/2/000/818/660.gph"};
+
+  std::size_t cnt{1};
+  for (const auto& test : tests) {
+    EXPECT_TRUE(filesystem::save<std::string>(test));
+    EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+  }
+
+  if (filesystem::create_directories("/tmp/save_file_invalid"))
+    EXPECT_TRUE(filesystem::get_files("/tmp/save_file_invalid").empty());
+
+  filesystem::remove_all("/tmp/save_file_input/");
+  filesystem::remove_all("/tmp/save_file_invalid/");
 }
 
 } // namespace

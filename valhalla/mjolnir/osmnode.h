@@ -54,7 +54,21 @@ struct OSMNode {
   uint32_t urban_ : 1;
   uint32_t tagged_access_ : 1; // Was access originally tagged?
   uint32_t private_access_ : 1;
-  uint32_t spare1_ : 6;
+  uint32_t cash_only_toll_ : 1;
+  uint32_t spare1_ : 5;
+
+  // pronunciations
+  uint32_t name_pronunciation_ipa_index_;
+  uint32_t name_pronunciation_nt_sampa_index_;
+  uint32_t name_pronunciation_katakana_index_;
+  uint32_t name_pronunciation_jeita_index_;
+  uint32_t ref_pronunciation_ipa_index_;
+  uint32_t ref_pronunciation_nt_sampa_index_;
+  uint32_t ref_pronunciation_katakana_index_;
+  uint32_t ref_pronunciation_jeita_index_;
+
+  // bss information
+  uint32_t bss_info_;
 
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
@@ -90,12 +104,12 @@ struct OSMNode {
    * @param  lat  Latitude of the node.
    *
    */
-  void set_latlng(const double lng, double lat) {
-    lng7_ = lat7_ = std::numeric_limits<uint32_t>::max();
-    if (lng >= -180 && lng <= 180)
-      lng7_ = std::round((lng + 180) * 1e7);
-    if (lat >= -90 && lat <= 90)
-      lat7_ = std::round((lat + 90) * 1e7);
+  void set_latlng(double lng, double lat) {
+    lng = std::round((lng + 180) * 1e7);
+    lng7_ = (lng >= 0 && lng <= 360 * 1e7) ? lng : std::numeric_limits<uint32_t>::max();
+
+    lat = std::round((lat + 90) * 1e7);
+    lat7_ = (lat >= 0 && lat <= 180 * 1e7) ? lat : std::numeric_limits<uint32_t>::max();
   }
 
   /**
@@ -423,6 +437,134 @@ struct OSMNode {
   }
 
   /**
+   * Sets the index for the ref ipa pronunciation
+   * @param  idx  Index for the reference ipa pronunciation.
+   */
+  void set_ref_pronunciation_ipa_index(const uint32_t idx) {
+    ref_pronunciation_ipa_index_ = idx;
+  }
+
+  /**
+   * Get the ref ipa pronunciation index.
+   * @return  Returns the index for the ref ipa pronunciation.
+   */
+  uint32_t ref_pronunciation_ipa_index() const {
+    return ref_pronunciation_ipa_index_;
+  }
+
+  /**
+   * Sets the index for the ref nt-sampa pronunciation
+   * @param  idx  Index for the reference nt-sampa pronunciation.
+   */
+  void set_ref_pronunciation_nt_sampa_index(const uint32_t idx) {
+    ref_pronunciation_nt_sampa_index_ = idx;
+  }
+
+  /**
+   * Get the ref nt-sampa pronunciation index.
+   * @return  Returns the index for the ref nt-sampa pronunciation.
+   */
+  uint32_t ref_pronunciation_nt_sampa_index() const {
+    return ref_pronunciation_nt_sampa_index_;
+  }
+
+  /**
+   * Sets the index for the ref katakana pronunciation
+   * @param  idx  Index for the reference katakana pronunciation.
+   */
+  void set_ref_pronunciation_katakana_index(const uint32_t idx) {
+    ref_pronunciation_katakana_index_ = idx;
+  }
+
+  /**
+   * Get the ref katakana pronunciation index.
+   * @return  Returns the index for the ref katakana pronunciation.
+   */
+  uint32_t ref_pronunciation_katakana_index() const {
+    return ref_pronunciation_katakana_index_;
+  }
+
+  /**
+   * Sets the index for the ref jeita pronunciation
+   * @param  idx  Index for the reference jeita pronunciation.
+   */
+  void set_ref_pronunciation_jeita_index(const uint32_t idx) {
+    ref_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the ref jeita pronunciation index.
+   * @return  Returns the index for the ref jeita pronunciation.
+   */
+  uint32_t ref_pronunciation_jeita_index() const {
+    return ref_pronunciation_jeita_index_;
+  }
+
+  /**
+   * Sets the index for name ipa pronunciation
+   * @param  idx  Index for the name ipa pronunciation.
+   */
+  void set_name_pronunciation_ipa_index(const uint32_t idx) {
+    name_pronunciation_ipa_index_ = idx;
+  }
+
+  /**
+   * Get the name ipa pronunciation index.
+   * @return  Returns the index for the name ipa pronunciation.
+   */
+  uint32_t name_pronunciation_ipa_index() const {
+    return name_pronunciation_ipa_index_;
+  }
+
+  /**
+   * Sets the index for name nt-sampa pronunciation
+   * @param  idx  Index for the name nt-sampa pronunciation.
+   */
+  void set_name_pronunciation_nt_sampa_index(const uint32_t idx) {
+    name_pronunciation_nt_sampa_index_ = idx;
+  }
+
+  /**
+   * Get the name nt-sampa pronunciation index.
+   * @return  Returns the index for the name nt-sampa pronunciation.
+   */
+  uint32_t name_pronunciation_nt_sampa_index() const {
+    return name_pronunciation_nt_sampa_index_;
+  }
+
+  /**
+   * Sets the index for name katakana pronunciation
+   * @param  idx  Index for the name katakana pronunciation.
+   */
+  void set_name_pronunciation_katakana_index(const uint32_t idx) {
+    name_pronunciation_katakana_index_ = idx;
+  }
+
+  /**
+   * Get the name katakana pronunciation index.
+   * @return  Returns the index for the name katakana pronunciation.
+   */
+  uint32_t name_pronunciation_katakana_index() const {
+    return name_pronunciation_katakana_index_;
+  }
+
+  /**
+   * Sets the index for name jeita pronunciation
+   * @param  idx  Index for the name jeita pronunciation.
+   */
+  void set_name_pronunciation_jeita_index(const uint32_t idx) {
+    name_pronunciation_jeita_index_ = idx;
+  }
+
+  /**
+   * Get the name jeita pronunciation index.
+   * @return  Returns the index for the name jeita pronunciation.
+   */
+  uint32_t name_pronunciation_jeita_index() const {
+    return name_pronunciation_jeita_index_;
+  }
+
+  /**
    * Set the country iso code index
    * @param country iso code Index into the 2 char Country ISO Code.
    */
@@ -506,6 +648,41 @@ struct OSMNode {
    */
   bool private_access() const {
     return private_access_;
+  }
+
+  /**
+   * Set the cash_only_toll flag.
+   * @param  cash_only_toll bool.
+   */
+  void set_cash_only_toll(const bool cash_only_toll) {
+    cash_only_toll_ = cash_only_toll;
+  }
+
+  /**
+   * Get the cash_only_toll flag.
+   * @return  Returns cash_only_toll flag.
+   */
+  bool cash_only_toll() const {
+    return cash_only_toll_;
+  }
+
+  /**
+   * Sets the index for bss informations.
+   * @param  idx  Index for the bss informations.
+   */
+  void set_bss_info_index(const uint32_t index) {
+    if (index > kMaxNodeNameIndex) {
+      throw std::runtime_error("OSMNode: exceeded maximum bss informations index");
+    }
+    bss_info_ = index;
+  }
+
+  /**
+   * Get the bss informations index.
+   * @return  Returns the index for the bss informations.
+   */
+  uint32_t bss_info_index() const {
+    return bss_info_;
   }
 };
 

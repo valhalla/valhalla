@@ -11,7 +11,7 @@
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
@@ -117,7 +117,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void Clear();
+  void clear();
 
 protected:
   // Access mode used by the costing method
@@ -145,14 +145,14 @@ protected:
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // source location (forward traversal)
   std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
-  std::vector<std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>> source_adjacency_;
+  std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> source_adjacency_;
   std::vector<std::vector<sif::BDEdgeLabel>> source_edgelabel_;
   std::vector<EdgeStatus> source_edgestatus_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
   // target location (reverse traversal)
   std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
-  std::vector<std::shared_ptr<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>> target_adjacency_;
+  std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> target_adjacency_;
   std::vector<std::vector<sif::BDEdgeLabel>> target_edgelabel_;
   std::vector<EdgeStatus> target_edgestatus_;
 

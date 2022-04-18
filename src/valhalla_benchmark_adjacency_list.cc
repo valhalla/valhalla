@@ -1,5 +1,5 @@
-#include <boost/program_options.hpp>
 #include <cstdint>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <queue>
 #include <random>
@@ -16,8 +16,6 @@
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
-
-namespace bpo = boost::program_options;
 
 /**
  * Benchmark of adjacency list. Constructs a large number of random numbers,
@@ -106,39 +104,32 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 }
 
 int main(int argc, char* argv[]) {
-
-  bpo::options_description options(
-      "valhalla " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: adjlistbenchmark [options]\n"
-      "\n"
-      "adjlistbenchmark is benchmark comparing performance of an STL priority_queue"
-      "to the approximate double bucket adjacency list class supplied with Valhalla."
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.");
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_benchmakr_adjacency_list",
+      "valhalla " VALHALLA_VERSION "\n\n"
+      "valhalla_benchmakr_adjacency_list is benchmark comparing performance of an STL priority_queue\n"
+      "to the approximate double bucket adjacency list class supplied with Valhalla.\n\n");
 
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.");
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_benchmakr_adjacency_list " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "AdjacencyListBenchmark " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
   }
 
   // Benchmark with count, maxcost, and bucketsize

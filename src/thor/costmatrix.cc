@@ -17,13 +17,13 @@ constexpr uint32_t kMaxMatrixIterations = 2000000;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
-int GetThreshold(const TravelMode mode, const int n) {
-  return (mode == TravelMode::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
+int GetThreshold(const travel_mode_t mode, const int n) {
+  return (mode == travel_mode_t::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
-  return a.has_lat() == b.has_lat() && a.has_lng() == b.has_lng() &&
-         (!a.has_lat() || a.lat() == b.lat()) && (!a.has_lng() || a.lng() == b.lng());
+  return a.has_lat_case() == b.has_lat_case() && a.has_lng_case() == b.has_lng_case() &&
+         (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
 } // namespace
@@ -35,8 +35,9 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix()
-    : mode_(TravelMode::kDrive), access_mode_(kAutoAccess), source_count_(0), remaining_sources_(0),
-      target_count_(0), remaining_targets_(0), current_cost_threshold_(0), targets_{new TargetMap} {
+    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
+      remaining_sources_(0), target_count_(0), remaining_targets_(0),
+      current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -45,14 +46,14 @@ CostMatrix::~CostMatrix() {
 float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       cost_threshold = max_matrix_distance / kCostThresholdBicycleDivisor;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       cost_threshold = max_matrix_distance / kCostThresholdPedestrianDivisor;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       cost_threshold = max_matrix_distance / kCostThresholdAutoDivisor;
   }
@@ -64,24 +65,44 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void CostMatrix::Clear() {
+void CostMatrix::clear() {
   // Clear the target edge markings
+  for (auto& iter : *targets_) {
+    iter.second.clear();
+    iter.second.resize(0);
+    iter.second.shrink_to_fit();
+  }
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
+  // Resize and shrink_to_fit so all capacity is reduced.
   source_adjacency_.clear();
-  source_edgelabel_.clear();
-  source_edgestatus_.clear();
-
-  // Clear all target adjacency lists, edge labels, and edge status
+  source_adjacency_.resize(0);
+  source_adjacency_.shrink_to_fit();
   target_adjacency_.clear();
+  target_adjacency_.resize(0);
+  target_adjacency_.shrink_to_fit();
+  source_edgelabel_.clear();
+  source_edgelabel_.resize(0);
+  source_edgelabel_.shrink_to_fit();
   target_edgelabel_.clear();
+  target_edgelabel_.resize(0);
+  target_edgelabel_.shrink_to_fit();
+  source_edgestatus_.clear();
+  source_edgestatus_.resize(0);
+  source_edgestatus_.shrink_to_fit();
   target_edgestatus_.clear();
-
+  target_edgestatus_.resize(0);
+  target_edgestatus_.shrink_to_fit();
   source_hierarchy_limits_.clear();
+  source_hierarchy_limits_.resize(0);
+  source_hierarchy_limits_.shrink_to_fit();
   target_hierarchy_limits_.clear();
+  target_hierarchy_limits_.resize(0);
+  target_hierarchy_limits_.shrink_to_fit();
   source_status_.clear();
   target_status_.clear();
+  best_connection_.clear();
 }
 
 // Form a time distance matrix from the set of source locations
@@ -91,7 +112,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const travel_mode_t mode,
     const float max_matrix_distance) {
   // Set the mode and costing
   mode_ = mode;
@@ -101,7 +122,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   // Set the source and target locations
-  Clear();
   SetSources(graphreader, source_location_list);
   SetTargets(graphreader, target_location_list);
 
@@ -221,7 +241,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   // Get the next edge from the adjacency list for this source location
   auto& adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
-  uint32_t pred_idx = adj->pop();
+  uint32_t pred_idx = adj.pop();
   if (pred_idx == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
@@ -302,16 +322,15 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       uint8_t flow_sources;
-      Cost newcost =
-          pred.cost() + tc +
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost newcost = pred.cost() + tc +
+                     costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
       if (es->set() == EdgeSet::kTemporary) {
         BDEdgeLabel& lab = edgelabels[es->index()];
         if (newcost.cost < lab.cost().cost) {
-          adj->decrease(es->index(), newcost.cost);
+          adj.decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
                      pred.path_distance() + directededge->length(), restriction_idx);
         }
@@ -336,7 +355,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
                               static_cast<bool>(flow_sources & kDefaultFlowMask),
                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                               restriction_idx);
-      adj->add(idx);
+      adj.add(idx);
     }
 
     // Handle transitions - expand from the end node of the transition
@@ -497,7 +516,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   // Get the next edge from the adjacency list for this target location
   auto& adj = target_adjacency_[index];
   auto& edgelabels = target_edgelabel_[index];
-  uint32_t pred_idx = adj->pop();
+  uint32_t pred_idx = adj.pop();
   if (pred_idx == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
@@ -586,19 +605,22 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
       // Get cost. Use opposing edge for EdgeCost. Separate the transition seconds so
       // we can properly recover elapsed time on the reverse path.
-      Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge, pred.has_measured_speed(),
-                                                pred.internal_turn());
       uint8_t flow_sources;
-      Cost newcost = pred.cost() + tc +
-                     costing_->EdgeCost(opp_edge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost newcost =
+          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
+
+      Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge,
+                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                                pred.internal_turn());
+      newcost += tc;
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
       if (es->set() == EdgeSet::kTemporary) {
         BDEdgeLabel& lab = edgelabels[es->index()];
         if (newcost.cost < lab.cost().cost) {
-          adj->decrease(es->index(), newcost.cost);
+          adj.decrease(es->index(), newcost.cost);
           lab.Update(pred_idx, newcost, newcost.cost, tc,
                      pred.path_distance() + directededge->length(), restriction_idx);
         }
@@ -616,7 +638,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                  opp_pred_edge),
                               restriction_idx);
-      adj->add(idx);
+      adj.add(idx);
 
       // Add to the list of targets that have reached this edge
       (*targets_)[edgeid].push_back(index);
@@ -671,7 +693,6 @@ void CostMatrix::SetSources(GraphReader& graphreader,
   source_count_ = sources.size();
   source_edgelabel_.resize(source_count_);
   source_edgestatus_.resize(source_count_);
-  source_adjacency_.resize(source_count_);
   source_hierarchy_limits_.resize(source_count_);
 
   // Go through each source location
@@ -680,13 +701,13 @@ void CostMatrix::SetSources(GraphReader& graphreader,
   for (const auto& origin : sources) {
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                      costing_->UnitSize(),
-                                                                      &source_edgelabel_[index]));
+    source_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                  costing_->UnitSize(),
+                                                                  &source_edgelabel_[index]));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : origin.path_edges()) {
+    for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
       if (edge.end_node()) {
         continue;
@@ -705,8 +726,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
-      Cost edgecost =
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -732,7 +752,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // of the path.
       uint32_t idx = source_edgelabel_[index].size();
       source_edgelabel_[index].push_back(std::move(edge_label));
-      source_adjacency_[index]->add(idx);
+      source_adjacency_[index].add(idx);
       source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
     }
     index++;
@@ -747,7 +767,6 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   target_count_ = targets.size();
   target_edgelabel_.resize(targets.size());
   target_edgestatus_.resize(targets.size());
-  target_adjacency_.resize(targets.size());
   target_hierarchy_limits_.resize(targets.size());
 
   // Go through each target location
@@ -756,13 +775,13 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   for (const auto& dest : targets) {
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_adjacency_[index].reset(new DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                      costing_->UnitSize(),
-                                                                      &target_edgelabel_[index]));
+    target_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                  costing_->UnitSize(),
+                                                                  &target_edgelabel_[index]));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
     // Iterate through edges and add to adjacency list
-    for (const auto& edge : dest.path_edges()) {
+    for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
       if (edge.begin_node()) {
@@ -791,8 +810,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Use the directed edge for costing, as this is the forward direction
       // along the destination edge.
       uint8_t flow_sources;
-      Cost edgecost =
-          costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
       Cost cost = edgecost * edge.percent_along();
       uint32_t d = std::round(directededge->length() * edge.percent_along());
 
@@ -818,7 +836,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // of the path. Set the origin flag
       uint32_t idx = target_edgelabel_[index].size();
       target_edgelabel_[index].push_back(std::move(edge_label));
-      target_adjacency_[index]->add(idx);
+      target_adjacency_[index].add(idx);
       target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                     graphreader.GetGraphTile(opp_edge_id));
       (*targets_)[opp_edge_id].push_back(index);

@@ -146,7 +146,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader,
                  const valhalla::Location& origin,
                  const valhalla::Location& destination,
-                 const uint32_t seconds_of_week);
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Set the destination edge(s).
@@ -181,7 +181,6 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::BDEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;

@@ -5,6 +5,7 @@
 #include "graph_lua_proc.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
+#include "mjolnir/osmpronunciation.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -25,6 +26,7 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "mjolnir/timeparsing.h"
+#include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -159,6 +161,7 @@ public:
     }
 
     include_driveways_ = pt.get<bool>("include_driveways", true);
+    include_construction_ = pt.get<bool>("include_construction", false);
     infer_internal_intersections_ =
         pt.get<bool>("data_processing.infer_internal_intersections", true);
     infer_turn_channels_ = pt.get<bool>("data_processing.infer_turn_channels", true);
@@ -186,6 +189,11 @@ public:
       if (!infer_turn_channels_) {
         way_.set_turn_channel(tag_.second == "true" ? true : false);
       }
+    };
+
+    tag_handlers_["layer"] = [this]() {
+      auto layer = static_cast<int8_t>(std::stoi(tag_.second));
+      way_.set_layer(layer);
     };
 
     tag_handlers_["road_class"] = [this]() {
@@ -368,8 +376,14 @@ public:
         case Use::kPath:
           way_.set_use(Use::kPath);
           break;
+        case Use::kElevator:
+          way_.set_use(Use::kElevator);
+          break;
         case Use::kSteps:
           way_.set_use(Use::kSteps);
+          break;
+        case Use::kEscalator:
+          way_.set_use(Use::kEscalator);
           break;
         case Use::kBridleway:
           way_.set_use(Use::kBridleway);
@@ -406,6 +420,9 @@ public:
           break;
         case Use::kOther:
           way_.set_use(Use::kOther);
+          break;
+        case Use::kConstruction:
+          way_.set_use(Use::kConstruction);
           break;
         case Use::kRoad:
         default:
@@ -477,6 +494,154 @@ public:
     tag_handlers_["tunnel:name"] = [this]() {
       if (!tag_.second.empty())
         way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["level"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_level_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["level:ref"] = [this]() {
+      if (!tag_.second.empty())
+        way_.set_level_ref_index(osmdata_.name_offset_map.index(tag_.second));
+    };
+    tag_handlers_["name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["name:en:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_name_en_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_alt_name_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["official_name:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_official_name_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_tunnel_name_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
     };
     tag_handlers_["max_speed"] = [this]() {
       try {
@@ -584,6 +749,19 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["hov_type"] = [this]() {
+      // If this tag is set then the way is either HOV-2 or HOV-3.
+      // There are no other real-world hov levels.
+      std::string hov_type = tag_.second;
+      if (hov_type == "HOV2") {
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV2);
+      } else if (hov_type == "HOV3") {
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
+      } else {
+        LOG_WARN("Unrecognized HOV type: " + hov_type);
+        way_.set_hov_type(valhalla::baldr::HOVEdgeType::kHOV3);
+      }
+    };
     tag_handlers_["default_speed"] = [this]() {
       try {
         default_speed_ = std::stof(tag_.second);
@@ -592,6 +770,7 @@ public:
         LOG_INFO("out_of_range thrown for way id: " + std::to_string(osmid_));
       }
     };
+
     tag_handlers_["ref"] = [this]() {
       if (!tag_.second.empty()) {
         if (!use_direction_on_ways_)
@@ -608,6 +787,86 @@ public:
           int_ref_ = tag_.second;
       }
     };
+    tag_handlers_["ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_pronunciation_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_pronunciation_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_pronunciation_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_pronunciation_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_pronunciation_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_pronunciation_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_ref_pronunciation_jeita_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          ref_pronunciation_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (!use_direction_on_ways_)
+          osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
+              osmdata_.name_offset_map.index(tag_.second));
+        else
+          int_ref_pronunciation_jeita_ = tag_.second;
+      }
+    };
     tag_handlers_["direction"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_ = tag_.second;
@@ -615,6 +874,38 @@ public:
     tag_handlers_["int_direction"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_ = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_pronunciation_ = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_pronunciation_ = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_pronunciation_nt_sampa_ = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_pronunciation_nt_sampa_ = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_pronunciation_katakana_ = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_pronunciation_katakana_ = tag_.second;
+    };
+    tag_handlers_["direction:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        direction_pronunciation_jeita_ = tag_.second;
+    };
+    tag_handlers_["int_direction:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty() && use_direction_on_ways_)
+        int_direction_pronunciation_jeita_ = tag_.second;
     };
     tag_handlers_["sac_scale"] = [this]() {
       std::string value = tag_.second;
@@ -653,14 +944,18 @@ public:
       } else if (value.find("paved") != std::string::npos ||
                  value.find("pavement") != std::string::npos ||
                  value.find("asphalt") != std::string::npos ||
+                 // concrete, concrete:lanes, concrete:plates
                  value.find("concrete") != std::string::npos ||
-                 value.find("cement") != std::string::npos) {
+                 value.find("cement") != std::string::npos ||
+                 value.find("chipseal") != std::string::npos ||
+                 value.find("metal") != std::string::npos) {
         way_.set_surface(Surface::kPavedSmooth);
 
       } else if (value.find("tartan") != std::string::npos ||
                  value.find("pavingstone") != std::string::npos ||
                  value.find("paving_stones") != std::string::npos ||
-                 value.find("sett") != std::string::npos) {
+                 value.find("sett") != std::string::npos ||
+                 value.find("grass_paver") != std::string::npos) {
         way_.set_surface(Surface::kPaved);
 
       } else if (value.find("cobblestone") != std::string::npos ||
@@ -679,11 +974,12 @@ public:
                  value.find("mud") != std::string::npos) {
         way_.set_surface(Surface::kDirt);
 
-      } else if (value.find("gravel") != std::string::npos ||
+      } else if (value.find("gravel") != std::string::npos || // gravel, fine_gravel
                  value.find("pebblestone") != std::string::npos ||
                  value.find("sand") != std::string::npos) {
         way_.set_surface(Surface::kGravel);
-      } else if (value.find("grass") != std::string::npos) {
+      } else if (value.find("grass") != std::string::npos ||
+                 value.find("stepping_stones") != std::string::npos) {
         way_.set_surface(Surface::kPath);
         // We have to set a flag as surface may come before Road classes and Uses
       } else {
@@ -779,6 +1075,7 @@ public:
     tag_handlers_["tunnel"] = [this]() { way_.set_tunnel(tag_.second == "true" ? true : false); };
     tag_handlers_["toll"] = [this]() { way_.set_toll(tag_.second == "true" ? true : false); };
     tag_handlers_["bridge"] = [this]() { way_.set_bridge(tag_.second == "true" ? true : false); };
+    tag_handlers_["indoor"] = [this]() { way_.set_indoor(tag_.second == "yes" ? true : false); };
     tag_handlers_["seasonal"] = [this]() { way_.set_seasonal(tag_.second == "true" ? true : false); };
     tag_handlers_["bike_network_mask"] = [this]() { way_.set_bike_network(std::stoi(tag_.second)); };
     //    tag_handlers_["bike_national_ref"] = [this]() {
@@ -839,6 +1136,230 @@ public:
       if (!tag_.second.empty()) {
         way_.set_junction_ref_index(osmdata_.name_offset_map.index(tag_.second));
         way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_ipa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_nt_sampa_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:x-katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_katakana_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:forward:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_forward_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:backward:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_backward_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:ref:to:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_ref_to_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_destination_street_to_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:x-jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        osm_pronunciation_.set_junction_ref_pronunciation_jeita_index(
+            osmdata_.name_offset_map.index(tag_.second));
       }
     };
     tag_handlers_["turn:lanes"] = [this]() {
@@ -915,17 +1436,43 @@ public:
         results = empty_node_results_;
       }
 
+      // bail if there is nothing bike related
+      Tags::const_iterator found;
+      if (!results || (found = results->find("amenity")) == results->end() ||
+          found->second != "bicycle_rental") {
+        return;
+      }
+
+      // Create a new node and set its attributes
+      OSMNode n{osmid};
+      n.set_latlng(lng, lat);
+      n.set_type(NodeType::kBikeShare);
+      valhalla::BikeShareStationInfo bss_info;
+
       for (auto& key_value : *results) {
-        if (key_value.first == "amenity" && key_value.second == "bicycle_rental") {
-          // Create a new node and set its attributes
-          OSMNode n{osmid};
-          n.set_latlng(lng, lat);
-          n.set_type(NodeType::kBikeShare);
-          bss_nodes_->push_back(n);
-          return; // we are done.
+        if (key_value.first == "name") {
+          bss_info.set_name(key_value.second);
+        } else if (key_value.first == "network") {
+          bss_info.set_network(key_value.second);
+        } else if (key_value.first == "ref") {
+          bss_info.set_ref(key_value.second);
+        } else if (key_value.first == "capacity") {
+          auto capacity = std::strtoul(key_value.second.c_str(), nullptr, 10);
+          if (capacity > 0) {
+            bss_info.set_capacity(capacity);
+          }
+        } else if (key_value.first == "operator") {
+          bss_info.set_operator_(key_value.second);
         }
       }
-      return; // not found
+
+      std::string buffer;
+      bss_info.SerializeToString(&buffer);
+      n.set_bss_info_index(osmdata_.node_names.index(buffer));
+      ++osmdata_.node_name_count;
+
+      bss_nodes_->push_back(n);
+      return; // we are done.
     }
 
     // if we found all of the node ids we were looking for already we can bail
@@ -1030,6 +1577,22 @@ public:
         n.set_name_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_name_count;
         named_junction = maybe_named_junction;
+      } else if (tag.first == "name:pronunciation") {
+        n.set_name_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:nt-sampa") {
+        n.set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:x-katakana") {
+        n.set_name_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "name:pronunciation:x-jeita") {
+        n.set_name_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation") {
+        n.set_ref_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:nt-sampa") {
+        n.set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:x-katakana") {
+        n.set_ref_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
+      } else if (tag.first == "ref:pronunciation:x-jeita") {
+        n.set_ref_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -1046,6 +1609,11 @@ public:
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kBorderControl);
+      } else if (tag.first == "cash_only_toll" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kTollBooth);
+        n.set_cash_only_toll(true);
       } else if (tag.first == "toll_gantry" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -1054,6 +1622,14 @@ public:
         osmdata_.edge_count += !intersection;
         intersection = true;
         n.set_type(NodeType::kSumpBuster);
+      } else if (tag.first == "building_entrance" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kBuildingEntrance);
+      } else if (tag.first == "elevator" && tag.second == "true") {
+        osmdata_.edge_count += !intersection;
+        intersection = true;
+        n.set_type(NodeType::kElevator);
       } else if (tag.first == "access_mask") {
         n.set_access(std::stoi(tag.second));
       } else if (tag.first == "tagged_access") {
@@ -1061,11 +1637,6 @@ public:
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
       }
-
-      /* TODO: payment type.
-      else if (tag.first == "payment_mask")
-        n.set_payment_mask(std::stoi(tag.second));
-      */
     }
 
     // If we ended up storing a name for a regular junction flag that
@@ -1141,17 +1712,22 @@ public:
       return;
     }
 
-    // Throw away driveways if include_driveways_ is false
-    Tags::const_iterator driveways;
     try {
-      if (!include_driveways_ && (driveways = results.find("use")) != results.end() &&
-          static_cast<Use>(std::stoi(driveways->second)) == Use::kDriveway) {
+      // Throw away use if include_driveways_ is false
+      Tags::const_iterator use;
+      if (!include_driveways_ && (use = results.find("use")) != results.end() &&
+          static_cast<Use>(std::stoi(use->second)) == Use::kDriveway) {
 
-        // only private driveways.
+        // only private use.
         Tags::const_iterator priv;
         if ((priv = results.find("private")) != results.end() && priv->second == "true") {
           return;
         }
+      }
+      // Throw away constructions if include_construction_ is false
+      if (!include_construction_ && (use = results.find("use")) != results.end() &&
+          static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
+        return;
       }
     } catch (const std::invalid_argument& arg) {
       LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid_));
@@ -1206,8 +1782,12 @@ public:
     way_.set_node_count(nodes.size());
 
     osm_access_ = OSMAccess{osmid_};
-    has_user_tags_ = false;
+    osm_pronunciation_ = OSMPronunciation{osmid_};
+
+    has_user_tags_ = false, has_pronunciation_tags_ = false;
     ref_ = int_ref_ = direction_ = int_direction_ = {};
+    ref_pronunciation_ = int_ref_pronunciation_ = direction_pronunciation_ =
+        int_direction_pronunciation_ = {};
 
     const auto& surface_exists = results.find("surface");
     has_surface_tag_ = (surface_exists != results.end());
@@ -1221,7 +1801,15 @@ public:
       tag_ = kv;
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
-        it->second();
+        try {
+          it->second();
+        } catch (const std::exception& ex) {
+          std::stringstream ss;
+          ss << "Error during parsing of `" << tag_.first << "` tag on the way " << osmid_ << ": "
+             << std::string{ex.what()};
+          LOG_WARN(ss.str());
+        }
+
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
       else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
@@ -1303,63 +1891,48 @@ public:
 
     // We need to set a data processing flag so we need to
     // process in pbfgraphparser instead of lua because of config option use_rest_area
-    if (use_rest_area_ && service_ == "rest_area") {
+    if (use_rest_area_ && service_ == "rest_area" && way_.use() != Use::kConstruction) {
       if (amenity_ == "yes") {
         way_.set_use(Use::kServiceArea);
       } else {
         way_.set_use(Use::kRestArea);
       }
     }
-    if (use_direction_on_ways_ && !ref_.empty()) {
-      if (direction_.empty()) {
-        way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
-      } else {
-        std::vector<std::string> refs = GetTagTokens(ref_);
-        std::vector<std::string> directions = GetTagTokens(direction_);
 
-        std::string tmp_ref;
-        if (refs.size() == directions.size()) {
-          for (uint32_t i = 0; i < refs.size(); i++) {
-            if (!tmp_ref.empty()) {
-              tmp_ref += ";";
-            }
-            if (!directions.at(i).empty())
-              tmp_ref += refs.at(i) + " " + directions.at(i);
-            else
-              tmp_ref += refs.at(i);
-          }
-          way_.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
-        } else
-          way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
-      }
-    }
+    if (use_direction_on_ways_) {
+      if (!ref_.empty())
+        ProcessDirection(false);
 
-    if (use_direction_on_ways_ && !int_ref_.empty()) {
-      if (int_direction_.empty()) {
-        way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
-      } else {
-        std::vector<std::string> int_refs = GetTagTokens(int_ref_);
-        std::vector<std::string> int_directions = GetTagTokens(int_direction_);
+      if (!int_ref_.empty())
+        ProcessDirection(true);
 
-        std::string tmp_ref;
-        if (int_refs.size() == int_directions.size()) {
-          for (uint32_t i = 0; i < int_refs.size(); i++) {
-            if (!tmp_ref.empty()) {
-              tmp_ref += ";";
-            }
-            if (!int_directions.at(i).empty())
-              tmp_ref += int_refs.at(i) + " " + int_directions.at(i);
-            else
-              tmp_ref += int_refs.at(i);
-          }
-          way_.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
-        } else
-          way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
-      }
+      if (!ref_pronunciation_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, false);
+
+      if (!int_ref_pronunciation_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, true);
+
+      if (!ref_pronunciation_katakana_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, false);
+
+      if (!int_ref_pronunciation_katakana_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, true);
+
+      if (!ref_pronunciation_nt_sampa_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, false);
+
+      if (!int_ref_pronunciation_nt_sampa_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, true);
+
+      if (!ref_pronunciation_jeita_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, false);
+
+      if (!int_ref_pronunciation_jeita_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, true);
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
-    if (use_direction_on_ways_ && way_.int_ref_index()) {
+    if (way_.int_ref_index()) {
       std::string tmp = osmdata_.name_offset_map.name(way_.ref_index());
 
       std::vector<std::string> rs = GetTagTokens(tmp);
@@ -1388,6 +1961,10 @@ public:
       way_.set_int_ref_index(0);
     }
 
+    // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
+    // don't add dups.
+    MergeRefPronunciations();
+
     // Process mtb tags.
     auto mtb_scale = results.find("mtb:scale");
     bool has_mtb_scale = mtb_scale != results.end();
@@ -1407,10 +1984,10 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbScale;
-        if (access && !way_.oneway_reverse()) {
+        if (access && !way_.oneway_reverse() && way_.use() != Use::kConstruction) {
           way_.set_bike_forward(true);
         }
-        if (access && !way_.oneway()) {
+        if (access && !way_.oneway() && way_.use() != Use::kConstruction) {
           way_.set_bike_backward(true);
         }
       }
@@ -1434,10 +2011,10 @@ public:
 
         // Set bicycle access to true for all but the highest scale.
         bool access = scale < kMaxMtbUphillScale;
-        if (access && !way_.oneway_reverse()) {
+        if (access && !way_.oneway_reverse() && way_.use() != Use::kConstruction) {
           way_.set_bike_forward(true);
         }
-        if (access && !way_.oneway()) {
+        if (access && !way_.oneway() && way_.use() != Use::kConstruction) {
           way_.set_bike_backward(true);
         }
       }
@@ -1448,7 +2025,7 @@ public:
     bool has_mtb_imba = mtb_imba_scale != results.end();
     if (has_mtb_imba) {
       // Update bike access (only if neither mtb:scale nor mtb:scale:uphill is present)
-      if (!has_mtb_scale && !has_mtb_uphill_scale) {
+      if (!has_mtb_scale && !has_mtb_uphill_scale && way_.use() != Use::kConstruction) {
         if (!way_.oneway_reverse()) {
           way_.set_bike_forward(true);
         }
@@ -1460,7 +2037,8 @@ public:
 
     // Only has MTB description - set bicycle access.
     bool has_mtb_desc = results.find("mtb:description") != results.end();
-    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba) {
+    if (has_mtb_desc && !has_mtb_scale && !has_mtb_uphill_scale && !has_mtb_imba &&
+        way_.use() != Use::kConstruction) {
       if (!way_.oneway_reverse()) {
         way_.set_bike_forward(true);
       }
@@ -1602,6 +2180,12 @@ public:
       way_.set_has_user_tags(true);
       access_->push_back(osm_access_);
     }
+
+    if (has_pronunciation_tags_) {
+      way_.set_has_pronunciation_tags(true);
+      pronunciation_->push_back(osm_pronunciation_);
+    }
+
     // Add the way to the list
     ways_->push_back(way_);
   }
@@ -1628,7 +2212,7 @@ public:
     uint64_t from_way_id = 0;
     bool isRestriction = false, isTypeRestriction = false, hasRestriction = false;
     bool isRoad = false, isRoute = false, isBicycle = false, isConnectivity = false;
-    bool isConditional = false, has_multiple_times = false;
+    bool isConditional = false, isProbable = false, has_multiple_times = false;
     uint32_t bike_network_mask = 0;
 
     std::string network, ref, name, except;
@@ -1655,6 +2239,17 @@ public:
       } else if (tag.first == "restriction:conditional") {
         isConditional = true;
         condition = tag.second;
+      } else if (tag.first == "restriction:probable") {
+        // probability=73
+        std::vector<std::string> prob_tok = GetTagTokens(tag.second, '=');
+        if (prob_tok.size() == 2) {
+          const auto& p = stoi(prob_tok.at(1));
+          if (p > 0) {
+            isProbable = true;
+            restriction.set_probability(p);
+          } else // A complex restriction can not have a 0 probability set.  range is 1 to 100
+            return;
+        }
       } else if (tag.first == "direction") {
         direction = tag.second;
       } else if (tag.first == "network") {
@@ -1762,6 +2357,15 @@ public:
         from = tag.second;
       }
     } // for (const auto& tag : results)
+
+    if (isProbable) {
+      RestrictionType type = restriction.type();
+      if (type == RestrictionType::kOnlyRightTurn || type == RestrictionType::kOnlyLeftTurn ||
+          type == RestrictionType::kOnlyStraightOn)
+        restriction.set_type(RestrictionType::kOnlyProbable);
+      else
+        restriction.set_type(RestrictionType::kNoProbable);
+    }
 
     std::vector<std::string> net = GetTagTokens(network, ':');
     bool special_network = false;
@@ -1933,8 +2537,9 @@ public:
         // or
         // restriction = x with except tags; change to a complex
         // restriction with modes.
-        if (vias.size() == 0 &&
-            (isTypeRestriction || isConditional || (!isTypeRestriction && except.size()))) {
+        // if probable restriction, change to a complex restriction
+        if (vias.size() == 0 && (isTypeRestriction || isConditional || isProbable ||
+                                 (!isTypeRestriction && except.size()))) {
 
           restriction.set_via(0);
           vias.push_back(restriction.to());
@@ -2037,6 +2642,7 @@ public:
   void reset(sequence<OSMWay>* ways,
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
+             sequence<OSMPronunciation>* pronunciation,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
              sequence<OSMNode>* bss_nodes) {
@@ -2044,9 +2650,259 @@ public:
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
+    pronunciation_.reset(pronunciation);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
+  }
+
+  void ProcessDirection(bool int_ref) {
+
+    std::string ref, direction;
+    if (int_ref) {
+      ref = int_ref_;
+      direction = int_direction_;
+    } else {
+      ref = ref_;
+      direction = direction_;
+    }
+
+    if (direction.empty()) {
+      if (int_ref)
+        way_.set_int_ref_index(osmdata_.name_offset_map.index(ref));
+      else
+        way_.set_ref_index(osmdata_.name_offset_map.index(ref));
+    } else {
+      std::vector<std::string> refs = GetTagTokens(ref);
+      std::vector<std::string> directions = GetTagTokens(direction);
+
+      std::string tmp_ref;
+      if (refs.size() == directions.size()) {
+        for (uint32_t i = 0; i < refs.size(); i++) {
+          if (!tmp_ref.empty()) {
+            tmp_ref += ";";
+          }
+          if (!directions.at(i).empty())
+            tmp_ref += refs.at(i) + " " + directions.at(i);
+          else
+            tmp_ref += refs.at(i);
+        }
+        if (int_ref)
+          way_.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+        else
+          way_.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+      } else {
+        if (int_ref)
+          way_.set_int_ref_index(osmdata_.name_offset_map.index(ref));
+        else
+          way_.set_ref_index(osmdata_.name_offset_map.index(ref));
+      }
+    }
+  }
+
+  void ProcessDirectionPronunciation(const PronunciationAlphabet type, bool int_ref) {
+
+    std::string ref_pronunciation, direction_pronunciation;
+    if (int_ref) {
+      switch (type) {
+        case PronunciationAlphabet::kIpa:
+          ref_pronunciation = int_ref_pronunciation_;
+          direction_pronunciation = int_direction_pronunciation_;
+          break;
+        case PronunciationAlphabet::kXKatakana:
+          ref_pronunciation = int_ref_pronunciation_katakana_;
+          direction_pronunciation = int_direction_pronunciation_katakana_;
+          break;
+        case PronunciationAlphabet::kNtSampa:
+          ref_pronunciation = int_ref_pronunciation_nt_sampa_;
+          direction_pronunciation = int_direction_pronunciation_nt_sampa_;
+          break;
+        case PronunciationAlphabet::kXJeita:
+          ref_pronunciation = int_ref_pronunciation_jeita_;
+          direction_pronunciation = int_direction_pronunciation_jeita_;
+          break;
+      }
+    } else {
+      switch (type) {
+        case PronunciationAlphabet::kIpa:
+          ref_pronunciation = ref_pronunciation_;
+          direction_pronunciation = direction_pronunciation_;
+          break;
+        case PronunciationAlphabet::kXKatakana:
+          ref_pronunciation = ref_pronunciation_katakana_;
+          direction_pronunciation = direction_pronunciation_katakana_;
+          break;
+        case PronunciationAlphabet::kNtSampa:
+          ref_pronunciation = ref_pronunciation_nt_sampa_;
+          direction_pronunciation = direction_pronunciation_nt_sampa_;
+          break;
+        case PronunciationAlphabet::kXJeita:
+          ref_pronunciation = ref_pronunciation_jeita_;
+          direction_pronunciation = direction_pronunciation_jeita_;
+          break;
+      }
+    }
+
+    if (direction_pronunciation.empty()) {
+      UpdateRefPronunciation(ref_pronunciation, type, int_ref);
+    } else {
+      std::vector<std::string> refs = GetTagTokens(ref_pronunciation);
+      std::vector<std::string> directions = GetTagTokens(direction_pronunciation);
+
+      std::string tmp_ref;
+      if (refs.size() == directions.size()) {
+        for (uint32_t i = 0; i < refs.size(); i++) {
+          if (!tmp_ref.empty()) {
+            tmp_ref += ";";
+          }
+          if (!directions.at(i).empty())
+            tmp_ref += refs.at(i) + " " + directions.at(i);
+          else
+            tmp_ref += refs.at(i);
+        }
+        UpdateRefPronunciation(tmp_ref, type, int_ref);
+      } else
+        UpdateRefPronunciation(ref_pronunciation, type, int_ref);
+    }
+  }
+
+  void UpdateRefPronunciation(const std::string& ref_pronunciation,
+                              const PronunciationAlphabet type,
+                              bool int_ref) {
+    if (int_ref) {
+      switch (type) {
+        case PronunciationAlphabet::kIpa:
+          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kXKatakana:
+          osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kNtSampa:
+          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kXJeita:
+          osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+      }
+    } else {
+      switch (type) {
+        case PronunciationAlphabet::kIpa:
+          osm_pronunciation_.set_ref_pronunciation_ipa_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kXKatakana:
+          osm_pronunciation_.set_ref_pronunciation_katakana_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kNtSampa:
+          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kXJeita:
+          osm_pronunciation_.set_ref_pronunciation_jeita_index(
+              osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+      }
+    }
+  }
+
+  void MergeRefPronunciations() {
+
+    for (uint8_t type = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+         type != static_cast<uint8_t>(PronunciationAlphabet::kNtSampa) + 1; ++type) {
+      // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
+      // don't add dups.
+
+      uint32_t index = 0;
+      std::string tmp;
+      switch (static_cast<PronunciationAlphabet>(type)) {
+        case PronunciationAlphabet::kIpa:
+          index = osm_pronunciation_.int_ref_pronunciation_ipa_index();
+          tmp =
+              (index ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_ipa_index())
+                     : "");
+          break;
+        case PronunciationAlphabet::kXKatakana:
+          index = osm_pronunciation_.int_ref_pronunciation_katakana_index();
+          tmp = (index ? osmdata_.name_offset_map.name(
+                             osm_pronunciation_.ref_pronunciation_katakana_index())
+                       : "");
+          break;
+        case PronunciationAlphabet::kNtSampa:
+          index = osm_pronunciation_.int_ref_pronunciation_nt_sampa_index();
+          tmp = (index ? osmdata_.name_offset_map.name(
+                             osm_pronunciation_.ref_pronunciation_nt_sampa_index())
+                       : "");
+          break;
+        case PronunciationAlphabet::kXJeita:
+          index = osm_pronunciation_.int_ref_pronunciation_jeita_index();
+          tmp =
+              (index
+                   ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_jeita_index())
+                   : "");
+          break;
+      }
+
+      if (index) {
+        std::vector<std::string> rs = GetTagTokens(tmp);
+        std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(index));
+        bool bFound = false;
+
+        for (auto& i : is) {
+          for (auto& r : rs) {
+            if (i == r) {
+              bFound = true;
+              break;
+            }
+          }
+          if (!bFound) {
+            if (!tmp.empty()) {
+              tmp += ";";
+            }
+            tmp += i;
+          }
+          bFound = false;
+        }
+
+        switch (static_cast<PronunciationAlphabet>(type)) {
+          case PronunciationAlphabet::kIpa:
+            if (!tmp.empty()) {
+              osm_pronunciation_.set_ref_pronunciation_ipa_index(osmdata_.name_offset_map.index(tmp));
+            }
+            // no matter what, clear out the int_ref.
+            osm_pronunciation_.set_int_ref_pronunciation_ipa_index(0);
+            break;
+          case PronunciationAlphabet::kXKatakana:
+            if (!tmp.empty()) {
+              osm_pronunciation_.set_ref_pronunciation_katakana_index(
+                  osmdata_.name_offset_map.index(tmp));
+            }
+            // no matter what, clear out the int_ref.
+            osm_pronunciation_.set_int_ref_pronunciation_katakana_index(0);
+            break;
+          case PronunciationAlphabet::kNtSampa:
+            if (!tmp.empty()) {
+              osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
+                  osmdata_.name_offset_map.index(tmp));
+            }
+            // no matter what, clear out the int_ref.
+            osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(0);
+            break;
+          case PronunciationAlphabet::kXJeita:
+            if (!tmp.empty()) {
+              osm_pronunciation_.set_ref_pronunciation_jeita_index(
+                  osmdata_.name_offset_map.index(tmp));
+            }
+            // no matter what, clear out the int_ref.
+            osm_pronunciation_.set_int_ref_pronunciation_jeita_index(0);
+            break;
+        }
+      }
+    }
   }
 
   // WayCallback tag handlers
@@ -2063,12 +2919,23 @@ public:
   bool has_surface_ = true;
   bool has_surface_tag_ = true;
   OSMAccess osm_access_;
-  bool has_user_tags_ = false;
+  OSMPronunciation osm_pronunciation_;
+  bool has_user_tags_ = false, has_pronunciation_tags_ = false;
   std::string ref_, int_ref_, direction_, int_direction_;
+  std::string ref_pronunciation_, int_ref_pronunciation_, ref_pronunciation_nt_sampa_,
+      int_ref_pronunciation_nt_sampa_, ref_pronunciation_katakana_, int_ref_pronunciation_katakana_,
+      ref_pronunciation_jeita_, int_ref_pronunciation_jeita_;
+  std::string direction_pronunciation_, int_direction_pronunciation_,
+      direction_pronunciation_nt_sampa_, int_direction_pronunciation_nt_sampa_,
+      direction_pronunciation_katakana_, int_direction_pronunciation_katakana_,
+      direction_pronunciation_jeita_, int_direction_pronunciation_jeita_;
   std::string name_, service_, amenity_;
 
   // Configuration option to include driveways
   bool include_driveways_;
+
+  // Configuration option to include roads under construction
+  bool include_construction_;
 
   // Configuration option indicating whether or not to infer internal intersections during the graph
   // enhancer phase or use the internal_intersection key from the pbf
@@ -2118,6 +2985,8 @@ public:
 
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
+  // way pronunciations
+  std::unique_ptr<sequence<OSMPronunciation>> pronunciation_;
   // from complex restrictions
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
@@ -2144,7 +3013,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::vector<std::string>& input_files,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
-                                  const std::string& access_file) {
+                                  const std::string& access_file,
+                                  const std::string& pronunciation_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -2170,7 +3040,8 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr);
+                 new sequence<OSMAccess>(access_file, true),
+                 new sequence<OSMPronunciation>(pronunciation_file, true), nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -2188,13 +3059,21 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
+  }
+
+  // we need to sort the pronunciation indexes so that we can easily find them.
+  LOG_INFO("Sorting pronunciation indexes by way id...");
+  {
+    sequence<OSMPronunciation> pronunciation(pronunciation_file, false);
+    pronunciation.sort(
+        [](const OSMPronunciation& a, const OSMPronunciation& b) { return a.way_id() < b.way_id(); });
   }
 
   LOG_INFO("Finished");
@@ -2235,7 +3114,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
     }
   }
 
-  callback.reset(nullptr, nullptr, nullptr,
+  callback.reset(nullptr, nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
@@ -2253,7 +3132,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -2306,17 +3185,24 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
 
   if (pt.get<bool>("import_bike_share_stations", false)) {
     LOG_INFO("Parsing bss nodes...");
+
+    bool create = true;
     for (auto& file_handle : file_handles) {
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
-      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
-                     new sequence<OSMNode>(bss_nodes_file, true));
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+                     new sequence<OSMNode>(bss_nodes_file, create));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
+      create = false;
     }
+    // Since the sequence must be flushed before reading it...
+    callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) +
+             " bss nodes...");
   }
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -2336,7 +3222,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr, nullptr);
+                   nullptr, nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -2345,7 +3231,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 

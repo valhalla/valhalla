@@ -50,7 +50,7 @@ TEST(Actor, Basic) {
   ASSERT_NE(transit_json.find(std::to_string(false)), std::string::npos);
 
   auto status_json = actor.status("");
-  ASSERT_EQ(status_json, "{}");
+  ASSERT_NE(status_json.find("tileset_last_modified"), std::string::npos);
   actor.cleanup();
   status_json = actor.status(R"({"verbose":true})");
   actor.cleanup();

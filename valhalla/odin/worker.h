@@ -1,6 +1,7 @@
 #ifndef __VALHALLA_ODIN_SERVICE_H__
 #define __VALHALLA_ODIN_SERVICE_H__
 
+#include <valhalla/odin/markup_formatter.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/worker.h>
 
@@ -28,6 +29,9 @@ public:
    */
   std::string narrate(Api& request) const;
   void status(Api& request) const;
+
+protected:
+  MarkupFormatter markup_formatter_;
 
 private:
   std::string service_name() const override {
