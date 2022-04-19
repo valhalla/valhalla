@@ -406,6 +406,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
+      //    if shortcut edge length is greater than kMaxEdgeLength, return 0
+      if (length > kMaxEdgeLength) {
+        LOG_ERROR("length too big");
+        throw std::runtime_error("edge length too big");
+      }
+
       // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
       uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
