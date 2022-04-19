@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/optional.hpp>
+#include <cxxopts.hpp>
 #include <boost/tokenizer.hpp>
 
 #include "config.h"
@@ -587,45 +589,42 @@ int main(int argc, char** argv) {
   std::string csv_file_path;
   std::string bash_cmd;
 
-  bpo::options_description options(
-      "valhalla_update_live_traffic \n"
-      "\n"
-      " Usage: valhalla_update_live_traffic [options]\n"
-      "\n"
-      "provides utils for create default traffic.tar and updating by csv file. "
-      "\n"
-      "\n");
+  // ref:
+  // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
+  cxxopts::Options options(
+      "valhalla_update_live_traffic",
+      "valhalla_update_live_traffic " VALHALLA_VERSION
+      "\n\nvalhalla_update_live_traffic is a program that creates or updates traffic.tar\nfrom one csv file\n");
 
-  options.add_options()("help,h",
-                        "Print this help message.")("config,c",
-                                                    boost::program_options::value<std::string>(
-                                                        &config_file_path),
-                                                    "Path to the json configuration file.")(
-      "traffic,t", boost::program_options::value<std::string>(&csv_file_path),
-      "Path to the csv traffic file")("bash,b", boost::program_options::value<std::string>(&bash_cmd),
-                                      "Bash command for download from azure");
+  // clang-format off
+  options.add_options()
+    ("h,help", "Print this help message.")
+    ("v,version","Print the version of this software.")
+    ("c,config", "Path to the configuration file", cxxopts::value<std::string>())
+    // ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+    ("t,traffic", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value(""))
+    ("b,bash", "Bash command for download from azure", cxxopts::value<std::string>()->default_value(""));
+    // ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
+  // clang-format on
 
-  // config_file_path = "/SDD_datadrive/valhalla/deu/valhalla_deu.json";
-  // csv_file_path = "/SDD_datadrive/here-traffic/traffic_speed_deu.csv";
+  // options.parse_positional({"input_files"});
+  // options.positional_help("OSM PBF file(s)");
+  auto vm = options.parse(argc, argv);
 
-  bpo::variables_map vm;
-  try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-  std:
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
-    return EXIT_FAILURE;
-  }
-
-  if (vm.count("help") || vm.empty()) {
-    std::cout << options << "\n";
+  if (vm.count("version")) {
+    std::cout << "valhalla_update_live_traffic " << VALHALLA_VERSION << "\n";
     return EXIT_SUCCESS;
   }
 
+  if (vm.count("help")) {
+    std::cout << options.help() << "\n";
+    return EXIT_SUCCESS;
+  }
+
+
   // Read the config file
   boost::property_tree::ptree pt;
-  if (vm.count("config") && filesystem::is_regular_file(config_file_path)) {
+  if (vm.count("config") && filesystem::is_regular_file(config_file_path = (vm["config"].as<std::string>()))) {
     rapidjson::read_json(config_file_path, pt);
   } else {
     LOG_ERROR("Configuration is required");
@@ -650,12 +649,13 @@ int main(int argc, char** argv) {
     while (true) {
       auto start = std::chrono::high_resolution_clock::now();
       if (vm.count("bash")) {
+        bash_cmd = vm["bash"].as<std::string>();
         LOG_INFO("Download traffic from Azure!");
         // auto result = std::system("/home/router/valhalla/load_here_traffic_weu.sh");
         auto result = std::system(bash_cmd.c_str());
         std::this_thread::sleep_for(2000ms);
       }
-      if (!filesystem::is_regular_file(csv_file_path)) {
+      if (!filesystem::is_regular_file(csv_file_path = vm["traffic"].as<std::string>())) {
         LOG_ERROR("Traffic file " + csv_file_path + " does not exist!");
         return EXIT_FAILURE;
       }

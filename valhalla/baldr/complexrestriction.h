@@ -242,13 +242,8 @@ protected:
 
   // Restriction data
   uint64_t type_ : 4;        // Restriction type
-  uint64_t modes_ : 12;      // Mode(s) this access restriction applies to
-  uint64_t via_count_ : 5;   // size of via list.
-  uint64_t dow_ : 7;         // day of week for this restriction
-  uint64_t begin_mins_ : 6;  // begin minutes
-  uint64_t end_mins_ : 6;    // end minutes
   uint64_t probability_ : 7; // used for probable restrictions.
-  uint64_t spare_ : 17;
+  uint64_t spare_ : 53;
 
   // List of vias follows the structure immediately on disk
   // TODO - perhaps use spare to store offset to a separate list?
