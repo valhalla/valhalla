@@ -1,0 +1,2 @@
+ccache /Library/Developer/CommandLineTools/usr/bin/ar qc libvalhalla_test.a CMakeFiles/valhalla_test.dir/test.cc.o CMakeFiles/valhalla_test.dir/gurka/gurka.cc.o CMakeFiles/valhalla_test.dir/__/third_party/microtar/src/microtar.c.o CMakeFiles/valhalla_test.dir/__/third_party/lz4/lib/lz4.c.o CMakeFiles/valhalla_test.dir/__/third_party/lz4/lib/lz4hc.c.o CMakeFiles/valhalla_test.dir/__/third_party/lz4/lib/lz4frame.c.o CMakeFiles/valhalla_test.dir/__/third_party/lz4/lib/xxhash.c.o
+ccache /Library/Developer/CommandLineTools/usr/bin/ranlib libvalhalla_test.a

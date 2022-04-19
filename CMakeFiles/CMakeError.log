@@ -1,0 +1,36 @@
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /Library/Developer/CommandLineTools/usr/bin/c++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+ld: library not found for -lc++
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Compiling the C compiler identification source file "CMakeCCompilerId.c" failed.
+Compiler: /Library/Developer/CommandLineTools/usr/bin/cc 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+ld: library not found for -lSystem
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Performing C++ SOURCE FILE Test HAVE_CXX_FLAG_WD654 failed with the following output:
+Change Dir: /Users/cpark/Desktop/valhalla/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_88fe2/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_88fe2.dir/build.make CMakeFiles/cmTC_88fe2.dir/build
+Building CXX object CMakeFiles/cmTC_88fe2.dir/src.cxx.o
+/Library/Developer/CommandLineTools/usr/bin/c++ -DHAVE_CXX_FLAG_WD654  -fcolor-diagnostics   -std=c++11  -Wall  -Wextra  -Wshadow  -Wsuggest-override  -pedantic  -pedantic-errors  -Wshorten-64-to-32  -fstrict-aliasing  -Wno-deprecated-declarations  -Wstrict-aliasing  -wd654 -arch x86_64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk   -wd654 -std=gnu++14 -MD -MT CMakeFiles/cmTC_88fe2.dir/src.cxx.o -MF CMakeFiles/cmTC_88fe2.dir/src.cxx.o.d -o CMakeFiles/cmTC_88fe2.dir/src.cxx.o -c /Users/cpark/Desktop/valhalla/CMakeFiles/CMakeTmp/src.cxx
+clang: [0;1;31merror: [0m[1munknown argument: '-wd654'[0m
+clang: [0;1;31merror: [0m[1munknown argument: '-wd654'[0m
+make[1]: *** [CMakeFiles/cmTC_88fe2.dir/src.cxx.o] Error 1
+make: *** [cmTC_88fe2/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }

@@ -70,7 +70,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
   // Map of unique schedules (validity) in this tile
   uint32_t schedule_index = 0;
-  std::map<TransitSchedule, uint32_t> schedules;
+  std::map<TransitSchedule, uint32_t> schedules; 
 
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0, slash_found);

@@ -1,0 +1,89 @@
+[settings]
+    arch=x86_64
+    build_type=Release
+    compiler=apple-clang
+    compiler.cppstd=14
+    compiler.libcxx=libc++
+    compiler.version=13.1
+    os=Macos
+
+[requires]
+    boost/1.Y.Z
+
+[options]
+
+
+[full_settings]
+    arch=x86_64
+    arch_build=x86_64
+    build_type=Release
+    compiler=apple-clang
+    compiler.cppstd=14
+    compiler.libcxx=libc++
+    compiler.version=13.1
+    os=Macos
+    os_build=Macos
+
+[full_requires]
+    boost/1.71.0:524ea35a8120baabdde02483add58d81bf541327
+
+[full_options]
+    boost:asio_no_deprecated=False
+    boost:buildid=None
+    boost:bzip2=True
+    boost:debug_level=0
+    boost:diagnostic_definitions=False
+    boost:error_code_header_only=False
+    boost:extra_b2_flags=None
+    boost:filesystem_no_deprecated=False
+    boost:header_only=True
+    boost:i18n_backend=deprecated
+    boost:layout=system
+    boost:lzma=False
+    boost:magic_autolink=False
+    boost:multithreading=True
+    boost:namespace=boost
+    boost:namespace_alias=False
+    boost:pch=True
+    boost:python_executable=None
+    boost:python_version=None
+    boost:segmented_stacks=False
+    boost:system_no_deprecated=False
+    boost:visibility=hidden
+    boost:without_atomic=True
+    boost:without_chrono=True
+    boost:without_container=True
+    boost:without_context=True
+    boost:without_contract=True
+    boost:without_coroutine=True
+    boost:without_date_time=True
+    boost:without_exception=True
+    boost:without_fiber=True
+    boost:without_filesystem=True
+    boost:without_graph=True
+    boost:without_graph_parallel=True
+    boost:without_iostreams=True
+    boost:without_locale=True
+    boost:without_log=True
+    boost:without_math=True
+    boost:without_mpi=True
+    boost:without_program_options=True
+    boost:without_python=True
+    boost:without_random=True
+    boost:without_regex=True
+    boost:without_serialization=True
+    boost:without_stacktrace=True
+    boost:without_system=True
+    boost:without_test=True
+    boost:without_thread=True
+    boost:without_timer=True
+    boost:without_type_erasure=True
+    boost:without_wave=True
+    boost:zlib=True
+    boost:zstd=False
+
+[recipe_hash]
+
+
+[env]
+

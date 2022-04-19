@@ -30,7 +30,7 @@ using namespace valhalla::baldr::DateTime;
 using namespace valhalla::mjolnir;
 
 namespace {
-
+ 
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;

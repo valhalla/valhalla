@@ -74,6 +74,38 @@ TEST(Shortcuts, CreateInvalid) {
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
 }
 
+// Here no shortcuts are created. 
+//The grid size should be greater than the max length that allows shortcuts to be created
+TEST(Shortcuts, CreateTooLong) {
+  constexpr double gridsize = 5000000;
+                            
+  const std::string ascii_map = R"(
+      A--B--C
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"highway", "primary"},
+        {"name", "Independence Avenue"},
+        {"maxspeed:forward", "80"},
+        {"maxspeed:backward", "80"}}},
+      {"BC",
+       {{"highway", "primary"},
+        {"name", "Independence Avenue"},
+        {"maxspeed:forward", "80"},
+        {"maxspeed:backward", "80"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_speed");
+
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // check that there are no shortcut edges
+  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
+  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
+}
+
 TEST(Shortcuts, ShortcutSpeed) {
   // At C node turn duration is present. As a result the speed for AE shortcut is decreased
   // from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph in the test case below.

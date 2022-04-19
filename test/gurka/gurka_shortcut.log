@@ -1,0 +1,37 @@
+Running main() from /Users/cpark/valhalla/third_party/googletest/googletest/src/gtest_main.cc
+[==========] Running 7 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 7 tests from Shortcuts
+[ RUN      ] Shortcuts.CreateValid
+[          ] generating map PBF at test/data/gurka_openlrjoiner_shortcut_speed/map.pbf
+[          ] building tiles in test/data/gurka_openlrjoiner_shortcut_speed
+[       OK ] Shortcuts.CreateValid (233 ms)
+[ RUN      ] Shortcuts.CreateInvalid
+[          ] generating map PBF at test/data/gurka_openlrjoiner_shortcut_speed/map.pbf
+[          ] building tiles in test/data/gurka_openlrjoiner_shortcut_speed
+[       OK ] Shortcuts.CreateInvalid (204 ms)
+[ RUN      ] Shortcuts.CreateTooLong
+[          ] generating map PBF at test/data/gurka_openlrjoiner_shortcut_speed/map.pbf
+[          ] building tiles in test/data/gurka_openlrjoiner_shortcut_speed
+[       OK ] Shortcuts.CreateTooLong (365 ms)
+[ RUN      ] Shortcuts.ShortcutSpeed
+[          ] generating map PBF at test/data/gurka_shortcut/map.pbf
+[          ] building tiles in test/data/gurka_shortcut
+[       OK ] Shortcuts.ShortcutSpeed (278 ms)
+[ RUN      ] Shortcuts.TruckSpeedNotSet
+[          ] generating map PBF at test/data/gurka_shortcut/map.pbf
+[          ] building tiles in test/data/gurka_shortcut
+[       OK ] Shortcuts.TruckSpeedNotSet (228 ms)
+[ RUN      ] Shortcuts.TruckSpeedPartiallySet
+[          ] generating map PBF at test/data/gurka_shortcut/map.pbf
+[          ] building tiles in test/data/gurka_shortcut
+[       OK ] Shortcuts.TruckSpeedPartiallySet (228 ms)
+[ RUN      ] Shortcuts.ShortcutsInBins
+[          ] generating map PBF at test/data/gurka_shortcut/map.pbf
+[          ] building tiles in test/data/gurka_shortcut
+[       OK ] Shortcuts.ShortcutsInBins (228 ms)
+[----------] 7 tests from Shortcuts (1768 ms total)
+
+[----------] Global test environment tear-down
+[==========] 7 tests from 1 test suite ran. (1769 ms total)
+[  PASSED  ] 7 tests.

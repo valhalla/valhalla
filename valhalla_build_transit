@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+function usage() {
+    echo "Usage: `basename $0` valhalla_config transit_land_url per_page [target_directory] [bounding_box] [transitland_api_key] [import_level] [feed_onestop_id] [onestop_test]"
+    echo "Sample: `basename $0` conf/valhalla.json http://transit.land 1000 ./transit_tiles -122.469,37.502,-121.78,38.018 transitland-YOUR_KEY_SUFFIX 4 f-9q9-bart"
+	exit 1
+}
+
+#validate ranges
+if [ -z "$3" ]; then
+	usage
+fi
+
+# Run valhalla_fetch_transit to create PBF tiles.
+valhalla_fetch_transit $@
+
+# Run valhalla_convert_transit to convert PBF tiles to GPH tiles.
+valhalla_convert_transit $1 $4 $9

@@ -1,0 +1,24 @@
+{
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "options": "boost:asio_no_deprecated=False\nboost:buildid=None\nboost:bzip2=True\nboost:debug_level=0\nboost:diagnostic_definitions=False\nboost:error_code_header_only=False\nboost:extra_b2_flags=None\nboost:filesystem_no_deprecated=False\nboost:header_only=True\nboost:i18n_backend=deprecated\nboost:layout=system\nboost:lzma=False\nboost:magic_autolink=False\nboost:multithreading=True\nboost:namespace=boost\nboost:namespace_alias=False\nboost:pch=True\nboost:python_executable=None\nboost:python_version=None\nboost:segmented_stacks=False\nboost:system_no_deprecated=False\nboost:visibility=hidden\nboost:without_atomic=True\nboost:without_chrono=True\nboost:without_container=True\nboost:without_context=True\nboost:without_contract=True\nboost:without_coroutine=True\nboost:without_date_time=True\nboost:without_exception=True\nboost:without_fiber=True\nboost:without_filesystem=True\nboost:without_graph=True\nboost:without_graph_parallel=True\nboost:without_iostreams=True\nboost:without_locale=True\nboost:without_log=True\nboost:without_math=True\nboost:without_mpi=True\nboost:without_program_options=True\nboost:without_python=True\nboost:without_random=True\nboost:without_regex=True\nboost:without_serialization=True\nboost:without_stacktrace=True\nboost:without_system=True\nboost:without_test=True\nboost:without_thread=True\nboost:without_timer=True\nboost:without_type_erasure=True\nboost:without_wave=True\nboost:zlib=True\nboost:zstd=False",
+    "requires": [
+     "1"
+    ],
+    "path": "conanfile.txt",
+    "context": "host"
+   },
+   "1": {
+    "ref": "boost/1.71.0",
+    "options": "asio_no_deprecated=False\nbuildid=None\nbzip2=True\ndebug_level=0\ndiagnostic_definitions=False\nerror_code_header_only=False\nextra_b2_flags=None\nfilesystem_no_deprecated=False\nheader_only=True\ni18n_backend=deprecated\nlayout=system\nlzma=False\nmagic_autolink=False\nmultithreading=True\nnamespace=boost\nnamespace_alias=False\npch=True\npython_executable=None\npython_version=None\nsegmented_stacks=False\nsystem_no_deprecated=False\nvisibility=hidden\nwithout_atomic=True\nwithout_chrono=True\nwithout_container=True\nwithout_context=True\nwithout_contract=True\nwithout_coroutine=True\nwithout_date_time=True\nwithout_exception=True\nwithout_fiber=True\nwithout_filesystem=True\nwithout_graph=True\nwithout_graph_parallel=True\nwithout_iostreams=True\nwithout_locale=True\nwithout_log=True\nwithout_math=True\nwithout_mpi=True\nwithout_program_options=True\nwithout_python=True\nwithout_random=True\nwithout_regex=True\nwithout_serialization=True\nwithout_stacktrace=True\nwithout_system=True\nwithout_test=True\nwithout_thread=True\nwithout_timer=True\nwithout_type_erasure=True\nwithout_wave=True\nzlib=True\nzstd=False",
+    "package_id": "524ea35a8120baabdde02483add58d81bf541327",
+    "prev": "0",
+    "context": "host"
+   }
+  },
+  "revisions_enabled": false
+ },
+ "version": "0.4",
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Release\ncompiler=apple-clang\ncompiler.cppstd=14\ncompiler.libcxx=libc++\ncompiler.version=13.1\nos=Macos\nos_build=Macos\n[options]\n[build_requires]\n[env]\n"
+}
