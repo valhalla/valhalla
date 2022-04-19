@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# view narrative diffs
-vi `find *.txt -type f ! -size 0 | sort -n`
-

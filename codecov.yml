@@ -1,7 +1,0 @@
-coverage:
-
-  ignore:
-    - third_party/.*
-    - bench/.*
-
-comment: off

@@ -1,1 +1,0 @@
-../../scripts/valhalla_build_config
