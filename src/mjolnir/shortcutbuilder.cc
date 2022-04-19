@@ -34,7 +34,7 @@ namespace {
 struct EdgePairs {
   std::pair<GraphId, GraphId> edge1;
   std::pair<GraphId, GraphId> edge2;
-}; 
+};
 
 /**
  * Test if 2 edges have matching attributes such that they should be
@@ -401,15 +401,15 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
-    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) { 
+    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-  //    if shortcut edge length is greater than kMaxEdgeLength, return 0
-      if(length > kMaxEdgeLength){
+      //    if shortcut edge length is greater than kMaxEdgeLength, return 0
+      if (length > kMaxEdgeLength) {
         LOG_ERROR("length too big");
-        throw std::runtime_error("edge length too big"); 
+        throw std::runtime_error("edge length too big");
       }
 
       // For computing weighted density and total turn duration along the shortcut
@@ -485,7 +485,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                                average_density, total_duration, total_truck_duration);
 
-        
+
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?

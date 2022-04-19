@@ -134,11 +134,9 @@ uint32_t GetOpposingEdgeIndex(const GraphId& startnode,
         continue;
       }
 
-      if (edge.length() > kMaxEdgeLength){
+      if (edge.length() > kMaxEdgeLength) {
         throw std::runtime_error("Edge Length too Long");
       }
-
-
 
       bool match = false;
       uint64_t wayid2 = 0;

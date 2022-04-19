@@ -74,11 +74,11 @@ TEST(Shortcuts, CreateInvalid) {
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
 }
 
-// Here no shortcuts are created. 
-//The grid size should be greater than the max length that allows shortcuts to be created
+// Here no shortcuts are created.
+// The grid size should be greater than the max length that allows shortcuts to be created
 TEST(Shortcuts, CreateTooLong) {
   constexpr double gridsize = 5000000;
-                            
+
   const std::string ascii_map = R"(
       A--B--C
   )";
