@@ -1,0 +1,68 @@
+# https://www.mkdocs.org/user-guide/configuration/
+
+site_name: Valhalla
+repo_url: https://github.com/valhalla/valhalla/
+nav:
+  - Introduction for Developers: README.md
+  - Introduction for Users: valhalla-intro.md
+  - Terminology: terminology.md
+  - Public APIs:
+    - API Overview: api/index.md
+    - Turn-by-Turn Route API:
+        - Overview: api/turn-by-turn/overview.md
+        - API Reference: api/turn-by-turn/api-reference.md
+    - Optimized Route API: api/optimized/api-reference.md
+    - Matrix API: api/matrix/api-reference.md
+    - Isochrone API: api/isochrone/api-reference.md
+    - Map Matching API: api/map-matching/api-reference.md
+    - Locate API: api/locate/api-reference.md
+    - Transit Availability API: api/transit-available/api-reference.md
+    - Elevation API: api/elevation/api-reference.md
+  - Internal topics:
+    - "Why tiles?": mjolnir/why_tiles.md
+    - route_overview.md
+    - Decoding shape: decoding.md
+    - Tile structure: tiles.md
+    - Speed information: speeds.md
+    - Dynamic costing: sif/dynamic-costing.md
+    - Elevation influenced bicycle routing: sif/elevation_costing.md
+    - elevation.md
+  - Internal components:
+    - Baldr (routing data strutures/algorithms): baldr.md
+    - Loki (associate locations with graph edges): loki.md
+    - Midgard (data structures for geography/geometry): midgard.md
+    - Odin (route narrative/maneuver generation): odin.md
+    - Sif (costing for edges/transitions): sif.md
+    - Skadi (digital elevation model usage): skadi.md
+    - Tyr (service layer): tyr.md
+    - Meili (map matching):
+      - Overview: meili.md
+      - Algorithms: meili/algorithms.md
+      - Configuration: meili/configuration.md
+      - meili/implementation_details.md
+      - meili/library_api.md
+      - meili/service_api.md
+    - Mjolnir (routing graph/tile generation):
+      - mjolnir.md
+      - mjolnir/geojson.md
+      - mjolnir/getting_started_guide.md
+      - mjolnir/map_roulette.md
+      - mjolnir/map_roulette_blog.md
+      - mjolnir/tag_parsing.md
+    - Thor (routing algorithms):
+      - thor.md
+      - thor/isochrones.md
+      - thor/path-algorithm.md
+      - thor/simple_traffic.md 
+  - Data sources:
+    - Data sources: mjolnir/data_sources.md
+    - Administrative data: mjolnir/admins.md
+    - Attribution requirements: mjolnir/attribution.md
+  - Development:
+    - Changelog: CHANGELOG.md
+    - releasing.md
+  
+theme: readthedocs
+markdown_extensions:
+  - toc:
+      permalink: True

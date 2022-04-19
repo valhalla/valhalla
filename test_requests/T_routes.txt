@@ -1,0 +1,9 @@
+-j '{"locations":[{"lat":38.927921,"lon":-77.226021,"street":"Sunstone Drive"},{"lat":38.928402,"lon":-77.225815,"street":"Sunstone Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.927879,"lon":-77.226212,"street":"Sunstone Drive"},{"lat":38.927830,"lon":-77.225693,"street":"Sunstone Drive"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.242741,"lon":-76.723648,"street":"Raleigh Road"},{"lat":40.242550,"lon":-76.724449,"street":"Raleigh Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.242771,"lon":-76.723640,"street":"Raleigh Road"},{"lat":40.242241,"lon":-76.723289,"street":"Raleigh Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.257439,"lon":-76.684402,"street":""},{"lat":40.257160,"lon":-76.684464,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.257439,"lon":-76.684418,"street":""},{"lat":40.257729,"lon":-76.684883,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.258400,"lon":-76.685349,"street":""},{"lat":40.259010,"lon":-76.685463,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.258362,"lon":-76.685471,"street":""},{"lat":40.258369,"lon":-76.684868,"street":""}],"costing":"bicycle","directions_options":{"units":"miles"}}'
+

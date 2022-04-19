@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":9.341032,"lon":-79.873436,"street":"Carretera Transístmica"},{"lat":9.341371,"lon":-79.880127,"street":"Avenida Randolph"}],"costing":"auto","directions_options":{"units":"miles"}}'

@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.182201,"lon":-76.600266,"street":"Hershey Road"},{"lat":40.181820,"lon":-76.605553,"street":"PA 283 West"}],"costing":"auto","units":"miles"}'

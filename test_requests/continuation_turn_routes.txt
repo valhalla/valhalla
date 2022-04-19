@@ -1,0 +1,7 @@
+-j '{"locations":[{"lat":37.366619,"lon":-122.014473,"street":"Old San Francisco Road"},{"lat":37.366688,"lon":-122.012978,"street":"Reed Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.735420,"lon":-73.992203,"street":"East 14th Street"},{"lat":40.746605,"lon":-73.993752,"street":"West 27th Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.739445,"lon":-122.424164,"street":"San Jose Avenue"},{"lat":37.742676,"lon":-122.424210,"street":"Dolores Street"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":36.591019,"lon":-121.880051,"street":"Aguajito Road"},{"lat":36.589951,"lon":-121.879326,"street":"Aguajito Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.612453,"lon":-122.404106,"street":"Park Boulevard"},{"lat":37.613045,"lon":-122.404015,"street":"El Camino Real"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.612453,"lon":-122.404106,"street":"Park Boulevard"},{"lat":37.612930,"lon":-122.403328,"street":"San Diego Avenue"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":37.612965,"lon":-122.403297,"street":"San Diego Avenue"},{"lat":37.612446,"lon":-122.404266,"street":"Park Boulevard"}],"costing":"auto","directions_options":{"units":"miles"}}'

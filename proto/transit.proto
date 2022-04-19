@@ -1,0 +1,81 @@
+syntax = "proto2";
+option optimize_for = LITE_RUNTIME;
+package valhalla.mjolnir;
+
+message Transit {
+
+  message Node {
+    optional float lon = 1;
+    optional float lat = 2;
+    optional uint32 type = 3;
+    optional uint64 graphid = 4;
+    optional uint64 prev_type_graphid = 5;
+    optional string name = 6;
+    optional string onestop_id = 7;
+    optional uint64 osm_way_id = 8;
+    optional string timezone = 9;
+    optional bool wheelchair_boarding = 10;
+    optional bool generated = 11;
+    optional uint32 traversability = 12;
+  }
+
+  message StopPair {
+    optional bool bikes_allowed = 1; 
+    optional uint32 block_id = 2; 
+    optional uint32 destination_arrival_time = 3;
+    optional uint64 destination_graphid = 4;
+    optional string destination_onestop_id = 5; 
+    optional string operated_by_onestop_id = 6;
+    optional uint32 origin_departure_time = 7;
+    optional uint64 origin_graphid = 8;
+    optional string origin_onestop_id = 9;
+    optional uint32 route_index = 10;
+    repeated uint32 service_added_dates = 11;
+    repeated bool service_days_of_week = 12;
+    optional uint32 service_end_date = 13;
+    repeated uint32 service_except_dates = 14;
+    optional uint32 service_start_date = 15;
+    optional string trip_headsign = 16;
+    optional uint32 trip_id = 17;
+    optional bool wheelchair_accessible = 18;
+    optional uint32 shape_id = 20;
+    optional float origin_dist_traveled = 21;
+    optional float destination_dist_traveled = 22;
+    optional uint32 frequency_end_time = 23;
+    optional uint32 frequency_headway_seconds = 24;
+  }
+   
+  enum VehicleType {
+    kTram = 0;
+    kMetro = 1;
+    kRail = 2;
+    kBus = 3;
+    kFerry = 4;
+    kCableCar = 5;
+    kGondola = 6;
+    kFunicular = 7;
+  }
+ 
+  message Route {
+    optional string name = 1;
+    optional string onestop_id = 2;
+    optional string operated_by_name = 3;
+    optional string operated_by_onestop_id = 4;
+    optional string operated_by_website = 5;
+    optional uint32 route_color = 6;
+    optional string route_desc = 7; 
+    optional string route_long_name = 8;
+    optional uint32 route_text_color = 9;
+    optional VehicleType vehicle_type = 10;     
+  }
+  
+  message Shape {
+    optional uint32 shape_id = 1; 
+    optional bytes encoded_shape = 2;
+  }
+ 
+  repeated Node nodes = 1;
+  repeated StopPair stop_pairs = 2;
+  repeated Route routes = 3; 
+  repeated Shape shapes = 4; 
+}

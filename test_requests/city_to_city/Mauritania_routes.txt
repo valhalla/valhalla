@@ -1,0 +1,3 @@
+-j '{"locations":[{"lat":18.119444,"lon":-16.040556,"city":"Nouakchott"},{"lat":16.640388,"lon":-12.498493,"city":"Barkewol"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":18.119444,"lon":-16.040556,"city":"Nouakchott"},{"lat":20.902500,"lon":-17.042223,"city":"Nouadhibou"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":16.640388,"lon":-12.498493,"city":"Barkewol"},{"lat":20.902500,"lon":-17.042223,"city":"Nouadhibou"}],"costing":"auto","directions_options":{"units":"miles"}}'

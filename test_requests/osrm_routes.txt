@@ -1,0 +1,5 @@
+-j '{"locations":[{"lat":38.928505,"lon":-77.018120,"street":"Michigan Avenue Northwest"},{"lat":38.929298,"lon":-77.019577,"street":"Warder Street Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.909698,"lon":-77.031151,"street":"P Street Northwest"},{"lat":38.910095,"lon":-77.028206,"street":"Rhode Island Avenue Northwest"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.257080,"lon":-76.709305,"street":"Middletown Road"},{"lat":40.272404,"lon":-76.675705,"street":"US 422"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.073391,"lon":-76.331436,"street":"PA 283 East"},{"lat":40.070126,"lon":-76.315407,"street":"US 30 East"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":42.253529,"lon":-70.995956,"street":"Mayor Thomas J. McGrath Highway"},{"lat":42.253292,"lon":-70.991982,"street":"Field Street"}],"costing":"auto","directions_options":{"units":"miles"}}'

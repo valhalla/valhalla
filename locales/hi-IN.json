@@ -1,0 +1,2259 @@
+{
+  "posix_locale": "hi_IN.UTF-8",
+  "aliases": [
+    "hi"
+  ],
+  "instructions": {
+    "arrive": {
+      "phrases": {
+        "0": "पहुंचें: <TIME>.",
+        "1": "<TRANSIT_STOP> पर पहुंचें: <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "पहुंचें: 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU पर पहुंचें: 8:02 AM."
+        ]
+      }
+    },
+    "arrive_verbal": {
+      "phrases": {
+        "0": "<TIME> पर पहुंचें.",
+        "1": "<TRANSIT_STOP> पर <TIME> पर पहुंचें."
+      },
+      "example_phrases": {
+        "0": [
+          "8:02 AM पर पहुंचें."
+        ],
+        "1": [
+          "8 St - NYU पर 8:02 AM पर पहुंचें."
+        ]
+      }
+    },
+    "bear": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
+        "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
+        "2": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े. <STREET_NAMES> पर बने रहें.",
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दाईं ओर बढ़े."
+        ],
+        "1": [
+          "बाईं ओर Arlen Road पर बढ़े."
+        ],
+        "2": [
+          "दाईं ओर Belair Road/US 1 Business पर बढ़े. US 1 Business पर बने रहें."
+        ],
+        "3": [
+          "बाईं ओर US 15 South पर बने रहें."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "bear_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> ओर बढ़े.",
+        "1": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बढ़े.",
+        "2": "<RELATIVE_DIRECTION> ओर <BEGIN_STREET_NAMES> पर बढ़े.",
+        "3": "<RELATIVE_DIRECTION> ओर <STREET_NAMES> पर बने रहें.",
+        "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दाईं ओर बढ़े."
+        ],
+        "1": [
+          "बाईं ओर Arlen Road पर बढ़े."
+        ],
+        "2": [
+          "दाईं ओर Belair Road, U.S. 1 Business पर बढ़े."
+        ],
+        "3": [
+          "बाईं ओर US 15 South पर बने रहें."
+        ],
+        "4": [
+          "Bear right at Mannenbashi East."
+        ],
+        "5": [
+          "Bear left toward Baltimore."
+        ]
+      }
+    },
+    "becomes": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> <STREET_NAMES> बन जाती है."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street Middletown Road बन जाती है."
+        ]
+      }
+    },
+    "becomes_verbal": {
+      "phrases": {
+        "0": "<PREVIOUS_STREET_NAMES> <STREET_NAMES> बन जाती है."
+      },
+      "example_phrases": {
+        "0": [
+          "Vine Street Middletown Road बन जाती है."
+        ]
+      }
+    },
+    "continue": {
+      "phrases": {
+        "0": "जारी रहें.",
+        "1": "<STREET_NAMES> पर जारी रहें.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "जारी रहें."
+        ],
+        "1": [
+          "10th Avenue पर जारी रहें."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "continue_verbal": {
+      "phrases": {
+        "0": "जारी रहें.",
+        "1": "<LENGTH> के लिए जारी रहें.",
+        "2": "<STREET_NAMES> पर जारी रहें.",
+        "3": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें.",
+        "4": "Continue at <JUNCTION_NAME>.",
+        "5": "Continue at <JUNCTION_NAME> for <LENGTH>.",
+        "6": "Continue toward <TOWARD_SIGN>.",
+        "7": "Continue toward <TOWARD_SIGN> for <LENGTH>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "Continue."
+        ],
+        "1": [
+          "Continue for 300 feet."
+        ],
+        "2": [
+          "Continue on 10th Avenue."
+        ],
+        "3": [
+          "Continue on 10th Avenue for 3 miles."
+        ],
+        "4": [
+          "Continue at Mannenbashi East."
+        ],
+        "5": [
+          "Continue at Mannenbashi East for 2 miles."
+        ],
+        "6": [
+          "Continue toward Baltimore."
+        ],
+        "7": [
+          "Continue toward Baltimore for 5 miles."
+        ]
+      }
+    },
+    "continue_verbal_alert": {
+      "phrases": {
+        "0": "जारी रहें.",
+        "1": "<STREET_NAMES> पर जारी रहें.",
+        "2": "Continue at <JUNCTION_NAME>.",
+        "3": "Continue toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "जारी रहें."
+        ],
+        "1": [
+          "10th Avenue पर जारी रहें."
+        ],
+        "2": [
+          "Continue at Mannenbashi East."
+        ],
+        "3": [
+          "Continue toward Baltimore."
+        ]
+      }
+    },
+    "depart": {
+      "phrases": {
+        "0": "रवाना: <TIME>.",
+        "1": "<TRANSIT_STOP> से रवाना: <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "रवाना: 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU से रवाना: 8:02 AM."
+        ]
+      }
+    },
+    "depart_verbal": {
+      "phrases": {
+        "0": "रवाना <TIME>.",
+        "1": "<TRANSIT_STOP> से रवाना <TIME>."
+      },
+      "example_phrases": {
+        "0": [
+          "रवाना at 8:02 AM."
+        ],
+        "1": [
+          "8 St - NYU से रवाना 8:02 AM."
+        ]
+      }
+    },
+    "destination": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच चुके हैं.",
+        "1": "आप <DESTINATION> पर पहुंच चुके हैं.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ है.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ है."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच चुके हैं."
+        ],
+        "1": [
+          "आप 3206 Powelton Avenue पर पहुंच चुके हैं."
+        ],
+        "2": [
+          "आपका गंतव्य बाईं तरफ है.",
+          "आपका गंतव्य दाईं तरफ है."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाईं तरफ है."
+        ]
+      }
+    },
+    "destination_verbal": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच चुके हैं.",
+        "1": "आप <DESTINATION> पर पहुंच चुके हैं.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ है.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ है."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच चुके हैं."
+        ],
+        "1": [
+          "आप 32 o6 Powelton Avenue पर पहुंच चुके हैं."
+        ],
+        "2": [
+          "आपका गंतव्य बाईं तरफ है.",
+          "आपका गंतव्य दाईं तरफ है."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाईं तरफ है."
+        ]
+      }
+    },
+    "destination_verbal_alert": {
+      "phrases": {
+        "0": "आप अपने गंतव्य पर पहुंच जाएगे.",
+        "1": "आप <DESTINATION> पर पहुंच जाएगे.",
+        "2": "आपका गंतव्य <RELATIVE_DIRECTION> तरफ होगा.",
+        "3": "<DESTINATION> <RELATIVE_DIRECTION> तरफ होगा."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "आप अपने गंतव्य पर पहुंच जाएगे."
+        ],
+        "1": [
+          "आप 32 o6 Powelton Avenue पर पहुंच जाएगे."
+        ],
+        "2": [
+          "आपका गंतव्य बाईं तरफ होगा.",
+          "आपका गंतव्य दाईं तरफ होगा."
+        ],
+        "3": [
+          "Lancaster Brewing Company बाईं तरफ होगा."
+        ]
+      }
+    },
+    "enter_ferry": {
+      "phrases": {
+        "0": "नौका लें.",
+        "1": "<STREET_NAMES> लें.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "नौका लें."
+        ],
+        "1": [
+          "Millersburg Ferry लें."
+        ],
+        "2": [
+          "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_ferry_verbal": {
+      "phrases": {
+        "0": "नौका लें.",
+        "1": "<STREET_NAMES> लें.",
+        "2": "<STREET_NAMES> <FERRY_LABEL> नौका लें.",
+        "3": "Take the ferry toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "ferry_label": "Ferry",
+      "example_phrases": {
+        "0": [
+          "नौका लें."
+        ],
+        "1": [
+          "Millersburg Ferry लें."
+        ],
+        "2": [
+          "Bridgeport - Port Jefferson नौका लें."
+        ],
+        "3": [
+          "Take the ferry toward Cape May."
+        ]
+      }
+    },
+    "enter_roundabout": {
+      "phrases": {
+        "0": "सर्कल प्रवेश करें.",
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>. Continue on <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "पहला",
+        "दूसरा",
+        "तीसरा",
+        "चौथा",
+        "पांचवां",
+        "छठवां",
+        "सातवां",
+        "आठवाँ",
+        "नौवां",
+        "दसवां"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल प्रवेश करें."
+        ],
+        "1": [
+          "सर्कल प्रवेश करें और पहला निकास लें.",
+          "सर्कल प्रवेश करें और दूसरा निकास लें.",
+          "सर्कल प्रवेश करें और तीसरा निकास लें.",
+          "सर्कल प्रवेश करें और चौथा निकास लें.",
+          "सर्कल प्रवेश करें और पांचवां निकास लें.",
+          "सर्कल प्रवेश करें और छठवां निकास लें.",
+          "सर्कल प्रवेश करें और सातवां निकास लें.",
+          "सर्कल प्रवेश करें और आठवाँ निकास लें.",
+          "सर्कल प्रवेश करें और नौवां निकास लें.",
+          "सर्कल प्रवेश करें और दसवां निकास लें."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto US 322/Main Street. Continue on US 322."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "enter_roundabout_verbal": {
+      "phrases": {
+        "0": "सर्कल प्रवेश करें.",
+        "1": "सर्कल प्रवेश करें और <ORDINAL_VALUE> निकास लें.",
+        "2": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "3": "Enter the roundabout and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "4": "Enter the roundabout and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "5": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "6": "Enter the roundabout and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "7": "Enter the roundabout and take the exit toward <TOWARD_SIGN>.",
+        "8": "Enter <STREET_NAMES>",
+        "9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit.",
+        "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "11": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>.",
+        "13": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_STREET_NAMES>.",
+        "14": "Enter <STREET_NAMES> and take the exit onto <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>.",
+        "15": "Enter <STREET_NAMES> and take the exit toward <TOWARD_SIGN>."
+      },
+      "ordinal_values": [
+        "पहला",
+        "दूसरा",
+        "तीसरा",
+        "चौथा",
+        "पांचवां",
+        "छठवां",
+        "सातवां",
+        "आठवाँ",
+        "नौवां",
+        "दसवां"
+      ],
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल प्रवेश करें."
+        ],
+        "1": [
+          "सर्कल प्रवेश करें और पहला निकास लें.",
+          "सर्कल प्रवेश करें और दूसरा निकास लें.",
+          "सर्कल प्रवेश करें और तीसरा निकास लें.",
+          "सर्कल प्रवेश करें और चौथा निकास लें.",
+          "सर्कल प्रवेश करें और पांचवां निकास लें.",
+          "सर्कल प्रवेश करें और छठवां निकास लें.",
+          "सर्कल प्रवेश करें और सातवां निकास लें.",
+          "सर्कल प्रवेश करें और आठवाँ निकास लें.",
+          "सर्कल प्रवेश करें और नौवां निकास लें.",
+          "सर्कल प्रवेश करें और दसवां निकास लें."
+        ],
+        "2": [
+          "Enter the roundabout and take the 3rd exit onto Main Street."
+        ],
+        "3": [
+          "Enter the roundabout and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "4": [
+          "Enter the roundabout and take the 3rd exit toward Baltimore."
+        ],
+        "5": [
+          "Enter the roundabout and take the exit onto Main Street."
+        ],
+        "6": [
+          "Enter the roundabout and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "7": [
+          "Enter the roundabout and take the exit toward Baltimore."
+        ],
+        "8": [
+          "Enter Dupont Circle."
+        ],
+        "9": [
+          "Enter Dupont Circle and take the 1st exit."
+        ],
+        "10": [
+          "Enter Dupont Circle and take the 3rd exit onto Main Street."
+        ],
+        "11": [
+          "Enter Dupont Circle and take the 3rd exit onto U.S. 3 22/Main Street."
+        ],
+        "12": [
+          "Enter Dupont Circle and take the 3rd exit toward Baltimore."
+        ],
+        "13": [
+          "Enter Dupont Circle and take the exit onto Main Street."
+        ],
+        "14": [
+          "Enter Dupont Circle and take the exit onto U.S. 3 22/Main Street."
+        ],
+        "15": [
+          "Enter Dupont Circle and take the exit toward Baltimore."
+        ]
+      }
+    },
+    "exit": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ निकलें.",
+        "1": "<RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "3": "<BRANCH_SIGN> पर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "4": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकलें.",
+        "5": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "6": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "7": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाईं तरफ निकलें.",
+          "दाईं तरफ निकलें."
+        ],
+        "1": [
+          "दाईं तरफ निकास 67 B-A  लें."
+        ],
+        "2": [
+          "दाईं तरफ निकास US 322 West लें."
+        ],
+        "3": [
+          "दाईं तरफ निकास 67 B-A लेकर US 322 West पर बाहर निकलें."
+        ],
+        "4": [
+          "Lewistown की ओर दाईं तरफ बाहर निकलें."
+        ],
+        "5": [
+          "Lewistown की ओर दाईं तरफ निकास 67 B-A लें."
+        ],
+        "6": [
+          "Lewistown की ओर दाईं तरफ निकास US 322 West लें."
+        ],
+        "7": [
+          "Lewistown/State College की ओर बढ़ते रहने के लिए दाईं तरफ निकास 67 B-A लेकर US 322 West पर बाहर निकलें."
+        ],
+        "8": [
+          "बाईं तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "10": [
+          "बाईं तरफ निकास White Marsh Boulevard लेकर MD 43 East पर बाहर निकलें."
+        ],
+        "12": [
+          "White Marsh की ओर बाईं तरफ निकास Marsh Boulevard लें."
+        ],
+        "14": [
+          "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर MD 43 East पर बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकलें 67 B-A लें."
+        ],
+        "17": [
+          "निकलें US 322 West लें."
+        ],
+        "18": [
+          "निकलें 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "निकलें toward Lewistown ."
+        ],
+        "20": [
+          "निकलें 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "निकलें US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "निकलें White Marsh Boulevard exit."
+        ],
+        "25": [
+          "निकलें White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "निकलें White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "निकलें White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_roundabout": {
+      "phrases": {
+        "0": "सर्कल से बाहर निकलें.",
+        "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें. <STREET_NAMES> पर जारी रहें.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल से बाहर निकलें."
+        ],
+        "1": [
+          "Philadelphia Road/MD 7 पर सर्कल से बाहर निकलें."
+        ],
+        "2": [
+          "Catoctin Mountain Highway/US 15 पर सर्कल से बाहर निकलें. US 15 पर जारी रहें."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_roundabout_verbal": {
+      "phrases": {
+        "0": "सर्कल से बाहर निकलें.",
+        "1": "<STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "2": "<BEGIN_STREET_NAMES> पर सर्कल से बाहर निकलें.",
+        "3": "Exit the roundabout toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "सर्कल से बाहर निकलें."
+        ],
+        "1": [
+          "Philadelphia Road, Maryland 7 पर सर्कल से बाहर निकलें."
+        ],
+        "2": [
+          "Catoctin Mountain Highway, U.S. 15 पर सर्कल से बाहर निकलें."
+        ],
+        "3": [
+          "Exit the roundabout toward Baltimore."
+        ]
+      }
+    },
+    "exit_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ निकलें.",
+        "1": "<RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "3": "<BRANCH_SIGN> पर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "4": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकलें.",
+        "5": "<TOWARD_SIGN> की ओर जाने के लिए <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "6": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <BRANCH_SIGN> लें.",
+        "7": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ निकास <NUMBER_SIGN> लें.",
+        "8": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "10": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "12": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "14": "<TOWARD_SIGN> की ओर <RELATIVE_DIRECTION> तरफ <NAME_SIGN> से बाहर निकलें.",
+        "15": "निकलें.",
+        "16": "निकास <NUMBER_SIGN> लें.",
+        "17": "निकास <BRANCH_SIGN> लें.",
+        "18": "<BRANCH_SIGN> पर निकास <NUMBER_SIGN> लें.",
+        "19": "<TOWARD_SIGN> की ओर जाने के लिए निकलें.",
+        "20": "<TOWARD_SIGN> की ओर जाने के लिए निकास <NUMBER_SIGN> लें.",
+        "21": "<TOWARD_SIGN> की ओर निकास <BRANCH_SIGN> लें.",
+        "22": "<BRANCH_SIGN> पर <TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> लें.",
+        "23": "<NAME_SIGN> से बाहर निकलें.",
+        "25": "<NAME_SIGN> निकास से <BRANCH_SIGN> पर बाहर निकलें",
+        "27": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें.",
+        "29": "<TOWARD_SIGN> की ओर <NAME_SIGN> से बाहर निकलें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाईं तरफ निकलें.",
+          "दाईं तरफ निकलें."
+        ],
+        "1": [
+          "दाईं तरफ निकास 67 B-A  लें."
+        ],
+        "2": [
+          "दाईं तरफ निकास U.S. 3 22 West लें."
+        ],
+        "3": [
+          "दाईं तरफ निकास 67 B-A लेकर U.S. 3 22 West पर बाहर निकलें."
+        ],
+        "4": [
+          "Lewistown की ओर दाईं तरफ बाहर निकलें."
+        ],
+        "5": [
+          "Lewistown की ओर दाईं तरफ निकास 67 B-A लें."
+        ],
+        "6": [
+          "Lewistown की ओर दाईं तरफ निकास U.S. 3 22 West लें."
+        ],
+        "7": [
+          "Lewistown/State College की ओर बढ़ते रहने के लिए दाईं तरफ निकास 67 B-A लेकर U.S. 3 22 West पर बाहर निकलें."
+        ],
+        "8": [
+          "बाईं तरफ White Marsh Boulevard से बाहर निकलें."
+        ],
+        "10": [
+          "बाईं तरफ निकास White Marsh Boulevard लेकर Maryland 43 East पर बाहर निकलें."
+        ],
+        "12": [
+          "White Marsh की ओर बाईं तरफ निकास Marsh Boulevard लें."
+        ],
+        "14": [
+          "बाईं तरफ निकास White Marsh Boulevard लेकर White Marsh की ओर Maryland 43 East पर बाहर निकलें."
+        ],
+        "15": [
+          "निकलें."
+        ],
+        "16": [
+          "निकलें 67 B-A."
+        ],
+        "17": [
+          "Take the US 322 West exit."
+        ],
+        "18": [
+          "निकलें 67 B-A onto US 322 West."
+        ],
+        "19": [
+          "Take the exit toward Lewistown."
+        ],
+        "20": [
+          "निकलें 67 B-A toward Lewistown."
+        ],
+        "21": [
+          "Take the US 322 West exit toward Lewistown."
+        ],
+        "22": [
+          "निकलें 67 B-A onto US 322 West toward Lewistown/State College."
+        ],
+        "23": [
+          "Take the White Marsh Boulevard exit."
+        ],
+        "25": [
+          "Take the White Marsh Boulevard exit onto MD 43 East."
+        ],
+        "27": [
+          "Take the White Marsh Boulevard exit toward White Marsh."
+        ],
+        "29": [
+          "Take the White Marsh Boulevard exit onto MD 43 East toward White Marsh."
+        ]
+      }
+    },
+    "exit_visual": {
+      "phrases": {
+        "0": "निकलें. <EXIT_NUMBERS>"
+      },
+      "example_phrases": {
+        "0": [
+          "निकलें.  1A"
+        ]
+      }
+    },
+    "keep": {
+      "phrases": {
+        "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
+        "1": "निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "4": "<TOWARD_SIGN> की ओर निकास पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "5": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दोराहे पर बाएं बने रहें.",
+          "दोराहे पर सीधे बने रहें.",
+          "दोराहे पर दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 62 पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "I 895 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "निकास 62 I 895 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "4": [
+          "Annapolis की ओर दाएँ बने रहें."
+        ],
+        "5": [
+          "Annapolis की ओर निकास 62 पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "6": [
+          "Annapolis की ओर Interstate 8 95 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "7": [
+          "Annapolis की ओर निकास exit 62 I 895 South पकड़ने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "keep_to_stay_on": {
+      "phrases": {
+        "0": "<STREET_NAMES> पर जारी रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "1": "<NUMBER_SIGN> पकड़कर <STREET_NAMES> पर जारी रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "I 95 South पर जारी रहने के लिए बाएं बने रहें.",
+          "I 95 South पर जारी रहने के लिए सीधे बने रहें.",
+          "I 95 South पर जारी रहने के लिए दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 62 पकड़कर I 95 South पर जारी रहने के लिए बाएं बने रहें."
+        ],
+        "2": [
+          "Baltimore जाने के लिए और I 95 South की ओर बढ़ते रहने के लिए बाएं बने रहें."
+        ],
+        "3": [
+          "Baltimore जाने के लिए और िकास 62 I 95 South की ओर बढ़ते रहने के लिए बाएं बने रहें."
+        ]
+      }
+    },
+    "keep_to_stay_on_verbal": {
+      "phrases": {
+        "0": "<STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "1": "<STREET_NAMES> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<TOWARD_SIGN> जाने के लिए और <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "<TOWARD_SIGN> जाने के लिए और निकास <NUMBER_SIGN> <STREET_NAMES> की ओर बढ़ते रहने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "Interstate 95 South पर जारी रहने के लिए बाएं बने रहें.",
+          "Interstate 95 South पर जारी रहने के लिए सीधे बने रहें.",
+          "Interstate 95 South पर जारी रहने के लिए दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 62 पकड़कर Interstate 95 South पर जारी रहने के लिए बाएं बने रहें."
+        ],
+        "2": [
+          "Baltimore जाने के लिए और Interstate 95 South की ओर बढ़ते रहने के लिए बाएं बने रहें."
+        ],
+        "3": [
+          "Baltimore जाने के लिए और िकास 62 Interstate 95 South की ओर बढ़ते रहने के लिए बाएं बने रहें."
+        ]
+      }
+    },
+    "keep_verbal": {
+      "phrases": {
+        "0": "दोराहे पर <RELATIVE_DIRECTION> बने रहें.",
+        "1": "निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "2": "<STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "3": "निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "4": "<TOWARD_SIGN> की ओर निकास पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "5": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "6": "<TOWARD_SIGN> की ओर <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें.",
+        "7": "<TOWARD_SIGN> की ओर निकास <NUMBER_SIGN> <STREET_NAMES> पकड़ने के लिए <RELATIVE_DIRECTION> बने रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "सीधे",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "दोराहे पर बाएं बने रहें.",
+          "दोराहे पर सीधे बने रहें.",
+          "दोराहे पर दाएँ बने रहें."
+        ],
+        "1": [
+          "निकास 62 पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "2": [
+          "Interstate 8 95 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "3": [
+          "निकास 62 Interstate 8 95 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "4": [
+          "Annapolis की ओर दाएँ बने रहें."
+        ],
+        "5": [
+          "Annapolis की ओर निकास 62 पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "6": [
+          "Annapolis की ओर Interstate 8 95 South पकड़ने के लिए दाएँ बने रहें."
+        ],
+        "7": [
+          "Annapolis की ओर निकास exit 62 Interstate 8 95 South पकड़ने के लिए दाएँ बने रहें."
+        ]
+      }
+    },
+    "merge": {
+      "phrases": {
+        "0": "मिलें.",
+        "1": "<RELATIVE_DIRECTION> मिलें.",
+        "2": "<STREET_NAMES> पर मिलें.",
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "मिलें."
+        ],
+        "1": [
+          "बाएं मिलें."
+        ],
+        "2": [
+          "I 76 West/Pennsylvania Turnpike पर मिलें."
+        ],
+        "3": [
+          "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "merge_verbal": {
+      "phrases": {
+        "0": "मिलें.",
+        "1": "<RELATIVE_DIRECTION> मिलें.",
+        "2": "<STREET_NAMES> पर मिलें.",
+        "3": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मिलें.",
+        "4": "Merge toward <TOWARD_SIGN>.",
+        "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "मिलें."
+        ],
+        "1": [
+          "बाएं मिलें."
+        ],
+        "2": [
+          "I 76 West/Pennsylvania Turnpike पर मिलें."
+        ],
+        "3": [
+          "I 83 South पर दाएँ मिलें."
+        ],
+        "4": [
+          "Merge toward Baltimore."
+        ],
+        "5": [
+          "Merge right toward Baltimore."
+        ]
+      }
+    },
+    "post_transition_transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL> के लिए यात्रा."
+      },
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "1 स्टॉप के लिए यात्रा.",
+          "3 स्टॉप के लिए यात्रा."
+        ]
+      }
+    },
+    "post_transition_verbal": {
+      "phrases": {
+        "0": "<LENGTH> के लिए जारी रहें.",
+        "1": "<STREET_NAMES> पर <LENGTH> के लिए जारी रहें."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "300 फुट के लिए जारी रहें.",
+          "9 मील के लिए जारी रहें."
+        ],
+        "1": [
+          "Pennsylvania 7 43 पर 6.2 मील के लिए जारी रहें.",
+          "Main Street, Vermont 30 पर एक मील का दसवें के लिए जारी रहें."
+        ]
+      }
+    },
+    "ramp": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ रैंप लें.",
+        "1": "<RELATIVE_DIRECTION> तरफ <BRANCH_SIGN> रैंप लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर रैंप लें.",
+        "3": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "4": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> रैंप लें.",
+        "5": "रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाईं तरफ रैंप लें.",
+          "दाईं तरफ रैंप लें."
+        ],
+        "1": [
+          "दाईं तरफ I 95 रैंप लें."
+        ],
+        "2": [
+          "बाईं तरफ JFK की ओर रैंप लें."
+        ],
+        "3": [
+          "बाईं तरफ JFK की ओर South Conduit Avenue रैंप लें."
+        ],
+        "4": [
+          "दाईं तरफ Gettysburg Pike रैंप लें."
+        ],
+        "5": [
+          "रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "6": [
+          "PA 283 West रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "7": [
+          "Harrisburg/Harrisburg International Airport की ओर रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "8": [
+          "Harrisburg/Harrisburg International Airport की ओर PA 283 West रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "9": [
+          "Gettysburg Pike रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the I 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the Soutch Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg ramp."
+        ]
+      }
+    },
+    "ramp_straight": {
+      "phrases": {
+        "0": "रैंप पकड़ने के लिए सीधे बने रहें.",
+        "1": "<BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "2": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए सीधे बने रहें.",
+        "3": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "4": "<NAME_SIGN> रैंप पकड़ने के लिए सीधे बने रहें."
+      },
+      "example_phrases": {
+        "0": [
+          "रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "1": [
+          "US 322 East रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "2": [
+          "Hershey की ओर रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "3": [
+          "Hershey/Palmdale/Palmyra/Campbelltown की ओर US 322 East/US 422 East/US 522 East/US 622 East रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "4": [
+          "Gettysburg Pike रैंप पकड़ने के लिए सीधे बने रहें."
+        ]
+      }
+    },
+    "ramp_straight_verbal": {
+      "phrases": {
+        "0": "रैंप पकड़ने के लिए सीधे बने रहें.",
+        "1": "<BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "2": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए सीधे बने रहें.",
+        "3": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए सीधे बने रहें.",
+        "4": "<NAME_SIGN> रैंप पकड़ने के लिए सीधे बने रहें."
+      },
+      "example_phrases": {
+        "0": [
+          "रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "1": [
+          "US 322 East रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "2": [
+          "Hershey की ओर रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "3": [
+          "Hershey, Palmdale की ओरU.S. 3 22 East, U.S. 4 22 East रैंप पकड़ने के लिए सीधे बने रहें."
+        ],
+        "4": [
+          "Gettysburg Pike रैंप पकड़ने के लिए सीधे बने रहें."
+        ]
+      }
+    },
+    "ramp_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> तरफ रैंप लें.",
+        "1": "<RELATIVE_DIRECTION> तरफ <BRANCH_SIGN> रैंप लें.",
+        "2": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर रैंप लें.",
+        "3": "<RELATIVE_DIRECTION> तरफ <TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "4": "<RELATIVE_DIRECTION> तरफ <NAME_SIGN> रैंप लें.",
+        "5": "रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "6": "<BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "7": "<TOWARD_SIGN> की ओर रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "8": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "9": "<NAME_SIGN> रैंप पकड़ने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "10": "रैंप लें.",
+        "11": "<BRANCH_SIGN> रैंप लें.",
+        "12": "<TOWARD_SIGN> की ओर रैंप लें.",
+        "13": "<TOWARD_SIGN> की ओर <BRANCH_SIGN> रैंप लें.",
+        "14": "<NAME_SIGN> रैंप लें."
+      },
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाईं तरफ रैंप लें.",
+          "दाईं तरफ रैंप लें."
+        ],
+        "1": [
+          "दाईं तरफ Interstate 95 रैंप लें."
+        ],
+        "2": [
+          "बाईं तरफ JFK की ओर रैंप लें."
+        ],
+        "3": [
+          "बाईं तरफ JFK की ओर South Conduit Avenue रैंप लें."
+        ],
+        "4": [
+          "दाईं तरफ Gettysburg Pike रैंप लें."
+        ],
+        "5": [
+          "रैंप पकड़ने के लिए बाएं मुड़ें.",
+          "रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "6": [
+          "Pennsylvania 2 83 West रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "7": [
+          "Harrisburg/Harrisburg International Airport की ओर रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "8": [
+          "Harrisburg/Harrisburg International Airport की ओर Pennsylvania 2 83 West रैंप पकड़ने के लिए बाएं मुड़ें."
+        ],
+        "9": [
+          "Gettysburg Pike रैंप पकड़ने के लिए दाएँ मुड़ें."
+        ],
+        "10": [
+          "Take the ramp."
+        ],
+        "11": [
+          "Take the Interstate 95 ramp."
+        ],
+        "12": [
+          "Take the ramp toward JFK."
+        ],
+        "13": [
+          "Take the South Conduit Avenue ramp toward JFK."
+        ],
+        "14": [
+          "Take the Gettysburg Pike ramp."
+        ]
+      }
+    },
+    "sharp": {
+      "phrases": {
+        "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "तेज बाएं मुड़ें."
+        ],
+        "1": [
+          "Flatbush Avenue पर तेज दाएँ मुड़ें."
+        ],
+        "2": [
+          "North Bond Street/US 1 Business/MD 924 पर तेज बाएं मुड़ें. MD 924 पर बने रहें."
+        ],
+        "3": [
+          "Sunstone Drive पर बने रहने के लिए तेज दाएँ मुड़ें."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "sharp_verbal": {
+      "phrases": {
+        "0": "तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर तेज <RELATIVE_DIRECTION> मुड़ें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "तेज बाएं मुड़ें."
+        ],
+        "1": [
+          "Flatbush Avenue पर तेज दाएँ मुड़ें."
+        ],
+        "2": [
+          "North Bond Street/US 1 Business पर तेज बाएं मुड़ें."
+        ],
+        "3": [
+          "Sunstone Drive पर बने रहने के लिए तेज दाएँ मुड़ें."
+        ],
+        "4": [
+          "Make a sharp right at Mannenbashi East."
+        ],
+        "5": [
+          "Make a sharp left toward Baltimore."
+        ]
+      }
+    },
+    "start": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं. <STREET_NAMES> पर जारी रहें.",
+        "4": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "5": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें. <STREET_NAMES> पर जारी रहें.",
+        "8": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "9": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "10": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें. <STREET_NAMES> पर जारी रहें.",
+        "16": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए. <STREET_NAMES> पर जारी रहें."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "पूर्व की ओर जाएं.",
+          "उत्तर की ओर जाएं."
+        ],
+        "1": [
+          "दक्षिण पश्चिम की ओर 5th Avenue पर जाएं.",
+          "पश्चिम की ओर रास्ते पर जाएं",
+          "पूर्व की ओर साइकिल रास्ते पर जाएं",
+          "उत्तर की ओर माउंटेन साइकिल पगडंडी पर जाएं"
+        ],
+        "2": [
+          "दक्षिण की ओर North Prince Street/US 222/PA 272 पर जाएं. US 222/PA 272 पर बने रहें."
+        ],
+        "4": [
+          "पूर्व की ओर ड्राइव.",
+          "उत्तर ओर ड्राइव करें."
+        ],
+        "5": [
+          "दक्षिण पश्चिम की ओर 5th Avenue पर ड्राइव करें."
+        ],
+        "6": [
+          "दक्षिण की ओर North Prince Street/US 222/PA 272 पर ड्राइव करें. US 222/PA 272 पर बने रहें."
+        ],
+        "8": [
+          "पूर्व की ओर चलें.",
+          "उत्तर की ओर चलें."
+        ],
+        "9": [
+          "दक्षिण पश्चिम की ओर 5th Avenue पर चलें.",
+          "पश्चिम की ओर रास्ते पर चलें"
+        ],
+        "10": [
+          "दक्षिण की ओर North Prince Street/US 222/PA 272 पर चलें. US 222/PA 272 पर बने रहें."
+        ],
+        "16": [
+          "पूर्व की ओर साइकिल चलाए.",
+          "उत्तर की ओर साइकिल चलाए."
+        ],
+        "17": [
+          "दक्षिण पश्चिम की ओर 5th Avenue पर साइकिल चलाए.",
+          "पूर्व की ओर साइकिल रास्ते पर चलें",
+          "उत्तर की ओर माउंटेन साइकिल पगडंडी पर चलें"
+        ],
+        "18": [
+          "दक्षिण की ओर North Prince Street/US 222/PA 272 पर साइकिल चलाए. US 222/PA 272 पर बने रहें."
+        ]
+      }
+    },
+    "start_verbal": {
+      "phrases": {
+        "0": "<CARDINAL_DIRECTION> की ओर जाएं.",
+        "1": "<LENGTH> के लिए <<CARDINAL_DIRECTION> की ओर जाएं.",
+        "2": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "3": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर जाएं.",
+        "4": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर जाएं.",
+        "5": "<CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "6": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "7": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "8": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर ड्राइव करें.",
+        "9": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर ड्राइव करें.",
+        "10": "<CARDINAL_DIRECTION> की ओर चलें.",
+        "11": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर चलें.",
+        "12": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "13": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर चलें.",
+        "14": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर चलें.",
+        "15": "<CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "16": "<LENGTH> के लिए <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "17": "<STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "18": "<LENGTH> के लिए <STREET_NAMES> पर <CARDINAL_DIRECTION> की ओर साइकिल चलाए.",
+        "19": "<CARDINAL_DIRECTION> की ओर <BEGIN_STREET_NAMES> पर साइकिल चलाए."
+      },
+      "cardinal_directions": [
+        "उत्तर",
+        "उत्तर-पूर्व",
+        "पूर्व",
+        "दक्षिण-पूर्व",
+        "दक्षिण",
+        "दक्षिण-पश्चिम",
+        "पश्चिम",
+        "उत्तर-पश्चिम"
+      ],
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "Head east.",
+          "Head north."
+        ],
+        "1": [
+          "Head east for a half mile.",
+          "Head north for 1 kilometer."
+        ],
+        "2": [
+          "Head southwest on 5th Avenue."
+        ],
+        "3": [
+          "Head southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "4": [
+          "Head south on North Prince Street, U.S. 2 22."
+        ],
+        "5": [
+          "Drive east.",
+          "Drive north."
+        ],
+        "6": [
+          "Drive east for a half mile.",
+          "Drive north for 1 kilometer."
+        ],
+        "7": [
+          "Drive southwest on 5th Avenue."
+        ],
+        "8": [
+          "Drive southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "9": [
+          "Drive south on North Prince Street, U.S. 2 22."
+        ],
+        "10": [
+          "Walk east.",
+          "Walk north."
+        ],
+        "11": [
+          "Walk east for a half mile.",
+          "Walk north for 1 kilometer."
+        ],
+        "12": [
+          "Walk southwest on 5th Avenue."
+        ],
+        "13": [
+          "Walk southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "14": [
+          "Walk south on North Prince Street, U.S. 2 22."
+        ],
+        "15": [
+          "Bike east.",
+          "Bike north."
+        ],
+        "16": [
+          "Bike east for a half mile.",
+          "Bike north for 1 kilometer."
+        ],
+        "17": [
+          "Bike southwest on 5th Avenue."
+        ],
+        "18": [
+          "Bike southwest on 5th Avenue for 1 tenth of a mile."
+        ],
+        "19": [
+          "Bike south on North Prince Street, U.S. 2 22."
+        ]
+      }
+    },
+    "transit": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven लें. (एक स्टॉप)",
+          "मेट्रो पकड़ें. (दो स्टॉप)",
+          "बस पकड़ें. (12 स्टॉप)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F लें. (10 स्टॉप)",
+          "Staten Island की ओर नौका लें. (एक स्टॉप)"
+        ]
+      }
+    },
+    "transit_connection_destination": {
+      "phrases": {
+        "0": "स्टेशन से बाहर निकलें.",
+        "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन से बाहर निकलें."
+        ],
+        "1": [
+          "Embarcadero Station स्टेशन से बाहर निकलें.."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन से बाहर निकलें.."
+        ]
+      }
+    },
+    "transit_connection_destination_verbal": {
+      "phrases": {
+        "0": "स्टेशन से बाहर निकलें.",
+        "1": "<TRANSIT_STOP> स्टेशन से बाहर निकलें..",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन से बाहर निकलें.."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन से बाहर निकलें."
+        ],
+        "1": [
+          "Embarcadero Station स्टेशन से बाहर निकलें.."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन से बाहर निकलें.."
+        ]
+      }
+    },
+    "transit_connection_start": {
+      "phrases": {
+        "0": "स्टेशन में प्रवेश करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन में प्रवेश करे़."
+        ],
+        "1": [
+          "Embarcadero Station स्टेशन में प्रवेश करे़."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन में प्रवेश करे़."
+        ]
+      }
+    },
+    "transit_connection_start_verbal": {
+      "phrases": {
+        "0": "स्टेशन में प्रवेश करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन में प्रवेश करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन में प्रवेश करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन में प्रवेश करे़."
+        ],
+        "1": [
+          "Embarcadero Station स्टेशन में प्रवेश करे़."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन में प्रवेश करे़."
+        ]
+      }
+    },
+    "transit_connection_transfer": {
+      "phrases": {
+        "0": "स्टेशन पर हस्तांतरण करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन पर हस्तांतरण करे़."
+        ],
+        "1": [
+          "Embarcadero Station स्टेशन पर हस्तांतरण करे़."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन पर हस्तांतरण करे़"
+        ]
+      }
+    },
+    "transit_connection_transfer_verbal": {
+      "phrases": {
+        "0": "स्टेशन पर हस्तांतरण करे़.",
+        "1": "<TRANSIT_STOP> स्टेशन पर हस्तांतरण करे़.",
+        "2": "<TRANSIT_STOP> <STATION_LABEL> स्टेशन पर हस्तांतरण करे़."
+      },
+      "station_label": "Station",
+      "example_phrases": {
+        "0": [
+          "स्टेशन पर हस्तांतरण करे़."
+        ],
+        "1": [
+          "Transfer at the Embarcadero Station स्टेशन पर हस्तांतरण करे़."
+        ],
+        "2": [
+          "8 St - NYU Station स्टेशन पर हस्तांतरण करे़."
+        ]
+      }
+    },
+    "transit_remain_on": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> पर बने रहें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> पर बने रहें. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven पर बने रहें. (1 स्टॉप)",
+          "ट्रेन पर बने रहें. (3 स्टॉप)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F पर बने रहें. (10 स्टॉप)"
+        ]
+      }
+    },
+    "transit_remain_on_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> पर बने रहें.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> पर बने रहें."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven पर बने रहें."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F पर बने रहें."
+        ]
+      }
+    },
+    "transit_transfer": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लेने के लिए स्थानांतरण. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लेने के लिए स्थानांतरण. (<TRANSIT_STOP_COUNT> <TRANSIT_STOP_COUNT_LABEL>)"
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "transit_stop_count_labels": {
+        "one": "stop",
+        "other": "स्टॉप"
+      },
+      "example_phrases": {
+        "0": [
+          "New Haven लेने के लिए स्थानांतरण. (1 स्टॉप)",
+          "ट्राम लेने के लिए स्थानांतरण. (4 स्टॉप)"
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F लेने के लिए स्थानांतरण. (10 स्टॉप)"
+        ]
+      }
+    },
+    "transit_transfer_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लेने के लिए स्थानांतरण.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लेने के लिए स्थानांतरण."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven लेने के लिए स्थानांतरण."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F लेने के लिए स्थानांतरण."
+        ]
+      }
+    },
+    "transit_verbal": {
+      "phrases": {
+        "0": "<TRANSIT_NAME> लें.",
+        "1": "<TRANSIT_HEADSIGN> की ओर <TRANSIT_NAME> लें."
+      },
+      "empty_transit_name_labels": [
+        "ट्राम",
+        "मेट्रो",
+        "ट्रेन",
+        "बस",
+        "नौका",
+        "केबलकार",
+        "गोंडोला",
+        "रज्जु रेल"
+      ],
+      "example_phrases": {
+        "0": [
+          "New Haven लें."
+        ],
+        "1": [
+          "JAMAICA - 179 ST की ओर F लें."
+        ]
+      }
+    },
+    "turn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें. <STREET_NAMES> पर बने रहें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएँ मुड़ें."
+        ],
+        "1": [
+          "Flatbush Avenue पर दाएँ मुड़ें."
+        ],
+        "2": [
+          "North Bond Street/US 1 Business/MD 924 पर बाएँ मुड़ें. MD 924 पर बने रहें."
+        ],
+        "3": [
+          "Sunstone Drive पर बने रहने के लिए दाएँ मुड़ें."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "turn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> मुड़ें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "2": "<BEGIN_STREET_NAMES> पर <RELATIVE_DIRECTION> मुड़ें.",
+        "3": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> मुड़ें.",
+        "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएँ मुड़ें."
+        ],
+        "1": [
+          "Flatbush Avenue पर दाएँ मुड़ें."
+        ],
+        "2": [
+          "North Bond Street, U.S. 1 Business पर बाएँ मुड़ें."
+        ],
+        "3": [
+          "Sunstone Drive पर बने रहने के लिए दाएँ मुड़ें."
+        ],
+        "4": [
+          "Turn right at Mannenbashi East."
+        ],
+        "5": [
+          "Turn left toward Baltimore."
+        ]
+      }
+    },
+    "uturn": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> यू-टर्न लें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं यू-टर्न लें."
+        ],
+        "1": [
+          "Bunker Hill Road पर दाएँ यू-टर्न लें."
+        ],
+        "2": [
+          "Bunker Hill Road पर बने रहने के लिए बाएं यू-टर्न लें."
+        ],
+        "3": [
+          "Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "4": [
+          "Devonshire Road पर Jonestown Road/US 22 की ओर बाएं यू-टर्न लें."
+        ],
+        "5": [
+          "Jonestown Road/US 22 पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "uturn_verbal": {
+      "phrases": {
+        "0": "<RELATIVE_DIRECTION> यू-टर्न लें.",
+        "1": "<STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "2": "<STREET_NAMES> पर बने रहने के लिए <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "3": "<CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "4": "<CROSS_STREET_NAMES> पर <STREET_NAMES> की ओर <RELATIVE_DIRECTION> यू-टर्न लें.",
+        "5": "<STREET_NAMES> पर बने रहने के लिए <CROSS_STREET_NAMES> पर <RELATIVE_DIRECTION> यू-टर्न ले.",
+        "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
+        "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
+      },
+      "empty_street_name_labels": [
+        "रास्ते",
+        "साइकिल रास्ते",
+        "माउंटेन साइकिल पगडंडी",
+        "the crosswalk"
+      ],
+      "relative_directions": [
+        "बाएं",
+        "दाएँ"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाएं यू-टर्न लें."
+        ],
+        "1": [
+          "Bunker Hill Road पर दाएँ यू-टर्न लें."
+        ],
+        "2": [
+          "Bunker Hill Road पर बने रहने के लिए बाएं यू-टर्न लें."
+        ],
+        "3": [
+          "Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "4": [
+          "Devonshire Road पर Jonestown Road/US 22 की ओर बाएं यू-टर्न लें."
+        ],
+        "5": [
+          "Jonestown Road/US 22 पर बने रहने के लिए Devonshire Road पर बाएं यू-टर्न लें."
+        ],
+        "6": [
+          "Make a right U-turn at Mannenbashi East."
+        ],
+        "7": [
+          "Make a left U-turn toward Baltimore."
+        ]
+      }
+    },
+    "verbal_multi_cue": {
+      "phrases": {
+        "0": "<CURRENT_VERBAL_CUE> और फिर <NEXT_VERBAL_CUE>",
+        "1": "<CURRENT_VERBAL_CUE> Then, in <LENGTH>, <NEXT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "बाईं ओर East Fayette Street पर बने रहें. और फिर North Gay Street पर दाएँ मुड़ें."
+        ],
+        "1": [
+          "Bear right onto East Fayette Street. Then, in 500 feet, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "approach_verbal_alert": {
+      "phrases": {
+        "0": "In <LENGTH>, <CURRENT_VERBAL_CUE>"
+      },
+      "metric_lengths": [
+        "<KILOMETERS> किलोमीटर",
+        "1 किलोमीटर",
+        "<METERS> मीटर",
+        "कम से कम 10 मीटर"
+      ],
+      "us_customary_lengths": [
+        "<MILES> मील",
+        "1 मील",
+        "एक आधा मील",
+        "a quarter mile",
+        "<FEET> फुट",
+        "कम से कम 10 फुट"
+      ],
+      "example_phrases": {
+        "0": [
+          "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
+        ]
+      }
+    }
+  }
+}

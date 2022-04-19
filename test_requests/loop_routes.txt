@@ -1,0 +1,4 @@
+-j '{"locations":[{"lat":34.0941613,"lon":-117.6955246},{"lat":34.0941613,"lon":-117.6953744}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":34.0942323,"lon":-117.695567},{"lat":34.0942146,"lon":-117.695374488}],"costing":"bus","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":34.094161308223335,"lon":-117.69552469253541},{"lat":34.094161308223335,"lon":-117.69537448883057}],"costing":"bus","output":"json"}'
+-j '{"locations":[{"lat":34.0942323860854,"lon":-117.69556760787965},{"lat":34.09426792499404,"lon":-117.69500970840456}],"costing":"bus","output":"json"}'

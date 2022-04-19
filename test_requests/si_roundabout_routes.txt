@@ -1,0 +1,2 @@
+-j '{"locations":[{"lat":46.087791,"lon":14.639874,"street":""},{"lat":46.092773,"lon":14.665365,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":45.88460,"lon":15.61220,"street":""},{"lat":45.89120,"lon":15.60830,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}'

@@ -1,0 +1,3 @@
+-j '{"locations":[{"lat":7.100000,"lon":171.383331,"city":"Majuro"},{"lat":5.916667,"lon":169.649994,"city":"Jabor"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":7.100000,"lon":171.383331,"city":"Majuro"},{"lat":6.983333,"lon":171.699997,"city":"Ine"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":5.916667,"lon":169.649994,"city":"Jabor"},{"lat":6.983333,"lon":171.699997,"city":"Ine"}],"costing":"auto","directions_options":{"units":"miles"}}'

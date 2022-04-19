@@ -1,0 +1,7 @@
+-j '{"locations":[{"lat":40.051899,"lon":-76.310738,"street":"West Liberty Street"},{"lat":39.997940,"lon":-76.290092,"street":"Willow Street Pike"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.047470,"lon":-76.362312,"street":"Noll Drive"},{"lat":40.038639,"lon":-76.363983,"street":"Millersville Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.201832,"lon":-76.724411,"street":"Vine Street"},{"lat":40.190720,"lon":-76.685013,"street":"Harrisburg Pike"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.004292,"lon":-77.428757,"street":"Davis Drive"},{"lat":39.007160,"lon":-77.444572,"street":"VA 625"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.005711,"lon":-77.429443,"street":"Atlantic Boulevard"},{"lat":39.004910,"lon":-77.436028,"street":"VA 625"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":39.005901,"lon":-77.443108,"street":"Pacific Boulevard"},{"lat":39.004761,"lon":-77.429962,"street":"West Church Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.895370,"lon":-77.192207,"street":"Chestnut Street"},{"lat":38.893311,"lon":-77.188271,"street":"West Broad Street"}],"costing":"auto","directions_options":{"units":"miles"}}'

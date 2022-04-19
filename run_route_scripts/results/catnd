@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# cat narrative diffs
+FILES=`find *.txt -type f ! -size 0 | sort -n`
+for FILE in ${FILES}
+do
+  echo ""
+  echo "##########################################"
+  echo "### ${FILE}"
+  echo "##########################################"
+  cat ${FILE}
+done
+
