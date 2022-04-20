@@ -76,24 +76,8 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 
-// unordered map for warning pairs
-const std::unordered_map<int, std::string> warnings_object = {
-    {100, "auto_shorter is deprecated and will be turned into the shotest costing option"},
-    {101,
-     "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"},
-    {102, "auto_data_fix is deprecated and will be turned to ignore all the things costing option"},
-    {103, "best_paths has been deprecated. use alternates instead"},
-};
-
 // function to add warnings to proto info object
-inline void add_warning(valhalla::Api& api, unsigned code) {
-  auto message = warnings_object.find(code);
-  if (message != warnings_object.end()) {
-    auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
-    warning->set_code(message->first);
-  }
-}
+void add_warning(valhalla::Api& api, unsigned code);
 
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,

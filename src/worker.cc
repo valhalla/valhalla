@@ -138,6 +138,25 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
 };
 
+// unordered map for warning pairs
+const std::unordered_map<int, std::string> warnings_object = {
+    {100, "auto_shorter is deprecated and will be turned into the shotest costing option"},
+    {101,
+     "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"},
+    {102, "auto_data_fix is deprecated and will be turned to ignore all the things costing option"},
+    {103, "best_paths has been deprecated. use alternates instead"},
+};
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, int code) {
+  auto message = warnings_object.find(code);
+  if (message != warnings_object.end()) {
+    auto* warning = api.mutable_info()->mutable_warnings()->Add();
+    warning->set_description(message->second);
+    warning->set_code(message->first);
+  }
+}
+
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
