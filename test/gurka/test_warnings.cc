@@ -6,8 +6,8 @@ using namespace valhalla;
 
 std::vector<std::string> deprecated_costing_methods = {"auto_shorter", "hov", "auto_data_fix"};
 
-class Warning : public ::testing::Test {
-protected:
+class Warning : public ::testing::TestWithParam<valhalla::Options::Action> {
+public:
   static gurka::map map;
 
   static void SetUpTestSuite() {
@@ -25,18 +25,32 @@ protected:
 gurka::map Warning::map = {};
 
 /*************************************************************/
-// test for route endpoint
-TEST_F(Warning, routes) {
+
+// test for route, locate, height, trace_route, trace_attributes, transit_available
+TEST_P(Warning, valhalla__api_endpoints) {
+  const auto& endpoint = GetParam();
   for (auto& costing : deprecated_costing_methods) {
-    valhalla::Api result =
-        gurka::do_action(valhalla::Options::route, map, {"A", "C"}, costing, {{"/best_paths", "2"}});
+    valhalla::Api result = gurka::do_action((valhalla::Options::Action)endpoint, map, {"A", "B", "C"},
+                                            costing, {{"/best_paths", "2"}});
     ASSERT_TRUE(result.info().warnings_size() != 0);
     EXPECT_EQ(result.info().warnings_size(), 2);
   }
 }
 
+// test for isochrone endpoint
+TEST_P(Warning, isochrone) {
+  Api request;
+  for (auto& costing : deprecated_costing_methods) {
+    valhalla::Api result =
+        gurka::do_action(valhalla::Options::isochrone, map, {"B"}, costing,
+                         {{"/contours/0/time", "10"}, {"/denoise", "0"}, {"/generalize", "0"}});
+    ASSERT_FALSE(result.info().warnings_size() == 0);
+    EXPECT_EQ(result.info().warnings_size(), 1);
+  }
+}
+
 // test for matrix endpoint
-TEST_F(Warning, matrix) {
+TEST_P(Warning, matrix) {
   Api request;
   for (auto& costing : deprecated_costing_methods) {
     std::string request_str = R"({"sources":[{"lat":)" + std::to_string(map.nodes["A"].lat()) +
@@ -50,52 +64,14 @@ TEST_F(Warning, matrix) {
   }
 }
 
-// test for locate endpoint
-TEST_F(Warning, locate) {
-  for (auto& costing : deprecated_costing_methods) {
-    valhalla::Api result = gurka::do_action(valhalla::Options::locate, map, {"B"}, costing);
-    ASSERT_TRUE(result.info().warnings_size() != 0);
-    EXPECT_EQ(result.info().warnings_size(), 1);
-  }
-}
+/*
+ * Endpoints defined in proto/options.proto
+ * route = 1
+ * locate = 2
+ * trace_route = 6
+ * trace_attributes = 7
+ * transit_available = 9
+ * height = 8
+ */
 
-// test for isochrone endpoint
-TEST_F(Warning, isochrone) {
-  for (auto& costing : deprecated_costing_methods) {
-    valhalla::Api result =
-        gurka::do_action(valhalla::Options::isochrone, map, {"B"}, costing,
-                         {{"/contours/0/time", "10"}, {"/denoise", "0"}, {"/generalize", "0"}});
-    ASSERT_FALSE(result.info().warnings_size() == 0);
-    EXPECT_EQ(result.info().warnings_size(), 1);
-  }
-}
-
-// test for transit_available endpoint
-TEST_F(Warning, transit_available) {
-  valhalla::Api result = gurka::do_action(valhalla::Options::transit_available, map, {"A"}, "",
-                                          {{"/locations/0/radius", "5"}, {"/best_paths", "2"}});
-  ASSERT_FALSE(result.info().warnings_size() == 0);
-  EXPECT_EQ(result.info().warnings_size(), 1);
-}
-
-// test for height endpoint
-TEST_F(Warning, height) {
-  valhalla::Api result = gurka::do_action(valhalla::Options::height, map, {"A", "C"}, "",
-                                          {{"/resample_distance", "15"}, {"/best_paths", "2"}});
-  ASSERT_FALSE(result.info().warnings_size() == 0);
-  EXPECT_EQ(result.info().warnings_size(), 1);
-}
-
-// test for map_matching endpoint
-TEST_F(Warning, map_matching) {
-  for (auto& costing : deprecated_costing_methods) {
-    valhalla::Api trace_route_result =
-        gurka::do_action(valhalla::Options::trace_route, map, {"A", "B", "C"}, costing);
-    valhalla::Api trace_attributes_result =
-        gurka::do_action(valhalla::Options::trace_attributes, map, {"A", "B", "C"}, costing);
-    ASSERT_FALSE(trace_route_result.info().warnings_size() == 0);
-    EXPECT_EQ(trace_route_result.info().warnings_size(), 1);
-    ASSERT_TRUE(trace_attributes_result.info().warnings_size() != 0);
-    EXPECT_EQ(trace_attributes_result.info().warnings_size(), 1);
-  }
-}
+INSTANTIATE_TEST_CASE_P(WarningsTests, Warning, ::testing::Values(1, 2, 6, 7, 8, 9));
