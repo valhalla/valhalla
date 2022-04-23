@@ -218,6 +218,12 @@ bool CanContract(GraphReader& reader,
   if (!EdgesMatch(tile, edge1, edge2))
     return false;
 
+  //if edges are greater than the maximum legnth constnat, do not contract them
+  uint32_t totalLength = edge1->length() + edge2->length(); 
+  if(totalLength > kMaxEdgeLength) {
+    return false; 
+  }
+
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
@@ -406,11 +412,6 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-      //    if shortcut edge length is greater than kMaxEdgeLength, return 0
-      if (length > kMaxEdgeLength) {
-        LOG_ERROR("length too big");
-        throw std::runtime_error("edge length too big");
-      }
 
       // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
@@ -628,7 +629,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       const auto& admin = tile->admininfo(nodeinfo.admin_index());
       nodeinfo.set_edge_index(tilebuilder.directededges().size());
       nodeinfo.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
-                                                    admin.country_iso(), admin.state_iso()));
+                                                    admin.country_iso(), admin.state_iso())); 
 
       // Current edge count
       size_t edge_count = tilebuilder.directededges().size();
@@ -769,3 +770,4 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
 } // namespace mjolnir
 } // namespace valhalla
+ 

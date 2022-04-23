@@ -36,9 +36,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // Protect against 0 length edges
   set_length(std::max(length, kMinimumEdgeLength), true);
 
-  // Protect against values greater than maximum edge length;
-  // set_length(std::min(length, kMaxEdgeLength), true);
-
   // Override use for ferries/rail ferries. TODO - set this in lua
   if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);

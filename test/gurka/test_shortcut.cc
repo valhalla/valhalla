@@ -43,7 +43,7 @@ TEST(Shortcuts, CreateValid) {
 }
 
 // Here no shortcuts are created. There could be one from A to C with speed 80 but in the opposite
-// direction speeds differ which blocks CA creation.
+// direction speeds differ which blocks CA creation. 
 TEST(Shortcuts, CreateInvalid) {
   constexpr double gridsize = 50;
 
@@ -80,7 +80,7 @@ TEST(Shortcuts, CreateTooLong) {
   constexpr double gridsize = 5000000;
 
   const std::string ascii_map = R"(
-      A--B--C
+      A--B--C--D
   )";
 
   const gurka::ways ways = {
@@ -102,8 +102,8 @@ TEST(Shortcuts, CreateTooLong) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // check that there are no shortcut edges
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
+  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));
+ 
 }
 
 TEST(Shortcuts, ShortcutSpeed) {
