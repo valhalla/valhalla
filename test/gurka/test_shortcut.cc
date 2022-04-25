@@ -77,10 +77,10 @@ TEST(Shortcuts, CreateInvalid) {
 // Here no shortcuts are created.
 // The grid size should be greater than the max length that allows shortcuts to be created
 TEST(Shortcuts, CreateTooLong) {
-  constexpr double gridsize = 5000000;
+  constexpr double gridsize = 2000000;
 
   const std::string ascii_map = R"(
-      A--B--C--D
+      A--B--C--D----E
   )";
 
   const gurka::ways ways = {
@@ -102,7 +102,11 @@ TEST(Shortcuts, CreateTooLong) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // check that there are no shortcut edges
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));
+  auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
+
+  EXPECT_LE(shortcut_edge->length(), kMaxEdgeLength); 
+  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "E"));
+
  
 }
 

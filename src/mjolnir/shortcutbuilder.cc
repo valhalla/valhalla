@@ -456,6 +456,10 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // For turn duration calculation during contraction
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
+
+      //keep track of shortcut length so it does not exceed max length
+      uint32_t shortcutLength = 0; 
+
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
@@ -477,6 +481,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
                     std::to_string(tile->edgeinfo(de).wayid()));
           break;
+        }
+
+        //terminate shortcut if edge length has exceeded
+        shortcutLength +=tile->directededge(next_edge_id)->length(); 
+        if(shortcutLength > kMaxEdgeLength){
+          break; 
         }
 
         // Connect the matching outbound directed edge (updates the next
