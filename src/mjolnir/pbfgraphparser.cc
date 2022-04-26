@@ -1636,6 +1636,8 @@ public:
         n.set_tagged_access(std::stoi(tag.second));
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
+      } else if (tag.first == "artificial") {
+        n.set_artificial(tag.second == "true");
       }
     }
 

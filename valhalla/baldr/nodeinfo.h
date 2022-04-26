@@ -50,7 +50,8 @@ public:
            const bool traffic_signal,
            const bool tagged_access,
            const bool private_access,
-           const bool cash_only_toll);
+           const bool cash_only_toll,
+           const bool artificial);
 
   /**
    * Get the latitude, longitude of the node.
@@ -295,6 +296,22 @@ public:
   }
 
   /**
+   * Is this node artificial?
+   * @return  Returns true if node is artificial.
+   */
+  bool artificial() const {
+    return artificial_;
+  }
+
+  /**
+   * Sets artificial flag. It is true when the node is artificial.
+   * @param  artificial  True if node is artificial.
+   */
+  void set_artificial(const bool artificial) {
+    artificial_ = artificial;
+  }
+
+  /**
    * Is a mode change allowed at this node? The access data tells which
    * modes are allowed at the node. Examples include transit stops, bike
    * share locations, and parking locations.
@@ -470,7 +487,8 @@ protected:
   uint64_t private_access_ : 1;      // Is the access private?
   uint64_t edge_count_ : 7;          // Number of outbound edges (on this level)
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
-  uint64_t spare2_ : 10;
+  uint64_t artificial_ : 1;          // Is this artificial?
+  uint64_t spare2_ : 9;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

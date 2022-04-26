@@ -102,6 +102,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {170, {170, "Locations are in unconnected regions. Go check/edit the map at osm.org", 400, HTTP_400, OSRM_NO_ROUTE, "impossible_route"}},
     {171, {171, "No suitable edges near location", 400, HTTP_400, OSRM_NO_SEGMENT, "no_edges_near"}},
     {172, {172, "Exceeded breakage distance for all pairs", 400, HTTP_400, OSRM_BREAKAGE_EXCEEDED, "too_large_breakage_distance"}},
+    {173, {173, "Invalid nodes filter", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_nodes_filter"}},
     {199, {199, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {200, {200, "Failed to parse intermediate request format", 500, HTTP_500, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {201, {201, "Failed to parse TripLeg", 500, HTTP_500, OSRM_INVALID_URL, "trip_parse_failed"}},
@@ -1060,10 +1061,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   options.set_roundabout_exits(roundabout_exits);
 
   // shapepoints
-  auto shapepoints = rapidjson::get_optional<bool>(doc, "/shapepoints");
-  options.set_shapepoints(true);
-  if (shapepoints) {
-    options.set_shapepoints(*shapepoints);
+  auto nodes_filter = rapidjson::get_optional<std::string>(doc, "/nodes_filter");
+  options.set_nodes_filter(valhalla::NodesFilter::shapepoints);
+  if (nodes_filter) {
+    if (*nodes_filter == "shapepoints") {
+      options.set_nodes_filter(valhalla::NodesFilter::shapepoints);
+    } else if (*nodes_filter == "nodes") {
+      options.set_nodes_filter(valhalla::NodesFilter::nodes);
+    } else if (*nodes_filter == "nodes_wo_artificial") {
+      options.set_nodes_filter(valhalla::NodesFilter::nodes_wo_artificial);
+    } else {
+      // Throw an error if shape format is invalid
+      throw valhalla_exception_t{173};
+    }
   }
 
   // force these into the output so its obvious what we did to the user
