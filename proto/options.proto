@@ -472,5 +472,9 @@ message Options {
   }
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
-  bool reverse = 53;                             // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
+  bool reverse = 53;                                               // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
+  uint32 matrix_locations = 54;                                    // Number of matrix locations found that will trigger an early exit from
+                                                                   // a one to many or many to one time distance matrix. Does not affect
+                                                                   // sources_to_targets when either sources or targets has more than 1 location
+                                                                   // or when CostMatrix is the selected matrix mode.
 }
