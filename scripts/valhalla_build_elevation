@@ -253,14 +253,10 @@ def download(tile: Tile, output_dir, compression: TileCompression):
                     if compression is TileCompression.UNCOMPRESSED:
                         f.write(uncompressed)
                     elif compression is TileCompression.LZ4:
-                        # Local imports are yuck, even though it only takes effect once. the alternative is
-                        # requiring everyone to have the LZ4 package available, regardless of whether the user needs it.
-                        # Compression level 6 was chosen after some benchmarking as having a reasonable balance between
-                        # compression time and space savings. The end result will be larger than the maximally gzipped
-                        # tiles from AWS, but only by around 12%. To narrow the gap to ~10% requires compression level
-                        # 9, and more than double the compression time, so this is the approximate efficient frontier.
-                        # for our purposes. Note that in general LZ4 decompression cost does not vary much with
-                        # compression level, unless using extremely high compression levels.
+                        # Compression level 6 was chosen after some benchmarking as the approx efficient frontier
+                        # between compression time and space savings (decompression time is roughly constant regardless
+                        # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
+                        # by around 12%.
                         import lz4.frame
                         with lz4.frame.LZ4FrameCompressor(block_size=lz4.frame.BLOCKSIZE_MAX4MB,
                                                           compression_level=6) as compressor:
