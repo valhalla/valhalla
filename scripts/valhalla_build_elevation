@@ -71,7 +71,7 @@ method.add_argument(
 method.add_argument(
     "-t",
     "--from-tiles",
-    help="Only download tiles covered by the Valhalla graph.",
+    help="Only download tiles covered by the Valhalla graph (requires a Valhalla config JSON file).",
     action="store_true"
 )
 parser.add_argument(
@@ -307,7 +307,11 @@ if __name__ == "__main__":
     elif args.from_bbox:
         tiles = get_tiles_with_bbox(args.from_bbox)
     elif args.from_tiles:
-        tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
+        if config is not None:
+            tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
+        else:
+            LOGGER.critical("--from-tiles requires a config to be specified.")
+            sys.exit(1)
     else:
         LOGGER.critical("No download method specified.")
         sys.exit(1)
