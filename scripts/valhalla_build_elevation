@@ -307,11 +307,10 @@ if __name__ == "__main__":
     elif args.from_bbox:
         tiles = get_tiles_with_bbox(args.from_bbox)
     elif args.from_tiles:
-        if config is not None:
-            tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
-        else:
+        if config is None:
             LOGGER.critical("--from-tiles requires a config to be specified.")
             sys.exit(1)
+        tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
     else:
         LOGGER.critical("No download method specified.")
         sys.exit(1)
