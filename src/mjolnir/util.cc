@@ -27,6 +27,21 @@ using namespace valhalla::midgard;
 
 namespace {
 
+struct spatialite_singleton_t {
+  static const spatialite_singleton_t& get_instance() {
+    static spatialite_singleton_t s;
+    return s;
+  }
+
+private:
+  spatialite_singleton_t() {
+    spatialite_initialize();
+  }
+  ~spatialite_singleton_t() {
+    spatialite_shutdown();
+  }
+};
+
 // Temporary files used during tile building
 const std::string ways_file = "ways.bin";
 const std::string way_nodes_file = "way_nodes.bin";
@@ -146,23 +161,15 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
-bool load_spatialite(sqlite3* db_handle) {
-  sqlite3_enable_load_extension(db_handle, 1);
-  // we do a bunch of failover for changes to the module file name over the years
-  for (const auto& mod_name : std::vector<std::string>{"mod_spatialite", "mod_spatialite.so",
-                                                       "libspatialite", "libspatialite.so"}) {
-    std::string sql = "SELECT load_extension('" + mod_name + "')";
-    char* err_msg = nullptr;
-    if (sqlite3_exec(db_handle, sql.c_str(), nullptr, nullptr, &err_msg) == SQLITE_OK) {
-      LOG_INFO("SpatiaLite loaded as an extension");
-      return true;
-    } else {
-      LOG_WARN("load_extension() warning: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-    }
+std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
+  if (!handle) {
+    return nullptr;
   }
-  LOG_ERROR("sqlite3 load_extension() failed to load spatialite module");
-  return false;
+
+  spatialite_singleton_t::get_instance();
+  void* conn = spatialite_alloc_connection();
+  spatialite_init_ex(handle, conn, 0);
+  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
