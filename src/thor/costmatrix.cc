@@ -172,13 +172,12 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
             //  Get all sources remaining for the destination
             auto& sources = target_status_[target].remaining_locations;
             auto it = sources.find(i);
-            if (it != sources.end()) {
+            if (it != sources.end())
               sources.erase(it);
-              if (sources.empty() && target_status_[target].threshold > 0) {
-                target_status_[i].threshold = -1;
-                if (remaining_targets_ > 0) {
-                  remaining_targets_--;
-                }
+            if (sources.empty() && target_status_[target].threshold > 0) {
+              target_status_[i].threshold = -1;
+              if (remaining_targets_ > 0) {
+                remaining_targets_--;
               }
             }
           }
