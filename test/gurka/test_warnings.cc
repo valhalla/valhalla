@@ -66,13 +66,6 @@ TEST_F(Warning, isochrone) {
   }
 }
 
-// test for transit_available endpoint
-TEST_F(Warning, transit_available) {
-  valhalla::Api result = gurka::do_action(valhalla::Options::transit_available, map, {"A"}, "",
-                                          {{"/locations/0/radius", "5"}, {"/best_paths", "2"}});
-  EXPECT_EQ(result.info().warnings_size(), 1);
-}
-
 // test for height endpoint
 TEST_F(Warning, height) {
   valhalla::Api result = gurka::do_action(valhalla::Options::height, map, {"A", "C"}, "",
