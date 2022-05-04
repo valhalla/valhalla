@@ -80,6 +80,7 @@
    * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
    * CHANGED: modernized spatialite syntax [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * ADDED: Options to generate partial results for time distance matrix when there is one source (one to many) or one target (many to one). [#3181](https://github.com/valhalla/valhalla/pull/3181)
+   * ADDED: Enhance valhalla_build_elevation with LZ4 recompression support [#3607](https://github.com/valhalla/valhalla/pull/3607)
    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
