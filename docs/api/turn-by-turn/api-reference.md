@@ -121,22 +121,22 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). |
-| `width` | The width of the vehicle (in meters). |
-| `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. |
-| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. |
-| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
-| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
-| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 2.6 for truck. |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 4.11 for truck. |
+| `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
 The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `length` | The length of the truck (in meters). |
-| `weight` | The weight of the truck (in metric tons). |
-| `axle_load` | The axle load of the truck (in metric tons). |
-| `hazmat` | A value indicating if the truck is carrying hazardous materials. |
+| `length` | The length of the truck (in meters). Default 21.64. |
+| `weight` | The weight of the truck (in metric tons). Default 21.77. |
+| `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
