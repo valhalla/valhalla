@@ -17,7 +17,6 @@ jobs:
             mingw64-curl \
             mingw64-boost \
             mingw64-protobuf \
-            mingw64-geos \
             mingw64-python3 \
             protobuf-compiler
       - uses: actions/checkout@v2

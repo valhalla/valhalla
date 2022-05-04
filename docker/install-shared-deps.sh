@@ -27,8 +27,6 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     jq \
     lcov \
     libcurl4-openssl-dev \
-    libgeos++-dev \
-    libgeos-dev \
     libluajit-5.1-dev \
     liblz4-dev \
     libprime-server${primeserver_version} \

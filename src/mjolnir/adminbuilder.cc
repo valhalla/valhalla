@@ -2,6 +2,12 @@
 #include <string>
 #include <vector>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/register/multi_linestring.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
+#include <boost/geometry/geometries/register/ring.hpp>
+#include <boost/optional.hpp>
+
 #include "baldr/graphconstants.h"
 #include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
@@ -12,53 +18,21 @@
 
 #include "config.h"
 
-/* Need to know which geos version we have to work out which headers to include */
-#include <geos/version.h>
-
-#define USE_UNSTABLE_GEOS_CPP_API
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-#include <geos/geom/CoordinateArraySequence.h>
-#else
-#include <geos/geom/CoordinateSequenceFactory.h>
-#endif
-#include <geos/geom/Geometry.h>
-#include <geos/geom/GeometryFactory.h>
-#include <geos/geom/LineString.h>
-#include <geos/geom/LinearRing.h>
-#include <geos/geom/MultiLineString.h>
-#include <geos/geom/MultiPolygon.h>
-#include <geos/geom/Point.h>
-#include <geos/geom/Polygon.h>
-#include <geos/io/WKTReader.h>
-#include <geos/io/WKTWriter.h>
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-#include <geos/operation/linemerge/LineMerger.h>
-#else
-#include <geos/opLinemerge.h>
-#endif
-#include <geos/util/GEOSException.h>
-
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
-
-using namespace geos::geom;
-using namespace geos::io;
-using namespace geos::util;
-using namespace geos::operation::linemerge;
-
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
-
 using namespace valhalla::midgard;
+namespace bg = boost::geometry;
+
+BOOST_GEOMETRY_REGISTER_POINT_2D(PointLL, double, bg::cs::geographic<bg::degree>, first, second)
+typedef boost::geometry::model::polygon<PointLL> polygon_t;
+typedef boost::geometry::model::multi_polygon<polygon_t> mpolygon_t;
 
 namespace {
 
 struct polygondata {
-  Polygon* polygon;
-  LinearRing* ring;
+  polygon_t polygon;
   double area;
-  int iscontained;
   unsigned containedbyid;
 };
 
@@ -75,83 +49,47 @@ int polygondata_comparearea(const void* vp1, const void* vp2) {
   return 1;
 }
 
-std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
-  std::vector<std::string> wkts;
+std::string GetWkt(std::vector<polygon_t>& polygons) {
+  std::ostringstream wkt;
 
-#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
-
-  LineMerger merger;
-  merger.add(mline.get());
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  std::vector<std::unique_ptr<LineString>> merged(merger.getMergedLineStrings());
-#else
-  std::unique_ptr<std::vector<LineString*>> merged(merger.getMergedLineStrings());
-#endif
-  WKTWriter writer;
-
-  // Procces ways into lines or simple polygon list
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  polygondata* polys = new polygondata[merged.size()];
-#else
-  polygondata* polys = new polygondata[merged->size()];
-#endif
+  // something to hold the polygons for processing
+  polygondata* polys = new polygondata[polygons.size()];
 
   unsigned totalpolys = 0;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  for (unsigned i = 0; i < merged.size(); ++i) {
-    std::unique_ptr<LineString> pline(merged[i].release());
-#else
-  for (unsigned i = 0; i < merged->size(); ++i) {
-    std::unique_ptr<LineString> pline((*merged)[i]);
-#endif
-    if (pline->getNumPoints() > 3 && pline->isClosed()) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      polys[totalpolys].polygon =
-          gf->createPolygon(gf->createLinearRing(pline->getCoordinates())).release();
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates()).release();
-#else
-      polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
-#endif
-      polys[totalpolys].area = polys[totalpolys].polygon->getArea();
-      polys[totalpolys].iscontained = 0;
+  for (const auto& polygon : polygons) {
+    if (polygon.outer().size() > 3) {
+      polys[totalpolys].polygon = polygon;
+      polys[totalpolys].area = bg::area(polygon);
       polys[totalpolys].containedbyid = 0;
       if (polys[totalpolys].area > 0.0) {
         totalpolys++;
-      } else {
-        delete (polys[totalpolys].polygon);
-        delete (polys[totalpolys].ring);
       }
     }
   }
 
   if (totalpolys) {
+    // sort the polygons by area in descending order
     qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
 
     for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
+      if (polys[i].containedbyid != 0) {
         continue;
       }
 
       for (unsigned j = i + 1; j < totalpolys; ++j) {
         // Does polygon[i] contain the smaller polygon[j]?
-        if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
+        if (polys[j].containedbyid == 0 && bg::within(polys[j].polygon, polys[i].polygon)) {
           // are we in a [i] contains [k] contains [j] situation
+          // e.g. vatican state in rome, we want to cut vatican from italy
           // which would actually make j top level
           bool istoplevelafterall = false;
           for (unsigned k = i + 1; k < j; ++k) {
-            if (polys[k].iscontained && polys[k].containedbyid == i &&
-                polys[k].polygon->contains(polys[j].polygon)) {
+            if (polys[k].containedbyid == i && bg::within(polys[j].polygon, polys[k].polygon)) {
               istoplevelafterall = true;
               break;
             }
           }
           if (istoplevelafterall) {
-            polys[j].iscontained = 1;
             polys[j].containedbyid = i;
           }
         }
@@ -160,58 +98,37 @@ std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
     // polys now is a list of polygons tagged with which ones are inside each other
 
     // List of polygons for multipolygon
-    std::unique_ptr<std::vector<Geometry*>> polygons(new std::vector<Geometry*>);
+    mpolygon_t multipoly;
 
     // For each top level polygon create a new polygon including any holes
     for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
+      if (polys[i].containedbyid != 0) {
         continue;
       }
 
-      // List of holes for this top level polygon
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      std::unique_ptr<std::vector<LinearRing*>> interior(new std::vector<LinearRing*>);
-#else
-      std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
-#endif
+      // fill outer ring, inners further down
+      multipoly.push_back(polys[i].polygon);
+
+      // List of holes for this top level polygon, i.e. remove a country within a country
       for (unsigned j = i + 1; j < totalpolys; ++j) {
-        if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-          interior->push_back(polys[j].ring);
-#else
-          interior->push_back(polys[j].ring);
-#endif
+        if (polys[j].containedbyid == i) {
+          multipoly.back().inners().push_back(polys[j].polygon.outer());
         }
       }
 
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#else
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#endif
-      poly->normalize();
-      polygons->push_back(poly);
+      // self-intersections?
+      if (!bg::is_valid(multipoly.back())) {
+        multipoly.pop_back();
+        continue;
+      }
     }
 
-    // Make a multipolygon
-    std::unique_ptr<Geometry> multipoly(gf->createMultiPolygon(polygons.release()));
-    if (!multipoly->isValid()) {
-      multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-    }
-    multipoly->normalize();
-
-    if (multipoly->isValid()) {
-      wkts.push_back(writer.write(multipoly.get()));
-    }
+    // make sure the windings are correct and the rings are closed
+    bg::correct(multipoly);
+    wkt << bg::wkt(multipoly);
   }
 
-  for (unsigned i = 0; i < totalpolys; ++i) {
-    delete (polys[i].polygon);
-  }
-
-  delete[](polys);
-
-  return wkts;
+  return wkt.str();
 }
 
 } // anonymous namespace
@@ -372,23 +289,13 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   }
 
   uint32_t count = 0;
-  bool has_data;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
-
   try {
 
     for (const auto& admin : osm_admin_data.admins_) {
+      std::vector<polygon_t> polygons;
 
-      std::unique_ptr<Geometry> geom;
-      std::unique_ptr<std::vector<Geometry*>> lines(new std::vector<Geometry*>);
-      has_data = true;
-
+      bool has_data = true;
       for (const auto memberid : admin.ways()) {
-
         auto itr = osm_admin_data.way_map.find(memberid);
 
         // A relation may be included in an extract but it's members may not.
@@ -398,82 +305,63 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           break;
         }
 
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-        auto coords = std::unique_ptr<CoordinateArraySequence>(new CoordinateArraySequence);
-#else
-        std::unique_ptr<CoordinateSequence> coords(
-            gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
-#endif
-
+        polygon_t polygon;
         for (const auto ref_id : itr->second) {
-
-          const PointLL ll = osm_admin_data.shape_map.at(ref_id);
-
-          Coordinate c;
-          c.x = ll.lng();
-          c.y = ll.lat();
-          coords->add(c, 0);
+          bg::append(polygon, osm_admin_data.shape_map.at(ref_id));
         }
 
-        if (coords->getSize() > 1) {
-          geom = std::unique_ptr<Geometry>(gf->createLineString(coords.release()));
-          lines->push_back(geom.release());
-        }
+        // close the ring if it's open and fix the winding if necessary
+        bg::correct(polygon);
+        polygons.push_back(polygon);
 
       } // member loop
 
       if (has_data) {
-
-        std::unique_ptr<Geometry> mline(gf->createMultiLineString(lines.release()));
-        std::vector<std::string> wkts = GetWkts(mline);
+        std::string wkt = GetWkt(polygons);
         std::string name;
         std::string name_en;
         std::string iso;
 
-        for (const auto& wkt : wkts) {
+        count++;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_bind_int(stmt, 1, admin.admin_level());
 
-          count++;
-          sqlite3_reset(stmt);
-          sqlite3_clear_bindings(stmt);
-          sqlite3_bind_int(stmt, 1, admin.admin_level());
-
-          if (admin.iso_code_index()) {
-            iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
-            sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 2);
-          }
-
-          sqlite3_bind_null(stmt, 3);
-
-          name = osm_admin_data.name_offset_map.name(admin.name_index());
-          sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
-
-          if (admin.name_en_index()) {
-            name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
-            sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 5);
-          }
-
-          sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-          sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
-          sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
-          /* performing INSERT INTO */
-          ret = sqlite3_step(stmt);
-          if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-            continue;
-          }
-          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          LOG_ERROR("sqlite3_step() Name: " +
-                    osm_admin_data.name_offset_map.name(admin.name_index()));
-          LOG_ERROR("sqlite3_step() Name:en: " +
-                    osm_admin_data.name_offset_map.name(admin.name_en_index()));
-          LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
-          LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
-          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
-                    std::to_string(admin.allow_intersection_names()));
+        if (admin.iso_code_index()) {
+          iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
+          sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
+        } else {
+          sqlite3_bind_null(stmt, 2);
         }
+
+        sqlite3_bind_null(stmt, 3);
+
+        name = osm_admin_data.name_offset_map.name(admin.name_index());
+        sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
+
+        if (admin.name_en_index()) {
+          name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
+          sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
+        } else {
+          sqlite3_bind_null(stmt, 5);
+        }
+
+        sqlite3_bind_int(stmt, 6, admin.drive_on_right());
+        sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
+        sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+        /* performing INSERT INTO */
+        ret = sqlite3_step(stmt);
+        if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+          continue;
+        }
+        LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+        LOG_ERROR("sqlite3_step() Name: " + osm_admin_data.name_offset_map.name(admin.name_index()));
+        LOG_ERROR("sqlite3_step() Name:en: " +
+                  osm_admin_data.name_offset_map.name(admin.name_en_index()));
+        LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
+        LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
+        LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+                  std::to_string(admin.allow_intersection_names()));
       } // has data
     }   // admins
   } catch (std::exception& e) {

@@ -1,5 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
+   * REMOVED: geos dependencies in favor of boost geometry [#3615](https://github.com/valhalla/valhalla/pull/3615)
+   
 * **Bug Fix**
    * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
