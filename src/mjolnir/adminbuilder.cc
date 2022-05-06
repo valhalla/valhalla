@@ -125,8 +125,10 @@ std::string GetWkt(std::vector<polygon_t>& polygons) {
 
     // make sure the windings are correct and the rings are closed
     bg::correct(multipoly);
-    wkt << bg::wkt(multipoly);
+    wkt << std::setprecision(7) << bg::wkt(multipoly);
   }
+
+  delete[](polys);
 
   return wkt.str();
 }
