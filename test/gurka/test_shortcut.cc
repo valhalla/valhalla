@@ -68,7 +68,7 @@ TEST(Shortcuts, CreateInvalid) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_speed");
 
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
- 
+
   // check that there are no shortcut edges
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
@@ -94,20 +94,20 @@ TEST(Shortcuts, CreateTooLong) {
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
         {"maxspeed:backward", "80"}}},
-      {"CD",
+       {"CD",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "80"},
-        {"maxspeed:backward", "80"}}},
+        {"maxspeed:forward", "100"},
+        {"maxspeed:backward", "100"}}},
       {"DE",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "80"},
-        {"maxspeed:backward", "80"}}},
+        {"maxspeed:forward", "100"},
+        {"maxspeed:backward", "100"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_maxlen");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_speed");
 
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 

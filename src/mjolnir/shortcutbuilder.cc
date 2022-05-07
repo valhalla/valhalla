@@ -294,7 +294,7 @@ bool CanContract(GraphReader& reader,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-uint32_t ConnectEdges(GraphReader& reader,
+void ConnectEdges(GraphReader& reader,
                       const GraphId& startnode,
                       const GraphId& edgeid,
                       std::list<PointLL>& shape,
@@ -347,7 +347,6 @@ uint32_t ConnectEdges(GraphReader& reader,
 
   // Update the end node and return the length
   endnode = directededge->endnode();
-  return directededge->length();
 }
 
 // Check if the edge is entering a contracted node
@@ -483,14 +482,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           break; 
         }
         
-        // further down
-        ConnectEdges(..)
 
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
-        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+        ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                                average_density, total_duration, total_truck_duration);
       }
 
