@@ -97,17 +97,17 @@ TEST(Shortcuts, CreateTooLong) {
        {"CD",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "100"},
-        {"maxspeed:backward", "100"}}},
+        {"maxspeed:forward", "60"},
+        {"maxspeed:backward", "60"}}},
       {"DE",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "100"},
-        {"maxspeed:backward", "100"}}},
+        {"maxspeed:forward", "60"},
+        {"maxspeed:backward", "60"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_speed");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_maxLen");
 
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
