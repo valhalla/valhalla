@@ -218,12 +218,6 @@ bool CanContract(GraphReader& reader,
   if (!EdgesMatch(tile, edge1, edge2))
     return false;
 
-  //if edges are greater than the maximum legnth constnat, do not contract them
-  uint32_t totalLength = edge1->length() + edge2->length(); 
-  if(totalLength > kMaxEdgeLength) {
-    return false; 
-  }
-
   // Exactly one pair of edges match. Check if any other remaining edges
   // are driveable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
