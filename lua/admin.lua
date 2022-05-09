@@ -188,7 +188,7 @@ function rels_proc (kv, nokeys)
            end
          end
        end
-       if kv["name"] = "England" or kv["name"] = "Scotland" or kv["name"] = "Wales" or kv["name"] = "Northern Ireland" then
+       if kv["name"] == "England" or kv["name"] == "Scotland" or kv["name"] == "Wales" or kv["name"] == "Northern Ireland" then
          kv["admin_level"] = 2
        end
      end
