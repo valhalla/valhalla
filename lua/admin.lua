@@ -129,7 +129,7 @@ function rels_proc (kv, nokeys)
 
      if (kv["admin_level"] == "3" and kv["name"] ~= "Guyane" and kv["name"] ~= "Guadeloupe" and  kv["name"] ~= "La Réunion" and  
          kv["name"] ~= "Martinique" and kv["name"] ~= "Mayotte" and kv["name"] ~= "Saint-Pierre-et-Miquelon" and
-         kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin" and kv["name"] ~= "Polynésie Française" and 
+         kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin (France)" and kv["name"] ~= "Polynésie Française" and 
          kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and 
          kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
          kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
@@ -141,7 +141,7 @@ function rels_proc (kv, nokeys)
      end
 
      if kv["admin_level"] == "2" then 
-        if kv["name"] ==  "France" then
+        if kv["name"] ==  "France" or kv["name"] == "United Kingdom" then
           return 1, kv
         elseif kv["name:en"] == "Abkhazia" or kv["name:en"] == "South Ossetia" then
           kv["admin_level"] = "4"
@@ -187,6 +187,9 @@ function rels_proc (kv, nokeys)
              kv["iso_code"] = string.sub(kv["ISO3166-2"], 3)
            end
          end
+       end
+       if kv["name"] = "England" or kv["name"] = "Scotland" or kv["name"] = "Wales" or kv["name"] = "Northern Ireland" then
+         kv["admin_level"] = 2
        end
      end
 
