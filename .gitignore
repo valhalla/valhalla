@@ -69,3 +69,6 @@ CMakeLists.txt.user
 site/
 
 .DS_Store
+
+# nodejs
+node_modules
