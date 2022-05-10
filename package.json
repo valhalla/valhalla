@@ -1,0 +1,29 @@
+{
+  "name": "valhalla",
+  "description": "Open Source Routing Engine for OpenStreetMap",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "echo \"test\"",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/valhalla/valhalla.git"
+  },
+  "keywords": [
+    "valhalla"
+  ],
+  "author": "Valhalla Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/valhalla/valhalla/issues"
+  },
+  "homepage": "https://github.com/valhalla/valhalla#readme",
+  "devDependencies": {
+    "@commitlint/cli": "^16.2.4",
+    "@commitlint/config-conventional": "^16.2.4",
+    "husky": "^8.0.1",
+    "lint-staged": "^12.4.1"
+  }
+}
