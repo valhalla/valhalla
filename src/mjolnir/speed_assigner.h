@@ -65,6 +65,7 @@ The json basically looks like this:
 
 constexpr uint32_t kMinSuburbanDensity = 5;
 constexpr uint32_t kMaxSuburbanDensity = 10;
+constexpr uint32_t kUnconfiguredSpeed = 0;
 
 /**
  * This class has two methods of deciding the default speed of an edge. The default method is to use
@@ -93,7 +94,7 @@ protected:
         throw std::runtime_error(name + " must have " + std::to_string(entries.size()) + " speeds");
       size_t i = 0;
       for (const auto& speed : arr) {
-        entries[i++] = speed.GetUint();
+        entries[i++] = speed.IsNull() ? kUnconfiguredSpeed : speed.GetUint();
       }
     }
 
@@ -102,10 +103,12 @@ protected:
       parse(obj, "link_exiting", link_exiting);
       parse(obj, "link_turning", link_turning);
       parse(obj, "roundabout", roundabout);
-      service[0] = obj["driveway"].GetUint();
-      service[1] = obj["alley"].GetUint();
-      service[2] = obj["parking_aisle"].GetUint();
-      service[3] = obj["drive-through"].GetUint();
+      service[0] = obj["driveway"].IsNull() ? kUnconfiguredSpeed : obj["driveway"].GetUint();
+      service[1] = obj["alley"].IsNull() ? kUnconfiguredSpeed : obj["alley"].GetUint();
+      service[2] =
+          obj["parking_aisle"].IsNull() ? kUnconfiguredSpeed : obj["parking_aisle"].GetUint();
+      service[3] =
+          obj["drive-through"].IsNull() ? kUnconfiguredSpeed : obj["drive-through"].GetUint();
     }
   };
 
@@ -115,23 +118,28 @@ protected:
   /**
    * This function determines the speed of an edge based on the json configuration provided to the
    * classes constructor. If the edge is one of the types that cannot be assigned via config the
-   * method will leave the edges speed unset and signal as much by returning false
+   * method will return an invalid speed value to signal that
    *
    * @param directededge         the edge whose speed we may set
    * @param density              the road density of the end node of the edge
    * @param country_state_code   the 4 letter country/state code, it may be 2 letters if just the
    *                             country is known and it may also be an empty string if no admin
    *                             information has been loaded
-   * @return true if the directededge had its speed set from configuration
+   * @return the speed to use for the directededge or kUnconfiguredSpeed if none is configured
    */
-  bool FromConfig(DirectedEdge& directededge,
-                  const uint32_t density,
-                  const std::string& country,
-                  const std::string& state) const {
+  uint32_t FromConfig(DirectedEdge& directededge,
+                      const uint32_t density,
+                      const std::string& country,
+                      const std::string& state) const {
+    // nothing is configured
+    if (tables.empty()) {
+      return kUnconfiguredSpeed;
+    }
+
     // let the other function handle ferry stuff or anything not motor vehicle
     if (directededge.use() == Use::kFerry || directededge.use() == Use::kRailFerry ||
         !((directededge.forwardaccess() | directededge.reverseaccess()) & kVehicularAccess))
-      return false;
+      return kUnconfiguredSpeed;
 
     // try first the country state combo, then country only, then neither, then bail
     auto found = tables.find(country + "." + state);
@@ -140,7 +148,7 @@ protected:
     if (found == tables.end())
       found = tables.find("");
     if (found == tables.end())
-      return false;
+      return kUnconfiguredSpeed;
 
     // rural, suburban or urban
     const auto& speed_table =
@@ -150,17 +158,13 @@ protected:
     // some kind of special use
     switch (directededge.use()) {
       case Use::kDriveway:
-        directededge.set_speed(speed_table.service[0]);
-        return true;
+        return speed_table.service[0];
       case Use::kAlley:
-        directededge.set_speed(speed_table.service[1]);
-        return true;
+        return speed_table.service[1];
       case Use::kParkingAisle:
-        directededge.set_speed(speed_table.service[2]);
-        return true;
+        return speed_table.service[2];
       case Use::kDriveThru:
-        directededge.set_speed(speed_table.service[3]);
-        return true;
+        return speed_table.service[3];
       default:
         break;
     }
@@ -169,24 +173,21 @@ protected:
     if (directededge.link()) {
       // these classes dont have links
       if (rc >= speed_table.link_exiting.size())
-        return false;
+        return kUnconfiguredSpeed;
       // we use signage to tell if its an exit otherwise its just a link/ramp/turn channel
       if (directededge.sign())
-        directededge.set_speed(speed_table.link_exiting[rc]);
+        return speed_table.link_exiting[rc];
       else
-        directededge.set_speed(speed_table.link_turning[rc]);
-      return true;
+        return speed_table.link_turning[rc];
     }
 
     // roundabout
     if (directededge.roundabout()) {
-      directededge.set_speed(speed_table.roundabout[rc]);
-      return true;
+      return speed_table.roundabout[rc];
     }
 
     // non-special use, just use the road class
-    directededge.set_speed(speed_table.way[rc]);
-    return true;
+    return speed_table.way[rc];
   }
 
 public:
@@ -253,8 +254,10 @@ public:
                    const std::string& country_code,
                    const std::string& state_code) const {
 
-    // If we have config loaded we'll use that
-    if (!tables.empty() && FromConfig(directededge, density, country_code, state_code)) {
+    // See if we can get a valid speed loaded from configuration
+    auto configured_speed = FromConfig(directededge, density, country_code, state_code);
+    if (configured_speed != kUnconfiguredSpeed) {
+      directededge.set_speed(configured_speed);
       directededge.set_speed_type(SpeedType::kClassified);
       return true;
     }
