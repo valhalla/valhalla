@@ -35,6 +35,7 @@
    * FIXED: Fix "no elevation" values and /locate elevation response [#3571](https://github.com/valhalla/valhalla/pull/3571)
    * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * FIXED: admin "Saint-Martin" changed name to "Saint-Martin (France)" [#3619](https://github.com/valhalla/valhalla/pull/3619)
+   * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
