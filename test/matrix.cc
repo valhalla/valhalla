@@ -244,6 +244,30 @@ TEST(Matrix, test_matrix) {
                " to expected value for CostMatrix";
   }
 
+  CostMatrix cost_matrix_abort_source;
+  results = cost_matrix_abort_source.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                   mode_costing, sif::TravelMode::kDrive, 100000.0);
+
+  uint32_t found = 0;
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist < kMaxCost) {
+      ++found;
+    }
+  }
+  EXPECT_EQ(found, 15) << " not the number of results as expected";
+
+  CostMatrix cost_matrix_abort_target;
+  results = cost_matrix_abort_target.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                    mode_costing, sif::TravelMode::kDrive, 50000.0);
+
+  found = 0;
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist < kMaxCost) {
+      ++found;
+    }
+  }
+  EXPECT_EQ(found, 10) << " not the number of results as expected";
+
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                            reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
