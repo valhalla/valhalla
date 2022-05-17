@@ -245,8 +245,9 @@ TEST(Matrix, test_matrix) {
   }
 
   CostMatrix cost_matrix_abort_source;
-  results = cost_matrix_abort_source.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                   mode_costing, sif::TravelMode::kDrive, 100000.0);
+  results = cost_matrix_abort_source.SourceToTarget(request.options().sources(),
+                                                    request.options().targets(), reader, mode_costing,
+                                                    sif::TravelMode::kDrive, 100000.0);
 
   uint32_t found = 0;
   for (uint32_t i = 0; i < results.size(); ++i) {
@@ -257,8 +258,9 @@ TEST(Matrix, test_matrix) {
   EXPECT_EQ(found, 15) << " not the number of results as expected";
 
   CostMatrix cost_matrix_abort_target;
-  results = cost_matrix_abort_target.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                    mode_costing, sif::TravelMode::kDrive, 50000.0);
+  results = cost_matrix_abort_target.SourceToTarget(request.options().sources(),
+                                                    request.options().targets(), reader, mode_costing,
+                                                    sif::TravelMode::kDrive, 50000.0);
 
   found = 0;
   for (uint32_t i = 0; i < results.size(); ++i) {
