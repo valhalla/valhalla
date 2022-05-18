@@ -475,7 +475,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // Terminate shortcut if edge length has exceeded maximum length
         length += tile->directededge(next_edge_id)->length(); 
         if(length >= kMaxEdgeLength){
-          break;  
+          break; 
         }
         
         // Connect the matching outbound directed edge (updates the next
