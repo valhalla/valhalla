@@ -34,6 +34,8 @@
    * FIXED: Improve build errors reporting [#3579](https://github.com/valhalla/valhalla/pull/3579)
    * FIXED: Fix "no elevation" values and /locate elevation response [#3571](https://github.com/valhalla/valhalla/pull/3571)
    * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
+   * FIXED: admin "Saint-Martin" changed name to "Saint-Martin (France)" [#3619](https://github.com/valhalla/valhalla/pull/3619)
+   * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -80,8 +82,10 @@
    * CHANGED: Remove `max_matrix_locations` and introduce `max_matrix_location_pairs` to configure the allowed number of total routes for the matrix action for more flexible asymmetric matrices [#3569](https://github.com/valhalla/valhalla/pull/3569)
    * CHANGED: modernized spatialite syntax [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * ADDED: Options to generate partial results for time distance matrix when there is one source (one to many) or one target (many to one). [#3181](https://github.com/valhalla/valhalla/pull/3181)
-   * ADDED: Enhance valhalla_build_elevation with LZ4 recompression support [#3607](https://github.com/valhalla/valhalla/pull/3607) 
+   * ADDED: Enhance valhalla_build_elevation with LZ4 recompression support [#3607](https://github.com/valhalla/valhalla/pull/3607)
    * ADDED: Shorten down the request delay, when some sources/targets searches are early aborted [#3611](https://github.com/valhalla/valhalla/pull/3611)
+   * CHANGED: removed UK admin and upgraded its constituents to countries [#3619](https://github.com/valhalla/valhalla/pull/3619)
+   * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
