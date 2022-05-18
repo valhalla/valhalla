@@ -358,7 +358,7 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-// TODO - need to add acce  ss restrictions?
+// TODO - need to add access restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
