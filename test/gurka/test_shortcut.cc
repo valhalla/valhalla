@@ -77,10 +77,13 @@ TEST(Shortcuts, CreateInvalid) {
 // Here no shortcuts are created.
 // The grid size should be greater than the max length that allows shortcuts to be created
 TEST(Shortcuts, CreateTooLong) {
-  constexpr double gridsize = 2000000;
+  constexpr double gridsize = 1500000;
+                            //16777215
 
   const std::string ascii_map = R"(
-      A--B--C--D----E
+      A--B--C--D----E-----F
+
+
   )";
 
   const gurka::ways ways = {
@@ -89,7 +92,7 @@ TEST(Shortcuts, CreateTooLong) {
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
         {"maxspeed:backward", "80"}}},
-      {"BC",
+      {"BC",  
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
@@ -97,13 +100,18 @@ TEST(Shortcuts, CreateTooLong) {
        {"CD",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "60"},
-        {"maxspeed:backward", "60"}}},
+        {"maxspeed:forward", "80"},
+        {"maxspeed:backward", "80"}}},
       {"DE",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
-        {"maxspeed:forward", "60"},
-        {"maxspeed:backward", "60"}}},
+        {"maxspeed:forward", "80"},
+        {"maxspeed:backward", "80"}}},
+      {"EF",
+       {{"highway", "primary"},
+        {"name", "Independence Avenue"},
+        {"maxspeed:forward", "80"},
+        {"maxspeed:backward", "80"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -112,10 +120,11 @@ TEST(Shortcuts, CreateTooLong) {
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
   // check that there are no shortcut edges
-  auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
-
+  auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));  
   EXPECT_LE(shortcut_edge->length(), kMaxEdgeLength); 
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "E"));
+  
+  // Ensure that shortcut is not made if length is too long
+  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "F"));
 
  
 }

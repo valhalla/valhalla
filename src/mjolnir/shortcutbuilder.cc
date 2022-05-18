@@ -358,7 +358,7 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-// TODO - need to add access restrictions?
+// TODO - need to add acce  ss restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
@@ -405,7 +405,6 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
 
-
       // For computing weighted density and total turn duration along the shortcut
       float average_density = length * newedge.density();
       uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
@@ -450,9 +449,6 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
 
-      //keep track of shortcut length so it does not exceed max length
-      uint32_t shortcutLength = 0; 
-
       while (true) {
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
@@ -476,13 +472,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           break;
         }
 
-        //terminate shortcut if edge length has exceeded
+        // Terminate shortcut if edge length has exceeded maximum length
         length += tile->directededge(next_edge_id)->length(); 
-        if(length > kMaxEdgeLength){
-          break; 
+        if(length >= kMaxEdgeLength){
+          break;  
         }
         
-
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
