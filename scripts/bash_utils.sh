@@ -27,3 +27,22 @@ function setup_mason {
   fi
 
 }
+
+function setup_pre_commit {
+  echo "Installing pre-commit"
+  if [[ $OS = "Linux" ]] ; then
+    pip install pre-commit
+  elif [[ ${OS} = "Darwin" ]] ; then
+      if [[ $(command -v brew) == "" ]]; then
+        # Install Homebrew
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+      else
+        # Install pre-commit
+        brew install pre-commit
+      fi
+  else
+    pip install pre-commit
+  fi
+  echo "Setting up pre-commit hooks"
+  pre-commit install
+}
