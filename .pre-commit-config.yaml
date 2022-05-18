@@ -1,0 +1,18 @@
+repos:
+  # Autoformat: Docker files
+  - repo: local
+    hooks:
+      - id: hadolint
+        name: hadolint
+        language: docker_image
+        types:
+          - dockerfile
+        entry: hadolint/hadolint:v2.8.0-alpine hadolint ./docker/Dockerfile-*
+
+  # Autoformat: Shell files
+  - repo: local
+    hooks:
+    - id: format
+      name: format
+      entry: bash ./scripts/format.sh
+      language: system
