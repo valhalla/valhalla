@@ -36,6 +36,7 @@
    * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * FIXED: admin "Saint-Martin" changed name to "Saint-Martin (France)" [#3619](https://github.com/valhalla/valhalla/pull/3619)
    * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
+   * FIXED: valhalla_run_matrix was failing (could not find proper max_matrix_distance) [#3635](https://github.com/valhalla/valhalla/pull/3635)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
