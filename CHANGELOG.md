@@ -86,6 +86,7 @@
    * ADDED: Enhance valhalla_build_elevation with LZ4 recompression support [#3607](https://github.com/valhalla/valhalla/pull/3607)
    * CHANGED: removed UK admin and upgraded its constituents to countries [#3619](https://github.com/valhalla/valhalla/pull/3619)    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: add `pre-commit` hook for running the `format.sh` script [#3637](https://github.com/valhalla/valhalla/pull/3637)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
