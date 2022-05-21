@@ -295,15 +295,15 @@ bool CanContract(GraphReader& reader,
 
 // Connect 2 edges shape and update the next end node in the new level
 void ConnectEdges(GraphReader& reader,
-                      const GraphId& startnode,
-                      const GraphId& edgeid,
-                      std::list<PointLL>& shape,
-                      GraphId& endnode,
-                      uint32_t& opp_local_idx,
-                      uint32_t& restrictions,
-                      float& average_density,
-                      float& total_duration,
-                      float& total_truck_duration) {
+                  const GraphId& startnode,
+                  const GraphId& edgeid,
+                  std::list<PointLL>& shape,
+                  GraphId& endnode,
+                  uint32_t& opp_local_idx,
+                  uint32_t& restrictions,
+                  float& average_density,
+                  float& total_duration,
+                  float& total_truck_duration) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -372,6 +372,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   if (CanContract(reader, tile, start_node, edgepairs)) {
     return 0;
   }
+  // Variable to check if this is a sliced shortcut w shortcut was too long
+  bool sliceShortcut = false;
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
   auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {
@@ -473,17 +475,18 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         }
 
         // Terminate shortcut if edge length has exceeded maximum length
-        length += tile->directededge(next_edge_id)->length(); 
-        if(length >= kMaxEdgeLength){
-          break; 
+        auto new_length = length + tile->directededge(next_edge_id)->length();
+        if (new_length >= kMaxEdgeLength) {
+          break;
         }
-        
+        length = new_length;
+
         // Connect the matching outbound directed edge (updates the next
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density, total_duration, total_truck_duration);
+                     average_density, total_duration, total_truck_duration);
       }
 
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
@@ -628,7 +631,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       const auto& admin = tile->admininfo(nodeinfo.admin_index());
       nodeinfo.set_edge_index(tilebuilder.directededges().size());
       nodeinfo.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
-                                                    admin.country_iso(), admin.state_iso())); 
+                                                    admin.country_iso(), admin.state_iso()));
 
       // Current edge count
       size_t edge_count = tilebuilder.directededges().size();
@@ -769,4 +772,3 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
 
 } // namespace mjolnir
 } // namespace valhalla
- 

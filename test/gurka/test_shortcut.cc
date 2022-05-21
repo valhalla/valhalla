@@ -43,7 +43,7 @@ TEST(Shortcuts, CreateValid) {
 }
 
 // Here no shortcuts are created. There could be one from A to C with speed 80 but in the opposite
-// direction speeds differ which blocks CA creation. 
+// direction speeds differ which blocks CA creation.
 TEST(Shortcuts, CreateInvalid) {
   constexpr double gridsize = 50;
 
@@ -78,12 +78,10 @@ TEST(Shortcuts, CreateInvalid) {
 // The grid size should be greater than the max length that allows shortcuts to be created
 TEST(Shortcuts, CreateTooLong) {
   constexpr double gridsize = 1500000;
-  //Maximum edge length is 16777215
+  // Maximum edge length is    16777215
 
   const std::string ascii_map = R"(
-      A--B--C--D----E-----F
-
-
+      A--B--C--D--E-F
   )";
 
   const gurka::ways ways = {
@@ -92,12 +90,12 @@ TEST(Shortcuts, CreateTooLong) {
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
         {"maxspeed:backward", "80"}}},
-      {"BC",  
+      {"BC",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
         {"maxspeed:backward", "80"}}},
-       {"CD",
+      {"CD",
        {{"highway", "primary"},
         {"name", "Independence Avenue"},
         {"maxspeed:forward", "80"},
@@ -119,14 +117,14 @@ TEST(Shortcuts, CreateTooLong) {
 
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  // check that there are no shortcut edges
-  auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));  
-  EXPECT_LE(shortcut_edge->length(), kMaxEdgeLength); 
-  
+  // Check that there are no shortcut edges
+  auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));
+  EXPECT_NEAR(shortcut_edge->length(), 1500000 * 9, 100000);
+  auto second_sc = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "F"));
+  EXPECT_NEAR(second_sc->length(), 1500000 * 4, 100000);
+
   // Ensure that shortcut is not made if length is too long
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "F"));
-
- 
 }
 
 TEST(Shortcuts, ShortcutSpeed) {
