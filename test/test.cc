@@ -271,25 +271,25 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bicycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bikeshare": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "bus": {
           "max_distance": 5000000.0,
           "max_locations": 50,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "centroid": {
           "max_distance": 200000.0,
@@ -313,25 +313,25 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "motorcycle": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "multimodal": {
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 0.0,
-          "max_matrix_locations": 0
+          "max_matrix_location_pairs": 0
         },
         "pedestrian": {
           "max_distance": 250000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50,
+          "max_matrix_location_pairs": 2500,
           "max_transit_walking_distance": 10000,
           "min_transit_walking_distance": 1
         },
@@ -346,7 +346,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "trace": {
           "max_alternates": 3,
@@ -360,13 +360,13 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_distance": 500000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         },
         "truck": {
           "max_distance": 5000000.0,
           "max_locations": 20,
           "max_matrix_distance": 400000.0,
-          "max_matrix_locations": 50
+          "max_matrix_location_pairs": 2500
         }
       },
       "thor": {

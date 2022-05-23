@@ -263,7 +263,7 @@ add_subdirectory(src)
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
   # favors Py3, falls back to Py2
-  find_package(Python COMPONENTS Development Interpreter)
+  find_package(Python3 COMPONENTS Development Interpreter)
   if (Python_FOUND)
     add_subdirectory(src/bindings/python)
     install(FILES COPYING CHANGELOG.md

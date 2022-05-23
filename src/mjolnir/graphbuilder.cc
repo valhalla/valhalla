@@ -419,6 +419,7 @@ void BuildTileSet(const std::string& ways_file,
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
+  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
@@ -428,6 +429,7 @@ void BuildTileSet(const std::string& ways_file,
   } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
   }
+  auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   const auto& tiling = TileHierarchy::levels().back().tiles;
 
@@ -732,12 +734,11 @@ void BuildTileSet(const std::string& ways_file,
               bike_network = w.bike_network();
             }
 
-            // Add edge info. Mean elevation is set to 1234 as a placeholder, set later if we have it.
             edge_info_offset =
                 graphtile.AddEdgeInfo(edge_pair.second, (*nodes[source]).graph_id,
-                                      (*nodes[target]).graph_id, w.way_id(), 1234, bike_network,
-                                      speed_limit, shape, names, tagged_values, pronunciations, types,
-                                      added, dual_refs);
+                                      (*nodes[target]).graph_id, w.way_id(), kNoElevationData,
+                                      bike_network, speed_limit, shape, names, tagged_values,
+                                      pronunciations, types, added, dual_refs);
             if (added) {
               stats.edgeinfocount++;
             }
