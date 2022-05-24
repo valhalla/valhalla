@@ -9,10 +9,7 @@ repos:
   # Autoformat: Docker files
   - repo: local
     hooks:
-      - id: hadolint
-        name: hadolint
-        language: docker_image
-        types:
-          - dockerfile
-        entry: hadolint/hadolint:v2.8.0-alpine hadolint
-        args: ["--config", "./.hadolint.yaml"]
+      - id: hadolint-sh
+        name: hadolint-sh
+        entry: bash ./scripts/format_docker.sh
+        language: system
