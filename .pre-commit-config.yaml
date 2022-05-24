@@ -14,4 +14,5 @@ repos:
         language: docker_image
         types:
           - dockerfile
-        entry: hadolint/hadolint:v2.8.0-alpine hadolint ./docker/Dockerfile-*
+        entry: hadolint/hadolint:v2.8.0-alpine hadolint
+        args: ["--config", "./.hadolint.yaml"]
