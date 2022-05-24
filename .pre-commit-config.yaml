@@ -13,3 +13,10 @@ repos:
         name: hadolint-sh
         entry: bash ./scripts/format_docker.sh
         language: system
+  # Auto format: YAML
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+        args: ["-d {extends: relaxed, rules: {line-length: disable}}", "-s"]
+        files: \.(yaml|yml)$
