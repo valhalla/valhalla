@@ -1,6 +1,8 @@
 FROM ubuntu:20.04
 
-ADD install-shared-deps.sh .
+WORKDIR /
+
+COPY install-shared-deps.sh .
 RUN bash ./install-shared-deps.sh
 
 # set paths
