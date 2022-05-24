@@ -20,3 +20,8 @@ repos:
       - id: yamllint
         args: ["-d {extends: relaxed, rules: {line-length: disable}}", "-s"]
         files: \.(yaml|yml)$
+  # Autoformat: YAML, JSON, Markdown, etc.
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v2.6.2
+    hooks:
+      - id: prettier
