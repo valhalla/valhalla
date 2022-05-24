@@ -1,6 +1,8 @@
 FROM i386/ubuntu:18.04
 
-ADD install-shared-deps.sh .
+WORKDIR /
+
+COPY install-shared-deps.sh .
 RUN bash ./install-shared-deps.sh
 
 # set paths
