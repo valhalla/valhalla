@@ -1,6 +1,9 @@
+// boost
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
+// osmium
 #include <osmium/builder/attr.hpp>
 #include <osmium/builder/osm_object_builder.hpp>
 #include <osmium/io/output_iterator.hpp>
@@ -8,6 +11,7 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
+// stl
 #include <iostream>
 #include <regex>
 #include <set>
@@ -18,6 +22,7 @@
 #include <utility>
 
 // valhalla
+#include "filesystem.h"
 #include "midgard/logging.h"
 
 const std::string NODE_SOURCE_IDS_FILE = "original_node_id";
@@ -51,7 +56,9 @@ template <class T> inline std::vector<T> read_vector(std::string file_path) {
   return std::move(vec);
 }
 
-inline void build_pbf(const std::string inPath, const uint64_t initial_osm_id = 0) {
+inline void build_pbf(const std::string inPath,
+                      const std::string osm_file_name,
+                      const uint64_t initial_osm_id = 0) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -59,14 +66,12 @@ inline void build_pbf(const std::string inPath, const uint64_t initial_osm_id = 
   LOG_INFO("reading files for nodes");
   std::vector<uint64_t> node_ids =
       valhalla::detail::read_vector<uint64_t>(inPath + NODE_SOURCE_IDS_FILE);
-  std::vector<uint32_t> node_lats =
-      valhalla::detail::read_vector<uint32_t>(inPath + NODE_POS_LAT_FILE);
-  std::vector<uint32_t> node_lons =
-      valhalla::detail::read_vector<uint32_t>(inPath + NODE_POS_LON_FILE);
+  std::vector<int32_t> node_lats = valhalla::detail::read_vector<int32_t>(inPath + NODE_POS_LAT_FILE);
+  std::vector<int32_t> node_lons = valhalla::detail::read_vector<int32_t>(inPath + NODE_POS_LON_FILE);
   std::vector<uint32_t> node_artificials =
       valhalla::detail::read_vector<uint32_t>(inPath + NODE_IS_ARTIFICIAL_FILE);
 
-  LOG_INFO("converting " + std::to_string(node_ids.size()) + " nodes");
+  LOG_INFO("processing " + std::to_string(node_ids.size()) + " nodes");
   for (auto i = 0; i < node_ids.size(); ++i) {
     std::vector<std::pair<std::string, std::string>> tags;
     if (node_artificials.at(i) == 1)
@@ -102,10 +107,10 @@ inline void build_pbf(const std::string inPath, const uint64_t initial_osm_id = 
   std::vector<uint32_t> link_oneways =
       valhalla::detail::read_vector<uint32_t>(inPath + LINK_ONEWAY_FILE);
 
-  std::string ROAD_CLASS[] = {"motorway",  "trunk",    "primary",
-                              "secondary", "tertiary", "unclassified"};
+  const std::string ROAD_CLASS[] = {"motorway",  "trunk",    "primary",
+                                    "secondary", "tertiary", "unclassified"};
 
-  LOG_INFO("converting " + std::to_string(link_ids.size()) + " nodes");
+  LOG_INFO("processing " + std::to_string(link_ids.size()) + " nodes");
   for (auto i = 0; i < link_ids.size(); ++i) {
     std::vector<uint64_t> nodeids;
     nodeids.emplace_back(link_froms.at(i));
@@ -176,7 +181,7 @@ inline void build_pbf(const std::string inPath, const uint64_t initial_osm_id = 
   osmium::io::Header header;
   header.set("generator", "valhalla-test-creator");
 
-  osmium::io::File output_file{inPath + "test.osm.pbf", "pbf"};
+  osmium::io::File output_file{inPath + osm_file_name, "pbf"};
 
   // Initialize Writer using the header from above and tell it that it
   // is allowed to overwrite a possibly existing file.
@@ -215,9 +220,35 @@ inline void build_pbf(const std::string inPath, const uint64_t initial_osm_id = 
 } // namespace valhalla
 
 int main(int argc, char** argv) {
-  using namespace valhalla;
-  const std::string path = "/SDD_datadrive/ndslive/data/weu_out_2/";
-  valhalla::detail::build_pbf(path); // nodes
+  std::string input_path;
+  std::string filename = "result.osm.pbf";
+  cxxopts::Options options("pbf_writer",
+                           "\n\npbf_writer is a program that creates *.osm.pbf from binary files\n");
+
+  options.add_options()("h,help", "Print this help message.")(
+      "filename", "filename of output .osm.pbf, defaulat (result.osm.pbf)",
+      cxxopts::value<std::string>())("input_path", "positional arguments",
+                                     cxxopts::value<std::string>(input_path));
+
+  auto result = options.parse(argc, argv);
+
+  if (result.count("help")) {
+    std::cout << options.help() << "\n";
+    return EXIT_SUCCESS;
+  }
+
+  if (result.count("filename")) {
+    filename = result["filename"].as<std::string>();
+  }
+
+  if (result.count("input_path")) {
+    input_path = result["input_path"].as<std::string>();
+    if (input_path.back() != '/') {
+      input_path.push_back('/');
+    }
+  }
+
+  valhalla::detail::build_pbf(input_path, filename); // nodes
   LOG_INFO("Finished");
   return 0;
 }

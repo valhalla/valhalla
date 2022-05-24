@@ -42,7 +42,7 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   streetnames_us streetname_us tilehierarchy tiles transitdeparture transitroute transitschedule
   transitstop turn turnlanes util_midgard util_skadi vector2 verbal_text_formatter verbal_text_formatter_us
   verbal_text_formatter_us_co verbal_text_formatter_us_tx viterbi_search compression filesystem traffictile
-  incident_loading worker_nullptr_tiles tar_index curl_tilegetter pbf_writter) 
+  incident_loading worker_nullptr_tiles tar_index curl_tilegetter pbf_writer) 
 
 if(ENABLE_DATA_TOOLS)
   list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
@@ -82,6 +82,7 @@ foreach(test ${tests})
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
+  target_include_directories(${test} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
   if (LUAJIT_FOUND AND APPLE)
     # Using LuaJIT on macOS requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
