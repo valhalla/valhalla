@@ -224,7 +224,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
 
       // we need to cut segments where a match result is marked as a break
       // this loops through all interpolated points in between the stateful points (if any)
-      // and cuts segments if necessary
+      // and cuts segments and updates their first/last matched point idx's
       auto first_segment = segments.begin();
       for (int cut_begin_idx = prev_idx, cut_end_idx = prev_idx + 1; cut_end_idx <= curr_idx;
            ++cut_end_idx) {
@@ -239,36 +239,32 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
                      new_segments);
 
         if (!new_segments.size()) {
+          cut_begin_idx = cut_end_idx;
+
           // handle very last segment
+          // TODO: re-factor with the same statements further below
           if (cut_end_idx == match_results.size() - 1) {
             route.back().last_match_idx = cut_end_idx;
             route.back().target = match_results[cut_end_idx].distance_along;
           }
-          cut_begin_idx = cut_end_idx;
           continue;
         } else if (new_segments.size() >= 2) {
+          // if we now have 2 (or more) segments the two matched points are on
+          // different segments. it might be many more than 2 but we only care
+          // to update the first and the last as the ones in between don't have
+          // a matched point on them
           new_segments.front().first_match_idx = first_match_prev_seg;
           new_segments.front().last_match_idx = cut_begin_idx;
-          new_segments.front().target = 1;
-
           new_segments.back().first_match_idx = cut_end_idx;
-          new_segments.back().source = 0;
+          // we don't know yet the last segment's last_match_idx,
+          // unless this is the last segment we'll replace it further down
 
           first_match_prev_seg = cut_end_idx;
         }
 
+        // replace the last segment in the route with the first new segment
         if (!match_results[cut_begin_idx].is_break_point && !route.empty() &&
             !route.back().discontinuity && route.back().edgeid == new_segments.front().edgeid) {
-          // // we modify the first segment of the new_segments accordingly to replace the previous
-          // // one in the route.
-          // new_segments.front().source = route.back().source;
-          // Prefer first_match_idx from previous segments but do not replace valid value with
-          // invalid.
-          if (route.back().first_match_idx != -1)
-            new_segments.front().first_match_idx = route.back().first_match_idx;
-          // Prefer last_match_idx from new segments but do not replace valid value with invalid.
-          if (new_segments.front().last_match_idx == -1)
-            new_segments.front().last_match_idx = route.back().last_match_idx;
           route.pop_back();
         }
 
@@ -278,6 +274,13 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
 
         // after we figured out whether or not we need to merge the last one we keep the rest
         route.insert(route.end(), new_segments.cbegin(), new_segments.cend());
+
+        // handle very last segment
+        // TODO: re-factor with the same statements further up
+        if (cut_end_idx == match_results.size() - 1) {
+          route.back().last_match_idx = cut_end_idx;
+          route.back().target = match_results[cut_end_idx].distance_along;
+        }
 
         cut_begin_idx = cut_end_idx;
       }
