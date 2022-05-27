@@ -85,11 +85,6 @@ bool MergeRoute(const State& source,
                 const State& target,
                 std::vector<EdgeSegment>& route,
                 const MatchResult& target_result) {
-  // TODO: this somehow has to take into account the interpolated results. careful though:
-  // interpolated points don't necessarily have to have a matched point on the same edge,
-  // much less be on the same edge as their pred matched point (which could also be an
-  // an interpolated point)
-
   // Discontinuity either from invalid state id or no paths on either side of this states candidates
   const auto route_rbegin = source.RouteBegin(target), route_rend = source.RouteEnd();
   if (route_rbegin == route_rend) {
