@@ -13,8 +13,6 @@ namespace midgard {
 
 namespace {
 constexpr double RAD_PER_METER = 1.0 / 6378160.187;
-constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
-constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
 } // namespace
 constexpr double INVALID_LL = (double)0xBADBADBAD;
 /**
