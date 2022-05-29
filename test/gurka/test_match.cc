@@ -11,21 +11,21 @@ TEST(Standalone, BasicMatch) {
 
   const std::string ascii_map = R"(
       1
-    A---2B-3-4C
-              |
-              |5
-              D
+    A---2B-3-45C
+               |
+               |6
+               D
          )";
 
   const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                             {"BC", {{"highway", "primary"}}},
                             {"CD", {{"highway", "primary"}}}};
 
-  const double gridsize = 10;
+  const double gridsize = 5;
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/basic_match");
 
-  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"1", "2", "3", "4", "5"},
+  auto result = gurka::do_action(valhalla::Options::trace_route, map, {"1", "2", "3", "4", "5", "6"},
                                  "auto", {}, {}, nullptr, "via");
 
   gurka::assert::osrm::expect_match(result, {"AB", "CD"});
@@ -34,7 +34,12 @@ TEST(Standalone, BasicMatch) {
                                                 DirectionsLeg::Maneuver::kRight,
                                                 DirectionsLeg::Maneuver::kDestination});
 
-  gurka::assert::raw::expect_path_length(result, 0.100, 0.001);
+  gurka::assert::raw::expect_path_length(result, 0.055, 0.001);
+
+  // confirm one of the interpolated points has the right edge index
+  auto json = gurka::convert_to_json(result, valhalla::Options_Format_json);
+  ASSERT_EQ(json["matched_points"][4]["type"].GetString(), "interpolated");
+  ASSERT_EQ(json["matched_points"][4]["edge_index"].GetInt(), 1);
 }
 
 TEST(Standalone, UturnMatch) {
