@@ -38,6 +38,7 @@
    * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
    * FIXED: valhalla_run_matrix was failing (could not find proper max_matrix_distance) [#3635](https://github.com/valhalla/valhalla/pull/3635)
    * FIXED: Removed duplicate degrees/radians constants [#3642](https://github.com/valhalla/valhalla/pull/3642)
+   * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3646)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
