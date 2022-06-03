@@ -365,11 +365,14 @@ uint32_t AddShortcutEdges(GraphReader& reader,
                           const GraphId& start_node,
                           const uint32_t edge_index,
                           const uint32_t edge_count,
-                          std::unordered_map<uint32_t, uint32_t>& shortcuts) {
+                          std::unordered_map<uint32_t, uint32_t>& shortcuts,
+                          std::unordered_set<GraphId>& last_nodes) {
   // Shortcut edges have to start at a node that is not contracted - return if
-  // this node can be contracted.
+  // this node can be contracted and is not a terminus of a pervious shortcut.
   EdgePairs edgepairs;
-  if (CanContract(reader, tile, start_node, edgepairs)) {
+  std::unordered_set<GraphId>::const_iterator prev_shortcut = last_nodes.find(start_node);
+
+  if (CanContract(reader, tile, start_node, edgepairs) || prev_shortcut != last_nodes.end()) {
     return 0;
   }
   // Variable to check if this is a sliced shortcut w shortcut was too long
@@ -402,7 +405,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     // Get the end node and check if the edge is set as a matching, entering
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
-    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
+    if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id) ||
+        prev_shortcut != last_nodes.end()) {
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
       uint32_t length = newedge.length();
@@ -457,6 +461,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         if (last_edge(tile, end_node, edgepairs)) {
           break;
         }
+        GraphId curr_edge = next_edge_id;
 
         // Edge should match one of the 2 first (inbound) edges in the
         // pair. Choose the matching outgoing (second) edge.
@@ -477,6 +482,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // Terminate shortcut if edge length has exceeded maximum length
         auto new_length = length + tile->directededge(next_edge_id)->length();
         if (new_length >= kMaxEdgeLength) {
+          graph_tile_ptr curr_tile = reader.GetGraphTile(curr_edge);
+          last_nodes.insert(curr_tile->directededge(curr_edge)->endnode());
           break;
         }
         length = new_length;
@@ -592,6 +599,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
 // Form shortcuts for tiles in this level.
 uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
+  // Hashset to keep track of nodes of shortcuts that are longer than limit
+  std::unordered_set<GraphId> last_nodes;
+
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
@@ -639,7 +649,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
-                                         old_edge_count, shortcuts);
+                                         old_edge_count, shortcuts, last_nodes);
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
