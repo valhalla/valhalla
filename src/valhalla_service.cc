@@ -116,6 +116,7 @@ int main(int argc, char** argv) {
           break;
         case valhalla::Options::chinese_postman:
           std::cout << actor.chinese_postman(request_str, nullptr, &request) << std::endl;
+          break;
         case valhalla::Options::status:
           std::cout << actor.status(request_str, nullptr, &request) << std::endl;
           break;
