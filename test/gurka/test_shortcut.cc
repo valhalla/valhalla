@@ -119,9 +119,9 @@ TEST(Shortcuts, CreateTooLong) {
 
   // Check that there are no shortcut edges
   auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));
-  // EXPECT_NEAR(shortcut_edge->length(), 1500000 * 9, 100000);
-  // auto second_sc = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "F"));
-  // EXPECT_NEAR(second_sc->length(), 1500000 * 4, 100000);
+  EXPECT_NEAR(shortcut_edge->length(), 1500000 * 9, 100000);
+  auto second_sc = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "D", "F"));
+  EXPECT_NEAR(second_sc->length(), 1500000 * 4, 100000);
 
   // Ensure that shortcut is not made if length is too long
   EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "F"));

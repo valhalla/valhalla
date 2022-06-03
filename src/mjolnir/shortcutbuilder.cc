@@ -372,7 +372,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   EdgePairs edgepairs;
   std::unordered_set<GraphId>::const_iterator prev_shortcut = last_nodes.find(start_node);
 
-  if (CanContract(reader, tile, start_node, edgepairs) || prev_shortcut != last_nodes.end()) {
+  if (CanContract(reader, tile, start_node, edgepairs) && prev_shortcut == last_nodes.end()) {
     return 0;
   }
   // Variable to check if this is a sliced shortcut w shortcut was too long
