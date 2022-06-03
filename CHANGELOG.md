@@ -36,6 +36,8 @@
    * FIXED: Build tiles with admin/timezone support on Windows [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * FIXED: admin "Saint-Martin" changed name to "Saint-Martin (France)" [#3619](https://github.com/valhalla/valhalla/pull/3619)
    * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
+   * FIXED: valhalla_run_matrix was failing (could not find proper max_matrix_distance) [#3635](https://github.com/valhalla/valhalla/pull/3635)
+   * FIXED: Removed duplicate degrees/radians constants [#3642](https://github.com/valhalla/valhalla/pull/3642)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -84,8 +86,10 @@
    * CHANGED: modernized spatialite syntax [#3580](https://github.com/valhalla/valhalla/pull/3580)
    * ADDED: Options to generate partial results for time distance matrix when there is one source (one to many) or one target (many to one). [#3181](https://github.com/valhalla/valhalla/pull/3181)
    * ADDED: Enhance valhalla_build_elevation with LZ4 recompression support [#3607](https://github.com/valhalla/valhalla/pull/3607)
-   * CHANGED: removed UK admin and upgraded its constituents to countries [#3619](https://github.com/valhalla/valhalla/pull/3619)    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
+   * CHANGED: removed UK admin and upgraded its constituents to countries [#3619](https://github.com/valhalla/valhalla/pull/3619)
    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
+   * ADDED: Shorten down the request delay, when some sources/targets searches are early aborted [#3611](https://github.com/valhalla/valhalla/pull/3611)
+   * ADDED: add `pre-commit` hook for running the `format.sh` script [#3637](https://github.com/valhalla/valhalla/pull/3637)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

@@ -1,0 +1,8 @@
+repos:
+  # Autoformat: Shell files
+  - repo: local
+    hooks:
+    - id: format
+      name: format
+      entry: bash ./scripts/format.sh
+      language: system
