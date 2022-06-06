@@ -1,4 +1,11 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
+
+## Release Date: 2016-01-04
+* **Removed**
+* **Bug Fix**
+* **Enhancement** 
+   * ADDED: MaxAxle count to restrictions [#3648](https://github.com/valhalla/valhalla/pull/3648)
+
 * **Removed**
 * **Bug Fix**
    * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
