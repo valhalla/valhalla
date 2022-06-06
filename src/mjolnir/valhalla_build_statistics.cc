@@ -435,6 +435,9 @@ void build(const boost::property_tree::ptree& pt,
                   case AccessType::kMaxAxleLoad:
                     hgv.axle_load = true;
                     break;
+                  case AccessType::kMaxAxles:
+                    hgv.axles = true;
+                    break;
                   case AccessType::kMaxHeight:
                     hgv.height = true;
                     break;

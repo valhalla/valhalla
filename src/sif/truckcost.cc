@@ -350,6 +350,11 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
         return false;
       }
       break;
+    case AccessType::kMaxAxles:
+      if (axles > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
     case AccessType::kMaxHeight:
       if (height_ > static_cast<float>(restriction.value() * 0.01)) {
         return false;

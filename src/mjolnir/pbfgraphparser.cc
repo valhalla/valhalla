@@ -749,6 +749,14 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+     tag_handlers_["maxaxles"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxAxles);
+      restriction.set_value(std::stof(tag_.second) * 100);
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["hov_type"] = [this]() {
       // If this tag is set then the way is either HOV-2 or HOV-3.
       // There are no other real-world hov levels.
