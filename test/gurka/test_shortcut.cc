@@ -81,7 +81,7 @@ TEST(Shortcuts, CreateTooLong) {
   // Maximum edge length is    16777215
 
   const std::string ascii_map = R"(
-      A--B--C---D--E-F
+      A--B--C---D----E-F
   )";
 
   const gurka::ways ways = {
@@ -117,7 +117,7 @@ TEST(Shortcuts, CreateTooLong) {
 
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  // Check that there are no shortcut edges
+  // Check that shortcut does terminate when maxLength is reached
   auto shortcut_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "A", "D"));
   EXPECT_NEAR(shortcut_edge->length(), 1500000 * 10, 100000);
 
