@@ -369,14 +369,16 @@ uint32_t AddShortcutEdges(GraphReader& reader,
                           std::unordered_set<GraphId>& last_nodes) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted and is not a terminus of a pervious shortcut.
+
+  // TODO: Could loop through last_nodes after proessing all tiles
+  // to continue the shortcut path of the ones terminated because they were
+  // too long. Currently, a shortcut path is continued by another tile at random.
   EdgePairs edgepairs;
   std::unordered_set<GraphId>::const_iterator prev_shortcut = last_nodes.find(start_node);
 
   if (CanContract(reader, tile, start_node, edgepairs) && prev_shortcut == last_nodes.end()) {
     return 0;
   }
-  // Variable to check if this is a sliced shortcut w shortcut was too long
-  bool sliceShortcut = false;
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
   auto last_edge = [&reader](graph_tile_ptr tile, const GraphId& endnode, EdgePairs& edgepairs) {

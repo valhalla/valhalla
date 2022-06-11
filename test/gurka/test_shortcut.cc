@@ -78,7 +78,7 @@ TEST(Shortcuts, CreateInvalid) {
 // The grid size should be greater than the max length that allows shortcuts to be created
 TEST(Shortcuts, CreateTooLong) {
   constexpr double gridsize = 1500000;
-  // Maximum edge length is    16777215
+  // Maximum edge length is   16777215
 
   const std::string ascii_map = R"(
       A--B--C---D----E-F
