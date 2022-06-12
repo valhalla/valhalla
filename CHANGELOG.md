@@ -38,6 +38,7 @@
    * FIXED: openstreetmapspeeds global config with `null`s now supported [#3621](https://github.com/valhalla/valhalla/pull/3621)
    * FIXED: valhalla_run_matrix was failing (could not find proper max_matrix_distance) [#3635](https://github.com/valhalla/valhalla/pull/3635)
    * FIXED: Removed duplicate degrees/radians constants [#3642](https://github.com/valhalla/valhalla/pull/3642)
+   * FIXED: Forgot to adapt driving side and country access rules in [#3619](https://github.com/valhalla/valhalla/pull/3619) [#3652](https://github.com/valhalla/valhalla/pull/3652)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
