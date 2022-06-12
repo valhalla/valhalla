@@ -1,8 +1,11 @@
 #!/bin/sh
 
 error_exit() {
-  echo "error: $1" 1>&2
-  exit $(pkg-config geos --modversion | grep -cvF "3.9")
+    echo "error: $1" 1>&2
+    # the 3.9x version of geos has a double free bug but the output still works
+    if [ $(pkg-config geos --modversion | grep -cF "3.9") -eq 0 ]; then
+        exit 1
+    fi
 }
 
 if  ! which spatialite >/dev/null; then
