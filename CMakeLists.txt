@@ -325,8 +325,8 @@ if(ENABLE_DATA_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla)
-    if (LUAJIT_FOUND AND APPLE)
-      # Using LuaJIT on macOS requires a couple of extra linker flags
+    if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR EQUAL "x86_64")
+      # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
     if(MSVC)
