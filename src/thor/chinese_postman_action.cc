@@ -53,7 +53,6 @@ sources_targets_pair sources_targets_from_nodes(const std::vector<GraphId> nodes
   sources_targets_pair::first_type sources, targets;
   graph_tile_ptr seed_tile, opp_tile;
   for (const auto& seed_node_id : nodes) {
-    std::cout << seed_node_id << " | ";
     // skip missing tiles
     if (!reader.GetGraphTile(seed_node_id, seed_tile))
       continue;
@@ -82,7 +81,6 @@ sources_targets_pair sources_targets_from_nodes(const std::vector<GraphId> nodes
         auto edge_id = tile->id(&edge);
         if (costing.Allowed(&edge, tile, kDisallowShortcut)) {
           source.edges.emplace_back(edge_id, 0, ll, 0);
-          std::cout << edge_id << " ";
         }
 
         // entering the node as a target
@@ -90,10 +88,8 @@ sources_targets_pair sources_targets_from_nodes(const std::vector<GraphId> nodes
         auto opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
         if (opp_id && costing.Allowed(opp_edge, opp_tile, kDisallowShortcut)) {
           target.edges.emplace_back(opp_id, 1, ll, 0);
-          std::cout << opp_id << " ";
         }
       }
-      std::cout << std::endl << std::endl;
     }
 
     // convert it back to pbf for the matrix api
@@ -157,49 +153,20 @@ DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> grap
     return distanceMatrix;
   }
 
-  google::protobuf::RepeatedPtrField<valhalla::Location> source_location_list;
-  google::protobuf::RepeatedPtrField<valhalla::Location> target_location_list;
+  // Create the path locations
+  sources_targets_pair::first_type sources;
+  sources_targets_pair::second_type targets;
+  std::tie(sources, targets) = sources_targets_from_nodes(graph_ids, *costing, *reader);
 
-  for (const auto& graph_id : graph_ids) {
-    GraphId g(graph_id);
-    graph_tile_ptr tile = reader->GetGraphTile(g);
-    auto l = tile->node(g)->latlng(tile->header()->base_ll());
-    Location loc = Location();
-
-    loc.mutable_ll()->set_lng(l.first);
-    loc.mutable_ll()->set_lat(l.second);
-    source_location_list.Add()->CopyFrom(loc);
-    target_location_list.Add()->CopyFrom(loc);
-  }
-
-  try {
-    auto locations = PathLocation::fromPBF(source_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, source_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  try {
-    auto locations = PathLocation::fromPBF(target_location_list, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, target_location_list.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  // get the all pairs matrix result
+  // Get the all pairs matrix result
   CostMatrix costmatrix;
   std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(source_location_list, target_location_list, *reader, mode_costing,
-                                mode, max_matrix_distance);
+      costmatrix.SourceToTarget(sources, targets, *reader, mode_costing, mode, max_matrix_distance);
 
   // Update Distance Matrix
   for (int i = 0; i < graph_ids.size(); i++) {
     for (int j = 0; j < graph_ids.size(); j++) {
-      distanceMatrix[i][j] = td[i * source_location_list.size() + j].dist;
+      distanceMatrix[i][j] = td[i * sources.size() + j].dist;
     }
   }
 
@@ -218,46 +185,17 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
   LOG_DEBUG("computeFullRoute");
   std::vector<GraphId> edge_graph_ids;
 
-  // Setup
-  google::protobuf::RepeatedPtrField<Location> locations_;
+  // Get the locations setup for the algorithm
   std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
                                        GraphId(cpvertex_end.graph_id)};
-  for (const auto& node_id : node_ids) {
-    auto* loc = locations_.Add();
-    auto tile = reader->GetGraphTile(node_id);
-    const auto* node = tile->node(node_id);
-    auto ll = node->latlng(tile->header()->base_ll());
-    auto edge_id = tile->id();
-    edge_id.set_id(node->edge_index());
-    for (const auto& edge : tile->GetDirectedEdges(node_id)) {
-      auto* path_edge = loc->mutable_correlation()->add_edges();
-      path_edge->set_distance(0);
-      path_edge->set_begin_node(true);
-      path_edge->set_end_node(false);
-      loc->mutable_ll()->set_lng(ll.first);
-      loc->mutable_ll()->set_lat(ll.second);
-      path_edge->set_graph_id(edge_id);
-      path_edge->mutable_ll()->set_lng(ll.first);
-      path_edge->mutable_ll()->set_lat(ll.second);
-      ++edge_id;
-    }
-  }
+  auto all_pairs = sources_targets_from_nodes(node_ids, *costing, *reader);
+  auto& source = *all_pairs.first.begin();
+  auto& target = *all_pairs.second.rbegin();
 
-  // This try-catch block below can be replaced with something cheaper
-  try {
-    auto locations = PathLocation::fromPBF(locations_, true);
-    const auto projections = loki::Search(locations, *reader, costing);
-    for (size_t i = 0; i < locations.size(); ++i) {
-      const auto& correlated = projections.at(locations[i]);
-      PathLocation::toPBF(correlated, locations_.Mutable(i), *reader);
-    }
-  } catch (const std::exception&) { throw valhalla_exception_t{171}; }
-
-  auto x = locations_.begin();
-  auto y = std::next(x);
-  thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing_str, *x, *y, options);
-  auto paths = path_algorithm->GetBestPath(*x, *y, *reader, mode_costing, mode, options);
-  path_algorithm->Clear();
+  // Run the route
+  thor::PathAlgorithm* path_algorithm = get_path_algorithm(costing_str, source, target, options);
+  auto paths = path_algorithm->GetBestPath(source, target, *reader, mode_costing, mode, options);
+  path_algorithm->Clear(); // might have to call this again
   // Only take the first path (there is only one path)
   if (paths.size() > 0) {
     auto path = paths[0];
@@ -265,9 +203,9 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
       edge_graph_ids.push_back(p.edgeid);
     }
   } else {
-    auto start_loc_string = std::to_string(x->ll().lng()) + ", " + std::to_string(x->ll().lat());
-    auto end_loc_string = std::to_string(y->ll().lng()) + ", " + std::to_string(y->ll().lat());
-    LOG_WARN("No route from " + start_loc_string + " to " + end_loc_string);
+    auto sll = std::to_string(source.ll().lat()) + "," + std::to_string(source.ll().lng());
+    auto tll = std::to_string(target.ll().lat()) + "," + std::to_string(target.ll().lng());
+    LOG_WARN("No path for chinese vertex pair: " + sll + " to " + tll);
   }
 
   return edge_graph_ids;
