@@ -50,7 +50,7 @@ sources_targets_pair sources_targets_from_nodes(const std::vector<GraphId> nodes
                                                 GraphReader& reader) {
 
   // get all the path locations for all the nodes
-  sources_targets_pair::first_type sources, targets;
+  sources_targets_pair results;
   graph_tile_ptr seed_tile, opp_tile;
   for (const auto& seed_node_id : nodes) {
     // skip missing tiles
@@ -93,11 +93,11 @@ sources_targets_pair sources_targets_from_nodes(const std::vector<GraphId> nodes
     }
 
     // convert it back to pbf for the matrix api
-    PathLocation::toPBF(source, sources.Add(), reader);
-    PathLocation::toPBF(target, targets.Add(), reader);
+    PathLocation::toPBF(source, results.first.Add(), reader);
+    PathLocation::toPBF(target, results.second.Add(), reader);
   }
 
-  return sources_targets_pair{std::move(sources), std::move(targets)};
+  return results;
 }
 
 std::vector<PathInfo> buildPath(GraphReader& graphreader,
