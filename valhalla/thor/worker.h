@@ -105,7 +105,7 @@ protected:
   std::string parse_costing(const Api& request);
 
   // Compute a cost matrix among graph ids. It calls costmatrix.SourceToTarget
-  DistanceMatrix computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
+  DistanceMatrix computeCostMatrix(const std::vector<baldr::GraphId>& graph_ids,
                                    const std::shared_ptr<sif::DynamicCost>& costing,
                                    const float max_matrix_distance);
 

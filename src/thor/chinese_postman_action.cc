@@ -141,7 +141,7 @@ std::vector<PathInfo> buildPath(GraphReader& graphreader,
 }
 
 // Computing the cost matrix between graph ids
-DistanceMatrix thor_worker_t::computeCostMatrix(std::vector<baldr::GraphId> graph_ids,
+DistanceMatrix thor_worker_t::computeCostMatrix(const std::vector<baldr::GraphId>& graph_ids,
                                                 const std::shared_ptr<sif::DynamicCost>& costing,
                                                 const float max_matrix_distance) {
 
