@@ -552,7 +552,7 @@ y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
   if (std::abs(u.first - v.first) < 1e-5) {
     return u.first;
   }
-  if (std::abs(u.second - u.second) < 1e-5) {
+  if (std::abs(u.second - v.second) < 1e-5) {
     return NAN;
   }
   auto m = (v.second - u.second) / (v.first - u.first);
