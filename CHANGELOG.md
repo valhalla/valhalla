@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
 * **Bug Fix**
+   * FIXED: DateTime::is_conditional_active(...) incorrect end week handling [#3655](https://github.com/valhalla/valhalla/pull/3655)
    * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
    * FIXED: Fix precision losses while encoding-decoding distance parameter in openlr [#3374](https://github.com/valhalla/valhalla/pull/3374)
