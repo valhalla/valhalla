@@ -91,6 +91,7 @@
    * CHANGED: expansion service: only track requested max time/distance [#3532](https://github.com/valhalla/valhalla/pull/3509)
    * ADDED: Shorten down the request delay, when some sources/targets searches are early aborted [#3611](https://github.com/valhalla/valhalla/pull/3611)
    * ADDED: add `pre-commit` hook for running the `format.sh` script [#3637](https://github.com/valhalla/valhalla/pull/3637)
+   * CHANGED: upgrade pybind11 to v2.9.2 to remove cmake warning [#3658](https://github.com/valhalla/valhalla/pull/3658)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
