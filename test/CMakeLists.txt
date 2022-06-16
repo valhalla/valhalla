@@ -24,7 +24,8 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src
+  ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)
