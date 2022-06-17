@@ -82,8 +82,8 @@ foreach(test ${tests})
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
-  if (LUAJIT_FOUND AND APPLE)
-    # Using LuaJIT on macOS requires a couple of extra linker flags
+  if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS
     target_link_options(${test} PUBLIC -pagezero_size 10000 -image_base 100000000)
   endif()
