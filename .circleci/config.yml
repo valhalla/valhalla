@@ -146,11 +146,11 @@ jobs:
             - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: mkdir -p build
       - run: cd build && cmake ..
-      - run: make -C build -j4
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 check
+      - run: make -C build -j8 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
