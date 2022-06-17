@@ -31,16 +31,18 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
 // ordered by the best.
 int get_node_candidate_index(const valhalla::Location& location,
                              const GraphId& edge_id,
-                             int* percent_along) {
-  int i = 0;
-  for (const auto& e : location.correlation().edges()) {
+                             double* percent_along) {
+  // see if this edge is an edge candidate for this location
+  for (int i = 0; i < location.correlation().edges_size(); ++i) {
+    const auto& e = location.correlation().edges(i);
     if (e.graph_id() == edge_id) {
-      *percent_along = e.percent_along();
+      // TODO: this will always be 0, this is definitely a bug
+      *percent_along = int(e.percent_along());
       return i;
     }
-    i++;
   }
-  return i;
+  // this signals its not found, ie its not an origin or destination edge candidate
+  return location.correlation().edges_size();
 }
 
 using sources_targets_pair = std::pair<google::protobuf::RepeatedPtrField<valhalla::Location>,
@@ -252,75 +254,65 @@ void thor_worker_t::chinese_postman(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
-
-  auto correlated = request.options().locations();
-  auto it = correlated.begin();
-  auto origin = &it;
-  valhalla::Location originLocation = **origin;
-
-  it++;
-  auto destination = &it;
-  valhalla::Location destinationLocation = **destination;
-
-  midgard::PointLL originPoint = to_ll(originLocation);
-  midgard::PointLL destinationPoint = to_ll(destinationLocation);
-
-  ChinesePostmanGraph G;
-
+  // basic init
   parse_locations(request);
   controller = AttributesController(request.options());
   auto costing_str = parse_costing(request);
   auto& options = *request.mutable_options();
   const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
-
   auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
-  std::list<std::string> exclude_edge_ids;
 
+  // remember excluded edges
+  std::unordered_set<uint64_t> exclude_edge_ids;
   for (auto& exclude_edge : co.exclude_edges()) {
-    exclude_edge_ids.push_back(std::to_string(GraphId(exclude_edge.id())));
+    exclude_edge_ids.insert(exclude_edge.id());
   }
 
-  int currentOriginNodeIndex = originLocation.correlation().edges().size();
+  // setup for the origin location
+  auto& origin = *request.mutable_options()->mutable_locations(0);
+  int currentOriginNodeIndex = origin.correlation().edges().size();
   CPVertex originVertex;
   int candidateOriginNodeIndex;
-  int originPercentAlong;
+  double originPercentAlong;
 
-  int currentDestinationNodeIndex = destinationLocation.correlation().edges().size();
+  // setup for the destination location
+  auto& destination = *request.mutable_options()->mutable_locations(1);
+  int currentDestinationNodeIndex = destination.correlation().edges().size();
   CPVertex destinationVertex;
   int candidateDestinationNodeIndex;
-  int destinationPercentAlong;
+  double destinationPercentAlong;
 
   // Add chinese edges to the CP Graph
+  ChinesePostmanGraph G;
   for (auto& edge : co.chinese_edges()) {
     // Exclude the edge if the edge is in exclude_edges
-    bool excluded = (std::find(exclude_edge_ids.begin(), exclude_edge_ids.end(),
-                               std::to_string(GraphId(edge.id()))) != exclude_edge_ids.end());
-    if (excluded)
+    if (exclude_edge_ids.find(edge.id()) != exclude_edge_ids.end())
       continue;
 
+    // we need to figure out which end of the edge we are going to go with
+    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
+    if (!end_node.Is_Valid())
+      continue;
+    CPVertex end_vertex = CPVertex(end_node);
     GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
     CPVertex start_vertex = CPVertex(start_node);
-    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
-    CPVertex end_vertex = CPVertex(end_node);
 
-    // Find the vertex for the origin location
+    // Find the vertex for the origin
     candidateOriginNodeIndex =
-        get_node_candidate_index(originLocation, GraphId(edge.id()), &originPercentAlong);
+        get_node_candidate_index(origin, GraphId(edge.id()), &originPercentAlong);
     if (candidateOriginNodeIndex < currentOriginNodeIndex) {
       if (originPercentAlong < 0.5) {
         originVertex = start_vertex;
       } else {
         originVertex = end_vertex;
       }
-
       currentOriginNodeIndex = candidateOriginNodeIndex;
     }
     G.addVertex(start_vertex);
 
     // Find the vertex for the destination
     candidateDestinationNodeIndex =
-        get_node_candidate_index(destinationLocation, GraphId(edge.id()), &destinationPercentAlong);
+        get_node_candidate_index(destination, GraphId(edge.id()), &destinationPercentAlong);
     if (candidateDestinationNodeIndex < currentDestinationNodeIndex) {
       // Check this part of the code
       if (destinationPercentAlong < 0.5) {
@@ -340,12 +332,11 @@ void thor_worker_t::chinese_postman(Api& request) {
     CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
+
   // If the node index is more than the path_edge size, that means that there is no suitable
   // node for the origin or destination location.
-  if (currentOriginNodeIndex >= originLocation.correlation().edges().size()) {
-    throw valhalla_exception_t(451);
-  }
-  if (currentDestinationNodeIndex >= destinationLocation.correlation().edges().size()) {
+  if (currentOriginNodeIndex == origin.correlation().edges().size() ||
+      currentDestinationNodeIndex == destination.correlation().edges().size()) {
     throw valhalla_exception_t(451);
   }
 
@@ -363,10 +354,8 @@ void thor_worker_t::chinese_postman(Api& request) {
     auto reverseEulerPath = G.computeIdealEulerCycle(originVertex);
     // Build the edge graph ids from the computed euler path
     edgeGraphIds = buildEdgeIds(reverseEulerPath, G, options, costing_str, costing_);
-  } else {
-    // If the graph is not ideal, we need to make it ideal by creating a "imaginary" edge between the
-    // unbalanced nodes
-
+  } // If the graph is not ideal, we fix it by creating "imaginary" edges between the unbalanced nodes
+  else {
     // First, get all the unbalanced nodes
     auto sorted_unbalanced_nodes = G.getUnbalancedVertices();
 
@@ -374,10 +363,9 @@ void thor_worker_t::chinese_postman(Api& request) {
     bool originNodeChecked = false;
     bool destinationNodeChecked = false;
 
-    // Populate the list of node which has too many incoming and too few incoming edges
-    std::vector<baldr::GraphId> overNodes;  // Incoming > Outcoming edges
-    std::vector<baldr::GraphId> underNodes; // Incoming < Outcoming edges
-
+    // Populate the list of nodes which have too many incoming and too few outgoing edges
+    std::vector<baldr::GraphId> overNodes;  // Incoming > Outgoing edges
+    std::vector<baldr::GraphId> underNodes; // Incoming < Outgoing edges
     for (auto const& v : G.getUnbalancedVerticesMap()) {
       // Calculate the number of needed extra edges to make it balance
       int extraEdges = 0;
@@ -455,10 +443,11 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Start build path here
   LOG_DEBUG("Building full path");
   bool invariant = options.date_time_type() != Options::no_time;
-  auto time_info = TimeInfo::make(originLocation, *reader, &tz_cache_);
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+  auto time_info = TimeInfo::make(origin, *reader, &tz_cache_);
   std::vector<PathInfo> path =
-      buildPath(*reader, options, originLocation, destinationLocation, time_info, invariant,
-                edgeGraphIds, costing_, originPercentAlong, destinationPercentAlong);
+      buildPath(*reader, options, origin, destination, time_info, invariant, edgeGraphIds, costing_,
+                originPercentAlong, destinationPercentAlong);
 
   std::list<valhalla::Location> throughs; // Empty
   std::vector<std::string> algorithms{"Chinese Postman"};
@@ -472,8 +461,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   }
   auto& leg = *route->mutable_legs()->Add();
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias; // Empty
-  TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
-                        originLocation, destinationLocation, leg, algorithms, interrupt);
+  TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(), origin,
+                        destination, leg, algorithms, interrupt);
 }
 
 } // namespace thor
