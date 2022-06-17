@@ -129,6 +129,7 @@ jobs:
 
   build-osx:
     executor: macos
+    resource_class: large
     steps:
       - checkout
       - install_macos_dependencies
