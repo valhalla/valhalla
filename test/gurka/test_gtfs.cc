@@ -126,12 +126,12 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(trips[0].trip_id, "bar");
 
   const auto& stops = feed.get_stops();
-  EXPECT_EQ(stops.size(), 2); 
-  EXPECT_EQ(stops[1].stop_id,"foo2");
+  EXPECT_EQ(stops.size(), 2);
+  EXPECT_EQ(stops[1].stop_id, "foo2");
 
-  const auto& shapes = feed.get_shapes(); 
+  const auto& shapes = feed.get_shapes();
   EXPECT_EQ(shapes[0].shape_id, "square");
 
-  const auto& calendarGTFS = feed.get_calendar(); 
-  EXPECT_EQ(calendarGTFS[0].service_id, "bon"); 
+  const auto& calendarGTFS = feed.get_calendar();
+  EXPECT_EQ(calendarGTFS[0].service_id, "bon");
 }
