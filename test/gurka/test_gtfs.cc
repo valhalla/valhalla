@@ -37,6 +37,14 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo);
+
+  struct gtfs::Stop secondStop {
+    .stop_id = "foo2", .coordinates_present = true, .stop_lat = 0.2, .stop_lon = 0.2,
+    .parent_station = "1", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .stop_name = gtfs::Text("SECOND STOP"), .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(secondStop);
   feed.write_stops("../test/data/gtfs_test/");
 
   // write routes.txt
@@ -87,13 +95,22 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_calendar_dates("../test/data/gtfs_test/");
 
   // write shapes.txt
-  struct ShapePoint shapeOne {
-    .shape_id = "square", .shape_pt_lat = 0.2, .shape_pt_lon = 0.2, .shape_pt_sequence = 1,
-    .shape_id = "square", .shape_pt_lat = 0.21, .shape_pt_lon = 0.21, .shape_pt_sequence = 2,
-    .shape_id = "square", .shape_pt_lat = 0.22, .shape_pt_lon = 0.22, .shape_pt_sequence = 3,
-    .shape_id = "square", .shape_pt_lat = 0.23, .shape_pt_lon = 0.23, .shape_pt_sequence = 4,
+  struct ShapePoint shapePointOne {
+    .shape_id = "square", .shape_pt_lat = 0.2, .shape_pt_lon = 0.2, .shape_pt_sequence = 1
   };
-  feed.add_shape(shapeOne);
+  struct ShapePoint shapePointTwo {
+    .shape_id = "square", .shape_pt_lat = 0.21, .shape_pt_lon = 0.21, .shape_pt_sequence = 2
+  };
+  struct ShapePoint shapePointThree {
+    .shape_id = "square", .shape_pt_lat = 0.22, .shape_pt_lon = 0.22, .shape_pt_sequence = 3
+  };
+  struct ShapePoint shapePointFour {
+    .shape_id = "square", .shape_pt_lat = 0.23, .shape_pt_lon = 0.23, .shape_pt_sequence = 4
+  };
+  feed.add_shape(shapePointOne);
+  feed.add_shape(shapePointTwo);
+  feed.add_shape(shapePointThree);
+  feed.add_shape(shapePointFour);
   feed.write_shapes("../test/data/gtfs_test/");
 
   // write frequencies.txt
