@@ -148,8 +148,9 @@ void compute_and_fill_shape(const BestProjection& best,
 }
 
 const static auto VALID_EDGE_USES = std::unordered_set<Use>{
-    Use::kRoad,    Use::kLivingStreet, Use::kCycleway,   Use::kSidewalk,
-    Use::kFootway, Use::kPath,         Use::kPedestrian,
+    Use::kRoad, Use::kLivingStreet, Use::kCycleway, Use::kSidewalk,    Use::kFootway,
+    Use::kPath, Use::kPedestrian,   Use::kAlley,    Use::kServiceRoad,
+
 };
 
 std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vector<OSMNode>& osm_bss) {
