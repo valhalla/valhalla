@@ -147,6 +147,11 @@ void compute_and_fill_shape(const BestProjection& best,
   std::copy(best.shape.begin() + cloest_index + 1, best.shape.end(), std::back_inserter(end.shape));
 }
 
+const static auto VALID_EDGE_USES = std::unordered_set<Use>{
+    Use::kRoad,    Use::kLivingStreet, Use::kCycleway,   Use::kSidewalk,
+    Use::kFootway, Use::kPath,         Use::kPedestrian,
+};
+
 std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vector<OSMNode>& osm_bss) {
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
@@ -181,11 +186,11 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
         const DirectedEdge* directededge = local_tile.directededge(node->edge_index() + j);
         auto edgeinfo = local_tile.edgeinfo(directededge);
 
-        if (directededge->use() == Use::kTransitConnection ||
-            directededge->use() == Use::kEgressConnection ||
-            directededge->use() == Use::kPlatformConnection) {
+        auto found = VALID_EDGE_USES.count(directededge->use());
+        if (!found) {
           continue;
         }
+
         if ((!(directededge->forwardaccess() & kBicycleAccess) &&
              !(directededge->forwardaccess() & kPedestrianAccess)) ||
             directededge->is_shortcut()) {
