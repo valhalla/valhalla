@@ -37,7 +37,7 @@ int get_node_candidate_index(const valhalla::Location& location,
     const auto& e = location.correlation().edges(i);
     if (e.graph_id() == edge_id) {
       // TODO: this will always be 0, this is definitely a bug
-      *percent_along = int(e.percent_along());
+      *percent_along = e.percent_along();
       return i;
     }
   }
