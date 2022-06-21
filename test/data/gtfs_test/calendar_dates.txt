@@ -1,0 +1,2 @@
+service_id,date,exception_type
+bon,20220202,1
