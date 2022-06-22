@@ -180,7 +180,7 @@ void thor_worker_t::centroid(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  parse_locations(request);
+  adjust_scores(request);
   controller = AttributesController(request.options());
   auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
@@ -216,7 +216,7 @@ void thor_worker_t::route(Api& request) {
   auto _ = measure_scope_time(request);
 
   auto& options = *request.mutable_options();
-  parse_locations(request);
+  adjust_scores(request);
   controller = AttributesController(options);
   auto costing = parse_costing(request);
 

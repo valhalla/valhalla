@@ -94,7 +94,7 @@ protected:
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
 
-  void parse_locations(Api& request);
+  void adjust_scores(Api& request);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
 
