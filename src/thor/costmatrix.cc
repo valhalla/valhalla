@@ -265,34 +265,36 @@ void CostMatrix::Initialize(
 }
 
 // Iterate the forward search from the source/origin location.
-void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphReader& graphreader) {
+void CostMatrix::ForwardSearch(const uint32_t source_index,
+                               const uint32_t n,
+                               GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this source location
-  auto& adj = source_adjacency_[index];
-  auto& edgelabels = source_edgelabel_[index];
+  auto& adj = source_adjacency_[source_index];
+  auto& edgelabels = source_edgelabel_[source_index];
   uint32_t pred_idx = adj.pop();
   if (pred_idx == kInvalidLabel) {
     // Forward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     for (uint32_t target = 0; target < target_count_; target++) {
-      UpdateStatus(index, target);
+      UpdateStatus(source_index, target);
     }
-    source_status_[index].threshold = 0;
+    source_status_[source_index].threshold = 0;
     return;
   }
 
   // Get edge label and check cost threshold
   BDEdgeLabel pred = edgelabels[pred_idx];
   if (pred.cost().secs > current_cost_threshold_) {
-    source_status_[index].threshold = 0;
+    source_status_[source_index].threshold = 0;
     return;
   }
 
   // Settle this edge
-  auto& edgestate = source_edgestatus_[index];
+  auto& edgestate = source_edgestatus_[source_index];
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Check for connections to backwards search.
-  CheckForwardConnections(index, pred, n);
+  CheckForwardConnections(source_index, pred, n);
 
   // Prune path if predecessor is not a through edge
   if (pred.not_thru() && pred.not_thru_pruning()) {
@@ -303,7 +305,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   // hierarchy level if the maximum number of upward transitions has
   // been exceeded.
   GraphId node = pred.endnode();
-  auto& hierarchy_limits = source_hierarchy_limits_[index];
+  auto& hierarchy_limits = source_hierarchy_limits_[source_index];
   if (hierarchy_limits[node.level()].StopExpanding()) {
     return;
   }
@@ -540,30 +542,30 @@ void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
 }
 
 // Expand the backwards search trees.
-void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) {
+void CostMatrix::BackwardSearch(const uint32_t target_index, GraphReader& graphreader) {
   // Get the next edge from the adjacency list for this target location
-  auto& adj = target_adjacency_[index];
-  auto& edgelabels = target_edgelabel_[index];
+  auto& adj = target_adjacency_[target_index];
+  auto& edgelabels = target_edgelabel_[target_index];
   uint32_t pred_idx = adj.pop();
   if (pred_idx == kInvalidLabel) {
     // Backward search is exhausted - mark this and update so we don't
     // extend searches more than we need to
     for (uint32_t source = 0; source < source_count_; source++) {
-      UpdateStatus(source, index);
+      UpdateStatus(source, target_index);
     }
-    target_status_[index].threshold = 0;
+    target_status_[target_index].threshold = 0;
     return;
   }
 
   // Copy predecessor, check cost threshold
   BDEdgeLabel pred = edgelabels[pred_idx];
   if (pred.cost().secs > current_cost_threshold_) {
-    target_status_[index].threshold = 0;
+    target_status_[target_index].threshold = 0;
     return;
   }
 
   // Settle this edge
-  auto& edgestate = target_edgestatus_[index];
+  auto& edgestate = target_edgestatus_[target_index];
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Prune path if predecessor is not a through edge
@@ -575,7 +577,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   // hierarchy level if the maximum number of upward transitions has
   // been exceeded.
   GraphId node = pred.endnode();
-  auto& hierarchy_limits = target_hierarchy_limits_[index];
+  auto& hierarchy_limits = target_hierarchy_limits_[target_index];
   if (hierarchy_limits[node.level()].StopExpanding()) {
     return;
   }
@@ -585,7 +587,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                      const uint32_t, const DirectedEdge*, const bool)>
       expand;
   expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo,
-               const uint32_t index, BDEdgeLabel& pred, const uint32_t pred_idx,
+               const uint32_t target_index, BDEdgeLabel& pred, const uint32_t pred_idx,
                const DirectedEdge* opp_pred_edge, const bool from_transition) {
     uint32_t shortcuts = 0;
     GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -669,7 +671,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       adj.add(idx);
 
       // Add to the list of targets that have reached this edge
-      (*targets_)[edgeid].push_back(index);
+      (*targets_)[edgeid].push_back(target_index);
     }
 
     // Handle transitions - expand from the end node of the transition
@@ -686,7 +688,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         GraphId node = trans->endnode();
         graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), index, pred, pred_idx, opp_pred_edge, true);
+          expand(endtile, node, endtile->node(node), target_index, pred, pred_idx, opp_pred_edge,
+                 true);
         }
         continue;
       }
@@ -708,7 +711,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         opp_pred_edge =
             graphreader.GetGraphTile(pred.opp_edgeid().Tile_Base())->directededge(pred.opp_edgeid());
       }
-      expand(tile, node, nodeinfo, index, pred, pred_idx, opp_pred_edge, false);
+      expand(tile, node, nodeinfo, target_index, pred, pred_idx, opp_pred_edge, false);
     }
   }
 }
