@@ -14,15 +14,6 @@ using namespace valhalla;
 #define shapeOneID "square"
 #define serviceOneID "bon"
 
-// test to read gtfs data from sample
-// TEST(GtfsExample, ReadGtfs) {
-//   Feed feed("../test/data/gtfs_sample");
-//   EXPECT_EQ(feed.read_agencies().code, ResultCode::OK);
-//   const auto& agencies = feed.get_agencies();
-//   EXPECT_EQ(agencies.size(), 1);
-//   EXPECT_EQ(agencies[0].agency_id, "DTA");
-// }
-
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
 
