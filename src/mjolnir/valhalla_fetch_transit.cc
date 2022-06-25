@@ -31,12 +31,14 @@
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
+#include "third_party/just_gtfs/include/just_gtfs/just_gtfs.h"
 #include "valhalla/proto/transit.pb.h"
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
+using namespace gtfs;
 
 std::string url_encode(const std::string& unencoded) {
   char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
@@ -149,6 +151,7 @@ struct weighted_tile_t {
     return w == o.w ? t < o.t : w < o.w;
   }
 };
+
 std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::string& feed) {
   // now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
@@ -222,6 +225,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       }
     }
   }
+
   // we want slowest to build tiles first, routes query is slowest so we weight by that
   // stop pairs is most numerous so that might want to be factored in as well
   std::priority_queue<weighted_tile_t> prioritized;
@@ -272,6 +276,44 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   LOG_INFO("Finished with " + std::to_string(prioritized.size()) + " transit tiles in " +
            std::to_string(feeds.get_child("features").size()) + " feeds");
   return prioritized;
+}
+
+// gtfs version of the which_tiles function
+std::priority_queue<weighted_tile_t> select_tiles() {
+  Feed feed("test/data/gtfs_test"); // in the end loop through all gtfs feeds
+  feed.read_stops();
+  const auto& stops = feed.get_stops();
+
+  std::set<GraphId> tiles;
+  const auto& tile_level = TileHierarchy::levels().back();
+  // calculate maximum and minimum coordinates
+  float min_x = 180, max_x = -180, min_y = 90, max_y = -90;
+  for (auto stop : stops) {
+    auto x = stop.stop_lon;
+    auto y = stop.stop_lat;
+    if (x < min_x) {
+      min_x = x;
+    }
+    if (x > max_x) {
+      max_x = x;
+    }
+    if (y < min_y) {
+      min_y = y;
+    }
+    if (y > max_y) {
+      max_y = y;
+    }
+
+    auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
+    auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
+    for (auto i = min_c; i <= max_c; ++i) {
+      for (auto j = min_r; j <= max_r; ++j) {
+        tiles.emplace(GraphId(tile_level.tiles.TileId(i, j), tile_level.level, 0));
+      }
+    }
+  }
+
+  std::priority_queue<weighted_tile_t> prioritized;
 }
 
 #define set_no_null(T, pt, path, null_value, set)                                                    \

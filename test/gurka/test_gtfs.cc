@@ -8,10 +8,12 @@ using namespace gtfs;
 using namespace valhalla;
 
 #define tripOneID "bar"
+#define tripTwoID "barbar"
 #define stopOneID "foo"
 #define stopTwoID "foo2"
 #define shapeOneID "square"
 #define serviceOneID "bon"
+
 // test to read gtfs data from sample
 // TEST(GtfsExample, ReadGtfs) {
 //   Feed feed("../test/data/gtfs_sample");
@@ -32,7 +34,7 @@ TEST(GtfsExample, WriteGtfs) {
     .agency_timezone = "America/Toronto"
   };
   feed.add_agency(ttc);
-  feed.write_agencies("../test/data/gtfs_test/");
+  feed.write_agencies(("../build/test/data/gtfs_test/"));
 
   // write stops.txt
   struct gtfs::Stop nemo {
@@ -50,7 +52,7 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
-  feed.write_stops("../test/data/gtfs_test/");
+  feed.write_stops(("../build/test/data/gtfs_test/"));
 
   // write routes.txt
   struct Route lineOne {
@@ -59,7 +61,7 @@ TEST(GtfsExample, WriteGtfs) {
     .route_text_color = "black",
   };
   feed.add_route(lineOne);
-  feed.write_routes("../test/data/gtfs_test/");
+  feed.write_routes(("../build/test/data/gtfs_test/"));
 
   // write trips.txt
   struct gtfs::Trip tripOne {
@@ -68,16 +70,20 @@ TEST(GtfsExample, WriteGtfs) {
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
-  feed.write_trips("../test/data/gtfs_test/");
+  feed.write_trips("../build/test/data/gtfs_test/");
 
   // write stop_times.txt
-  struct StopTime stopTimeOne {
-    .trip_id = tripOneID, .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"),
-    .stop_id = stopOneID, .stop_sequence = 0, .stop_headsign = "head", .shape_dist_traveled = 0.0,
-    .timepoint = gtfs::StopTimePoint::Exact,
-  };
-  feed.add_stop_time(stopTimeOne);
-  feed.write_stop_times("../test/data/gtfs_test/");
+  for (int i = 0; i < 4; i++) {
+    struct StopTime stopTime {
+      .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_sequence = 0,
+      .stop_headsign = "head", .shape_dist_traveled = 0.0, .timepoint = gtfs::StopTimePoint::Exact,
+    };
+    stopTime.stop_id = (i % 2 == 0) ? stopOneID : stopTwoID;
+    stopTime.trip_id = (i < 2) ? tripOneID : tripTwoID;
+    feed.add_stop_time(stopTime);
+  }
+
+  feed.write_stop_times("../build/test/data/gtfs_test/");
 
   // write calendar.txt
   struct CalendarItem calendarOne {
@@ -86,18 +92,24 @@ TEST(GtfsExample, WriteGtfs) {
     .wednesday = CalendarAvailability::Available, .thursday = CalendarAvailability::Available,
     .friday = CalendarAvailability::Available, .saturday = CalendarAvailability::Available,
     .sunday = CalendarAvailability::Available, .start_date = Date(2022, 1, 31),
-    .end_date = Date(2022, 2, 1),
+    .end_date = Date(2023, 1, 31),
   };
   feed.add_calendar_item(calendarOne);
-  feed.write_calendar("../test/data/gtfs_test/");
+  feed.write_calendar("../build/test/data/gtfs_test/");
 
   // write calendar_dates.txt
-  struct CalendarDate dateOne {
+  struct CalendarDate servAdded {
     .service_id = serviceOneID, // connected to trip
         .date = Date(2022, 2, 2), .exception_type = gtfs::CalendarDateException::Added,
   };
-  feed.add_calendar_date(dateOne);
-  feed.write_calendar_dates("../test/data/gtfs_test/");
+  struct CalendarDate servRemoved {
+    .service_id = serviceOneID, // connected to trip
+        .date = Date(2022, 2, 3), .exception_type = gtfs::CalendarDateException::Removed,
+  };
+
+  feed.add_calendar_date(servAdded);
+  feed.add_calendar_date(servRemoved);
+  feed.write_calendar_dates(("../build/test/data/gtfs_test/"));
 
   // write shapes.txt
   for (size_t i = 0; i < 4; i++) {
@@ -107,17 +119,24 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_shape(shapePointTest);
   }
 
-  feed.write_shapes("../test/data/gtfs_test/");
+  feed.write_shapes(("../build/test/data/gtfs_test/"));
 
   // write frequencies.txt
-  struct Frequency freqOne {
+  struct Frequency freqBased {
     .trip_id = tripOneID, .start_time = Time(0, 0, 0), .end_time = Time(2, 0, 0),
     .headway_secs = 1800, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
   };
-  feed.add_frequency(freqOne);
-  feed.write_frequencies("../test/data/gtfs_test/");
+  struct Frequency schedBased {
+    .trip_id = tripTwoID, .start_time = Time(0, 0, 0), .end_time = Time(2, 0, 0),
+    .headway_secs = 1800, .exact_times = gtfs::FrequencyTripService::ScheduleBased,
+  };
 
-  Feed feed_reader("../test/data/gtfs_test/");
+  feed.add_frequency(freqBased);
+  feed.add_frequency(schedBased);
+  feed.write_frequencies(("../build/test/data/gtfs_test/"));
+
+  Feed feed_reader(("../build/test/data/gtfs_test/"));
+
   // make sure files are actually written
   EXPECT_EQ(feed_reader.read_trips().code, ResultCode::OK);
   const auto& trips = feed_reader.get_trips();
