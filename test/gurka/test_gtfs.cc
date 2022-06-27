@@ -1,5 +1,5 @@
 #include "gurka.h"
-#include "third_party/just_gtfs/include/just_gtfs/just_gtfs.h"
+#include "just_gtfs/just_gtfs.h"
 
 #include "string.h"
 #include <gtest/gtest.h>
