@@ -66,7 +66,7 @@ TEST(GtfsExample, WriteGtfs) {
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
     struct StopTime stopTime {
-      .trip_id = "", .stop_id = "", .arrival_time = Time("6:00:00"), .stop_sequence = 0,
+      .trip_id = "", .stop_id = "", .stop_sequence = 0, .arrival_time = Time("6:00:00"),
       .departure_time = Time("6:00:00"), .stop_headsign = "head", .shape_dist_traveled = 0.0,
       .timepoint = gtfs::StopTimePoint::Exact,
     };
