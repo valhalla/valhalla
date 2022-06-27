@@ -36,7 +36,8 @@ int get_node_candidate_index(const valhalla::Location& location,
   for (int i = 0; i < location.correlation().edges_size(); ++i) {
     const auto& e = location.correlation().edges(i);
     if (e.graph_id() == edge_id) {
-      // TODO: this will always be 0, this is definitely a bug
+      // TODO: shouldnt we just round this to 0 always, basically if it lands on the edge at all lets
+      //  include it in the postman route right?
       *percent_along = e.percent_along();
       return i;
     }
@@ -385,7 +386,7 @@ void thor_worker_t::chinese_postman(Api& request) {
         // extra edges
         extraEdges = abs(v.second);
       }
-      // Populate the overNode and undeNodes
+      // Populate the overNode and underNodes
       for (int i = 0; i < extraEdges; i++) {
         if (v.second > 0) {
           overNodes.push_back(GraphId(v.first));
@@ -395,8 +396,8 @@ void thor_worker_t::chinese_postman(Api& request) {
       }
     }
     // Handle if the origin or destination nodes are not managed yet
-    // This can happen when the origin or destinaton has the same number of incoming and outcoming
-    // edge, but the route has different origin and destination
+    // This can happen when the origin or destinaton has the same number of incoming and outgoing
+    // edges, but the route has a different origin and destination
     if (!isSameOriginDestination) {
       if (!originNodeChecked) {
         sorted_unbalanced_nodes.push_back(originVertex.graph_id);
@@ -417,6 +418,7 @@ void thor_worker_t::chinese_postman(Api& request) {
       pairingMatrix.push_back(std::vector<double>{});
       for (int j = 0; j < underNodes.size(); j++) {
         int overNodeIndex = getCPVertexIndex(overNodes[i], sorted_unbalanced_nodes);
+        // TODO: This should be using j, need to update tests
         int underNodeIndex = getCPVertexIndex(underNodes[i], sorted_unbalanced_nodes);
 
         double distance = distance_matrix[overNodeIndex][underNodeIndex];
@@ -449,18 +451,9 @@ void thor_worker_t::chinese_postman(Api& request) {
       buildPath(*reader, options, origin, destination, time_info, invariant, edgeGraphIds, costing_,
                 originPercentAlong, destinationPercentAlong);
 
-  std::list<valhalla::Location> throughs; // Empty
-  std::vector<std::string> algorithms{"Chinese Postman"};
-  TripRoute* route = nullptr;
-  valhalla::Trip& trip = *request.mutable_trip();
-
   // Form output information based on path edges
-  if (trip.routes_size() == 0 || options.alternates() > 0) {
-    route = trip.mutable_routes()->Add();
-    route->mutable_legs()->Reserve(options.locations_size());
-  }
-  auto& leg = *route->mutable_legs()->Add();
-  std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> vias; // Empty
+  std::vector<std::string> algorithms{"Chinese Postman"};
+  auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
   TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(), origin,
                         destination, leg, algorithms, interrupt);
 }

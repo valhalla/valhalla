@@ -42,13 +42,13 @@ using EdgeItr = boost::graph_traits<CPGraph>::edge_iterator;                 // 
 class ChinesePostmanGraph {
 private:
   CPGraph G;
-  std::map<std::string, Vertex> vertices;
+  std::unordered_map<std::string, Vertex> vertices;
 
   // store the indegree and outdegree for each node, updated when an edge is added.
-  std::map<std::string, int> indegrees;
-  std::map<std::string, int> outdegrees;
+  std::unordered_map<std::string, int> indegrees;
+  std::unordered_map<std::string, int> outdegrees;
 
-  // Used for Hiezholer's algorithm
+  // Used for Hierholzer's algorithm
   std::vector<int> reversedEulerPath; // Storing euler path, but reversed
   std::map<int, int> outEdges;        // Storing the number of outedges from a node index
   std::map<int, std::vector<int>>
