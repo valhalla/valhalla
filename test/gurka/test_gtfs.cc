@@ -66,8 +66,8 @@ TEST(GtfsExample, WriteGtfs) {
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
     struct StopTime stopTime {
-      .trip_id = "", .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"),
-      .stop_id = "", .stop_sequence = 0, .stop_headsign = "head", .shape_dist_traveled = 0.0,
+      .trip_id = "", .stop_id = "", .arrival_time = Time("6:00:00"), .stop_sequence = 0,
+      .departure_time = Time("6:00:00"), .stop_headsign = "head", .shape_dist_traveled = 0.0,
       .timepoint = gtfs::StopTimePoint::Exact,
     };
     stopTime.stop_id = (i % 2 == 0) ? stopOneID : stopTwoID;
@@ -142,7 +142,6 @@ TEST(GtfsExample, WriteGtfs) {
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 4);
   EXPECT_EQ(shapes[0].shape_id, shapeOneID);
-  EXPECT_EQ(shapes[7].shape_id, "hi");
 
   const auto& calendarGTFS = feed_reader.get_calendar();
   EXPECT_EQ(calendarGTFS.size(), 1);
