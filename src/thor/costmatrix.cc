@@ -37,7 +37,7 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 CostMatrix::CostMatrix()
     : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
-      current_cost_threshold_(0), targets_{new TargetMap} {
+      current_cost_threshold_(0), reached_targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -67,12 +67,12 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // construction.
 void CostMatrix::clear() {
   // Clear the target edge markings
-  for (auto& iter : *targets_) {
+  for (auto& iter : *reached_targets_) {
     iter.second.clear();
     iter.second.resize(0);
     iter.second.shrink_to_fit();
   }
-  targets_->clear();
+  reached_targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
@@ -440,8 +440,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // Get the opposing edge. Get a list of target locations whose reverse
   // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
-  auto targets = targets_->find(oppedge);
-  if (targets == targets_->end()) {
+  auto targets = reached_targets_->find(oppedge);
+  if (targets == reached_targets_->end()) {
     return;
   }
 
@@ -671,7 +671,7 @@ void CostMatrix::BackwardSearch(const uint32_t target_index, GraphReader& graphr
       adj.add(idx);
 
       // Add to the list of targets that have reached this edge
-      (*targets_)[edgeid].push_back(target_index);
+      (*reached_targets_)[edgeid].push_back(target_index);
     }
 
     // Handle transitions - expand from the end node of the transition
@@ -870,7 +870,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       target_adjacency_[index].add(idx);
       target_edgestatus_[index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                     graphreader.GetGraphTile(opp_edge_id));
-      (*targets_)[opp_edge_id].push_back(index);
+      (*reached_targets_)[opp_edge_id].push_back(index);
     }
     index++;
   }

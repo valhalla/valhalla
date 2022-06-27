@@ -251,8 +251,8 @@ protected:
 private:
   class TargetMap;
 
-  // Mark each target edge with a list of target indexes that have reached it
-  std::unique_ptr<TargetMap> targets_;
+  // Maps each edge to a list of target indexes that have been reached by it
+  std::unique_ptr<TargetMap> reached_targets_;
 };
 
 } // namespace thor
