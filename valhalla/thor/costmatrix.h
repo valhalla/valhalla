@@ -157,7 +157,7 @@ protected:
   std::vector<EdgeStatus> target_edgestatus_;
 
   // List of best connections found so far
-  std::vector<BestCandidate> best_connection_;
+  std::vector<BestCandidate> best_connections_;
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
