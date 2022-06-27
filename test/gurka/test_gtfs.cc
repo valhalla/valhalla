@@ -7,12 +7,12 @@
 using namespace gtfs;
 using namespace valhalla;
 
-#define tripOneID "bar"
-#define tripTwoID "barbar"
-#define stopOneID "foo"
-#define stopTwoID "foo2"
-#define shapeOneID "square"
-#define serviceOneID "bon"
+const std::string tripOneID = "bar";
+const std::string tripTwoID = "barbar";
+const std::string stopOneID = "foo";
+const std::string stopTwoID = "foo2";
+const std::string shapeOneID = "square";
+const std::string serviceOneID = "bon";
 
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
@@ -25,7 +25,7 @@ TEST(GtfsExample, WriteGtfs) {
     .agency_timezone = "America/Toronto"
   };
   feed.add_agency(ttc);
-  feed.write_agencies(("../build/test/data/gtfs_test/"));
+  feed.write_agencies(("test/data/gtfs_test/"));
 
   // write stops.txt
   struct gtfs::Stop nemo {
@@ -43,7 +43,7 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
-  feed.write_stops(("../build/test/data/gtfs_test/"));
+  feed.write_stops(("test/data/gtfs_test/"));
 
   // write routes.txt
   struct Route lineOne {
@@ -52,7 +52,7 @@ TEST(GtfsExample, WriteGtfs) {
     .route_text_color = "black",
   };
   feed.add_route(lineOne);
-  feed.write_routes(("../build/test/data/gtfs_test/"));
+  feed.write_routes(("test/data/gtfs_test/"));
 
   // write trips.txt
   struct gtfs::Trip tripOne {
@@ -61,7 +61,7 @@ TEST(GtfsExample, WriteGtfs) {
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
-  feed.write_trips("../build/test/data/gtfs_test/");
+  feed.write_trips("test/data/gtfs_test/");
 
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
@@ -74,33 +74,32 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_stop_time(stopTime);
   }
 
-  feed.write_stop_times("../build/test/data/gtfs_test/");
+  feed.write_stop_times("test/data/gtfs_test/");
 
   // write calendar.txt
   struct CalendarItem calendarOne {
-    .service_id = serviceOneID, // connected to trip
-        .monday = CalendarAvailability::Available, .tuesday = CalendarAvailability::Available,
-    .wednesday = CalendarAvailability::Available, .thursday = CalendarAvailability::Available,
-    .friday = CalendarAvailability::Available, .saturday = CalendarAvailability::Available,
-    .sunday = CalendarAvailability::Available, .start_date = Date(2022, 1, 31),
-    .end_date = Date(2023, 1, 31),
+    .service_id = serviceOneID, .monday = CalendarAvailability::Available,
+    .tuesday = CalendarAvailability::Available, .wednesday = CalendarAvailability::Available,
+    .thursday = CalendarAvailability::Available, .friday = CalendarAvailability::Available,
+    .saturday = CalendarAvailability::Available, .sunday = CalendarAvailability::Available,
+    .start_date = Date(2022, 1, 31), .end_date = Date(2023, 1, 31),
   };
   feed.add_calendar_item(calendarOne);
-  feed.write_calendar("../build/test/data/gtfs_test/");
+  feed.write_calendar("test/data/gtfs_test/");
 
   // write calendar_dates.txt
   struct CalendarDate servAdded {
-    .service_id = serviceOneID, // connected to trip
-        .date = Date(2022, 2, 2), .exception_type = gtfs::CalendarDateException::Added,
+    .service_id = serviceOneID, .date = Date(2022, 2, 2),
+    .exception_type = gtfs::CalendarDateException::Added,
   };
   struct CalendarDate servRemoved {
-    .service_id = serviceOneID, // connected to trip
-        .date = Date(2022, 2, 3), .exception_type = gtfs::CalendarDateException::Removed,
+    .service_id = serviceOneID, .date = Date(2022, 2, 3),
+    .exception_type = gtfs::CalendarDateException::Removed,
   };
 
   feed.add_calendar_date(servAdded);
   feed.add_calendar_date(servRemoved);
-  feed.write_calendar_dates(("../build/test/data/gtfs_test/"));
+  feed.write_calendar_dates(("test/data/gtfs_test/"));
 
   // write shapes.txt
   for (size_t i = 0; i < 4; i++) {
@@ -110,7 +109,7 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_shape(shapePointTest);
   }
 
-  feed.write_shapes(("../build/test/data/gtfs_test/"));
+  feed.write_shapes(("test/data/gtfs_test/"));
 
   // write frequencies.txt
   struct Frequency freqBased {
@@ -124,28 +123,29 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_frequency(freqBased);
   feed.add_frequency(schedBased);
-  feed.write_frequencies(("../build/test/data/gtfs_test/"));
+  feed.write_frequencies(("test/data/gtfs_test/"));
 
-  Feed feed_reader(("../build/test/data/gtfs_test/"));
+  Feed feed_reader(("test/data/gtfs_test/"));
+  feed_reader.read_feed();
 
   // make sure files are actually written
   EXPECT_EQ(feed_reader.read_trips().code, ResultCode::OK);
   const auto& trips = feed_reader.get_trips();
-  EXPECT_EQ(trips.size(), 1);
+  EXPECT_EQ(trips.size(), 2);
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   EXPECT_EQ(feed_reader.read_stops().code, ResultCode::OK);
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 2);
+  EXPECT_EQ(stops.size(), 4);
   EXPECT_EQ(stops[1].stop_id, stopTwoID);
 
   EXPECT_EQ(feed_reader.read_shapes().code, ResultCode::OK);
   const auto& shapes = feed_reader.get_shapes();
-  EXPECT_EQ(shapes.size(), 4);
+  EXPECT_EQ(shapes.size(), 8);
   EXPECT_EQ(shapes[0].shape_id, shapeOneID);
 
   EXPECT_EQ(feed_reader.read_calendar().code, ResultCode::OK);
   const auto& calendarGTFS = feed_reader.get_calendar();
-  EXPECT_EQ(calendarGTFS.size(), 1);
+  EXPECT_EQ(calendarGTFS.size(), 2);
   EXPECT_EQ(calendarGTFS[0].service_id, serviceOneID);
 }

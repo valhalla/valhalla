@@ -25,6 +25,7 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
+#include "midgard/tiles.h"
 
 #include "filesystem.h"
 #include "mjolnir/admin.h"
@@ -38,7 +39,19 @@ using namespace boost::property_tree;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
+using namespace valhalla;
 using namespace gtfs;
+
+// to include stop_ids or stops
+typedef struct tileTransitInfo {
+  GraphId graphId;
+  Stops tile_stops;
+  Trips tile_trips;
+  Routes tile_routes;
+  std::vector<Id> service_ids;
+  Agencies tile_agencies;
+  int size;
+} tileTransitInfo;
 
 std::string url_encode(const std::string& unencoded) {
   char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
@@ -279,41 +292,45 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
 }
 
 // gtfs version of the which_tiles function
-std::priority_queue<weighted_tile_t> select_tiles() {
-  Feed feed("test/data/gtfs_test"); // in the end loop through all gtfs feeds
-  feed.read_stops();
+std::priority_queue<tileTransitInfo> select_tiles(const std::string& path) {
+  Feed feed(path);
+  // TODO: CREATE LOOP THROUGH ALL FEEDS
+  feed.read_feed();
   const auto& stops = feed.get_stops();
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().back();
-  // calculate maximum and minimum coordinates
-  float min_x = 180, max_x = -180, min_y = 90, max_y = -90;
-  for (auto stop : stops) {
-    auto x = stop.stop_lon;
-    auto y = stop.stop_lat;
-    if (x < min_x) {
-      min_x = x;
-    }
-    if (x > max_x) {
-      max_x = x;
-    }
-    if (y < min_y) {
-      min_y = y;
-    }
-    if (y > max_y) {
-      max_y = y;
-    }
+  std::priority_queue<tileTransitInfo> prioritized;
 
-    auto min_c = tile_level.tiles.Col(min_x), min_r = tile_level.tiles.Row(min_y);
-    auto max_c = tile_level.tiles.Col(max_x), max_r = tile_level.tiles.Row(max_y);
-    for (auto i = min_c; i <= max_c; ++i) {
-      for (auto j = min_r; j <= max_r; ++j) {
-        tiles.emplace(GraphId(tile_level.tiles.TileId(i, j), tile_level.level, 0));
+  for (auto stop : stops) {
+    tileTransitInfo currTile;
+    double x = stop.stop_lon;
+    double y = stop.stop_lat;
+    // add unique GraphId and stop
+    // might have to typecast these doubles into uint32_t
+    GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
+    currTile.graphId = currId;
+    currTile.tile_stops.push_back(stop);
+    StopTimes currStopTimes = feed.get_stop_times_for_stop(stop.stop_id);
+
+    for (auto stopTime : currStopTimes) {
+      // add trip, route, agency and service_id from stop_time
+      Trip currTrip = *(feed.get_trip(stopTime.trip_id));
+      Trips::iterator trip_it =
+          std::find(currTile.tile_trips.begin(), currTile.tile_trips.end(), currTrip);
+      if (trip_it == currTile.tile_trips.end()) {
+        currTile.tile_trips.push_back(currTrip);
+      }
+      Route currRoute = *(feed.get_route(currTrip.route_id));
+      Routes::iterator route_it =
+          std::find(currTile.tile_routes.begin(), currTile.tile_routes.end(), currTrip);
+      if (route_it == currTile.tile_routes.end()) {
+        currTile.tile_routes.push_back(currRoute);
       }
     }
   }
 
-  std::priority_queue<weighted_tile_t> prioritized;
+  return prioritized;
 }
 
 #define set_no_null(T, pt, path, null_value, set)                                                    \
