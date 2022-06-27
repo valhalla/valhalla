@@ -7,17 +7,17 @@
 using namespace gtfs;
 using namespace valhalla;
 
-const std::string tripOneID = "bar";
-const std::string tripTwoID = "barbar";
-const std::string stopOneID = "foo";
-const std::string stopTwoID = "foo2";
-const std::string shapeOneID = "square";
-const std::string serviceOneID = "bon";
-
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
 
+  const std::string tripOneID = "bar";
+  const std::string tripTwoID = "barbar";
+  const std::string stopOneID = "foo";
+  const std::string stopTwoID = "foo2";
+  const std::string shapeOneID = "square";
+  const std::string serviceOneID = "bon";
   Feed feed;
+  bool gtfs_test = filesystem::create_directories("test/data/gtfs_test/");
 
   // write agency.txt
   struct Agency ttc {
@@ -129,23 +129,21 @@ TEST(GtfsExample, WriteGtfs) {
   feed_reader.read_feed();
 
   // make sure files are actually written
-  EXPECT_EQ(feed_reader.read_trips().code, ResultCode::OK);
+
   const auto& trips = feed_reader.get_trips();
-  EXPECT_EQ(trips.size(), 2);
+  EXPECT_EQ(trips.size(), 1);
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
-  EXPECT_EQ(feed_reader.read_stops().code, ResultCode::OK);
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 4);
+  EXPECT_EQ(stops.size(), 2);
   EXPECT_EQ(stops[1].stop_id, stopTwoID);
 
-  EXPECT_EQ(feed_reader.read_shapes().code, ResultCode::OK);
   const auto& shapes = feed_reader.get_shapes();
-  EXPECT_EQ(shapes.size(), 8);
+  EXPECT_EQ(shapes.size(), 4);
   EXPECT_EQ(shapes[0].shape_id, shapeOneID);
+  EXPECT_EQ(shapes[7].shape_id, "hi");
 
-  EXPECT_EQ(feed_reader.read_calendar().code, ResultCode::OK);
   const auto& calendarGTFS = feed_reader.get_calendar();
-  EXPECT_EQ(calendarGTFS.size(), 2);
+  EXPECT_EQ(calendarGTFS.size(), 1);
   EXPECT_EQ(calendarGTFS[0].service_id, serviceOneID);
 }
