@@ -233,16 +233,6 @@ public:
   uint32_t Clip(std::vector<coord_t>& pts, const bool closed) const;
 
   /**
-   * Intersects the segment formed by u,v with the bounding box
-   *
-   * @param  u  the first point in the segment
-   * @param  v  the second point in the segment
-   * @return Returns true if the segment actually intersected the bounding box
-   *         and moves u and v to actually reflect the intersection points
-   */
-  bool Intersect(coord_t& u, coord_t& v) const;
-
-  /**
    * Expands (if necessary) the bounding box to include the specified
    * bounding box.
    * @param  r2  Bounding bounding box to "combine" with this bounding box.

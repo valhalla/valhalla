@@ -27,3 +27,17 @@ function setup_mason {
   fi
 
 }
+
+function setup_pre_commit {
+  echo "INFO: Installing pre-commit"
+  if [[ $(command -v python3) != "" ]]; then 
+    python3 -m pip install pre-commit
+  elif [[ $(command -v python) != "" ]]; then
+    python -m pip install pre-commit
+  else
+    echo "WARNING: install python3 to set up pre-commit hooks."
+    return
+  fi
+  echo "INFO: Setting up pre-commit hooks"
+  pre-commit install
+}
