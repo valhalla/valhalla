@@ -17,7 +17,7 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string shapeOneID = "square";
   const std::string serviceOneID = "bon";
   Feed feed;
-  bool gtfs_test = filesystem::create_directories("test/data/gtfs_test/");
+  filesystem::create_directories("test/data/gtfs_test/");
 
   // write agency.txt
   struct Agency ttc {
@@ -29,17 +29,17 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write stops.txt
   struct gtfs::Stop nemo {
-    .stop_id = stopOneID, .coordinates_present = true, .stop_lat = 0.1, .stop_lon = 0.1,
-    .parent_station = "0", .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_name = gtfs::Text("POINT NEMO"), .stop_timezone = "America/Toronto",
+    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_lat = 0.1, .stop_lon = 0.1, .parent_station = "0",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
     .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo);
 
   struct gtfs::Stop secondStop {
-    .stop_id = stopTwoID, .coordinates_present = true, .stop_lat = 0.2, .stop_lon = 0.2,
-    .parent_station = "1", .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_name = gtfs::Text("SECOND STOP"), .stop_timezone = "America/Toronto",
+    .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
+    .stop_lat = 0.2, .stop_lon = 0.2, .parent_station = "1",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
@@ -66,8 +66,9 @@ TEST(GtfsExample, WriteGtfs) {
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
     struct StopTime stopTime {
-      .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_sequence = 0,
-      .stop_headsign = "head", .shape_dist_traveled = 0.0, .timepoint = gtfs::StopTimePoint::Exact,
+      .trip_id = "", .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"),
+      .stop_id = "", .stop_sequence = 0, .stop_headsign = "head", .shape_dist_traveled = 0.0,
+      .timepoint = gtfs::StopTimePoint::Exact,
     };
     stopTime.stop_id = (i % 2 == 0) ? stopOneID : stopTwoID;
     stopTime.trip_id = (i < 2) ? tripOneID : tripTwoID;
