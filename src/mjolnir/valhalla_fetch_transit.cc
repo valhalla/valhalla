@@ -43,6 +43,7 @@ using namespace valhalla::mjolnir;
 using namespace gtfs;
 
 // to include stop_ids or stops
+// change to include only sets of ids save memory
 typedef struct tileTransitInfo {
   GraphId graphId;
   Stops tile_stops;
@@ -318,6 +319,8 @@ std::priority_queue<tileTransitInfo> select_tiles(const std::string& path) {
     for (auto stopTime : currStopTimes) {
       // add trip, route, agency and service_id from stop_time
       // could use std::set to not check if it already exists
+
+      // use a set instead to keep track of these points
       Trip currTrip = *(feed.get_trip(stopTime.trip_id));
       Trips::iterator trip_it =
           std::find(currTile.tile_trips.begin(), currTile.tile_trips.end(), currTrip);
@@ -330,6 +333,8 @@ std::priority_queue<tileTransitInfo> select_tiles(const std::string& path) {
       if (service_it == currTile.tile_services.end()) {
         currTile.tile_services.push_back(currService);
       }
+
+      // remember the shape id such that we can access it later
       Route currRoute = *(feed.get_route(currTrip.route_id));
       Routes::iterator route_it =
           std::find(currTile.tile_routes.begin(), currTile.tile_routes.end(), currRoute);
@@ -346,20 +351,7 @@ std::priority_queue<tileTransitInfo> select_tiles(const std::string& path) {
     // add to map of tiles
     tiles_used.insert({currId, currTile});
   }
-
-  const auto& shapes = feed.get_shapes();
-  for (auto shape : shapes) {
-    double y = shape.shape_pt_lat;
-    double x = shape.shape_pt_lon;
-
-    GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
-    auto it = tiles_used.find(currId);
-    if (it != tiles_used.end()) {
-      tileTransitInfo currTile = it->second;
-      currTile.tile_shapes.push_back(shape);
-    }
-  }
-
+  // use number of stops(.size()) to insert into the queue
   return prioritized;
 }
 
