@@ -29,31 +29,35 @@
 #include "midgard/tiles.h"
 
 #include "filesystem.h"
+#include "just_gtfs/just_gtfs.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
-#include "third_party/just_gtfs/include/just_gtfs/just_gtfs.h"
 #include "valhalla/proto/transit.pb.h"
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
-using namespace gtfs;
 
-// to include stop_ids or stops
-// change to include only sets of ids save memory
+// information referred by tileBuilder saved spatially
 typedef struct tileTransitInfo {
   GraphId graphId;
-  Stops tile_stops;
-  Trips tile_trips;
-  Routes tile_routes;
-  std::vector<Id> tile_services;
-  Agencies tile_agencies;
-  Shapes tile_shapes;
-  int size;
+  std::set<gtfs::Id> tile_stops;
+  std::set<gtfs::Id> tile_trips;
+  std::set<gtfs::Id> tile_routes;
+  std::set<gtfs::Id> tile_services;
+  std::set<gtfs::Id> tile_agencies;
+  std::set<gtfs::Id> tile_shapes;
 } tileTransitInfo;
+
+struct CompareNumStops {
+  bool operator()(tileTransitInfo const& t1, tileTransitInfo const& t2) {
+    // sort tileTransitInfo by size
+    return t1.tile_stops.size() < t2.tile_stops.size();
+  }
+};
 
 std::string url_encode(const std::string& unencoded) {
   char* encoded = curl_escape(unencoded.c_str(), static_cast<int>(unencoded.size()));
@@ -293,65 +297,48 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
   return prioritized;
 }
 
-// gtfs version of the which_tiles function
-std::priority_queue<tileTransitInfo> select_tiles(const std::string& path) {
-  Feed feed(path);
+// gtfs implementation of the which_tiles function
+std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops>
+select_tiles(const std::string& path) {
+  gtfs::Feed feed(path);
   // TODO: CREATE LOOP THROUGH ALL FEEDS
   feed.read_feed();
   const auto& stops = feed.get_stops();
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().back();
-  std::priority_queue<tileTransitInfo> prioritized;
-  std::unordered_map<GraphId, tileTransitInfo> tiles_used;
+  std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops> prioritized;
 
   for (auto stop : stops) {
     tileTransitInfo currTile;
     double x = stop.stop_lon;
     double y = stop.stop_lat;
+    gtfs::Id currStopId = stop.stop_id;
     // add unique GraphId and stop
     // might have to typecast these doubles into uint32_t
     GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
     currTile.graphId = currId;
-    currTile.tile_stops.push_back(stop);
-    StopTimes currStopTimes = feed.get_stop_times_for_stop(stop.stop_id);
+    currTile.tile_stops.insert(currStopId);
+    gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
     for (auto stopTime : currStopTimes) {
       // add trip, route, agency and service_id from stop_time
       // could use std::set to not check if it already exists
 
       // use a set instead to keep track of these points
-      Trip currTrip = *(feed.get_trip(stopTime.trip_id));
-      Trips::iterator trip_it =
-          std::find(currTile.tile_trips.begin(), currTile.tile_trips.end(), currTrip);
-      if (trip_it == currTile.tile_trips.end()) {
-        currTile.tile_trips.push_back(currTrip);
-      }
-      Id currService = currTrip.service_id;
-      std::vector<Id>::iterator service_it =
-          std::find(currTile.tile_services.begin(), currTile.tile_services.end(), currService);
-      if (service_it == currTile.tile_services.end()) {
-        currTile.tile_services.push_back(currService);
-      }
+      gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
+      currTile.tile_services.insert(currTrip.service_id);
+      currTile.tile_trips.insert(currTrip.trip_id);
 
+      currTile.tile_shapes.insert(currTrip.shape_id);
       // remember the shape id such that we can access it later
-      Route currRoute = *(feed.get_route(currTrip.route_id));
-      Routes::iterator route_it =
-          std::find(currTile.tile_routes.begin(), currTile.tile_routes.end(), currRoute);
-      if (route_it == currTile.tile_routes.end()) {
-        currTile.tile_routes.push_back(currRoute);
-      }
-      Agency currAgency = *(feed.get_agency(currRoute.agency_id));
-      Agencies::iterator agency_it =
-          std::find(currTile.tile_agencies.begin(), currTile.tile_agencies.end(), currAgency);
-      if (agency_it == currTile.tile_agencies.end()) {
-        currTile.tile_agencies.push_back(currAgency);
-      }
+      gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
+      currTile.tile_routes.insert(currRoute.route_id);
+      currTile.tile_agencies.insert(currRoute.agency_id);
+      // add to the queue of tiles
+      prioritized.push(currTile);
     }
-    // add to map of tiles
-    tiles_used.insert({currId, currTile});
   }
-  // use number of stops(.size()) to insert into the queue
   return prioritized;
 }
 
