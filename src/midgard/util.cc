@@ -545,62 +545,6 @@ template bool intersect<PointLL>(const PointLL& u,
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
 
-// Return the intercept of the line passing through uv with the horizontal line defined by y
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return u.first;
-  }
-  if (std::abs(u.second - u.second) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return (y - b) / m;
-}
-template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
-
-// Return the intercept of the line passing through uv with the vertical line defined by x
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
-  if (std::abs(u.second - v.second) < 1e-5) {
-    return u.second;
-  }
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return x * m + b;
-}
-template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
-
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
   // Shoelace formula

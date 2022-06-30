@@ -44,7 +44,7 @@ set(SQLITE3_LIB_SEARCH_PATHS
 if (APPLE)
   # on macOS, we try hard to prefer aftermarket sqlite3 installations, as the system sqlite3
   # disables extension loading, which breaks use of spatialite later on
-  list(INSERT SQLITE3_INCLUDE_SEARCH_PATHS 0 /usr/local/opt/sqlite3/include /usr/local/include)
+  list(INSERT SQLITE3_INCLUDE_SEARCH_PATHS 0 /usr/local/opt/sqlite3/include /usr/local/include /opt/homebrew/opt/sqlite/include)
   find_path(SQLITE3_INCLUDE_DIR
     NAMES sqlite3.h
     PATHS ${SQLITE3_INCLUDE_SEARCH_PATHS}
@@ -64,7 +64,7 @@ set(SQLITE3_NAMES sqlite3_i sqlite3)
 if (APPLE)
   # on macOS, we try hard to prefer aftermarket sqlite3 installations, as the system sqlite3
   # disables extension loading, which breaks use of spatialite later on
-  list(INSERT SQLITE3_LIB_SEARCH_PATHS 0 /usr/local/opt/sqlite3/lib /usr/local/lib)
+  list(INSERT SQLITE3_LIB_SEARCH_PATHS 0 /usr/local/opt/sqlite3/lib /usr/local/lib /opt/homebrew/opt/sqlite/lib)
   find_library(SQLITE3_LIBRARY
     NAMES ${SQLITE3_NAMES}
     PATHS ${SQLITE3_LIB_SEARCH_PATHS}
