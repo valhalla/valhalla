@@ -107,8 +107,9 @@ inline void build_pbf(const std::string inPath,
   std::vector<uint32_t> link_oneways =
       valhalla::detail::read_vector<uint32_t>(inPath + LINK_ONEWAY_FILE);
 
-  const std::string ROAD_CLASS[] = {"motorway",  "trunk",    "primary",
-                                    "secondary", "tertiary", "unclassified"};
+  const std::string ROAD_CLASS[] = {"motorway", "trunk", "secondary", "tertiary", "residential"};
+  // const std::string ROAD_CLASS[] = {"motorway", "trunk",        "secondary",
+  //                                   "tertiary", "unclassified", "residential"};
 
   LOG_INFO("processing " + std::to_string(link_ids.size()) + " nodes");
   for (auto i = 0; i < link_ids.size(); ++i) {
