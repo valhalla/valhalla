@@ -76,7 +76,7 @@ TEST(Standalone, ShoulderAttributes) {
 TEST(Standalone, InterpolatedPoints) {
   const std::string ascii_map = R"(
          3
-    A--12B4---5C)";
+    A--12B4--56C)";
 
   const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "secondary"}}}};
 
@@ -85,20 +85,23 @@ TEST(Standalone, InterpolatedPoints) {
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shoulder_attributes");
 
   std::string trace_json;
-  auto api = gurka::do_action(valhalla::Options::trace_attributes, map, {"1", "2", "3", "4", "5"},
-                              "bicycle", {}, {}, &trace_json, "via");
+  auto api = gurka::do_action(valhalla::Options::trace_attributes, map,
+                              {"1", "2", "3", "4", "5", "6"}, "bicycle", {}, {}, &trace_json, "via");
 
   // confirm one of the interpolated points has the right edge index
   rapidjson::Document result_doc;
   result_doc.Parse(trace_json);
-  ASSERT_EQ(result_doc["matched_points"].GetArray().Size(), 5);
+  ASSERT_EQ(result_doc["matched_points"].GetArray().Size(), 6);
   ASSERT_EQ(result_doc["edges"].GetArray().Size(), 2);
 
-  // we have all the right points set as interpolated
-  for (const auto& wp : {1, 2, 3}) {
-    std::cout << std::to_string(wp) << std::endl;
-    ASSERT_EQ(static_cast<std::string>(result_doc["matched_points"][wp]["type"].GetString()),
-              "interpolated");
+  // we have all the right points set as interpolated & matched
+  const std::unordered_map<std::string, std::vector<int>> wp_pairs{{"matched", {0, 4, 5}},
+                                                                   {"interpolated", {1, 2, 3}}};
+  for (const auto& wp_pair : wp_pairs) {
+    for (const auto& wp : wp_pair.second) {
+      ASSERT_EQ(static_cast<std::string>(result_doc["matched_points"][wp]["type"].GetString()),
+                wp_pair.first);
+    }
   }
 
   // make sure the relation of points to edge is correct
@@ -111,4 +114,5 @@ TEST(Standalone, InterpolatedPoints) {
 
   ASSERT_EQ(result_doc["matched_points"][3]["edge_index"].GetInt(), 1);
   ASSERT_EQ(result_doc["matched_points"][4]["edge_index"].GetInt(), 1);
+  ASSERT_EQ(result_doc["matched_points"][5]["edge_index"].GetInt(), 1);
 }
