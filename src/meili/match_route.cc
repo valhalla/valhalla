@@ -75,11 +75,16 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
  * Here we return the vector of edge segments between the source and target states. If its a node to
  * node route (meaning no realy edge is traversed) then we use the target_result to say what edge the
  * segment should use
+ *
+ * TODO: we should modify this function to take the range of MatchResults between the source and
+ *  target. we should then use those to property initialize the segments source/target/indices to
+ *  match those of the MatchResults that lie on them rather than doing it downstream in an otherwise
+ *  superfluous operation
  * @param source         source state to use to find the route
  * @param target         target state which candidate in the next column to fetch the route for
  * @param route          a place to put the edge segments as we create them
  * @param target_result  in case we have a node to node route we have a no-op edge segment to return
- * @return  the vector of segments reprsenting the route between source and target
+ * @return  the vector of segments representing the route between source and target
  */
 bool MergeRoute(const State& source,
                 const State& target,
