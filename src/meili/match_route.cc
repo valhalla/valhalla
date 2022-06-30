@@ -155,12 +155,15 @@ void cut_segments(const std::vector<MatchResult>& match_results,
       throw std::logic_error("In meili::cutsegments(), unexpectedly unable to locate target edge.");
     }
 
-    // if its not a break point we dont have to cut the segment, the last one also has to come through
-    // because we need to finish off making the last segment of this piece of the path
+    // if its not a break point nor the last segment, then we dont need to split it into two
     if (!curr_match.is_break_point && curr_idx != last_idx) {
       // but if it isnt a breakpoint and its not the last stateful match point then its interpolated
-      // and we still need to mark the segments where those points lie
-      // TODO:
+      // and we still need to mark the segments in such a way that we which match points lie on them
+      if (search_segment->first_match_idx < 0)
+        search_segment->first_match_idx = curr_idx;
+      if (search_segment->last_match_idx < 0)
+        search_segment->last_match_idx = curr_idx;
+      // we are done marking it no need to split this one
       continue;
     }
 
