@@ -440,36 +440,36 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // Get the opposing edge. Get a list of target locations whose reverse
   // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
-  auto targets = reached_targets_->find(oppedge);
-  if (targets == reached_targets_->end()) {
+  auto targets_reached_by_edge = reached_targets_->find(oppedge);
+  if (targets_reached_by_edge == reached_targets_->end()) {
     return;
   }
 
   // Iterate through the targets
-  for (auto target : targets->second) {
-    uint32_t idx = source * target_count_ + target;
-    if (best_connections_[idx].found) {
+  for (auto reached_target_index : targets_reached_by_edge->second) {
+    auto& best_connection = best_connections_[source * target_count_ + reached_target_index];
+    if (best_connection.found) {
       continue;
     }
 
     // Update any targets whose threshold has been reached
-    if (best_connections_[idx].threshold > 0 && n > best_connections_[idx].threshold) {
-      best_connections_[idx].found = true;
+    if (best_connection.threshold > 0 && n > best_connection.threshold) {
+      best_connection.found = true;
       continue;
     }
 
-    const auto& edgestate = target_edgestatus_[target];
+    const auto& target_edgestate = target_edgestatus_[reached_target_index];
 
     // If this edge has been reached then a shortest path has been found
     // to the end node of this directed edge.
-    EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
+    EdgeStatusInfo oppedgestatus = target_edgestate.Get(oppedge);
     if (oppedgestatus.set() != EdgeSet::kUnreachedOrReset) {
-      const auto& edgelabels = target_edgelabel_[target];
-      uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
-      const BDEdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
+      const auto& target_edgelabels = target_edgelabel_[reached_target_index];
+      const uint32_t revers_search_predidx = target_edgelabels[oppedgestatus.index()].predecessor();
+      const BDEdgeLabel& opp_el = target_edgelabels[oppedgestatus.index()];
 
       // Special case - common edge for source and target are both initial edges
-      if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
+      if (pred.predecessor() == kInvalidLabel && revers_search_predidx == kInvalidLabel) {
         // TODO: shouldnt this use seconds? why is this using cost!?
         float s = std::abs(pred.cost().secs + opp_el.cost().secs - opp_el.transition_cost().cost);
 
@@ -478,34 +478,40 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         uint32_t d = std::abs(static_cast<int>(pred.path_distance()) +
                               static_cast<int>(opp_el.path_distance()) -
                               static_cast<int>(opp_el.transition_cost().secs));
-        best_connections_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
-        best_connections_[idx].found = true;
+        best_connection.Update(pred.edgeid(), oppedge, Cost(s, s), d);
+        best_connection.found = true;
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
-        UpdateStatus(source, target);
+        UpdateStatus(source, reached_target_index);
       } else {
-        float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].cost().cost;
+        float oppcost = (revers_search_predidx == kInvalidLabel)
+                            ? 0
+                            : target_edgelabels[revers_search_predidx].cost().cost;
         float c = pred.cost().cost + oppcost + opp_el.transition_cost().cost;
 
         // Check if best connection
-        if (c < best_connections_[idx].cost.cost) {
-          float oppsec = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].cost().secs;
-          uint32_t oppdist = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].path_distance();
+        if (c < best_connection.cost.cost) {
+          float oppsec = (revers_search_predidx == kInvalidLabel)
+                             ? 0
+                             : target_edgelabels[revers_search_predidx].cost().secs;
+          uint32_t oppdist = (revers_search_predidx == kInvalidLabel)
+                                 ? 0
+                                 : target_edgelabels[revers_search_predidx].path_distance();
           float s = pred.cost().secs + oppsec + opp_el.transition_cost().secs;
           uint32_t d = pred.path_distance() + oppdist;
 
           // Update best connection and set a threshold
-          best_connections_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
-          if (best_connections_[idx].threshold == 0) {
-            best_connections_[idx].threshold =
-                n + GetThreshold(mode_,
-                                 source_edgelabel_[source].size() + target_edgelabel_[target].size());
+          best_connection.Update(pred.edgeid(), oppedge, Cost(c, s), d);
+          if (best_connection.threshold == 0) {
+            best_connection.threshold =
+                n + GetThreshold(mode_, source_edgelabel_[source].size() +
+                                            target_edgelabel_[reached_target_index].size());
           }
 
           // Update status and update threshold if this is the last location
           // to find for this source or target
-          UpdateStatus(source, target);
+          UpdateStatus(source, reached_target_index);
         }
       }
     }
