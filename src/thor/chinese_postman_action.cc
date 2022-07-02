@@ -180,8 +180,8 @@ DistanceMatrix thor_worker_t::computeCostMatrix(const std::vector<baldr::GraphId
 // The route found can go outside the chinese postman polygon, but will not go through the exclude
 // polygons
 std::vector<GraphId>
-thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
-                                CPVertex cpvertex_end,
+thor_worker_t::computeFullRoute(baldr::GraphId cpvertex_start,
+                                baldr::GraphId cpvertex_end,
                                 const Options& options,
                                 const std::string& costing_str,
                                 const std::shared_ptr<sif::DynamicCost>& costing) {
@@ -189,8 +189,7 @@ thor_worker_t::computeFullRoute(CPVertex cpvertex_start,
   std::vector<GraphId> edge_graph_ids;
 
   // Get the locations setup for the algorithm
-  std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start.graph_id),
-                                       GraphId(cpvertex_end.graph_id)};
+  std::vector<baldr::GraphId> node_ids{GraphId(cpvertex_start), GraphId(cpvertex_end)};
   auto all_pairs = sources_targets_from_nodes(node_ids, *costing, *reader);
   auto& source = *all_pairs.first.begin();
   auto& target = *all_pairs.second.rbegin();
@@ -272,14 +271,14 @@ void thor_worker_t::chinese_postman(Api& request) {
   // setup for the origin location
   auto& origin = *request.mutable_options()->mutable_locations(0);
   int currentOriginNodeIndex = origin.correlation().edges().size();
-  CPVertex originVertex;
+  GraphId originVertex;
   int candidateOriginNodeIndex;
   double originPercentAlong;
 
   // setup for the destination location
   auto& destination = *request.mutable_options()->mutable_locations(1);
   int currentDestinationNodeIndex = destination.correlation().edges().size();
-  CPVertex destinationVertex;
+  GraphId destinationVertex;
   int candidateDestinationNodeIndex;
   double destinationPercentAlong;
 
@@ -291,12 +290,10 @@ void thor_worker_t::chinese_postman(Api& request) {
       continue;
 
     // we need to figure out which end of the edge we are going to go with
-    GraphId end_node = reader->edge_endnode(GraphId(edge.id()));
-    if (!end_node.Is_Valid())
+    GraphId end_vertex = reader->edge_endnode(GraphId(edge.id()));
+    if (!end_vertex.Is_Valid())
       continue;
-    CPVertex end_vertex = CPVertex(end_node);
-    GraphId start_node = reader->edge_startnode(GraphId(edge.id()));
-    CPVertex start_vertex = CPVertex(start_node);
+    GraphId start_vertex = reader->edge_startnode(GraphId(edge.id()));
 
     // Find the vertex for the origin
     candidateOriginNodeIndex =
@@ -330,7 +327,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     // The cost is only considered when matching the unbalanced nodes.
     // TODO: probably remove this since we use edge length as the heuristic
     Cost cost(1, 1);
-    CPEdge cpEdge(cost, baldr::GraphId(edge.id()));
+    CPEdge cpEdge{cost, GraphId(edge.id())};
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
 
@@ -344,7 +341,7 @@ void thor_worker_t::chinese_postman(Api& request) {
   LOG_DEBUG("Number of edges in Chinese Postman Graph: " + std::to_string(G.numEdges()));
 
   // A flag if the destination and the origin is the same node
-  bool isSameOriginDestination = destinationVertex.graph_id == originVertex.graph_id;
+  bool isSameOriginDestination = destinationVertex == originVertex;
 
   // Solving the Chinese Postman
   std::vector<GraphId> edgeGraphIds;
@@ -371,12 +368,12 @@ void thor_worker_t::chinese_postman(Api& request) {
       // Calculate the number of needed extra edges to make it balance
       int extraEdges = 0;
 
-      if (!isSameOriginDestination && v.first == originVertex.vertex_id) {
+      if (!isSameOriginDestination && v.first == originVertex) {
         // If the origin != destination and the vertex is the origin vertex, we need to add 1 extra
         // edge
         extraEdges = abs(v.second + 1);
         originNodeChecked = true;
-      } else if (!isSameOriginDestination && v.first == destinationVertex.vertex_id) {
+      } else if (!isSameOriginDestination && v.first == destinationVertex) {
         // If the origin != destination and the vertex is the destination vertex, we need to reduce 1
         // extra edge
         extraEdges = abs(v.second - 1);
@@ -400,12 +397,12 @@ void thor_worker_t::chinese_postman(Api& request) {
     // edges, but the route has a different origin and destination
     if (!isSameOriginDestination) {
       if (!originNodeChecked) {
-        sorted_unbalanced_nodes.push_back(originVertex.graph_id);
-        overNodes.push_back(originVertex.graph_id);
+        sorted_unbalanced_nodes.push_back(originVertex);
+        overNodes.push_back(originVertex);
       }
       if (!destinationNodeChecked) {
-        sorted_unbalanced_nodes.push_back(destinationVertex.graph_id);
-        underNodes.push_back(destinationVertex.graph_id);
+        sorted_unbalanced_nodes.push_back(destinationVertex);
+        underNodes.push_back(destinationVertex);
       }
     }
 

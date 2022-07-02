@@ -110,8 +110,8 @@ protected:
                                    const float max_matrix_distance);
 
   // Compute a route from cpvertex_start to cpvertex_end. It calls PathAlgorithm's GetBestPath
-  std::vector<baldr::GraphId> computeFullRoute(CPVertex cpvertex_start,
-                                               CPVertex cpvertex_end,
+  std::vector<baldr::GraphId> computeFullRoute(baldr::GraphId cpvertex_start,
+                                               baldr::GraphId cpvertex_end,
                                                const Options& options,
                                                const std::string& costing_str,
                                                const std::shared_ptr<sif::DynamicCost>& costing);
