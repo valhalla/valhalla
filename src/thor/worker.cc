@@ -226,8 +226,7 @@ std::string thor_worker_t::parse_costing(const Api& request) {
   return costing_str;
 }
 
-void thor_worker_t::adjust_scores(Api& request) {
-  auto& options = *request.mutable_options();
+void thor_worker_t::adjust_scores(valhalla::Options& options) {
   for (auto* locations :
        {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
     for (auto& location : *locations) {

@@ -71,10 +71,10 @@ void thor_worker_t::trace_route(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  adjust_scores(request);
+  auto& options = *request.mutable_options();
+  adjust_scores(options);
   parse_costing(request);
   parse_measurements(request);
-  const auto& options = *request.mutable_options();
   controller = AttributesController(options);
 
   switch (options.shape_match()) {

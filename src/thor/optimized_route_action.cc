@@ -21,9 +21,9 @@ void thor_worker_t::optimized_route(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  adjust_scores(request);
-  auto costing = parse_costing(request);
   auto& options = *request.mutable_options();
+  adjust_scores(options);
+  auto costing = parse_costing(request);
   controller = AttributesController(options);
 
   // Use CostMatrix to find costs from each location to every other location

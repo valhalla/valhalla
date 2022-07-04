@@ -28,7 +28,7 @@ std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  adjust_scores(request);
+  adjust_scores(*request.mutable_options());
   auto costing = parse_costing(request);
   const auto& options = request.options();
 
