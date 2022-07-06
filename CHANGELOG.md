@@ -95,6 +95,7 @@
    * ADDED: add `pre-commit` hook for running the `format.sh` script [#3637](https://github.com/valhalla/valhalla/pull/3637)
    * CHANGED: upgrade pybind11 to v2.9.2 to remove cmake warning [#3658](https://github.com/valhalla/valhalla/pull/3658)
    * ADDED: tests for just_gtfs reading and writing feeds [#3665](https://github.com/valhalla/valhalla/pull/3665)
+   * CHANGED: Precise definition of types of edges on which BSS could be projected [#3658](https://github.com/valhalla/valhalla/pull/3663)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
