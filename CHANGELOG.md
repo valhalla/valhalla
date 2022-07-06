@@ -44,6 +44,7 @@
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
 
 * **Enhancement**
+   * CHANGED: Some refactoring of `CostMatrix` and remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
