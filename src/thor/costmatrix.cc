@@ -102,7 +102,7 @@ void CostMatrix::clear() {
   target_hierarchy_limits_.shrink_to_fit();
   source_status_.clear();
   target_status_.clear();
-  best_connections_.clear();
+  best_connection_.clear();
 }
 
 // Form a time distance matrix from the set of source locations
@@ -208,7 +208,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   // Form the time, distance matrix from the destinations list
   uint32_t idx = 0;
   std::vector<TimeDistance> td;
-  for (const auto& connection : best_connections_) {
+  for (const auto& connection : best_connection_) {
     td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
     idx++;
   }
@@ -238,10 +238,10 @@ void CostMatrix::Initialize(
   for (uint32_t i = 0; i < source_count_; i++) {
     for (uint32_t j = 0; j < target_count_; j++) {
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
-        best_connections_.emplace_back(empty, empty, trivial_cost, 0.0f);
-        best_connections_.back().found = true;
+        best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
+        best_connection_.back().found = true;
       } else {
-        best_connections_.emplace_back(empty, empty, max_cost, kMaxCost);
+        best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
         source_status_[i].remaining_locations.insert(j);
         target_status_[j].remaining_locations.insert(i);
         all_the_same = false;
@@ -448,13 +448,13 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // Iterate through the targets
   for (auto target : targets->second) {
     uint32_t idx = source * target_count_ + target;
-    if (best_connections_[idx].found) {
+    if (best_connection_[idx].found) {
       continue;
     }
 
     // Update any targets whose threshold has been reached
-    if (best_connections_[idx].threshold > 0 && n > best_connections_[idx].threshold) {
-      best_connections_[idx].found = true;
+    if (best_connection_[idx].threshold > 0 && n > best_connection_[idx].threshold) {
+      best_connection_[idx].found = true;
       continue;
     }
 
@@ -478,8 +478,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         uint32_t d = std::abs(static_cast<int>(pred.path_distance()) +
                               static_cast<int>(opp_el.path_distance()) -
                               static_cast<int>(opp_el.transition_cost().secs));
-        best_connections_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
-        best_connections_[idx].found = true;
+        best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(s, s), d);
+        best_connection_[idx].found = true;
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
@@ -489,16 +489,16 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
         float c = pred.cost().cost + oppcost + opp_el.transition_cost().cost;
 
         // Check if best connection
-        if (c < best_connections_[idx].cost.cost) {
+        if (c < best_connection_[idx].cost.cost) {
           float oppsec = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].cost().secs;
           uint32_t oppdist = (predidx == kInvalidLabel) ? 0 : edgelabels[predidx].path_distance();
           float s = pred.cost().secs + oppsec + opp_el.transition_cost().secs;
           uint32_t d = pred.path_distance() + oppdist;
 
           // Update best connection and set a threshold
-          best_connections_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
-          if (best_connections_[idx].threshold == 0) {
-            best_connections_[idx].threshold =
+          best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
+          if (best_connection_[idx].threshold == 0) {
+            best_connection_[idx].threshold =
                 n + GetThreshold(mode_,
                                  source_edgelabel_[source].size() + target_edgelabel_[target].size());
           }
