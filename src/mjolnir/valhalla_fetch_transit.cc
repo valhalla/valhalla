@@ -298,8 +298,9 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
 }
 
 // gtfs implementation of the which_tiles function
-std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops>
-select_tiles(const std::string& path) {
+// std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops>
+
+std::unordered_map<GraphId, tileTransitInfo> select_tiles(const std::string& path) {
   gtfs::Feed feed(path);
   // TODO: CREATE LOOP THROUGH ALL FEEDS
   feed.read_feed();
@@ -307,16 +308,18 @@ select_tiles(const std::string& path) {
 
   std::set<GraphId> tiles;
   const auto& tile_level = TileHierarchy::levels().back();
-  std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops> prioritized;
+  std::unordered_map<GraphId, tileTransitInfo> tile_map;
+  // std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops> prioritized;
 
-  for (auto stop : stops) {
-    tileTransitInfo currTile;
-    double x = stop.stop_lon;
-    double y = stop.stop_lat;
+  for (const auto& stop : stops) {
     gtfs::Id currStopId = stop.stop_id;
+    float x = stop.stop_lon;
+    float y = stop.stop_lat;
+
     // add unique GraphId and stop
     // might have to typecast these doubles into uint32_t
     GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
+    auto currTile = tile_map[currId];
     currTile.graphId = currId;
     currTile.tile_stops.insert(currStopId);
     gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
@@ -336,10 +339,10 @@ select_tiles(const std::string& path) {
       currTile.tile_routes.insert(currRoute.route_id);
       currTile.tile_agencies.insert(currRoute.agency_id);
       // add to the queue of tiles
-      prioritized.push(currTile);
+      // prioritized.push(currTile);
     }
   }
-  return prioritized;
+  return tile_map;
 }
 
 #define set_no_null(T, pt, path, null_value, set)                                                    \
@@ -348,6 +351,75 @@ select_tiles(const std::string& path) {
     if (value != null_value)                                                                         \
       set(value);                                                                                    \
   }
+
+std::unordered_map<gtfs::Id, graphId>
+write_stations(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
+  gtfs::Feed feed(path);
+  feed.read_feed();
+  auto tile_stopIds = tile_info.tile_stops;
+  auto node_id = tile_info.graphId;
+
+  std::unordered_map<gtfs::Id, graphId> stop_graphIds;
+  // loop through all stops inside the tile
+  for (const gtfs::Id& tile_stopId : tile_stopIds) {
+    auto* node = tile.add_nodes();
+    gtfs::Stop tile_stop = *(feed.get_stop(tile_stopId));
+    node->set_lon(tile_stop.stop_lon);
+    node->set_lat(tile_stop.stop_lat);
+    node->set_type((int)tile_stop.location_type);
+    node->set_graphid(node_id);
+    node_id++;
+    // node->set_prev_graphid(); what is prev?
+    node->set_name(tile_stop.stop_name);
+    // node->set_osm_way_id(); where is this?
+    node->set_timezone(tile_stop.stop_timezone);
+    // 0 is No Info ; 1 is True ; 2 is False
+    bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
+    node->set_wheelchair_boarding(wheelchair_accessible);
+    // node->set_generated(feed_stop.generated); ?
+
+    stop_graphIds[tile_stopId] = node_id;
+  }
+}
+
+void add_stop_pair_shapes(const gtfs::Shape& shape) {
+  // shape dist traveled already exists inside
+}
+
+void write_stop_pairs(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
+  gtfs::Feed feed(path);
+  feed.read_feed();
+  auto& tile_tripIds = tile_info.tile_trips;
+  for (const gtfs::Id& tile_tripId : tile_tripIds) {
+
+    gtfs::Trip tile_trip = *(feed.get_trip(tile_tripId));
+
+    // already sorted by stop_sequence
+    auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
+
+    for (int stop_sequence = 0; stop_sequence < tile_stopTimes.size() - 1; i++) {
+      gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
+      gtfs::Id origin_stopId = origin_stopTime.stop_id;
+      gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
+      gtfs::Id dest_stopId = dest_stopTime.stop_id;
+      const bool origin_is_in_tile =
+          tile_info.tile_stops.find(origin_stopId) != tile_info.tile_stops.end();
+      // check if this stop_pair (the origin of the pair) is inside the current tile
+      if (origin_is_in_tile || dest_is_in_tile) {
+        auto* stop_pair = tile.add_stop_pairs();
+        stop_pair->set_bikes_allowed(tile_trip.bikes_allowed == gtfs::TripAccess::Yes);
+        // convert Time to uint32 (note: hh, mm, ss are all uint16s)
+        stop_pair->set_origin_departure_time(origin_stopTime.departure_time);
+        stop_pair->set_origin_graphid(tile_info.graphId);
+        stop_pair->set_origin_onestop_id(origin_stopId);
+
+        stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time);
+        stop_pair->set_destination_graphid(tile_info.graphId);
+        stop_pair->set_destination_onestop_id(dest_stopTime.stop_id);
+      }
+    }
+  }
+}
 
 void get_stop_stations(Transit& tile,
                        std::unordered_map<std::string, uint64_t>& nodes,
