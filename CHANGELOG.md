@@ -96,6 +96,7 @@
    * CHANGED: upgrade pybind11 to v2.9.2 to remove cmake warning [#3658](https://github.com/valhalla/valhalla/pull/3658)
    * ADDED: tests for just_gtfs reading and writing feeds [#3665](https://github.com/valhalla/valhalla/pull/3665)
    * CHANGED: Remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
+   * CHANGED: Precise definition of types of edges on which BSS could be projected [#3658](https://github.com/valhalla/valhalla/pull/3663)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
