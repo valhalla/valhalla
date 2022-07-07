@@ -44,7 +44,6 @@
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
 
 * **Enhancement**
-   * CHANGED: Some refactoring of `CostMatrix` and remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
    * CHANGED: Requested code clean up for phonemes PR [#3356](https://github.com/valhalla/valhalla/pull/3356)
    * CHANGED: Refactor Pronunciation class to struct [#3359](https://github.com/valhalla/valhalla/pull/3359)
@@ -96,6 +95,7 @@
    * ADDED: add `pre-commit` hook for running the `format.sh` script [#3637](https://github.com/valhalla/valhalla/pull/3637)
    * CHANGED: upgrade pybind11 to v2.9.2 to remove cmake warning [#3658](https://github.com/valhalla/valhalla/pull/3658)
    * ADDED: tests for just_gtfs reading and writing feeds [#3665](https://github.com/valhalla/valhalla/pull/3665)
+   * CHANGED: Remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
