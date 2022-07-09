@@ -12,7 +12,7 @@ commands:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: pip3 install requests shapely conan
-      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
 
 jobs:
   build-docker-images:
@@ -129,6 +129,7 @@ jobs:
 
   build-osx:
     executor: macos
+    resource_class: large
     steps:
       - checkout
       - install_macos_dependencies
@@ -145,11 +146,11 @@ jobs:
             - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: mkdir -p build
       - run: cd build && cmake ..
-      - run: make -C build -j4
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 check
+      - run: make -C build -j8 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
           key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
