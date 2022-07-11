@@ -364,7 +364,7 @@ select_tiles(const std::string& path) {
   }
 
 std::unordered_map<gtfs::Id, GraphId>
-write_stations(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
+write_stops(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
   gtfs::Feed feed(path);
   feed.read_feed();
   auto tile_stopIds = tile_info.tile_stops;
@@ -541,7 +541,7 @@ void write_shapes(Transit& tile,
 // fetch_ only does the threading
 void build_tiles(std::priority_queue<tileTransitInfo>& queue, const std::string& path) {
   // write some stuff here like all the
-  // write_stations / stop_pairs / routes / shapes belong here
+  // write_stops / stop_pairs / routes / shapes belong here
   // refer to fetch_tiles when trying to write this f^n
   while (true) {
     tileTransitInfo current;
@@ -550,7 +550,7 @@ void build_tiles(std::priority_queue<tileTransitInfo>& queue, const std::string&
     Transit tile;
     queue.pop();
 
-    std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stations(tile, current, path);
+    std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stops(tile, current, path);
     write_stop_pairs(tile, current, path, stop_graphIds);
     write_routes(tile, current, path);
     write_shapes(tile, current, path);
