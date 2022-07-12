@@ -65,6 +65,10 @@ TEST_F(FixedSpeedTest, MotorcycleFixedSpeed) {
   doTests("motorcycle", {{"/costing_options/motorcycle/fixed_speed", "50"}});
 }
 
+TEST_F(FixedSpeedTest, MotorscooterFixedSpeed) {
+  doTests("motor_scooter", {{"/costing_options/motor_scooter/fixed_speed", "50"}});
+}
+
 TEST_F(FixedSpeedTest, ClampMaxSpeed) {
   Options options;
   rapidjson::Document dom;
