@@ -495,7 +495,7 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = fixed_speed_ == baldr::kDefaultFixedSpeed
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
                         ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
                                          &flow_sources, time_info.seconds_from_now)
                         : fixed_speed_;
@@ -930,7 +930,7 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = fixed_speed_ == baldr::kDefaultFixedSpeed
+    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
                           ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
                                            &flow_sources, time_info.seconds_from_now)
                           : fixed_speed_;

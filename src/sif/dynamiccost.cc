@@ -105,7 +105,7 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
-constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDefaultFixedSpeed,
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
                                                       baldr::kMaxSpeedKph};
 } // namespace
 

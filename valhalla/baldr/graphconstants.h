@@ -106,7 +106,7 @@ constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
 // Default Fixed Speed. This is the default fixed speed that is assumed.
 // Unless otherwised specified no fixed speed will be assumed and speed will be
 // calculated from costing algorithm.
-constexpr uint32_t kDefaultFixedSpeed = 0; // ~0 MPH
+constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
 inline bool valid_speed(float speed) {
   return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
