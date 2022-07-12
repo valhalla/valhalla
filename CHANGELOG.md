@@ -42,6 +42,7 @@
    * FIXED: DateTime::is_conditional_active(...) incorrect end week handling [#3655](https://github.com/valhalla/valhalla/pull/3655)
    * FIXED: TimeDistanceBSSMatrix: incorrect initialization for destinations[#3659](https://github.com/valhalla/valhalla/pull/3659)
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
+   * FIXED: Use a small node snap distance in map-matching. FIxes issue with incorrect turn followed by Uturn. [#3677](https://github.com/valhalla/valhalla/pull/3677)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
