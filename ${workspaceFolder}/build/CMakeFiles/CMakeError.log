@@ -1,0 +1,52 @@
+Detecting CXX compiler ABI info failed to compile with the following output:
+Change Dir: /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make -f Makefile cmTC_8f468/fast && /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_8f468.dir/build.make CMakeFiles/cmTC_8f468.dir/build
+Building CXX object CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/clang   -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk   -v -Wl,-v -MD -MT CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -c /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.20/Modules/CMakeCXXCompilerABI.cpp
+Apple clang version 13.1.6 (clang-1316.0.21.2.5)
+Target: arm64-apple-darwin21.5.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+clang: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
+ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx12.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -mrelax-all --mrelax-relocations -disable-free -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -fno-rounding-math -munwind-tables -target-sdk-version=12.3 -fvisibility-inlines-hidden-static-local-var -target-cpu apple-m1 -target-feature +v8.5a -target-feature +fp-armv8 -target-feature +neon -target-feature +crc -target-feature +crypto -target-feature +dotprod -target-feature +fp16fml -target-feature +ras -target-feature +lse -target-feature +rdm -target-feature +rcpc -target-feature +zcm -target-feature +zcz -target-feature +fullfp16 -target-feature +sm4 -target-feature +sha3 -target-feature +sha2 -target-feature +aes -target-abi darwinpcs -fallow-half-arguments-and-returns -debugger-tuning=lldb -target-linker-version 763 -v -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/13.1.6 -dependency-file CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -stdlib=libc++ -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -Wno-objc-load-method -fdeprecated-macro "-fdebug-compilation-dir=/Users/cpark/valhalla/\${workspaceFolder}/build/CMakeFiles/CMakeTmp" -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+messageToSelfInClassMethodIdReturnType -clang-vendor-feature=+disableInferNewAvailabilityFromInit -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -mllvm -disable-aligned-alloc-awareness=1 -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -x c++ /Applications/CLion.app/Contents/bin/cmake/mac/share/cmake-3.20/Modules/CMakeCXXCompilerABI.cpp
+clang -cc1 version 13.1.6 (clang-1316.0.21.2.5) default target arm64-apple-darwin21.5.0
+ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/local/include"
+ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/Library/Frameworks"
+#include "..." search starts here:
+#include <...> search starts here:
+ /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include/c++/v1
+ /Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/include
+ /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/include
+ /Library/Developer/CommandLineTools/usr/include
+ /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/System/Library/Frameworks (framework directory)
+End of search list.
+Linking CXX executable /Users/cpark/valhalla/build/CMakeFiles/CMakeTmp/cmTC_8f468
+/Applications/CLion.app/Contents/bin/cmake/mac/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8f468.dir/link.txt --verbose=1
+/usr/bin/clang  -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -o /Users/cpark/valhalla/build/CMakeFiles/CMakeTmp/cmTC_8f468 
+Apple clang version 13.1.6 (clang-1316.0.21.2.5)
+Target: arm64-apple-darwin21.5.0
+Thread model: posix
+InstalledDir: /Library/Developer/CommandLineTools/usr/bin
+ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 12.0.0 12.3 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -o /Users/cpark/valhalla/build/CMakeFiles/CMakeTmp/cmTC_8f468 -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_8f468.dir/CMakeCXXCompilerABI.cpp.o -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/13.1.6/lib/darwin/libclang_rt.osx.a
+@(#)PROGRAM:ld  PROJECT:ld64-764
+BUILD 11:22:55 Apr 28 2022
+configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
+Library search paths:
+	/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/usr/lib
+Framework search paths:
+	/Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk/System/Library/Frameworks/
+
+
+Cannot copy output executable
+  ''
+to destination specified by COPY_FILE:
+  '/Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/3.20.2/CMakeDetermineCompilerABI_CXX.bin'
+Unable to find the executable at any of:
+  /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp/cmTC_8f468
+  /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp/Debug/cmTC_8f468
+  /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp/Debug/cmTC_8f468.app/cmTC_8f468
+  /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp/cmTC_8f468.app/cmTC_8f468
+  /Users/cpark/valhalla/${workspaceFolder}/build/CMakeFiles/CMakeTmp/Development/cmTC_8f468
+
+

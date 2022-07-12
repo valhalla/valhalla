@@ -391,28 +391,34 @@ write_stops(Transit& tile, const tileTransitInfo& tile_info, const std::string& 
 
     stop_graphIds[tile_stopId] = node_id;
   }
+  return stop_graphIds;
 }
 
-std::unordered_map<gtfs::Id, shapeInfo> add_stop_pair_shapes(const tileTransitInfo& tile_info,
-                                                             const std::string& path) {
-  // Could remember shape points instead of shape ids inside tile_info to get rid of one for loop
-  gtfs::Feed feed(path);
-  feed.read_feed();
-  std::unordered_map<gtfs::Id, shapeInfo> stop_shapes;
-  auto tile_shapes = tile_info.tile_shapes;
-  auto tile_stops = tile_info.tile_stops;
-  for (const auto& tile_shape : tile_shapes) {
-    auto currShapePoints = feed.get_shape(tile_shape);
-    float min_dist_to_stop;
+// read per stop, given shape
+float add_stop_pair_shapes(const gtfs::Stop& stop_connect, const gtfs::Shape& trip_shape) {
+  // check which segment would belong
+  // projector_t project(PointLL(lon, lat)); building a path to geodesic .?
+  float dist_traveled = 0;
+  float min_sq_distance = INFINITY;
+  for (int segment = 0; segment < trip_shape.size() - 1; segment++) {
     // change to if shape point size >= 2 and for until 1 before last
-    auto test = currShapePoints.begin();
-    for (const auto& shape_point : currShapePoints) {
-      auto currSeg = test->project(PointLL(shape_point.shape_pt_lon, shape_point.shape_pt_lat),
-                                   PointLL(shape_point.shape_pt_lon, shape_point.shape_pt_lat));
+    auto currOrigin = trip_shape[segment];
+    auto currDest = trip_shape[segment + 1];
+    PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
+    PointLL originPoint = PointLL(currOrigin.shape_pt_lon, currOrigin.shape_pt_lat);
+    PointLL destPoint = PointLL(currDest.shape_pt_lon, currDest.shape_pt_lat);
+    // why am i getting a re-declaration error? is this not how i use operator()?
+    projector_t project(stopPoint);
+    PointLL minPoint = project(originPoint, destPoint);
+    float sq_distance = project.approx.DistanceSquared(minPoint);
+    if (sq_distance < min_sq_distance) {
+      min_sq_distance = dist_traveled + originPoint.Distance(minPoint);
     }
+    dist_traveled += originPoint.Distance(destPoint);
   }
+  return dist_traveled;
 }
-
+// return dangling stop_pairs
 void write_stop_pairs(Transit& tile,
                       const tileTransitInfo& tile_info,
                       const std::string& path,
@@ -440,18 +446,24 @@ void write_stop_pairs(Transit& tile,
       if (origin_is_in_tile || dest_is_in_tile) {
         auto* stop_pair = tile.add_stop_pairs();
         stop_pair->set_bikes_allowed(currTrip.bikes_allowed == gtfs::TripAccess::Yes);
+        gtfs::Shape currShape = tile_info.tile_shapes.find(currTrip.shape_id);
         // where is blockid??
         // convert Time to uint32 (note: hh, mm, ss are all uint16s)
         if (origin_is_in_tile) {
           stop_pair->set_origin_departure_time(origin_stopTime.departure_time);
           stop_pair->set_origin_graphid(stop_graphIds[origin_stopId]);
           stop_pair->set_origin_onestop_id(origin_stopId);
+          // call function to set shape
+          float dist = add_stop_pair_shapes(tile_info.tile_stops.find(origin_stopId), currShape);
+          stop_pair->set_origin_dist_traveled(dist);
         }
 
         if (dest_is_in_tile) {
           stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time);
           stop_pair->set_destination_graphid(stop_graphIds[dest_stopId]);
           stop_pair->set_destination_onestop_id(dest_stopTime.stop_id);
+          float dist = add_stop_pair_shapes(tile_info.tile_stops.find(dest_stopId), currShape);
+          stop_pair->set_destination_dist_traveled(dist);
         }
 
         stop_pair->set_route_index(currTrip.route_id);
@@ -478,7 +490,7 @@ void write_stop_pairs(Transit& tile,
         stop_pair->set_service_start_date(trip_calendar.start_date);
         stop_pair->set_service_end_date(trip_calendar.end_date);
         stop_pair->set_trip_headsign(currTrip.trip_headsign);
-        stop_pair->set_trip_id(currTrip.trip_id);
+        stop_pair->set_trip_id(stoi(currTrip.trip_id));
         stop_pair->set_wheelchair_accessible(currTrip.wheelchair_accessible == 1);
 
         // insert shape info
@@ -518,23 +530,22 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::st
   }
 }
 
-void write_shapes(Transit& tile,
-                  const tileTransitInfo& tile_info,
-                  const std::string& path,
-                  std::vector<gtfs::Shape> shape_pts) {
+void write_shapes(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
   // it's all very straightforward after implementing the matching stops -> shape_pts .
+  // just include all shape_pts (in this tile)
   gtfs::Feed feed(path);
   feed.read_feed();
   for (const auto& tile_shape : tile_info.tile_shapes) {
     auto* shape = tile.add_shapes();
     gtfs::Shape currShape = feed.get_shape(tile_shape, true);
-    shape->set_shape_id((int)currShape[0].shape_id);
+    // We use currShape[0] because 'Shape' type is a vector of ShapePoints
+    shape->set_shape_id(stoi(currShape[0].shape_id));
     std::vector<PointLL> trip_shape;
-    for (const auto& shape_pt : shape_pts) {
+    for (const auto& shape_pt : currShape) {
       trip_shape.emplace_back(PointLL(shape_pt.shape_pt_lon, shape_pt.shape_pt_lat));
     }
+    shape->set_encoded_shape(encode7(trip_shape));
   }
-  // then we can pull somethwing like
 }
 
 // note: so basically fetch_tiles is the function and
