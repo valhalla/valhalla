@@ -282,7 +282,7 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::st
     route->set_route_desc(currRoute.route_desc);
     route->set_route_long_name(currRoute.route_long_name);
     route->set_route_text_color(strtol(currRoute.route_text_color.c_str(), nullptr, 16));
-    route->set_vehicle_type((valhalla::mjolnir::Transit_Vehicletype)((int)currRoute.route_type));
+    route->set_vehicle_type((valhalla::mjolnir::Transit_VehicleType)((int)currRoute.route_type));
   }
 }
 
