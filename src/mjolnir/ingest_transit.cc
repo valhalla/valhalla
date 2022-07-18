@@ -46,7 +46,21 @@ using namespace valhalla::mjolnir;
 // information referred by tileBuilder saved spatially
 
 namespace {
-using namespace valhalla::midgard;
+
+struct tileTransitInfo {
+  GraphId graphId;
+  std::unordered_set<gtfs::Id> tile_stops;
+  std::unordered_set<gtfs::Id> tile_trips;
+  std::unordered_set<gtfs::Id> tile_routes;
+  std::unordered_set<gtfs::Id> tile_services;
+  std::unordered_set<gtfs::Id> tile_agencies;
+  std::unordered_set<gtfs::Id> tile_shapes;
+
+  bool operator<(const tileTransitInfo& t1) const {
+    // sort tileTransitInfo by size
+    return tile_stops.size() < t1.tile_stops.size();
+  }
+};
 
 typedef struct shapeInfo {
   gtfs::Id shape_id;
@@ -276,8 +290,7 @@ void write_shapes(Transit& tile, const tileTransitInfo& tile_info, const std::st
 // fetch_ only does the threading
 void ingest_tiles(const boost::property_tree::ptree& pt,
                   std::priority_queue<tileTransitInfo>& queue,
-                  const std::string& path,
-                  unique_transit_t uniques,
+                  unique_transit_t& uniques,
                   std::promise<std::list<GraphId>>& promise) {
   // write some stuff here like all the
   // write_stops / stop_pairs / routes / shapes belong here
@@ -289,6 +302,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
   ++utc->tm_mon; // TODO: use timezone code?
 
   auto database = pt.get_optional<std::string>("mjolnir.timezone");
+  auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
   if (!database) {
@@ -450,6 +464,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
       auto size = tile.ByteSize();
 #endif
       valhalla::midgard::mem_map<char> buffer;
+      // this is giving an error in the header file
       buffer.create(file_name, size);
       tile.SerializeToArray(buffer.get(), size);
       lock.unlock();
@@ -465,47 +480,50 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
-std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt,
-                                                          const std::string& path) {
-  gtfs::Feed feed(path);
-  // TODO: CREATE LOOP THROUGH ALL FEEDS
-  feed.read_feed();
-  const auto& stops = feed.get_stops();
+std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
-  std::set<GraphId> tiles;
-  const auto& tile_level = TileHierarchy::levels().back();
-  std::unordered_map<GraphId, tileTransitInfo> tile_map;
-  // std::priority_queue<tileTransitInfo, std::vector<tileTransitInfo>, CompareNumStops> prioritized;
+  auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
 
-  for (const auto& stop : stops) {
-    gtfs::Id currStopId = stop.stop_id;
-    float x = stop.stop_lon;
-    float y = stop.stop_lat;
+  for (const auto& dir_it : filesystem::recursive_directory_iterator(path)) {
 
-    // add unique GraphId and stop
-    // might have to typecast these doubles into uint32_t
-    GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
-    auto currTile = tile_map[currId];
-    currTile.graphId = currId;
-    currTile.tile_stops.insert(currStopId);
-    gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
+    gtfs::Feed feed(dir_it->path().string());
+    feed.read_feed();
+    const auto& stops = feed.get_stops();
 
-    for (auto stopTime : currStopTimes) {
-      // add trip, route, agency and service_id from stop_time
-      // could use std::set to not check if it already exists
+    std::set<GraphId> tiles;
+    const auto& tile_level = TileHierarchy::levels().back();
+    std::unordered_map<GraphId, tileTransitInfo> tile_map;
 
-      // use a set instead to keep track of these points
-      gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
-      currTile.tile_services.insert(currTrip.service_id);
-      currTile.tile_trips.insert(currTrip.trip_id);
+    for (const auto& stop : stops) {
+      gtfs::Id currStopId = stop.stop_id;
+      float x = stop.stop_lon;
+      float y = stop.stop_lat;
 
-      currTile.tile_shapes.insert(currTrip.shape_id);
-      // remember the shape id such that we can access it later
-      gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
-      currTile.tile_routes.insert(currRoute.route_id);
-      currTile.tile_agencies.insert(currRoute.agency_id);
-      // add to the queue of tiles
-      // prioritized.push(currTile);
+      // add unique GraphId and stop
+      // might have to typecast these doubles into uint32_t
+      GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
+      auto currTile = tile_map[currId];
+      currTile.graphId = currId;
+      currTile.tile_stops.insert(currStopId);
+      gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
+
+      for (auto stopTime : currStopTimes) {
+        // add trip, route, agency and service_id from stop_time
+        // could use std::set to not check if it already exists
+
+        // use a set instead to keep track of these points
+        gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
+        currTile.tile_services.insert(currTrip.service_id);
+        currTile.tile_trips.insert(currTrip.trip_id);
+
+        currTile.tile_shapes.insert(currTrip.shape_id);
+        // remember the shape id such that we can access it later
+        gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
+        currTile.tile_routes.insert(currRoute.route_id);
+        currTile.tile_agencies.insert(currRoute.agency_id);
+        // add to the queue of tiles
+        // prioritized.push(currTile);
+      }
     }
   }
   std::priority_queue<tileTransitInfo> prioritized;
@@ -515,11 +533,15 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
   return prioritized;
 }
 
-std::list<GraphId>
-ingest_transit(const boost::property_tree::ptree& pt,
-               std::priority_queue<tileTransitInfo>& tiles,
-               unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                                    std::thread::hardware_concurrency())) {
+std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
+
+  auto thread_count =
+      pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
+                                                           std::thread::hardware_concurrency()));
+  // go get information about what transit tiles we should be fetching
+  LOG_INFO("Tiling GTFS Feeds");
+  auto tiles = select_transit_tiles(pt);
+
   LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " +
            std::to_string(thread_count) + " threads...");
 
@@ -548,11 +570,24 @@ ingest_transit(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished");
   return dangling;
 }
-void stitch_transit(const boost::property_tree::ptree& pt,
-                    const std::unordered_set<GraphId>& all_tiles,
-                    std::list<GraphId>& dangling_tiles,
-                    unsigned int thread_count = std::max(static_cast<unsigned int>(1),
-                                                         std::thread::hardware_concurrency())) {
+void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& dangling_tiles) {
+
+  auto thread_count =
+      pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
+                                                           std::thread::hardware_concurrency()));
+  // figure out which transit tiles even exist
+  filesystem::recursive_directory_iterator transit_file_itr(
+      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
+      std::to_string(TileHierarchy::levels().back().level));
+  filesystem::recursive_directory_iterator end_file_itr;
+  std::unordered_set<GraphId> all_tiles;
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if (filesystem::is_regular_file(transit_file_itr->path()) &&
+        transit_file_itr->path().extension() == ".pbf") {
+      all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
+    }
+  }
+
   LOG_INFO("Stitching " + std::to_string(dangling_tiles.size()) + " transit tiles with " +
            std::to_string(thread_count) + " threads...");
 

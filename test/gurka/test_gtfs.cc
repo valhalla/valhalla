@@ -1,6 +1,7 @@
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
 
+#include "mjolnir/ingest_transit.h"
 #include "string.h"
 #include <gtest/gtest.h>
 
@@ -17,7 +18,7 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string shapeOneID = "square";
   const std::string serviceOneID = "bon";
   Feed feed;
-  filesystem::create_directories("test/data/gtfs_test/");
+  filesystem::create_directories("test/data/gtfs_feeds/toronto");
 
   // write agency.txt
   struct Agency ttc {
@@ -25,7 +26,7 @@ TEST(GtfsExample, WriteGtfs) {
     .agency_timezone = "America/Toronto"
   };
   feed.add_agency(ttc);
-  feed.write_agencies(("test/data/gtfs_test/"));
+  feed.write_agencies(("test/data/gtfs_feeds/toronto"));
 
   // write stops.txt
   struct gtfs::Stop nemo {
@@ -43,7 +44,7 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
-  feed.write_stops(("test/data/gtfs_test/"));
+  feed.write_stops(("test/data/gtfs_feeds/toronto"));
 
   // write routes.txt
   struct Route lineOne {
@@ -52,7 +53,7 @@ TEST(GtfsExample, WriteGtfs) {
     .route_text_color = "black",
   };
   feed.add_route(lineOne);
-  feed.write_routes(("test/data/gtfs_test/"));
+  feed.write_routes(("test/data/gtfs_feeds/toronto"));
 
   // write trips.txt
   struct gtfs::Trip tripOne {
@@ -61,7 +62,7 @@ TEST(GtfsExample, WriteGtfs) {
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
-  feed.write_trips("test/data/gtfs_test/");
+  feed.write_trips("test/data/gtfs_feeds/toronto");
 
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
@@ -75,7 +76,7 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_stop_time(stopTime);
   }
 
-  feed.write_stop_times("test/data/gtfs_test/");
+  feed.write_stop_times("test/data/gtfs_feeds/toronto");
 
   // write calendar.txt
   struct CalendarItem calendarOne {
@@ -86,7 +87,7 @@ TEST(GtfsExample, WriteGtfs) {
     .start_date = Date(2022, 1, 31), .end_date = Date(2023, 1, 31),
   };
   feed.add_calendar_item(calendarOne);
-  feed.write_calendar("test/data/gtfs_test/");
+  feed.write_calendar("test/data/gtfs_feeds/toronto");
 
   // write calendar_dates.txt
   struct CalendarDate servAdded {
@@ -100,7 +101,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_calendar_date(servAdded);
   feed.add_calendar_date(servRemoved);
-  feed.write_calendar_dates(("test/data/gtfs_test/"));
+  feed.write_calendar_dates(("test/data/gtfs_feeds/toronto"));
 
   // write shapes.txt
   for (size_t i = 0; i < 4; i++) {
@@ -110,7 +111,7 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_shape(shapePointTest);
   }
 
-  feed.write_shapes(("test/data/gtfs_test/"));
+  feed.write_shapes(("test/data/gtfs_feeds/toronto"));
 
   // write frequencies.txt
   struct Frequency freqBased {
@@ -124,9 +125,9 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_frequency(freqBased);
   feed.add_frequency(schedBased);
-  feed.write_frequencies(("test/data/gtfs_test/"));
+  feed.write_frequencies(("test/data/gtfs_feeds/toronto"));
 
-  Feed feed_reader(("test/data/gtfs_test/"));
+  Feed feed_reader(("test/data/gtfs_feeds/toronto"));
   feed_reader.read_feed();
 
   // make sure files are actually written
@@ -146,4 +147,13 @@ TEST(GtfsExample, WriteGtfs) {
   const auto& calendarGTFS = feed_reader.get_calendar();
   EXPECT_EQ(calendarGTFS.size(), 1);
   EXPECT_EQ(calendarGTFS[0].service_id, serviceOneID);
+}
+
+TEST(GtfsExample, MakeTiles) {
+  // create a config in memory make_config
+  // make_config("")
+
+  // call the two functions, in main valhalla_ingest-transit
+  // it's gonna write protobufs
+  // make sure all the data is inside -> which we can test using the same tests as above
 }
