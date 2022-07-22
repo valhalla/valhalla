@@ -12,206 +12,140 @@
 
 #include "config.h"
 
-/* Need to know which geos version we have to work out which headers to include */
-#include <geos/version.h>
-
-#define USE_UNSTABLE_GEOS_CPP_API
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-#include <geos/geom/CoordinateArraySequence.h>
-#else
-#include <geos/geom/CoordinateSequenceFactory.h>
-#endif
-#include <geos/geom/Geometry.h>
-#include <geos/geom/GeometryFactory.h>
-#include <geos/geom/LineString.h>
-#include <geos/geom/LinearRing.h>
-#include <geos/geom/MultiLineString.h>
-#include <geos/geom/MultiPolygon.h>
-#include <geos/geom/Point.h>
-#include <geos/geom/Polygon.h>
-#include <geos/io/WKTReader.h>
-#include <geos/io/WKTWriter.h>
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-#include <geos/operation/linemerge/LineMerger.h>
-#else
-#include <geos/opLinemerge.h>
-#endif
-#include <geos/util/GEOSException.h>
-
-#include <boost/optional.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace geos::geom;
-using namespace geos::io;
-using namespace geos::util;
-using namespace geos::operation::linemerge;
+using point_t =
+    boost::geometry::model::d2::point_xy<double,
+                                         boost::geometry::cs::geographic<boost::geometry::degree>>;
+using polygon_t = boost::geometry::model::polygon<point_t>;
+using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
+
+namespace std {
+template <> struct hash<point_t> {
+  inline size_t operator()(const point_t& p) const {
+    return uint64_t(p.x() * 1e7 + 180 * 1e7) << 32 | uint64_t(p.y() * 1e7 + 90 * 1e7);
+  }
+};
+
+template <> struct equal_to<point_t> {
+  inline bool operator()(const point_t& a, const point_t& b) const {
+    return a.x() == b.x() && a.y() == b.y();
+  }
+};
+
+} // namespace std
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
-
 using namespace valhalla::midgard;
 
 namespace {
 
+/**
+ * Converts a series of a linestrings into one or more polygons (rings) by connecting contiguous
+ * ones until a ring is formed
+ * @param lines the unmerged lines
+ * @param line_lookup a multi map that lets one easily
+ * @return
+ */
+std::vector<std::vector<point_t>> line_merge(std::vector<std::vector<point_t>> lines,
+                                             std::unordered_multimap<point_t, size_t> line_lookup) {
+  // TODO: use the lookup to connect adjacent linestrings. GriddedData::GenerateContours does this
+  std::vector<std::vector<point_t>> rings;
+
+  return rings;
+}
+
 struct polygondata {
-  Polygon* polygon;
-  LinearRing* ring;
+  polygon_t polygon;
   double area;
   int iscontained;
   unsigned containedbyid;
+  bool operator<(const polygondata& p) const {
+    return p.area < area; // sort descending
+  }
 };
 
-int polygondata_comparearea(const void* vp1, const void* vp2) {
-  const polygondata* p1 = (const polygondata*)vp1;
-  const polygondata* p2 = (const polygondata*)vp2;
-
-  if (p1->area == p2->area) {
-    return 0;
-  }
-  if (p1->area > p2->area) {
-    return -1;
-  }
-  return 1;
-}
-
-std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
-  std::vector<std::string> wkts;
-
-#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
-
-  LineMerger merger;
-  merger.add(mline.get());
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  std::vector<std::unique_ptr<LineString>> merged(merger.getMergedLineStrings());
-#else
-  std::unique_ptr<std::vector<LineString*>> merged(merger.getMergedLineStrings());
-#endif
-  WKTWriter writer;
-
+std::string to_wkt(const std::vector<std::vector<point_t>>& rings) {
   // Procces ways into lines or simple polygon list
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  polygondata* polys = new polygondata[merged.size()];
-#else
-  polygondata* polys = new polygondata[merged->size()];
-#endif
-
-  unsigned totalpolys = 0;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  for (unsigned i = 0; i < merged.size(); ++i) {
-    std::unique_ptr<LineString> pline(merged[i].release());
-#else
-  for (unsigned i = 0; i < merged->size(); ++i) {
-    std::unique_ptr<LineString> pline((*merged)[i]);
-#endif
-    if (pline->getNumPoints() > 3 && pline->isClosed()) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      polys[totalpolys].polygon =
-          gf->createPolygon(gf->createLinearRing(pline->getCoordinates())).release();
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates()).release();
-#else
-      polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
-#endif
-      polys[totalpolys].area = polys[totalpolys].polygon->getArea();
-      polys[totalpolys].iscontained = 0;
-      polys[totalpolys].containedbyid = 0;
-      if (polys[totalpolys].area > 0.0) {
-        totalpolys++;
-      } else {
-        delete (polys[totalpolys].polygon);
-        delete (polys[totalpolys].ring);
-      }
-    }
+  std::vector<polygondata> polys;
+  for (const auto& ring : rings) {
+    polygondata pd;
+    boost::geometry::assign_points(pd.polygon, ring);
+    boost::geometry::correct(pd.polygon);
+    if (!boost::geometry::is_valid(pd.polygon))
+      continue;
+    pd.area = boost::geometry::area(pd.polygon);
+    polys.emplace_back(std::move(pd));
   }
 
-  if (totalpolys) {
-    qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
+  // if we have anything that wasnt degenerate we can convert it to wkt
+  if (polys.empty())
+    return "";
 
-    for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
-        continue;
-      }
+  // sort descending by area
+  std::sort(polys.begin(), polys.end());
 
-      for (unsigned j = i + 1; j < totalpolys; ++j) {
-        // Does polygon[i] contain the smaller polygon[j]?
-        if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
-          // are we in a [i] contains [k] contains [j] situation
-          // which would actually make j top level
-          bool istoplevelafterall = false;
-          for (unsigned k = i + 1; k < j; ++k) {
-            if (polys[k].iscontained && polys[k].containedbyid == i &&
-                polys[k].polygon->contains(polys[j].polygon)) {
-              istoplevelafterall = true;
-              break;
-            }
+  // here we mark rings that are nested inside of other rings
+  for (size_t i = 0; i < polys.size(); ++i) {
+    if (polys[i].iscontained != 0) {
+      continue;
+    }
+
+    for (size_t j = i + 1; j < polys.size(); ++j) {
+      // Does polygon[i] contain the smaller polygon[j]?
+      if (polys[j].containedbyid == 0 &&
+          boost::geometry::within(polys[j].polygon, polys[i].polygon)) {
+        // are we in a [i] contains [k] contains [j] situation
+        // which would actually make j top level
+        bool istoplevelafterall = false;
+        for (size_t k = i + 1; k < j; ++k) {
+          if (polys[k].iscontained && polys[k].containedbyid == i &&
+              boost::geometry::within(polys[j].polygon, polys[k].polygon)) {
+            istoplevelafterall = true;
+            break;
           }
-          if (istoplevelafterall) {
-            polys[j].iscontained = 1;
-            polys[j].containedbyid = i;
-          }
+        }
+        if (istoplevelafterall) {
+          polys[j].iscontained = 1;
+          polys[j].containedbyid = i;
         }
       }
     }
-    // polys now is a list of polygons tagged with which ones are inside each other
-
-    // List of polygons for multipolygon
-    std::unique_ptr<std::vector<Geometry*>> polygons(new std::vector<Geometry*>);
-
-    // For each top level polygon create a new polygon including any holes
-    for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
-        continue;
-      }
-
-      // List of holes for this top level polygon
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      std::unique_ptr<std::vector<LinearRing*>> interior(new std::vector<LinearRing*>);
-#else
-      std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
-#endif
-      for (unsigned j = i + 1; j < totalpolys; ++j) {
-        if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-          interior->push_back(polys[j].ring);
-#else
-          interior->push_back(polys[j].ring);
-#endif
-        }
-      }
-
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#else
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#endif
-      poly->normalize();
-      polygons->push_back(poly);
-    }
-
-    // Make a multipolygon
-    std::unique_ptr<Geometry> multipoly(gf->createMultiPolygon(polygons.release()));
-    if (!multipoly->isValid()) {
-      multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-    }
-    multipoly->normalize();
-
-    if (multipoly->isValid()) {
-      wkts.push_back(writer.write(multipoly.get()));
-    }
   }
 
-  for (unsigned i = 0; i < totalpolys; ++i) {
-    delete (polys[i].polygon);
+  // For each top level polygon create a new polygon including any holes
+  for (size_t i = 0; i < polys.size(); ++i) {
+    if (polys[i].iscontained != 0) {
+      continue;
+    }
+
+    // List of holes for this top level polygon
+    for (size_t j = i + 1; j < polys.size(); ++j) {
+      if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
+        polys[i].polygon.inners().push_back(polys[j].polygon.outer());
+        polys.erase(polys.begin() + j);
+      }
+    }
+
+    // Make sure the geom is good
+    boost::geometry::correct(polys[i].polygon);
   }
 
-  delete[](polys);
+  // Make a simple container of multiple polygons
+  multipolygon_t stripped;
+  stripped.reserve(polys.size());
+  for (auto& poly : polys) {
+    stripped.push_back(std::move(poly.polygon));
+  }
 
-  return wkts;
+  // Get back some wkt
+  std::stringstream ss;
+  ss << boost::geometry::wkt(stripped);
+  return ss.str();
 }
 
 } // anonymous namespace
@@ -373,22 +307,17 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   uint32_t count = 0;
   bool has_data;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
-
   try {
-
+    // for each admin area (relation)
     for (const auto& admin : osm_admin_data.admins_) {
 
-      std::unique_ptr<Geometry> geom;
-      std::unique_ptr<std::vector<Geometry*>> lines(new std::vector<Geometry*>);
+      // have to keep the geom of each member and lookup so we can merge them together
+      std::vector<std::vector<point_t>> lines;
+      std::unordered_multimap<point_t, size_t> line_lookup;
       has_data = true;
 
+      // get all the individual members of the admin relation merged into one ring
       for (const auto memberid : admin.ways()) {
-
         auto itr = osm_admin_data.way_map.find(memberid);
 
         // A relation may be included in an extract but it's members may not.
@@ -398,82 +327,77 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           break;
         }
 
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-        auto coords = std::unique_ptr<CoordinateArraySequence>(new CoordinateArraySequence);
-#else
-        std::unique_ptr<CoordinateSequence> coords(
-            gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
-#endif
-
+        // build the line geom
+        std::vector<point_t> coords;
         for (const auto ref_id : itr->second) {
-
-          const PointLL ll = osm_admin_data.shape_map.at(ref_id);
-
-          Coordinate c;
-          c.x = ll.lng();
-          c.y = ll.lat();
-          coords->add(c, 0);
+          const auto& ll = osm_admin_data.shape_map.at(ref_id);
+          coords.push_back(point_t{ll.first, ll.second});
         }
 
-        if (coords->getSize() > 1) {
-          geom = std::unique_ptr<Geometry>(gf->createLineString(coords.release()));
-          lines->push_back(geom.release());
+        // remember how to find this line
+        if (!coords.empty()) {
+          line_lookup.insert({coords.front(), lines.size()});
+          line_lookup.insert({coords.back(), lines.size()});
+          lines.push_back(std::move(coords));
         }
+      }
 
-      } // member loop
-
+      // if we had a complete relation (ie we found all members)
       if (has_data) {
+        // merge all the members into one or more rings
+        auto rings = line_merge(lines, line_lookup);
+        // convert those into wkt format so we can put it into sqlite
+        // TODO: why was this a vector before, just to find when it was empty?
+        auto wkt = to_wkt(rings);
+        if (wkt.empty())
+          continue;
 
-        std::unique_ptr<Geometry> mline(gf->createMultiLineString(lines.release()));
-        std::vector<std::string> wkts = GetWkts(mline);
         std::string name;
         std::string name_en;
         std::string iso;
 
-        for (const auto& wkt : wkts) {
+        // load it into sqlite
+        count++;
+        sqlite3_reset(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_bind_int(stmt, 1, admin.admin_level());
 
-          count++;
-          sqlite3_reset(stmt);
-          sqlite3_clear_bindings(stmt);
-          sqlite3_bind_int(stmt, 1, admin.admin_level());
-
-          if (admin.iso_code_index()) {
-            iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
-            sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 2);
-          }
-
-          sqlite3_bind_null(stmt, 3);
-
-          name = osm_admin_data.name_offset_map.name(admin.name_index());
-          sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
-
-          if (admin.name_en_index()) {
-            name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
-            sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 5);
-          }
-
-          sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-          sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
-          sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
-          /* performing INSERT INTO */
-          ret = sqlite3_step(stmt);
-          if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-            continue;
-          }
-          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          LOG_ERROR("sqlite3_step() Name: " +
-                    osm_admin_data.name_offset_map.name(admin.name_index()));
-          LOG_ERROR("sqlite3_step() Name:en: " +
-                    osm_admin_data.name_offset_map.name(admin.name_en_index()));
-          LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
-          LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
-          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
-                    std::to_string(admin.allow_intersection_names()));
+        if (admin.iso_code_index()) {
+          iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
+          sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
+        } else {
+          sqlite3_bind_null(stmt, 2);
         }
+
+        sqlite3_bind_null(stmt, 3);
+
+        name = osm_admin_data.name_offset_map.name(admin.name_index());
+        sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
+
+        if (admin.name_en_index()) {
+          name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
+          sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
+        } else {
+          sqlite3_bind_null(stmt, 5);
+        }
+
+        sqlite3_bind_int(stmt, 6, admin.drive_on_right());
+        sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
+        sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+        /* performing INSERT INTO */
+        ret = sqlite3_step(stmt);
+        if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+          continue;
+        }
+        LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+        LOG_ERROR("sqlite3_step() Name: " + osm_admin_data.name_offset_map.name(admin.name_index()));
+        LOG_ERROR("sqlite3_step() Name:en: " +
+                  osm_admin_data.name_offset_map.name(admin.name_en_index()));
+        LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
+        LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
+        LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+                  std::to_string(admin.allow_intersection_names()));
+
       } // has data
     }   // admins
   } catch (std::exception& e) {
