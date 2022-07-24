@@ -190,6 +190,7 @@ TEST(GtfsExample, MakeTiles) {
 
       // make sure we are looking at a pbf file
 
+      // make sure that the data writtten in the previous test is readable through pbfs
       // shape info
       EXPECT_EQ(transit.shapes_size(), 4);
       EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
