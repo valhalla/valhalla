@@ -33,7 +33,6 @@
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
 
