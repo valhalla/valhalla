@@ -31,8 +31,8 @@
 
 #include "mjolnir/admin.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
 #include "mjolnir/validatetransit.h"
 

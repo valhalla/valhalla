@@ -2,7 +2,8 @@
 #include "just_gtfs/just_gtfs.h"
 
 #include "mjolnir/ingest_transit.h"
-#include "string.h"
+#include "proto/transit.pb.h"
+#include "test.h"
 #include <gtest/gtest.h>
 
 using namespace gtfs;
@@ -15,7 +16,7 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string tripTwoID = "barbar";
   const std::string stopOneID = "foo";
   const std::string stopTwoID = "foo2";
-  const std::string shapeOneID = "square";
+  const std::string shapeOneID = "5";
   const std::string serviceOneID = "bon";
   Feed feed;
   filesystem::create_directories("test/data/gtfs_feeds/toronto");
@@ -62,6 +63,13 @@ TEST(GtfsExample, WriteGtfs) {
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
+
+  struct gtfs::Trip tripTwo {
+    .route_id = "baz", .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
+    .block_id = "block", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .bikes_allowed = gtfs::TripAccess::No,
+  };
+  feed.add_trip(tripTwo);
   feed.write_trips("test/data/gtfs_feeds/toronto");
 
   // write stop_times.txt
@@ -133,7 +141,7 @@ TEST(GtfsExample, WriteGtfs) {
   // make sure files are actually written
 
   const auto& trips = feed_reader.get_trips();
-  EXPECT_EQ(trips.size(), 1);
+  EXPECT_EQ(trips.size(), 2);
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   const auto& stops = feed_reader.get_stops();
@@ -150,10 +158,53 @@ TEST(GtfsExample, WriteGtfs) {
 }
 
 TEST(GtfsExample, MakeTiles) {
-  // create a config in memory make_config
-  // make_config("")
+  // shuold this be a pbf file, not a tar file ? maybe
+  auto pt = test::make_config("test/data/transit_test/",
+                              {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds/"},
+                               {"mjolnir.transit_dir", "test/data/transit_tiles/"}});
+  // constants written in the last function
+  const std::string tripOneID = "bar";
+  const std::string tripTwoID = "barbar";
+  const std::string stopOneID = "foo";
+  const std::string stopTwoID = "foo2";
+  const std::string shapeOneID = "1";
+  const std::string serviceOneID = "bon";
 
+  // spawn threads to download all the tiles returning a list of
+  // tiles that ended up having dangling stop pairs
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+
+  // spawn threads to connect dangling stop pairs to adjacent tiles' stops
+  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
   // call the two functions, in main valhalla_ingest-transit
   // it's gonna write protobufs
-  // make sure all the data is inside -> which we can test using the same tests as above
+  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles/");
+  filesystem::recursive_directory_iterator end_file_itr;
+
+  // for each pbf.
+  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    if (filesystem::is_regular_file(transit_file_itr->path())) {
+      std::string fname = transit_file_itr->path().string();
+      std::mutex lock;
+      mjolnir::Transit transit = mjolnir::read_pbf(fname, lock);
+
+      // make sure we are looking at a pbf file
+
+      // shape info
+      EXPECT_EQ(transit.shapes_size(), 4);
+      EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
+      // stop(node) info
+      EXPECT_EQ(transit.nodes_size(), 2);
+      EXPECT_EQ(transit.nodes(0).onestop_id(), stopOneID);
+      // routes info
+      EXPECT_EQ(transit.routes_size(), 1);
+      EXPECT_EQ(transit.routes(0).onestop_id(), "baz");
+
+      // stop_pair info
+      EXPECT_EQ(transit.stop_pairs_size(), 1);
+      EXPECT_EQ(transit.stop_pairs(0).origin_onestop_id(), stopOneID);
+    }
+  }
 }
+
+// make sure all the data is inside -> which we can test using the same tests as above

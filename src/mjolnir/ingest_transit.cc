@@ -4,6 +4,7 @@
 #include <future>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <random>
 #include <sstream>
@@ -34,9 +35,11 @@
 #include "mjolnir/admin.h"
 #include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
 #include "proto/transit.pb.h"
+
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 using namespace boost::property_tree;
 using namespace valhalla::midgard;
@@ -98,16 +101,14 @@ write_stops(Transit& tile, const tileTransitInfo& tile_info, const std::string& 
   return stop_graphIds;
 }
 
-// read per stop, given shape
+// read feed data per stop, given shape
 float add_stop_pair_shapes(const gtfs::Stop& stop_connect, const gtfs::Shape& trip_shape) {
-  // check which segment would belong
-  // projector_t project(PointLL(lon, lat)); building a path to geodesic .?
+  // check which segment would belong to which tile
   float dist_traveled = 0;
   float min_sq_distance = INFINITY;
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
   for (int segment = 0; segment < (int)trip_shape.size() - 1; segment++) {
-    // change to if shape point size >= 2 and for until 1 before last
     auto currOrigin = trip_shape[segment];
     auto currDest = trip_shape[segment + 1];
     PointLL originPoint = PointLL(currOrigin.shape_pt_lon, currOrigin.shape_pt_lat);
@@ -122,6 +123,7 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect, const gtfs::Shape& tr
   }
   return dist_traveled;
 }
+
 struct unique_transit_t {
   std::mutex lock;
   std::unordered_map<std::string, size_t> trips;
@@ -129,7 +131,7 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-// return dangling stop_pairs
+// return dangling stop_pairs, write stop data from feed
 bool write_stop_pairs(Transit& tile,
                       const tileTransitInfo& tile_info,
                       const std::string& path,
@@ -218,14 +220,12 @@ bool write_stop_pairs(Transit& tile,
 
         stop_pair->set_wheelchair_accessible(currTrip.wheelchair_accessible == gtfs::TripAccess::Yes);
 
-        // insert shape info
-
         // get frequency info
         auto currFrequencies = feed.get_frequencies(currTrip.trip_id);
         auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
         auto freq_end_time = (currFrequencies[0].start_time.get_raw_time());
         auto freq_time = freq_start_time + freq_end_time;
-        // what to do if there are multiple frequencies?
+        // what to do if there are multiple frequencies? choose fist one
         if (currFrequencies.size() > 0) {
           stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
           stop_pair->set_frequency_headway_seconds(currFrequencies[0].headway_secs);
@@ -245,6 +245,7 @@ bool write_stop_pairs(Transit& tile,
   return dangles;
 }
 
+// read routes data from feed
 void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
   gtfs::Feed feed(path);
   feed.read_feed();
@@ -268,15 +269,15 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::st
   }
 }
 
+// grab feed data from feed
 void write_shapes(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
-  // it's all very straightforward after implementing the matching stops -> shape_pts .
-  // just include all shape_pts (in this tile)
   gtfs::Feed feed(path);
   feed.read_feed();
   for (const auto& tile_shape : tile_info.tile_shapes) {
     auto* shape = tile.add_shapes();
     gtfs::Shape currShape = feed.get_shape(tile_shape, true);
-    // We use currShape[0] because 'Shape' type is a vector of ShapePoints
+    // We use currShape[0] because 'Shape' type is a vector of ShapePoints, but they all have the same
+    // shape_id
     shape->set_shape_id(stoi(currShape[0].shape_id));
     std::vector<PointLL> trip_shape;
     for (const auto& shape_pt : currShape) {
@@ -286,8 +287,7 @@ void write_shapes(Transit& tile, const tileTransitInfo& tile_info, const std::st
   }
 }
 
-// note: so basically fetch_tiles is the function and
-// fetch_ only does the threading
+// pre-processes feed data and writes to the pbfs (calls the 'write' functions)
 void ingest_tiles(const boost::property_tree::ptree& pt,
                   std::priority_queue<tileTransitInfo>& queue,
                   unique_transit_t& uniques,
@@ -344,7 +344,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     }
 
     if (tile.stop_pairs_size()) {
-      // what is the pt?
       auto file_name = GraphTile::FileSuffix(current.graphId, SUFFIX_NON_COMPRESSED);
       filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
                                       filesystem::path::preferred_separator + file_name;
@@ -370,6 +369,7 @@ struct dist_sort_t {
   }
 };
 
+// connect the stop_pairs that span multiple tiles by processing dangling tiles
 void stitch_tiles(const boost::property_tree::ptree& pt,
                   const std::unordered_set<GraphId>& all_tiles,
                   std::list<GraphId>& tiles,
@@ -480,49 +480,53 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
+// Read from GTFS feed, sort data into the tiles they belong to
 std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
   auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
 
-  for (const auto& dir_it : filesystem::recursive_directory_iterator(path)) {
+  std::set<GraphId> tiles;
+  const auto& tile_level = TileHierarchy::levels().back();
+  std::unordered_map<GraphId, tileTransitInfo> tile_map;
 
-    gtfs::Feed feed(dir_it->path().string());
-    feed.read_feed();
-    const auto& stops = feed.get_stops();
+  filesystem::recursive_directory_iterator gtfs_feed_itr(path);
+  filesystem::recursive_directory_iterator end_file_itr;
+  for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
+    if (filesystem::is_regular_file(gtfs_feed_itr->path())) {
+      gtfs::Feed feed(gtfs_feed_itr->path().string());
+      feed.read_feed();
+      const auto& stops = feed.get_stops();
 
-    std::set<GraphId> tiles;
-    const auto& tile_level = TileHierarchy::levels().back();
-    std::unordered_map<GraphId, tileTransitInfo> tile_map;
+      for (const auto& stop : stops) {
+        gtfs::Id currStopId = stop.stop_id;
+        float x = stop.stop_lon;
+        float y = stop.stop_lat;
 
-    for (const auto& stop : stops) {
-      gtfs::Id currStopId = stop.stop_id;
-      float x = stop.stop_lon;
-      float y = stop.stop_lat;
+        // add unique GraphId and stop
+        // might have to typecast these doubles into uint32_t
+        GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
+        auto currTile = tile_map[currId];
+        currTile.graphId = currId;
+        currTile.tile_stops.insert(currStopId);
+        gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
-      // add unique GraphId and stop
-      // might have to typecast these doubles into uint32_t
-      GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
-      auto currTile = tile_map[currId];
-      currTile.graphId = currId;
-      currTile.tile_stops.insert(currStopId);
-      gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
+        for (auto stopTime : currStopTimes) {
+          // add trip, route, agency and service_id from stop_time
+          // could use std::set to not check if it already exists
 
-      for (auto stopTime : currStopTimes) {
-        // add trip, route, agency and service_id from stop_time
-        // could use std::set to not check if it already exists
+          // use a set instead to keep track of these points
+          gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
+          currTile.tile_services.insert(currTrip.service_id);
+          currTile.tile_trips.insert(currTrip.trip_id);
 
-        // use a set instead to keep track of these points
-        gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
-        currTile.tile_services.insert(currTrip.service_id);
-        currTile.tile_trips.insert(currTrip.trip_id);
-
-        currTile.tile_shapes.insert(currTrip.shape_id);
-        // remember the shape id such that we can access it later
-        gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
-        currTile.tile_routes.insert(currRoute.route_id);
-        currTile.tile_agencies.insert(currRoute.agency_id);
-        // add to the queue of tiles
-        // prioritized.push(currTile);
+          currTile.tile_shapes.insert(currTrip.shape_id);
+          // remember the shape id such that we can access it later
+          gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
+          currTile.tile_routes.insert(currRoute.route_id);
+          currTile.tile_agencies.insert(currRoute.agency_id);
+          // add to the queue of tiles
+          // prioritized.push(currTile);
+        }
       }
     }
   }
@@ -533,6 +537,7 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
   return prioritized;
 }
 
+// thread and call ingest_tiles
 std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
 
   auto thread_count =
@@ -570,6 +575,8 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   LOG_INFO("Finished");
   return dangling;
 }
+
+// thread and call stitch_tiles
 void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& dangling_tiles) {
 
   auto thread_count =
@@ -607,6 +614,108 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   }
 
   LOG_INFO("Finished");
+}
+
+Transit read_pbf(const std::string& file_name, std::mutex& lock) {
+  lock.lock();
+  std::fstream file(file_name, std::ios::in | std::ios::binary);
+  if (!file) {
+    throw std::runtime_error("Couldn't load " + file_name);
+    lock.unlock();
+  }
+  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  lock.unlock();
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+  google::protobuf::io::CodedInputStream cs(
+      static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+  auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+  cs.SetTotalBytesLimit(limit);
+#else
+  cs.SetTotalBytesLimit(limit, limit);
+#endif
+  Transit transit;
+  if (!transit.ParseFromCodedStream(&cs)) {
+    throw std::runtime_error("Couldn't load " + file_name);
+  }
+  return transit;
+}
+
+Transit read_pbf(const std::string& file_name) {
+  std::fstream file(file_name, std::ios::in | std::ios::binary);
+  if (!file) {
+    throw std::runtime_error("Couldn't load " + file_name);
+  }
+  std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+  google::protobuf::io::ArrayInputStream as(static_cast<const void*>(buffer.c_str()), buffer.size());
+  google::protobuf::io::CodedInputStream cs(
+      static_cast<google::protobuf::io::ZeroCopyInputStream*>(&as));
+  auto limit = std::max(static_cast<size_t>(1), buffer.size() * 2);
+#if GOOGLE_PROTOBUF_VERSION >= 3006000
+  cs.SetTotalBytesLimit(limit);
+#else
+  cs.SetTotalBytesLimit(limit, limit);
+#endif
+  Transit transit;
+  if (!transit.ParseFromCodedStream(&cs)) {
+    throw std::runtime_error("Couldn't load " + file_name);
+  }
+  return transit;
+}
+
+// Get PBF transit data given a GraphId / tile
+Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
+  std::string fname = GraphTile::FileSuffix(id);
+  fname = fname.substr(0, fname.size() - 3) + "pbf";
+  file_name = transit_dir + '/' + fname;
+  Transit transit;
+  transit = read_pbf(file_name);
+  return transit;
+}
+
+void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
+  // check for empty stop pairs and routes.
+  if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
+    LOG_WARN(transit_tile.string() + " had no data and will not be stored");
+    return;
+  }
+
+  // write pbf to file
+  if (!filesystem::exists(transit_tile.parent_path())) {
+    filesystem::create_directories(transit_tile.parent_path());
+  }
+#if GOOGLE_PROTOBUF_VERSION >= 3001000
+  auto size = tile.ByteSizeLong();
+#else
+  auto size = tile.ByteSize();
+#endif
+  valhalla::midgard::mem_map<char> buffer;
+  buffer.create(transit_tile.string(), size);
+  if (!tile.SerializeToArray(buffer.get(), size)) {
+    LOG_ERROR("Couldn't write: " + transit_tile.string() + " it would have been " +
+              std::to_string(size));
+  }
+
+  if (tile.routes_size() && tile.nodes_size() && tile.stop_pairs_size() && tile.shapes_size()) {
+    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.nodes_size()) + " nodes " +
+             std::to_string(tile.routes_size()) + " routes " + std::to_string(tile.shapes_size()) +
+             " shapes " + std::to_string(tile.stop_pairs_size()) + " stop pairs");
+  } else {
+    LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stop_pairs_size()) +
+             " stop pairs");
+  }
+}
+
+// Converts a stop's pbf graph Id to a Valhalla graph Id by adding the
+// tile's node count. Returns an Invalid GraphId if the tile is not found
+// in the list of Valhalla tiles
+GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& all_tiles) {
+  auto t = all_tiles.find(nodeid.Tile_Base());
+  if (t == all_tiles.end()) {
+    return GraphId(); // Invalid graph Id
+  } else {
+    return {nodeid.tileid(), nodeid.level() + 1, nodeid.id()};
+  }
 }
 
 } // namespace mjolnir
