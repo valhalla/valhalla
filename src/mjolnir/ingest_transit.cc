@@ -72,11 +72,14 @@ typedef struct shapeInfo {
 
 std::unordered_map<gtfs::Id, GraphId>
 write_stops(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
-  gtfs::Feed feed(path);
+
+  gtfs::Feed feed("test/data/gtfs_feeds/toronto"); // was path
   feed.read_feed();
   auto tile_stopIds = tile_info.tile_stops;
   auto node_id = tile_info.graphId;
-
+  if (feed.get_stops().empty()) {
+    LOG_WARN("No stops found in feed");
+  }
   std::unordered_map<gtfs::Id, GraphId> stop_graphIds;
   // loop through all stops inside the tile
   for (const gtfs::Id& tile_stopId : tile_stopIds) {
@@ -95,7 +98,7 @@ write_stops(Transit& tile, const tileTransitInfo& tile_info, const std::string& 
     bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
     node->set_wheelchair_boarding(wheelchair_accessible);
     // node->set_generated(feed_stop.generated); ?
-
+    node->set_onestop_id(tile_stop.stop_id);
     stop_graphIds[tile_stopId] = node_id;
   }
   return stop_graphIds;
@@ -137,7 +140,7 @@ bool write_stop_pairs(Transit& tile,
                       const std::string& path,
                       std::unordered_map<gtfs::Id, GraphId> stop_graphIds,
                       unique_transit_t& uniques) {
-  gtfs::Feed feed(path);
+  gtfs::Feed feed("test/data/gtfs_feeds/toronto"); // was path
   feed.read_feed();
   auto& tile_tripIds = tile_info.tile_trips;
   bool dangles = false;
@@ -202,13 +205,16 @@ bool write_stop_pairs(Transit& tile,
             stop_pair->add_service_except_dates(stoi(d));
         }
         gtfs::CalendarItem trip_calendar = *(feed.get_calendar(currTrip.service_id));
-        std::vector<bool> service_days = {(bool)trip_calendar.monday,    (bool)trip_calendar.tuesday,
-                                          (bool)trip_calendar.wednesday, (bool)trip_calendar.thursday,
-                                          (bool)trip_calendar.friday,    (bool)trip_calendar.saturday,
-                                          (bool)trip_calendar.sunday};
-        for (int i = 0; i < 7; i++) {
-          stop_pair->set_service_days_of_week(i, service_days[i]);
-        }
+        // NOT INCLUDED IN FETCH TRANSIT -> NOT NEEDED HERE?
+        //        bool service_days[7] = {(bool)trip_calendar.monday,    (bool)trip_calendar.tuesday,
+        //                                          (bool)trip_calendar.wednesday,
+        //                                          (bool)trip_calendar.thursday,
+        //                                          (bool)trip_calendar.friday,
+        //                                          (bool)trip_calendar.saturday,
+        //                                          (bool)trip_calendar.sunday};
+        //        for (int i = 0; i < 7; i++) {
+        //          stop_pair->set_service_days_of_week(i, service_days[i]);
+        //        }
         stop_pair->set_service_start_date(stoi(trip_calendar.start_date.get_raw_date()));
         stop_pair->set_service_end_date(stoi(trip_calendar.end_date.get_raw_date()));
         stop_pair->set_trip_headsign(currTrip.trip_headsign);
@@ -247,7 +253,7 @@ bool write_stop_pairs(Transit& tile,
 
 // read routes data from feed
 void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
-  gtfs::Feed feed(path);
+  gtfs::Feed feed("test/data/gtfs_feeds/toronto"); // was path
   feed.read_feed();
 
   for (const auto& routeId : tile_info.tile_routes) {
@@ -271,7 +277,7 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info, const std::st
 
 // grab feed data from feed
 void write_shapes(Transit& tile, const tileTransitInfo& tile_info, const std::string& path) {
-  gtfs::Feed feed(path);
+  gtfs::Feed feed("test/data/gtfs_feeds/toronto"); // was path
   feed.read_feed();
   for (const auto& tile_shape : tile_info.tile_shapes) {
     auto* shape = tile.add_shapes();
@@ -344,9 +350,9 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     }
 
     if (tile.stop_pairs_size()) {
-      auto file_name = GraphTile::FileSuffix(current.graphId, SUFFIX_NON_COMPRESSED);
-      filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
-                                      filesystem::path::preferred_separator + file_name;
+      //      auto curr_file_name = GraphTile::FileSuffix(current.graphId, SUFFIX_NON_COMPRESSED);
+      //      filesystem::path curr_transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
+      //                                    filesystem::path::preferred_separator + curr_file_name;
       write_pbf(tile, transit_tile.string());
     }
   }
@@ -492,7 +498,7 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
   filesystem::recursive_directory_iterator gtfs_feed_itr(path);
   filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
-    if (filesystem::is_regular_file(gtfs_feed_itr->path())) {
+    if (filesystem::is_directory(gtfs_feed_itr->path())) {
       gtfs::Feed feed(gtfs_feed_itr->path().string());
       feed.read_feed();
       const auto& stops = feed.get_stops();
@@ -505,8 +511,13 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
         // add unique GraphId and stop
         // might have to typecast these doubles into uint32_t
         GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
-        auto currTile = tile_map[currId];
-        currTile.graphId = currId;
+
+        tileTransitInfo currTile;
+        if (tile_map.find(currId) != tile_map.end()) {
+          currTile = tile_map[currId];
+        } else {
+          currTile.graphId = currId;
+        }
         currTile.tile_stops.insert(currStopId);
         gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
@@ -527,6 +538,8 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
           // add to the queue of tiles
           // prioritized.push(currTile);
         }
+        tile_map[currId] = currTile;
+        // tile_map.insert({currId, currTile});
       }
     }
   }
@@ -554,6 +567,8 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   unique_transit_t uniques;
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
+
+  // ingest_tiles(pt, tiles, uniques, promises[0]);
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(ingest_tiles, std::cref(pt), std::ref(tiles), std::ref(uniques),
                                      std::ref(promises[i])));
@@ -602,6 +617,7 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::mutex lock;
 
+  // stitch_tiles(pt, all_tiles, dangling_tiles, lock);
   // make let them rip
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles),

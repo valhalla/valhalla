@@ -12,12 +12,12 @@ using namespace valhalla;
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
 
-  const std::string tripOneID = "bar";
-  const std::string tripTwoID = "barbar";
-  const std::string stopOneID = "foo";
-  const std::string stopTwoID = "foo2";
+  const std::string tripOneID = "10";
+  const std::string tripTwoID = "11";
+  const std::string stopOneID = "7";
+  const std::string stopTwoID = "8";
   const std::string shapeOneID = "5";
-  const std::string serviceOneID = "bon";
+  const std::string serviceOneID = "9";
   Feed feed;
   filesystem::create_directories("test/data/gtfs_feeds/toronto");
 
@@ -49,7 +49,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write routes.txt
   struct Route lineOne {
-    .route_id = "baz", .route_type = RouteType::Subway, .route_short_name = "ba",
+    .route_id = "2", .route_type = RouteType::Subway, .route_short_name = "ba",
     .route_long_name = "bababa", .route_desc = "this is the first route", .route_color = "blue",
     .route_text_color = "black",
   };
@@ -58,15 +58,15 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write trips.txt
   struct gtfs::Trip tripOne {
-    .route_id = "baz", .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "haha",
-    .block_id = "block", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .route_id = "2", .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "haha",
+    .block_id = "3", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
 
   struct gtfs::Trip tripTwo {
-    .route_id = "baz", .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
-    .block_id = "block", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .route_id = "2", .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
+    .block_id = "4", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripTwo);
@@ -158,17 +158,19 @@ TEST(GtfsExample, WriteGtfs) {
 }
 
 TEST(GtfsExample, MakeTiles) {
-  // shuold this be a pbf file, not a tar file ? maybe
-  auto pt = test::make_config("test/data/transit_test/",
+  filesystem::create_directories("test/data/transit_test");
+  filesystem::create_directories("test/data/transit_tiles");
+  auto pt = test::make_config("test/data/transit_test",
                               {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds/"},
-                               {"mjolnir.transit_dir", "test/data/transit_tiles/"}});
+                               {"mjolnir.transit_dir", "test/data/transit_tiles"}});
+
   // constants written in the last function
-  const std::string tripOneID = "bar";
-  const std::string tripTwoID = "barbar";
-  const std::string stopOneID = "foo";
-  const std::string stopTwoID = "foo2";
-  const std::string shapeOneID = "1";
-  const std::string serviceOneID = "bon";
+  const std::string tripOneID = "10";
+  const std::string tripTwoID = "11";
+  const std::string stopOneID = "7";
+  const std::string stopTwoID = "8";
+  const std::string shapeOneID = "5";
+  const std::string serviceOneID = "9";
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
@@ -178,7 +180,7 @@ TEST(GtfsExample, MakeTiles) {
   valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
   // call the two functions, in main valhalla_ingest-transit
   // it's gonna write protobufs
-  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles/");
+  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
   filesystem::recursive_directory_iterator end_file_itr;
 
   // for each pbf.
@@ -192,17 +194,18 @@ TEST(GtfsExample, MakeTiles) {
 
       // make sure that the data written in the previous test is readable through pbfs
       // shape info
-      EXPECT_EQ(transit.shapes_size(), 4);
+      // becomes 1 shape from 4 shape_points last test
+      EXPECT_EQ(transit.shapes_size(), 1);
       EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
       // stop(node) info
       EXPECT_EQ(transit.nodes_size(), 2);
-      EXPECT_EQ(transit.nodes(0).onestop_id(), stopOneID);
+      EXPECT_EQ(transit.nodes(1).onestop_id(), stopOneID);
       // routes info
       EXPECT_EQ(transit.routes_size(), 1);
-      EXPECT_EQ(transit.routes(0).onestop_id(), "baz");
+      EXPECT_EQ(transit.routes(0).onestop_id(), "2");
 
       // stop_pair info
-      EXPECT_EQ(transit.stop_pairs_size(), 1);
+      EXPECT_EQ(transit.stop_pairs_size(), 2);
       EXPECT_EQ(transit.stop_pairs(0).origin_onestop_id(), stopOneID);
     }
   }

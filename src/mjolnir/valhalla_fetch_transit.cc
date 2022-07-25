@@ -9,7 +9,6 @@
 #include <sstream>
 #include <string>
 #include <thread>
-#include <unordered_map>
 #include <unordered_set>
 
 #include <boost/algorithm/string.hpp>
@@ -26,12 +25,10 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
-#include "midgard/tiles.h"
 
 #include "filesystem.h"
-#include "just_gtfs/just_gtfs.h"
-#include "midgard/util.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
@@ -278,6 +275,13 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
            std::to_string(feeds.get_child("features").size()) + " feeds");
   return prioritized;
 }
+
+#define set_no_null(T, pt, path, null_value, set)                                                    \
+  {                                                                                                  \
+    auto value = pt.get<T>(path, null_value);                                                        \
+    if (value != null_value)                                                                         \
+      set(value);                                                                                    \
+  }
 
 void get_stop_stations(Transit& tile,
                        std::unordered_map<std::string, uint64_t>& nodes,
