@@ -199,7 +199,7 @@ TEST(GtfsExample, MakeTiles) {
       EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
       // stop(node) info
       EXPECT_EQ(transit.nodes_size(), 2);
-      EXPECT_EQ(transit.nodes(1).onestop_id(), stopOneID);
+      EXPECT_EQ(transit.nodes(0).onestop_id(), stopOneID);
       // routes info
       EXPECT_EQ(transit.routes_size(), 1);
       EXPECT_EQ(transit.routes(0).onestop_id(), "2");
