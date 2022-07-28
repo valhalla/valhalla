@@ -3,9 +3,7 @@
 #include "baldr/admin.h"
 #include "filesystem.h"
 #include "gurka.h"
-#include "mjolnir/admin.h"
 #include "mjolnir/adminbuilder.h"
-#include "mjolnir/pbfadminparser.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test/test.h"
 
@@ -27,12 +25,25 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         |       |       |   |   |       |
         |       |       |   Z   |       |
         F-------E-------D-------L-------K
+
+
+
+        M-------N-------O
+        |    S-----T    |
+        |    |     |    |
+        |  a-|--b--|-c  |
+        |    |     |    |
+        |    U-----V    |
+        Q-------R-------P
+
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
-  const gurka::ways ways = {{"ABCDEFA", {}},
-                            {"ABEFA", {}},
-                            {"BCDEB", {}},
+  const gurka::ways ways = {{"AB", {}},
+                            {"AF", {}},
+                            {"EF", {}},
+                            {"EB", {}},
+                            {"BCDE", {}},
                             {"CIJKLDC", {}},
                             {"CILDC", {}},
                             {"IJKLI", {}},
@@ -57,7 +68,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
                                  {"highway", "primary"},
                              }}};
 
-  // X lives Japan which allows named intersections - and is named.
+  // X lives in Japan which allows named intersections - and is named.
   // gurka automatically names the nodes by their name in the ascii map
   // if you want to make sure there is no name you need to send empty string
   const gurka::nodes nodes = {
@@ -65,17 +76,30 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {"Y", {{"junction", "yes"}, {"name", ""}}},
   };
 
-  const gurka::relations relations = {{{{{gurka::way_member, "ABEFA", "outer"}}},
+  const gurka::relations relations = {{{{
+                                           {gurka::way_member, "AB", "outer"},
+                                           {gurka::way_member, "EB", "outer"},
+                                           {gurka::way_member, "EF", "outer"},
+                                           {gurka::way_member, "AF", "outer"},
+                                       }},
                                        {{"type", "boundary"},
                                         {"boundary", "administrative"},
                                         {"admin_level", "4"},
                                         {"name", "Colorado"}}},
-                                      {{{{gurka::way_member, "BCDEB", "outer"}}},
+                                      {{{
+                                           {gurka::way_member, "BCDE", "outer"},
+                                           {gurka::way_member, "EB", "outer"},
+                                       }},
                                        {{"type", "boundary"},
                                         {"boundary", "administrative"},
                                         {"admin_level", "4"},
                                         {"name", "Utah"}}},
-                                      {{{{gurka::way_member, "ABCDEFA", "outer"}}},
+                                      {{{
+                                           {gurka::way_member, "AB", "outer"},
+                                           {gurka::way_member, "BCDE", "outer"},
+                                           {gurka::way_member, "EF", "outer"},
+                                           {gurka::way_member, "AF", "outer"},
+                                       }},
                                        {{"type", "boundary"},
                                         {"boundary", "administrative"},
                                         {"admin_level", "2"},
