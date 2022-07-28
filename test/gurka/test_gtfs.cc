@@ -18,6 +18,11 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string stopTwoID = "8";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
+  const int serviceStartDate = 20220131;
+  const int serviceEndDate = 20230131;
+  const int addedDate = 20220202;
+  const int removedDate = 20220203;
+  const int headwaySec = 1800;
   Feed feed;
   filesystem::create_directories("test/data/gtfs_feeds/toronto");
 
@@ -124,11 +129,11 @@ TEST(GtfsExample, WriteGtfs) {
   // write frequencies.txt
   struct Frequency freqBased {
     .trip_id = tripOneID, .start_time = Time(0, 0, 0), .end_time = Time(2, 0, 0),
-    .headway_secs = 1800, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
+    .headway_secs = headwaySec, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
   };
   struct Frequency schedBased {
     .trip_id = tripTwoID, .start_time = Time(0, 0, 0), .end_time = Time(2, 0, 0),
-    .headway_secs = 1800, .exact_times = gtfs::FrequencyTripService::ScheduleBased,
+    .headway_secs = headwaySec, .exact_times = gtfs::FrequencyTripService::ScheduleBased,
   };
 
   feed.add_frequency(freqBased);
@@ -155,6 +160,18 @@ TEST(GtfsExample, WriteGtfs) {
   const auto& calendarGTFS = feed_reader.get_calendar();
   EXPECT_EQ(calendarGTFS.size(), 1);
   EXPECT_EQ(calendarGTFS[0].service_id, serviceOneID);
+
+  const auto& calendarExceptions = feed_reader.get_calendar_dates();
+  EXPECT_EQ(calendarExceptions.size(), 2);
+  EXPECT_EQ(calendarExceptions[0].exception_type,
+            gtfs::CalendarDateException::Added); // service added
+  EXPECT_EQ(calendarExceptions[1].exception_type,
+            gtfs::CalendarDateException::Removed); // service added
+
+  const auto& frequencies = feed_reader.get_frequencies();
+  EXPECT_EQ(frequencies.size(), 2);
+  EXPECT_EQ(frequencies[0].exact_times, gtfs::FrequencyTripService::FrequencyBased);
+  EXPECT_EQ(frequencies[1].exact_times, gtfs::FrequencyTripService::ScheduleBased);
 }
 
 TEST(GtfsExample, MakeTiles) {
@@ -171,6 +188,11 @@ TEST(GtfsExample, MakeTiles) {
   const std::string stopTwoID = "8";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
+  const int serviceStartDate = 20220131;
+  const int serviceEndDate = 20230131;
+  const int addedDate = 20220202;
+  const int removedDate = 20220203;
+  const int headwaySec = 1800;
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
@@ -187,8 +209,7 @@ TEST(GtfsExample, MakeTiles) {
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
-      std::mutex lock;
-      mjolnir::Transit transit = mjolnir::read_pbf(fname, lock);
+      mjolnir::Transit transit = mjolnir::read_pbf(fname);
 
       // make sure we are looking at a pbf file
 
@@ -207,6 +228,20 @@ TEST(GtfsExample, MakeTiles) {
       // stop_pair info
       EXPECT_EQ(transit.stop_pairs_size(), 2);
       EXPECT_EQ(transit.stop_pairs(0).origin_onestop_id(), stopOneID);
+
+      // calendar information
+      EXPECT_EQ(transit.stop_pairs(0).service_start_date(), serviceStartDate);
+      EXPECT_EQ(transit.stop_pairs(0).service_end_date(), serviceEndDate);
+      //   .start_date = Date(2022, 1, 31), .end_date = Date(2023, 1, 31) is written to gtfs
+
+      // calendar date information
+      EXPECT_EQ(transit.stop_pairs(0).service_except_dates_size(), 1);
+      EXPECT_EQ(transit.stop_pairs(0).service_except_dates(0), removedDate);
+      EXPECT_EQ(transit.stop_pairs(0).service_added_dates(0), addedDate);
+
+      // frequency information
+      EXPECT_EQ(transit.stop_pairs(0).frequency_headway_seconds(), headwaySec);
+      EXPECT_EQ(transit.stop_pairs(1).frequency_headway_seconds(), headwaySec);
     }
   }
 }

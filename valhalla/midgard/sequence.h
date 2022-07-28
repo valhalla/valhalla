@@ -154,9 +154,10 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    auto target_size = new_count * sizeof(T);
+    decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
-    if (stat(new_file_name.c_str(), &s) || (unsigned long)s.st_size != target_size) {
+
+    if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
       std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);
       // seek to the new size and put a null char
