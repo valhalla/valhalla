@@ -16,25 +16,23 @@
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using point_t =
-    boost::geometry::model::d2::point_xy<double,
-                                         boost::geometry::cs::geographic<boost::geometry::degree>>;
+using polar_coordinate_system_t = boost::geometry::cs::geographic<boost::geometry::degree>;
+using point_t = boost::geometry::model::d2::point_xy<double, polar_coordinate_system_t>;
 using polygon_t = boost::geometry::model::polygon<point_t>;
 using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
 
+// in order to work with boost points inside stl containers
 namespace std {
 template <> struct hash<point_t> {
   inline size_t operator()(const point_t& p) const {
-    return uint64_t(p.x() * 1e7 + 180 * 1e7) << 32 | uint64_t(p.y() * 1e7 + 90 * 1e7);
+    return (uint64_t(p.x() * 1e7 + 180 * 1e7) << 32) | (uint64_t(p.y() * 1e7 + 90 * 1e7));
   }
 };
-
 template <> struct equal_to<point_t> {
   inline bool operator()(const point_t& a, const point_t& b) const {
     return a.x() == b.x() && a.y() == b.y();
   }
 };
-
 } // namespace std
 
 // For OSM pbf reader
@@ -53,8 +51,39 @@ namespace {
  */
 std::vector<std::vector<point_t>> line_merge(std::vector<std::vector<point_t>> lines,
                                              std::unordered_multimap<point_t, size_t> line_lookup) {
-  // TODO: use the lookup to connect adjacent linestrings. GriddedData::GenerateContours does this
   std::vector<std::vector<point_t>> rings;
+  std::equal_to<point_t> point_equals;
+
+  // keep going while we have threads to pull
+  while (!line_lookup.empty()) {
+    // start connecting the first line we have to adjacent ones
+    auto& ring = *rings.emplace(rings.end());
+    for (auto line_itr = line_lookup.begin(); line_itr != line_lookup.end();
+         line_itr = line_lookup.find(ring.back())) {
+      // grab the line segment to add
+      auto line_index = line_itr->second;
+      auto& line = lines[line_index];
+      // we can add this line in the forward direction
+      if (ring.empty() || point_equals(ring.back(), line.front())) {
+        ring.insert(ring.end(), std::make_move_iterator(line.begin() + !ring.empty()),
+                    std::make_move_iterator(line.end()));
+      } // have to add this segment backwards
+      else {
+        ring.insert(ring.end(), std::make_move_iterator(std::next(line.rbegin())),
+                    std::make_move_iterator(line.rend()));
+      }
+
+      // done with this segment and its other end
+      line_lookup.erase(line_itr);
+      line_itr = line_lookup.find(ring.back());
+      assert(line_itr != line_lookup.end());
+      if (line_itr->second != line_index)
+        ++line_itr;
+      assert(line_itr != line_lookup.end());
+      line_lookup.erase(line_itr);
+    }
+    assert(ring.size() > 2 && point_equals(ring.front(), ring.back()));
+  }
 
   return rings;
 }
