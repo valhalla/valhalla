@@ -88,21 +88,21 @@ std::vector<std::vector<point_t>> line_merge(std::vector<std::vector<point_t>> l
   return rings;
 }
 
-struct polygondata {
+struct polygon_data {
   polygon_t polygon;
   double area;
-  int iscontained;
-  unsigned containedbyid;
-  bool operator<(const polygondata& p) const {
+  bool is_inner;
+  size_t outer_idx;
+  bool operator<(const polygon_data& p) const {
     return area >= p.area; // sort descending
   }
 };
 
 std::string to_wkt(const std::vector<std::vector<point_t>>& rings) {
   // Procces ways into lines or simple polygon list
-  std::vector<polygondata> polys;
+  std::vector<polygon_data> polys;
   for (const auto& ring : rings) {
-    polygondata pd;
+    polygon_data pd{};
     boost::geometry::assign_points(pd.polygon, ring);
     boost::geometry::correct(pd.polygon);
     if (!boost::geometry::is_valid(pd.polygon))
@@ -118,29 +118,35 @@ std::string to_wkt(const std::vector<std::vector<point_t>>& rings) {
   // sort descending by area
   std::sort(polys.begin(), polys.end());
 
-  // here we mark rings that are nested inside of other rings
+  // we need to figure out which rings are inners of others
+  // our strategy is to only ever go one level deep with inners, that is inners of inners
+  // will just become outers that happen to be inside the hole of another outer
   for (size_t i = 0; i < polys.size(); ++i) {
-    if (polys[i].iscontained != 0) {
+    // im already claimed as an inner no need to search
+    if (polys[i].is_inner) {
       continue;
     }
 
+    // i may have an inner myself though
     for (size_t j = i + 1; j < polys.size(); ++j) {
-      // Does polygon[i] contain the smaller polygon[j]?
-      if (polys[j].containedbyid == 0 &&
-          boost::geometry::within(polys[j].polygon, polys[i].polygon)) {
-        // are we in a [i] contains [k] contains [j] situation
-        // which would actually make j top level
-        bool istoplevelafterall = false;
+      // is j inside i but not the inner of any other rings?
+      if (!polys[j].is_inner && boost::geometry::within(polys[j].polygon, polys[i].polygon)) {
+
+        // its possible that j would be the inner of someone who is already my inner, call them k
+        // in that case j will be its own outer that lives in the hole that k carves out of i
+        bool j_is_inner = true;
         for (size_t k = i + 1; k < j; ++k) {
-          if (polys[k].iscontained && polys[k].containedbyid == i &&
+          if (polys[k].is_inner && polys[k].outer_idx == i &&
               boost::geometry::within(polys[j].polygon, polys[k].polygon)) {
-            istoplevelafterall = true;
+            j_is_inner = false;
             break;
           }
         }
-        if (istoplevelafterall) {
-          polys[j].iscontained = 1;
-          polys[j].containedbyid = i;
+
+        // if j is not living inside another ring then its now i's inner
+        if (j_is_inner) {
+          polys[j].is_inner = true;
+          polys[j].outer_idx = i;
         }
       }
     }
@@ -148,13 +154,13 @@ std::string to_wkt(const std::vector<std::vector<point_t>>& rings) {
 
   // For each top level polygon create a new polygon including any holes
   for (size_t i = 0; i < polys.size(); ++i) {
-    if (polys[i].iscontained != 0) {
+    if (polys[i].is_inner) {
       continue;
     }
 
     // List of holes for this top level polygon
     for (size_t j = i + 1; j < polys.size(); ++j) {
-      if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
+      if (polys[j].is_inner && polys[j].outer_idx == i) {
         polys[i].polygon.inners().push_back(polys[j].polygon.outer());
         polys.erase(polys.begin() + j);
       }
