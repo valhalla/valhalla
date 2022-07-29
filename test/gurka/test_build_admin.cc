@@ -39,34 +39,42 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
-  const gurka::ways ways = {{"AB", {}},
-                            {"AF", {}},
-                            {"EF", {}},
-                            {"EB", {}},
-                            {"BCDE", {}},
-                            {"CIJKLDC", {}},
-                            {"CILDC", {}},
-                            {"IJKLI", {}},
-                            {"GH",
-                             {
-                                 {"highway", "primary"},
-                             }},
-                            {"HX",
-                             {
-                                 {"highway", "primary"},
-                             }},
-                            {"XY",
-                             {
-                                 {"highway", "primary"},
-                             }},
-                            {"WX",
-                             {
-                                 {"highway", "primary"},
-                             }},
-                            {"XZ",
-                             {
-                                 {"highway", "primary"},
-                             }}};
+  const gurka::ways ways = {
+      {"AB", {}},
+      {"AF", {}},
+      {"EF", {}},
+      {"EB", {}},
+      {"BCDE", {}},
+      {"CIJKLDC", {}},
+      {"CILDC", {}},
+      {"IJKLI", {}},
+      {"MNOPRQM", {}},
+      {"STVUS", {}},
+      {"GH",
+       {
+           {"highway", "primary"},
+       }},
+      {"HX",
+       {
+           {"highway", "primary"},
+       }},
+      {"XY",
+       {
+           {"highway", "primary"},
+       }},
+      {"WX",
+       {
+           {"highway", "primary"},
+       }},
+      {"XZ",
+       {
+           {"highway", "primary"},
+       }},
+      {"abc",
+       {
+           {"highway", "primary"},
+       }},
+  };
 
   // X lives in Japan which allows named intersections - and is named.
   // gurka automatically names the nodes by their name in the ascii map
@@ -76,51 +84,66 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {"Y", {{"junction", "yes"}, {"name", ""}}},
   };
 
-  const gurka::relations relations = {{{{
-                                           {gurka::way_member, "AB", "outer"},
-                                           {gurka::way_member, "EB", "outer"},
-                                           {gurka::way_member, "EF", "outer"},
-                                           {gurka::way_member, "AF", "outer"},
-                                       }},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "4"},
-                                        {"name", "Colorado"}}},
-                                      {{{
-                                           {gurka::way_member, "BCDE", "outer"},
-                                           {gurka::way_member, "EB", "outer"},
-                                       }},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "4"},
-                                        {"name", "Utah"}}},
-                                      {{{
-                                           {gurka::way_member, "AB", "outer"},
-                                           {gurka::way_member, "BCDE", "outer"},
-                                           {gurka::way_member, "EF", "outer"},
-                                           {gurka::way_member, "AF", "outer"},
-                                       }},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "2"},
-                                        {"name", "USA"}}},
-                                      {{{{gurka::way_member, "CILDC", "outer"}}},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "4"},
-                                        {"name", "Hyogo"}}},
-                                      {{{{gurka::way_member, "IJKLI", "outer"}}},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "4"},
-                                        {"name", "Kyoto"}}},
-                                      {{{{gurka::way_member, "CIJKLDC", "outer"}}},
-                                       {{"type", "boundary"},
-                                        {"boundary", "administrative"},
-                                        {"admin_level", "2"},
-                                        {"name", "Japan"}}}};
+  const gurka::relations relations = {
+      {{{
+           {gurka::way_member, "AB", "outer"},
+           {gurka::way_member, "EB", "outer"},
+           {gurka::way_member, "EF", "outer"},
+           {gurka::way_member, "AF", "outer"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "4"},
+        {"name", "Colorado"}}},
+      {{{
+           {gurka::way_member, "BCDE", "outer"},
+           {gurka::way_member, "EB", "outer"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "4"},
+        {"name", "Utah"}}},
+      {{{
+           {gurka::way_member, "AB", "outer"},
+           {gurka::way_member, "BCDE", "outer"},
+           {gurka::way_member, "EF", "outer"},
+           {gurka::way_member, "AF", "outer"},
+       }},
+       {{"type", "boundary"}, {"boundary", "administrative"}, {"admin_level", "2"}, {"name", "USA"}}},
+      {{{{gurka::way_member, "CILDC", "outer"}}},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "4"},
+        {"name", "Hyogo"}}},
+      {{{{gurka::way_member, "IJKLI", "outer"}}},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "4"},
+        {"name", "Kyoto"}}},
+      {{{{gurka::way_member, "CIJKLDC", "outer"}}},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Japan"}}},
 
-  constexpr double gridsize = 10;
+      {{{
+           {gurka::way_member, "MNOPRQM", "outer"},
+           {gurka::way_member, "STVUS", "inner"}, // austrian enclave, wound wrong
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Germany"}}},
+      {{{
+           {gurka::way_member, "STVUS", "outer"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Austria"}}},
+  };
+
+  constexpr double gridsize = 100000;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
@@ -221,7 +244,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = {"Japan", "USA"};
+  std::set<std::string> exp_countries = {"Austria", "Germany", "Japan", "USA"};
   EXPECT_EQ(countries, exp_countries);
 
   std::set<std::string> exp_states = {"Colorado", "Hyogo", "Kyoto", "Utah"};
@@ -307,5 +330,37 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     AdminInfo X_admin = X_tile->admininfo(X_node->admin_index());
     EXPECT_EQ(X_admin.state_text(), "Hyogo");
     EXPECT_EQ(X_admin.country_text(), "Japan");
+  }
+
+  // check a and c are in Germany
+  {
+    auto a_id = findNode(graph_reader, admin_map.nodes, "a");
+    EXPECT_TRUE(a_id.Is_Valid());
+    auto c_id = findNode(graph_reader, admin_map.nodes, "c");
+    EXPECT_TRUE(c_id.Is_Valid());
+    const auto* a = graph_reader.nodeinfo(a_id);
+    EXPECT_EQ(a->drive_on_right(), true);
+    EXPECT_EQ(a->named_intersection(), false);
+    const auto* c = graph_reader.nodeinfo(c_id);
+    EXPECT_EQ(c->drive_on_right(), true);
+    EXPECT_EQ(c->named_intersection(), false);
+    AdminInfo a_admin = graph_reader.GetGraphTile(a_id)->admininfo(a->admin_index());
+    EXPECT_EQ(a_admin.state_text(), "");
+    EXPECT_EQ(a_admin.country_text(), "Germany");
+    AdminInfo c_admin = graph_reader.GetGraphTile(c_id)->admininfo(c->admin_index());
+    EXPECT_EQ(c_admin.state_text(), "");
+    EXPECT_EQ(c_admin.country_text(), "Germany");
+  }
+
+  // b is in an austrian enclave
+  {
+    auto b_id = findNode(graph_reader, admin_map.nodes, "b");
+    EXPECT_TRUE(b_id.Is_Valid());
+    const auto* b = graph_reader.nodeinfo(b_id);
+    EXPECT_EQ(b->drive_on_right(), true);
+    EXPECT_EQ(b->named_intersection(), false);
+    AdminInfo b_admin = graph_reader.GetGraphTile(b_id)->admininfo(b->admin_index());
+    EXPECT_EQ(b_admin.state_text(), "");
+    EXPECT_EQ(b_admin.country_text(), "Austria");
   }
 }
