@@ -508,7 +508,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
       const auto* forward_directed_edge = tile->directededge(i);
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      graph_tile_ptr reverse_tile = tile;
+      auto de_endnode_coordinates =
+          reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
@@ -517,7 +519,6 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            graph_tile_ptr reverse_tile = nullptr;
             GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
             auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
