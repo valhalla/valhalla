@@ -94,7 +94,7 @@ struct polygondata {
   int iscontained;
   unsigned containedbyid;
   bool operator<(const polygondata& p) const {
-    return p.area < area; // sort descending
+    return area >= p.area; // sort descending
   }
 };
 

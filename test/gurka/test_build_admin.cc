@@ -70,7 +70,11 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
        {
            {"highway", "primary"},
        }},
-      {"abc",
+      {"ab",
+       {
+           {"highway", "primary"},
+       }},
+      {"bc",
        {
            {"highway", "primary"},
        }},
