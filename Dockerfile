@@ -1,11 +1,15 @@
 ####################################################################
-# base image contains all the dependencies we need to build the code
-FROM valhalla/valhalla:build-3.1.5 as builder
+FROM ubuntu:20.04 as builder 
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
-# get the code into the right place and prepare to build it
+# set paths
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+
+# get the code into the right place, install deps and prepare to build it
 WORKDIR /usr/local/src/valhalla
 ADD . /usr/local/src/valhalla
+RUN bash ./scripts/install-linux-deps.sh
 RUN ls
 RUN git submodule sync && git submodule update --init --recursive
 RUN mkdir build
