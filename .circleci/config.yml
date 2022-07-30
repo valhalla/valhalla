@@ -16,6 +16,7 @@ commands:
   install_linux_dependencies:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
+      - run: which python3 && python3 -m pip list | grep requests
 
 jobs:
   build-docker-images:
@@ -41,6 +42,7 @@ jobs:
       - checkout
       - install_linux_dependencies
       - run: |
+            which python3 && python3 -m pip list | grep requests
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
