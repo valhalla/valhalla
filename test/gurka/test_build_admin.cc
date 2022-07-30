@@ -28,14 +28,20 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 
 
 
-        M-------N-------O
-        |    S-----T    |
-        |    |     |    |
-        |  a-|--b--|-c  |
-        |    |     |    |
-        |    U-----V    |
-        Q-------R-------P
+        M-------N-------O           d
+        |    S-----T    |           |
+        |    |     |    |           |
+        |  a-|--b--|-c  |           |
+        |    |     |    |           |
+        |    U-----V    |           |
+        Q-------R-------P           e-----f
 
+        g----h----i
+         \       /
+          \     /
+           \   /
+            \ /
+             j
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
@@ -50,6 +56,11 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {"IJKLI", {}},
       {"MNOPRQM", {}},
       {"STVUS", {}},
+      {"de", {}}, // not a closed ring
+      {"ef", {}}, // not a closed ring
+      {"gh", {}}, // not a closed ring
+      {"hi", {}}, // not a closed ring
+      {"ij", {}}, // not a closed ring
       {"GH",
        {
            {"highway", "primary"},
@@ -129,7 +140,6 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Japan"}}},
-
       {{{
            {gurka::way_member, "MNOPRQM", "outer"},
            {gurka::way_member, "STVUS", "inner"}, // austrian enclave, wound wrong
@@ -145,13 +155,31 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Austria"}}},
+      {{{
+           {gurka::way_member, "de", "outer"},
+           {gurka::way_member, "ef", "outer"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Mexico"}}},
+      {{{
+           {gurka::way_member, "gh", "outer"},
+           {gurka::way_member, "hi", "outer"},
+           {gurka::way_member, "ij", "outer"},
+           {gurka::way_member, "jg", "outer"}, // way is missing from extract
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "madagasgar"}}},
   };
 
   constexpr double gridsize = 100000;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename);
+  detail::build_pbf(node_layout, ways, nodes, relations, pbf_filename, 0, false);
 
   valhalla::gurka::map result;
   result.nodes = node_layout;

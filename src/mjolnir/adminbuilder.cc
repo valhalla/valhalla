@@ -64,12 +64,13 @@ std::vector<std::vector<point_t>> line_merge(std::vector<std::vector<point_t>> l
       auto line_index = line_itr->second;
       auto& line = lines[line_index];
       // we can add this line in the forward direction
-      if (ring.empty() || point_equals(ring.back(), line.front())) {
+      if ((ring.empty() && point_equals(line_itr->first, line.front())) ||
+          (!ring.empty() && point_equals(ring.back(), line.front()))) {
         ring.insert(ring.end(), std::make_move_iterator(line.begin() + !ring.empty()),
                     std::make_move_iterator(line.end()));
       } // have to add this segment backwards
       else {
-        ring.insert(ring.end(), std::make_move_iterator(std::next(line.rbegin())),
+        ring.insert(ring.end(), std::make_move_iterator(line.rbegin() + !ring.empty()),
                     std::make_move_iterator(line.rend()));
       }
 
@@ -82,7 +83,9 @@ std::vector<std::vector<point_t>> line_merge(std::vector<std::vector<point_t>> l
       assert(line_itr != line_lookup.end());
       line_lookup.erase(line_itr);
     }
-    assert(ring.size() > 2 && point_equals(ring.front(), ring.back()));
+    // degenerate rings are ignored, unconnected rings or missing relation members cause this
+    if (ring.size() < 4 || !point_equals(ring.front(), ring.back()))
+      rings.pop_back();
   }
 
   return rings;
@@ -381,6 +384,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       if (has_data) {
         // merge all the members into one or more rings
         auto rings = line_merge(lines, line_lookup);
+        if (rings.empty())
+          continue;
+
         // convert those into wkt format so we can put it into sqlite
         // TODO: why was this a vector before, just to find when it was empty?
         auto wkt = to_wkt(rings);

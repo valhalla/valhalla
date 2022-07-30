@@ -239,7 +239,8 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const uint64_t initial_osm_id) {
+                      const uint64_t initial_osm_id,
+                      const bool strict) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -264,7 +265,7 @@ inline void build_pbf(const nodelayout& node_locations,
   }
 
   for (auto& used_node : used_nodes) {
-    if (node_locations.count(used_node) == 0) {
+    if (node_locations.count(used_node) == 0 && strict) {
       throw std::runtime_error("Node " + used_node + " was referred to but was not in the ASCII map");
     }
   }
@@ -339,7 +340,7 @@ inline void build_pbf(const nodelayout& node_locations,
         members.push_back({osmium::item_type::node, static_cast<int64_t>(node_osm_id_map[member.ref]),
                            member.role.c_str()});
       } else {
-        if (way_osm_id_map.count(member.ref) == 0) {
+        if (way_osm_id_map.count(member.ref) == 0 && strict) {
           throw std::runtime_error("Relation member refers to an undefined way " + member.ref);
         }
         members.push_back({osmium::item_type::way, static_cast<int64_t>(way_osm_id_map[member.ref]),
