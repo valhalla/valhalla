@@ -15,7 +15,7 @@ commands:
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   install_linux_dependencies:
     steps:
-      - run: bash ./scripts/install-linux-deps.sh
+      - run: sudo bash ./scripts/install-linux-deps.sh
 
 jobs:
   build-docker-images:
