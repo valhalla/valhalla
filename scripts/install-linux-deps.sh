@@ -48,6 +48,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     prime-server${primeserver_version}-bin \
     protobuf-compiler \
     python3-all-dev \
+    python3-requests \
     python3-shapely \
     python3-pip \
     spatialite-bin \
