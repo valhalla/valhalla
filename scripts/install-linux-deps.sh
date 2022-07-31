@@ -50,10 +50,11 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     python3-all-dev \
     python3-shapely \
     python3-pip \
+    python3-requests \
     spatialite-bin \
     unzip \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # for boost
-python3 -m pip install conan
+/usr/bin/python3 -m pip install --upgrade conan

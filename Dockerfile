@@ -6,17 +6,16 @@ MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
-# get the code into the right place, install deps and prepare to build it
+# install deps
 WORKDIR /usr/local/src/valhalla
-ADD . /usr/local/src/valhalla
+COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts
 RUN bash ./scripts/install-linux-deps.sh
+
+# get the code into the right place and prepare to build it
+ADD . /usr/local/src/valhalla
 RUN ls
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
-
-# upgrade Conan:
-# https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN pip install --upgrade conan
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
