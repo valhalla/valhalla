@@ -220,14 +220,18 @@ TEST(GtfsExample, MakeTiles) {
       EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
       // stop(node) info
       EXPECT_EQ(transit.nodes_size(), 2);
-      EXPECT_EQ(transit.nodes(0).onestop_id(), stopOneID);
+      bool stops_written =
+          transit.nodes(0).onestop_id() == stopOneID || transit.nodes(0).onestop_id() == stopTwoID;
+      EXPECT_EQ(stops_written, true);
       // routes info
       EXPECT_EQ(transit.routes_size(), 1);
       EXPECT_EQ(transit.routes(0).onestop_id(), "2");
 
       // stop_pair info
       EXPECT_EQ(transit.stop_pairs_size(), 2);
-      EXPECT_EQ(transit.stop_pairs(0).origin_onestop_id(), stopOneID);
+      bool stop_pairs_written = transit.stop_pairs(0).origin_onestop_id() == stopOneID ||
+                                transit.stop_pairs(0).origin_onestop_id() == stopTwoID;
+      EXPECT_EQ(stop_pairs_written, true);
 
       // calendar information
       EXPECT_EQ(transit.stop_pairs(0).service_start_date(), serviceStartDate);
