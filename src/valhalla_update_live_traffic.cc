@@ -637,11 +637,11 @@ int main(int argc, char** argv) {
     LOG_INFO("Generated " + pt.get<std::string>("mjolnir.traffic_extract") + " succesfully");
   } else {
     // update the traffic of all edges in all tiles to dummy value
-    if (vm.count("traffic")) {
-      valhalla::baldr::TrafficSpeed speed = {};
-      customize_live_traffic_data(pt, speed);
-      LOG_INFO("Updated " + pt.get<std::string>("mjolnir.traffic_extract") + " to default value!");
-    }
+    //if (vm.count("traffic")) {
+    valhalla::baldr::TrafficSpeed speed = {};
+    customize_live_traffic_data(pt, speed);
+    LOG_INFO("Updated " + pt.get<std::string>("mjolnir.traffic_extract") + " to default value!");
+    //}
   }
 
   if (vm.count("traffic")) {
