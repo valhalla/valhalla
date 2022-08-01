@@ -10,7 +10,7 @@ int main(int argc, char** argv) {
   }
 
   // args and config file loading
-  ptree pt;
+  boost::property_tree::pt;
   rapidjson::read_json(std::string(argv[1]), pt);
   if (argc > 2) {
     pt.get_child("mjolnir").erase("transit_dir");

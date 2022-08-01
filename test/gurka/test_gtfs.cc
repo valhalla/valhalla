@@ -1,6 +1,7 @@
 #include "gurka.h"
 #include "just_gtfs/just_gtfs.h"
 
+#include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
 #include "proto/transit.pb.h"
 #include "test.h"
@@ -174,7 +175,7 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(frequencies[1].exact_times, gtfs::FrequencyTripService::ScheduleBased);
 }
 
-TEST(GtfsExample, MakeTiles) {
+TEST(GtfsExample, MakeProto) {
   filesystem::create_directories("test/data/transit_test");
   filesystem::create_directories("test/data/transit_tiles");
   auto pt = test::make_config("test/data/transit_test",
@@ -245,5 +246,22 @@ TEST(GtfsExample, MakeTiles) {
     }
   }
 }
-
-// make sure all the data is inside -> which we can test using the same tests as above
+//
+// TEST(GtfsExample, MakeTile){
+//  auto pt = test::make_config("test/data/transit_test",
+//                              {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds/"},
+//                               {"mjolnir.transit_dir", "test/data/transit_tiles"}});
+//
+//  valhalla::mjolnir::build(pt);
+//  // files are already going to be written from
+//  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
+//  filesystem::recursive_directory_iterator end_file_itr;
+//  // for each pbf.
+//  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+//    if (filesystem::is_regular_file(transit_file_itr->path())) {
+//      std::string fname = transit_file_itr->path().string();
+//      mjolnir::Transit transit = mjolnir::read_pbf(fname);
+//    }
+//  }
+//
+//}

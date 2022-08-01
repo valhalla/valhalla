@@ -1193,8 +1193,8 @@ std::unordered_set<GraphId> build(const ptree& pt) {
 
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().back().level));
+      pt.get<std::string>("mjolnir.transit_dir"));
+  LOG_INFO("Making Tiles In" + pt.get<std::string>("mjolnir.transit_dir"));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
