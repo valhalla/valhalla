@@ -8,6 +8,6 @@
 namespace valhalla {
 namespace mjolnir {
 
-std::unordered_set<baldr::GraphId> build(const boost::property_tree::ptree& pt);
+std::unordered_set<baldr::GraphId> convert_transit(const boost::property_tree::ptree& pt);
 }
 } // namespace valhalla

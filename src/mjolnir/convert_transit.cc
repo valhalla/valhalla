@@ -1189,7 +1189,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
-std::unordered_set<GraphId> build(const ptree& pt) {
+std::unordered_set<GraphId> convert_transit(const ptree& pt) {
 
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
