@@ -149,7 +149,6 @@ struct weighted_tile_t {
     return w == o.w ? t < o.t : w < o.w;
   }
 };
-
 std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::string& feed) {
   // now real need to catch exceptions since we can't really proceed without this stuff
   LOG_INFO("Fetching transit feeds");
@@ -223,7 +222,6 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
       }
     }
   }
-
   // we want slowest to build tiles first, routes query is slowest so we weight by that
   // stop pairs is most numerous so that might want to be factored in as well
   std::priority_queue<weighted_tile_t> prioritized;
@@ -897,7 +895,6 @@ void fetch_tiles(const ptree& pt,
                     pt);
       request = *request + import_level;
       do {
-
         // grab some stuff
         response = curler(*request, "schedule_stop_pairs");
         // copy pairs in, noting if any dont have stops
@@ -1026,7 +1023,6 @@ void stitch_tiles(const ptree& pt,
       }
 
       // do while we have more to find and arent sick of searching
-      // DOES THIS SEARCH FOR TILES OF STOP_PAIRS? LIKE MAYBE?
       std::set<GraphId, dist_sort_t> unchecked(all_tiles.cbegin(), all_tiles.cend(),
                                                dist_sort_t(current, grid));
       size_t found = 0;

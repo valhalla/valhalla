@@ -23,9 +23,7 @@ namespace mjolnir {
  *
  * @param pt Property tree containing the hierarchy configuration
  *             and other configuration needed to build transit.
- * @param tiles queue of all tiles that have transit data (tiles that need processing)
- * @param thread_count
- * @return std::list<GraphId>
+ * @return std::list<baldr::GraphId> dangling tiles that contain stop_pairs that go inter-tiles
  */
 std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt);
 
@@ -35,63 +33,46 @@ std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt);
  *
  * @param pt Property tree containing the hierarchy configuration
  *             and other configuration needed to build transit.
- * @param all_tiles set of all tiles that have transit data.
  * @param dangling_tiles tiles where routes go past its boundaries
- * @param thread_count
  */
 void stitch_transit(const boost::property_tree::ptree& pt, std::list<baldr::GraphId>& dangling_tiles);
 
-// Shape
-struct Shape {
-  uint32_t begins;
-  uint32_t ends;
-  std::vector<midgard::PointLL> shape;
-};
-
-struct Departure {
-  baldr::GraphId orig_pbf_graphid; // GraphId in pbf tiles
-  baldr::GraphId dest_pbf_graphid; // GraphId in pbf tiles
-  uint32_t trip;
-  uint32_t route;
-  uint32_t blockid;
-  uint32_t shapeid;
-  uint32_t headsign_offset;
-  uint32_t dep_time;
-  uint32_t schedule_index;
-  uint32_t frequency_end_time;
-  uint16_t elapsed_time;
-  uint16_t frequency;
-  float orig_dist_traveled;
-  float dest_dist_traveled;
-  bool wheelchair_accessible;
-  bool bicycle_accessible;
-};
-
-// Unique route and stop
-struct TransitLine {
-  uint32_t lineid;
-  uint32_t routeid;
-  baldr::GraphId dest_pbf_graphid; // GraphId (from pbf) of the destination stop
-  uint32_t shapeid;
-  float orig_dist_traveled;
-  float dest_dist_traveled;
-};
-
-struct StopEdges {
-  baldr::GraphId origin_pbf_graphid;        // GraphId (from pbf) of the origin stop
-  std::vector<baldr::GraphId> intrastation; // List of intra-station connections
-  std::vector<TransitLine> lines;           // Set of unique route/stop pairs
-};
-
+/**
+ * @brief Get a protobuf file and create a Valhalla Transit tile according to its data
+ *
+ * @param file_name the path where target protobuf is located
+ * @param lock (optional) lock for threading
+ * @return Transit tile that is read from the protobuf data
+ */
 Transit read_pbf(const std::string& file_name, std::mutex& lock);
 Transit read_pbf(const std::string& file_name);
 
-// Get PBF transit data given a GraphId / tile
+/**
+ * @brief Get PBF transit data given a GraphId / tile
+ *
+ * @param id graphId of the tile
+ * @param transit_dir directory where transit data is located
+ * @param file_name  name of the file
+ * @return transit data of the tile with the given GraphId
+ */
 Transit read_pbf(const baldr::GraphId& id, const std::string& transit_dir, std::string& file_name);
+
+/**
+ * @brief writes transit information inside the tile to a protobuf
+ *
+ * @param tile contains transit data
+ * @param transit_tile destination where the protobuf is written
+ */
 void write_pbf(const Transit& tile, const filesystem::path& transit_tile);
-// Converts a stop's pbf graph Id to a Valhalla graph Id by adding the
-// tile's node count. Returns an Invalid GraphId if the tile is not found
-// in the list of Valhalla tiles
+
+/**
+ * @brief Converts a stop's pbf graph Id to a Valhalla graph Id by adding the tile's node count.
+ * Returns an Invalid GraphId if the tile is not found in the list of Valhalla tiles
+ *
+ * @param nodeid the id of the stop inside gtfs (node)
+ * @param all_tiles list of tiles with transit data
+ * @return the id of the stop inside valhalla
+ */
 baldr::GraphId GetGraphId(const baldr::GraphId& nodeid,
                           const std::unordered_set<baldr::GraphId>& all_tiles);
 

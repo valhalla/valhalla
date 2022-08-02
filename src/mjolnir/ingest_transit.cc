@@ -143,7 +143,7 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
         currTile.tile_stops.insert({currStopId, feed_path});
         gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
-        for (auto stopTime : currStopTimes) {
+        for (const auto& stopTime : currStopTimes) {
           // add trip, route, agency and service_id from stop_time
           // could use std::set to not check if it already exists
 
@@ -158,10 +158,8 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
           currTile.tile_routes.insert({currRoute.route_id, feed_path});
           currTile.tile_agencies.insert({currRoute.agency_id, feed_path});
           // add to the queue of tiles
-          // prioritized.push(currTile);
         }
         tile_map[currId] = currTile;
-        // tile_map.insert({currId, currTile});
       }
     }
   }
@@ -445,7 +443,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
                                     filesystem::path::preferred_separator + file_name;
 
     // tiles are wrote out with .pbf or .pbf.n ext
-    std::string prefix = transit_tile.string();
+    const std::string& prefix = transit_tile.string();
     LOG_INFO("Fetching " + transit_tile.string());
 
     std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stops(tile, current);
