@@ -444,7 +444,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
 
     // tiles are wrote out with .pbf or .pbf.n ext
     const std::string& prefix = transit_tile.string();
-    LOG_INFO("Fetching " + transit_tile.string());
+    LOG_INFO("Fetching " + prefix);
 
     std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stops(tile, current);
     bool dangles = write_stop_pairs(tile, current, stop_graphIds, uniques);
