@@ -4,7 +4,7 @@
 #include "config.h"
 #include <cxxopts.hpp>
 
-std::string config_file_path;
+filesystem::path config_file_path;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
 
   // args and config file loading
   boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path, pt);
+  rapidjson::read_json(config_file_path.string(), pt);
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
