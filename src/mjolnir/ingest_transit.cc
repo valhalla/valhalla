@@ -107,6 +107,29 @@ struct feedCache {
   }
 };
 
+struct dist_sort_t {
+  PointLL center;
+  Tiles<PointLL> grid;
+  dist_sort_t(const GraphId& center, const Tiles<PointLL>& grid) : grid(grid) {
+    this->center = grid.TileBounds(center.tileid()).Center();
+  }
+  bool operator()(const GraphId& a, const GraphId& b) const {
+    auto a_dist = center.Distance(grid.TileBounds(a.tileid()).Center());
+    auto b_dist = center.Distance(grid.TileBounds(b.tileid()).Center());
+    if (a_dist == b_dist) {
+      return a.tileid() < b.tileid();
+    }
+    return a_dist < b_dist;
+  }
+};
+
+struct unique_transit_t {
+  std::mutex lock;
+  std::unordered_map<std::string, size_t> trips;
+  std::unordered_map<std::string, size_t> block_ids;
+  std::unordered_map<std::string, size_t> lines;
+};
+
 // Read from GTFS feed, sort data into the tiles they belong to
 std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
@@ -126,6 +149,9 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
       const auto& stops = feed.get_stops();
 
       for (const auto& stop : stops) {
+        if (stop.stop_id.empty()) {
+          continue;
+        }
         gtfs::Id currStopId = stop.stop_id;
         float x = stop.stop_lon;
         float y = stop.stop_lat;
@@ -148,7 +174,13 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
           // could use std::set to not check if it already exists
 
           // use a set instead to keep track of these points
+          if (stopTime.trip_id.empty() || !feed.get_trip(stopTime.trip_id)) {
+            continue;
+          }
           gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
+          if(currTrip.service_id.empty() || currTrip.route_id.empty() || !feed.get_route(currTrip.route_id){
+            continue;
+          }
           currTile.tile_services.insert({currTrip.service_id, feed_path});
           currTile.tile_trips.insert({currTrip.trip_id, feed_path});
 
@@ -185,7 +217,7 @@ std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTrans
     gtfs::Stop tile_stop = *(feed.get_stop(tile_stopId));
     node->set_lon(tile_stop.stop_lon);
     node->set_lat(tile_stop.stop_lat);
-    node->set_type((int)tile_stop.location_type);
+    node->set_type(std::static_cast<int>(tile_stop.location_type));
     node->set_graphid(node_id);
     node_id++;
     // node->set_prev_graphid(); what is prev?
@@ -214,7 +246,7 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
   float min_sq_distance = INFINITY;
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
-  for (int segment = 0; segment < (int)trip_shape.size() - 1; segment++) {
+  for (int segment = 0; segment < std::static_cast<int>(trip_shape.size()) - 1; segment++) {
     auto currOrigin = trip_shape[segment];
     auto currDest = trip_shape[segment + 1];
     PointLL originPoint = PointLL(currOrigin.shape_pt_lon, currOrigin.shape_pt_lat);
@@ -229,13 +261,6 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
   }
   return dist_traveled;
 }
-
-struct unique_transit_t {
-  std::mutex lock;
-  std::unordered_map<std::string, size_t> trips;
-  std::unordered_map<std::string, size_t> block_ids;
-  std::unordered_map<std::string, size_t> lines;
-};
 
 // return dangling stop_pairs, write stop data from feed
 bool write_stop_pairs(Transit& tile,
@@ -257,7 +282,8 @@ bool write_stop_pairs(Transit& tile,
     // already sorted by stop_sequence
     auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
-    for (int stop_sequence = 0; stop_sequence < (int)tile_stopTimes.size() - 1; stop_sequence++) {
+    for (int stop_sequence = 0; stop_sequence < std::static_cast<int>(tile_stopTimes.size()) - 1;
+         stop_sequence++) {
       gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
       gtfs::Id origin_stopId = origin_stopTime.stop_id;
       gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
@@ -374,7 +400,8 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info) {
     route->set_route_desc(currRoute.route_desc);
     route->set_route_long_name(currRoute.route_long_name);
     route->set_route_text_color(strtol(currRoute.route_text_color.c_str(), nullptr, 16));
-    route->set_vehicle_type((valhalla::mjolnir::Transit_VehicleType)((int)currRoute.route_type));
+    route->set_vehicle_type(
+        (valhalla::mjolnir::Transit_VehicleType)(std::static_cast<int>(currRoute.route_type)));
   }
 }
 
@@ -462,22 +489,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
   }
   promise.set_value(dangling);
 }
-
-struct dist_sort_t {
-  PointLL center;
-  Tiles<PointLL> grid;
-  dist_sort_t(const GraphId& center, const Tiles<PointLL>& grid) : grid(grid) {
-    this->center = grid.TileBounds(center.tileid()).Center();
-  }
-  bool operator()(const GraphId& a, const GraphId& b) const {
-    auto a_dist = center.Distance(grid.TileBounds(a.tileid()).Center());
-    auto b_dist = center.Distance(grid.TileBounds(b.tileid()).Center());
-    if (a_dist == b_dist) {
-      return a.tileid() < b.tileid();
-    }
-    return a_dist < b_dist;
-  }
-};
 
 // connect the stop_pairs that span multiple tiles by processing dangling tiles
 void stitch_tiles(const boost::property_tree::ptree& pt,
