@@ -42,6 +42,19 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
            \   /
             \ /
              j
+
+
+        k-------------l
+        |             |
+        |   o     q   |
+        |   |\   /|   |
+        |   | \ / |   |
+        |   |  p  |   |
+        |   | / \ |   |
+        |   |/   \|   |
+        |   s     r   |
+        |             |
+        n-------------m
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
@@ -61,6 +74,8 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {"gh", {}}, // not a closed ring
       {"hi", {}}, // not a closed ring
       {"ij", {}}, // not a closed ring
+      {"klmnk", {}},
+      {"opqrpso", {}},
       {"GH",
        {
            {"highway", "primary"},
@@ -172,7 +187,22 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
        {{"type", "boundary"},
         {"boundary", "administrative"},
         {"admin_level", "2"},
-        {"name", "madagasgar"}}},
+        {"name", "Madagasgar"}}},
+      {{{
+           {gurka::way_member, "klmnk", "outer"},
+           {gurka::way_member, "opqrpso", "inner"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Netherlands"}}},
+      {{{
+           {gurka::way_member, "opqrpso", "outer"},
+       }},
+       {{"type", "boundary"},
+        {"boundary", "administrative"},
+        {"admin_level", "2"},
+        {"name", "Belgium"}}},
   };
 
   constexpr double gridsize = 100000;
@@ -276,7 +306,9 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = {"Austria", "Germany", "Japan", "USA"};
+  std::set<std::string> exp_countries = {
+      "Austria", "Germany", "Japan", "USA", "Netherlands", "Belgium",
+  };
   EXPECT_EQ(countries, exp_countries);
 
   std::set<std::string> exp_states = {"Colorado", "Hyogo", "Kyoto", "Utah"};
