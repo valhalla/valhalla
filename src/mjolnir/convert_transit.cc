@@ -1189,12 +1189,15 @@ void build_tiles(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
-std::unordered_set<GraphId> build(const ptree& pt) {
+std::unordered_set<GraphId> convert_transit(const ptree& pt) {
 
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
-      pt.get<std::string>("mjolnir.transit_dir"));
-  LOG_INFO("Making Tiles In" + pt.get<std::string>("mjolnir.transit_dir"));
+      pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
+      std::to_string(TileHierarchy::levels().back().level));
+  // it looks like Tile Hierarchy has level 2 as a maximum
+  //
+  LOG_INFO("Making Tiles In Level " + std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -1248,9 +1251,11 @@ std::unordered_set<GraphId> build(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     std::cref(all_tiles), tile_start, tile_end,
-                                     std::ref(results.back())));
+    build_tiles(pt.get_child("mjolnir"), lock, all_tiles, tile_start, tile_end, results.back());
+    //    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")),
+    //    std::ref(lock),
+    //                                     std::cref(all_tiles), tile_start, tile_end,
+    //                                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work

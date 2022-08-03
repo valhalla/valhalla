@@ -1,4 +1,6 @@
+#include "baldr/rapidjson_utils.h"
 #include "mjolnir/convert_transit.h"
+#include "mjolnir/validatetransit.h"
 
 int main(int argc, char** argv) {
   if (argc < 2) {
@@ -10,17 +12,17 @@ int main(int argc, char** argv) {
   }
 
   // args and config file loading
-  boost::property_tree::pt;
+  boost::property_tree::ptree pt;
   rapidjson::read_json(std::string(argv[1]), pt);
   if (argc > 2) {
     pt.get_child("mjolnir").erase("transit_dir");
     pt.add("mjolnir.transit_dir", std::string(argv[2]));
   }
   std::string testfile;
-  std::vector<OneStopTest> onestoptests;
+  std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
   if (argc > 3) {
     testfile = std::string(argv[3]);
-    onestoptests = ParseTestFile(testfile);
+    onestoptests = valhalla::mjolnir::ParseTestFile(testfile);
     std::sort(onestoptests.begin(), onestoptests.end());
   }
 
@@ -31,7 +33,7 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Building transit network.");
-  build(pt);
-  ValidateTransit::Validate(pt, all_tiles, onestoptests);
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
+  valhalla::mjolnir::ValidateTransit::Validate(pt, all_tiles, onestoptests);
   return 0;
 }

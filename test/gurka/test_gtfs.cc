@@ -246,22 +246,24 @@ TEST(GtfsExample, MakeProto) {
     }
   }
 }
-//
-// TEST(GtfsExample, MakeTile){
-//  auto pt = test::make_config("test/data/transit_test",
-//                              {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds/"},
-//                               {"mjolnir.transit_dir", "test/data/transit_tiles"}});
-//
-//  valhalla::mjolnir::build(pt);
-//  // files are already going to be written from
-//  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
-//  filesystem::recursive_directory_iterator end_file_itr;
-//  // for each pbf.
-//  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-//    if (filesystem::is_regular_file(transit_file_itr->path())) {
-//      std::string fname = transit_file_itr->path().string();
-//      mjolnir::Transit transit = mjolnir::read_pbf(fname);
-//    }
-//  }
-//
-//}
+
+TEST(GtfsExample, MakeTile) {
+  filesystem::create_directories("test/data/level3_tile_dir");
+  auto pt =
+      test::make_config("test/data/tile_src", {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds"},
+                                               {"mjolnir.transit_dir", "test/data/transit_tiles"},
+                                               {"mjolnir.tile_dir", "test/data/level3_tile_dir"}});
+
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
+
+  //  // files are already going to be written from
+  //  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
+  //  filesystem::recursive_directory_iterator end_file_itr;
+  //  // for each pbf.
+  //  for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+  //    if (filesystem::is_regular_file(transit_file_itr->path())) {
+  //      std::string fname = transit_file_itr->path().string();
+  //      mjolnir::Transit transit = mjolnir::read_pbf(fname);
+  //    }
+  //  }
+}
