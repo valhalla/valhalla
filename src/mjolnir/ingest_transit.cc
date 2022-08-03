@@ -217,7 +217,7 @@ std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTrans
     gtfs::Stop tile_stop = *(feed.get_stop(tile_stopId));
     node->set_lon(tile_stop.stop_lon);
     node->set_lat(tile_stop.stop_lat);
-    node->set_type(std::static_cast<int>(tile_stop.location_type));
+    node->set_type(static_cast<int>(tile_stop.location_type));
     node->set_graphid(node_id);
     node_id++;
     // node->set_prev_graphid(); what is prev?
@@ -246,7 +246,7 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
   float min_sq_distance = INFINITY;
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
-  for (int segment = 0; segment < std::static_cast<int>(trip_shape.size()) - 1; segment++) {
+  for (int segment = 0; segment < static_cast<int>(trip_shape.size()) - 1; segment++) {
     auto currOrigin = trip_shape[segment];
     auto currDest = trip_shape[segment + 1];
     PointLL originPoint = PointLL(currOrigin.shape_pt_lon, currOrigin.shape_pt_lat);
@@ -282,7 +282,7 @@ bool write_stop_pairs(Transit& tile,
     // already sorted by stop_sequence
     auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
-    for (int stop_sequence = 0; stop_sequence < std::static_cast<int>(tile_stopTimes.size()) - 1;
+    for (int stop_sequence = 0; stop_sequence < static_cast<int>(tile_stopTimes.size()) - 1;
          stop_sequence++) {
       gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
       gtfs::Id origin_stopId = origin_stopTime.stop_id;
@@ -401,7 +401,7 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info) {
     route->set_route_long_name(currRoute.route_long_name);
     route->set_route_text_color(strtol(currRoute.route_text_color.c_str(), nullptr, 16));
     route->set_vehicle_type(
-        (valhalla::mjolnir::Transit_VehicleType)(std::static_cast<int>(currRoute.route_type)));
+        (valhalla::mjolnir::Transit_VehicleType)(static_cast<int>(currRoute.route_type)));
   }
 }
 
