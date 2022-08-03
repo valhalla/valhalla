@@ -178,7 +178,8 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
             continue;
           }
           gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
-          if(currTrip.service_id.empty() || currTrip.route_id.empty() || !feed.get_route(currTrip.route_id){
+          if (currTrip.service_id.empty() || currTrip.route_id.empty() ||
+              !feed.get_route(currTrip.route_id)) {
             continue;
           }
           currTile.tile_services.insert({currTrip.service_id, feed_path});
