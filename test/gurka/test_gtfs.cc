@@ -10,8 +10,17 @@
 using namespace gtfs;
 using namespace valhalla;
 
+boost::property_tree::ptree get_config() {
+
+  return test::make_config(VALHALLA_BUILD_DIR "test/data/tile_src",
+                           {{"mjolnir.transit_feeds_dir", VALHALLA_BUILD_DIR "test/data/gtfs_feeds"},
+                            {"mjolnir.transit_dir", VALHALLA_BUILD_DIR "test/data/transit_tiles"},
+                            {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/level3_tile_dir"},
+                            {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+}
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
+  auto pt = get_config();
 
   const std::string tripOneID = "10";
   const std::string tripTwoID = "11";
@@ -25,7 +34,9 @@ TEST(GtfsExample, WriteGtfs) {
   const int removedDate = 20220203;
   const int headwaySec = 1800;
   Feed feed;
-  filesystem::create_directories("test/data/gtfs_feeds/toronto");
+  std::string path_directory = pt.get<std::string>("mjolnir.transit_feeds_dir") +
+                               filesystem::path::preferred_separator + "toronto";
+  filesystem::create_directories(path_directory);
 
   // write agency.txt
   struct Agency ttc {
@@ -33,7 +44,7 @@ TEST(GtfsExample, WriteGtfs) {
     .agency_timezone = "America/Toronto"
   };
   feed.add_agency(ttc);
-  feed.write_agencies(("test/data/gtfs_feeds/toronto"));
+  feed.write_agencies(path_directory);
 
   // write stops.txt
   struct gtfs::Stop nemo {
@@ -51,7 +62,7 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
-  feed.write_stops(("test/data/gtfs_feeds/toronto"));
+  feed.write_stops(path_directory);
 
   // write routes.txt
   struct Route lineOne {
@@ -60,7 +71,7 @@ TEST(GtfsExample, WriteGtfs) {
     .route_text_color = "black",
   };
   feed.add_route(lineOne);
-  feed.write_routes(("test/data/gtfs_feeds/toronto"));
+  feed.write_routes(path_directory);
 
   // write trips.txt
   struct gtfs::Trip tripOne {
@@ -76,7 +87,7 @@ TEST(GtfsExample, WriteGtfs) {
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripTwo);
-  feed.write_trips("test/data/gtfs_feeds/toronto");
+  feed.write_trips(path_directory);
 
   // write stop_times.txt
   for (int i = 0; i < 4; i++) {
@@ -90,7 +101,7 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_stop_time(stopTime);
   }
 
-  feed.write_stop_times("test/data/gtfs_feeds/toronto");
+  feed.write_stop_times(path_directory);
 
   // write calendar.txt
   struct CalendarItem calendarOne {
@@ -101,7 +112,7 @@ TEST(GtfsExample, WriteGtfs) {
     .start_date = Date(2022, 1, 31), .end_date = Date(2023, 1, 31),
   };
   feed.add_calendar_item(calendarOne);
-  feed.write_calendar("test/data/gtfs_feeds/toronto");
+  feed.write_calendar(path_directory);
 
   // write calendar_dates.txt
   struct CalendarDate servAdded {
@@ -115,7 +126,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_calendar_date(servAdded);
   feed.add_calendar_date(servRemoved);
-  feed.write_calendar_dates(("test/data/gtfs_feeds/toronto"));
+  feed.write_calendar_dates(path_directory);
 
   // write shapes.txt
   for (size_t i = 0; i < 4; i++) {
@@ -125,7 +136,7 @@ TEST(GtfsExample, WriteGtfs) {
     feed.add_shape(shapePointTest);
   }
 
-  feed.write_shapes(("test/data/gtfs_feeds/toronto"));
+  feed.write_shapes(path_directory);
 
   // write frequencies.txt
   struct Frequency freqBased {
@@ -139,9 +150,9 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_frequency(freqBased);
   feed.add_frequency(schedBased);
-  feed.write_frequencies(("test/data/gtfs_feeds/toronto"));
+  feed.write_frequencies(path_directory);
 
-  Feed feed_reader(("test/data/gtfs_feeds/toronto"));
+  Feed feed_reader(path_directory);
   feed_reader.read_feed();
 
   // make sure files are actually written
@@ -176,11 +187,9 @@ TEST(GtfsExample, WriteGtfs) {
 }
 
 TEST(GtfsExample, MakeProto) {
-  filesystem::create_directories("test/data/transit_test");
-  filesystem::create_directories("test/data/transit_tiles");
-  auto pt = test::make_config("test/data/transit_test",
-                              {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds/"},
-                               {"mjolnir.transit_dir", "test/data/transit_tiles"}});
+  auto pt = path_directory;
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_test");
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tiles");
 
   // constants written in the last function
   const std::string tripOneID = "10";
@@ -203,7 +212,8 @@ TEST(GtfsExample, MakeProto) {
   valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
   // call the two functions, in main valhalla_ingest-transit
   // it's gonna write protobufs
-  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
+  filesystem::recursive_directory_iterator transit_file_itr(VALHALLA_BUILD_DIR
+                                                            "test/data/transit_tiles");
   filesystem::recursive_directory_iterator end_file_itr;
 
   // for each pbf.
@@ -248,11 +258,8 @@ TEST(GtfsExample, MakeProto) {
 }
 
 TEST(GtfsExample, MakeTile) {
-  filesystem::create_directories("test/data/level3_tile_dir");
-  auto pt =
-      test::make_config("test/data/tile_src", {{"mjolnir.transit_feeds_dir", "test/data/gtfs_feeds"},
-                                               {"mjolnir.transit_dir", "test/data/transit_tiles"},
-                                               {"mjolnir.tile_dir", "test/data/level3_tile_dir"}});
+  auto pt = get_config;
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/level3_tile_dir");
 
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
