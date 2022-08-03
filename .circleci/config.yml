@@ -6,6 +6,7 @@ executors:
       xcode: 13.4.1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
+      CXXFLAGS: -DGEOS_INLINE
 
 commands:
   install_macos_dependencies:
