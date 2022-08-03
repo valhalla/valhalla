@@ -18,6 +18,7 @@
 
 using polar_coordinate_system_t = boost::geometry::cs::geographic<boost::geometry::degree>;
 using point_t = boost::geometry::model::d2::point_xy<double, polar_coordinate_system_t>;
+using ring_t = boost::geometry::model::ring<point_t>;
 using polygon_t = boost::geometry::model::polygon<point_t>;
 using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
 
@@ -347,7 +348,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   bool has_data;
   try {
     // for each admin area (relation)
-    for (const auto& admin : osm_admin_data.admins_) {
+    for (const auto& admin : osm_admin_data.admins) {
+      LOG_DEBUG("Building admin: " + osm_admin_data.name_offset_map.name(admin.name_index));
 
       // have to keep the geom of each member and lookup so we can merge them together
       std::vector<std::vector<point_t>> lines;
@@ -355,7 +357,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       has_data = true;
 
       // get all the individual members of the admin relation merged into one ring
-      for (const auto memberid : admin.ways()) {
+      for (const auto memberid : admin.ways) {
         auto itr = osm_admin_data.way_map.find(memberid);
 
         // A relation may be included in an extract but it's members may not.
@@ -401,10 +403,10 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         count++;
         sqlite3_reset(stmt);
         sqlite3_clear_bindings(stmt);
-        sqlite3_bind_int(stmt, 1, admin.admin_level());
+        sqlite3_bind_int(stmt, 1, admin.admin_level);
 
-        if (admin.iso_code_index()) {
-          iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
+        if (admin.iso_code_index) {
+          iso = osm_admin_data.name_offset_map.name(admin.iso_code_index);
           sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
         } else {
           sqlite3_bind_null(stmt, 2);
@@ -412,18 +414,18 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
         sqlite3_bind_null(stmt, 3);
 
-        name = osm_admin_data.name_offset_map.name(admin.name_index());
+        name = osm_admin_data.name_offset_map.name(admin.name_index);
         sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
 
-        if (admin.name_en_index()) {
-          name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
+        if (admin.name_en_index) {
+          name_en = osm_admin_data.name_offset_map.name(admin.name_en_index);
           sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
         } else {
           sqlite3_bind_null(stmt, 5);
         }
 
-        sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-        sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
+        sqlite3_bind_int(stmt, 6, admin.drive_on_right);
+        sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
         sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
         /* performing INSERT INTO */
         ret = sqlite3_step(stmt);
@@ -431,13 +433,13 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
           continue;
         }
         LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-        LOG_ERROR("sqlite3_step() Name: " + osm_admin_data.name_offset_map.name(admin.name_index()));
+        LOG_ERROR("sqlite3_step() Name: " + osm_admin_data.name_offset_map.name(admin.name_index));
         LOG_ERROR("sqlite3_step() Name:en: " +
-                  osm_admin_data.name_offset_map.name(admin.name_en_index()));
-        LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
-        LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
+                  osm_admin_data.name_offset_map.name(admin.name_en_index));
+        LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
+        LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right));
         LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
-                  std::to_string(admin.allow_intersection_names()));
+                  std::to_string(admin.allow_intersection_names));
 
       } // has data
     }   // admins
