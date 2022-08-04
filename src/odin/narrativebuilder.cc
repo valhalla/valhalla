@@ -1,5 +1,6 @@
 #include <cmath>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -491,19 +492,27 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
       }
       case DirectionsLeg_Maneuver_Type_kContinue:
       default: {
-        // Set instruction
-        maneuver.set_instruction(FormContinueInstruction(maneuver));
+        if (maneuver.has_node_type()) {
+          std::string instr = FormPassInstruction(maneuver);
+          // Set instruction
+          maneuver.set_instruction(instr);
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(instr);
+        } else {
+          // Set instruction
+          maneuver.set_instruction(FormContinueInstruction(maneuver));
 
-        // Set verbal transition alert instruction
-        maneuver.set_verbal_transition_alert_instruction(
-            FormVerbalAlertContinueInstruction(maneuver));
+          // Set verbal transition alert instruction
+          maneuver.set_verbal_transition_alert_instruction(
+              FormVerbalAlertContinueInstruction(maneuver));
 
-        // Set verbal pre transition instruction
-        maneuver.set_verbal_pre_transition_instruction(FormVerbalContinueInstruction(maneuver));
+          // Set verbal pre transition instruction
+          maneuver.set_verbal_pre_transition_instruction(FormVerbalContinueInstruction(maneuver));
 
-        // Set verbal post transition instruction
-        maneuver.set_verbal_post_transition_instruction(
-            FormVerbalPostTransitionInstruction(maneuver));
+          // Set verbal post transition instruction
+          maneuver.set_verbal_post_transition_instruction(
+              FormVerbalPostTransitionInstruction(maneuver));
+        }
         break;
       }
     }
@@ -515,7 +524,8 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
   }
 
   // Iterate over maneuvers to form verbal multi-cue instructions
-  FormVerbalMultiCue(maneuvers);
+  if (!options_.blind_user_mode())
+    FormVerbalMultiCue(maneuvers);
 }
 
 std::string NarrativeBuilder::FormVerbalAlertApproachInstruction(float distance,
@@ -4313,6 +4323,52 @@ std::string NarrativeBuilder::FormTransitPlatformCountLabel(
   return transit_stop_count_labels.at(kPluralCategoryOtherKey);
 }
 
+std::string NarrativeBuilder::FormPassInstruction(Maneuver& maneuver) {
+  // "0": "Pass <object>.",
+  // "1": "Pass traffic lights on <object>.",
+  std::string instruction;
+  instruction.reserve(kInstructionInitialCapacity);
+
+  // Determine which phrase to use
+  uint8_t phrase_id = 0;
+  std::string object_label;
+  auto dictionary_object_index = kStreetIntersectionIndex; // kGateIndex;
+  if (maneuver.has_node_type()) {
+    switch (maneuver.node_type()) {
+      case TripLeg_Node_Type_kGate:
+        dictionary_object_index = kGateIndex;
+        break;
+      case TripLeg_Node_Type_kBollard:
+        dictionary_object_index = kBollardIndex;
+        break;
+      case TripLeg_Node_Type_kStreetIntersection:
+        dictionary_object_index = kStreetIntersectionIndex;
+        if (maneuver.traffic_signal())
+          phrase_id = 1;
+        if (maneuver.HasCrossStreetNames())
+          object_label = FormStreetNames(maneuver, maneuver.cross_street_names());
+        break;
+      default:
+        break;
+    }
+    if (object_label.empty())
+      object_label = dictionary_.pass_subset.object_labels.at(dictionary_object_index);
+  }
+
+  // Set instruction to the determined tagged phrase
+  instruction = dictionary_.pass_subset.phrases.at(std::to_string(phrase_id));
+
+  // Replace phrase tags with values
+  boost::replace_all(instruction, kObjectLabelTag, object_label);
+
+  // If enabled, form articulated prepositions
+  if (articulated_preposition_enabled_) {
+    FormArticulatedPrepositions(instruction);
+  }
+
+  return instruction;
+}
+
 std::string NarrativeBuilder::GetPluralCategory(size_t count) {
   if (count == 1) {
     return kPluralCategoryOneKey;
@@ -4561,11 +4617,19 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
   // If empty street names string
   // then determine if walkway or bike path
   if (enhance_empty_street_names && street_names_string.empty() && empty_street_name_labels) {
-
+    // Set names in blind user mode:
+    if (options_.blind_user_mode()) {
+      if (maneuver.is_steps())
+        street_names_string = empty_street_name_labels->at(kStepsIndex);
+      else if (maneuver.is_bridge())
+        street_names_string = empty_street_name_labels->at(kBridgeIndex);
+      else if (maneuver.is_tunnel())
+        street_names_string = empty_street_name_labels->at(kTunnelIndex);
+    }
     // If pedestrian travel mode on unnamed footway
     // then set street names string to walkway. Additionally, if the path
     // is a pedestrian crossing, use appropriate phrasing.
-    if ((maneuver.travel_mode() == TravelMode::kPedestrian) && maneuver.unnamed_walkway()) {
+    else if ((maneuver.travel_mode() == TravelMode::kPedestrian) && maneuver.unnamed_walkway()) {
       auto dictionary_index =
           maneuver.pedestrian_crossing() ? kPedestrianCrossingIndex : kWalkwayIndex;
       street_names_string = empty_street_name_labels->at(dictionary_index);
@@ -4573,13 +4637,14 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
 
     // If bicycle travel mode on unnamed cycleway
     // then set street names string to cycleway
-    if ((maneuver.travel_mode() == TravelMode::kBicycle) && maneuver.unnamed_cycleway()) {
+    else if ((maneuver.travel_mode() == TravelMode::kBicycle) && maneuver.unnamed_cycleway()) {
       street_names_string = empty_street_name_labels->at(kCyclewayIndex);
     }
 
     // If bicycle travel mode on unnamed mountain bike trail
     // then set street names string to mountain bike trail
-    if ((maneuver.travel_mode() == TravelMode::kBicycle) && maneuver.unnamed_mountain_bike_trail()) {
+    else if ((maneuver.travel_mode() == TravelMode::kBicycle) &&
+             maneuver.unnamed_mountain_bike_trail()) {
       street_names_string = empty_street_name_labels->at(kMountainBikeTrailIndex);
     }
   }

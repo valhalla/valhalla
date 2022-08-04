@@ -576,6 +576,20 @@ void AddSignInfo(const AttributesController& controller,
   }
 }
 
+void FilterUnneededStreetNumbers(std::vector<std::pair<std::string, bool>>& names_and_types) {
+  if (names_and_types.size() < 2) {
+    return;
+  }
+  auto it = names_and_types.begin();
+  while (it != names_and_types.end()) {
+    if (it->second == true && names_and_types.size() > 1) {
+      it = names_and_types.erase(it);
+    } else {
+      it++;
+    }
+  }
+}
+
 /**
  * Add trip intersecting edge.
  * @param  controller   Controller to determine which attributes to set.
@@ -648,6 +662,21 @@ void AddTripIntersectingEdge(const AttributesController& controller,
   // Set the current/intersecting edge name consistency if requested
   if (controller(kNodeIntersectingEdgeToEdgeNameConsistency)) {
     intersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
+  }
+
+  // Add names to edge if requested
+  if (controller.attributes.at(kEdgeNames)) {
+    // Get the edgeinfo
+    auto edgeinfo = graphtile->edgeinfo(intersecting_de);
+    std::vector<uint8_t> types;
+    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    FilterUnneededStreetNumbers(names_and_types);
+    intersecting_edge->mutable_name()->Reserve(names_and_types.size());
+    for (const auto& name_and_type : names_and_types) {
+      auto* trip_edge_name = intersecting_edge->mutable_name()->Add();
+      trip_edge_name->set_value(name_and_type.first);
+      trip_edge_name->set_is_route_number(name_and_type.second);
+    }
   }
 
   // Set the use for the intersecting edge if requested
@@ -820,6 +849,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   if (controller(kEdgeNames)) {
     std::vector<uint8_t> types;
     auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    FilterUnneededStreetNumbers(names_and_types);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
@@ -1520,6 +1550,8 @@ void TripLegBuilder::Build(
 
     if (controller(kNodeType)) {
       trip_node->set_type(GetTripLegNodeType(node->type()));
+      if (node->traffic_signal())
+        trip_node->set_traffic_signal(true);
     }
 
     if (node->intersection() == IntersectionType::kFork) {

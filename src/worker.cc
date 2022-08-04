@@ -836,6 +836,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // Blind user mode:
+  options.set_blind_user_mode(
+      rapidjson::get_optional<bool>(doc, "/blind_user_mode").get_value_or(false));
+
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;

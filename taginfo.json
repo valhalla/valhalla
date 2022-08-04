@@ -1018,6 +1018,13 @@
       "description": "Allows access for all modes unless the mode override is set."
     },
     {
+      "key": "crossing",
+      "value": "traffic_signals",
+      "object_types": [
+        "node"
+      ]
+    },
+    {
       "key": "cyclestreet",
       "value": "yes",
       "object_types": [

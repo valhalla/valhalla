@@ -477,4 +477,5 @@ message Options {
                                                                    // a one to many or many to one time distance matrix. Does not affect
                                                                    // sources_to_targets when either sources or targets has more than 1 location
                                                                    // or when CostMatrix is the selected matrix mode.
+  bool blind_user_mode = 81;                           // route: additional maneuvers and informations for blind users.
 }

@@ -189,6 +189,7 @@ message TripLeg {
     RoadClass road_class = 8;
     uint32 lane_count = 9;
     TripSign sign = 10;
+    repeated StreetName name = 21;           // street names
   }
 
   message Cost {
@@ -232,6 +233,7 @@ message TripLeg {
     PathCost cost = 12;             // how much cost did it take at this node in the path
     repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
     BikeShareStationInfo bss_info = 14;
+     bool traffic_signal = 21;
  }
 
   message Admin {

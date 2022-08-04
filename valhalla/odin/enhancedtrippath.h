@@ -464,6 +464,18 @@ class EnhancedTripLeg_IntersectingEdge {
 public:
   EnhancedTripLeg_IntersectingEdge(TripLeg_IntersectingEdge* mutable_intersecting_edge);
 
+  int name_size() const {
+    return mutable_intersecting_edge_->name_size();
+  }
+
+  const ::valhalla::StreetName& name(int index) const {
+    return mutable_intersecting_edge_->name(index);
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& name() const {
+    return mutable_intersecting_edge_->name();
+  }
+
   uint32_t begin_heading() const {
     return mutable_intersecting_edge_->begin_heading();
   }
@@ -599,6 +611,9 @@ public:
     return mutable_node_->type();
   }
 
+  bool traffic_signal() const {
+    return mutable_node_->traffic_signal();
+  }
   double elapsed_time() const {
     return mutable_node_->cost().elapsed_cost().seconds();
   }
