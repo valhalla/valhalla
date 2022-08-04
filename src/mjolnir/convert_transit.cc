@@ -57,6 +57,7 @@ struct builder_stats {
   }
 };
 
+
 // Shape
 struct Shape {
   uint32_t begins;
@@ -1055,7 +1056,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
 
-    GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
+    GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level(), tile_id.id());
     graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
 
@@ -1065,7 +1066,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     // Set the tile base LL
-    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level()).Base(tile_id.tileid());
+    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level() - 1).Base(tile_id.tileid());
     tilebuilder_transit.header_builder().set_base_ll(base_ll);
 
     lock.unlock();
@@ -1237,6 +1238,8 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
       std::to_string(TileHierarchy::GetTransitLevel().level));
+  // it looks like Tile Hierarchy has level 2 as a maximum
+  //
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -1290,6 +1293,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
+    // build_tiles(pt.get_child("mjolnir"), lock, all_tiles, tile_start, tile_end, results.back());
     threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
                                      std::cref(all_tiles), tile_start, tile_end,
                                      std::ref(results.back())));
