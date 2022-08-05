@@ -59,7 +59,7 @@ See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-a
 
 ### Draw isochrones on a map
 
-Most JavaScript-based GeoJSON renderers, including [Leaflet](http://leafletjs.com/), can use the isochrone styling information directly from the response. At present, you cannot control the opacity through the API.
+Most [JavaScript](https://www.scaler.com/topics/javascript/)-based GeoJSON renderers, including [Leaflet](http://leafletjs.com/), can use the isochrone styling information directly from the response. At present, you cannot control the opacity through the API.
 
 When making a map, drawing the isochrone contours as lines is more straightforward than polygons, and, therefore, currently is the default and recommended method. When deciding between the output as lines and polygons, consider your use case and the additional styling considerations involved with polygons. For example, fills should be rendered as semi-transparent over the other map layers so they are visible, although you may have more flexibility when using a vector-based map. In addition, polygons from multiple contour levels do not have overlapping areas cut out or removed. In other words, the outer contours include the areas of any inner contours, causing the colors and transparencies to blend when multiple contour polygons are drawn at the same time.
 
