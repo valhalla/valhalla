@@ -28,7 +28,7 @@ function setup_mason {
 
 }
 
-function run_pre_commit {
+function setup_pre_commit {
   local python_bin=""
   if [[ $(command -v python3) != "" ]]; then
     python_bin="python3"

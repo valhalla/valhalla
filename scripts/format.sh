@@ -11,9 +11,8 @@ set -o errexit -o pipefail -o nounset
 readonly CLANG_FORMAT_VERSION=7.0.0
 
 source scripts/bash_utils.sh
-
-run_pre_commit
 setup_mason
+setup_pre_commit
 
 ./mason/mason install clang-format $CLANG_FORMAT_VERSION
 ./mason/mason link clang-format $CLANG_FORMAT_VERSION

@@ -1,13 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import fnmatch
-import sys
-
-print(f"python3 exe is: {sys.executable}")
-import subprocess
-import requests
-
-
 from os import path, environ
+import requests
+import sys
+import subprocess
+
+
 
 # jobs defined in .circleci/config.yml
 JOBS = ['build-docker-images',
