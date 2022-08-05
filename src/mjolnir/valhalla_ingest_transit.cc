@@ -24,7 +24,7 @@ bool ParseArguments(int argc, char* argv[]) {
     auto result = options.parse(argc, argv);
 
     if (result.count("version")) {
-      std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
+      std::cout << "ingest_transit " << VALHALLA_VERSION << "\n";
       exit(0);
     }
 

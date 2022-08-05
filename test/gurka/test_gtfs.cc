@@ -16,6 +16,7 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string tripTwoID = "11";
   const std::string stopOneID = "7";
   const std::string stopTwoID = "8";
+  const std::string stopThreeID = "19";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
   const int serviceStartDate = 20220131;
@@ -50,6 +51,14 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
+
+  struct gtfs::Stop thirdStop {
+    .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
+    .stop_lat = 5, .stop_lon = 5, .parent_station = "1",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(thirdStop);
   feed.write_stops(("test/data/gtfs_feeds/toronto"));
 
   // write routes.txt
@@ -78,14 +87,15 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_trips("test/data/gtfs_feeds/toronto");
 
   // write stop_times.txt
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 6; i++) {
+    std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
     struct StopTime stopTime {
       .trip_id = "", .stop_id = "", .stop_sequence = 0, .arrival_time = Time("6:00:00"),
       .departure_time = Time("6:00:00"), .stop_headsign = "head", .shape_dist_traveled = 0.0,
       .timepoint = gtfs::StopTimePoint::Exact,
     };
-    stopTime.stop_id = (i % 2 == 0) ? stopOneID : stopTwoID;
-    stopTime.trip_id = (i < 2) ? tripOneID : tripTwoID;
+    stopTime.stop_id = stopIds[i % 3];
+    stopTime.trip_id = (i < 3) ? tripOneID : tripTwoID;
     feed.add_stop_time(stopTime);
   }
 
@@ -119,7 +129,8 @@ TEST(GtfsExample, WriteGtfs) {
   // write shapes.txt
   for (size_t i = 0; i < 4; i++) {
     struct ShapePoint shapePointTest {
-      .shape_id = shapeOneID, .shape_pt_lat = 0.2, .shape_pt_lon = 0.2, .shape_pt_sequence = (i + 1),
+      .shape_id = shapeOneID, .shape_pt_lat = i + 0.2, .shape_pt_lon = i + 0.2,
+      .shape_pt_sequence = (i + 1),
     };
     feed.add_shape(shapePointTest);
   }
@@ -150,7 +161,7 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 2);
+  EXPECT_EQ(stops.size(), 3);
   EXPECT_EQ(stops[1].stop_id, stopTwoID);
 
   const auto& shapes = feed_reader.get_shapes();
@@ -186,6 +197,7 @@ TEST(GtfsExample, MakeTiles) {
   const std::string tripTwoID = "11";
   const std::string stopOneID = "7";
   const std::string stopTwoID = "8";
+  const std::string stopThreeID = "19";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
   const int serviceStartDate = 20220131;
@@ -205,6 +217,8 @@ TEST(GtfsExample, MakeTiles) {
   filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
   filesystem::recursive_directory_iterator end_file_itr;
 
+  std::unordered_set<std::string> stops;
+  std::unordered_set<std::string> stop_pairs;
   // for each pbf.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (filesystem::is_regular_file(transit_file_itr->path())) {
@@ -219,19 +233,19 @@ TEST(GtfsExample, MakeTiles) {
       EXPECT_EQ(transit.shapes_size(), 1);
       EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
       // stop(node) info
-      EXPECT_EQ(transit.nodes_size(), 2);
-      bool stops_written =
-          transit.nodes(0).onestop_id() == stopOneID || transit.nodes(0).onestop_id() == stopTwoID;
-      EXPECT_EQ(stops_written, true);
+      for (int i = 0; i < transit.nodes_size(); i++) {
+        stops.insert(transit.nodes(i).onestop_id());
+      }
+
       // routes info
       EXPECT_EQ(transit.routes_size(), 1);
       EXPECT_EQ(transit.routes(0).onestop_id(), "2");
 
       // stop_pair info
-      EXPECT_EQ(transit.stop_pairs_size(), 2);
-      bool stop_pairs_written = transit.stop_pairs(0).origin_onestop_id() == stopOneID ||
-                                transit.stop_pairs(0).origin_onestop_id() == stopTwoID;
-      EXPECT_EQ(stop_pairs_written, true);
+      for (int i = 0; i < transit.stop_pairs_size(); i++) {
+        stop_pairs.insert(transit.stop_pairs(i).origin_onestop_id());
+        stop_pairs.insert(transit.stop_pairs(i).destination_onestop_id());
+      }
 
       // calendar information
       EXPECT_EQ(transit.stop_pairs(0).service_start_date(), serviceStartDate);
@@ -247,6 +261,13 @@ TEST(GtfsExample, MakeTiles) {
       EXPECT_EQ(transit.stop_pairs(0).frequency_headway_seconds(), headwaySec);
       EXPECT_EQ(transit.stop_pairs(1).frequency_headway_seconds(), headwaySec);
     }
+  }
+  EXPECT_EQ(stops.size(), 3);
+  std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
+
+  for (const auto& stopID : stopIds) {
+    EXPECT_EQ(*stops.find((stopID)), stopID);
+    EXPECT_EQ(*stop_pairs.find((stopID)), stopID);
   }
 }
 

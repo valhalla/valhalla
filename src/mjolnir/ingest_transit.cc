@@ -221,14 +221,16 @@ std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTrans
     node->set_type(static_cast<int>(tile_stop.location_type));
     node->set_graphid(node_id);
     node_id++;
-    // node->set_prev_graphid(); what is prev?
+    // TODO: look at how prev_graphid() is used in convert transit (and if it is necessary)
     node->set_name(tile_stop.stop_name);
-    // node->set_osm_way_id(); where is this?
+    // TODO: Determine how to .set_osm_way_id().
+    // can't be set directly because it used to be processed by transitland but it is not part of GTFS
+    // data
     node->set_timezone(tile_stop.stop_timezone);
     // 0 is No Info ; 1 is True ; 2 is False
     bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
     node->set_wheelchair_boarding(wheelchair_accessible);
-    // node->set_generated(feed_stop.generated); ?
+    // TODO: look at how generated() is used in convert transit (and if it is necessary)
     node->set_onestop_id(tile_stop.stop_id);
     stop_graphIds[tile_stopId] = node_id;
   }
@@ -309,10 +311,12 @@ bool write_stop_pairs(Transit& tile,
         if (!(origin_is_in_tile && dest_is_in_tile)) {
           dangles = true;
         }
+        stop_pair->set_origin_onestop_id(origin_stopId);
+        stop_pair->set_destination_onestop_id(dest_stopId);
         if (origin_is_in_tile) {
           stop_pair->set_origin_departure_time(stoi(origin_stopTime.departure_time.get_raw_time()));
           stop_pair->set_origin_graphid(stop_graphIds[origin_stopId]);
-          stop_pair->set_origin_onestop_id(origin_stopId);
+
           // call function to set shape
           float dist =
               add_stop_pair_shapes(*(feed.get_stop(origin_stopId)), currShape, origin_stopTime);
@@ -322,7 +326,7 @@ bool write_stop_pairs(Transit& tile,
         if (dest_is_in_tile) {
           stop_pair->set_destination_arrival_time(stoi(dest_stopTime.arrival_time.get_raw_time()));
           stop_pair->set_destination_graphid(stop_graphIds[dest_stopId]);
-          stop_pair->set_destination_onestop_id(dest_stopTime.stop_id);
+          // call function to set shape
           float dist = add_stop_pair_shapes(*(feed.get_stop(dest_stopId)), currShape, dest_stopTime);
           stop_pair->set_destination_dist_traveled(dist);
         }
@@ -356,7 +360,8 @@ bool write_stop_pairs(Transit& tile,
         auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
         auto freq_end_time = (currFrequencies[0].start_time.get_raw_time());
         auto freq_time = freq_start_time + freq_end_time;
-        // what to do if there are multiple frequencies? choose fist one
+        // TODO: Determine what to do if there are multiple frequencies.
+        // currently, choose fist one
         if (currFrequencies.size() > 0) {
           stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
           stop_pair->set_frequency_headway_seconds(currFrequencies[0].headway_secs);
@@ -652,7 +657,7 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().back().level));
+      std::to_string(TileHierarchy::GetTransitLevel().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
