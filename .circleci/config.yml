@@ -22,7 +22,7 @@ commands:
 jobs:
   build-docker-images:
     machine:
-      image: ubuntu-2004:2022.07.1
+      image: ubuntu-2004:current
     steps:
       - checkout
       - run:
@@ -37,7 +37,7 @@ jobs:
 
   lint-build-debug:
     machine:
-      image: ubuntu-2004:2022.07.1
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
@@ -85,7 +85,7 @@ jobs:
 
   build-release:
     machine:
-      image: ubuntu-2004:2022.07.1
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
