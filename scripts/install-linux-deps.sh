@@ -57,3 +57,4 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
 
 # for boost
 python3 -m pip install --upgrade conan requests
+echo "python3 exe is: $(which python3)"
