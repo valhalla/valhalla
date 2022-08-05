@@ -76,7 +76,7 @@ jobs:
             - ~/.ccache
             - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
@@ -118,7 +118,7 @@ jobs:
           paths:
             - ~/.ccache
             - ~/.conan
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
 
   build-osx:
