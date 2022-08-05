@@ -3,9 +3,10 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 12.4.0
+      xcode: 13.4.1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
+      CXXFLAGS: -DGEOS_INLINE
 
 commands:
   install_macos_dependencies:
@@ -58,7 +59,7 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
-                -DLOGGING_LEVEL=NONE \
+                -DLOGGING_LEVEL=INFO \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j8
