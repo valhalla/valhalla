@@ -17,7 +17,7 @@ RUN ls
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
-# upgrade Conan:
+# upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
 RUN pip install --upgrade conan
 

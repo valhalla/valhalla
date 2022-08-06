@@ -31,7 +31,7 @@ jobs:
             if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
               BUILD_TAG="${CIRCLE_TAG:-latest}"
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker build --tag valhalla/valhalla:run-${BUILD_TAG} .
+              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
               docker push valhalla/valhalla:run-${BUILD_TAG}
             fi
 
