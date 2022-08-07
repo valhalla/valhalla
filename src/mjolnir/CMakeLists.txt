@@ -83,6 +83,7 @@ valhalla_module(NAME mjolnir
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/boost_geometry_correct
   DEPENDS
     valhalla::proto
     valhalla::baldr

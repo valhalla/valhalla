@@ -19,6 +19,9 @@ struct OSMAdmin {
   // List of ways/member ids
   std::vector<uint64_t> ways;
 
+  // Parallel list of way roles (outer==true or inner==false)
+  std::vector<bool> roles;
+
   // Names of country or state/prov
   uint32_t name_index;
   uint32_t name_en_index;

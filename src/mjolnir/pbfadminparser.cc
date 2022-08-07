@@ -99,11 +99,13 @@ public:
     }
 
     admin.ways.reserve(members.size());
+    admin.roles.reserve(members.size());
     for (const auto& member : members) {
 
       if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
         members_.set(member.member_id);
         admin.ways.push_back(member.member_id);
+        admin.roles.push_back(member.role != "inner"); // assume outer
         ++osm_admin_data_.osm_way_count;
       }
     }
