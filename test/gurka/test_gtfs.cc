@@ -75,7 +75,7 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(thirdStop);
-  feed.write_stops(("test/data/gtfs_feeds/toronto"));
+  feed.write_stops(path_directory);
 
   // write routes.txt
   struct Route lineOne {
@@ -168,7 +168,6 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.add_frequency(freqBased);
   feed.add_frequency(schedBased);
-
   feed.write_frequencies(path_directory);
 
   Feed feed_reader(path_directory);
