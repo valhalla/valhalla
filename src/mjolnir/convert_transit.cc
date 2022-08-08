@@ -57,7 +57,6 @@ struct builder_stats {
   }
 };
 
-
 // Shape
 struct Shape {
   uint32_t begins;
