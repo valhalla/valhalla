@@ -57,6 +57,48 @@ struct builder_stats {
   }
 };
 
+// Shape
+struct Shape {
+  uint32_t begins;
+  uint32_t ends;
+  std::vector<valhalla::midgard::PointLL> shape;
+};
+
+struct Departure {
+  valhalla::baldr::GraphId orig_pbf_graphid; // GraphId in pbf tiles
+  valhalla::baldr::GraphId dest_pbf_graphid; // GraphId in pbf tiles
+  uint32_t trip;
+  uint32_t route;
+  uint32_t blockid;
+  uint32_t shapeid;
+  uint32_t headsign_offset;
+  uint32_t dep_time;
+  uint32_t schedule_index;
+  uint32_t frequency_end_time;
+  uint16_t elapsed_time;
+  uint16_t frequency;
+  float orig_dist_traveled;
+  float dest_dist_traveled;
+  bool wheelchair_accessible;
+  bool bicycle_accessible;
+};
+
+// Unique route and stop
+struct TransitLine {
+  uint32_t lineid;
+  uint32_t routeid;
+  valhalla::baldr::GraphId dest_pbf_graphid; // GraphId (from pbf) of the destination stop
+  uint32_t shapeid;
+  float orig_dist_traveled;
+  float dest_dist_traveled;
+};
+
+struct StopEdges {
+  valhalla::baldr::GraphId origin_pbf_graphid;        // GraphId (from pbf) of the origin stop
+  std::vector<valhalla::baldr::GraphId> intrastation; // List of intra-station connections
+  std::vector<TransitLine> lines;                     // Set of unique route/stop pairs
+};
+
 // Get scheduled departures for a stop
 std::unordered_multimap<GraphId, Departure>
 ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
@@ -1194,9 +1236,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::GetTransitLevel().level));
-  // it looks like Tile Hierarchy has level 2 as a maximum
-  //
+      std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -1250,11 +1290,9 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    build_tiles(pt.get_child("mjolnir"), lock, all_tiles, tile_start, tile_end, results.back());
-    //    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")),
-    //    std::ref(lock),
-    //                                     std::cref(all_tiles), tile_start, tile_end,
-    //                                     std::ref(results.back())));
+    threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                     std::cref(all_tiles), tile_start, tile_end,
+                                     std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
