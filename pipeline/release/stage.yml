@@ -1,0 +1,76 @@
+parameters:
+  name: null
+  region: null
+  environment: null
+  namespace: null
+  branchFilter: true
+  variables: []
+  dependencies: []
+
+stages:
+  - stage: ${{ parameters.name }}
+    displayName: ${{ parameters.region }}.${{ parameters.environment }}
+    dependsOn: ${{ parameters.dependencies }}
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'), ${{ parameters.branchFilter }})
+    variables:
+      - name: region
+        value: ${{ parameters.region }}
+      - name: environment
+        value: ${{ parameters.environment }}
+      - name: namespace
+        value: ${{ parameters.namespace }}
+      - name: app.stage.short
+        value: $[replace(variables['app.stage'], '-', '')]
+      - ${{ each group in parameters.variables }}:
+          - group: ${{ group }}
+
+    jobs:
+      - deployment: ${{ parameters.name }}_release
+        displayName: ${{ parameters.region }}.${{ parameters.environment }}.release
+        environment: ${{ parameters.environment }}
+        pool:
+          vmImage: ubuntu-18.04
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                  clean: true
+                  persistCredentials: true
+
+                - bash: |
+                    echo "##vso[task.setvariable variable=app.version]${BUILD_BUILDNUMBER}"
+                  name: version
+                  displayName: Version
+
+                - bash: |
+                    source pipeline/release/scripts/10-validate.sh
+                  name: validate
+                  displayName: Validate
+                  env:
+                    APP_REGISTRY_PASSWORD: $(app.registry.password)
+                    APP_CLIENT_SECRET: $(app.client.secret)
+                    AKS_CLIENT_SECRET: $(aks.client.secret)
+                    DATADOG_APP_KEY: $(datadog.app.key)
+                    DATADOG_API_KEY: $(datadog.api.key)
+
+                - bash: |
+                    source pipeline/release/scripts/20-datadog.sh
+                  name: provision
+                  displayName: Datadog Monitors
+                  condition: and(succeeded(), eq(variables['datadog.monitors.enabled'], 'True'))
+                  env:
+                    APP_CLIENT_SECRET: $(app.client.secret)
+                    DATADOG_APP_KEY: $(datadog.app.key)
+                    DATADOG_API_KEY: $(datadog.api.key)
+
+                - bash: |
+                    source pipeline/release/scripts/30-deploy.sh
+                  name: deploy
+                  displayName: Deploy
+                  condition: and(succeeded(), eq(variables['run.deploy'], 'True'))
+                  env:
+                    APP_REGISTRY_PASSWORD: $(app.registry.password)
+                    APP_CLIENT_SECRET: $(app.client.secret)
+                    AKS_CLIENT_SECRET: $(aks.client.secret)
+                    SHARED_CLIENT_SECRET: $(shared.client.secret)

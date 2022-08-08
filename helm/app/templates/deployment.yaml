@@ -1,0 +1,192 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels" . | indent 4 }}
+  annotations:
+    {{- include "annotations" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    rollingUpdate:
+      maxSurge: {{ .Values.strategy.surge }}
+      maxUnavailable: {{ .Values.strategy.unavailable }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "labels" . | indent 8 }}
+        date: "{{ now | unixEpoch }}"
+      annotations:
+        {{- include "annotations" . | indent 8 }}
+        ad.datadoghq.com/{{ .Chart.Name }}.check_names: |
+          ["openmetrics"]
+        ad.datadoghq.com/{{ .Chart.Name }}.init_configs: |
+          [{}]
+        ad.datadoghq.com/{{ .Chart.Name }}.instances: |
+          [
+            {
+              "prometheus_url": "http://%%host%%:{{ .Values.container.datastore.healthPort }}/metrics",
+              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}-datastore",
+              "metrics": ["*"]
+            },
+            {
+              "prometheus_url": "http://%%host%%:{{ .Values.container.router.healthPort }}/metrics",
+              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}",
+              "metrics": ["*"]
+            }
+          ]
+
+    spec:
+      imagePullSecrets:
+        - name: {{ .Chart.Name }}-registry
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
+      affinity:
+        podAntiAffinity:      # Makes sure only one osrm-routing pod is scheduled on each routers node
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                      - {{ .Chart.Name }}
+              topologyKey: "kubernetes.io/hostname"   # Applies this rule to each node (i.e. each unique host name in the cluster)
+
+      volumes:
+        - name: graph-storage
+          azureFile:
+            secretName: {{ .Chart.Name }}-storage
+            shareName: {{ .Values.graph.share.name }}
+            readOnly: true
+        - name: temp-share      # The two containers communicate via lock files, they need to be accessible to both but not persisted
+          emptyDir:
+            medium: Memory
+
+      hostIPC: true             # This is very important to allow both containers to access the same shared memory
+
+      initContainers:
+        - name: memory-cleanup  # This will remove whatever shared memory regions might still be blocked by previous pods
+          image: {{ include "image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["ipcrm"]
+          args: ["-a"]          # This is brute force, but thanks to our podAntiAffinity, other osrm-router pods will not be affected
+          securityContext:
+            privileged: true    # Only privileged containers are allowed to reserve large amounts of shared memory
+
+      containers:
+        - name: osrm-datastore
+          image: {{ include "image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            limits:
+              memory: {{ .Values.container.datastore.resourceLimits.memory }}
+              cpu: {{ .Values.container.datastore.resourceLimits.cpu }}
+            requests:
+              memory: {{ .Values.container.datastore.resourceRequests.memory }}   # The container itself does not require this much, but we need to reserve it all to account for shared memory (which is not monitored by Kubernetes *sigh*)
+              cpu: {{ .Values.container.datastore.resourceRequests.cpu }}
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+                - IPC_LOCK
+                - IPC_OWNER
+          command: [ "osrm-datastore" ]
+          args: [
+            "$(GRAPH_PATH)",
+            "--azure-connection-string", "$(AZURE_CONNECTION_STRING)",
+            "--log-level", "{{ .Values.datastore.logging.level }}",
+            "--log-format", "{{ .Values.datastore.logging.outputFormat }}"
+          ]
+          ports:
+            - containerPort: {{ .Values.container.datastore.healthPort }}
+          volumeMounts:
+            - mountPath: /graphs
+              name: graph-storage
+            - mountPath: /tmp
+              name: temp-share
+          env:
+            - name: DD_SERVICE
+              value: "{{ .Values.app.key }}-{{ .Values.app.name }}"
+          envFrom:
+            - configMapRef:
+                name: {{ .Chart.Name | quote }}
+            - secretRef:
+                name: {{ .Chart.Name }}-metrics
+
+        - name: osrm-router
+          image: {{ include "image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            limits:
+              memory: {{ .Values.container.router.resourceLimits.memory }}
+              cpu: {{ .Values.container.router.resourceLimits.cpu }}
+            requests:
+              memory: {{ .Values.container.router.resourceRequests.memory }} # All the memory used by the routing service is shared, it requires almost nothing
+              cpu: {{ .Values.container.router.resourceRequests.cpu }}       # Routing can be parallelized, so we reserve all the CPU we can get
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          command: ["osrm-routed"]
+          args: [
+              "--port", "{{ .Values.container.router.port }}",
+              "--algorithm", "{{ .Values.router.algorithm }}",
+              "--shared-memory",
+              "--threads", "{{ .Values.router.numberOfThreads }}",
+              "--log-level", "{{ .Values.router.logging.level }}",
+              "--log-format", "{{ .Values.router.logging.outputFormat }}"
+          ]
+          ports:
+            - containerPort: {{ .Values.container.router.port }}
+            - containerPort: {{ .Values.container.router.healthPort }}
+          volumeMounts:
+            - mountPath: /graphs
+              name: graph-storage
+            - mountPath: /tmp
+              name: temp-share
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: DD_SERVICE
+              value: "{{ .Values.app.key }}-{{ .Values.app.name }}"
+            - name: DD_VERSION
+              value: {{ .Values.app.version }}
+            - name: DD_TAGS
+              value: key:{{ .Values.app.key }},env:{{ .Values.stage.environment }},geo:{{ .Values.stage.region }},class:app
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: {{ .Values.container.router.healthPort }}
+            initialDelaySeconds: 10
+            failureThreshold: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: {{ .Values.container.router.healthPort }}
+            initialDelaySeconds: 500
+            failureThreshold: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
