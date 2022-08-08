@@ -156,7 +156,6 @@ public:
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
     decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
-
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
       std::ofstream f(new_file_name, std::ios::binary | std::ios::out | std::ios::trunc);

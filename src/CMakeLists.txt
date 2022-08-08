@@ -223,7 +223,6 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/third_party/date/include
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
-    ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
     ${libvalhalla_include_directories})
