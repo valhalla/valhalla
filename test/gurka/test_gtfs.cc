@@ -290,10 +290,10 @@ TEST(GtfsExample, MakeProto) {
 }
 
 TEST(GtfsExample, MakeTile) {
-  auto pt = get_config;
+  boost::property_tree::ptree pt = get_config();
   filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/level3_tile_dir");
 
-  auto all_tiles = valhalla::mjolnir::convert_transit(*pt);
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
   //  // files are already going to be written from
   //  filesystem::recursive_directory_iterator transit_file_itr("test/data/transit_tiles");
