@@ -1292,7 +1292,6 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    // build_tiles(pt.get_child("mjolnir"), lock, all_tiles, tile_start, tile_end, results.back());
     threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
                                      std::cref(all_tiles), tile_start, tile_end,
                                      std::ref(results.back())));

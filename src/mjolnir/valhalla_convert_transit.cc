@@ -1,4 +1,3 @@
-
 #include "baldr/rapidjson_utils.h"
 #include "filesystem.h"
 #include "mjolnir/convert_transit.h"
