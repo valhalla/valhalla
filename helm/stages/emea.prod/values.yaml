@@ -1,4 +1,4 @@
-router:
+valhalla:
   logging:
     level: WARN
 

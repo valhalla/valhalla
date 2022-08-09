@@ -22,7 +22,7 @@ image:
   pullPolicy: Always
 
 container:
-  router:
+  valhalla:
     port: 5000
     healthPort: 8080
     resourceLimits:
@@ -43,7 +43,7 @@ container:
 service:
   port: 80
 
-router:
+valhalla:
   algorithm: "MLD"
   numberOfThreads: 10
   logging:

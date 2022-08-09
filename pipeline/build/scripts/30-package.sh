@@ -7,11 +7,11 @@ docker login ${APP_REGISTRY_URL} \
 || exit 1
 
 
-if ! docker manifest inspect ${APP_REGISTRY_URL}/osrm-base:latest > /dev/null;
+if ! docker manifest inspect ${APP_REGISTRY_URL}/valhalla:latest > /dev/null;
 then
    echo "base image not present, building it now"
-   docker build --file "docker/base/Dockerfile" --tag ${APP_REGISTRY_URL}/osrm-base:latest .
-   docker push ${APP_REGISTRY_URL}/osrm-base:latest
+   docker build --file "docker/base/Dockerfile" --tag ${APP_REGISTRY_URL}/valhalla:latest .
+   docker push ${APP_REGISTRY_URL}/valhalla:latest
 fi
 
 DOCKER_TAG=""

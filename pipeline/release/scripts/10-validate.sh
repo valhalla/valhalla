@@ -110,7 +110,7 @@ then
   echo "ERROR DATADOG_APP_KEY variable not defined." && exit 1
 fi
 
-if [[ -z "${OSRM_BACKEND_GRAPH}" ]]
+if [[ -z "${VALHALLA_GRAPH}" ]]
 then
   echo "ERROR GRAPH_PATH variable not defined." && exit 1
 fi

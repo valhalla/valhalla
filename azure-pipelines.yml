@@ -42,9 +42,9 @@ parameters:
 
 variables:
   - name: app.key
-    value: tnt
+    value: way
   - name: app.name
-    value: osrm-backend
+    value: valhalla
   - name: run.deploy
     value: ${{ parameters.deploy }}
   - name: datadog.monitors.enabled
@@ -81,7 +81,7 @@ stages:
         - shared
         - datadog
         - release.emea.dev
-        - osrm-backend.emea.dev
+        - valhalla.emea.dev
       dependencies: build
 
   # RELEASE TO NONPROD
@@ -96,7 +96,7 @@ stages:
         - shared
         - datadog
         - release.emea.nonprod
-        - osrm-backend.emea.nonprod
+        - valhalla.emea.nonprod
       dependencies: emea_dev
 
   # RELEASE TO PROD
@@ -111,5 +111,5 @@ stages:
         - shared
         - datadog
         - release.emea.prod
-        - osrm-backend.emea.prod
+        - valhalla.emea.prod
       dependencies: emea_nonprod

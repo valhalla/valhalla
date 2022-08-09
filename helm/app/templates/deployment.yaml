@@ -37,7 +37,7 @@ spec:
               "metrics": ["*"]
             },
             {
-              "prometheus_url": "http://%%host%%:{{ .Values.container.router.healthPort }}/metrics",
+              "prometheus_url": "http://%%host%%:{{ .Values.container.valhalla.healthPort }}/metrics",
               "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}",
               "metrics": ["*"]
             }
@@ -52,7 +52,7 @@ spec:
         fsGroup: 1000
 
       affinity:
-        podAntiAffinity:      # Makes sure only one osrm-routing pod is scheduled on each routers node
+        podAntiAffinity:      # Makes sure only one osrm-routing pod is scheduled on each valhalla node
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
@@ -79,7 +79,7 @@ spec:
           image: {{ include "image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["ipcrm"]
-          args: ["-a"]          # This is brute force, but thanks to our podAntiAffinity, other osrm-router pods will not be affected
+          args: ["-a"]          # This is brute force, but thanks to our podAntiAffinity, other valhalla pods will not be affected
           securityContext:
             privileged: true    # Only privileged containers are allowed to reserve large amounts of shared memory
 
@@ -128,16 +128,16 @@ spec:
             - secretRef:
                 name: {{ .Chart.Name }}-metrics
 
-        - name: osrm-router
+        - name: valhalla
           image: {{ include "image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             limits:
-              memory: {{ .Values.container.router.resourceLimits.memory }}
-              cpu: {{ .Values.container.router.resourceLimits.cpu }}
+              memory: {{ .Values.container.valhalla.resourceLimits.memory }}
+              cpu: {{ .Values.container.valhalla.resourceLimits.cpu }}
             requests:
-              memory: {{ .Values.container.router.resourceRequests.memory }} # All the memory used by the routing service is shared, it requires almost nothing
-              cpu: {{ .Values.container.router.resourceRequests.cpu }}       # Routing can be parallelized, so we reserve all the CPU we can get
+              memory: {{ .Values.container.valhalla.resourceRequests.memory }} # All the memory used by the routing service is shared, it requires almost nothing
+              cpu: {{ .Values.container.valhalla.resourceRequests.cpu }}       # Routing can be parallelized, so we reserve all the CPU we can get
           securityContext:
             runAsUser: 1000
             runAsGroup: 1000
@@ -149,7 +149,7 @@ spec:
                 - NET_BIND_SERVICE
           command: ["osrm-routed"]
           args: [
-              "--port", "{{ .Values.container.router.port }}",
+              "--port", "{{ .Values.container.router.port }}", 
               "--algorithm", "{{ .Values.router.algorithm }}",
               "--shared-memory",
               "--threads", "{{ .Values.router.numberOfThreads }}",
@@ -157,8 +157,8 @@ spec:
               "--log-format", "{{ .Values.router.logging.outputFormat }}"
           ]
           ports:
-            - containerPort: {{ .Values.container.router.port }}
-            - containerPort: {{ .Values.container.router.healthPort }}
+            - containerPort: {{ .Values.container.valhalla.port }}
+            - containerPort: {{ .Values.container.valhalla.healthPort }}
           volumeMounts:
             - mountPath: /graphs
               name: graph-storage
@@ -178,14 +178,14 @@ spec:
           livenessProbe:
             httpGet:
               path: /liveness
-              port: {{ .Values.container.router.healthPort }}
+              port: {{ .Values.container.valhalla.healthPort }}
             initialDelaySeconds: 10
             failureThreshold: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /readiness
-              port: {{ .Values.container.router.healthPort }}
+              port: {{ .Values.container.valhalla.healthPort }}
             initialDelaySeconds: 500
             failureThreshold: 10
             periodSeconds: 30
