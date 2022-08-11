@@ -468,6 +468,7 @@ void build_live_traffic_data(const boost::property_tree::ptree& config,
     // values within the generated traffic tiles and test that routes reflect those changes
     // as expected.
     for (auto tile_id : tile_ids) {
+      // LOG_INFO("tile_id=" + std::to_string(tile_id.value));
       auto tile = reader.GetGraphTile(tile_id);
       std::stringstream buffer;
       valhalla::baldr::TrafficTileHeader header = {};
@@ -547,6 +548,59 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
         valhalla::baldr::TrafficSpeed* current =
             const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         setter_cb(reader, tile, index, current);
+      }
+      mtar_next(&tar);
+    }
+  }
+}
+
+void customize_live_traffic_data(const boost::property_tree::ptree& config,
+                                 const std::vector<CSV_Speed>& ts) {
+  // Now we have the tar-file and can go ahead with per edge customizations
+  {
+    const auto memory =
+        std::make_shared<MMap>(config.get<std::string>("mjolnir.traffic_extract").c_str());
+
+    mtar_t tar;
+    tar.pos = 0;
+    tar.stream = memory->data;
+    tar.read = [](mtar_t* tar, void* data, unsigned size) -> int {
+      memcpy(data, reinterpret_cast<char*>(tar->stream) + tar->pos, size);
+      return MTAR_ESUCCESS;
+    };
+    tar.write = [](mtar_t* tar, const void* data, unsigned size) -> int {
+      memcpy(reinterpret_cast<char*>(tar->stream) + tar->pos, data, size);
+      return MTAR_ESUCCESS;
+    };
+    tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t* /*tar*/) -> int { return MTAR_ESUCCESS; };
+
+    // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
+    // 10km/h)
+    valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+    mtar_header_t tar_header;
+    while ((mtar_read_header(&tar, &tar_header)) != MTAR_ENULLRECORD) {
+      valhalla::baldr::TrafficTile tile(
+          std::make_unique<MMapGraphMemory>(memory,
+                                            reinterpret_cast<char*>(tar.stream) + tar.pos +
+                                                sizeof(mtar_raw_header_t_),
+                                            tar_header.size));
+
+      valhalla::baldr::GraphId tile_id(tile.header->tile_id);
+
+      CSV_Speed findvalue{tile_id};
+
+      auto it = find(ts.begin(), ts.end(), findvalue);
+      if (it != ts.end()) {
+        for (auto speeddata : it->speed_data) {
+          valhalla::baldr::TrafficSpeed* current =
+              const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + speeddata.first);
+          current->breakpoint1 = 255;
+          current->overall_encoded_speed = speeddata.second >> 1;
+          current->encoded_speed1 = speeddata.second >> 1;
+        }
+      } else {
+        // LOG_INFO("No traffic data for tile " + std::to_string(tile_id));
       }
       mtar_next(&tar);
     }

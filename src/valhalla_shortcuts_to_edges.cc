@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -8,6 +9,8 @@
 #include "config.h"
 
 #include "baldr/rapidjson_utils.h"
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <ostream>
@@ -19,27 +22,31 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 
+namespace bpo = boost::program_options;
+
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
+bool export_edge_id = true;
 
 // Structure holding an edge Id and forward flag
-struct EdgeAndDirection {
-  bool forward;
-  GraphId edgeid;
+// struct EdgeAndDirection {
+//   bool forward;
+//   GraphId edgeid;
 
-  EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
-  }
-};
+//   EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
+//   }
+// };
 
 bool ParseArguments(int argc, char* argv[]) {
+
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_ways_to_edges",
-      "valhalla_ways_to_edges " VALHALLA_VERSION "\n\n"
-      "valhalla_ways_to_edges is a program that creates a list of edges for each auto-driveable OSM way.\n\n");
+      "shortcuts_to_edges",
+      "shortcuts_to_edges " VALHALLA_VERSION "\n\n"
+      "shortcuts_to_edges is a program that creates a list of edges for each shortcut.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
@@ -99,9 +106,11 @@ int main(int argc, char** argv) {
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
+  // rapidjson::read_json("/SDD_datadrive/valhalla/deu/valhalla_deu.json", pt);
 
+  // bool export_edge_id = export_edge_id;
   // Create an unordered map of OSM ways Ids and their associated graph edges
-  std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
+  std::unordered_map<GraphId, std::vector<GraphId>> shortcuts_edges;
 
   uint64_t edge_count = 0;
   GraphReader reader(pt.get_child("mjolnir"));
@@ -111,65 +120,74 @@ int main(int argc, char** argv) {
     if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
+    if (edge_id.level() == 2) {
+      continue;
+    }
 
     graph_tile_ptr tile = reader.GetGraphTile(edge_id);
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
-          edge->is_shortcut()) {
+          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
         continue;
       }
 
-      // Skip if the edge does not allow auto use
-      if (!(edge->forwardaccess() & kAutoAccess)) {
+      if (!edge->is_shortcut()) {
         continue;
       }
 
-      // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge).wayid();
-      ways_edges[wayid].push_back({edge->forward(), edge_id});
       edge_count++;
+      auto result = reader.RecoverShortcut(edge_id);
+      float shortcut_time = 0;
+
+      if (result.size() < 2)
+        continue;
+
+      for (auto id : result) {
+        if (export_edge_id) {
+          // insert edge id
+          shortcuts_edges[edge_id].emplace_back(id);
+        } else {
+          // insert link_id
+          auto tile2 = reader.GetGraphTile(GraphId{id});
+          auto edge2 = tile2->directededge(id);
+          uint64_t wayid = tile2->edgeinfo(edge2).wayid();
+          shortcuts_edges[edge_id].emplace_back(wayid);
+        }
+      } // for
     }
   }
+  LOG_INFO("Shortcuts in total: " + std::to_string(edge_count));
 
-  std::ofstream ways_file;
-  std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "way_edges.txt";
+  edge_count = 0;
+  std::ofstream shortcuts_file;
+  std::string fname = pt.get<std::string>("mjolnir.tile_dir") + filesystem::path::preferred_separator;
+  if (export_edge_id) {
+    fname += "shortcuts_edges.txt";
+  } else {
+    fname += "shortcuts_links.txt";
+  }
 
-  std::vector<long> vec_ways;
-  // vec_ways.resize(edge_count);
-  std::vector<uint64_t> vec_edges;
-  // vec_edges.resize(edge_count);
+  shortcuts_file.open(fname, std::ofstream::out | std::ofstream::trunc);
+  for (const auto& shortcut : shortcuts_edges) {
+    shortcuts_file << (uint64_t)shortcut.first;
 
-  ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
-  for (const auto& way : ways_edges) {
-    // ways_file << way.first;
-    // for (auto edge : way.second) {
-    //   ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
-    // }
-    // ways_file << std::endl;
-
-    for (auto edge : way.second) {
-      ways_file << way.first << " " << (uint32_t)edge.forward << " " << (uint64_t)edge.edgeid
-                << std::endl;
-      if (edge.forward == true) {
-        vec_ways.emplace_back(way.first);
-      } else {
-        vec_ways.emplace_back(-1 * way.first);
+    for (auto edge : shortcut.second) {
+      if (export_edge_id) {
+        if (shortcut.first.tileid() != edge.tileid()) {
+          // LOG_ERROR("shortcut " + std::to_string((uint64_t)shortcut.first) +
+          //           " contains different tiles");
+          edge_count++;
+        }
       }
-      vec_edges.emplace_back((uint64_t)edge.edgeid);
+      shortcuts_file << " " << (uint64_t)edge;
     }
+    shortcuts_file << std::endl;
   }
-  ways_file.close();
+  shortcuts_file.close();
 
-  // write to binary files
-  write_vector<long>(pt.get<std::string>("mjolnir.tile_dir") + filesystem::path::preferred_separator +
-                         "link_id",
-                     vec_ways);
-  write_vector<uint64_t>(pt.get<std::string>("mjolnir.tile_dir") +
-                             filesystem::path::preferred_separator + "edge_id",
-                         vec_edges);
-
+  if (export_edge_id) {
+    LOG_INFO("Shortcuts in different tiles: " + std::to_string(edge_count));
+  }
   return EXIT_SUCCESS;
 }

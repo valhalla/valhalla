@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstdlib>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -8,6 +9,8 @@
 #include "config.h"
 
 #include "baldr/rapidjson_utils.h"
+#include <boost/optional.hpp>
+#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 #include <ostream>
@@ -19,27 +22,29 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 
+namespace bpo = boost::program_options;
+
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
 
 // Structure holding an edge Id and forward flag
-struct EdgeAndDirection {
-  bool forward;
-  GraphId edgeid;
+// struct EdgeAndDirection {
+//   bool forward;
+//   GraphId edgeid;
 
-  EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
-  }
-};
+//   EdgeAndDirection(const bool f, const GraphId& id) : forward(f), edgeid(id) {
+//   }
+// };
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_ways_to_edges",
-      "valhalla_ways_to_edges " VALHALLA_VERSION "\n\n"
-      "valhalla_ways_to_edges is a program that creates a list of edges for each auto-driveable OSM way.\n\n");
+      "shortcuts_recost",
+      "shortcuts_recost " VALHALLA_VERSION "\n\n"
+      "shortcuts_recost is a program that update the cost of shortcut by using existing traffic and other costs.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
@@ -99,9 +104,10 @@ int main(int argc, char** argv) {
   // Get the config to see which coverage we are using
   boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
+  // rapidjson::read_json("/SDD_datadrive/valhalla/deu/valhalla_deu.json", pt);
 
   // Create an unordered map of OSM ways Ids and their associated graph edges
-  std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
+  std::unordered_map<GraphId, std::vector<GraphId>> shortcuts_edges;
 
   uint64_t edge_count = 0;
   GraphReader reader(pt.get_child("mjolnir"));
@@ -111,65 +117,82 @@ int main(int argc, char** argv) {
     if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
+    if (edge_id.level() == 2) {
+      continue;
+    }
 
     graph_tile_ptr tile = reader.GetGraphTile(edge_id);
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
-          edge->is_shortcut()) {
+          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
         continue;
       }
 
-      // Skip if the edge does not allow auto use
-      if (!(edge->forwardaccess() & kAutoAccess)) {
+      if (!edge->is_shortcut()) {
         continue;
       }
 
-      // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge).wayid();
-      ways_edges[wayid].push_back({edge->forward(), edge_id});
+      auto result = reader.RecoverShortcut(edge_id);
+      float shortcut_duration = 0;
+
+      if (result.size() < 2)
+        continue;
+
+      for (auto id : result) {
+        auto tile2 = reader.GetGraphTile(GraphId{id});
+        auto edge2 = tile2->directededge(id);
+
+        // auto speed = tile2->GetSpeed(edge2, kNoFlowMask, 1);
+        auto speed = tile2->GetSpeed(edge2, 255, 1);
+
+        if (speed == 0) {
+          shortcut_duration = 0;
+          break;
+        } else {
+          shortcut_duration += edge2->length() / static_cast<float>(speed);
+        }
+      } // for
+
+      auto shortcut_speed = tile->GetSpeed(edge, 255, 1);
+      decltype(shortcut_speed) new_speed;
+      if (shortcut_duration == 0) {
+        // closure on road
+        new_speed = 0;
+      } else {
+        // new_speed = static_cast<decltype(shortcut_speed)>(edge->length() / shortcut_time);
+        new_speed = static_cast<uint32_t>(std::round(edge->length() / shortcut_duration));
+      }
+
+      // if speed has be changed. new speed shall be slower than old speed
+      // some shortcut speed has increase a lot after recalculation. root cause is unknown
+      // the recalculated length of shortcuts is not changed
+      // Therefore, RecoverShortcut works.  
+      if (static_cast<int>(shortcut_speed) - static_cast<int>(new_speed) > 2) {
+        shortcuts_edges[edge_id].emplace_back(new_speed);
+        shortcuts_edges[edge_id].emplace_back(shortcut_speed);
+      }
+
       edge_count++;
     }
   }
-
-  std::ofstream ways_file;
+  LOG_INFO("Shortcuts in total: " + std::to_string(edge_count));
+  LOG_INFO("Write shortcut speed [edge_id, new speed, old speed]]");
+  edge_count = 0;
+  std::ofstream shortcuts_file;
   std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "way_edges.txt";
+                      filesystem::path::preferred_separator + "shortcuts_speed.txt";
 
-  std::vector<long> vec_ways;
-  // vec_ways.resize(edge_count);
-  std::vector<uint64_t> vec_edges;
-  // vec_edges.resize(edge_count);
-
-  ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
-  for (const auto& way : ways_edges) {
-    // ways_file << way.first;
-    // for (auto edge : way.second) {
-    //   ways_file << "," << (uint32_t)edge.forward << "," << (uint64_t)edge.edgeid;
-    // }
-    // ways_file << std::endl;
-
-    for (auto edge : way.second) {
-      ways_file << way.first << " " << (uint32_t)edge.forward << " " << (uint64_t)edge.edgeid
-                << std::endl;
-      if (edge.forward == true) {
-        vec_ways.emplace_back(way.first);
-      } else {
-        vec_ways.emplace_back(-1 * way.first);
-      }
-      vec_edges.emplace_back((uint64_t)edge.edgeid);
+  shortcuts_file.open(fname, std::ofstream::out | std::ofstream::trunc);
+  for (const auto& shortcut : shortcuts_edges) {
+    shortcuts_file << (uint64_t)shortcut.first;
+    for (auto speed : shortcut.second) {
+      shortcuts_file << " " << (uint64_t)speed;
     }
+    shortcuts_file << std::endl;
+    edge_count++;
   }
-  ways_file.close();
-
-  // write to binary files
-  write_vector<long>(pt.get<std::string>("mjolnir.tile_dir") + filesystem::path::preferred_separator +
-                         "link_id",
-                     vec_ways);
-  write_vector<uint64_t>(pt.get<std::string>("mjolnir.tile_dir") +
-                             filesystem::path::preferred_separator + "edge_id",
-                         vec_edges);
-
+  shortcuts_file.close();
+  LOG_INFO("Write shortcut: " + std::to_string(edge_count));
   return EXIT_SUCCESS;
 }

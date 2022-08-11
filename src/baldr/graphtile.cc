@@ -468,7 +468,11 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
     tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
     if ((tile_id_strlen - ind) % 4 == 0) {
-      tile_id_str[ind--] = separator;
+      if (ind == 0) {
+        tile_id_str[ind] = separator;
+      } else {
+        tile_id_str[ind--] = separator;
+      }
     }
   }
   // add missing separators
@@ -476,6 +480,7 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
     tile_id_str[sep_ind] = separator;
   }
 
+  // LOG_INFO("Reading: " + std::to_string(graphid.level()) + tile_id_str + fname_suffix);
   return std::to_string(graphid.level()) + tile_id_str + fname_suffix;
 }
 

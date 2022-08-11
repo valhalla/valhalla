@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& os, const ComplexRestrictionBuilder& crb)
 
   // Write out the bytes - write the fixed part of the structure and then
   // write the via Ids (if any).
-  os.write(reinterpret_cast<const char*>(&crb), 3 * sizeof(uint64_t));
+  os.write(reinterpret_cast<const char*>(&crb), sizeof(ComplexRestriction));
   if (via_count > 0) {
     os.write(reinterpret_cast<const char*>(crb.via_list_.data()), (via_count * sizeof(GraphId)));
   }
