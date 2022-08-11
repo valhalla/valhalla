@@ -23,7 +23,7 @@ image:
 
 container:
   valhalla:
-    port: 5000
+    port: 8002
     healthPort: 8080
     resourceLimits:
       memory: 10Gi
@@ -31,38 +31,19 @@ container:
     resourceRequests:
       memory: 5Gi       # All the memory used by the routing service is shared, it requires almost nothing
       cpu: 10000m       # Routing can be parallelized, so we reserve all the CPU we can get
-  datastore:
-    healthPort: 8080
-    resourceLimits:
-      memory: 100Gi
-      cpu: 4000m
-    resourceRequests:
-      memory: 90Gi     # The container itself does not require this much, but we need to reserve it all to account for shared memory (which is not monitored by Kubernetes *sigh*)
-      cpu: 3000m
-
 service:
   port: 80
 
 valhalla:
-  algorithm: "MLD"
   numberOfThreads: 10
   logging:
     level: INFO
     outputFormat: JSON
 
-datastore:
-  logging:
-    level: INFO
-    outputFormat: JSON
-
-
 graph:
   path: pipeline/release/scripts/30-deploy.sh
   share:
     name: pipeline/release/scripts/30-deploy.sh
-  storage:
-    name: pipeline/release/scripts/30-deploy.sh
-    key: pipeline/release/scripts/30-deploy.sh
 
 metrics:
   connectionString: pipeline/release/scripts/30-deploy.sh
