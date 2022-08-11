@@ -1,0 +1,49 @@
+app:
+  key: pipeline/release/scripts/30-deploy.sh
+  name: pipeline/release/scripts/30-deploy.sh
+  version: pipeline/release/scripts/30-deploy.sh
+
+stage:
+  region: pipeline/release/scripts/30-deploy.sh
+  environment: pipeline/release/scripts/30-deploy.sh
+
+replicas: 1
+strategy:
+  type: RollingUpdate
+  surge: 1
+  unavailable: 0
+
+image:
+  registry: pipeline/release/scripts/30-deploy.sh
+  username: pipeline/release/scripts/30-deploy.sh
+  password: pipeline/release/scripts/30-deploy.sh
+  repository: pipeline/release/scripts/30-deploy.sh
+  tag: pipeline/release/scripts/30-deploy.sh
+  pullPolicy: Always
+
+container:
+  valhalla:
+    port: 8002
+    healthPort: 8080
+    resourceLimits:
+      memory: 10Gi
+      cpu: 11000m
+    resourceRequests:
+      memory: 5Gi       # All the memory used by the routing service is shared, it requires almost nothing
+      cpu: 10000m       # Routing can be parallelized, so we reserve all the CPU we can get
+service:
+  port: 80
+
+valhalla:
+  numberOfThreads: 10
+  logging:
+    level: INFO
+    outputFormat: JSON
+
+graph:
+  path: pipeline/release/scripts/30-deploy.sh
+  share:
+    name: pipeline/release/scripts/30-deploy.sh
+
+metrics:
+  connectionString: pipeline/release/scripts/30-deploy.sh

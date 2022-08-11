@@ -1,0 +1,7 @@
+router:
+  logging:
+    level: WARN
+
+datastore:
+  logging:
+    level: WARN

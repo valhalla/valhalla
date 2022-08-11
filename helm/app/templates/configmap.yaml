@@ -1,0 +1,11 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "labels" . | indent 4 }}
+  annotations:
+    {{- include "annotations" . | indent 4 }}
+data:
+  GRAPH_PATH: "{{ .Values.graph.path }}"

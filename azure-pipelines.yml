@@ -1,0 +1,115 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  - master
+  - main
+  - release/*
+
+# Parameters that can be specified when running the pipeline
+parameters:
+  - name: deploy
+    type: boolean
+    default: true
+    displayName: Deploy to Cluster
+  - name: deploy_all
+    type: boolean
+    default: false
+    displayName: Deploy to all Stages (Override Branch Filters, Subject to Approvals)
+  - name: trivy
+    type: boolean
+    default: true
+    displayName: Scan Container with Trivy
+  - name: sonar
+    type: boolean
+    default: false
+    displayName: Scan Code with SonarQube
+  - name: blackduck
+    type: boolean
+    default: false
+    displayName: Scan Code with BlackDuck
+  - name: acr_cleanup
+    type: boolean
+    default: true
+    displayName: Purge Images in Container Registry
+  - name: datadog
+    type: boolean
+    default: true
+    displayName: Setup Datadog Monitors
+  - name: debug_mode
+    type: boolean
+    default: false
+    displayName: Build in Debug Mode with Assertions
+
+variables:
+  - name: app.key
+    value: way
+  - name: app.name
+    value: valhalla
+  - name: run.deploy
+    value: ${{ parameters.deploy }}
+  - name: datadog.monitors.enabled
+    value: ${{ parameters.datadog }}
+  - name: sonar.enabled
+    value: ${{ parameters.sonar }}
+  - name: blackduck.enabled
+    value: ${{ parameters.blackduck }}
+  - name: trivy.enabled
+    value: ${{ parameters.trivy }}
+  - name: run.acr.cleanup
+    value: ${{ parameters.acr_cleanup }}
+  - name: build.debug.mode
+    value: ${{ parameters.debug_mode }}
+
+stages:
+  # BUILD
+  - template: pipeline/build/stage.yml
+    parameters:
+      name: build
+      variables:
+        - shared
+        - sonarqube
+        - blackduck
+
+  # RELEASE TO DEV
+  - template: pipeline/release/stage.yml
+    parameters:
+      name: emea_dev
+      region: emea
+      environment: dev
+      namespace: $(app.name)
+      variables:
+        - shared
+        - datadog
+        - release.emea.dev
+        - valhalla.emea.dev
+      dependencies: build
+
+  # RELEASE TO NONPROD
+  - template: pipeline/release/stage.yml
+    parameters:
+      name: emea_nonprod
+      region: emea
+      environment: nonprod
+      namespace: $(app.name)
+      branchFilter: or(${{ parameters.deploy_all }}, contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
+      variables:
+        - shared
+        - datadog
+        - release.emea.nonprod
+        - valhalla.emea.nonprod
+      dependencies: emea_dev
+
+  # RELEASE TO PROD
+  - template: pipeline/release/stage.yml
+    parameters:
+      name: emea_prod
+      region: emea
+      environment: prod
+      namespace: $(app.name)
+      branchFilter: or(${{ parameters.deploy_all }}, startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
+      variables:
+        - shared
+        - datadog
+        - release.emea.prod
+        - valhalla.emea.prod
+      dependencies: emea_nonprod
