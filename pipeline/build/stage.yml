@@ -31,7 +31,7 @@ stages:
             displayName: Validate
             env:
               APP_REGISTRY_PASSWORD: $(app.registry.password)
-              SHARED_CLIENT_SECRET: $(shared.client.secret)
+              SHARE_CLIENT_SECRET: $(share.client.secret)
 
           - bash: |
               source pipeline/build/scripts/11-version.sh
@@ -55,7 +55,7 @@ stages:
             condition: and(succeeded(), eq(variables['run.acr.cleanup'], 'true'))
             continueOnError: true
             env:
-              SHARED_CLIENT_SECRET: $(shared.client.secret)
+              SHARE_CLIENT_SECRET: $(share.client.secret)
 
           - bash: |
               source pipeline/build/scripts/30-package.sh
