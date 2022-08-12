@@ -25,22 +25,22 @@ then
   echo "ERROR: APP_REGISTRY_PASSWORD not defined." && exit 1
 fi
 
-if [[ -z ${SHARED_CLIENT_ID} ]]
+if [[ -z ${SHARE_CLIENT_ID} ]]
 then
-  echo "ERROR: SHARED_CLIENT_ID not defined." && exit 1
+  echo "ERROR: SHARE_CLIENT_ID not defined." && exit 1
 fi
 
-if [[ -z ${SHARED_CLIENT_SECRET} ]]
+if [[ -z ${SHARE_CLIENT_SECRET} ]]
 then
-  echo "ERROR: SHARED_CLIENT_SECRET not defined." && exit 1
+  echo "ERROR: SHARE_CLIENT_SECRET not defined." && exit 1
 fi
 
-if [[ -z ${SHARED_SUBSCRIPTION_ID} ]]
+if [[ -z ${AZURE_SUBSCRIPTION_ID} ]]
 then
-  echo "ERROR: SHARED_SUBSCRIPTION_ID not defined." && exit 1
+  echo "ERROR: AZURE_SUBSCRIPTION_ID not defined." && exit 1
 fi
 
-if [[ -z ${SHARED_TENANT_ID} ]]
+if [[ -z ${AZURE_TENANT_ID} ]]
 then
-  echo "ERROR: SHARED_TENANT_ID not defined." && exit 1
+  echo "ERROR: AZURE_TENANT_ID not defined." && exit 1
 fi

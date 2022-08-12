@@ -13,9 +13,9 @@ fi
 
 az login \
 --service-principal \
---tenant ${SHARED_TENANT_ID} \
---username ${SHARED_CLIENT_ID} \
---password ${SHARED_CLIENT_SECRET} \
+--tenant ${SHARE_TENANT_ID} \
+--username ${SHARE_CLIENT_ID} \
+--password ${SHARE_CLIENT_SECRET} \
 --output table \
 || exit 1
 
@@ -24,7 +24,7 @@ az acr task create --name PurgeTask \
   --schedule "0 1 * * Sun" \
   --registry ${APP_REGISTRY_USERNAME} \
   --context /dev/null \
-  --subscription ${SHARED_SUBSCRIPTION_ID} \
+  --subscription ${AZURE_SUBSCRIPTION_ID} \
 || exit 2
 
 az logout

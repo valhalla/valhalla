@@ -50,9 +50,8 @@ stages:
                   env:
                     APP_REGISTRY_PASSWORD: $(app.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    AKS_CLIENT_SECRET: $(app.client.secret)
-                    DATADOG_APP_KEY: $(datadog.app.key)
-                    DATADOG_API_KEY: $(datadog.api.key)
+                    #DATADOG_APP_KEY: $(datadog.app.key)
+                    #DATADOG_API_KEY: $(datadog.api.key)
 
                 - bash: |
                     source pipeline/release/scripts/20-datadog.sh
@@ -61,8 +60,8 @@ stages:
                   condition: and(succeeded(), eq(variables['datadog.monitors.enabled'], 'True'))
                   env:
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    DATADOG_APP_KEY: $(datadog.app.key)
-                    DATADOG_API_KEY: $(datadog.api.key)
+                    #DATADOG_APP_KEY: $(datadog.app.key)
+                    #DATADOG_API_KEY: $(datadog.api.key)
 
                 - bash: |
                     source pipeline/release/scripts/30-deploy.sh
@@ -72,5 +71,4 @@ stages:
                   env:
                     APP_REGISTRY_PASSWORD: $(app.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    AKS_CLIENT_SECRET: $(aks.client.secret)
-                    SHARED_CLIENT_SECRET: $(shared.client.secret)
+                    SHARE_CLIENT_SECRET: $(share.client.secret)

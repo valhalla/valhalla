@@ -64,9 +64,9 @@ az logout
 
 az login \
 --service-principal \
---tenant ${AKS_TENANT_ID} \
---username ${AKS_CLIENT_ID} \
---password ${AKS_CLIENT_SECRET} \
+--tenant ${APP_TENANT_ID} \
+--username ${APP_CLIENT_ID} \
+--password ${APP_CLIENT_SECRET} \
 --output table \
 || exit 2
 
@@ -106,7 +106,6 @@ helm upgrade valhalla helm/app \
 --set image.password=${APP_REGISTRY_PASSWORD} \
 --set image.repository=${APP_NAME} \
 --set image.tag=${APP_VERSION} \
---set graph.path=${VALHALLA_GRAPH} \
 --set graph.share.name=${GRAPH_SHARE_NAME} \
 --set graph.storage.name=${GRAPH_STORAGE_NAME} \
 --set graph.storage.key=${GRAPH_STORAGE_KEY} \
