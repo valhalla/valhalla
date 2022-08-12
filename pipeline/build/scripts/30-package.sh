@@ -25,13 +25,13 @@ fi
 
 if [[ "${APP_VERSION_LATEST}" = true ]]
 then
-  docker build . --file "docker/Dockerfile" \
+  docker build . --file "Dockerfile" \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:latest \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 else
-  docker build . --file "docker/Dockerfile" \
+  docker build . --file "Dockerfile" \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
