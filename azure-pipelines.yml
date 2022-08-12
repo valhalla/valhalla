@@ -66,7 +66,7 @@ stages:
     parameters:
       name: build
       variables:
-        - shared
+        - way.emea.shared
         #- sonarqube
         #- blackduck
 
@@ -78,8 +78,9 @@ stages:
       environment: dev
       namespace: $(app.name)
       variables:
-        - shared
+        - way.emea.shared
         #- datadog
+        - way.emea.dev
       dependencies: build
 
   # RELEASE TO NONPROD
@@ -91,8 +92,9 @@ stages:
       namespace: $(app.name)
       branchFilter: or(${{ parameters.deploy_all }}, contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
-        - shared
+        - way.emea.shared
         #- datadog
+        - way.emea.nonprod
       dependencies: emea_dev
 
   # RELEASE TO PROD
@@ -104,8 +106,7 @@ stages:
       namespace: $(app.name)
       branchFilter: or(${{ parameters.deploy_all }}, startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
-        - shared
+        - way.emea.shared
         #- datadog
-        #- release.emea.prod
-        #- valhalla.emea.prod
+        - way.emea.prod
       dependencies: emea_nonprod

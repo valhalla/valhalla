@@ -50,7 +50,7 @@ stages:
                   env:
                     APP_REGISTRY_PASSWORD: $(app.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    AKS_CLIENT_SECRET: $(aks.client.secret)
+                    AKS_CLIENT_SECRET: $(app.client.secret)
                     DATADOG_APP_KEY: $(datadog.app.key)
                     DATADOG_API_KEY: $(datadog.api.key)
 
