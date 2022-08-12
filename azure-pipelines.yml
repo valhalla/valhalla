@@ -17,7 +17,7 @@ parameters:
     displayName: Deploy to all Stages (Override Branch Filters, Subject to Approvals)
   - name: trivy
     type: boolean
-    default: true
+    default: false
     displayName: Scan Container with Trivy
   - name: sonar
     type: boolean
@@ -33,7 +33,7 @@ parameters:
     displayName: Purge Images in Container Registry
   - name: datadog
     type: boolean
-    default: true
+    default: false
     displayName: Setup Datadog Monitors
   - name: debug_mode
     type: boolean
@@ -67,8 +67,8 @@ stages:
       name: build
       variables:
         - shared
-        - sonarqube
-        - blackduck
+        #- sonarqube
+        #- blackduck
 
   # RELEASE TO DEV
   - template: pipeline/release/stage.yml
@@ -79,9 +79,7 @@ stages:
       namespace: $(app.name)
       variables:
         - shared
-        - datadog
-        - release.emea.dev
-        - valhalla.emea.dev
+        #- datadog
       dependencies: build
 
   # RELEASE TO NONPROD
@@ -94,9 +92,7 @@ stages:
       branchFilter: or(${{ parameters.deploy_all }}, contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
         - shared
-        - datadog
-        - release.emea.nonprod
-        - valhalla.emea.nonprod
+        #- datadog
       dependencies: emea_dev
 
   # RELEASE TO PROD
@@ -109,7 +105,7 @@ stages:
       branchFilter: or(${{ parameters.deploy_all }}, startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
         - shared
-        - datadog
-        - release.emea.prod
-        - valhalla.emea.prod
+        #- datadog
+        #- release.emea.prod
+        #- valhalla.emea.prod
       dependencies: emea_nonprod
