@@ -100,6 +100,7 @@
    * CHANGED: Precise definition of types of edges on which BSS could be projected [#3658](https://github.com/valhalla/valhalla/pull/3663)
    * CHANGED: Remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
    * ADDED: convert GTFS data into protobuf tiles [#3629](https://github.com/valhalla/valhalla/issues/3629)
+   * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
