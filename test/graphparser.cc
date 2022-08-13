@@ -9,6 +9,7 @@
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <fstream>
@@ -712,6 +713,42 @@ TEST(GraphParser, TestBike) {
 TEST(GraphParser, TestBus) {
   // write the tiles with it
   Bus(config_file);
+}
+
+TEST(GraphParser, TestBenchmarkStartsWith) {
+  auto start = std::chrono::steady_clock::now();
+  std::string test = "this is a test string to use";
+  const int n = 100000000;
+  int counter = 0;
+  for (int i = 0; i < n; ++i) {
+    if (test.substr(0, 18) == "this is a test str") {
+      ++counter;
+    }
+    if (test.substr(0, 10) == "not  match") {
+      ++counter;
+    }
+  }
+  EXPECT_EQ(n, counter);
+  auto finish = std::chrono::steady_clock::now();
+  std::cout << "With substr() it took "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() << " ms"
+            << std::endl;
+
+  start = std::chrono::steady_clock::now();
+  counter = 0;
+  for (int i = 0; i < n; ++i) {
+    if (boost::algorithm::starts_with(test, "this is a test str")) {
+      ++counter;
+    }
+    if (boost::algorithm::starts_with(test, "not  match")) {
+      ++counter;
+    }
+  }
+  EXPECT_EQ(n, counter);
+  finish = std::chrono::steady_clock::now();
+  std::cout << "With starts_with() it took "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() << " ms"
+            << std::endl;
 }
 
 TEST(GraphParser, TestImportBssNode) {
