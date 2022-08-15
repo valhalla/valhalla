@@ -7,6 +7,10 @@ else
   az cloud set --name AzureCloud
 fi
 
+echo ${APP_TENANT_ID}
+echo ${APP_CLIENT_ID}
+echo ${APP_CLIENT_SECRET} 
+
 az login \
 --service-principal \
 --tenant ${APP_TENANT_ID} \
