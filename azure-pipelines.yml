@@ -80,7 +80,7 @@ stages:
       variables:
         - way.emea.shared
         #- datadog
-        - way.emea.dev.test
+        - way.emea.dev
       dependencies: build
 
   # RELEASE TO NONPROD
