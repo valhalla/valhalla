@@ -99,6 +99,73 @@ struct StopEdges {
   std::vector<TransitLine> lines;                     // Set of unique route/stop pairs
 };
 
+const static auto VALID_EDGE_USES = std::unordered_set<Use>{
+    Use::kRoad, Use::kLivingStreet, Use::kCycleway, Use::kSidewalk,    Use::kFootway,
+    Use::kPath, Use::kPedestrian,   Use::kAlley,    Use::kServiceRoad,
+
+};
+
+std::vector<uint64_t> project(const GraphTile& local_tile, const Transit& transit_tile) {
+
+  // TODO: if tile is null return empty vector;
+  if (transit_tile.nodes_size() == 0) {
+    return std::vector<uint64_t>{};
+  }
+  auto t1 = std::chrono::high_resolution_clock::now();
+  auto scoped_finally = make_finally([&t1, size = transit_tile.nodes_size()]() {
+    auto t2 = std::chrono::high_resolution_clock::now();
+    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    LOG_INFO("Projection Finished - Projection of " + std::to_string(size) + " bike station  took " +
+             std::to_string(secs) + " secs");
+  });
+
+  // auto local_level = TileHierarchy::levels().back().level;
+  std::vector<uint64_t> best_ways;
+  std::map<GraphId, size_t> edge_count;
+
+  for (const auto& egress : transit_tile.nodes()) {
+    uint64_t best_wayid = std::numeric_limits<uint64_t>::max();
+    // In this loop, we try to find the way on which to project the bss node by iterating all nodes in
+    // its corresponding tile... Not a good idea in term of performance... any better idea???
+    auto bss_ll = PointLL{egress.lon(), egress.lat()};
+
+    float mindist_ped = std::numeric_limits<float>::max();
+
+    // Loop over all nodes in the tile to find the nearest edge
+    for (uint32_t i = 0; i < local_tile.header()->nodecount(); ++i) {
+      const NodeInfo* node = local_tile.node(i);
+      for (uint32_t j = 0; j < node->edge_count(); ++j) {
+        const DirectedEdge* directededge = local_tile.directededge(node->edge_index() + j);
+        auto edgeinfo = local_tile.edgeinfo(directededge);
+
+        auto found = VALID_EDGE_USES.count(directededge->use());
+        if (!found) {
+          continue;
+        }
+
+        if ((!(directededge->forwardaccess() & kPedestrianAccess)) || directededge->is_shortcut()) {
+          continue;
+        }
+
+        std::vector<PointLL> this_shape = edgeinfo.shape();
+        if (!directededge->forward()) {
+          std::reverse(this_shape.begin(), this_shape.end());
+        }
+        auto this_closest = bss_ll.Project(this_shape);
+
+        if (directededge->forwardaccess() & kPedestrianAccess) {
+          if (std::get<1>(this_closest) < mindist_ped) {
+            mindist_ped = std::get<1>(this_closest);
+            best_wayid = edgeinfo.wayid();
+          }
+        }
+      }
+    }
+    best_ways.push_back(best_wayid);
+  }
+
+  return best_ways;
+}
 // Get scheduled departures for a stop
 std::unordered_multimap<GraphId, Departure>
 ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
@@ -535,11 +602,23 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::vector<uint32_t>& route_types,
                 bool tile_within_one_tz,
                 const std::multimap<uint32_t, multi_polygon_type>& tz_polys,
-                uint32_t& no_dir_edge_count) {
+                uint32_t& no_dir_edge_count,
+                GraphReader& reader) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Get Transit PBF data for this tile
   Transit transit = read_pbf(tile, lock);
+
+  GraphId local_tile_id(tileid.tileid(), TileHierarchy::levels().back().level, 0);
+  graph_tile_ptr local_tile = reader.GetGraphTile(local_tile_id);
+  //  GraphTileBuilder tilebuilder_local(reader.tile_dir(), local_tile_id, true);
+
+  std::vector<uint64_t> best_wayids;
+  if (local_tile) {
+    best_wayids = project(*local_tile, transit);
+  } else {
+    LOG_INFO("Invalid graph tile for adding way_id");
+  }
 
   std::set<uint64_t> added_stations;
   std::set<uint64_t> added_egress;
@@ -676,7 +755,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
-        egress_node.set_connecting_wayid(egress.osm_way_id());
+
+        if (local_tile != nullptr && best_wayids[index] != std::numeric_limits<uint64_t>::max()) {
+          egress_node.set_connecting_wayid(best_wayids[index]);
+        }
 
         // add the egress connection
         // Make sure length is non-zero
@@ -1039,6 +1121,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");
+    GraphReader reader(pt);
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
@@ -1065,7 +1148,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     // Set the tile base LL
-    PointLL base_ll = TileHierarchy::get_tiling(tile_id.level() - 1).Base(tile_id.tileid());
+    PointLL base_ll =
+        TileHierarchy::get_tiling(TileHierarchy::levels().back().level).Base(tile_id.tileid());
     tilebuilder_transit.header_builder().set_base_ll(base_ll);
 
     lock.unlock();
@@ -1204,7 +1288,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     // Add nodes, directededges, and edgeinfo
     AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, all_tiles, stop_edge_map,
                stop_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
-               stats.no_dir_edge_count);
+               stats.no_dir_edge_count, reader);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.nodes_size()) + " stops, " +
