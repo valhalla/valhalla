@@ -35,6 +35,20 @@ then
   exit 3
 fi
 
+az logout
+
+az login \
+--service-principal \
+--tenant ${APP_TENANT_ID} \
+--username ${APP_CLIENT_ID} \
+--password ${APP_CLIENT_SECRET} \
+--output table \
+|| exit 2
+
+
+echo "getting aks credentials"
+
+
 az aks get-credentials \
 --resource-group ${APP_STAGE}-k8s-rg \
 --name ${APP_STAGE}-k8s \
