@@ -326,16 +326,15 @@ TEST(GtfsExample, MakeTile) {
   filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/level3_tile_dir");
 
   auto layout = create_layout();
-  auto path_directory = "mjolnir.tile_dir";
+  auto path_directory = pt.get<std::string>("mjolnir.tile_dir");
   auto map = gurka::buildtiles(layout, ways, {}, {}, path_directory);
   GraphReader reader(pt.get_child("mjolnir"));
 
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
-  //  // files are already going to be written from
+  // files are already going to be written from
   filesystem::recursive_directory_iterator transit_file_itr(path_directory);
   filesystem::recursive_directory_iterator end_file_itr;
-  // TODO: Check the graph files and test that the contents are written properly
 
   const std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   LOG_INFO(transit_dir);
