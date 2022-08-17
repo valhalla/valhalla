@@ -84,10 +84,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: DD_SERVICE
-              value: "{{ .Values.app.key }}-{{ .Values.app.name }}"
-            - name: DD_VERSION
-              value: {{ .Values.app.version }}
           livenessProbe:
             httpGet:
               path: /liveness
