@@ -2,7 +2,7 @@
 FROM ubuntu:20.04 as builder 
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
-ARG CONCURRENCY=$(nproc)
+ARG CONCURRENCY
 
 # set paths
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -26,7 +26,7 @@ RUN pip install --upgrade conan
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
-RUN make all -j${CONCURRENCY}
+RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
