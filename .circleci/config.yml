@@ -16,6 +16,12 @@ commands:
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
 
 jobs:
+  lint:
+    machine:
+      image: ubuntu-2004:current
+    steps:
+      - run: python3 -m pip install pre-commit && pre-commit run && ./scripts/error_on_dirty.sh
+    
   build-docker-images:
     docker:
       - image: docker:18.06.3-ce-git
@@ -55,7 +61,6 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -102,7 +107,6 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -139,7 +143,6 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -163,19 +166,28 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
+      - lint
       - build-docker-images:
+          requires:
+            - lint
           filters:
             tags:
               only: /.*/
       - lint-build-debug:
+          requires:
+            - lint
           filters:
             tags:
               ignore: /.*/
       - build-release:
+          requires:
+            - lint
           filters:
             tags:
               ignore: /.*/
       - build-osx:
+          requires:
+            - lint
           filters:
             tags:
               ignore: /.*/

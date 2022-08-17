@@ -20,11 +20,11 @@ def dict_or_str(func):
         elif not isinstance(args[1], str):
             raise ValueError("Request must be either of type str or dict")
         return func(*args)
+
     return wrapped
 
 
 class Actor(_Actor):
-    
     @dict_or_str
     def route(self, req: Union[str, dict]):
         return super().route(req)
