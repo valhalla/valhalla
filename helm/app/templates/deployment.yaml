@@ -25,24 +25,6 @@ spec:
         date: "{{ now | unixEpoch }}"
       annotations:
         {{- include "annotations" . | indent 8 }}
-        ad.datadoghq.com/{{ .Chart.Name }}.check_names: |
-          ["openmetrics"]
-        ad.datadoghq.com/{{ .Chart.Name }}.init_configs: |
-          [{}]
-        ad.datadoghq.com/{{ .Chart.Name }}.instances: |
-          [
-            {
-              "prometheus_url": "http://%%host%%:{{ .Values.container.datastore.healthPort }}/metrics",
-              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}-datastore",
-              "metrics": ["*"]
-            },
-            {
-              "prometheus_url": "http://%%host%%:{{ .Values.container.valhalla.healthPort }}/metrics",
-              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}",
-              "metrics": ["*"]
-            }
-          ]
-
     spec:
       imagePullSecrets:
         - name: {{ .Chart.Name }}-registry
@@ -90,7 +72,7 @@ spec:
           command: ["valhalla_service"]
           args: 
             - "/etc/valhalla/valhalla.json"
-            - "{{ .Values.router.numberOfThreads }}"
+            - "{{ .Values.valhalla.numberOfThreads }}"
           ports:
             - containerPort: {{ .Values.container.valhalla.port }}
             - containerPort: {{ .Values.container.valhalla.healthPort }}
