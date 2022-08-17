@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import fnmatch
+from os import path, environ
+import requests
 import sys
 import subprocess
-import requests
 
-
-from os import path, environ
 
 
 # jobs defined in .circleci/config.yml
@@ -127,6 +126,9 @@ for changed_file in changed_files:
     for ignore_rule in CI_IGNORE_RULES:
         if fnmatch.fnmatch(changed_file, ignore_rule):
             ignored_files.append(changed_file)
+
+print(f"changed files: {changed_files}")
+print(f"ignored files: {ignored_files}")
 
 if sorted(ignored_files) == sorted(changed_files):
     # everything was ignored, skip CI

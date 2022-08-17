@@ -12,44 +12,36 @@ commands:
   install_macos_dependencies:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: pip3 install requests shapely conan
+      - run: /usr/bin/python3 -m pip install --user requests
+      - run: pip3 install shapely conan
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
+  install_linux_dependencies:
+    steps:
+      - run: sudo bash ./scripts/install-linux-deps.sh
 
 jobs:
   build-docker-images:
-    docker:
-      - image: docker:18.06.3-ce-git
+    machine:
+      image: ubuntu-2004:current
     steps:
-      - setup_remote_docker
       - checkout
       - run:
-          name: Build Valhalla Docker Images
+          name: Build and push Valhalla Docker image
           command: |
-            docker build --pull -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
             if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
-              docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
-            fi
-      - run:
-          name: Push Valhalla Docker Images
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              BUILD_TAG="${CIRCLE_TAG:-latest}"
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:run-latest
-            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker tag valhalla/valhalla:build-latest valhalla/valhalla:build-${CIRCLE_TAG}
-              docker push valhalla/valhalla:build-${CIRCLE_TAG}
-              docker tag valhalla/valhalla:run-latest valhalla/valhalla:run-${CIRCLE_TAG}
-              docker push valhalla/valhalla:run-${CIRCLE_TAG}
+              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
+              docker push valhalla/valhalla:run-${BUILD_TAG}
             fi
 
   lint-build-debug:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
+      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
@@ -84,7 +76,7 @@ jobs:
             - ~/.ccache
             - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
@@ -92,11 +84,12 @@ jobs:
       - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
+      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
@@ -125,7 +118,7 @@ jobs:
           paths:
             - ~/.ccache
             - ~/.conan
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
 
   build-osx:
