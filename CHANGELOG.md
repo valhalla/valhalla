@@ -1,5 +1,6 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
+   * REMOVED: "build-*" docker image to decrease complexity [#3689](https://github.com/valhalla/valhalla/pull/3541)
 * **Bug Fix**
    * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
@@ -102,6 +103,7 @@
    * ADDED: convert GTFS data into protobuf tiles [#3629](https://github.com/valhalla/valhalla/issues/3629)
    * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
+   * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
