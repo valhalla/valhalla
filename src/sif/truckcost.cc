@@ -776,7 +776,7 @@ TEST(TruckCost, testTruckCostParams) {
                                     defaults.country_crossing_cost_.def));
   }
 
-  // ferry_cost_ (Cost.secs)
+  // ferry_transition_cost_ (Cost.secs)
   distributor.reset(make_distributor_from_range(defaults.ferry_cost_));
   for (unsigned i = 0; i < testIterations; ++i) {
     ctorTester.reset(make_truckcost_from_json("ferry_cost", (*distributor)(generator)));
