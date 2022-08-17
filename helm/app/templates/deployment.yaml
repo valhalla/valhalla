@@ -88,8 +88,6 @@ spec:
               value: "{{ .Values.app.key }}-{{ .Values.app.name }}"
             - name: DD_VERSION
               value: {{ .Values.app.version }}
-            - name: DD_TAGS
-              value: key:{{ .Values.app.key }},env:{{ .Values.stage.environment }},geo:{{ .Values.stage.region }},class:app
           livenessProbe:
             httpGet:
               path: /liveness
