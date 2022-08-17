@@ -6,7 +6,6 @@ import sys
 import subprocess
 
 
-
 # jobs defined in .circleci/config.yml
 JOBS = ['build-docker-images', 'lint-build-debug', 'build-release', 'build-osx']
 
