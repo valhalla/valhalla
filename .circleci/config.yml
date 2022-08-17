@@ -19,14 +19,7 @@ commands:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
 
-jobs:
-  lint:
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-    
+jobs:    
   build-docker-images:
     machine:
       image: ubuntu-2004:current
@@ -54,6 +47,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -101,6 +95,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -137,6 +132,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -160,28 +156,19 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - lint
       - build-docker-images:
-          requires:
-            - lint
           filters:
             tags:
               only: /.*/
       - lint-build-debug:
-          requires:
-            - lint
           filters:
             tags:
               ignore: /.*/
       - build-release:
-          requires:
-            - lint
           filters:
             tags:
               ignore: /.*/
       - build-osx:
-          requires:
-            - lint
           filters:
             tags:
               ignore: /.*/
