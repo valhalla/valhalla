@@ -24,7 +24,7 @@ jobs:
     machine:
       image: ubuntu-2004:current
     steps:
-      - run: python3 -m pip install pre-commit && python3 -m pre-commit run && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run && ./scripts/error_on_dirty.sh
     
   build-docker-images:
     machine:
