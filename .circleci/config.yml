@@ -19,7 +19,7 @@ commands:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
 
-jobs:
+jobs:    
   build-docker-images:
     machine:
       image: ubuntu-2004:current
@@ -47,7 +47,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -95,7 +95,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -132,7 +132,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
