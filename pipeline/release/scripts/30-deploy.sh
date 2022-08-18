@@ -53,6 +53,7 @@ az aks get-credentials \
 --resource-group ${APP_STAGE}-k8s-rg \
 --name ${APP_STAGE}-k8s \
 --subscription ${APP_SUBSCRIPTION_ID} \
+--admin \
 || exit 3
 
 kubectl get namespace ${NAMESPACE} \
