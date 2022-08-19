@@ -54,22 +54,22 @@ struct geos_helper_t {
     return singleton;
   }
   template <typename striped_container_t>
-  static GEOSCoordSequence* from_striped_container(const striped_container_t& coords) {
+  static GEOSGeometry* from_striped_container(const striped_container_t& coords) {
     // sadly we dont layout the memory in parallel arrays so we have to copy to geos
-    size_t i = 0;
     GEOSCoordSequence* geos_coords = GEOSCoordSeq_create(coords.size(), 2);
-    for (const auto& coord : coords) {
-      GEOSCoordSeq_setXY(geos_coords, i++, coord.x(), coord.y());
+    for (unsigned int i = 0; i < static_cast<unsigned int>(coords.size()); ++i) {
+      GEOSCoordSeq_setXY(geos_coords, i, coords[i].x(), coords[i].y());
     }
-    return geos_coords;
+    return GEOSGeom_createLinearRing(geos_coords);
   }
   template <typename striped_container_t>
-  static striped_container_t to_striped_container(const GEOSCoordSequence* coords) {
+  static striped_container_t to_striped_container(const GEOSGeometry* geometry) {
     // sadly we dont layout the memory in parallel arrays so we have to copy from geos
+    auto* coords = GEOSGeom_getCoordSeq(geometry);
     unsigned int coords_size;
     GEOSCoordSeq_getSize(coords, &coords_size);
     striped_container_t container;
-    container.reserve(coords_size);
+    container.resize(coords_size);
     for (unsigned int i = 0; i < coords_size; ++i) {
       double x, y;
       GEOSCoordSeq_getXY(coords, i, &x, &y);
@@ -101,37 +101,79 @@ protected:
  * @param rings  any resulting rings are output here
  * @return one or more rings
  */
-void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings) {
-  auto* geos_coords = geos_helper_t::from_striped_container(ring);
-  auto* geos_ring = GEOSGeom_createLinearRing(geos_coords);
-  auto* buffered = GEOSBuffer(geos_ring, 0, 8);
+void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<ring_t>& inners) {
+  // for collecting polygons
+  auto add = [&](auto* geos_poly) {
+    rings.emplace_back(geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly)));
+    for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
+      auto* inner = GEOSGetInteriorRingN(geos_poly, i);
+      inners.push_back(geos_helper_t::to_striped_container<ring_t>(inner));
+    }
+  };
+
+  auto* outer_ring = geos_helper_t::from_striped_container(ring);
+  auto* geos_poly = GEOSGeom_createPolygon(outer_ring, nullptr, 0);
+  auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   auto geom_type = GEOSGeomTypeId(buffered);
   switch (geom_type) {
     case GEOS_POLYGON: {
-      auto* coords = GEOSGeom_getCoordSeq(GEOSGetExteriorRing(buffered));
-      rings.emplace_back(geos_helper_t::to_striped_container<ring_t>(coords));
-      // TODO: this can't have inners right?
+      add(buffered);
       break;
     }
-    case GEOS_GEOMETRYCOLLECTION: {
+    case GEOS_MULTIPOLYGON: {
       for (int i = 0; i < GEOSGetNumGeometries(buffered); ++i) {
         auto* geom = GEOSGetGeometryN(buffered, i);
-        if (GEOSGeomTypeId(geom) != GEOS_LINEARRING)
+        if (GEOSGeomTypeId(geom) != GEOS_POLYGON)
           throw std::runtime_error("Unusable geometry type after buffering");
-        auto* coords = GEOSGeom_getCoordSeq(geom);
-        rings.emplace_back(geos_helper_t::to_striped_container<ring_t>(coords));
+        add(geom);
       }
       break;
     }
     default:
       throw std::runtime_error("Unusable geometry type after buffering");
   }
-  GEOSGeom_destroy(geos_ring);
+  GEOSGeom_destroy(geos_poly);
   GEOSGeom_destroy(buffered);
 }
 
 void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
-  // TODO:
+  // for collecting polygons
+  auto add = [&](auto* geos_poly) {
+    auto& poly = *multipolygon.emplace(multipolygon.end());
+    poly.outer() = geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly));
+    for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
+      auto* inner = GEOSGetInteriorRingN(geos_poly, i);
+      poly.inners().push_back(geos_helper_t::to_striped_container<ring_t>(inner));
+    }
+  };
+
+  auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
+  std::vector<GEOSGeometry*> inner_rings;
+  inner_rings.reserve(polygon.inners().size());
+  for (const auto& inner : polygon.inners())
+    inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
+  auto* buffered = GEOSBuffer(geos_poly, 0, 8);
+  auto geom_type = GEOSGeomTypeId(buffered);
+  switch (geom_type) {
+    case GEOS_POLYGON: {
+      add(buffered);
+      break;
+    }
+    case GEOS_MULTIPOLYGON: {
+      for (int i = 0; i < GEOSGetNumGeometries(buffered); ++i) {
+        auto* geom = GEOSGetGeometryN(buffered, i);
+        if (GEOSGeomTypeId(geom) != GEOS_POLYGON)
+          throw std::runtime_error("Unusable geometry type after buffering");
+        add(geom);
+      }
+      break;
+    }
+    default:
+      throw std::runtime_error("Unusable geometry type after buffering");
+  }
+  GEOSGeom_destroy(geos_poly);
+  GEOSGeom_destroy(buffered);
 }
 
 /**
@@ -190,11 +232,12 @@ bool to_segments(const OSMAdminData& admin_data,
  * @param line_lookup a multi map that lets one easily
  * @return zero or more rings
  */
-std::vector<ring_t> to_rings(std::vector<ring_t>& lines,
-                             std::unordered_multimap<point_t, size_t>& line_lookup) {
+void to_rings(std::vector<ring_t>& lines,
+              std::unordered_multimap<point_t, size_t>& line_lookup,
+              std::vector<ring_t>& rings,
+              std::vector<ring_t>& inners) {
 
   // keep going while we have threads to pull
-  std::vector<ring_t> rings;
   std::equal_to<point_t> point_equals;
   while (!line_lookup.empty()) {
     // start connecting the first line we have to adjacent ones
@@ -233,10 +276,8 @@ std::vector<ring_t> to_rings(std::vector<ring_t>& lines,
     multipolygon_t buffered;
     boost::geometry::correct(ring);
     // boost::geometry::buffer(ring, buffered, 0);
-    buffer_ring(ring, rings);
+    buffer_ring(ring, rings, inners);
   }
-
-  return rings;
 }
 
 struct polygon_data {
@@ -467,7 +508,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     // do inners and outers separately
     bool complete = true;
-    std::vector<std::vector<ring_t>> outers_inners;
+    std::array<std::vector<ring_t>, 2> outers_inners;
     for (bool outer : {true, false}) {
       // grab the ring segments and a lookup to find them when connecting them
       std::vector<ring_t> lines;
@@ -477,7 +518,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
         break;
       }
       // connect them into a series of one or more rings
-      outers_inners.emplace_back(to_rings(lines, line_lookup));
+      to_rings(lines, line_lookup, outers_inners[!outer], outers_inners[1]);
     }
 
     // if we didn't have a complete relation (ie some members were missing) we bail

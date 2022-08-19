@@ -309,10 +309,10 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> exp_countries = {
       "Austria", "Germany", "Japan", "USA", "Netherlands", "Belgium",
   };
-  EXPECT_EQ(countries, exp_countries);
+  ASSERT_EQ(countries, exp_countries);
 
   std::set<std::string> exp_states = {"Colorado", "Hyogo", "Kyoto", "Utah"};
-  EXPECT_EQ(states, exp_states);
+  ASSERT_EQ(states, exp_states);
 
   //======================================================================
   // part II: build the tile data. Query/assert things about the highway
