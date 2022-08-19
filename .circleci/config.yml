@@ -159,7 +159,7 @@ workflows:
       - build-docker-images:
           filters:
             tags:
-              only: /.*/
+              only: master
       - lint-build-debug:
           filters:
             tags:
