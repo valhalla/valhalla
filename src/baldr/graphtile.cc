@@ -1051,7 +1051,6 @@ std::unordered_map<uint32_t, TransitDeparture*> GraphTile::GetTransitDepartures(
 
 // Get the stop onestop Ids in this tile.
 const std::unordered_map<std::string, GraphId>& GraphTile::GetStopOneStops() const {
-
   return stop_one_stops;
 }
 
