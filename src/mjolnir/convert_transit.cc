@@ -712,6 +712,11 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       GraphId eg = GraphId(station.prev_type_graphid());
       uint32_t index = eg.id();
 
+      if (local_tile != nullptr && best_wayids[index] != std::numeric_limits<uint64_t>::max()) {
+        station_node.set_connecting_wayid(best_wayids[index]);
+        LOG_INFO("Stop Index " + std::to_string(index) + " was given way_id " +
+                 std::to_string(best_wayids[index]));
+      }
       while (true) {
         const Transit_Node& egress = transit.nodes(index);
         if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress) {
@@ -758,8 +763,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         if (local_tile != nullptr && best_wayids[index] != std::numeric_limits<uint64_t>::max()) {
           egress_node.set_connecting_wayid(best_wayids[index]);
+          LOG_INFO("Stop Index " + std::to_string(index) + " was given way_id " +
+                   std::to_string(best_wayids[index]));
         }
-
         // add the egress connection
         // Make sure length is non-zero
         double length = std::max(1.0, egress_ll.Distance(station_ll));
