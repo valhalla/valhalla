@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/optional.hpp>
 
 #include "baldr/streetname.h"
@@ -34,13 +35,11 @@ bool StreetName::operator==(const StreetName& rhs) const {
 }
 
 bool StreetName::StartsWith(const std::string& prefix) const {
-  size_t n = prefix.size();
-  return (value_.size() < n) ? false : prefix == value_.substr(0, n);
+  return boost::algorithm::starts_with(value_, prefix);
 }
 
 bool StreetName::EndsWith(const std::string& suffix) const {
-  size_t n = suffix.size();
-  return (value_.size() < n) ? false : suffix == value_.substr(value_.size() - n);
+  return boost::algorithm::ends_with(value_, suffix);
 }
 
 std::string StreetName::GetPreDir() const {
