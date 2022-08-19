@@ -158,7 +158,7 @@ workflows:
     jobs:
       - build-docker-images:
           filters:
-            tags:
+            branches:
               only: master
       - lint-build-debug:
           filters:
