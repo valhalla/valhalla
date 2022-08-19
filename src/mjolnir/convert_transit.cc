@@ -617,7 +617,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   if (local_tile) {
     best_wayids = project(*local_tile, transit);
   } else {
-    LOG_INFO("Invalid graph tile for adding way_id");
+    LOG_INFO("Invalid tile for " + std::to_string(local_tile_id));
   }
 
   std::set<uint64_t> added_stations;
@@ -1322,7 +1322,6 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
       std::to_string(TileHierarchy::GetTransitLevel().level));
   // it looks like Tile Hierarchy has level 2 as a maximum
-  //
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {

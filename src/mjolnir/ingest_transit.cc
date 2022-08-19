@@ -49,6 +49,20 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+valhalla::baldr::NodeType get_node_type(gtfs::StopLocationType stop_type) {
+
+  static const std::unordered_map<gtfs::StopLocationType, valhalla::baldr::NodeType>
+      stop_types{{gtfs::StopLocationType::StopOrPlatform,
+                  valhalla::baldr::NodeType::kMultiUseTransitPlatform},
+                 {gtfs::StopLocationType::Station, valhalla::baldr::NodeType::kTransitStation},
+                 {gtfs::StopLocationType::EntranceExit, valhalla::baldr::NodeType::kTransitEgress}};
+  auto i = stop_types.find(stop_type);
+  if (i == stop_types.cend()) {
+    throw std::runtime_error("Unusable GTFS Stop Type");
+  }
+  return i->second;
+}
+
 struct feedObject {
   gtfs::Id id;
   std::string feed;
@@ -208,7 +222,6 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
 }
 
 std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTransitInfo& tile_info) {
-
   const auto& tile_stopIds = tile_info.tile_stops;
   auto node_id = tile_info.graphId;
   feedCache stopFeeds;
@@ -222,8 +235,10 @@ std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTrans
     const gtfs::Stop& tile_stop = *(feed.get_stop(tile_stopId));
     node->set_lon(tile_stop.stop_lon);
     node->set_lat(tile_stop.stop_lat);
-    node->set_type(static_cast<int>(tile_stop.location_type));
+    // node->set_type(static_cast<uint32_t>(NodeType::kMultiUseTransitPlatform));
+    node->set_type(static_cast<uint32_t>(get_node_type(tile_stop.location_type)));
     node->set_graphid(node_id);
+    stop_graphIds[tile_stopId] = node_id;
     node_id++;
     // TODO: look at how prev_graphid() is used in convert transit (and if it is necessary)
     node->set_name(tile_stop.stop_name);
@@ -236,7 +251,6 @@ std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTrans
     node->set_wheelchair_boarding(wheelchair_accessible);
     // TODO: look at how generated() is used in convert transit (and if it is necessary)
     node->set_onestop_id(tile_stop.stop_id);
-    stop_graphIds[tile_stopId] = node_id;
   }
 
   return stop_graphIds;
