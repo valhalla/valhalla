@@ -1,6 +1,7 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 * **Removed**
-   * REMOVED: "build-*" docker image to decrease complexity [#3689](https://github.com/valhalla/valhalla/pull/3541)
+   * REMOVED: "build-\*" docker image to decrease complexity [#3689](https://github.com/valhalla/valhalla/pull/3541)
+
 * **Bug Fix**
    * FIXED: Wrong out index in route intersections [#3541](https://github.com/valhalla/valhalla/pull/3541)
    * FIXED: Both `hov:designated` and `hov:minimum` have to be correctly set for the way to be considered hov-only [#3526](https://github.com/valhalla/valhalla/pull/3526)
@@ -100,11 +101,11 @@
    * ADDED: tests for just_gtfs reading and writing feeds [#3665](https://github.com/valhalla/valhalla/pull/3665)
    * CHANGED: Precise definition of types of edges on which BSS could be projected [#3658](https://github.com/valhalla/valhalla/pull/3663)
    * CHANGED: Remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
-   * CHANGED: Replace unstable geos API with boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * ADDED: convert GTFS data into protobuf tiles [#3629](https://github.com/valhalla/valhalla/issues/3629)
    * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
    * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
+   * CHANGED: Replace unstable geos API with boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
