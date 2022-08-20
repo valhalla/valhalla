@@ -58,7 +58,8 @@ struct geos_helper_t {
     // sadly we dont layout the memory in parallel arrays so we have to copy to geos
     GEOSCoordSequence* geos_coords = GEOSCoordSeq_create(coords.size(), 2);
     for (unsigned int i = 0; i < static_cast<unsigned int>(coords.size()); ++i) {
-      GEOSCoordSeq_setXY(geos_coords, i, coords[i].x(), coords[i].y());
+      GEOSCoordSeq_setX(geos_coords, i, coords[i].x());
+      GEOSCoordSeq_setY(geos_coords, i, coords[i].y());
     }
     return GEOSGeom_createLinearRing(geos_coords);
   }
@@ -72,7 +73,8 @@ struct geos_helper_t {
     container.resize(coords_size);
     for (unsigned int i = 0; i < coords_size; ++i) {
       double x, y;
-      GEOSCoordSeq_getXY(coords, i, &x, &y);
+      GEOSCoordSeq_getX(coords, i, &x);
+      GEOSCoordSeq_getY(coords, i, &y);
       container[i].x(x);
       container[i].y(y);
     }
@@ -202,16 +204,22 @@ bool to_segments(const OSMAdminData& admin_data,
     // A relation may be included in an extract but it's members may not
     // Example:  PA extract can contain an NY relation but wont have all its members
     auto w_itr = admin_data.way_map.find(memberid);
-    if (w_itr == admin_data.way_map.end())
+    if (w_itr == admin_data.way_map.end()) {
+      LOG_WARN("Relation " + std::to_string(admin.id) + " is missing way member " +
+               std::to_string(memberid));
       return false;
+    }
 
     // build the line geom
     ring_t coords;
     for (const auto node_id : w_itr->second) {
       // although unlikely, we could have the way but not all the nodes
       auto n_itr = admin_data.shape_map.find(node_id);
-      if (n_itr == admin_data.shape_map.end())
+      if (n_itr == admin_data.shape_map.end()) {
+        LOG_WARN("Relation " + std::to_string(admin.id) + " with way member " +
+                 std::to_string(memberid) + " is missing node " + std::to_string(node_id));
         return false;
+      }
       coords.push_back(point_t{n_itr->second.first, n_itr->second.second});
     }
 
@@ -261,8 +269,7 @@ void to_rings(std::vector<ring_t>& lines,
       // done with this segment and its other end
       line_lookup.erase(line_itr);
       line_itr = line_lookup.find(ring.back());
-      assert(line_itr != line_lookup.end());
-      if (line_itr->second != line_index)
+      while (line_itr != line_lookup.end() && line_itr->second != line_index)
         ++line_itr;
       assert(line_itr != line_lookup.end());
       line_lookup.erase(line_itr);
@@ -323,8 +330,9 @@ multipolygon_t to_multipolygon(std::vector<ring_t>& outers, std::vector<ring_t>&
         found = true;
         break;
       }
-      if (!found)
-        LOG_WARN("Inner found without an outer");
+    }
+    if (!found) {
+      LOG_WARN("Inner without outer");
     }
   }
 
