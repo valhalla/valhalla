@@ -635,7 +635,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       uint8_t flow_sources;
       Cost newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,
