@@ -109,6 +109,29 @@ actor_t::route(const std::string& request_str, const std::function<void()>* inte
   return bytes;
 }
 
+std::string 
+actor_t::health(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
+  pimpl->set_interrupts(interrupt);
+  // if the caller doesn't want a copy we'll use this dummy
+  Api dummy;
+  if (!api) {
+    api = &dummy;
+  }
+
+   // parse the request
+  ParseApi(request_str, Options::health, *api);
+
+  auto bytes = pimpl->odin_worker.narrate(*api);
+  if (auto_cleanup) {
+    cleanup();
+  }
+  return bytes;
+  //http_response_t response(200, "OK", data, headers);
+}
+
+
+
+
 std::string
 actor_t::locate(const std::string& request_str, const std::function<void()>* interrupt, Api* api) {
   // set the interrupts

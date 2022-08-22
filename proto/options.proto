@@ -360,6 +360,7 @@ message Options {
     expansion = 10;
     centroid = 11;
     status = 12;
+    health = 13;
   }
 
   enum DateTimeType {
