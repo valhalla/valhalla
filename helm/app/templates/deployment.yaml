@@ -75,7 +75,6 @@ spec:
             - "{{ .Values.valhalla.numberOfThreads }}"
           ports:
             - containerPort: {{ .Values.container.valhalla.port }}
-            - containerPort: {{ .Values.container.valhalla.healthPort }}
           volumeMounts:
             - mountPath: /data/valhalla
               name: graph-storage
@@ -86,15 +85,15 @@ spec:
                   fieldPath: spec.nodeName
           livenessProbe:
             httpGet:
-              path: /liveness
-              port: {{ .Values.container.valhalla.healthPort }}
+              path: /status
+              port: {{ .Values.container.valhalla.port }}
             initialDelaySeconds: 10
             failureThreshold: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /readiness
-              port: {{ .Values.container.valhalla.healthPort }}
+              path: /status
+              port: {{ .Values.container.valhalla.port }}
             initialDelaySeconds: 500
             failureThreshold: 10
             periodSeconds: 30
