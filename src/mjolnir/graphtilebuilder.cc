@@ -67,6 +67,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
     // Add a dummy admin record at index 0 to be used if admin records are
     // not used/created or if none is found.
+    // TODO: do we really want to hardcode "None" for country and state?
     AddAdmin("None", "None", "", "");
     return;
   }

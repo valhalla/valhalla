@@ -10,33 +10,21 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-#include "config.h"
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <geos_c.h>
 
-using polar_coordinate_system_t = boost::geometry::cs::geographic<boost::geometry::degree>;
-using point_t = boost::geometry::model::d2::point_xy<double, polar_coordinate_system_t>;
-using ring_t = boost::geometry::model::ring<point_t>;
-using polygon_t = boost::geometry::model::polygon<point_t>;
+BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
+                                 double,
+                                 boost::geometry::cs::geographic<boost::geometry::degree>,
+                                 first,
+                                 second);
+using ring_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
+using polygon_t = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
 using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
-
-// in order to work with boost points inside stl containers
-namespace std {
-template <> struct hash<point_t> {
-  inline size_t operator()(const point_t& p) const {
-    return (uint64_t(p.x() * 1e7 + 180 * 1e7) << 32) | (uint64_t(p.y() * 1e7 + 90 * 1e7));
-  }
-};
-template <> struct equal_to<point_t> {
-  inline bool operator()(const point_t& a, const point_t& b) const {
-    return a.x() == b.x() && a.y() == b.y();
-  }
-};
-} // namespace std
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
@@ -46,7 +34,7 @@ using namespace valhalla::midgard;
 namespace {
 
 /**
- * a simple singleton to wrap geos setup and tear down
+ * a simple singleton to wrap geos setup and tear down as well as conversion to and from boost types
  */
 struct geos_helper_t {
   static const geos_helper_t& get() {
@@ -58,8 +46,8 @@ struct geos_helper_t {
     // sadly we dont layout the memory in parallel arrays so we have to copy to geos
     GEOSCoordSequence* geos_coords = GEOSCoordSeq_create(coords.size(), 2);
     for (unsigned int i = 0; i < static_cast<unsigned int>(coords.size()); ++i) {
-      GEOSCoordSeq_setX(geos_coords, i, coords[i].x());
-      GEOSCoordSeq_setY(geos_coords, i, coords[i].y());
+      GEOSCoordSeq_setX(geos_coords, i, coords[i].first);
+      GEOSCoordSeq_setY(geos_coords, i, coords[i].second);
     }
     return GEOSGeom_createLinearRing(geos_coords);
   }
@@ -72,11 +60,8 @@ struct geos_helper_t {
     striped_container_t container;
     container.resize(coords_size);
     for (unsigned int i = 0; i < coords_size; ++i) {
-      double x, y;
-      GEOSCoordSeq_getX(coords, i, &x);
-      GEOSCoordSeq_getY(coords, i, &y);
-      container[i].x(x);
-      container[i].y(y);
+      GEOSCoordSeq_getX(coords, i, &container[i].first);
+      GEOSCoordSeq_getY(coords, i, &container[i].second);
     }
     return container;
   }
@@ -101,7 +86,7 @@ protected:
  * buffer implementation and then back to boost geometry
  * @param ring   to buffer to fix self intersections
  * @param rings  any resulting rings are output here
- * @return one or more rings
+ * @param inners if some kind of self intersection should cause inners to be created we push them here
  */
 void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<ring_t>& inners) {
   // for collecting polygons
@@ -138,6 +123,10 @@ void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<rin
   GEOSGeom_destroy(buffered);
 }
 
+/**
+ * @param polygon       to buffer to fix self intersections
+ * @param multipolygon  any resulting polygons are output here
+ */
 void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   // for collecting polygons
   auto add = [&](auto* geos_poly) {
@@ -184,6 +173,7 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
  * If a given admin is incomplete (in that its missing members) the function will throw
  * @param admin_data   used to look up ways shape (nodes)
  * @param admin        the admin for which we are building the lookup
+ * @param name         the name of the admin handy for error reporting
  * @param outer        whether or not we should build a lookup for outers or inners
  * @param lines        ring segments that are built as output to be later connected together
  * @param line_lookup  a look up to find ring segments to help in connecting them together
@@ -191,21 +181,22 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
  */
 bool to_segments(const OSMAdminData& admin_data,
                  const OSMAdmin& admin,
+                 const std::string& name,
                  bool outer,
                  std::vector<ring_t>& lines,
-                 std::unordered_multimap<point_t, size_t>& line_lookup) {
+                 std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup) {
   // get all the individual members of the admin relation merged into one ring
-  auto roll_itr = admin.roles.begin();
+  auto role_itr = admin.roles.begin();
   for (const auto memberid : admin.ways) {
     // skip roles we arent interested in
-    if (*(roll_itr++) != outer)
+    if (*(role_itr++) != outer)
       continue;
 
     // A relation may be included in an extract but it's members may not
     // Example:  PA extract can contain an NY relation but wont have all its members
     auto w_itr = admin_data.way_map.find(memberid);
     if (w_itr == admin_data.way_map.end()) {
-      LOG_WARN("Relation " + std::to_string(admin.id) + " is missing way member " +
+      LOG_WARN(name + " (" + std::to_string(admin.id) + ") is missing way member " +
                std::to_string(memberid));
       return false;
     }
@@ -216,11 +207,11 @@ bool to_segments(const OSMAdminData& admin_data,
       // although unlikely, we could have the way but not all the nodes
       auto n_itr = admin_data.shape_map.find(node_id);
       if (n_itr == admin_data.shape_map.end()) {
-        LOG_WARN("Relation " + std::to_string(admin.id) + " with way member " +
+        LOG_WARN(name + " (" + std::to_string(admin.id) + ") with way member " +
                  std::to_string(memberid) + " is missing node " + std::to_string(node_id));
         return false;
       }
-      coords.push_back(point_t{n_itr->second.first, n_itr->second.second});
+      coords.push_back({n_itr->second.first, n_itr->second.second});
     }
 
     // remember how to find this line
@@ -236,17 +227,20 @@ bool to_segments(const OSMAdminData& admin_data,
 /**
  * Converts a series of a linestrings into one or more polygons (rings) by connecting contiguous
  * ones until a ring is formed
- * @param lines the unmerged lines
- * @param line_lookup a multi map that lets one easily
+ * @param admin_info  a simple pair that has the admins name and relation id, useful for logging
+ * @param lines       the line segments we need to merge into rings
+ * @param line_lookup a multi map that lets one easily find a line segment by its first or last point
+ * @param rings       a place to put the finally formed rings
+ * @param inners      a place to put any inners that occur from self intersection corrections
  * @return zero or more rings
  */
-void to_rings(std::vector<ring_t>& lines,
-              std::unordered_multimap<point_t, size_t>& line_lookup,
+void to_rings(const std::pair<std::string, uint64_t>& admin_info,
+              std::vector<ring_t>& lines,
+              std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup,
               std::vector<ring_t>& rings,
               std::vector<ring_t>& inners) {
 
   // keep going while we have threads to pull
-  std::equal_to<point_t> point_equals;
   while (!line_lookup.empty()) {
     // start connecting the first line we have to adjacent ones
     ring_t ring;
@@ -256,8 +250,8 @@ void to_rings(std::vector<ring_t>& lines,
       auto line_index = line_itr->second;
       auto& line = lines[line_index];
       // we can add this line in the forward direction
-      if ((ring.empty() && point_equals(line_itr->first, line.front())) ||
-          (!ring.empty() && point_equals(ring.back(), line.front()))) {
+      if ((ring.empty() && line_itr->first == line.front()) ||
+          (!ring.empty() && ring.back() == line.front())) {
         ring.insert(ring.end(), std::make_move_iterator(line.begin() + !ring.empty()),
                     std::make_move_iterator(line.end()));
       } // have to add this segment backwards
@@ -276,8 +270,12 @@ void to_rings(std::vector<ring_t>& lines,
     }
 
     // degenerate rings are ignored, unconnected rings or missing relation members cause this
-    if (ring.size() < 4 || !point_equals(ring.front(), ring.back()))
+    if (ring.size() < 4 || ring.front() != ring.back()) {
+      LOG_WARN("Degenerate ring for " + admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") " + " near lat,lon " + std::to_string(ring.back().y()) + "," +
+               std::to_string(ring.back().x()));
       continue;
+    }
 
     // otherwise we try to make sure the ring is not self intersecting etc and correct it if it is
     multipolygon_t buffered;
@@ -289,6 +287,7 @@ void to_rings(std::vector<ring_t>& lines,
 
 struct polygon_data {
   polygon_t polygon;
+  polygon_t::inner_container_type postponed_inners;
   double area;
   bool operator<(const polygon_data& p) const {
     return area < p.area;
@@ -297,11 +296,14 @@ struct polygon_data {
 
 /**
  * Takes outer and inner rings and combines them first into polygons and finally into a multipolygon
- * @param outers outer rings of polygons
- * @param inners inner rings of polygons
+ * @param admin_info  a simple pair of name and relation id used for logging
+ * @param outers      outer rings of polygons
+ * @param inners      inner rings of polygons
  * @return the multipolygon of the combined outer and inner rings
  */
-multipolygon_t to_multipolygon(std::vector<ring_t>& outers, std::vector<ring_t>& inners) {
+multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
+                               std::vector<ring_t>& outers,
+                               std::vector<ring_t>& inners) {
   // Associate an area with each outer so we can
   std::vector<polygon_data> polys;
   for (auto& outer : outers) {
@@ -311,7 +313,7 @@ multipolygon_t to_multipolygon(std::vector<ring_t>& outers, std::vector<ring_t>&
     polys.emplace_back(std::move(pd));
   }
 
-  // sort descending by area
+  // sort ascending by area
   std::sort(polys.begin(), polys.end());
 
   // here we try to figure out which polygon to assign each inner to
@@ -325,14 +327,16 @@ multipolygon_t to_multipolygon(std::vector<ring_t>& outers, std::vector<ring_t>&
     bool found = false;
     for (auto& poly : polys) {
       // is this the smallest polygon that can contain this inner?
-      if (poly.area > area && boost::geometry::within(inner, poly.polygon)) {
-        poly.polygon.inners().emplace_back(std::move(inner));
+      if (poly.area > area && boost::geometry::covered_by(inner, poly.polygon)) {
+        poly.postponed_inners.emplace_back(std::move(inner));
         found = true;
         break;
       }
     }
     if (!found) {
-      LOG_WARN("Inner without outer");
+      LOG_WARN("Inner with no outer " + admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") " + " near lat,lon " + std::to_string(inner.front().y()) + "," +
+               std::to_string(inner.front().x()));
     }
   }
 
@@ -341,6 +345,7 @@ multipolygon_t to_multipolygon(std::vector<ring_t>& outers, std::vector<ring_t>&
   multipolygon.reserve(polys.size());
   for (auto& poly : polys) {
     multipolygon_t buffered;
+    poly.polygon.inners().swap(poly.postponed_inners);
     boost::geometry::correct(poly.polygon);
     // boost::geometry::buffer(poly.polygon, buffered, 0);
     buffer_polygon(poly.polygon, multipolygon);
@@ -511,8 +516,9 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // for each admin area (relation)
   uint32_t count = 0;
   for (const auto& admin : admin_data.admins) {
-    auto name = admin_data.name_offset_map.name(admin.name_index);
-    LOG_DEBUG("Building admin: " + name);
+    std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
+                                                admin.id);
+    LOG_DEBUG("Building admin: " + admin_info.first);
 
     // do inners and outers separately
     bool complete = true;
@@ -520,23 +526,24 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     for (bool outer : {true, false}) {
       // grab the ring segments and a lookup to find them when connecting them
       std::vector<ring_t> lines;
-      std::unordered_multimap<point_t, size_t> line_lookup;
-      if (!to_segments(admin_data, admin, outer, lines, line_lookup)) {
+      std::unordered_multimap<valhalla::midgard::PointLL, size_t> line_lookup;
+      if (!to_segments(admin_data, admin, admin_info.first, outer, lines, line_lookup)) {
         complete = false;
         break;
       }
       // connect them into a series of one or more rings
-      to_rings(lines, line_lookup, outers_inners[!outer], outers_inners[1]);
+      to_rings(admin_info, lines, line_lookup, outers_inners[!outer], outers_inners[1]);
     }
 
     // if we didn't have a complete relation (ie some members were missing) we bail
     if (!complete || outers_inners.front().empty()) {
-      LOG_WARN("Degenerate admin: " + name);
+      LOG_WARN(admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") is degenerate and will be skipped");
       continue;
     }
 
     // convert the rings into multipolygons
-    auto multipolygon = to_multipolygon(outers_inners.front(), outers_inners.back());
+    auto multipolygon = to_multipolygon(admin_info, outers_inners.front(), outers_inners.back());
 
     // convert that into wkt format so we can put it into sqlite
     std::stringstream ss;
@@ -561,8 +568,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     sqlite3_bind_null(stmt, 3);
 
-    name = admin_data.name_offset_map.name(admin.name_index);
-    sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, admin_info.first.c_str(), admin_info.first.length(), SQLITE_STATIC);
 
     std::string name_en;
     if (admin.name_en_index) {

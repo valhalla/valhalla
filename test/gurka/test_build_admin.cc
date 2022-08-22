@@ -48,9 +48,9 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         |             |
         |   o     q   |
         |   |\   /|   |
-        |   | \ / |   |
-        |   |  p  |   |
-        |   | / \ |   |
+        |   |0\ /1|   |
+        |   || p ||   |
+        |   |2/ \3|   |
         |   |/   \|   |
         |   s     r   |
         |             |
@@ -76,6 +76,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
       {"ij", {}}, // not a closed ring
       {"klmnk", {}},
       {"opqrpso", {}},
+      {"opso", {}},
       {"GH",
        {
            {"highway", "primary"},
@@ -104,6 +105,14 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
        {
            {"highway", "primary"},
        }},
+      {"02",
+       {
+           {"highway", "primary"},
+       }},
+      {"13",
+       {
+           {"highway", "primary"},
+       }},
   };
 
   // X lives in Japan which allows named intersections - and is named.
@@ -125,6 +134,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "4"},
         {"name", "Colorado"}}},
+
       {{{
            {gurka::way_member, "BCDE", "outer"},
            {gurka::way_member, "EB", "outer"},
@@ -133,6 +143,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "4"},
         {"name", "Utah"}}},
+
       {{{
            {gurka::way_member, "AB", "outer"},
            {gurka::way_member, "BCDE", "outer"},
@@ -140,21 +151,25 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
            {gurka::way_member, "AF", "outer"},
        }},
        {{"type", "boundary"}, {"boundary", "administrative"}, {"admin_level", "2"}, {"name", "USA"}}},
+
       {{{{gurka::way_member, "CILDC", "outer"}}},
        {{"type", "boundary"},
         {"boundary", "administrative"},
         {"admin_level", "4"},
         {"name", "Hyogo"}}},
+
       {{{{gurka::way_member, "IJKLI", "outer"}}},
        {{"type", "boundary"},
         {"boundary", "administrative"},
         {"admin_level", "4"},
         {"name", "Kyoto"}}},
+
       {{{{gurka::way_member, "CIJKLDC", "outer"}}},
        {{"type", "boundary"},
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Japan"}}},
+
       {{{
            {gurka::way_member, "MNOPRQM", "outer"},
            {gurka::way_member, "STVUS", "inner"}, // austrian enclave, wound wrong
@@ -163,6 +178,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Germany"}}},
+
       {{{
            {gurka::way_member, "STVUS", "outer"},
        }},
@@ -170,6 +186,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Austria"}}},
+
       {{{
            {gurka::way_member, "de", "outer"},
            {gurka::way_member, "ef", "outer"},
@@ -178,6 +195,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Mexico"}}},
+
       {{{
            {gurka::way_member, "gh", "outer"},
            {gurka::way_member, "hi", "outer"},
@@ -188,6 +206,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Madagasgar"}}},
+
       {{{
            {gurka::way_member, "klmnk", "outer"},
            {gurka::way_member, "opqrpso", "inner"},
@@ -196,8 +215,9 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         {"boundary", "administrative"},
         {"admin_level", "2"},
         {"name", "Netherlands"}}},
+
       {{{
-           {gurka::way_member, "opqrpso", "outer"},
+           {gurka::way_member, "opso", "outer"},
        }},
        {{"type", "boundary"},
         {"boundary", "administrative"},
@@ -306,9 +326,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = {
-      "Austria", "Germany", "Japan", "USA", "Netherlands", "Belgium",
-  };
+  std::set<std::string> exp_countries = {"Austria", "Germany",     "Japan",
+                                         "USA",     "Netherlands", "Belgium"};
   ASSERT_EQ(countries, exp_countries);
 
   std::set<std::string> exp_states = {"Colorado", "Hyogo", "Kyoto", "Utah"};
@@ -426,5 +445,29 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
     AdminInfo b_admin = graph_reader.GetGraphTile(b_id)->admininfo(b->admin_index());
     EXPECT_EQ(b_admin.state_text(), "");
     EXPECT_EQ(b_admin.country_text(), "Austria");
+  }
+
+  // 0 is in a belgian enclave
+  {
+    auto zero_id = findNode(graph_reader, admin_map.nodes, "0");
+    EXPECT_TRUE(zero_id.Is_Valid());
+    const auto* zero = graph_reader.nodeinfo(zero_id);
+    EXPECT_EQ(zero->drive_on_right(), true);
+    EXPECT_EQ(zero->named_intersection(), false);
+    AdminInfo zero_admin = graph_reader.GetGraphTile(zero_id)->admininfo(zero->admin_index());
+    EXPECT_EQ(zero_admin.state_text(), "");
+    EXPECT_EQ(zero_admin.country_text(), "Belgium");
+  }
+
+  // 1 is orphaned in an enclave of the netherlands with no admin coverage
+  {
+    auto one_id = findNode(graph_reader, admin_map.nodes, "1");
+    EXPECT_TRUE(one_id.Is_Valid());
+    const auto* one = graph_reader.nodeinfo(one_id);
+    EXPECT_EQ(one->drive_on_right(), false);
+    EXPECT_EQ(one->named_intersection(), false);
+    AdminInfo one_admin = graph_reader.GetGraphTile(one_id)->admininfo(one->admin_index());
+    EXPECT_EQ(one_admin.state_text(), "None");
+    EXPECT_EQ(one_admin.country_text(), "None");
   }
 }
