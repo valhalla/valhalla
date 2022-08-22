@@ -75,45 +75,45 @@ then
   echo "ERROR: APP_STAGE not defined." && exit 1
 fi
 
-if [[ -z ${AKS_CLIENT_ID} ]]
-then
-  echo "ERROR: AKS_CLIENT_ID not defined." && exit 1
-fi
+#if [[ -z ${AKS_CLIENT_ID} ]]
+#then
+#  echo "ERROR: AKS_CLIENT_ID not defined." && exit 1
+#fi
 
-if [[ -z ${AKS_CLIENT_SECRET} ]]
-then
-  echo "ERROR: AKS_CLIENT_SECRET not defined." && exit 1
-fi
+#if [[ -z ${AKS_CLIENT_SECRET} ]]
+#then
+#  echo "ERROR: AKS_CLIENT_SECRET not defined." && exit 1
+#fi
 
-if [[ -z ${AKS_SUBSCRIPTION_ID} ]]
-then
-  echo "ERROR: AKS_SUBSCRIPTION_ID not defined." && exit 1
-fi
+#if [[ -z ${AKS_SUBSCRIPTION_ID} ]]
+#then
+#  echo "ERROR: AKS_SUBSCRIPTION_ID not defined." && exit 1
+#fi
 
-if [[ -z ${AKS_TENANT_ID} ]]
-then
-  echo "ERROR: AKS_TENANT_ID not defined." && exit 1
-fi
+#if [[ -z ${AKS_TENANT_ID} ]]
+#then
+#  echo "ERROR: AKS_TENANT_ID not defined." && exit 1
+#fi
 
-if [[ -z ${AKS_STAGE} ]]
-then
-  echo "ERROR: AKS_STAGE not defined." && exit 1
-fi
+#if [[ -z ${AKS_STAGE} ]]
+#then
+#  echo "ERROR: AKS_STAGE not defined." && exit 1
+#fi
 
-if [[ -z "${DATADOG_API_KEY}" ]]
-then
-  echo "ERROR DATADOG_API_KEY variable not defined." && exit 1
-fi
+#if [[ -z "${DATADOG_API_KEY}" ]]
+#then
+#  echo "ERROR DATADOG_API_KEY variable not defined." && exit 1
+#fi
 
-if [[ -z "${DATADOG_APP_KEY}" ]]
-then
-  echo "ERROR DATADOG_APP_KEY variable not defined." && exit 1
-fi
+#if [[ -z "${DATADOG_APP_KEY}" ]]
+#then
+#  echo "ERROR DATADOG_APP_KEY variable not defined." && exit 1
+#fi
 
-if [[ -z "${VALHALLA_GRAPH}" ]]
-then
-  echo "ERROR GRAPH_PATH variable not defined." && exit 1
-fi
+#if [[ -z "${VALHALLA_GRAPH}" ]]
+#then
+#  echo "ERROR GRAPH_PATH variable not defined." && exit 1
+#fi
 
 if [[ -z "${GRAPH_SHARE_NAME}" ]]
 then

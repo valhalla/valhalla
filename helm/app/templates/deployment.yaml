@@ -25,24 +25,6 @@ spec:
         date: "{{ now | unixEpoch }}"
       annotations:
         {{- include "annotations" . | indent 8 }}
-        ad.datadoghq.com/{{ .Chart.Name }}.check_names: |
-          ["openmetrics"]
-        ad.datadoghq.com/{{ .Chart.Name }}.init_configs: |
-          [{}]
-        ad.datadoghq.com/{{ .Chart.Name }}.instances: |
-          [
-            {
-              "prometheus_url": "http://%%host%%:{{ .Values.container.datastore.healthPort }}/metrics",
-              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}-datastore",
-              "metrics": ["*"]
-            },
-            {
-              "prometheus_url": "http://%%host%%:{{ .Values.container.valhalla.healthPort }}/metrics",
-              "namespace": "{{ .Values.app.key }}-{{ .Values.app.name }}",
-              "metrics": ["*"]
-            }
-          ]
-
     spec:
       imagePullSecrets:
         - name: {{ .Chart.Name }}-registry
@@ -90,10 +72,9 @@ spec:
           command: ["valhalla_service"]
           args: 
             - "/etc/valhalla/valhalla.json"
-            - "{{ .Values.router.numberOfThreads }}"
+            - "{{ .Values.valhalla.numberOfThreads }}"
           ports:
             - containerPort: {{ .Values.container.valhalla.port }}
-            - containerPort: {{ .Values.container.valhalla.healthPort }}
           volumeMounts:
             - mountPath: /data/valhalla
               name: graph-storage
@@ -102,24 +83,18 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: DD_SERVICE
-              value: "{{ .Values.app.key }}-{{ .Values.app.name }}"
-            - name: DD_VERSION
-              value: {{ .Values.app.version }}
-            - name: DD_TAGS
-              value: key:{{ .Values.app.key }},env:{{ .Values.stage.environment }},geo:{{ .Values.stage.region }},class:app
           livenessProbe:
             httpGet:
-              path: /liveness
-              port: {{ .Values.container.valhalla.healthPort }}
+              path: /status
+              port: {{ .Values.container.valhalla.port }}
             initialDelaySeconds: 10
             failureThreshold: 10
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /readiness
-              port: {{ .Values.container.valhalla.healthPort }}
-            initialDelaySeconds: 500
+              path: /status
+              port: {{ .Values.container.valhalla.port }}
+            initialDelaySeconds: 10
             failureThreshold: 10
             periodSeconds: 30
             timeoutSeconds: 5

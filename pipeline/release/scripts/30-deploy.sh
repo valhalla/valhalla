@@ -17,8 +17,14 @@ az login \
 
 KEYVAULT_NAME=${APP_STAGE}-keyvault
 
-METRIC_STORAGE_CONNECTION=$(az keyvault secret show \
---name metric-storage-connectionstring \
+GRAPH_STORAGE_NAME=$(az keyvault secret show \
+--name graph-storage-name \
+--vault-name ${KEYVAULT_NAME} \
+--subscription ${APP_SUBSCRIPTION_ID} \
+--query value \
+--output tsv)
+GRAPH_STORAGE_KEY=$(az keyvault secret show \
+--name graph-storage-key \
 --vault-name ${KEYVAULT_NAME} \
 --subscription ${APP_SUBSCRIPTION_ID} \
 --query value \
@@ -29,51 +35,12 @@ then
   exit 3
 fi
 
-az logout
-
-az login \
---service-principal \
---tenant ${SHARED_TENANT_ID} \
---username ${SHARED_CLIENT_ID} \
---password ${SHARED_CLIENT_SECRET} \
---output table \
-|| exit 1
-
-KEYVAULT_NAME=${SHARED_STAGE}-keyvault
-
-GRAPH_STORAGE_NAME=$(az keyvault secret show \
---name graph-storage-name \
---vault-name ${KEYVAULT_NAME} \
---subscription ${SHARED_SUBSCRIPTION_ID} \
---query value \
---output tsv)
-GRAPH_STORAGE_KEY=$(az keyvault secret show \
---name graph-storage-key \
---vault-name ${KEYVAULT_NAME} \
---subscription ${SHARED_SUBSCRIPTION_ID} \
---query value \
---output tsv)
-if [[ $? -ne 0 ]]
-then
-  echo "ERROR Failed to read secrets from key vault ${APP_STAGE}-keyvault. Make sure the key vault exists."
-  exit 3
-fi
-
-az logout
-
-
-az login \
---service-principal \
---tenant ${AKS_TENANT_ID} \
---username ${AKS_CLIENT_ID} \
---password ${AKS_CLIENT_SECRET} \
---output table \
-|| exit 2
-
+echo "getting aks credentials"
 az aks get-credentials \
---resource-group ${AKS_STAGE}-k8s-rg \
---name ${AKS_STAGE}-k8s \
---subscription ${AKS_SUBSCRIPTION_ID} \
+--resource-group ${APP_STAGE}-k8s-rg \
+--name ${APP_STAGE}-k8s \
+--subscription ${APP_SUBSCRIPTION_ID} \
+--admin \
 || exit 3
 
 kubectl get namespace ${NAMESPACE} \
@@ -106,11 +73,9 @@ helm upgrade valhalla helm/app \
 --set image.password=${APP_REGISTRY_PASSWORD} \
 --set image.repository=${APP_NAME} \
 --set image.tag=${APP_VERSION} \
---set graph.path=${VALHALLA_GRAPH} \
 --set graph.share.name=${GRAPH_SHARE_NAME} \
 --set graph.storage.name=${GRAPH_STORAGE_NAME} \
 --set graph.storage.key=${GRAPH_STORAGE_KEY} \
---set metrics.connectionString=${METRIC_STORAGE_CONNECTION} \
 || exit 5
 
 az logout

@@ -7,13 +7,6 @@ docker login ${APP_REGISTRY_URL} \
 || exit 1
 
 
-if ! docker manifest inspect ${APP_REGISTRY_URL}/valhalla:latest > /dev/null;
-then
-   echo "base image not present, building it now"
-   docker build --file "docker/base/Dockerfile" --tag ${APP_REGISTRY_URL}/valhalla:latest .
-   docker push ${APP_REGISTRY_URL}/valhalla:latest
-fi
-
 DOCKER_TAG=""
 # To allow debugging of a C++ application it needs to be build with special flags (see Dockerfile for details)
 shopt -s nocasematch
@@ -25,13 +18,13 @@ fi
 
 if [[ "${APP_VERSION_LATEST}" = true ]]
 then
-  docker build . --file "docker/Dockerfile" \
+  docker build . --file "Dockerfile" \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:latest \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 else
-  docker build . --file "docker/Dockerfile" \
+  docker build . --file "Dockerfile" \
   --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2

@@ -7,7 +7,7 @@ MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 WORKDIR /usr/local/src/valhalla
 ADD . /usr/local/src/valhalla
 RUN ls
-# RUN git submodule sync && git submodule update --init --recursive
+RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
 # upgrade Conan:
