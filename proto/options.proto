@@ -43,12 +43,6 @@ enum ShapeFormat {
   geojson = 2;
 }
 
-enum NodesFilter {
-  shapepoints = 0;
-  nodes = 1;
-  nodes_wo_artificial = 2;
-}
-
 // use this to select which top level fields should be present in the pbf output
 // the actions below are marked for each field that would provide a minimal response
 message PbfFieldSelector {
@@ -313,9 +307,6 @@ message Costing {
     oneof has_elevator_penalty {
       float elevator_penalty = 79;
     }
-    oneof has_use_traffic {
-      bool use_traffic = 80;
-    }
   }
 
   oneof has_options {
@@ -459,8 +450,6 @@ message Options {
     bool guidance_views = 41;                                      // Whether to return guidance_views in the response
   }
   // 42 is reserved
-  NodesFilter nodes_filter = 42;                                   // whether polyline with/without shapepoints/artificial nodes 
-
   oneof has_height_precision {
     uint32 height_precision = 43;                                  // Number of digits precision for heights returned [default = 0]
   }

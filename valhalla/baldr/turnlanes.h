@@ -202,8 +202,8 @@ public:
   }
 
 protected:
-  uint32_t edgeindex_ : 29; // kMaxTileEdgeCount in nodeinfo.h: 22 bits > 29 bits
-  uint32_t spare_ : 3;
+  uint32_t edgeindex_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
+  uint32_t spare_ : 10;
 
   uint32_t text_offset_;
 };

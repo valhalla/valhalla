@@ -108,13 +108,10 @@ public:
   }
 
 protected:
-  uint64_t index_ : 29; // kMaxTileEdgeCount in nodeinfo.h: 22 bits > 29 bits
-  uint64_t type_ : 8;
-  uint64_t route_num_type_ : 1;
-  uint64_t tagged_ : 1; // For future use to support "tagged" text strings.
-                        // Similar to EdgeInfo, for compatibility any tagged strings
-                        // will be skipped until code is available to properly use them.
-  uint64_t spare : 25;
+  uint32_t index_ : 22; // kMaxTileEdgeCount in nodeinfo.h: 22 bits
+  uint32_t type_ : 8;
+  uint32_t route_num_type_ : 1;
+  uint32_t tagged_ : 1;
 
   uint32_t text_offset_;
 };

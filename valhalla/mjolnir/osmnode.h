@@ -55,8 +55,7 @@ struct OSMNode {
   uint32_t tagged_access_ : 1; // Was access originally tagged?
   uint32_t private_access_ : 1;
   uint32_t cash_only_toll_ : 1;
-  uint32_t artificial_ : 1; // add artificial flag for NDS.Live
-  uint32_t spare1_ : 4;
+  uint32_t spare1_ : 5;
 
   // pronunciations
   uint32_t name_pronunciation_ipa_index_;
@@ -665,22 +664,6 @@ struct OSMNode {
    */
   bool cash_only_toll() const {
     return cash_only_toll_;
-  }
-
-  /**
-   * Set the artificial flag.
-   * @param  artificial bool.
-   */
-  void set_artificial(const bool artificial) {
-    artificial_ = artificial;
-  }
-
-  /**
-   * Get the artificial flag.
-   * @return  Returns artificial flag.
-   */
-  bool artificial() const {
-    return artificial_;
   }
 
   /**

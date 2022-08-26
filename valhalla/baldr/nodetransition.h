@@ -49,9 +49,9 @@ public:
   }
 
 protected:
-  uint64_t endnode_ : 60;
+  uint64_t endnode_ : 46;
   uint64_t up_ : 1;
-  uint64_t spare_ : 3;
+  uint64_t spare_ : 17;
 };
 } // namespace baldr
 } // namespace valhalla

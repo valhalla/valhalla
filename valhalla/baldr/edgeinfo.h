@@ -29,19 +29,19 @@ constexpr float kMaxElevation = kMinElevation + (kElevationBinSize * kMaxStoredE
 // the tile. A name can have a textual representation followed by optional
 // fields that provide additional information about the name.
 struct NameInfo {
-  uint64_t name_offset_ : 29;      // Offset to start of text string
-  uint64_t additional_fields_ : 4; // Additional text fields following
+  uint32_t name_offset_ : 24;      // Offset to start of text string
+  uint32_t additional_fields_ : 4; // Additional text fields following
                                    // the name. These can be used for
                                    // additional information like language
                                    // phonetic string, etc.
-  uint64_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
+  uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
                                    // vs just a name.
-  uint64_t tagged_ : 1;            // Future use - this indicates the text string is
+  uint32_t tagged_ : 1;            // This indicates the text string is
                                    // specially tagged (for example uses the first char as
                                    // the tag type). To make this forward and backward
                                    // compatible, tagged text will not be read in GetNames
                                    // and GetNamesAndTags until code is ready to actually use it.
-  uint64_t spare_ : 29;
+  uint32_t spare_ : 2;
 
   bool operator==(const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
