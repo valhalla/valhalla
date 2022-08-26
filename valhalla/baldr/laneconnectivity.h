@@ -98,13 +98,9 @@ public:
   std::string to_lanes() const;
 
 protected:
-  uint64_t to_ : 29;     // where this connection is going to (edge index)
-  uint64_t spare1_ : 35; // where this connection is going to (edge index)
-
-  uint64_t from_ : 42;   // where this connection is coming from (way id) // (XXX: 42-bits, maybe be a
-                         // problem in a few years)
-  uint64_t spare2_ : 22; // where this connection is going to (edge index)
-
+  uint64_t to_ : 22;   // where this connection is going to (edge index)
+  uint64_t from_ : 42; // where this connection is coming from (way id) // (XXX: 42-bits, maybe be a
+                       // problem in a few years)
   LaneConnectivityLanes to_lanes_;
   LaneConnectivityLanes from_lanes_;
 };

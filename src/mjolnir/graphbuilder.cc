@@ -1004,8 +1004,7 @@ void BuildTileSet(const std::string& ways_file,
         // from the node. Increment directed edge count.
         graphtile.nodes().emplace_back(base_ll, node_ll, node.access(), node.type(),
                                        node.traffic_signal(), node.tagged_access(),
-                                       node.private_access(), node.cash_only_toll(),
-                                       node.artificial());
+                                       node.private_access(), node.cash_only_toll());
         graphtile.nodes().back().set_edge_index(graphtile.directededges().size() -
                                                 bundle.node_edges.size());
         graphtile.nodes().back().set_edge_count(bundle.node_edges.size());

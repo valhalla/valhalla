@@ -13,12 +13,10 @@ namespace baldr {
 // room to grow before exceeding an unsigned 32 bit word.
 constexpr uint32_t kMaxOSMWayId = 4294967295;
 
-// TODO for NDS Level 13
-// Maximum tile id/index supported. 29 bits
-constexpr uint32_t kMaxGraphTileId = 268435455;
-
-// Maximum id/index within a tile. 28 bits
-constexpr uint32_t kMaxGraphId = 134217727;
+// Maximum tile id/index supported. 22 bits
+constexpr uint32_t kMaxGraphTileId = 4194303;
+// Maximum id/index within a tile. 21 bits
+constexpr uint32_t kMaxGraphId = 2097151;
 
 // Invalid edge label index
 constexpr uint32_t kInvalidLabel = std::numeric_limits<uint32_t>::max();
@@ -171,7 +169,7 @@ constexpr uint8_t kMcn = 8; // Part of mountain bicycle network
 constexpr uint8_t kMaxBicycleNetwork = 15;
 
 // Maximum offset to edge information
-constexpr uint32_t kMaxEdgeInfoOffset = 268435455; // 2^25 bytes>  2^28 bytes
+constexpr uint32_t kMaxEdgeInfoOffset = 33554431; // 2^25 bytes
 
 // Maximum length of an edge
 constexpr uint32_t kMaxEdgeLength = 16777215; // 2^24 meters

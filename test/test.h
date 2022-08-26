@@ -26,21 +26,6 @@
 
 namespace test {
 
-struct CSV_Speed {
-  CSV_Speed(valhalla::baldr::GraphId _tileid, std::vector<std::pair<uint32_t, uint32_t>> _speed_data)
-      : tileid{_tileid}, speed_data{std::move(_speed_data)} {
-  }
-  explicit CSV_Speed(valhalla::baldr::GraphId _tileid) : tileid{_tileid} {
-  }
-
-  valhalla::baldr::GraphId tileid;
-  std::vector<std::pair<uint32_t, uint32_t>> speed_data;
-  // uint32_t speed;
-  bool operator==(const CSV_Speed& rhs) const {
-    return this->tileid == rhs.tileid;
-  }
-};
-
 // Return a random number inside [0, 1)
 inline float rand01(std::mt19937& gen) {
   std::uniform_real_distribution<float> dis(0, 1);
@@ -100,9 +85,6 @@ using LiveTrafficCustomize = std::function<void(valhalla::baldr::GraphReader&,
 
 void customize_live_traffic_data(const boost::property_tree::ptree& config,
                                  const LiveTrafficCustomize& setter_cb);
-
-void customize_live_traffic_data(const boost::property_tree::ptree& config,
-                                 const std::vector<CSV_Speed>& ts);
 
 #ifdef DATA_TOOLS
 using HistoricalTrafficCustomize =

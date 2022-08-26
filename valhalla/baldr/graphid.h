@@ -18,10 +18,10 @@ constexpr uint32_t kMaxGraphHierarchy = 7;
 
 // 46 bits are used for the non-spare part of a graph Id. Fill all of them.
 // If we ever change the size of GraphId fields this will also need to change.
-constexpr uint64_t kInvalidGraphId = 0xfffffffffffffff;
+constexpr uint64_t kInvalidGraphId = 0x3fffffffffff;
 
 // Value used to increment an Id by 1
-constexpr uint64_t kIdIncrement = static_cast<uint64_t>(1) << 32;
+constexpr uint64_t kIdIncrement = 1 << 25;
 
 /**
  * Identifier of a node or an edge within the tiled, hierarchical graph.
@@ -38,9 +38,6 @@ public:
   //      3  bits for hierarchy level
   //      22 bits for tile Id (supports lat,lon tiles down to 1/8 degree)
   //      21 bits for id within the tile.
-
-  //      29 bits for tile Id (supports lat,lon tiles down to NDS Level 13)
-  //      28 bits for id within the tile.
   uint64_t value;
 
   /**
@@ -66,7 +63,7 @@ public:
     if (id > kMaxGraphId) {
       throw std::logic_error("Id out of valid range");
     }
-    value = level | (tileid << 3) | (static_cast<uint64_t>(id) << 32);
+    value = level | (tileid << 3) | (static_cast<uint64_t>(id) << 25);
   }
 
   /**
@@ -98,7 +95,7 @@ public:
    * @return   Returns the tile Id.
    */
   uint32_t tileid() const {
-    return (value & 0xfffffff8) >> 3;
+    return (value & 0x1fffff8) >> 3;
   }
 
   /**
@@ -114,7 +111,7 @@ public:
    * @return   Returns the unique identifier within the level.
    */
   uint32_t id() const {
-    return (value & 0xfffffff00000000) >> 32;
+    return (value & 0x3ffffe000000) >> 25;
   }
 
   /**
@@ -123,7 +120,7 @@ public:
    * @param  id  Id to set.
    */
   void set_id(const uint32_t id) {
-    value = (value & 0xffffffff) | (static_cast<uint64_t>(id & 0xfffffff) << 32);
+    value = (value & 0x1ffffff) | (static_cast<uint64_t>(id & 0x1fffff) << 25);
   }
 
   /**
@@ -151,7 +148,7 @@ public:
    * @return graphid with only tileid and level included
    */
   GraphId Tile_Base() const {
-    return GraphId((value & 0xffffffff));
+    return GraphId((value & 0x1ffffff));
   }
 
   /**
@@ -159,7 +156,7 @@ public:
    * @return  Returns a 32 bit value.
    */
   uint32_t tile_value() const {
-    return (value & 0xffffffff);
+    return (value & 0x1ffffff);
   }
 
   /**

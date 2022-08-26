@@ -52,9 +52,9 @@ void bresenham_line(double x0,
 template <class coord_t> struct closest_first_generator_t {
   valhalla::midgard::Tiles<coord_t> tiles;
   coord_t seed;
-  robin_hood::unordered_set<int64_t> queued;
-  int64_t subcols, subrows;
-  using best_t = std::pair<double, int64_t>;
+  robin_hood::unordered_set<int32_t> queued;
+  int32_t subcols, subrows;
+  using best_t = std::pair<double, int32_t>;
   std::priority_queue<best_t, std::vector<best_t>, std::function<bool(const best_t&, const best_t&)>>
       queue;
 
@@ -71,7 +71,7 @@ template <class coord_t> struct closest_first_generator_t {
     subrows = tiles.nrows() * tiles.nsubdivisions();
     auto x = (seed.first - tiles.TileBounds().minx()) / tiles.TileBounds().Width() * subcols;
     auto y = (seed.second - tiles.TileBounds().miny()) / tiles.TileBounds().Height() * subrows;
-    int64_t subdivision = static_cast<int64_t>(y) * subcols + static_cast<int64_t>(x);
+    auto subdivision = static_cast<int32_t>(y) * subcols + static_cast<int32_t>(x);
     queued.emplace(subdivision);
     queue.emplace(std::make_pair(0, subdivision));
     neighbors(subdivision);
@@ -80,7 +80,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // something to measure the closest possible point of a subdivision from the given seed point
-  double dist(int64_t sub) {
+  double dist(int32_t sub) {
     auto x = sub % subcols;
     auto x0 = tiles.TileBounds().minx() + x * tiles.SubdivisionSize();
     auto x1 = tiles.TileBounds().minx() + (x + 1) * tiles.SubdivisionSize();
@@ -109,28 +109,29 @@ template <class coord_t> struct closest_first_generator_t {
     }
     return distance;
   }
+
   // something to add the neighbors of a given subdivision
-  const std::list<std::pair<int64_t, int64_t>> neighbor_offsets{{0, -1}, {-1, 0}, {1, 0}, {0, 1}};
-  void neighbors(int64_t s) {
+  const std::array<std::pair<int, int>, 4> neighbor_offsets = {{{0, -1}, {-1, 0}, {1, 0}, {0, 1}}};
+  void neighbors(int32_t s) {
     // walk over all adjacent subdivisions in row major order
-    auto x = s % static_cast<int64_t>(subcols);
-    auto y = s / static_cast<int64_t>(subcols);
+    auto x = s % subcols;
+    auto y = s / subcols;
     for (const auto& off : neighbor_offsets) {
       // skip y out of bounds
-      auto ny = y + static_cast<int64_t>(off.second);
-      if (ny == static_cast<int64_t>(-1) || ny == static_cast<int64_t>(subrows)) {
+      auto ny = y + off.second;
+      if (ny == -1 || ny == subrows) {
         continue;
       }
       // fix x
-      auto nx = x + static_cast<int64_t>(off.first);
-      if (nx == static_cast<int64_t>(-1) || nx == static_cast<int64_t>(subcols)) {
+      auto nx = x + off.first;
+      if (nx == -1 || nx == subcols) {
         if (!coord_t::IsSpherical()) {
           continue;
         }
-        nx = (nx + static_cast<int64_t>(subcols)) % static_cast<int64_t>(subcols);
+        nx = (nx + subcols) % subcols;
       }
       // actually add the thing
-      auto neighbor = ny * static_cast<int64_t>(subcols) + nx;
+      auto neighbor = ny * subcols + nx;
       if (queued.find(neighbor) == queued.cend()) {
         queued.emplace(neighbor);
         queue.emplace(std::make_pair(dist(neighbor), neighbor));
@@ -139,7 +140,7 @@ template <class coord_t> struct closest_first_generator_t {
   }
 
   // get the next closest subdivision
-  std::tuple<int64_t, unsigned short, double> next() {
+  std::tuple<int32_t, unsigned short, double> next() {
     // get the next closest one or bail
     if (!queue.size()) {
       throw std::runtime_error("Subdivisions were exhausted");

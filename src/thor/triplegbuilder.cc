@@ -569,9 +569,7 @@ void AddSignInfo(const AttributesController& controller,
           }
           break;
         }
-        default: {
-          break;
-        }
+        default: { break; }
       }
       ++sign_index;
     }
@@ -1580,24 +1578,11 @@ void TripLegBuilder::Build(
     // Some edges at the beginning and end of the path and at intermediate locations will need trimmed
     uint32_t begin_index = is_first_edge ? 0 : trip_shape.size() - 1;
     auto edgeinfo = graphtile->edgeinfo(directededge);
-    std::vector<midgard::PointLL> edge_shape;
-    bool is_artificial_endnode = false;
-    if (options.nodes_filter() == valhalla::NodesFilter::shapepoints) {
-      edge_shape = edgeinfo.shape();
-    } else {
-      auto edge_shape2 = edgeinfo.shape();
-      edge_shape.emplace_back(edge_shape2.front());
-      edge_shape.emplace_back(edge_shape2.back());
-      if (options.nodes_filter() == valhalla::NodesFilter::nodes_wo_artificial) {
-        const NodeInfo* mynode = graphtile->node(directededge->endnode());
-        is_artificial_endnode = mynode->artificial();
-      }
-    }
-
     auto trimming = edge_trimming.end();
     if (!edge_trimming.empty() &&
         (trimming = edge_trimming.find(edge_index)) != edge_trimming.end()) {
       // Get edge shape and reverse it if directed edge is not forward.
+      auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
@@ -1640,14 +1625,11 @@ void TripLegBuilder::Build(
       trim_shape(begin_trim_dist * edge_length, begin_trim_vrt, end_trim_dist * edge_length,
                  end_trim_vrt, edge_shape);
       // Add edge shape to the trip and skip the first point when its redundant with the previous edge
-      if (is_last_edge) {
-        is_artificial_endnode = false;
-      }
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge,
-                        edge_shape.end() - is_artificial_endnode);
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
     } // We need to clip the shape if its at the beginning or end
     else if (is_first_edge || is_last_edge) {
       // Get edge shape and reverse it if directed edge is not forward.
+      auto edge_shape = edgeinfo.shape();
       if (!directededge->forward()) {
         std::reverse(edge_shape.begin(), edge_shape.end());
       }
@@ -1663,19 +1645,14 @@ void TripLegBuilder::Build(
         trim_shape(0, edge_shape.front(), end_pct * total, end_vrt, edge_shape);
       }
       // Keep the shape
-      if (is_last_edge) {
-        is_artificial_endnode = false;
-      }
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge,
-                        edge_shape.end() - is_artificial_endnode);
+      trip_shape.insert(trip_shape.end(), edge_shape.begin() + !is_first_edge, edge_shape.end());
     } // Just get the shape in there in the right direction no clipping needed
     else {
-      if (!directededge->forward()) {
-        std::reverse(edge_shape.begin(), edge_shape.end());
+      if (directededge->forward()) {
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().begin() + 1, edgeinfo.shape().end());
+      } else {
+        trip_shape.insert(trip_shape.end(), edgeinfo.shape().rbegin() + 1, edgeinfo.shape().rend());
       }
-
-      trip_shape.insert(trip_shape.end(), edge_shape.begin() + 1,
-                        edge_shape.end() - is_artificial_endnode);
     }
 
     // Set the portion of the edge we used
@@ -1739,8 +1716,7 @@ void TripLegBuilder::Build(
 
     // Set begin and end heading if requested. Uses trip_shape so
     // must be done after the edge's shape has been added.
-    if (!(!is_first_edge && !is_last_edge && is_artificial_endnode))
-      SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
+    SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.
@@ -1806,13 +1782,8 @@ void TripLegBuilder::Build(
   SetBoundingBox(trip_path, trip_shape);
 
   // Set shape if requested
-  if (controller.attributes.at(kShape)) {
-    if (options.shape_format() == polyline5) {
-      // support google polyline
-      trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape, 1e5));
-    } else {
-      trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
-    }
+  if (controller(kShape)) {
+    trip_path.set_shape(encode<std::vector<PointLL>>(trip_shape));
   }
 
   if (osmchangeset != 0 && controller(kOsmChangeset)) {

@@ -142,7 +142,7 @@ DynamicCost::DynamicCost(const Costing& costing,
     : pass_(0), allow_transit_connections_(false), allow_destination_only_(true),
       allow_conditional_destination_(false), travel_mode_(mode), access_mask_(access_mask),
       closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
-      shortest_(costing.options().shortest()), use_traffic_(costing.options().use_traffic()),
+      shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
@@ -370,11 +370,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   if (name) {
     c->set_name(*name);
   }
-//   pbf_costing_options->set_shortest(rapidjson::get<bool>(value, "/shortest", false));
-//   pbf_costing_options->set_use_traffic(rapidjson::get<bool>(value, "/use_traffic", true));
-//   pbf_costing_options->set_top_speed(
-//       kVehicleSpeedRange(rapidjson::get<uint32_t>(value, "/top_speed", kMaxAssumedSpeed)));
-// }
 
   // various traversability flags
   JSON_PBF_DEFAULT(co, false, json, "/ignore_restrictions", ignore_restrictions);
@@ -384,9 +379,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
-
-  // shortest
-  JSON_PBF_DEFAULT(co, true, json, "/use_traffic", use_traffic);
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
