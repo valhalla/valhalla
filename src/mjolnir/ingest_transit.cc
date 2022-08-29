@@ -88,6 +88,9 @@ namespace {
 
 struct tileTransitInfo {
   GraphId graphId;
+  // TODO: unordered multimap-string to a pair of strings that maps from station (parent_id) ->
+  //  platform/egress (child) (Max 2 kinds / many could exists)
+  std::unordered_multimap<feedObject, gtfs::Id> tile_station_children;
   std::unordered_set<feedObject> tile_stops;
   std::unordered_set<feedObject> tile_trips;
   std::unordered_map<feedObject, size_t> tile_routes;
@@ -177,12 +180,38 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
         GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
 
         tileTransitInfo currTile;
+
         if (tile_map.find(currId) != tile_map.end()) {
           currTile = tile_map[currId];
         } else {
           currTile.graphId = currId;
         }
-        currTile.tile_stops.insert({currStopId, feed_path});
+        // TODO: I CAN'T DO THIS: I HAVE TO FIRST CHECK: IF CHILD -> THEN CHECK IF PARENT IN TILE, AND
+        // ISNERT TO THE MAIN STATIONS ANYWAYS.
+
+        if (stop.location_type == gtfs::StopLocationType::StopOrPlatform ||
+            stop.location_type == gtfs::StopLocationType::EntranceExit) {
+          auto parent_in_tile = currTile.tile_stops.find({stop.parent_station, feed_path});
+          if (parent_in_tile != currTile.tile_stops.end()) {
+            currTile.tile_station_children.insert({{stop.parent_station, feed_path}, stop.stop_id});
+          } else {
+            currTile.tile_stops.insert({stop.stop_id, feed_path});
+          }
+        } else {
+          currTile.tile_stops.insert({stop.stop_id, feed_path});
+        }
+
+        //        // TODO: if we see that the stop has a parent station add it to the struct. [REVISED
+        //        ABOVE]
+        //        // If this stop has a parent -> add as a child (insert ot children map)
+        //        auto parent_in_tile = currTile.tile_stops.find({currStopId, feed_path});
+        //        if(parent_in_tile != currTile.tile_stops.end()){
+        //          auto parent_id = parent_in_tile->id;
+        //          currTile.tile_station_children.insert({{parent_id, feed_path}, currStopId});
+        //        }else {
+        //          currTile.tile_stops.insert({currStopId, feed_path});
+        //        }
+
         const gtfs::StopTimes& currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
         for (const auto& stopTime : currStopTimes) {
@@ -221,36 +250,104 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
   return prioritized;
 }
 
-std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTransitInfo& tile_info) {
+// TODO: First write entrance exit (either through feed or create one on the spot)
+// 2. write station as it's already done
+// TODO: 3. create or write a platform (through feed or create)
+
+void setup_stops(Transit& tile,
+                 const gtfs::Stop& tile_stop,
+                 GraphId& node_id,
+                 std::unordered_map<feedObject, GraphId>& stop_graphIds,
+                 std::string feed_path,
+                 NodeType child_type,
+                 bool isGenerated) {
+  auto* node = tile.mutable_nodes()->Add();
+  node->set_lon(tile_stop.stop_lon);
+  node->set_lat(tile_stop.stop_lat);
+
+  // change set_type to match the child / parent type.
+  node->set_type(static_cast<uint32_t>(get_node_type(tile_stop.location_type)));
+  node->set_graphid(node_id);
+  node->set_prev_type_graphid(node_id);
+  node->set_name(tile_stop.stop_name);
+  node->set_timezone(tile_stop.stop_timezone);
+  bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
+  node->set_wheelchair_boarding(wheelchair_accessible);
+  // TODO: Insert generated depending on if we had to generate egress / platform
+
+  // TODO: if it's a fake stop, i need to create a unique onestop id
+  // what is this? not all children are going to need a fake id?
+  auto onestop_id = isGenerated
+                        ? tile_stop.stop_id + std::to_string(static_cast<uint8_t>(child_type)) +
+                              std::to_string(node_id.id())
+                        : tile_stop.stop_id;
+  node->set_onestop_id(onestop_id);
+  stop_graphIds[{onestop_id, feed_path}] = node_id;
+  node_id++;
+}
+
+std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTransitInfo& tile_info) {
   const auto& tile_stopIds = tile_info.tile_stops;
+  const auto& tile_children = tile_info.tile_station_children;
   auto node_id = tile_info.graphId;
   feedCache stopFeeds;
 
-  std::unordered_map<gtfs::Id, GraphId> stop_graphIds;
+  std::unordered_map<feedObject, GraphId> stop_graphIds;
   // loop through all stops inside the tile
   for (const feedObject& feed_stop : tile_stopIds) {
-    const auto& tile_stopId = feed_stop.id;
     const auto& feed = stopFeeds(feed_stop);
-    auto* node = tile.add_nodes();
-    const gtfs::Stop& tile_stop = *(feed.get_stop(tile_stopId));
-    node->set_lon(tile_stop.stop_lon);
-    node->set_lat(tile_stop.stop_lat);
-    // node->set_type(static_cast<uint32_t>(NodeType::kMultiUseTransitPlatform));
-    node->set_type(static_cast<uint32_t>(get_node_type(tile_stop.location_type)));
-    node->set_graphid(node_id);
-    stop_graphIds[tile_stopId] = node_id;
-    node_id++;
+    const auto& tile_stop = feed.get_stop(feed_stop.id);
+
+    // Check if the current station has children -> call setup_stops to create a new stop
+    // if key that matches parent is found loop over children while is not at the end .
+    // if there is an egress type found - setup_stops //
+
+    // Add the Egress
+    int egress_count = tile.nodes_size();
+    auto has_children = tile_children.find(feed_stop);
+    if (has_children != tile_children.end()) {
+      gtfs::Stop currChild = *feed.get_stop(has_children->second);
+
+      if (currChild.location_type == gtfs::StopLocationType::EntranceExit) {
+        setup_stops(tile, currChild, node_id, stop_graphIds, feed_stop.feed,
+                    get_node_type(currChild.location_type), false);
+      }
+    }
+    if (tile.nodes_size() == egress_count) {
+      setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitEgress,
+                  true);
+    }
+
+    auto node_type = (*tile_stop).location_type;
+    // Add the Station
+    setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, get_node_type(node_type),
+                false);
+
+    if (node_type != gtfs::StopLocationType::Station) {
+      setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitStation,
+                  true);
+    }
+    // Add the Platform
+    egress_count = tile.nodes_size();
+    if (has_children != tile_children.end()) {
+      gtfs::Stop currChild = *feed.get_stop(has_children->second);
+
+      if (currChild.location_type == gtfs::StopLocationType::StopOrPlatform) {
+        setup_stops(tile, currChild, node_id, stop_graphIds, feed_stop.feed,
+                    get_node_type(currChild.location_type), false);
+      }
+    }
+    if (tile.nodes_size() == egress_count) {
+      setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitEgress,
+                  true);
+    }
+
+    // repeat the egress process for
+
+    // should also be incremeented on children added.
     // TODO: look at how prev_graphid() is used in convert transit (and if it is necessary)
-    node->set_name(tile_stop.stop_name);
-    // TODO: Determine how to .set_osm_way_id().
-    // can't be set directly because it used to be processed by transitland but it is not part of GTFS
-    // data
-    node->set_timezone(tile_stop.stop_timezone);
-    // 0 is No Info ; 1 is True ; 2 is False
-    bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
-    node->set_wheelchair_boarding(wheelchair_accessible);
-    // TODO: look at how generated() is used in convert transit (and if it is necessary)
-    node->set_onestop_id(tile_stop.stop_id);
+    //  this is just the graphid of the parent
+    // TODO: Insert generated depending on if we had to generate egress / platform
   }
 
   return stop_graphIds;
@@ -287,7 +384,7 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 // return dangling stop_pairs, write stop data from feed
 bool write_stop_pairs(Transit& tile,
                       const tileTransitInfo& tile_info,
-                      std::unordered_map<gtfs::Id, GraphId> stop_graphIds,
+                      std::unordered_map<feedObject, GraphId> stop_graphIds,
                       unique_transit_t& uniques) {
 
   const auto& tile_tripIds = tile_info.tile_trips;
@@ -334,7 +431,7 @@ bool write_stop_pairs(Transit& tile,
         stop_pair->set_destination_onestop_id(dest_stopId);
         if (origin_is_in_tile) {
           stop_pair->set_origin_departure_time(stoi(origin_stopTime.departure_time.get_raw_time()));
-          stop_pair->set_origin_graphid(stop_graphIds[origin_stopId]);
+          stop_pair->set_origin_graphid(stop_graphIds[{origin_stopId, currFeedPath}]);
 
           // call function to set shape
           float dist =
@@ -344,7 +441,7 @@ bool write_stop_pairs(Transit& tile,
 
         if (dest_is_in_tile) {
           stop_pair->set_destination_arrival_time(stoi(dest_stopTime.arrival_time.get_raw_time()));
-          stop_pair->set_destination_graphid(stop_graphIds[dest_stopId]);
+          stop_pair->set_destination_graphid(stop_graphIds[{dest_stopId, currFeedPath}]);
           // call function to set shape
           float dist = add_stop_pair_shapes(*(feed.get_stop(dest_stopId)), currShape, dest_stopTime);
           stop_pair->set_destination_dist_traveled(dist);
@@ -505,7 +602,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     const std::string& prefix = transit_tile.string();
     LOG_INFO("Fetching " + prefix);
 
-    std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stops(tile, current);
+    std::unordered_map<feedObject, GraphId> stop_graphIds = write_stops(tile, current);
     bool dangles = write_stop_pairs(tile, current, stop_graphIds, uniques);
     write_routes(tile, current);
     write_shapes(tile, current);

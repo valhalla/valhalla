@@ -12,11 +12,11 @@ using namespace valhalla;
 
 const std::string ascii_map = R"(
       A-1-B--2--C--D
-                3
+                3  E
     )";
 const gurka::ways ways = {{"AB", {{"highway", "pedestrian"}}},
                           {"BC", {{"highway", "pedestrian"}}},
-                          {"CD", {{"highway", "pedestrian"}}}};
+                          {"CDE", {{"highway", "pedestrian"}}}};
 
 const gurka::nodes nodes = {{"1", {{"highway", "stop"}}},
                             {"2", {{"highway", "stop"}}},
@@ -85,15 +85,29 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop nemo {
     .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "0", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .parent_station = "0", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo);
+  struct gtfs::Stop nemo_egress {
+    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
+    .parent_station = "0", .location_type = gtfs::StopLocationType::EntranceExit,
+    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+  };
+  feed.add_stop(nemo_egress);
+  struct gtfs::Stop nemo_platform {
+    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
+    .parent_station = "0", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+  };
+  feed.add_stop(nemo_platform);
 
   struct gtfs::Stop secondStop {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
     .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
-    .parent_station = "1", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .parent_station = "1", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
@@ -103,7 +117,7 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop thirdStop {
     .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
     .stop_lat = station_three_ll->second.second, .stop_lon = station_three_ll->second.first,
-    .parent_station = "1", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .parent_station = "1", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(thirdStop);
@@ -338,6 +352,10 @@ TEST(GtfsExample, MakeTile) {
   boost::property_tree::ptree pt = get_config();
 
   auto layout = create_layout();
+  auto station_one_ll = layout.find("1");
+  auto station_two_ll = layout.find("2");
+  auto station_three_ll = layout.find("3");
+
   auto path_directory = pt.get<std::string>("mjolnir.tile_dir");
   auto map = gurka::buildtiles(layout, ways, nodes, {}, path_directory);
   GraphReader reader(pt.get_child("mjolnir"));
@@ -351,22 +369,30 @@ TEST(GtfsExample, MakeTile) {
   const std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   LOG_INFO(transit_dir);
 
-  std::vector<GraphId> graphids = {GraphId(517680, 3, 0), GraphId(519120, 3, 0)};
+  auto graphids = reader.GetTileSet();
   //= {GraphId(547940, 3, 0), GraphId(519120, 3, 0)};
   // loop through all tiles
-  for (int i = 0; i < graphids.size(); i++) {
-    graph_tile_ptr tile = reader.GetGraphTile(graphids[i]);
-    LOG_INFO("Working on : " + std::to_string(graphids[i]));
+  int totalNodes = 0;
+  for (auto graphid : graphids) {
+    if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
+      continue;
+    }
+    graph_tile_ptr tile = reader.GetGraphTile(graphid);
+    LOG_INFO("Working on : " + std::to_string(graphid));
     if (tile->GetStopOneStops().empty()) {
       LOG_ERROR("NO one stops found");
     }
     auto tileStops = tile->GetStopOneStops();
     if (tile->GetNodes().size() == 0) {
-      LOG_WARN("There are no nodes inside tile " + std::to_string(graphids[i]));
+      LOG_WARN("There are no nodes inside tile " + std::to_string(graphid));
+    } else {
+      LOG_INFO("There are " + std::to_string(tile->GetNodes().size()) + " nodes inside tile " +
+               std::to_string(graphid));
     }
+    totalNodes += tile->GetNodes().size();
     for (const auto& node : tile->GetNodes()) {
-      EXPECT_EQ(node.type(), NodeType::kTransitStation);
-      EXPECT_EQ(node.access(), 1);
+      EXPECT_EQ(node.type(), NodeType::kMultiUseTransitPlatform);
+      EXPECT_EQ(node.latlng(PointLL(0.000001, 0.000001)), station_one_ll->second);
       uint64_t node_way_id = node.connecting_wayid();
       LOG_INFO("Current Way Id: " + std::to_string(node_way_id));
       // EXPECT_EQ(node.latlng(0.1, 0.1), midgard::PointLL(0.1,0.1));
@@ -389,19 +415,14 @@ TEST(GtfsExample, MakeTile) {
       EXPECT_EQ(currDeparture->tripid(), 2); // TRIPONEID OR TRIPTWOID
       EXPECT_EQ(currDeparture->blockid(), 3);
     }
-    int schedule_it = 0;
-    //    while (true) {
-    //      try {
-    //        auto* tileSchedule = tile->GetTransitSchedule(schedule_it);
-    //        EXPECT_EQ(tileSchedule->days(), 0);
-    //        EXPECT_EQ(tileSchedule->end_day(), 60);
-    //        schedule_it++;
-    //      } catch (const std::exception& e) {
-    //        LOG_INFO("There are " + std::to_string(schedule_it) + " schedules.");
-    //        break;
-    //      }
-    //    }
+
+    for (uint32_t schedule_it = 0; schedule_it < tile->header()->schedulecount(); schedule_it++) {
+      auto* tileSchedule = tile->GetTransitSchedule(schedule_it);
+      EXPECT_EQ(tileSchedule->days(), 0);
+      EXPECT_EQ(tileSchedule->end_day(), 60);
+    }
   }
+  EXPECT_EQ(totalNodes, 3);
   // check edges have schedules
   // look at graphtiles.h / directededge.h / nodeinfo.h /  transit*.h
 }
