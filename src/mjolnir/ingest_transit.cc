@@ -258,27 +258,24 @@ void setup_stops(Transit& tile,
                  const gtfs::Stop& tile_stop,
                  GraphId& node_id,
                  std::unordered_map<feedObject, GraphId>& stop_graphIds,
-                 std::string feed_path,
-                 NodeType child_type,
+                 const std::string& feed_path,
+                 NodeType node_type,
                  bool isGenerated) {
   auto* node = tile.mutable_nodes()->Add();
   node->set_lon(tile_stop.stop_lon);
   node->set_lat(tile_stop.stop_lat);
 
   // change set_type to match the child / parent type.
-  node->set_type(static_cast<uint32_t>(get_node_type(tile_stop.location_type)));
+  node->set_type(static_cast<uint32_t>(node_type));
   node->set_graphid(node_id);
   node->set_prev_type_graphid(node_id);
   node->set_name(tile_stop.stop_name);
   node->set_timezone(tile_stop.stop_timezone);
   bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
   node->set_wheelchair_boarding(wheelchair_accessible);
-  // TODO: Insert generated depending on if we had to generate egress / platform
-
-  // TODO: if it's a fake stop, i need to create a unique onestop id
-  // what is this? not all children are going to need a fake id?
+  node->set_generated(isGenerated);
   auto onestop_id = isGenerated
-                        ? tile_stop.stop_id + std::to_string(static_cast<uint8_t>(child_type)) +
+                        ? tile_stop.stop_id + std::to_string(static_cast<uint8_t>(node_type)) +
                               std::to_string(node_id.id())
                         : tile_stop.stop_id;
   node->set_onestop_id(onestop_id);
@@ -318,12 +315,14 @@ std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTra
                   true);
     }
 
-    auto node_type = (*tile_stop).location_type;
+    auto node_type = get_node_type((*tile_stop).location_type);
     // Add the Station
-    setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, get_node_type(node_type),
-                false);
-
-    if (node_type != gtfs::StopLocationType::Station) {
+    if (node_type == NodeType::kTransitStation) {
+      setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, node_type, false);
+      setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, node_type, false);
+    } else {
+      // where there is no station provided, the program will default to creating only stops
+      // so, the Station must be added
       setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitStation,
                   true);
     }
@@ -341,13 +340,6 @@ std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTra
       setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitEgress,
                   true);
     }
-
-    // repeat the egress process for
-
-    // should also be incremeented on children added.
-    // TODO: look at how prev_graphid() is used in convert transit (and if it is necessary)
-    //  this is just the graphid of the parent
-    // TODO: Insert generated depending on if we had to generate egress / platform
   }
 
   return stop_graphIds;
