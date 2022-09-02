@@ -313,13 +313,13 @@ message Costing {
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
     oneof has_exclude_bridge {
-      bool exclude_bridge = 83;
+      bool exclude_bridges = 84;
     }
     oneof has_exclude_tunnel {
-      bool exclude_tunnel = 84;
+      bool exclude_tunnels = 85;
     }
     oneof has_exclude_toll {
-      bool exclude_toll = 85;
+      bool exclude_tolls = 86;
     }
   }
 

@@ -286,6 +286,9 @@
    * ADDED: Added `exclude_toll` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
    * ADDED: Added `exclude_bridge` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
    * ADDED: Added `exclude_tunnel` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
+   * ADDED: Added `exclude_tolls` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
+   * ADDED: Added `exclude_bridges` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
+   * ADDED: Added `exclude_tunnels` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

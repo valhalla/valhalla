@@ -437,9 +437,9 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
-      (exclude_bridge_ && !pred.bridge() && edge->bridge()) ||
-      (exclude_tunnel_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_toll_ && !pred.toll() && edge->toll())) {
+      (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
+      (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
+      (exclude_tolls_ && !pred.toll() && edge->toll())) {
     return false;
   }
 
@@ -464,9 +464,9 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
-      (exclude_bridge_ && !pred.bridge() && edge->bridge()) ||
-      (exclude_tunnel_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_toll_ && !pred.toll() && edge->toll())) {
+      (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
+      (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
+      (exclude_tolls_ && !pred.toll() && edge->toll())) {
     return false;
   }
 
