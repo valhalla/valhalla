@@ -135,10 +135,12 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
-The following options are available for `auto`, `pedestrian` and `truck` costing methods.
-| `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
-| `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
-| `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+The following options are available for `auto`, `bus`, `taxi`, and `truck` and `pedestrian` costing methods.
+| Vehicle Options | Description |
+| :-------------------------- | :----------- |
+| `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
 
 The following options are available for `truck` costing.
 
