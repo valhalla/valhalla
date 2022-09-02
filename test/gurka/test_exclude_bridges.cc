@@ -10,7 +10,6 @@ const std::vector<std::string> kSupportedCostingModels = {
     "taxi",
     "bus",
     "truck",
-    "pedestrian",
 };
 } // namespace
 
@@ -31,13 +30,13 @@ protected:
     )";
 
     const gurka::ways ways = {
-        {"EF", {{"highway", "residential"}, {"bridge", "true"}}},
-        {"FG", {{"highway", "residential"}, {"bridge", "true"}}},
+        {"EF", {{"highway", "residential"}, {"bridge", "yes"}}},
+        {"FG", {{"highway", "residential"}, {"bridge", "yes"}}},
         {"GH", {{"highway", "residential"}}},
-        {"HI", {{"highway", "residential"}, {"bridge", "true"}}},
-        {"IA", {{"highway", "residential"}, {"bridge", "true"}}},
+        {"HI", {{"highway", "residential"}, {"bridge", "yes"}}},
+        {"IA", {{"highway", "residential"}}},
         {"IJ", {{"highway", "residential"}}},
-        {"JK", {{"highway", "residential"}, {"bridge", "true"}}},
+        {"JK", {{"highway", "residential"}, {"bridge", "yes"}}},
         {"KL", {{"highway", "residential"}}},
         {"JM", {{"highway", "residential"}}},
         {"MN", {{"highway", "residential"}}},
@@ -76,7 +75,7 @@ TEST_F(ExcludeBridgesTest, BridgesInTheMiddle) {
 TEST_F(ExcludeBridgesTest, BridgesUnsupported) {
   const std::string start = "E";
   const std::string end = "L";
-  for (const auto& costing : std::vector<std::string>{"bicycle", "pedestrian"}) {
+  for (const auto& costing : std::vector<std::string>{"bicycle"}) {
     const auto result_0 =
         gurka::do_action(valhalla::Options::route, map, {start, end}, costing,
                          {{"/costing_options/" + costing + "/exclude_bridges", "1"}});
@@ -114,21 +113,21 @@ TEST_F(ExcludeBridgesTest, BridgesInTheBeginning) {
 TEST_F(ExcludeBridgesTest, BridgesInTheEnd) {
   // Without options
   for (const auto& costing : kSupportedCostingModels) {
-    const auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing);
-    gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"H", "E"}, costing);
+    gurka::assert::raw::expect_path(result, {"GH", "FG", "EF"});
   }
 
   // Use bridges
   for (const auto& costing : kSupportedCostingModels) {
-    const auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"H", "E"}, costing,
                                          {{"/costing_options/" + costing + "/exclude_bridges", "0"}});
-    gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
+    gurka::assert::raw::expect_path(result, {"GH", "FG", "EF"});
   }
 
   // Do not use bridges
   for (const auto& costing : kSupportedCostingModels) {
-    const auto result = gurka::do_action(valhalla::Options::route, map, {"G", "A"}, costing,
+    const auto result = gurka::do_action(valhalla::Options::route, map, {"H", "E"}, costing,
                                          {{"/costing_options/" + costing + "/exclude_bridges", "1"}});
-    gurka::assert::raw::expect_path(result, {"GH", "HI", "IA"});
+    gurka::assert::raw::expect_path(result, {"GH", "FG", "EF"});
   }
 }
