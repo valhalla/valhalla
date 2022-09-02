@@ -135,6 +135,11 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
+The following options are available for `auto`, `pedestrian` and `truck` costing methods.
+| `exclude_bridge` | This value indicates whether or not the path may include bridges. If `exclude_bridge` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+| `exclude_tunnel` | This value indicates whether or not the path may include tunnels. If `exclude_tunnel` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+| `exclude_toll` | This value indicates whether or not the path may include tolls. If `exclude_toll` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+
 The following options are available for `truck` costing.
 
 | Truck options | Description |

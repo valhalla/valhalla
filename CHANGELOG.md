@@ -283,6 +283,9 @@
    * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
    * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
    * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
+   * ADDED: Added `exclude_toll` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
+   * ADDED: Added `exclude_bridge` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
+   * ADDED: Added `exclude_tunnel` request parameter [#????](https://github.com/valhalla/valhalla/pull/????)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
