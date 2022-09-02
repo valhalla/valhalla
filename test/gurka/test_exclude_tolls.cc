@@ -10,6 +10,7 @@ const std::vector<std::string> kSupportedCostingModels = {
     "taxi",
     "bus",
     "truck",
+    "pedestrian",
 };
 } // namespace
 
