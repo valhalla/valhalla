@@ -85,21 +85,23 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop nemo {
     .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "0", .location_type = gtfs::StopLocationType::Station,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo);
   struct gtfs::Stop nemo_egress {
-    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_id = stopOneID + "_" + to_string(NodeType::kTransitEgress),
+    .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "0", .location_type = gtfs::StopLocationType::EntranceExit,
+    .parent_station = stopOneID, .location_type = gtfs::StopLocationType::EntranceExit,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo_egress);
   struct gtfs::Stop nemo_platform {
-    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_id = stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
+    .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "0", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .parent_station = stopOneID, .location_type = gtfs::StopLocationType::StopOrPlatform,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo_platform);
@@ -107,7 +109,7 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop secondStop {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
     .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
-    .parent_station = "1", .location_type = gtfs::StopLocationType::Station,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
@@ -117,7 +119,7 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop thirdStop {
     .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
     .stop_lat = station_three_ll->second.second, .stop_lon = station_three_ll->second.first,
-    .parent_station = "1", .location_type = gtfs::StopLocationType::Station,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(thirdStop);
@@ -135,7 +137,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write trips.txt
   struct gtfs::Trip tripOne {
-    .route_id = "2", .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "haha",
+    .route_id = "2", .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "hello",
     .block_id = "3", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
@@ -150,7 +152,8 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_trips(path_directory);
 
   // write stop_times.txt
-  std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
+  std::string stopIds[3] = {stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
+                            stopTwoID, stopThreeID};
   for (int i = 0; i < 6; i++) {
     struct StopTime stopTime {
       .trip_id = "", .stop_id = "", .stop_sequence = 0, .arrival_time = Time("6:00:00"),
@@ -225,8 +228,8 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 3);
-  EXPECT_EQ(stops[1].stop_id, stopTwoID);
+  EXPECT_EQ(stops.size(), 5);
+  EXPECT_EQ(stops[0].stop_id, stopOneID);
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 4);
@@ -247,8 +250,6 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(frequencies.size(), 2);
   EXPECT_EQ(frequencies[0].exact_times, gtfs::FrequencyTripService::FrequencyBased);
   EXPECT_EQ(frequencies[1].exact_times, gtfs::FrequencyTripService::ScheduleBased);
-
-  // TODO: check more than one tile is created
 }
 
 TEST(GtfsExample, MakeProto) {
@@ -294,7 +295,6 @@ TEST(GtfsExample, MakeProto) {
       // shape info
       // becomes 1 shape from 4 shape_points last test
       EXPECT_EQ(transit.shapes_size(), 1);
-      EXPECT_EQ(transit.shapes(0).shape_id(), stoi(shapeOneID));
       // stop(node) info
       for (int i = 0; i < transit.nodes_size(); i++) {
         stops.insert(transit.nodes(i).onestop_id());
@@ -325,13 +325,19 @@ TEST(GtfsExample, MakeProto) {
       EXPECT_EQ(transit.stop_pairs(1).frequency_headway_seconds(), headwaySec);
     }
   }
-  EXPECT_EQ(stops.size(), 3);
+  EXPECT_EQ(stops.size(), 9);
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
+  std::string stop_pair_ids[3] = {stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
+                                  stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
+                                  stopThreeID + "_" + to_string(NodeType::kMultiUseTransitPlatform)};
 
   for (const auto& stopID : stopIds) {
     EXPECT_EQ(*stops.find((stopID)), stopID);
-    EXPECT_EQ(*stop_pairs.find((stopID)), stopID);
   }
+  for (const auto& stop_pair_id : stop_pair_ids) {
+    EXPECT_EQ(*stops.find((stop_pair_id)), stop_pair_id);
+  }
+  // TODO: MAKE SURE ALL THE GENEREATED STOPS ARE ALSO TESTED FOR
 }
 
 TEST(GtfsExample, MakeTile) {
@@ -370,8 +376,6 @@ TEST(GtfsExample, MakeTile) {
   LOG_INFO(transit_dir);
 
   auto graphids = reader.GetTileSet();
-  //= {GraphId(547940, 3, 0), GraphId(519120, 3, 0)};
-  // loop through all tiles
   int totalNodes = 0;
   for (auto graphid : graphids) {
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
@@ -389,21 +393,31 @@ TEST(GtfsExample, MakeTile) {
       LOG_INFO("There are " + std::to_string(tile->GetNodes().size()) + " nodes inside tile " +
                std::to_string(graphid));
     }
-    totalNodes += tile->GetNodes().size();
+    totalNodes += tile->header()->nodecount();
+    std::unordered_set<NodeType> node_types = {NodeType::kMultiUseTransitPlatform,
+                                               NodeType::kTransitStation, NodeType::kTransitEgress};
+    std::vector<PointLL> station_coords = {station_one_ll->second, station_two_ll->second,
+                                           station_three_ll->second};
     for (const auto& node : tile->GetNodes()) {
-      EXPECT_EQ(node.type(), NodeType::kMultiUseTransitPlatform);
-      EXPECT_EQ(node.latlng(PointLL(0.000001, 0.000001)), station_one_ll->second);
+      // I notice that the coordinates in the tiles are 'rounded' to [x] decimal places, what is a way
+      // to round when testing?
+      auto currNode_type = node_types.find(node.type());
+      EXPECT_NE(node_types.end(), currNode_type);
+      // TODO: check which tile, match station coords accordingly
       uint64_t node_way_id = node.connecting_wayid();
       LOG_INFO("Current Way Id: " + std::to_string(node_way_id));
-      // EXPECT_EQ(node.latlng(0.1, 0.1), midgard::PointLL(0.1,0.1));
+      bool coordinates_found = false;
+      for (auto station_coord : station_coords) {
+        coordinates_found = coordinates_found ||
+                            node.latlng(tile->header()->base_ll()).ApproximatelyEqual(station_coord);
+      }
+      EXPECT_TRUE(coordinates_found);
     }
 
     std::unordered_set<std::string> stopIds = {stopOneID, stopTwoID, stopThreeID};
-    for (const auto& tileStop : tileStops) {
-      EXPECT_NE(stopIds.find(tileStop.first), stopIds.end());
-    }
 
     auto currRoute = tile->GetTransitRoute(0);
+    EXPECT_EQ(tile->GetName(currRoute->one_stop_offset()), routeID);
     EXPECT_EQ(currRoute->route_text_color(), strtol("00ff00", nullptr, 16));
     EXPECT_EQ(currRoute->route_color(), strtol("ff0000", nullptr, 16));
 
@@ -411,9 +425,8 @@ TEST(GtfsExample, MakeTile) {
 
     for (const auto& departure : tile->GetTransitDepartures()) {
       TransitDeparture* currDeparture = departure.second;
-      EXPECT_EQ(currDeparture->routeid(), stoi(routeID));
-      EXPECT_EQ(currDeparture->tripid(), 2); // TRIPONEID OR TRIPTWOID
-      EXPECT_EQ(currDeparture->blockid(), 3);
+      auto transit_route = tile->GetTransitRoute(currDeparture->routeindex());
+      EXPECT_EQ(tile->GetName(transit_route->one_stop_offset()), routeID);
     }
 
     for (uint32_t schedule_it = 0; schedule_it < tile->header()->schedulecount(); schedule_it++) {
@@ -422,7 +435,7 @@ TEST(GtfsExample, MakeTile) {
       EXPECT_EQ(tileSchedule->end_day(), 60);
     }
   }
-  EXPECT_EQ(totalNodes, 3);
+  EXPECT_EQ(totalNodes, 9);
   // check edges have schedules
   // look at graphtiles.h / directededge.h / nodeinfo.h /  transit*.h
 }

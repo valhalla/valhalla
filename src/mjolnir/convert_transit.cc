@@ -1054,7 +1054,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         LOG_WARN("Shape Id not found: " + std::to_string(transitedge.shapeid));
       }
 
-      // TODO - if we separate transit edges based on more than just routeid
+      // TODO - if we separate transit edges based on more than just routeindex
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
       auto shape = GetShape(platform_ll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
@@ -1224,6 +1224,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
       }
 
       GraphId platform_pbf_graphid = GraphId(platform.graphid());
+      LOG_INFO(std::to_string(platform_pbf_graphid) + " " +
+               std::to_string(departures.begin()->second.orig_pbf_graphid));
       StopEdges stopedges;
       stopedges.origin_pbf_graphid = platform_pbf_graphid;
 

@@ -1202,7 +1202,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         transit_route_info->set_headsign(graphtile->GetName(transit_departure->headsign_offset()));
       }
 
-      const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeid());
+      const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeindex());
 
       if (transit_route) {
         // Set transit type if requested

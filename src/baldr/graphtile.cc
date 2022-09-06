@@ -396,7 +396,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   // Associate route and operator Ids
   auto deps = GetTransitDepartures();
   for (auto const& dep : deps) {
-    const auto* t = GetTransitRoute(dep.second->routeid());
+    const auto* t = GetTransitRoute(dep.second->routeindex());
     const auto& route_one_stop = GetName(t->one_stop_offset());
     auto stops = route_one_stops.find(route_one_stop);
     if (stops == route_one_stops.end()) {
@@ -956,7 +956,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
 
         const auto& d = departures_[found];
         const TransitDeparture* dep =
-            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
+            new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
                                  d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
                                  d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
                                  d.bicycle_accessible());
@@ -1022,7 +1022,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
       if (departure_time >= current_time && departure_time < end_time) {
         const auto& d = departures_[found];
         const TransitDeparture* dep =
-            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
+            new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
                                  d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
                                  d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
                                  d.bicycle_accessible());

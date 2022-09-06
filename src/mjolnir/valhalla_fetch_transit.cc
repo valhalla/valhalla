@@ -858,7 +858,7 @@ void fetch_tiles(const ptree& pt,
       uniques.lock.lock();
       response = curler(*request, "routes");
       uniques.lock.unlock();
-      // copy routes in, keeping track of routeid to route index
+      // copy routes in, keeping track of routeindex to route index
       get_routes(tile, routes, websites, short_names, response);
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
