@@ -112,16 +112,16 @@ json::ArrayPtr serialize_edges(const AttributesController& controller,
       }
       if (controller(kEdgeMaxDownwardGrade)) {
         if (edge.max_downward_grade() == kNoElevationData) {
-          edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
-        } else {
           edge_map->emplace("max_downward_grade", nullptr);
+        } else {
+          edge_map->emplace("max_downward_grade", static_cast<int64_t>(edge.max_downward_grade()));
         }
       }
       if (controller(kEdgeMaxUpwardGrade)) {
-        if (edge.max_downward_grade() == kNoElevationData) {
-          edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
-        } else {
+        if (edge.max_upward_grade() == kNoElevationData) {
           edge_map->emplace("max_upward_grade", nullptr);
+        } else {
+          edge_map->emplace("max_upward_grade", static_cast<int64_t>(edge.max_upward_grade()));
         }
       }
       if (controller(kEdgeWeightedGrade)) {
