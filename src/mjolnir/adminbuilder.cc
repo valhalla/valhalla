@@ -101,6 +101,7 @@ void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<rin
   auto* outer_ring = geos_helper_t::from_striped_container(ring);
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, nullptr, 0);
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
+  GEOSNormalize(buffered);
   auto geom_type = GEOSGeomTypeId(buffered);
   switch (geom_type) {
     case GEOS_POLYGON: {
@@ -145,6 +146,7 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
+  GEOSNormalize(buffered);
   auto geom_type = GEOSGeomTypeId(buffered);
   switch (geom_type) {
     case GEOS_POLYGON: {
