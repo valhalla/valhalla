@@ -45,7 +45,8 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_tunnels");
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/exclude_tunnels",
+                            {{"service_limits.allow_hard_exclusions", "true"}});
   }
 };
 
