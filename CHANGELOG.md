@@ -292,6 +292,7 @@
    * ADDED: Added `exclude_tolls` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
    * ADDED: Added `exclude_bridges` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
    * ADDED: Added `exclude_tunnels` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
+   * ADDED: Added `service_limits.allow_hard_exclusions` server config parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
