@@ -1127,6 +1127,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
+  header.set_osmids_for_nodes_offset(header.osmids_for_nodes_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   filesystem::path filename =
