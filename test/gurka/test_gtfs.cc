@@ -13,14 +13,11 @@ using namespace valhalla;
 const std::string ascii_map = R"(
       A-1-B--2--C--D
                 3  E
+                F-/
     )";
-const gurka::ways ways = {{"AB", {{"highway", "pedestrian"}}},
-                          {"BC", {{"highway", "pedestrian"}}},
-                          {"CDE", {{"highway", "pedestrian"}}}};
-
-const gurka::nodes nodes = {{"1", {{"highway", "stop"}}},
-                            {"2", {{"highway", "stop"}}},
-                            {"3", {{"highway", "stop"}}}};
+const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                          {"BC", {{"highway", "primary"}}},
+                          {"CDEF", {{"highway", "primary"}}}};
 
 boost::property_tree::ptree get_config() {
 
@@ -40,6 +37,8 @@ valhalla::gurka::nodelayout create_layout() {
 
   return layout;
 }
+gurka::map map;
+
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
   filesystem::remove_all("test/data/transit_tests");
@@ -363,7 +362,7 @@ TEST(GtfsExample, MakeTile) {
   auto station_three_ll = layout.find("3");
 
   auto path_directory = pt.get<std::string>("mjolnir.tile_dir");
-  auto map = gurka::buildtiles(layout, ways, nodes, {}, path_directory);
+  map = gurka::buildtiles(layout, ways, {}, {}, path_directory);
   GraphReader reader(pt.get_child("mjolnir"));
 
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
@@ -375,13 +374,25 @@ TEST(GtfsExample, MakeTile) {
   const std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   LOG_INFO(transit_dir);
 
+  // TODO: ENSURE THAT THE TRANSIT EDGES ARE CREATED AND CONNECTED TO THE GRAPH
+  //  FOR NOW, THE TEST IS DISABLED AS IT HAS NOT BEEN IMPLEMENTED YET.
+
   auto graphids = reader.GetTileSet();
   int totalNodes = 0;
   for (auto graphid : graphids) {
+    graph_tile_ptr tile = reader.GetGraphTile(graphid);
+
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
+      if (graphid.level() == TileHierarchy::levels().back().level) {
+        bool foundTransitConnect = false;
+        for (const auto& edge : tile->GetDirectedEdges()) {
+          foundTransitConnect =
+              foundTransitConnect || edge.use() == valhalla::baldr::Use::kTransitConnection;
+        }
+        // EXPECT_TRUE(foundTransitConnect);
+      }
       continue;
     }
-    graph_tile_ptr tile = reader.GetGraphTile(graphid);
     LOG_INFO("Working on : " + std::to_string(graphid));
     if (tile->GetStopOneStops().empty()) {
       LOG_ERROR("NO one stops found");
@@ -436,8 +447,17 @@ TEST(GtfsExample, MakeTile) {
     }
   }
   EXPECT_EQ(totalNodes, 9);
-  // check edges have schedules
-  // look at graphtiles.h / directededge.h / nodeinfo.h /  transit*.h
 }
 
-// make sure all the data is inside -> which we can test using the same tests as above
+// TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
+// THE TRIP TYPE IS A TRANSIT TYPE
+
+TEST(GtfsExample, DISABLED_testRouting) {
+
+  boost::property_tree::ptree pt = get_config();
+
+  auto layout = create_layout();
+
+  valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal");
+  EXPECT_EQ(result0.trip().routes_size(), 1);
+}
