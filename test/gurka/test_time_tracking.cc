@@ -189,7 +189,8 @@ TEST(TimeTracking, routes) {
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make",
-                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
+                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"},
+                                {"thor.source_to_target_algorithm", "timedistancematrix"}});
 
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
@@ -254,6 +255,27 @@ TEST(TimeTracking, routes) {
   }
 
   ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
+
+  // matrix between them
+  req =
+      boost::format(
+          R"({"costing":"auto","sources":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%},{"lon":%5%,"lat":%6%}],"targets":[{"lon":%7%,"lat":%8%},{"lon":%9%,"lat":%10%}]})") %
+      map.nodes["A"].first % map.nodes["A"].second % map.nodes["B"].first % map.nodes["B"].second %
+      map.nodes["C"].first % map.nodes["C"].second % map.nodes["D"].first % map.nodes["D"].second %
+      map.nodes["E"].first % map.nodes["E"].second;
+  std::string matrix = actor.matrix(req.str(), nullptr, &api);
+  rapidjson::Document d;
+  d.Parse(matrix.c_str());
+  rapidjson::Value a = d["sources_to_targets"].GetArray()[0].GetArray();
+
+  // check the timings
+  times.clear();
+  for (rapidjson::SizeType i = 0; i < a.Size(); ++i) {
+    times.push_back(a[i]["time"].GetDouble());
+  }
+
+  const std::vector<double> expectedTimes = {51, 193}; // {"A"->"D", "A"->"E"}
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.5), expectedTimes));
 }
 
 TEST(TimeTracking, dst) {
