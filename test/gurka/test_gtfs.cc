@@ -33,7 +33,7 @@ boost::property_tree::ptree get_config() {
 
 valhalla::gurka::nodelayout create_layout() {
   int gridsize_metres = 1000;
-  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.000001, 0.000001});
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-0.000001, -0.000001});
 
   return layout;
 }
@@ -41,11 +41,11 @@ gurka::map map;
 
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
-  filesystem::remove_all("test/data/transit_tests");
-  filesystem::create_directories("test/data/transit_tests");
-  filesystem::create_directories("test/data/transit_tests/gtfs_feeds");
-  filesystem::create_directories("test/data/transit_tests/transit_protos");
-  filesystem::create_directories("test/data/transit_tests/tiles");
+  filesystem::remove_all(VALHALLA_BUILD_DIR "test/data/transit_tests");
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests");
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds");
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/transit_protos");
+  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/tiles");
 
   auto pt = get_config();
   auto layout = create_layout();
@@ -108,8 +108,6 @@ TEST(GtfsExample, WriteGtfs) {
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(secondStop);
-
-  feed.write_stops(path_directory);
 
   struct gtfs::Stop thirdStop {
     .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
