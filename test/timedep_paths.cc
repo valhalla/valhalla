@@ -37,41 +37,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-void adjust_scores(Options& options) {
-  for (auto* locations :
-       {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
-    for (auto& location : *locations) {
-      // get the minimum score for all the candidates
-      auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
-                               location.mutable_correlation()->mutable_filtered_edges()}) {
-        for (auto& candidate : *candidates) {
-          // completely disable scores for this location
-          if (location.skip_ranking_candidates())
-            candidate.set_distance(0);
-          // scale the score to favor closer results more
-          else
-            candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
-          // remember the min score
-          if (minScore > candidate.distance())
-            minScore = candidate.distance();
-        }
-      }
-
-      // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
-      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
-                               location.mutable_correlation()->mutable_filtered_edges()}) {
-        for (auto& candidate : *candidates) {
-          candidate.set_distance(candidate.distance() - minScore);
-          if (candidate.distance() > max_score->second)
-            candidate.set_distance(max_score->second);
-        }
-      }
-    }
-  }
-}
-
 const auto config = test::make_config("test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
@@ -82,7 +47,7 @@ void try_path(GraphReader& reader,
   Api request;
   ParseApi(test_request, Options::route, request);
   loki_worker.route(request);
-  adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other
   travel_mode_t mode;
