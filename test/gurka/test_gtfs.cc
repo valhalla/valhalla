@@ -60,10 +60,6 @@ TEST(GtfsExample, WriteGtfs) {
   const std::string stopThreeID = "19";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
-  const int serviceStartDate = 20220131;
-  const int serviceEndDate = 20230131;
-  const int addedDate = 20220202;
-  const int removedDate = 20220203;
   const int headwaySec = 1800;
   Feed feed;
 
@@ -348,11 +344,6 @@ TEST(GtfsExample, MakeTile) {
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
   const std::string routeID = "2";
-  const int serviceStartDate = 20220131;
-  const int serviceEndDate = 20230131;
-  const int addedDate = 20220202;
-  const int removedDate = 20220203;
-  const int headwaySec = 1800;
 
   boost::property_tree::ptree pt = get_config();
 
@@ -418,7 +409,7 @@ TEST(GtfsExample, MakeTile) {
       uint64_t node_way_id = node.connecting_wayid();
       LOG_INFO("Current Way Id: " + std::to_string(node_way_id));
       bool coordinates_found = false;
-      for (auto station_coord : station_coords) {
+      for (const auto& station_coord : station_coords) {
         coordinates_found = coordinates_found ||
                             node.latlng(tile->header()->base_ll()).ApproximatelyEqual(station_coord);
       }
