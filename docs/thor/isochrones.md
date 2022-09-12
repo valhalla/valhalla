@@ -32,4 +32,4 @@ This 2-D grid of times can be useful for other purposes as well. It provides a v
 Where is it?
 ------------
 
-You can find the [API documentation here](https://github.com/valhalla/valhalla-docs/blob/master/isochrones/api-reference.md) and you see a live demo of it right [here](https://valhalla.github.io/demos/isochrone/).
+You can find the [API documentation here](../api/isochrone/api-reference.md) and you see a live demo of it right [here](https://valhalla.github.io/demos/isochrone/).
