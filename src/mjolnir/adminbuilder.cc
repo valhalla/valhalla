@@ -213,7 +213,7 @@ bool to_segments(const OSMAdminData& admin_data,
                  std::to_string(memberid) + " is missing node " + std::to_string(node_id));
         return false;
       }
-      coords.push_back({n_itr->second.first, n_itr->second.second});
+      coords.push_back(n_itr->second);
     }
 
     // remember how to find this line
@@ -281,8 +281,6 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
 
     // otherwise we try to make sure the ring is not self intersecting etc and correct it if it is
     multipolygon_t buffered;
-    boost::geometry::correct(ring);
-    // boost::geometry::buffer(ring, buffered, 0);
     buffer_ring(ring, rings, inners);
   }
 }
@@ -348,8 +346,6 @@ multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_inf
   for (auto& poly : polys) {
     multipolygon_t buffered;
     poly.polygon.inners().swap(poly.postponed_inners);
-    boost::geometry::correct(poly.polygon);
-    // boost::geometry::buffer(poly.polygon, buffered, 0);
     buffer_polygon(poly.polygon, multipolygon);
   }
   return multipolygon;
