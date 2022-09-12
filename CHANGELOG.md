@@ -44,6 +44,7 @@
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
    * FIXED: Use a small node snap distance in map-matching. FIxes issue with incorrect turn followed by Uturn. [#3677](https://github.com/valhalla/valhalla/pull/3677)
    * FIXED: Conan error when building Docker image. [#3689](https://github.com/valhalla/valhalla/pull/3689)
+   * FIXED: Wales and Scotland name change. [#3746](https://github.com/valhalla/valhalla/pull/3746)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
