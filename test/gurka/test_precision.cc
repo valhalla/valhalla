@@ -28,7 +28,7 @@ gurka::map Precision::map = {};
 
 /*************************************************************/
 TEST_F(Precision, WaypointsOnNodes) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(Options::route, map, {"A", "F"}, "auto");
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
   auto expected_shape = decltype(shape){map.nodes["A"], map.nodes["B"], map.nodes["C"],
@@ -42,7 +42,7 @@ TEST_F(Precision, WaypointsOnNodes) {
 }
 
 TEST_F(Precision, PartialOffsetCheckOne) {
-  auto result = gurka::route(map, "1", "2", "auto");
+  auto result = gurka::do_action(Options::route, map, {"1", "2"}, "auto");
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
   auto expected_shape = decltype(shape){map.nodes["1"], map.nodes["B"], map.nodes["C"],
@@ -56,7 +56,7 @@ TEST_F(Precision, PartialOffsetCheckOne) {
 }
 
 TEST_F(Precision, PartialOffsetCheckTwo) {
-  auto result = gurka::route(map, "A", "2", "auto");
+  auto result = gurka::do_action(Options::route, map, {"A", "2"}, "auto");
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
   auto expected_shape = decltype(shape){map.nodes["A"], map.nodes["B"], map.nodes["C"],
@@ -70,7 +70,7 @@ TEST_F(Precision, PartialOffsetCheckTwo) {
 }
 
 TEST_F(Precision, PartialOffsetCheckThree) {
-  auto result = gurka::route(map, "1", "F", "auto");
+  auto result = gurka::do_action(Options::route, map, {"1", "F"}, "auto");
   auto shape =
       midgard::decode<std::vector<midgard::PointLL>>(result.trip().routes(0).legs(0).shape());
   auto expected_shape = decltype(shape){map.nodes["1"], map.nodes["B"], map.nodes["C"],
