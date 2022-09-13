@@ -89,7 +89,7 @@ Costing methods can have several options that can be adjusted to develop the rou
 * Penalty options are fixed costs in seconds that are only added to the path cost. Penalties can influence the route path determination but do not add to the estimated time along the path. For example, add a `toll_booth_penalty` to create route paths that tend to avoid toll booths. Penalties must be in the range of 0.0 seconds to 43200.0 seconds (12 hours), otherwise a default value will be assigned.
 * Factor options are used to multiply the cost along an edge or road section in a way that influences the path to favor or avoid a particular attribute. Factor options do not impact estimated time along the path, though. Factors must be in the range 0.1 to 100000.0, where factors of 1.0 have no influence on cost. Anything outside of this range will be assigned a default value. Use a factor less than 1.0 to attempt to favor paths containing preferred attributes, and a value greater than 1.0 to avoid paths with undesirable attributes. Avoidance factors are more effective than favor factors at influencing a path. A factor's impact also depends on the length of road containing the specified attribute, as longer roads have more impact on the costing than very short roads. For this reason, penalty options tend to be better at influencing paths.
 
-A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`. 
+A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`.
 
 Another special case is `disable_hierarchy_pruning` costing option. As the name indicates, `disable_hierarchy_pruning = true` will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with `shortest = true` they can find the actual shortest route. When `disable_hierarchy_pruning` is `true` and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, `disable_hierarchy_pruning` is `true` will not be applied. This costing option is available for all motorized costing models, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. For `bicycle` and `pedestrian` hierarchies are always disabled by default.
 
@@ -135,12 +135,7 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
-The following options are available for `auto`, `bus`, `taxi`, and `truck` and `pedestrian` costing methods.
-| Vehicle Options | Description |
-| :-------------------------- | :----------- |
-| `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
-| `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+
 
 The following options are available for `truck` costing.
 
@@ -219,7 +214,7 @@ These options are available for pedestrian costing methods.
 | `use_living_streets` | This value indicates the willingness to take living streets. This is a range of values between 0 and 1. Values near 0 attempt to avoid living streets and values near 1 will favor living streets. The default value is 0.6. Note that sometimes living streets are required to complete a route so values of 0 are not guaranteed to avoid living streets entirely. |
 | `use_tracks` | This value indicates the willingness to take track roads. This is a range of values between 0 and 1. Values near 0 attempt to avoid tracks and values near 1 will favor tracks a little bit. The default value is 0.5. Note that sometimes tracks are required to complete a route so values of 0 are not guaranteed to avoid tracks entirely. |
 | `use_hills` | This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the pedestrian does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
-| `use_lit` | This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments. The default value is 0. | 
+| `use_lit` | This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments. The default value is 0. |
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
@@ -240,6 +235,23 @@ These options are available for transit costing when the multimodal costing mode
 | `use_transfers` |User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).|
 | `filters` | A way to filter for one or more ~~`stops`~~ (TODO: need to re-enable), `routes`, or `operators`. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an `action`. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies. <ul><li>`ids`: any number of Onestop IDs</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
 
+##### Hard exclusions -> **EXPERIMENTAL**
+
+The following options are available for all costing methods. Those options are not available by default, the server config must have `service_limits.allow_hard_exclusions` set to true in order to allow them. If not allowed and set to true, the server will return a 400 error code. If allowed and set to true, it is higly plausible that no route will be found.
+
+| Vehicle Options | Description |
+| :-------------------------- | :----------- |
+| `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+
+###### Filter transit data
+
+When using `filters`, you need to include a [Onestop ID](https://transit.land/documentation/onestop-id-scheme/) to identify the stop, routes, or operators to include or exclude in your query. Depending on how you are interacting with transit data from Transitland, there are different ways of obtaining the Onestop ID.
+
+- Turn-by-Turn API: Query a transit route query and parse the returned JSON maneuver  for `transit_info` to find `operator_onestop_id` and the route `onestop_id`. A `transit_stop` contains the `onestop_id` for the stop.
+- [Mobility Explorer](https://github.com/transitland/mobility-explorer): Click a single route, stop, or operator on the map, or use the drop-down menu to find the Onestop ID for routes and operators. The Onestop ID, among other details, is listed in the sidebar.
+- [Transitland](https://transit.land/): Use the Transitland Datastore API to query directly for stops, routes, and operators using a number of options. For example, you can filter for only [subway routes](http://transit.land/api/v1/routes?vehicle_type=metro) or [bus routes](http://transit.land/api/v1/routes?vehicle_type=bus). See the [Transitland Datastore API documentation](https://transit.land/documentation/datastore/api-endpoints.html) for details.
 
 ##### Sample JSON payloads for multimodal requests with transit
 
@@ -350,7 +362,7 @@ Basic trip information includes:
 | `units` | The specified units of length are returned, either kilometers or miles. |
 | `language` | The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language. |
 | `locations` | Location information is returned in the same form as it is entered with additional fields to indicate the side of the street. |
-| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. |
 
 The summary JSON object includes:
 

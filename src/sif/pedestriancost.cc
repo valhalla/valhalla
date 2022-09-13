@@ -681,9 +681,9 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
-      opp_edge->use() == Use::kPlatformConnection || (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
-      (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll())) {
+      opp_edge->use() == Use::kPlatformConnection || (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
+      (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
+      (exclude_tolls_ && !pred.toll() && opp_edge->toll())) {
     return false;
   }
 

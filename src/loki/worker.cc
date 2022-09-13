@@ -71,13 +71,13 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     throw valhalla_exception_t{124};
   }
 
-  auto& costings = *options.mutable_costings();
+  auto costings = options.costings();
   for (auto pair : costings)
   {
     if (!allow_hard_exclusions && (
-      (pair.second.mutable_options())->exclude_bridges() ||
-      (pair.second.mutable_options())->exclude_tolls() ||
-      (pair.second.mutable_options())->exclude_tunnels()
+      pair.second.options().exclude_bridges() ||
+      pair.second.options().exclude_tolls() ||
+      pair.second.options().exclude_tunnels()
     )) {
       throw valhalla_exception_t{145};
     }
