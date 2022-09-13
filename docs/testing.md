@@ -2,8 +2,8 @@
 
 Valhalla currently uses googletest for unit testing.
 
-- The basics are covered in [googletest primer](https://github.com/google/googletest/blob/master/googletest/docs/primer.md)
-- More advanced topics  are covered [here](https://github.com/google/googletest/blob/master/googletest/docs/advanced.md)
+- The basics are covered in [googletest primer](https://github.com/google/googletest/blob/master/docs/primer.md)
+- More advanced topics  are covered [here](https://github.com/google/googletest/blob/master/docs/advanced.md)
 
 Important things to note:
 * EXPECT_XXX macros mark the test as failed but continue execution
@@ -25,4 +25,3 @@ Important things to note:
 * Disabling a test is easy - just prefix its name with DISABLED_
     * TEST(PredictiveTraffic, DISABLED_test_predictive_traffic)
     * They are still compiled and there is always a warning each time the suite runs
-    

@@ -49,7 +49,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
@@ -119,7 +119,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
       // Skip uses other than road / other (service?)
       const OSMWay w = *ways[edge.wayindex_];
-      if (w.use() != baldr::Use::kOther &&
+      if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
           static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
         continue;
       }
@@ -210,7 +210,6 @@ bool ShortFerry(const uint32_t node_index,
                 node_bundle& bundle,
                 sequence<Edge>& edges,
                 sequence<Node>& nodes,
-                sequence<OSMWay>& ways,
                 sequence<OSMWayNode>& way_nodes) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
@@ -218,34 +217,42 @@ bool ShortFerry(const uint32_t node_index,
     std::list<PointLL> shape;
     for (size_t i = 0; i < count; ++i) {
       auto node = (*way_nodes[idx++]).node;
-      shape.emplace_back(node.lng_, node.lat_);
+      shape.emplace_back(node.latlng());
     }
     return shape;
   };
-  uint64_t wayid = 0;
   bool short_edge = false;
   for (const auto& edge : bundle.node_edges) {
-    // Check ferry edge. If the end node has a non-ferry edge check
-    // the length of the edge
+    // Check ferry edge.
     if (edge.first.attributes.driveable_ferry) {
       uint32_t endnode =
           (edge.first.sourcenode_ == node_index) ? edge.first.targetnode_ : edge.first.sourcenode_;
       auto end_node_itr = nodes[endnode];
       auto bundle2 = collect_node_edges(end_node_itr, nodes, edges);
+
+      // If we notice that either the end node or source node is a connection to another ferry edge,
+      // be cautious and assume this isn't a short edge.
+      for (const auto& edge2 : bundle.node_edges) {
+        if (edge2.first.llindex_ != edge.first.llindex_ && edge2.first.attributes.driveable_ferry) {
+          return false;
+        }
+      }
+      for (const auto& edge2 : bundle2.node_edges) {
+        if (edge2.first.llindex_ != edge.first.llindex_ && edge2.first.attributes.driveable_ferry) {
+          return false;
+        }
+      }
+
+      // If the end node has a non-ferry edge check the length of the edge
       if (bundle2.node.non_ferry_edge_) {
         auto shape = EdgeShape(edge.first.llindex_, edge.first.attributes.llcount);
         if (midgard::length(shape) < 2000.0f) {
-          const OSMWay w = *ways[edge.first.wayindex_];
-          wayid = w.way_id();
           short_edge = true;
         }
       } else {
         short_edge = false;
       }
     }
-  }
-  if (short_edge) {
-    LOG_DEBUG("Skip short ferry: way_id = " + std::to_string(wayid));
   }
   return short_edge;
 }
@@ -256,8 +263,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
                                 const std::string& edges_file,
-                                const uint32_t rc,
-                                DataQuality& stats) {
+                                const uint32_t rc) {
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);
@@ -278,10 +284,9 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > rc &&
-        !ShortFerry(node_itr.position(), bundle, edges, nodes, ways, way_nodes)) {
+        !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
-      bool oneway_reverse = false;
       for (const auto& edge : bundle.node_edges) {
         // Skip ferry edges and non-driveable edges
         if (edge.first.attributes.driveable_ferry ||

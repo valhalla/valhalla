@@ -3,6 +3,7 @@
 #define MMP_MATCH_RESULT_H_
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
@@ -13,15 +14,17 @@
 namespace valhalla {
 namespace meili {
 
+constexpr size_t kInvalidEdgeIndex = std::numeric_limits<size_t>::max();
+
 struct MatchResult {
   // Coordinate of the match point
   midgard::PointLL lnglat;
   // Distance from measurement to the match point
-  float distance_from;
+  double distance_from;
   // Which edge this match point stays
   baldr::GraphId edgeid;
   // Percentage distance along the edge
-  float distance_along;
+  double distance_along;
   // Optional epoch time for this match point copied from original measurement
   double epoch_time;
   // Sequential state id
@@ -34,7 +37,7 @@ struct MatchResult {
   bool ends_discontinuity;
   // An index into the full list of edges in the path even across discontinuities (for
   // trace_attributes)
-  size_t edge_index;
+  size_t edge_index = kInvalidEdgeIndex;
 
   bool HasState() const {
     return stateid.IsValid();
@@ -68,19 +71,19 @@ struct MatchResult {
 
 struct EdgeSegment {
   EdgeSegment(baldr::GraphId the_edgeid,
-              float the_source = 0.f,
-              float the_target = 1.f,
+              double the_source = 0.f,
+              double the_target = 1.f,
               int the_first_match_idx = -1,
               int the_last_match_idx = -1,
               bool disconnect = false,
               int restriction_idx = -1);
 
   baldr::GraphId edgeid;
-  float source{0.f};
-  float target{1.f};
+  double source{0.f};
+  double target{1.f};
   int first_match_idx{-1};
   int last_match_idx{-1};
-  int restriction_idx{-1};
+  uint8_t restriction_idx{baldr::kInvalidRestriction};
   bool discontinuity{false};
 
   // Stream output

@@ -1,0 +1,7 @@
+-j '{"locations":[{"lat":1.353052,"lon":103.960729,"radius":0},{"lat":1.352935,"lon":103.960815,"type":"break_through","radius":0},{"lat":1.353064,"lon":103.960613,"radius":0}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":28.4944434,"lon":-98.968827},{"lat": 28.4862271,"lon":-98.979871,"type":"break_through","radius":0},{"lat":28.4945204,"lon":-98.968688}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":48.212761,"lon":11.559820,"radius":0},{"lat":48.212797,"lon":11.560160,"type":"break_through","radius":0},{"lat":48.212705,"lon":11.560556,"radius":0}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":34.057247,"lon":-118.195328,"radius":0},{"lat":34.056621,"lon":-118.195357,"type":"break_through","radius":0},{"lat":34.057287,"lon":-118.195499,"radius":0}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":55.042466,"lon":10.654441,"radius":0},{"lat":55.042487,"lon":10.653367,"type":"break_through","radius":0},{"lat":55.041749,"lon":10.654708,"radius":0}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":-23.700713,"lon":133.861611,"radius":0},{"lat":-23.700378,"lon":133.862609,"type":"break_through","radius":0},{"lat":-23.700277,"lon":133.8636018,"radius":0}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":52.121981,"lon":6.201239,"radius":0},{"lat":52.122634,"lon":6.201436,"type":"break_through","radius":0},{"lat":52.123555,"lon":6.200474,"radius":0}],"costing":"auto","units":"miles"}'

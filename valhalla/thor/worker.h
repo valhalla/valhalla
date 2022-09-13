@@ -7,6 +7,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -18,14 +19,16 @@
 #include <valhalla/proto/trip.pb.h>
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astar.h>
 #include <valhalla/thor/astar_bss.h>
-#include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
+#include <valhalla/thor/centroid.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
-#include <valhalla/thor/timedep.h>
+#include <valhalla/thor/timedistancebssmatrix.h>
+#include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/triplegbuilder.h>
+#include <valhalla/thor/unidirectional_astar.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
@@ -49,6 +52,8 @@ public:
 #endif
   virtual void cleanup() override;
 
+  static void adjust_scores(valhalla::Options& options);
+
   static std::string offset_date(baldr::GraphReader& reader,
                                  const std::string& in_dt,
                                  const baldr::GraphId& in_edge,
@@ -62,6 +67,8 @@ public:
   void trace_route(Api& request);
   std::string trace_attributes(Api& request);
   std::string expansion(Api& request);
+  void centroid(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -74,7 +81,8 @@ protected:
   void log_admin(const TripLeg&);
   thor::PathAlgorithm* get_path_algorithm(const std::string& routetype,
                                           const Location& origin,
-                                          const Location& destination);
+                                          const Location& destination,
+                                          const Options& options);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized
@@ -87,11 +95,8 @@ protected:
 
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
-
-  void parse_locations(Api& request);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
-  void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
@@ -111,23 +116,33 @@ protected:
   std::vector<meili::Measurement> trace;
   sif::CostFactory factory;
   sif::mode_costing_t mode_costing;
+
   // Path algorithms (TODO - perhaps use a map?))
-  AStarPathAlgorithm astar;
   BidirectionalAStar bidir_astar;
   AStarBSSAlgorithm bss_astar;
-
   MultiModalPathAlgorithm multi_modal_astar;
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
+
+  // Time distance matrix
+  CostMatrix costmatrix_;
+  TimeDistanceMatrix time_distance_matrix_;
+  TimeDistanceBSSMatrix time_distance_bss_matrix_;
+
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
-  float long_request;
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
-  meili::MapMatcherFactory matcher_factory;
   std::shared_ptr<baldr::GraphReader> reader;
-  AttributesController controller;
+  meili::MapMatcherFactory matcher_factory;
+  baldr::AttributesController controller;
+  Centroid centroid_gen;
+
+private:
+  std::string service_name() const override {
+    return "thor";
+  }
 };
 
 } // namespace thor

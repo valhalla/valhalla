@@ -6,7 +6,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -42,13 +42,15 @@ public:
                  valhalla::RoadClass max_road_class = valhalla::RoadClass::kMotorway,
                  bool exclude_tunnel = false,
                  bool exclude_bridge = false,
-                 bool exclude_ramp = false);
+                 bool exclude_ramp = false,
+                 bool exclude_closures = true);
 
     valhalla::RoadClass min_road_class_;
     valhalla::RoadClass max_road_class_;
     bool exclude_tunnel_;
     bool exclude_bridge_;
     bool exclude_ramp_;
+    bool exclude_closures_;
 
   protected:
   };
@@ -68,7 +70,8 @@ public:
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
-           const SearchFilter& search_filter = SearchFilter());
+           const SearchFilter& search_filter = SearchFilter(),
+           boost::optional<int8_t> preferred_layer = {});
 
   /**
    * equality.
@@ -85,14 +88,9 @@ public:
   // address of the location, probably should be its own more broken up structure
   std::string name_;
   std::string street_;
-  std::string city_;
-  std::string state_;
-  std::string zip_;
-  std::string country_;
 
   boost::optional<std::string> date_time_;
   boost::optional<float> heading_;
-  boost::optional<uint64_t> way_id_;
 
   // try to find candidates who are reachable from/to this many or more nodes
   // if a given candidate edge is reachable to/from less than this number of nodes its considered to
@@ -114,6 +112,8 @@ public:
 
   // coordinates of the location as used for altering the side of street
   boost::optional<midgard::PointLL> display_latlng_;
+
+  boost::optional<int8_t> preferred_layer_;
 
 protected:
 };

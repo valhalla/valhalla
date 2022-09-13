@@ -20,7 +20,8 @@ namespace mjolnir {
 
 std::vector<std::string> GetTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, std::bind1st(std::equal_to<char>(), delim),
+  boost::algorithm::split(tokens, tag_value,
+                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_on);
   return tokens;
 }
@@ -158,7 +159,8 @@ std::vector<uint64_t> get_time_range(const std::string& str) {
     boost::algorithm::trim(condition);
 
     // Holidays and school hours skip for now
-    if (condition.size() >= 2 && (condition.substr(0, 2) == "PH" || condition.substr(0, 2) == "SH")) {
+    if (boost::algorithm::starts_with(condition, "PH") ||
+        boost::algorithm::starts_with(condition, "SH")) {
       return time_domains;
     }
 

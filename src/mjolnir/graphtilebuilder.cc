@@ -16,6 +16,32 @@ using namespace valhalla::baldr;
 namespace valhalla {
 namespace mjolnir {
 
+namespace {
+
+std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restrictions,
+                                                               size_t restrictions_size) {
+  std::vector<ComplexRestrictionBuilder> builders;
+  size_t offset = 0;
+  while (offset < restrictions_size) {
+    const ComplexRestriction* cr = reinterpret_cast<ComplexRestriction*>(restrictions + offset);
+    ComplexRestrictionBuilder builder(*cr);
+    if (cr->via_count()) {
+      std::vector<GraphId> vias;
+      vias.reserve(cr->via_count());
+      const baldr::GraphId* via = reinterpret_cast<const baldr::GraphId*>(cr + 1);
+      for (uint32_t i = 0; i < cr->via_count(); i++, ++via) {
+        vias.push_back(*via);
+      }
+      builder.set_via_list(vias);
+    }
+    builders.push_back(std::move(builder));
+    offset += cr->SizeOf();
+  }
+  return builders;
+};
+
+} // namespace
+
 // Constructor given an existing tile. This is used to read in the tile
 // data and then add to it (e.g. adding node connections between hierarchy
 // levels. If the deserialize flag is set then all objects are serialized
@@ -25,7 +51,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                                    const GraphId& graphid,
                                    bool deserialize,
                                    bool serialize_turn_lanes)
-    : tile_dir_(tile_dir), GraphTile(tile_dir, graphid) {
+    : GraphTile(tile_dir, graphid), tile_dir_(tile_dir) {
 
   // Copy tile header to a builder (if tile exists). Always set the tileid
   if (header_) {
@@ -98,8 +124,8 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // Create sign builders
   for (uint32_t i = 0; i < header_->signcount(); i++) {
     name_info.insert({signs_[i].text_offset()});
-    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].route_num_type(),
-                                signs_[i].text_offset());
+    signs_builder_.emplace_back(signs_[i].index(), signs_[i].type(), signs_[i].is_route_num_type(),
+                                signs_[i].tagged(), signs_[i].text_offset());
   }
 
   // Create turn lane builders
@@ -164,21 +190,18 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   }
 
   // Text list
-  for (auto ni : name_info) {
-    // Verify offsets as we add text. Identify any strings in the text list
-    // that are not referenced by any objects.
-    while (ni.name_offset_ != text_list_offset_) {
-      std::string unused_string(textlist_ + text_list_offset_);
-      textlistbuilder_.push_back(unused_string);
-      text_offset_map_.emplace(unused_string, text_list_offset_);
-      text_list_offset_ += unused_string.length() + 1;
-      LOG_WARN("Unused text string: " + unused_string);
-    }
-    std::string str(textlist_ + ni.name_offset_);
-    textlistbuilder_.push_back(str);
-    uint32_t offset = ni.name_offset_;
-    text_offset_map_.emplace(str, offset);
-    text_list_offset_ += str.length() + 1;
+  for (auto ni = name_info.begin(); ni != name_info.end(); ++ni) {
+    // compute the width of the entry by looking at the next offset or the end if its the last one
+    auto next = std::next(ni);
+    auto width = next != name_info.end() ? (next->name_offset_ - ni->name_offset_)
+                                         : (textlist_size_ - ni->name_offset_);
+
+    // Keep the bytes for this entry....remove null terminating char as it is added in StoreTileData
+    textlistbuilder_.emplace_back(textlist_ + ni->name_offset_, width - 1);
+    // Remember what offset they had
+    text_offset_map_.emplace(textlistbuilder_.back(), ni->name_offset_);
+    // Keep track of how large it is for storing it back to disk later
+    text_list_offset_ += textlistbuilder_.back().length() + 1;
   }
 
   // Lane connectivity
@@ -187,6 +210,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   lane_connectivity_builder_.reserve(n);
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
+
+  complex_restriction_forward_builder_ =
+      DeserializeRestrictions(complex_restriction_forward_, complex_restriction_forward_size_);
+  complex_restriction_reverse_builder_ =
+      DeserializeRestrictions(complex_restriction_reverse_, complex_restriction_reverse_size_);
 }
 
 // Output the tile to file. Stores as binary data.
@@ -464,13 +492,51 @@ void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction
 }
 
 // Add signs
+void GraphTileBuilder::AddSigns(const uint32_t idx,
+                                const std::vector<SignInfo>& signs,
+                                const std::vector<std::string>& pronunciations) {
+  // Iterate through the list of sign info (with sign text) and add sign
+  // text to the text list. Skip signs with no text.
+  for (size_t i = 0; i < signs.size(); ++i) {
+    auto sign = signs[i];
+    if (!(sign.text().empty())) {
+      uint32_t offset = AddName(sign.text());
+      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
+      if (sign.has_phoneme()) {
+        bool phoneme_on_node = sign.type() == Sign::Type::kJunctionName;
+        uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
+        for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
+          auto* p = const_cast<char*>(pronunciations[x].c_str());
+          size_t pos = 0;
+          std::string updated_pronunciation;
+
+          while (pos < strlen(p)) {
+            linguistic_text_header_t header =
+                midgard::unaligned_read<linguistic_text_header_t>(p + pos);
+            pos += 3;
+            header.name_index_ = i;
+            updated_pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
+                                         (p + pos));
+            pos += header.length_;
+          }
+
+          uint32_t offset = AddName(updated_pronunciation);
+          signs_builder_.emplace_back(idx, Sign::Type::kPronunciation, phoneme_on_node, true, offset);
+        }
+      }
+    }
+  }
+}
+
+// Add signs
 void GraphTileBuilder::AddSigns(const uint32_t idx, const std::vector<SignInfo>& signs) {
   // Iterate through the list of sign info (with sign text) and add sign
   // text to the text list. Skip signs with no text.
   for (const auto& sign : signs) {
     if (!(sign.text().empty())) {
-      uint32_t offset = AddName(sign.text());
-      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), offset);
+      uint32_t offset = 0;
+      offset = AddName(sign.text());
+      signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
     }
   }
 }
@@ -515,7 +581,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
-                                       const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& tagged_values,
+                                       const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -549,6 +616,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_route_num_ = 0;
+        ni.tagged_ = 0;
         if ((types & (1ULL << location))) {
           ni.is_route_num_ = 1; // set the ref bit.
         }
@@ -557,7 +625,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
-    for (const auto& name : tagged_names) {
+    for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
         LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
@@ -574,6 +642,29 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         ++name_count;
       }
     }
+
+    if (pronunciations.size()) {
+      if (name_count != kMaxNamesPerEdge) {
+        std::stringstream ss;
+        for (const auto& pronunciation : pronunciations) {
+          ss << pronunciation;
+        }
+
+        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
+          return std::string(1, static_cast<std::string::value_type>(tag));
+        };
+
+        // Add pronunciations and add its offset to edge info's list.
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
+
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      } else
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+    }
+
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -604,6 +695,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       const std::vector<PointLL>&,
                                                                       const std::vector<std::string>&,
                                                                       const std::vector<std::string>&,
+                                                                      const std::vector<std::string>&,
                                                                       const uint16_t,
                                                                       bool&,
                                                                       bool);
@@ -615,6 +707,7 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
                                                                     const uint32_t,
                                                                     const uint32_t,
                                                                     const std::list<PointLL>&,
+                                                                    const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const std::vector<std::string>&,
                                                                     const uint16_t,
@@ -631,7 +724,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
                                        const uint32_t speed_limit,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
-                                       const std::vector<std::string>& tagged_names,
+                                       const std::vector<std::string>& tagged_values,
+                                       const std::vector<std::string>& pronunciations,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -665,6 +759,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         // Add name and add its offset to edge info's list.
         NameInfo ni{AddName(name)};
         ni.is_route_num_ = 0;
+        ni.tagged_ = 0;
         if ((types & (1ULL << location))) {
           ni.is_route_num_ = 1; // set the ref bit.
         }
@@ -673,7 +768,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
       location++;
     }
-    for (const auto& name : tagged_names) {
+    for (const auto& name : tagged_values) {
       // Stop adding names if max count has been reached
       if (name_count == kMaxNamesPerEdge) {
         LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
@@ -689,6 +784,28 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
         name_info_list.emplace_back(ni);
         ++name_count;
       }
+    }
+
+    if (pronunciations.size()) {
+      if (name_count != kMaxNamesPerEdge) {
+        std::stringstream ss;
+        for (const auto& pronunciation : pronunciations) {
+          ss << pronunciation;
+        }
+
+        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
+          return std::string(1, static_cast<std::string::value_type>(tag));
+        };
+
+        // Add pronunciations and add its offset to edge info's list.
+        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
+
+        ni.is_route_num_ = 0;
+        ni.tagged_ = 1;
+        name_info_list.emplace_back(ni);
+        ++name_count;
+      } else
+        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
     }
 
     edgeinfo.set_name_info_list(name_info_list);
@@ -833,7 +950,7 @@ AccessRestriction& GraphTileBuilder::accessrestriction_builder(const size_t idx)
 }
 
 // Gets a non-const sign from existing tile data.
-Sign& GraphTileBuilder::sign(const size_t idx) {
+valhalla::baldr::Sign& GraphTileBuilder::sign(const size_t idx) {
   if (idx < header_->signcount()) {
     return signs_[idx];
   }
@@ -841,7 +958,7 @@ Sign& GraphTileBuilder::sign(const size_t idx) {
 }
 
 // Gets a sign builder at the specified index.
-Sign& GraphTileBuilder::sign_builder(const size_t idx) {
+valhalla::baldr::Sign& GraphTileBuilder::sign_builder(const size_t idx) {
   if (idx < header_->signcount()) {
     return signs_builder_[idx];
   }
@@ -890,18 +1007,19 @@ void GraphTileBuilder::AddTileCreationDate(const uint32_t tile_creation_date) {
 
 // return this tiles' edges' bins and its edges' tweeners' bins
 using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const GraphTile* tile,
+std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const graph_tile_ptr& tile,
                                                                        tweeners_t& tweeners) {
+  assert(tile);
   std::array<std::vector<GraphId>, kBinCount> bins;
   // we store these at the highest level
-  auto max_level = TileHierarchy::levels().rbegin()->first;
+  auto max_level = TileHierarchy::levels().back().level;
   // skip transit or other special levels and empty tiles
   if (tile->header()->graphid().level() > max_level || tile->header()->directededgecount() == 0) {
     return bins;
   }
   // is this the highest level
   auto max = tile->header()->graphid().level() == max_level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
 
   // each edge please
   std::unordered_set<uint64_t> ids(tile->header()->directededgecount() / 2);
@@ -909,13 +1027,13 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
   for (const DirectedEdge* edge = start_edge; edge < start_edge + tile->header()->directededgecount();
        ++edge) {
     // dont bin these
-    if (edge->is_shortcut() || edge->use() == Use::kTransitConnection ||
-        edge->use() == Use::kPlatformConnection || edge->use() == Use::kEgressConnection) {
+    if (edge->use() == Use::kTransitConnection || edge->use() == Use::kPlatformConnection ||
+        edge->use() == Use::kEgressConnection) {
       continue;
     }
 
     // get the shape or bail if none
-    auto info = tile->edgeinfo(edge->edgeinfo_offset());
+    auto info = tile->edgeinfo(edge);
     const auto& shape = info.shape();
     if (shape.empty()) {
       continue;
@@ -961,8 +1079,9 @@ std::array<std::vector<GraphId>, kBinCount> GraphTileBuilder::BinEdges(const Gra
 }
 
 void GraphTileBuilder::AddBins(const std::string& tile_dir,
-                               const GraphTile* tile,
+                               const graph_tile_ptr& tile,
                                const std::array<std::vector<GraphId>, kBinCount>& more_bins) {
+  assert(tile);
   // read bins and append and keep track of how much is appended
   std::vector<GraphId> bins[kBinCount];
   uint32_t shift = 0;
@@ -1019,11 +1138,8 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
 
 // Add a predicted speed profile for a directed edge.
 void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
-                                         const std::vector<int16_t>& profile,
+                                         const std::array<int16_t, kCoefficientCount>& coefficients,
                                          const size_t predicted_count_hint) {
-  if (profile.size() != kCoefficientCount)
-    throw std::runtime_error("GraphTileBuilder AddPredictedSpeed profile is not correct size: " +
-                             std::to_string(profile.size()));
   if (idx >= header_->directededgecount())
     throw std::runtime_error("GraphTileBuilder AddPredictedSpeed index is out of bounds");
 
@@ -1038,7 +1154,8 @@ void GraphTileBuilder::AddPredictedSpeed(const uint32_t idx,
   speed_profile_offset_builder_[idx] = speed_profile_builder_.size();
 
   // Append the profile
-  speed_profile_builder_.insert(speed_profile_builder_.end(), profile.begin(), profile.end());
+  speed_profile_builder_.insert(speed_profile_builder_.end(), coefficients.begin(),
+                                coefficients.end());
 }
 
 // Updates a tile with predictive speed data. Also updates directed edges with

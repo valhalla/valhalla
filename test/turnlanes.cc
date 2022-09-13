@@ -9,6 +9,7 @@
 #include "baldr/turnlanes.h"
 #include "odin/directionsbuilder.h"
 #include "odin/enhancedtrippath.h"
+#include "odin/markup_formatter.h"
 
 #include "proto/api.pb.h"
 #include "proto/directions.pb.h"
@@ -21,7 +22,43 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
+// this is useful when you modify the Options proto and need to restore it
+//#include "worker.h"
+// void fix_request(const std::string& filename, valhalla::Api& request) {
+//  auto txt = filename;
+//  txt.replace(txt.size() - 3, 3, "txt");
+//  std::string req_txt = test::load_binary_file(txt);
+//  req_txt.pop_back();
+//  req_txt.pop_back();
+//  req_txt = req_txt.substr(4);
+//
+//  //  valhalla::Api api;
+//  //  valhalla::ParseApi(req_txt, valhalla::Options::route, api);
+//  //  request.mutable_options()->set_action(valhalla::Options::route);
+//  for (auto& loc : *request.mutable_options()->mutable_locations()) {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  for (auto& loc : *request.mutable_trip()->mutable_routes(0)->mutable_legs(0)->mutable_location())
+//  {
+//    loc.mutable_correlation()->mutable_edges()->CopyFrom(loc.correlation().old_edges());
+//    loc.mutable_correlation()->set_original_index(loc.correlation().old_original_index());
+//    loc.mutable_correlation()->mutable_projected_ll()->CopyFrom(loc.correlation().old_projected_ll());
+//    loc.mutable_correlation()->set_leg_shape_index(loc.correlation().old_leg_shape_index());
+//    loc.mutable_correlation()->set_distance_from_leg_origin(
+//        loc.correlation().old_distance_from_leg_origin());
+//  }
+//
+//  std::ofstream f(filename);
+//  auto buf = request.SerializeAsString();
+//  f.write(buf.data(), buf.size());
+//}
+
 using namespace valhalla::baldr;
 
 // Expected size is 8 bytes. We want to alert if somehow any change grows
@@ -94,8 +131,10 @@ void test_turn_lanes(const std::string& filename,
   valhalla::Api request;
   request.ParseFromString(path_bytes);
 
+  // fix_request(filename, request);
+
   // Build the directions
-  valhalla::odin::DirectionsBuilder().Build(request);
+  valhalla::odin::DirectionsBuilder().Build(request, valhalla::odin::MarkupFormatter());
 
   // Validate routes size
   int found_routes_size = request.directions().routes_size();
@@ -127,52 +166,52 @@ TEST(Turnlanes, validate_turn_lanes) {
   // Test right active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/right_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left | through | through;right ACTIVE ]");
+                  "[ left | through | through;*right* ACTIVE ]");
 
   // Test left active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | through | through;right ]");
+                  "[ *left* ACTIVE | through | through;right ]");
 
   // Test right most slight left active
   test_turn_lanes({VALHALLA_SOURCE_DIR
                    "test/pinpoints/turn_lanes/right_most_slight_left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ slight_left | slight_left ACTIVE | slight_right | right ]");
+                  "[ *slight_left* VALID | *slight_left* ACTIVE | slight_right | right ]");
 
   // Test slight right active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/slight_right_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ slight_left | slight_left | slight_right ACTIVE | right ]");
+                  "[ slight_left | slight_left | *slight_right* ACTIVE | right ]");
 
   // Test left most left u-turn active
   test_turn_lanes({VALHALLA_SOURCE_DIR
                    "test/pinpoints/turn_lanes/left_most_left_uturn_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left | left | through | through;right ]");
+                  "[ *left* ACTIVE | left | left | through | through;right ]");
 
   // Test left reverse active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/left_reverse_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ reverse ACTIVE | through | through | right ]");
+                  "[ *reverse* ACTIVE | through | through | right ]");
 
   expected_maneuvers_size = 4;
   // Test right most left active
   test_turn_lanes({VALHALLA_SOURCE_DIR
                    "test/pinpoints/turn_lanes/right_most_left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left | left;through ACTIVE | through;right ]");
+                  "[ *left* VALID | *left*;through ACTIVE | through;right ]");
 
   // Test both left active
   test_turn_lanes({VALHALLA_SOURCE_DIR "test/pinpoints/turn_lanes/both_left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left;through ACTIVE | through;right ]");
+                  "[ *left* ACTIVE | *left*;through ACTIVE | through;right ]");
 
   // Test left most left active
   test_turn_lanes({VALHALLA_SOURCE_DIR
                    "test/pinpoints/turn_lanes/left_most_left_active_pinpoint.pbf"},
                   expected_routes_size, expected_legs_size, expected_maneuvers_size, maneuver_index,
-                  "[ left ACTIVE | left;through | through;right ]");
+                  "[ *left* ACTIVE | *left*;through VALID | through;right ]");
 }
 
 } // namespace

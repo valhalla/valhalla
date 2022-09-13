@@ -1,6 +1,6 @@
 # Map Matching service API reference
 
-With the Mapbox Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
+With Valhalla's Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
 
 You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer).
 
@@ -39,11 +39,11 @@ Note that the attributes that are returned are Valhalla routing attributes, not 
 
 ### Costing models and other options
 
-Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](/turn-by-turn/api-reference.md#costing-models) and [costing options](/turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+Valhalla Map Matching uses the `auto`, `auto_shorter`, `bicycle`, `bus`, and `pedestrian` costing models available in the Valhalla route service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 Costing for `multimodal` is not supported for map matching because it would be difficult to get favorable GPS traces.
 
-You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](/turn-by-turn/api-reference.md#directions-options) documentation for examples.
+You can also set `directions_options` to specify output units, language, and whether or not to return directions in a narrative form. Refer to the [route options](../turn-by-turn/api-reference.md#directions-options) documentation for examples.
 
 `trace_route` has additional options that allow more flexibility in specifying timestamps (when using encoded polyline input for the trace) and for using timestamps when computing elapsed time along the matched path. These options are:
 
@@ -99,6 +99,7 @@ edge.pedestrian_type
 edge.bicycle_type
 edge.transit_type
 edge.id
+edge.indoor
 edge.way_id
 edge.weighted_grade
 edge.max_upward_grade
@@ -107,6 +108,8 @@ edge.mean_elevation
 edge.lane_count
 edge.cycle_lane
 edge.bicycle_network
+edge.sac_scale
+edge.shoulder
 edge.sidewalk
 edge.density
 edge.speed_limit
@@ -122,6 +125,7 @@ node.intersecting_edge.cyclability
 node.intersecting_edge.walkability
 node.intersecting_edge.use
 node.intersecting_edge.road_class
+node.intersecting_edge.lane_count
 node.elapsed_time
 node.admin_index
 node.type
@@ -148,7 +152,7 @@ matched.distance_from_trace_point
 
 ### Outputs of `trace_route`
 
-The outputs of the `trace_route` action are the same as the [outputs of a route](/turn-by-turn/api-reference.md#outputs-of-a-route) action.
+The outputs of the `trace_route` action are the same as the [outputs of a route](../turn-by-turn/api-reference.md#outputs-of-a-route) action.
 
 ### Outputs of `trace_attributes`
 
@@ -194,6 +198,7 @@ Each `edge` may include:
 | `bicycle_type` | Bicycle type values:<ul><li>`road`</li><li>`cross`</li><li>`hybrid`</li><li>`mountain`</li></ul> |
 | `transit_type` | Transit type values: <ul><li>`tram`</li><li>`metro`</li><li>`rail`</li><li>`bus`</li><li>`ferry`</li><li>`cable_car`</li><li>`gondola`</li><li>`funicular`</li></ul>|
 | `id` | Identifier of an edge within the tiled, hierarchical graph. |
+| `indoor` | Whether or not the edge is inside of a building or structure or not. |
 | `way_id` | Way identifier of the OpenStreetMap base data. |
 | `weighted_grade` | The weighted grade factor. Valhalla manufactures a `weighted_grade` from elevation data. It is a measure used for hill avoidance in routing - sort of a relative energy use along an edge. But since an edge in Valhalla can possibly go up and down over several hills it might not equate to what most folks think of as grade. |
 | `max_upward_grade` | The maximum upward slope. A value of 32768 indicates no elevation data is available for this edge. |
@@ -202,6 +207,8 @@ Each `edge` may include:
 | `lane_count` | The number of lanes for this edge. |
 | `cycle_lane` | The type (if any) of bicycle lane along this edge. |
 | `bicycle_network` | The bike network for this edge. |
+| `sac_scale` | Classification of hiking trails based on difficulty. Values:<ul><li>`0 - No Sac Scale`</li><li>`1 - Hiking`</li><li>`2 - Mountain hiking`<li>`3 - Demanding mountain hiking`<li>`4 - Alpine hiking`<li>`5 - Demanding alpine hiking`<li>`6 - Difficult alpine hiking`</li></ul> |
+| `shoulder` | True if the edge has a shoulder. |
 | `sidewalk` | Sidewalk values:<ul><li>`left`</li><li>`right`</li><li>`both`</li></ul> |
 | `density` | The relative density along the edge. |
 | `speed_limit` | Edge speed limit in the units specified. The default is kilometers per hour. |

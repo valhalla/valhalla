@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/mjolnir/osmpronunciation.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
@@ -329,6 +330,38 @@ struct OSMWay {
   }
 
   /**
+   * Sets the index for forward signboard base string.
+   * @param  idx  Index for the forward signboard base string.
+   */
+  void set_fwd_signboard_base_index(const uint32_t idx) {
+    fwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the forward signboard base string index.
+   * @return  Returns the index for the forward signboard base string.
+   */
+  uint32_t fwd_signboard_base_index() const {
+    return fwd_signboard_base_index_;
+  }
+
+  /**
+   * Sets the index for backward signboard base string.
+   * @param  idx  Index for the backward signboard base string.
+   */
+  void set_bwd_signboard_base_index(const uint32_t idx) {
+    bwd_signboard_base_index_ = idx;
+  }
+
+  /**
+   * Get the backward signboard base string index.
+   * @return  Returns the index for the backward signboard base string.
+   */
+  uint32_t bwd_signboard_base_index() const {
+    return bwd_signboard_base_index_;
+  }
+
+  /**
    * Sets the index for destination.
    * @param  idx  Index for the destination.
    */
@@ -337,7 +370,7 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
+   * Get the destination index.
    * @return  Returns the index for the destination.
    */
   uint32_t destination_index() const {
@@ -353,8 +386,8 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
-   * @return  Returns the index for the destination.
+   * Get the destination in forward direction index.
+   * @return  Returns the index for the destination in forward direction.
    */
   uint32_t destination_forward_index() const {
     return destination_forward_index_;
@@ -369,8 +402,8 @@ struct OSMWay {
   }
 
   /**
-   * Get the get_destination index.
-   * @return  Returns the index for the destination.
+   * Get the destination in backward direction index.
+   * @return  Returns the index for the destination in backward direction.
    */
   uint32_t destination_backward_index() const {
     return destination_backward_index_;
@@ -441,16 +474,16 @@ struct OSMWay {
   }
 
   /**
-   * Sets the index for junction ref.
-   * @param  idx  Index for the junction ref.
+   * Sets the index for junction ref pronunciation.
+   * @param  idx  Index for the junction ref pronunciation.
    */
   void set_junction_ref_index(const uint32_t idx) {
     junction_ref_index_ = idx;
   }
 
   /**
-   * Get the junction ref index.
-   * @return  Returns the index for the junction ref.
+   * Get the junction ref pronunciation index.
+   * @return  Returns the index for the junction ref pronunciation.
    */
   uint32_t junction_ref_index() const {
     return junction_ref_index_;
@@ -460,9 +493,9 @@ struct OSMWay {
    * Sets the index for bike national ref.
    * @param  idx  Index for the name of the national bike network.
    */
-  void set_bike_national_ref_index(const uint32_t idx) {
-    ; // bike_national_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_national_ref_index(const uint32_t idx) {
+  //    ; // bike_national_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike national ref index.
@@ -476,9 +509,9 @@ struct OSMWay {
    * Sets the index for bike regional ref.
    * @param  idx  Index for the name of the regional bike network.
    */
-  void set_bike_regional_ref_index(const uint32_t idx) {
-    ; // bike_regional_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_regional_ref_index(const uint32_t idx) {
+  //    ; // bike_regional_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike regional ref index.
@@ -492,9 +525,9 @@ struct OSMWay {
    * Sets the index for bike local ref.
    * @param  idx  Index for the name of the local bike network.
    */
-  void set_bike_local_ref_index(const uint32_t idx) {
-    ; // bike_local_ref_index_ = idx; UNUSED - future
-  }
+  //  void set_bike_local_ref_index(const uint32_t idx) {
+  //    ; // bike_local_ref_index_ = idx; UNUSED - future
+  //  }
 
   /**
    * Get the bike local ref index.
@@ -666,6 +699,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the pedestrian forward flag.
+   * @param  pedestrian_forward   Are pedestrians allowed in the forward direction?
+   */
+  void set_pedestrian_forward(const bool pedestrian_forward) {
+    pedestrian_forward_ = pedestrian_forward;
+  }
+
+  /**
+   * Get the pedestrian forward flag.
+   * @return  Returns pedestrian forward flag.
+   */
+  bool pedestrian_forward() const {
+    return pedestrian_forward_;
+  }
+
+  /**
    * Sets the auto_backward flag.
    * @param  auto_backward   Can you drive in the reverse direction?
    */
@@ -813,6 +862,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the pedestrian backward flag.
+   * @param  pedestrian_backward   Are pedestrians allowed in the reverse direction?
+   */
+  void set_pedestrian_backward(const bool pedestrian_backward) {
+    pedestrian_backward_ = pedestrian_backward;
+  }
+
+  /**
+   * Get the pedestrian backward flag.
+   * @return  Returns pedestrian backward flag.
+   */
+  bool pedestrian_backward() const {
+    return pedestrian_backward_;
+  }
+
+  /**
    * Sets the destination_only flag.
    * @param  destination_only   Is private?
    */
@@ -829,22 +894,6 @@ struct OSMWay {
   }
 
   /**
-   * Sets the pedestrian flag.
-   * @param  pedestrian   Are pedestrians allowed?
-   */
-  void set_pedestrian(const bool pedestrian) {
-    pedestrian_ = pedestrian;
-  }
-
-  /**
-   * Get the pedestrian flag.
-   * @return  Returns pedestrian flag.
-   */
-  bool pedestrian() const {
-    return pedestrian_;
-  }
-
-  /**
    * Sets the has_user_tags flag.
    * @param  has_user_tags   Did a user enter the access tags?
    */
@@ -858,6 +907,22 @@ struct OSMWay {
    */
   bool has_user_tags() const {
     return has_user_tags_;
+  }
+
+  /**
+   * Sets the has_pronunciation_tags flag.
+   * @param  has_pronunciation_tags  Do pronunciation tags exist?
+   */
+  void set_has_pronunciation_tags(const bool has_pronunciation_tags) {
+    has_pronunciation_tags_ = has_pronunciation_tags;
+  }
+
+  /**
+   * Get the has_pronunciation_tags flag.
+   * @return  Returns has_pronunciation_tags flag.
+   */
+  bool has_pronunciation_tags() const {
+    return has_pronunciation_tags_;
   }
 
   /**
@@ -1225,6 +1290,38 @@ struct OSMWay {
   }
 
   /**
+   * Sets the indoor flag.
+   * @param  indoor   True if the edge is indoor, false if not (outdoor).
+   */
+  void set_indoor(const bool indoor) {
+    indoor_ = indoor;
+  }
+
+  /**
+   * Get the indoor flag.
+   * @return  Returns indoor flag.
+   */
+  bool indoor() const {
+    return indoor_;
+  }
+
+  /**
+   * Sets the HOV Type.
+   * @param  hov_type
+   */
+  void set_hov_type(const baldr::HOVEdgeType hov_type) {
+    hov_type_ = static_cast<uint8_t>(hov_type);
+  }
+
+  /**
+   * Get the hov_type flag.
+   * @return  Returns hov_type flag.
+   */
+  baldr::HOVEdgeType hov_type() const {
+    return static_cast<baldr::HOVEdgeType>(hov_type_);
+  }
+
+  /**
    * Set seasonal flag.
    * @param  seasonal   Is this seasonal?
    */
@@ -1530,15 +1627,79 @@ struct OSMWay {
     return turn_channel_;
   }
 
+  void AddPronunciations(std::vector<std::string>& pronunciations,
+                         const UniqueNames& name_offset_map,
+                         const uint32_t ipa_index,
+                         const uint32_t nt_sampa_index,
+                         const uint32_t katakana_index,
+                         const uint32_t jeita_index,
+                         const size_t name_tokens_size,
+                         const size_t key) const;
+
+  /**
+   * Sets layer index(Z-level) of the way.
+   * @param layer
+   */
+  void set_layer(int8_t layer);
+
+  /**
+   * Get layer(Z-level), can be negative.
+   * @return returns layer index of the way relatively to other ways.
+   */
+  int8_t layer() const {
+    return layer_;
+  }
+
+  /**
+   * Sets the index for level
+   * @param  idx  Index for the level.
+   */
+  void set_level_index(const uint32_t idx) {
+    level_index_ = idx;
+  }
+
+  /**
+   * Get the level index.
+   * @return  Returns the index for the level.
+   */
+  uint32_t level_index() const {
+    return level_index_;
+  }
+
+  /**
+   * Sets the index for level_ref
+   * @param  idx  Index for the level_ref
+   */
+  void set_level_ref_index(const uint32_t idx) {
+    level_ref_index_ = idx;
+  }
+
+  /**
+   * Get the level_ref index.
+   * @return  Returns the index for the level_ref.
+   */
+  uint32_t level_ref_index() const {
+    return level_ref_index_;
+  }
+
   /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
    * @return  Returns vector of strings
    */
-  std::vector<std::string>
-  GetNames(const std::string& ref, const UniqueNames& name_offset_map, uint16_t& types) const;
-  std::vector<std::string> GetTaggedNames(const UniqueNames& name_offset_map) const;
+  void GetNames(const std::string& ref,
+                const UniqueNames& name_offset_map,
+                const OSMPronunciation& pronunciation,
+                uint16_t& types,
+                std::vector<std::string>& names,
+                std::vector<std::string>& pronunciations) const;
+
+  void GetTaggedValues(const UniqueNames& name_offset_map,
+                       const OSMPronunciation& pronunciation,
+                       const size_t& names_size,
+                       std::vector<std::string>& names,
+                       std::vector<std::string>& pronunciations) const;
 
   // OSM way Id
   uint64_t osmwayid_;
@@ -1565,6 +1726,9 @@ struct OSMWay {
   uint32_t fwd_jct_overlay_index_;
   uint32_t bwd_jct_overlay_index_;
 
+  uint32_t fwd_signboard_base_index_;
+  uint32_t bwd_signboard_base_index_;
+
   // Sign Destination information
   uint32_t destination_index_;
   uint32_t destination_forward_index_;
@@ -1574,6 +1738,10 @@ struct OSMWay {
   uint32_t destination_street_index_;
   uint32_t destination_street_to_index_;
   uint32_t junction_ref_index_;
+
+  // level and level:ref of the way
+  uint32_t level_index_;
+  uint32_t level_ref_index_;
 
   // Bike network information. TODO - these are not yet used.
   //  uint32_t bike_national_ref_index_;
@@ -1618,12 +1786,16 @@ struct OSMWay {
   uint32_t forward_lanes_ : 4;
   uint32_t backward_lanes_ : 4;
   uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
-  uint16_t wheelchair_ : 1;
-  uint16_t wheelchair_tag_ : 1;
-  uint32_t pedestrian_ : 1;
+  uint32_t wheelchair_ : 1;
+  uint32_t wheelchair_tag_ : 1;
+  uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
+  uint32_t has_pronunciation_tags_ : 1;
   uint32_t internal_ : 1;
-  uint32_t spare0_ : 4; // Spare
+  uint32_t hov_type_ : 1;
+  uint32_t indoor_ : 1;
+  uint32_t pedestrian_forward_ : 1;
+  uint32_t pedestrian_backward_ : 1;
 
   // Access
   uint16_t auto_forward_ : 1;
@@ -1654,7 +1826,7 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare1_ : 4;
+  uint16_t spare2_ : 4;
 
   uint16_t nodecount_;
 
@@ -1674,7 +1846,8 @@ struct OSMWay {
   // Truck speed in kilometers per hour
   uint8_t truck_speed_;
 
-  uint8_t spare_;
+  // layer index(Z-level) of the way relatively to other levels
+  int8_t layer_;
 };
 
 } // namespace mjolnir

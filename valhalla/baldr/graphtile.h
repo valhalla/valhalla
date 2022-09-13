@@ -1,5 +1,4 @@
-#ifndef VALHALLA_BALDR_GRAPHTILE_H_
-#define VALHALLA_BALDR_GRAPHTILE_H_
+#pragma once
 
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
@@ -10,7 +9,9 @@
 #include <valhalla/baldr/edgeinfo.h>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphmemory.h>
 #include <valhalla/baldr/graphtileheader.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/laneconnectivity.h>
 #include <valhalla/baldr/nodeinfo.h>
 #include <valhalla/baldr/nodetransition.h>
@@ -45,44 +46,56 @@ class tile_getter_t;
 /**
  * Graph information for a tile within the Tiled Hierarchical Graph.
  */
+#ifndef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+class GraphTile : public boost::intrusive_ref_counter<GraphTile, boost::thread_unsafe_counter> {
+#else
 class GraphTile {
+#endif // ENABLE_THREAD_SAFE_TILE_REF_COUNT
 public:
   static const constexpr char* kTilePathPattern = "{tilePath}";
 
   /**
-   * Constructor
-   */
-  GraphTile();
-
-  /**
-   * Constructor given a GraphId. Reads the graph tile from file
+   * Constructs with a given GraphId. Reads the graph tile from file
    * into memory.
    * @param  tile_dir   Tile directory.
    * @param  graphid    GraphId (tileid and level)
+   * @return nullptr if the tile could not be loaded. may throw
    */
-  GraphTile(const std::string& tile_dir, const GraphId& graphid, char* traffic_ptr = nullptr);
+  static graph_tile_ptr Create(const std::string& tile_dir,
+                               const GraphId& graphid,
+                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
-   * Constructor given the graph Id, pointer to the tile data, and the
+   * Constructs with a given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   */
+  static graph_tile_ptr Create(const GraphId& graphid, std::vector<char>&& memory);
+
+  /**
+   * Constructs given the graph Id, pointer to the tile data, and the
    * size of the tile data. This is used for memory mapped (mmap) tiles.
    * @param  graphid  Tile Id.
    * @param  ptr      Pointer to the start of the tile's data.
    * @param  size     Size in bytes of the tile data.
    */
-  GraphTile(const GraphId& graphid, char* tile_ptr, size_t size, char* traffic_ptr = nullptr);
+  static graph_tile_ptr Create(const GraphId& graphid,
+                               std::unique_ptr<const GraphMemory>&& memory,
+                               std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
 
   /**
-   * Construct a tile given a url for the tile using curl
+   * Constructs a tile given a url for the tile using curl
    * @param  tile_url URL of tile
    * @param  graphid Tile Id
    * @param  tile_getter object that will handle tile downloading
    * @return whether or not the tile could be cached to disk
    */
 
-  static GraphTile CacheTileURL(const std::string& tile_url,
-                                const GraphId& graphid,
-                                tile_getter_t* tile_getter,
-                                const std::string& cache_location);
+  static graph_tile_ptr CacheTileURL(const std::string& tile_url,
+                                     const GraphId& graphid,
+                                     tile_getter_t* tile_getter,
+                                     const std::string& cache_location);
 
   /**
    * Construct a tile given a url for the tile using curl
@@ -141,6 +154,7 @@ public:
    * @return  Returns a pointer to the node.
    */
   const NodeInfo* node(const GraphId& node) const {
+    assert(node.Tile_Base() == header_->graphid().Tile_Base());
     if (node.id() < header_->nodecount()) {
       return &nodes_[node.id()];
     }
@@ -172,6 +186,7 @@ public:
    * @param  nodeid  GraphId of the node.
    */
   midgard::PointLL get_node_ll(const GraphId& nodeid) const {
+    assert(nodeid.Tile_Base() == header_->graphid().Tile_Base());
     return node(nodeid)->latlng(header()->base_ll());
   }
 
@@ -181,6 +196,7 @@ public:
    * @return  Returns a pointer to the edge.
    */
   const DirectedEdge* directededge(const GraphId& edge) const {
+    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
     if (edge.id() < header_->directededgecount()) {
       return &directededges_[edge.id()];
     }
@@ -306,7 +322,7 @@ public:
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
-  EdgeInfo edgeinfo(const size_t offset) const;
+  EdgeInfo edgeinfo(const DirectedEdge* edge) const;
 
   /**
    * Get the complex restrictions in the forward or reverse order.
@@ -330,23 +346,19 @@ public:
   GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
 
   /**
-   * Convenience method to get the names for an edge given the offset to the
-   * edge information.
-   * @param  edgeinfo_offset  Offset to the edge info.
-   * @param  only_tagged_names  Bool indicating whether or not to return only the tagged names
+   * Convenience method to get the names for an edge
+   * @param  edge  Directed edge
    *
    * @return  Returns a list (vector) of names.
    */
-  std::vector<std::string> GetNames(const uint32_t edgeinfo_offset,
-                                    bool only_tagged_names = false) const;
+  std::vector<std::string> GetNames(const DirectedEdge* edge) const;
 
   /**
-   * Convenience method to get the types for the names given the offset to the
-   * edge information.
-   * @param  edgeinfo_offset  Offset to the edge info.
+   * Convenience method to get the types for the names given the edge
+   * @param  edge  Directed edge
    * @return  Returns unit16_t.  If a bit is set, then it is a ref.
    */
-  uint16_t GetTypes(const uint32_t edgeinfo_offset) const;
+  uint16_t GetTypes(const DirectedEdge* edge) const;
 
   /**
    * Get the admininfo at the specified index. Populates the state name and
@@ -379,6 +391,19 @@ public:
    * @return  Returns a list (vector) of signs.
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+
+  /**
+   * Convenience method to get the signs for an edge given the directed
+   * edge index.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<SignInfo>
+  GetSigns(const uint32_t idx,
+           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
+           bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
@@ -510,48 +535,67 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
+   * @param  seconds_from_now   Absolute number of seconds from now till the moment the edge is
+   * passed. Be careful when setting the value in reverse direction algorithms to use proper value. It
+   * affects the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the
+   * less percentage is taken. Currently this parameter is set to 0 when building a route with reverse
+   * and bidirectional a*.
    * @return Returns the speed for the edge.
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
-                           uint8_t* flow_sources = nullptr) const {
+                           bool is_truck = false,
+                           uint8_t* flow_sources = nullptr,
+                           const uint64_t seconds_from_now = 0) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+
+    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
+    // route live-traffic gives more information about current congestion situation. But the further
+    // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
+    // Want to have a smooth decrease function.
+    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
-      if (live_speed.valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
+      if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        // Live speed covers entire edge, can return early here
         if (live_speed.breakpoint1 == 255) {
+          partial_live_pct = 1.;
+        } else {
+
+          // Since live speed didn't cover the entire edge, lets calculate the coverage
+          // to facilitate blending with other sources for uncovered part
+          partial_live_pct =
+              (
+                  // First section
+                  (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1
+                                                                          : 0)
+                  // Second section
+                  + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (live_speed.breakpoint2 - live_speed.breakpoint1)
+                         : 0)
+                  // Third section
+                  + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (255 - live_speed.breakpoint2)
+                         : 0)) /
+              255.0;
+        }
+        partial_live_pct *= live_traffic_multiplier;
+        if (partial_live_pct == 1.) {
           return partial_live_speed;
         }
-
-        // Since live speed didn't cover the entire edge, lets calculate the coverage
-        // to facilitate blending with other sources for uncovered part
-        partial_live_pct =
-            (
-                // First section
-                (live_speed.breakpoint1 > 0 ? live_speed.breakpoint1 : 0)
-                // Second section
-                + (live_speed.breakpoint2 > 0 ? (live_speed.breakpoint2 - live_speed.breakpoint1) : 0)
-                // Third section
-                + (live_speed.speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (255 - live_speed.breakpoint2)
-                       : 0)) /
-            255.0;
       }
     }
 
@@ -607,8 +651,9 @@ public:
 #endif
 
     // Fallback further to specified or derived speed
-    return static_cast<uint32_t>(partial_live_speed * partial_live_pct +
-                                 (1 - partial_live_pct) * de->speed());
+    auto const speed = static_cast<uint32_t>(partial_live_speed * partial_live_pct +
+                                             (1 - partial_live_pct) * de->speed());
+    return (is_truck && (de->truck_speed() > 0)) ? std::min(de->truck_speed(), speed) : speed;
   }
 
   inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
@@ -655,90 +700,90 @@ public:
   }
 
 protected:
-  // Graph tile memory, this must be shared so that we can put it into cache
-  std::shared_ptr<std::vector<char>> graphtile_;
+  // Graph tile memory. A Graph tile owns its memory.
+  std::unique_ptr<const GraphMemory> memory_;
 
   // Header information for the tile
-  GraphTileHeader* header_;
+  GraphTileHeader* header_{};
 
   // List of nodes. Fixed size structure, indexed by Id within the tile.
-  NodeInfo* nodes_;
+  NodeInfo* nodes_{};
 
   // List of transitions between nodes on different levels. NodeInfo contains
   // an index and count of transitions.
-  NodeTransition* transitions_;
+  NodeTransition* transitions_{};
 
   // List of directed edges. Fixed size structure indexed by Id within the tile.
-  DirectedEdge* directededges_;
+  DirectedEdge* directededges_{};
 
   // Extended directed edge records. For expansion. These are indexed by the same
   // Id as the directed edge.
-  DirectedEdgeExt* ext_directededges_;
+  DirectedEdgeExt* ext_directededges_{};
 
   // Access restrictions, 1 or more per edge id
-  AccessRestriction* access_restrictions_;
+  AccessRestriction* access_restrictions_{};
 
   // Transit departures, many per index (indexed by directed edge index and
   // sorted by departure time)
-  TransitDeparture* departures_;
+  TransitDeparture* departures_{};
 
   // Transit stops (indexed by stop index within the tile)
-  TransitStop* transit_stops_;
+  TransitStop* transit_stops_{};
 
   // Transit route (indexed by route index within the tile)
-  TransitRoute* transit_routes_;
+  TransitRoute* transit_routes_{};
 
   // Transit schedules (index by schedule index within the tile)
-  TransitSchedule* transit_schedules_;
+  TransitSchedule* transit_schedules_{};
 
   // Transit transfer records.
-  TransitTransfer* transit_transfers_;
+  TransitTransfer* transit_transfers_{};
 
   // Signs (indexed by directed edge index)
-  Sign* signs_;
+  Sign* signs_{};
 
   // Turn lanes (indexed by directed edge index)
-  TurnLanes* turnlanes_;
+  TurnLanes* turnlanes_{};
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
-  Admin* admins_;
+  Admin* admins_{};
 
   // List of complex_restrictions in the forward direction.
-  char* complex_restriction_forward_;
+  char* complex_restriction_forward_{};
 
   // Size of the complex restrictions in the forward direction
-  std::size_t complex_restriction_forward_size_;
+  std::size_t complex_restriction_forward_size_{};
 
   // List of complex_restrictions in the reverse direction.
-  char* complex_restriction_reverse_;
+  char* complex_restriction_reverse_{};
 
   // Size of the complex restrictions in the reverse direction
-  std::size_t complex_restriction_reverse_size_;
+  std::size_t complex_restriction_reverse_size_{};
 
   // List of edge info structures. Since edgeinfo is not fixed size we
   // use offsets in directed edges.
-  char* edgeinfo_;
+  char* edgeinfo_{};
 
   // Size of the edgeinfo data
-  std::size_t edgeinfo_size_;
+  std::size_t edgeinfo_size_{};
 
   // Street names as sets of null-terminated char arrays. Edge info has
   // offsets into this array.
-  char* textlist_;
+  char* textlist_{};
 
   // Number of bytes in the text/name list
-  std::size_t textlist_size_;
+  std::size_t textlist_size_{};
 
   // List of edge graph ids. The list is broken up in bins which have
   // indices in the tile header.
-  GraphId* edge_bins_;
+  GraphId* edge_bins_{};
 
   // Lane connectivity data.
-  LaneConnectivity* lane_connectivity_;
+  LaneConnectivity* lane_connectivity_{};
 
   // Number of bytes in lane connectivity data.
-  std::size_t lane_connectivity_size_;
+  std::size_t lane_connectivity_size_{};
 
   // Predicted speeds
   PredictedSpeeds predictedspeeds_;
@@ -753,15 +798,46 @@ protected:
   std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
 
   // Pointer to live traffic data (can be nullptr if not active)
-  TrafficTile traffic_tile;
+  TrafficTile traffic_tile{nullptr};
+
+  // GraphTiles are noncopyable.
+  GraphTile(const GraphTile&) = delete;
+  GraphTile& operator=(const GraphTile&) = delete;
+
+  // They are, however, moveable.
+  GraphTile(GraphTile&&) = default;
+  GraphTile& operator=(GraphTile&&) = default;
+
+  // constructs empty tile
+  GraphTile();
 
   /**
-   * Set pointers to internal tile data structures.
-   * @param  graphid    Graph Id for the tile.
-   * @param  tile_ptr   Pointer to the start of the tile.
-   * @param  tile_size  Tile size in bytes.
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
    */
-  void Initialize(const GraphId& graphid, char* tile_ptr, const size_t tile_size);
+  GraphTile(const GraphId& graphid,
+            std::unique_ptr<const GraphMemory> memory,
+            std::unique_ptr<const GraphMemory> traffic_memory = nullptr);
+
+  /**
+   * Constructor given the graph Id, pointer to the tile data, and the
+   * size of the tile data. This is used for memory mapped (mmap) tiles.
+   * @param  graphid  Tile Id.
+   * @param  ptr      Pointer to the start of the tile's data.
+   * @param  size     Size in bytes of the tile data.
+   */
+  GraphTile(const std::string& tile_dir,
+            const GraphId& graphid,
+            std::unique_ptr<const GraphMemory>&& traffic_memory = nullptr);
+
+  /**
+   * Initialize pointers to internal tile data structures.
+   * @param  graphid    Graph Id for the tile.
+   */
+  void Initialize(const GraphId& graphid);
 
   /**
    * For transit tiles, save off the pair<tileid,lineid> lookup via
@@ -776,13 +852,11 @@ protected:
   /** Decrompresses tile bytes into the internal graphtile byte buffer
    * @param  graphid     the id of the tile to be decompressed
    * @param  compressed  the compressed bytes
-   * @return whether or not the graphtile has been successfully initialized with
-   *         the uncompressed data
+   * @return a pointer to a graphtile if it  has been successfully initialized with
+   *         the uncompressed data, or nullptr
    */
-  bool DecompressTile(const GraphId& graphid, std::vector<char>& compressed);
+  static graph_tile_ptr DecompressTile(const GraphId& graphid, const std::vector<char>& compressed);
 };
 
 } // namespace baldr
 } // namespace valhalla
-
-#endif // VALHALLA_BALDR_GRAPHTILE_H_

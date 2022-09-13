@@ -44,6 +44,17 @@ protected:
                                                std::list<Maneuver>::iterator curr_man,
                                                std::list<Maneuver>::iterator next_man);
 
+  bool PossibleUnspecifiedInternalManeuver(std::list<Maneuver>::iterator prev_man,
+                                           std::list<Maneuver>::iterator curr_man,
+                                           std::list<Maneuver>::iterator next_man);
+
+  std::list<Maneuver>::iterator
+  CombineUnspecifiedInternalManeuver(std::list<Maneuver>& maneuvers,
+                                     std::list<Maneuver>::iterator prev_man,
+                                     std::list<Maneuver>::iterator curr_man,
+                                     std::list<Maneuver>::iterator next_man,
+                                     const DirectionsLeg_Maneuver_Type& maneuver_type);
+
   std::list<Maneuver>::iterator CombineInternalManeuver(std::list<Maneuver>& maneuvers,
                                                         std::list<Maneuver>::iterator prev_man,
                                                         std::list<Maneuver>::iterator curr_man,
@@ -59,6 +70,8 @@ protected:
   std::list<Maneuver>::iterator CombineManeuvers(std::list<Maneuver>& maneuvers,
                                                  std::list<Maneuver>::iterator curr_man,
                                                  std::list<Maneuver>::iterator next_man);
+
+  void ProcessVerbalSuccinctTransitionInstruction(std::list<Maneuver>& maneuvers);
 
   void CountAndSortSigns(std::list<Maneuver>& maneuvers);
 
@@ -102,7 +115,10 @@ protected:
                         EnhancedTripLeg_Edge* prev_edge,
                         EnhancedTripLeg_Edge* curr_edge) const;
 
-  bool IsTee(int node_index, EnhancedTripLeg_Edge* prev_edge, EnhancedTripLeg_Edge* curr_edge) const;
+  bool IsTee(int node_index,
+             EnhancedTripLeg_Edge* prev_edge,
+             EnhancedTripLeg_Edge* curr_edge,
+             bool prev_edge_has_common_base_name) const;
 
   bool IsLeftPencilPointUturn(int node_index,
                               EnhancedTripLeg_Edge* prev_edge,
@@ -132,7 +148,7 @@ protected:
    *
    * @return the speed based on the specified travel mode.
    */
-  float GetSpeed(TripLeg_TravelMode travel_mode, float edge_speed) const;
+  float GetSpeed(TravelMode travel_mode, float edge_speed) const;
 
   /**
    * Returns true if the current turn channel maneuver is able to be combined
@@ -184,7 +200,7 @@ protected:
    *
    * @return true if roundabouts are processable based on the specified travel mode.
    */
-  bool AreRoundaboutsProcessable(const TripLeg_TravelMode travel_mode) const;
+  bool AreRoundaboutsProcessable(const TravelMode travel_mode) const;
 
   /**
    * Review each roundabout and if appropriate - set the roundabout name and roundabout exit name.
@@ -216,7 +232,8 @@ protected:
    *
    * @param maneuver The maneuver at the intersection.
    */
-  uint16_t GetExpectedTurnLaneDirection(Maneuver& maneuver) const;
+  uint16_t GetExpectedTurnLaneDirection(std::unique_ptr<EnhancedTripLeg_Edge>& turn_lane_edge,
+                                        const Maneuver& maneuver) const;
 
   /**
    * Process the turn lanes at the maneuver point as well as within the maneuver.
@@ -227,12 +244,12 @@ protected:
   void ProcessTurnLanes(std::list<Maneuver>& maneuvers);
 
   /**
-   * Process the guidance view junctions at the maneuver point.
+   * Process the guidance views at the maneuver point.
    * Match the base to the overlay to form the "<prefix>_<base_suffix>_<overlay_suffix>".
    *
    * @param maneuvers The list of maneuvers to process.
    */
-  void ProcessGuidanceViewJunctions(std::list<Maneuver>& maneuvers);
+  void ProcessGuidanceViews(std::list<Maneuver>& maneuvers);
 
   /**
    * Match the guidance view junctions for the specified base prefix and suffix.
@@ -244,6 +261,13 @@ protected:
   void MatchGuidanceViewJunctions(Maneuver& maneuver,
                                   const std::string& base_prefix,
                                   const std::string& base_suffix);
+
+  /**
+   * Process the guidance view signboards.
+   *
+   * @param maneuver The maneuver to process.
+   */
+  void ProcessGuidanceViewSignboards(Maneuver& maneuver);
 
   /**
    * Returns true if the specified maneuver is a ramp and leads to a highway.
@@ -280,6 +304,20 @@ protected:
                                           uint32_t new_node_index,
                                           EnhancedTripLeg_Edge* prev_edge,
                                           EnhancedTripLeg_Edge* edge);
+
+  /**
+   * Collapse a small end ramp fork maneuver if the fork and the next turn is in the same direction.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseSmallEndRampFork(std::list<Maneuver>& maneuvers);
+
+  /**
+   * Collapse merge maneuver with previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to process.
+   */
+  void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

@@ -12,10 +12,10 @@
 
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripcommon.pb.h>
 
 using namespace valhalla::baldr;
 
@@ -56,6 +56,8 @@ public:
   bool IsStartType() const;
   bool IsDestinationType() const;
   bool IsMergeType() const;
+  bool IsRightType() const;
+  bool IsLeftType() const;
 
   const StreetNames& street_names() const;
   void set_street_names(const std::vector<std::pair<std::string, bool>>& names);
@@ -111,9 +113,6 @@ public:
 
   uint32_t end_heading() const;
   void set_end_heading(uint32_t endHeading);
-
-  uint32_t roundabout_exit_begin_heading() const;
-  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
 
   uint32_t begin_node_index() const;
   void set_begin_node_index(uint32_t beginNodeIndex);
@@ -178,9 +177,6 @@ public:
   uint32_t internal_left_turn_count() const;
   void set_internal_left_turn_count(uint32_t internal_left_turn_count);
 
-  uint32_t roundabout_exit_count() const;
-  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
-
   bool fork() const;
   void set_fork(bool fork);
 
@@ -189,6 +185,13 @@ public:
 
   bool intersecting_forward_edge() const;
   void set_intersecting_forward_edge(bool intersecting_forward_edge);
+
+  const std::string& verbal_succinct_transition_instruction() const;
+  void set_verbal_succinct_transition_instruction(
+      const std::string& verbal_succinct_transition_instruction);
+  void
+  set_verbal_succinct_transition_instruction(std::string&& verbal_succinct_transition_instruction);
+  bool HasVerbalSuccinctTransitionInstruction() const;
 
   const std::string& verbal_transition_alert_instruction() const;
   void
@@ -217,6 +220,8 @@ public:
   bool unnamed_cycleway() const;
   bool is_mountain_bike_trail() const;
   bool unnamed_mountain_bike_trail() const;
+  bool pedestrian_crossing() const;
+  void set_pedestrian_crossing(bool pedestrian_crossing);
 
   bool imminent_verbal_multi_cue() const;
   void set_imminent_verbal_multi_cue(bool imminent_verbal_multi_cue);
@@ -226,22 +231,6 @@ public:
 
   bool to_stay_on() const;
   void set_to_stay_on(bool to_stay_on);
-
-  const StreetNames& roundabout_exit_street_names() const;
-  void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
-  bool HasRoundaboutExitStreetNames() const;
-  void ClearRoundaboutExitStreetNames();
-
-  const StreetNames& roundabout_exit_begin_street_names() const;
-  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
-  void set_roundabout_exit_begin_street_names(
-      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
-  bool HasRoundaboutExitBeginStreetNames() const;
-  void ClearRoundaboutExitBeginStreetNames();
-
-  const Signs& roundabout_exit_signs() const;
-  Signs* mutable_roundabout_exit_signs();
 
   RelativeDirection merge_to_relative_direction() const;
   void set_merge_to_relative_direction(RelativeDirection merge_to_relative_direction);
@@ -266,6 +255,9 @@ public:
   bool contains_obvious_maneuver() const;
   void set_contains_obvious_maneuver(bool contains_obvious_maneuver);
 
+  uint32_t roundabout_exit_count() const;
+  void set_roundabout_exit_count(uint32_t roundabout_exit_count);
+
   bool has_combined_enter_exit_roundabout() const;
   void set_has_combined_enter_exit_roundabout(bool has_combined_enter_exit_roundabout);
 
@@ -275,8 +267,39 @@ public:
   float roundabout_exit_length(const Options::Units& units = Options::kilometers) const;
   void set_roundabout_exit_length(float roundabout_exit_km_length); // Kilometers
 
-  TripLeg_TravelMode travel_mode() const;
-  void set_travel_mode(TripLeg_TravelMode travel_mode);
+  const StreetNames& roundabout_exit_street_names() const;
+  void set_roundabout_exit_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_street_names(std::unique_ptr<StreetNames>&& roundabout_exit_street_names);
+  bool HasRoundaboutExitStreetNames() const;
+  void ClearRoundaboutExitStreetNames();
+
+  const StreetNames& roundabout_exit_begin_street_names() const;
+  void set_roundabout_exit_begin_street_names(const std::vector<std::pair<std::string, bool>>& names);
+  void set_roundabout_exit_begin_street_names(
+      std::unique_ptr<StreetNames>&& roundabout_exit_begin_street_names);
+  bool HasRoundaboutExitBeginStreetNames() const;
+  void ClearRoundaboutExitBeginStreetNames();
+
+  const Signs& roundabout_exit_signs() const;
+  Signs* mutable_roundabout_exit_signs();
+
+  uint32_t roundabout_exit_begin_heading() const;
+  void set_roundabout_exit_begin_heading(uint32_t beginHeading);
+
+  uint32_t roundabout_exit_turn_degree() const;
+  void set_roundabout_exit_turn_degree(uint32_t turnDegree);
+
+  uint32_t roundabout_exit_shape_index() const;
+  void set_roundabout_exit_shape_index(uint32_t shapeIndex);
+
+  bool has_collapsed_small_end_ramp_fork() const;
+  void set_has_collapsed_small_end_ramp_fork(bool has_collapsed_small_end_ramp_fork);
+
+  bool has_collapsed_merge_maneuver() const;
+  void set_has_collapsed_merge_maneuver(bool has_collapsed_merge_maneuver);
+
+  TravelMode travel_mode() const;
+  void set_travel_mode(TravelMode travel_mode);
 
   bool rail() const;
   void set_rail(bool rail);
@@ -284,17 +307,17 @@ public:
   bool bus() const;
   void set_bus(bool bus);
 
-  TripLeg_VehicleType vehicle_type() const;
-  void set_vehicle_type(TripLeg_VehicleType vehicle_type);
+  VehicleType vehicle_type() const;
+  void set_vehicle_type(VehicleType vehicle_type);
 
-  TripLeg_PedestrianType pedestrian_type() const;
-  void set_pedestrian_type(TripLeg_PedestrianType pedestrian_type);
+  PedestrianType pedestrian_type() const;
+  void set_pedestrian_type(PedestrianType pedestrian_type);
 
-  TripLeg_BicycleType bicycle_type() const;
-  void set_bicycle_type(TripLeg_BicycleType bicycle_type);
+  BicycleType bicycle_type() const;
+  void set_bicycle_type(BicycleType bicycle_type);
 
-  TripLeg_TransitType transit_type() const;
-  void set_transit_type(TripLeg_TransitType transit_type);
+  TransitType transit_type() const;
+  void set_transit_type(TransitType transit_type);
 
   bool transit_connection() const;
   void set_transit_connection(bool transit_connection);
@@ -349,6 +372,30 @@ public:
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type() const;
   void set_bss_maneuver_type(DirectionsLeg_Maneuver_BssManeuverType);
 
+  bool has_long_street_name() const;
+  void set_long_street_name(bool has_long_street_name);
+
+  const BikeShareStationInfo& bss_info() const;
+  void set_bss_info(const BikeShareStationInfo& bss_info);
+
+  bool elevator() const;
+  void set_elevator(bool elevator);
+
+  bool indoor_steps() const;
+  void set_indoor_steps(bool indoor_steps);
+
+  bool escalator() const;
+  void set_escalator(bool escalator);
+
+  bool building_enter() const;
+  void set_building_enter(bool building_enter);
+
+  bool building_exit() const;
+  void set_building_exit(bool building_exit);
+
+  std::string end_level_ref() const;
+  void set_end_level_ref(std::string end_level_ref);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -369,7 +416,6 @@ protected:
   DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
   uint32_t begin_heading_;
   uint32_t end_heading_;
-  uint32_t roundabout_exit_begin_heading_;
   uint32_t begin_node_index_;
   uint32_t end_node_index_;
   uint32_t begin_shape_index_;
@@ -386,10 +432,10 @@ protected:
   Signs signs_;
   uint32_t internal_right_turn_count_;
   uint32_t internal_left_turn_count_;
-  uint32_t roundabout_exit_count_;
   bool fork_;
   bool begin_intersecting_edge_name_consistency_;
   bool intersecting_forward_edge_;
+  std::string verbal_succinct_transition_instruction_;
   std::string verbal_transition_alert_instruction_;
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
@@ -398,9 +444,7 @@ protected:
   bool imminent_verbal_multi_cue_;
   bool distant_verbal_multi_cue_;
   bool to_stay_on_;
-  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
-  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
-  Signs roundabout_exit_signs_;
+  bool pedestrian_crossing_;
   RelativeDirection merge_to_relative_direction_;
   bool drive_on_right_; // Defaults to true
   bool has_time_restrictions_;
@@ -408,9 +452,32 @@ protected:
   bool has_left_traversable_outbound_intersecting_edge_;
   bool include_verbal_pre_transition_length_;
   bool contains_obvious_maneuver_;
+
+  uint32_t roundabout_exit_count_;
   bool has_combined_enter_exit_roundabout_;
   float roundabout_length_;      // Kilometers
   float roundabout_exit_length_; // Kilometers
+  std::unique_ptr<StreetNames> roundabout_exit_street_names_;
+  std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
+  Signs roundabout_exit_signs_;
+  uint32_t roundabout_exit_begin_heading_;
+  uint32_t roundabout_exit_turn_degree_;
+  uint32_t roundabout_exit_shape_index_;
+
+  bool has_collapsed_small_end_ramp_fork_;
+  bool has_collapsed_merge_maneuver_;
+  bool has_long_street_name_;
+
+  // Bss support
+  BikeShareStationInfo bss_info_;
+
+  // Indoor elements
+  bool elevator_;
+  bool indoor_steps_;
+  bool escalator_;
+  bool building_enter_;
+  bool building_exit_;
+  std::string end_level_ref_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
@@ -432,15 +499,15 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TripLeg_TravelMode travel_mode_;
+  TravelMode travel_mode_;
   bool rail_;
   bool bus_;
 
   // Travel types
-  TripLeg_VehicleType vehicle_type_;
-  TripLeg_PedestrianType pedestrian_type_;
-  TripLeg_BicycleType bicycle_type_;
-  TripLeg_TransitType transit_type_;
+  VehicleType vehicle_type_;
+  PedestrianType pedestrian_type_;
+  BicycleType bicycle_type_;
+  TransitType transit_type_;
 
   DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
 

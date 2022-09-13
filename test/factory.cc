@@ -15,16 +15,15 @@ namespace {
 TEST(Factory, Register) {
   Options options;
   const rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options);
   CostFactory factory;
-  options.set_costing(Costing::auto_);
+  options.set_costing_type(Costing::auto_);
   auto car = factory.Create(options);
-  options.set_costing(Costing::bicycle);
+  options.set_costing_type(Costing::bicycle);
   auto bike = factory.Create(options);
-  options.set_costing(Costing::multimodal);
+  options.set_costing_type(Costing::multimodal);
   EXPECT_THROW(factory.Create(options), std::runtime_error);
   auto truck = factory.Create(Costing::truck);
-  EXPECT_THROW(factory.Create(CostingOptions{}), std::runtime_error);
 }
 
 // TODO: add many more tests!

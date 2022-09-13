@@ -1,77 +1,122 @@
 #ifndef __VALHALLA_SAMPLE_H__
 #define __VALHALLA_SAMPLE_H__
 
-#include <cstdint>
-#include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <string>
-#include <unordered_map>
-#include <utility>
+#include <unordered_set>
 #include <vector>
 
-#include <valhalla/midgard/sequence.h>
+#include <boost/property_tree/ptree.hpp>
+
+#include "valhalla/baldr/tilegetter.h"
 
 namespace valhalla {
 namespace skadi {
+
+struct cache_t;
+class tile_data;
 
 class sample {
 public:
   // non-default-constructable and non-copyable
   sample() = delete;
-  sample(sample&&) = default;
-  sample& operator=(sample&&) = default;
+  sample(sample&&) = delete;
+  sample& operator=(sample&&) = delete;
   sample(const sample&) = delete;
   sample& operator=(const sample&) = delete;
 
   /**
-   * Constructor
-   * @param data_source  directory name of the datasource from which to sample
+   * @brief Constructor
+   * @param[in] config  Configuration settings
+   */
+  sample(const boost::property_tree::ptree& config);
+
+  /// TODO(neyromancer): combine both constructors in one with config as an input parameter
+  /// when valhalla_benchmark_skadi start using config instead of folder
+  /**
+   * @brief Constructor
+   * @param[in] data_source  directory name of the datasource from which to sample
    */
   sample(const std::string& data_source);
+  ~sample();
 
   /**
-   * Get a single sample from the datasource
+   * @brief Get a single sample from the datasource
    * @param coord  the single posting at which to sample the datasource
    */
-  template <class coord_t> double get(const coord_t& coord) const;
+  template <class coord_t> double get(const coord_t& coord);
 
   /**
-   * Get multiple samples from the datasource
+   * @brief Get multiple samples from the datasource
    * @param coords  the list of postings at which to sample the datasource
    */
-  template <class coords_t> std::vector<double> get_all(const coords_t& coords) const;
-
-  /**
-   * @return the no data value for this data source
-   */
-  static double get_no_data_value();
+  template <class coords_t> std::vector<double> get_all(const coords_t& coords);
 
 protected:
   /**
-   * @param  index  the index of the data tile being requested
-   * @return the array of data or nullptr if there was none
+   * Get a single sample from the datasource
+   * supplies the current tile - so if the same tile is requested in succession it does not have to
+   * look up the tile in the cache.
+   * @param coord  the single posting at which to sample the datasource
+   * @param tile the tile pointer that may already contain a tile, output value
+   * @return a single sample
    */
-  const int16_t* source(uint16_t index) const;
+  template <class coord_t> double get(const coord_t& coord, tile_data& tile);
 
-  enum class format_t { UNKNOWN = 0, GZIP = 1, RAW = 3 };
   /**
-   * maps a new source, used at start up and called periodically
-   * for lazily loaded sources
-   *
-   * @param  index  the index of the data tile being mapped
-   * @param  format the format of the data tile being mapped
-   * @param  file   the file name of the data tile being mapped
+   * @return A tile index value from a coordinate
    */
-  void map(uint16_t index, format_t format, const std::string& file);
+  template <class coord_t> static uint16_t get_tile_index(const coord_t& coord);
 
-  // using memory maps
-  mutable std::vector<std::pair<format_t, midgard::mem_map<char>>> mapped_cache;
+  /**
+   * @brief Adds single tile in cache. Used only in tests
+   * @param path path to the tile
+   */
+  void add_single_tile(const std::string& path);
 
-  // TODO: make an LRU
-  using unzipped_t = std::pair<int16_t, std::vector<int16_t>>;
-  mutable unzipped_t unzipped_cache;
+  /**
+   * @brief Get a single sample from a remote source
+   * @param[in] index tile index
+   * @return
+   *    true - in success case
+   *    false - in fail case
+   */
+  bool fetch(uint16_t index);
 
-  std::string data_source;
+  /**
+   * @brief Add tile to cache and store it in local filesystem.
+   * @param[in] path path to the tile
+   * @param[in] raw_data Data to store.
+   */
+  bool store(const std::string& path, const std::vector<char>& raw_data);
+
+  friend cache_t;
+  std::unique_ptr<cache_t> cache_;
+
+private:
+  /**
+   * @brief used to warm cache
+   * @param[in] source_path File local storage directory.
+   */
+  void cache_initialisation(const std::string& source_path);
+
+  std::mutex cache_lck;
+  std::string url_;
+  std::unique_ptr<baldr::tile_getter_t> remote_loader_;
+  // This parameter is used only in tests
+  std::string remote_path_;
 };
+
+/**
+ * @return The file name of a tile for a given index
+ */
+std::string get_hgt_file_name(uint16_t index);
+
+/**
+ * @return the no data value for this data source
+ */
+double get_no_data_value();
 
 } // namespace skadi
 } // namespace valhalla

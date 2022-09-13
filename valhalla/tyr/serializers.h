@@ -7,14 +7,15 @@
 #include <unordered_map>
 #include <vector>
 
+#include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/tyr/actor.h>
 
@@ -39,13 +40,11 @@ std::string serializeMatrix(const Api& request,
  * @param grid_contours    the contours generated from the grid
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
-template <class coord_t>
-std::string
-serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-                    bool polygons = true,
-                    const std::unordered_map<float, std::string>& colors = {},
-                    bool show_locations = false);
+std::string serializeIsochrones(const Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons = true,
+                                bool show_locations = false);
 
 /**
  * Turn heights and ranges into a height response
@@ -56,7 +55,7 @@ serializeIsochrones(const Api& request,
  */
 std::string serializeHeight(const Api& request,
                             const std::vector<double>& heights,
-                            const std::vector<float>& ranges = {});
+                            const std::vector<double>& ranges = {});
 
 /**
  * Turn some correlated points on the graph into info about those locations
@@ -92,15 +91,31 @@ std::string serializeTransitAvailable(const Api& request,
  * @param results     The vector of trip paths and match results for each match found
  */
 std::string serializeTraceAttributes(
-    const Api& request,
-    const thor::AttributesController& controller,
+    Api& request,
+    const baldr::AttributesController& controller,
     std::vector<std::tuple<float, float, std::vector<meili::MatchResult>>>& results);
+
+/**
+ * Turn proto with status information into json
+ * @param request  the proto request with status info attached
+ * @return json string
+ */
+std::string serializeStatus(Api& request);
 
 // Return a JSON array of OpenLR 1.5 line location references for each edge of a map matching
 // result. For the time being, result is only non-empty for auto costing requests.
 void route_references(baldr::json::MapPtr& route_json,
                       const TripRoute& route,
                       const Options& options);
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer);
+
+/**
+ * Turns the pbf into bytes omitting the fields specified in the request options pbf field selector
+ * @param request  The protobuf object which will be serialized
+ * @return the bytes representing the protobuf object
+ */
+std::string serializePbf(Api& request);
 
 } // namespace tyr
 } // namespace valhalla
@@ -121,6 +136,14 @@ valhalla::baldr::json::ArrayPtr
 waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
           bool tracepoints = false);
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
+valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
+
+void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
+                                 const valhalla::IncidentsTile::Metadata& incident_metadata,
+                                 const int begin_shape_index,
+                                 const int end_shape_index,
+                                 const std::string& road_class,
+                                 const std::string& key_prefix);
 
 } // namespace osrm
 

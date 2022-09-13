@@ -10,7 +10,6 @@
 #include "meili/map_matcher_factory.h"
 
 #include "test.h"
-#include "utils.h"
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -22,15 +21,14 @@ using namespace valhalla;
 
 using ptree = boost::property_tree::ptree;
 
-void create_costing_options(Costing costing, Options& options) {
+void create_costing_options(Costing::Type costing, Options& options) {
   const rapidjson::Document doc;
-  sif::ParseCostingOptions(doc, "/costing_options", options);
-  options.set_costing(costing);
+  sif::ParseCosting(doc, "/costing_options", options);
+  options.set_costing_type(costing);
 }
 
 TEST(MapMatcherFactory, TestMapMatcherFactory) {
-  ptree root;
-  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  const auto root = test::make_config("/data/valhala");
 
   // Do it thousand times to check memory leak
   for (size_t i = 0; i < 3000; i++) {
@@ -126,7 +124,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 
       delete matcher;
 
-      options.set_costing(Costing::bicycle);
+      options.set_costing_type(Costing::bicycle);
       matcher = factory.Create(options);
       EXPECT_EQ(matcher->travelmode(), sif::TravelMode::kBicycle)
           << "should read costing in options correctly again";
@@ -139,14 +137,16 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       Options options;
       create_costing_options(Costing::pedestrian, options);
       meili::MapMatcherFactory factory(root);
-      options.set_costing(Costing::pedestrian);
+      options.set_costing_type(Costing::pedestrian);
       auto matcher = factory.Create(options);
       EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
           << "should not have custom costing options when not set in preferences";
 
       delete matcher;
 
-      options.mutable_costing_options(static_cast<int>(Costing::pedestrian))
+      options.mutable_costings()
+          ->find(Costing::pedestrian)
+          ->second.mutable_options()
           ->set_transport_type("segway");
       matcher = factory.Create(options);
 
@@ -159,8 +159,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
 }
 
 TEST(MapMatcherFactory, TestMapMatcher) {
-  ptree root;
-  rapidjson::read_json(VALHALLA_SOURCE_DIR "test/valhalla.json", root);
+  const auto root = test::make_config("/data/valhalla");
 
   // Nothing special to test for the moment
 
@@ -168,7 +167,7 @@ TEST(MapMatcherFactory, TestMapMatcher) {
   Options options;
   create_costing_options(Costing::auto_, options);
   auto auto_matcher = factory.Create(options);
-  options.set_costing(Costing::pedestrian);
+  options.set_costing_type(Costing::pedestrian);
   auto pedestrian_matcher = factory.Create(options);
 
   // Share the same pool

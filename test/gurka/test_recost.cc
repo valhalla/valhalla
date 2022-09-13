@@ -1,11 +1,112 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/recost.h"
-#include <gtest/gtest.h>
+#include "test.h"
 
 using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{{"mjolnir.shortcuts", "false"}};
+
+TEST(recosting, forward_vs_reverse) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse";
+
+  const std::string ascii_map = R"(
+    A---B----C
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "trunk"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    if (e.classification() == baldr::RoadClass::kResidential) {
+      e.set_constrained_flow_speed(40);
+    }
+    return boost::none;
+  });
+
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["A"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["A"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["C"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["C"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    auto rn = reverse.trip().routes(0).legs(0).node().begin();
+    for (const auto& n : forward.trip().routes(0).legs(0).node()) {
+      // if the assert is triggered - probably something is wrong with TransitionCostReverse arguments
+      // in the Unidir-A*
+      EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
+      EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
+      ++rn;
+    }
+  }
+}
+
+TEST(recosting, forward_vs_reverse_internal_turn) {
+  std::string tile_dir = "test/data/gurka_recost_forward_vs_reverse_internal_turn";
+
+  const std::string ascii_map = R"(
+           1
+           |
+    A------B-----C
+           |
+    2------E----F
+  )";
+  const gurka::ways ways = {
+      {"ABC", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      {"1B", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+      // BE is supposed to be an internal edge
+      {"BE", {{"highway", "tertiary"}}},
+      {"FE2", {{"highway", "tertiary"}, {"oneway", "yes"}}},
+  };
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}},
+                              {"E", {{"highway", "traffic_signals"}}}};
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 4);
+  auto map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir, build_config);
+
+  auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
+  // run a route and check that the costs are the same for the same options
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  {
+    std::string locations = R"({"lon":)" + std::to_string(map.nodes["1"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["1"].lat()) + R"(},{"lon":)" +
+                            std::to_string(map.nodes["2"].lng()) + R"(,"lat":)" +
+                            std::to_string(map.nodes["2"].lat()) + "}";
+    Api forward;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":1,"value":"2020-08-01T11:12"}})",
+                {}, &forward);
+    Api reverse;
+    actor.route(R"({"costing":"auto","locations":[)" + locations +
+                    R"(],"date_time":{"type":2,"value":"2020-08-01T11:12"}})",
+                {}, &reverse);
+    EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
+              reverse.trip().routes(0).legs(0).node_size());
+    int node_count = forward.trip().routes(0).legs(0).node_size();
+    auto forward_cost =
+        forward.trip().routes(0).legs(0).node().Get(node_count - 1).cost().elapsed_cost();
+    auto reverse_cost =
+        reverse.trip().routes(0).legs(0).node().Get(node_count - 1).cost().elapsed_cost();
+    // if assert is triggered - check if uturn on internal edges is detected correctly
+    EXPECT_NEAR(forward_cost.cost(), reverse_cost.cost(), 0.1);
+  }
+}
 
 TEST(recosting, same_historical) {
   const std::string ascii_map = R"(A--1--B-2-3-C-----G
@@ -27,21 +128,13 @@ TEST(recosting, same_historical) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // add historical traffic so that we can get different costs at different times
-  // TODO: move this into test utils with a callback per edge to get speed from the test
-  for (const auto& tile_id : reader->GetTileSet()) {
-    valhalla::mjolnir::GraphTileBuilder tile(tile_dir, tile_id, false);
-    std::vector<valhalla::baldr::DirectedEdge> edges;
-    edges.reserve(tile.header()->directededgecount());
-    for (const auto& edge : tile.GetDirectedEdges()) {
-      edges.push_back(edge);
-      edges.back().set_free_flow_speed(80);
-      edges.back().set_speed(55);
-      edges.back().set_constrained_flow_speed(10);
-      // TODO: add historical 5 minutely buckets
-      // tile.AddPredictedSpeed();
-    }
-    tile.UpdatePredictedSpeeds(edges);
-  }
+  test::customize_historical_traffic(map.config, [](baldr::DirectedEdge& e) {
+    e.set_free_flow_speed(80);
+    e.set_speed(55);
+    e.set_constrained_flow_speed(10);
+    // TODO: add historical 5 minutely buckets
+    return boost::none;
+  });
 
   // run a route and check that the costs are the same for the same options
   valhalla::tyr::actor_t actor(map.config, *reader, true);
@@ -60,7 +153,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -102,7 +195,7 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -139,9 +232,9 @@ TEST(recosting, same_historical) {
 
   // TODO: There's a difference in the way a route is costed in reverse vs forward this could be
   // a result of FormPath in timedep_reverse or it could be a result of the difference between
-  // TransitionCost and TransitionCostReverse. When that is resolved we can enable these tests
-  return;
-
+  // upd: the costs are pretty close but still different. Probably the order of float operations can
+  // cause this diff
+  const float kCostThreshold = 0.0001f;
   // set times but different types and make sure the costings are the same
   {
     std::string unambiguous = R"({"lon":)" + std::to_string(map.nodes["8"].lng()) + R"(,"lat":)" +
@@ -160,9 +253,11 @@ TEST(recosting, same_historical) {
     EXPECT_EQ(forward.trip().routes(0).legs(0).node_size(),
               reverse.trip().routes(0).legs(0).node_size());
     auto rn = reverse.trip().routes(0).legs(0).node().begin();
+
     for (const auto& n : forward.trip().routes(0).legs(0).node()) {
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds());
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), rn->cost().elapsed_cost().seconds(),
+                  kCostThreshold);
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), rn->cost().elapsed_cost().cost(), kCostThreshold);
       EXPECT_EQ(n.cost().transition_cost().seconds(), rn->cost().transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), rn->cost().transition_cost().cost());
       if (n.has_edge()) {
@@ -183,7 +278,8 @@ TEST(recosting, same_historical) {
     // check we have the same cost at all places
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
-      EXPECT_EQ(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds());
+      EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(),
+                  kCostThreshold);
       EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
@@ -226,7 +322,8 @@ TEST(recosting, all_algorithms) {
         // get the api response out using the normal means
         auto start = named_locations.substr(i, 1);
         auto end = named_locations.substr(j, 1);
-        auto api = gurka::route(map, start, end, "auto", option, reader);
+        auto api =
+            gurka::do_action(valhalla::Options::route, map, {start, end}, "auto", option, reader);
         auto leg = api.trip().routes(0).legs(0);
 
         // setup a callback for the recosting to get each edge
@@ -248,7 +345,7 @@ TEST(recosting, all_algorithms) {
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
                                        reverse](const sif::EdgeLabel& label) -> void {
-          length += elapsed_itr->edge().length() * 1000.0;
+          length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
           EXPECT_EQ(static_cast<uint8_t>(elapsed_itr->edge().travel_mode()),
@@ -269,14 +366,14 @@ TEST(recosting, all_algorithms) {
 
         // find the percentage of the edges used
         float src_pct = 0;
-        for (const auto& edge : api.options().locations(0).path_edges()) {
+        for (const auto& edge : api.options().locations(0).correlation().edges()) {
           if (leg.node(0).edge().id() == edge.graph_id()) {
             src_pct = edge.percent_along();
             break;
           }
         }
         float tgt_pct = 1;
-        for (const auto& edge : api.options().locations(1).path_edges()) {
+        for (const auto& edge : api.options().locations(1).correlation().edges()) {
           if (std::next(leg.node().rbegin())->edge().id() == edge.graph_id()) {
             tgt_pct = edge.percent_along();
             break;
@@ -290,8 +387,12 @@ TEST(recosting, all_algorithms) {
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
+        const GraphId start_edge_id(leg.node().begin()->edge().id());
+        const auto* node = reader->nodeinfo(reader->edge_endnode(start_edge_id));
+        const auto time_info = baldr::TimeInfo::make(date_time, node->timezone());
+
         // recost the path
-        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, date_time);
+        sif::recost_forward(*reader, *costing, edge_cb, label_cb, src_pct, tgt_pct, time_info);
       }
     }
   }
@@ -319,7 +420,7 @@ TEST(recosting, throwing) {
   auto reader = std::make_shared<baldr::GraphReader>(map.config.get_child("mjolnir"));
 
   // cross the graph as a pedestrian
-  auto api = gurka::route(map, "A", "F", "pedestrian", {}, reader);
+  auto api = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "pedestrian", {}, reader);
 
   // setup a callback for the recosting to get each edge
   const auto& leg = api.trip().routes(0).legs(0);
@@ -355,7 +456,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // go in the reverse direction
-  api = gurka::route(map, "F", "A", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"F", "A"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // this path isnt possible with a car because the first node is a gate
@@ -364,7 +465,7 @@ TEST(recosting, throwing) {
   EXPECT_EQ(called, true);
 
   // travel only on pedestrian edges
-  api = gurka::route(map, "B", "D", "pedestrian", {}, reader);
+  api = gurka::do_action(valhalla::Options::route, map, {"B", "D"}, "pedestrian", {}, reader);
   edge_itr = api.trip().routes(0).legs(0).node().begin();
 
   // it wont be able to evaluate any edges because they are all pedestrian only
@@ -374,7 +475,7 @@ TEST(recosting, throwing) {
 }
 
 TEST(recosting, error_request) {
-  auto config = gurka::detail::build_config("foo_bar", {});
+  auto config = test::make_config("foo_bar", {});
   auto reader = std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(config, *reader, true);
 
@@ -433,7 +534,10 @@ TEST(recosting, api) {
                           bool transition = true) {
     if (cost)
       EXPECT_GE(greater.elapsed_cost().cost(), lesser.elapsed_cost().cost());
-    EXPECT_GE(greater.elapsed_cost().seconds(), lesser.elapsed_cost().seconds());
+    bool const is_greater = greater.elapsed_cost().seconds() > lesser.elapsed_cost().seconds();
+    bool const is_equal =
+        std::abs(greater.elapsed_cost().seconds() - lesser.elapsed_cost().seconds()) < 0.0001;
+    EXPECT_TRUE(is_greater || is_equal);
     if (transition) {
       if (cost)
         EXPECT_GE(greater.transition_cost().cost(), lesser.transition_cost().cost());

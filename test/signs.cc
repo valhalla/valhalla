@@ -17,7 +17,7 @@ constexpr size_t IS_ROUTE_NUMBER = 1;
 constexpr size_t CONSECUTIVE_COUNT = 2;
 
 void PopulateSigns(const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items,
-                   std::vector<Sign>* sign_list) {
+                   std::vector<valhalla::odin::Sign>* sign_list) {
   for (auto& sign_item : sign_items) {
     sign_list->emplace_back(std::get<TEXT>(sign_item), std::get<IS_ROUTE_NUMBER>(sign_item));
     sign_list->back().set_consecutive_count(std::get<CONSECUTIVE_COUNT>(sign_item));
@@ -142,14 +142,14 @@ void TryGetGuideSigns(const Signs& signs,
                       uint32_t max_count,
                       bool limit_by_consecutive_count,
                       const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
-  std::vector<Sign> expected_signs;
+  std::vector<valhalla::odin::Sign> expected_signs;
   PopulateSigns(sign_items, &expected_signs);
   ASSERT_THAT(signs.GetGuideSigns(max_count, limit_by_consecutive_count), expected_signs);
 }
 
-void TryTrimSigns(const std::vector<Sign>& signs,
+void TryTrimSigns(const std::vector<valhalla::odin::Sign>& signs,
                   const std::vector<std::tuple<std::string, bool, uint32_t>>& sign_items) {
-  std::vector<Sign> expected_signs;
+  std::vector<valhalla::odin::Sign> expected_signs;
   PopulateSigns(sign_items, &expected_signs);
   ASSERT_THAT(signs, expected_signs);
 }
@@ -556,7 +556,7 @@ TEST(Signs, TestTrimSigns) {
   auto Freedom_Highway = std::make_tuple("Freedom Highway", 0, 1);
   auto Valhalla_Highway = std::make_tuple("Valhalla Highway", 0, 0);
 
-  std::vector<Sign> signs;
+  std::vector<valhalla::odin::Sign> signs;
   PopulateSigns({US_322_West, US_22_West, Freedom_Highway, Valhalla_Highway}, &signs);
 
   // Test defaults (max_count = 0, limit_by_consecutive_count = false)

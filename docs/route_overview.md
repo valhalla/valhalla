@@ -10,11 +10,10 @@ This document provides a brief overview of Valhalla route computation.
   The first step within a route is to find candidate edges for each incoming location. This logic is held within the *loki* directory. A set of nearby edges is found by iterating through bins within a routing graph tile or set of tiles near the location latitude, longitude. Bins are subdivided portions of Valhalla tiles that are currently .05 degrees per bin. Each bin stores a list of Valhalla edges with the bin. Edges that are allowed for the specified costing model are tested to determine the closest point along the geometry or shape of the edge. Special logic manages edges that are in disconnected regions which frequently occur in OpenStreetMap data. Additional candidate edges may be created in these cases. In addition, other filters such as filtering by heading can optionally be applied to narrow the set of candidate edges. 
 ## Path Computation
   Valhalla uses a couple different algorithms to generate the route path.  Code for these algorithms is held within the *thor* directory. They are all flavors of Dijkstra’s algorithm. The following classes are derived from *PathAlgorithm* (base class defining the route path interface):
-  - *AStar* - This is a forward direction A* algorithm which is currently used only for “trivial paths” where the origin and destination are on the same edge or adjacent, connected edges.
-  - *TimeDepForward* - This is a forward direction A* algorithm meant to be used for time dependent routes where a departure time from the origin is specified. 
-  - *TimeDepReverse* - This is a revers direction A* algorithm meant to be used for time dependent routes where an arrival time at the destination is specified.
-  - *BidirectionalAStar* - This is a bidirectional A* algorithm used for routes that are not time-dependent and are not trivial.
-  - *MultiModal* - This is a forward direction A* algorithm with transit schedule lookup included as well as logic to switch modes between pedestrian and transit. This algorithm is time-dependent due to the nature of transit schedules.
+  
+  - *UnidirectionalAStar* - This is a forward _OR_ reverse direction A\* algorithm which is currently used for time-dependent routing and trivial paths.
+  - *BidirectionalAStar* - This is a bidirectional A\* algorithm used for routes that are not time-dependent and are not trivial.
+  - *MultiModal* - This is a forward direction A\* algorithm with transit schedule lookup included as well as logic to switch modes between pedestrian and transit. This algorithm is time-dependent due to the nature of transit schedules.
 
 
   All of Valhalla’s path algorithms use dynamic, run-time costing. Costing logic is held within the *sif* directory. A base class (*DynamicCost*) defines the interface that each costing model implements.  A brief overview of the costing design is located [here](https://github.com/valhalla/valhalla/blob/master/docs/sif/dynamic-costing.md). 
@@ -40,6 +39,7 @@ The route narrative/guidance generating code is located in the *odin* directory.
 
 ## Serializing the Route Response
   The serialization of the route response takes place in the *tyr* layer of the Valhalla source code. *Tyr* is used to handle HTTP requests for a route and communicates with all of the other Valhalla APIs.  *Tyr* will format output from *Odin* and supports JSON and protocol buffer (pbf) output.
+  
   - Serialization logic is split up by API (route, matrix, isochrone, height, locate, and map-matching (trace_route and trace_attributes).
   - route_serializer.cc 
     - **serializeDirections**(request, path_legs, directions_legs) → outputs a json string

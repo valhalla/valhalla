@@ -1,5 +1,4 @@
-#ifndef VALHALLA_MJOLNIR_SEQUENCE_H_
-#define VALHALLA_MJOLNIR_SEQUENCE_H_
+#pragma once
 
 #include <algorithm>
 #include <cerrno>
@@ -14,6 +13,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <queue>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -23,14 +23,14 @@
 
 #include <valhalla/filesystem.h>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <io.h>
 #define stat _stat64
 #else
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif // _MSC_VER
+#endif // _WIN32
 #include <fcntl.h>
 
 // if we are on android
@@ -49,7 +49,7 @@
 #endif
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -139,9 +139,12 @@ public:
   }
 
   // construct with file
-  mem_map(const std::string& file_name, size_t size, int advice = POSIX_MADV_NORMAL)
+  mem_map(const std::string& file_name,
+          size_t size,
+          int advice = POSIX_MADV_NORMAL,
+          bool readonly = false)
       : ptr(nullptr), count(0), file_name("") {
-    map(file_name, size, advice);
+    map(file_name, size, advice, readonly);
   }
 
   // unmap when done
@@ -151,7 +154,7 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    auto target_size = new_count * sizeof(T);
+    decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
@@ -165,27 +168,31 @@ public:
   }
 
   // reset to another file or another size
-  void map(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+  void map(const std::string& new_file_name,
+           size_t new_count,
+           int advice = POSIX_MADV_NORMAL,
+           bool readonly = false) {
     // just in case there was already something
     unmap();
 
     // has to be something to map
     if (new_count > 0) {
       auto fd =
-#if defined(_MSC_VER)
-          _open(new_file_name.c_str(), O_RDWR, 0);
+#if defined(_WIN32)
+          _open(new_file_name.c_str(), (readonly ? O_RDONLY : O_RDWR), 0);
 #else
-          open(new_file_name.c_str(), O_RDWR, 0);
+          open(new_file_name.c_str(), (readonly ? O_RDONLY : O_RDWR), 0);
 #endif
       if (fd == -1) {
         throw std::runtime_error(new_file_name + "(open): " + strerror(errno));
       }
-      ptr = mmap(nullptr, new_count * sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      ptr = mmap(nullptr, new_count * sizeof(T), (readonly ? PROT_READ : PROT_READ | PROT_WRITE),
+                 MAP_SHARED, fd, 0);
       if (ptr == MAP_FAILED) {
         throw std::runtime_error(new_file_name + "(mmap): " + strerror(errno));
       }
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
       auto cl = _close(fd);
 #else
       auto cl = close(fd);
@@ -197,6 +204,12 @@ public:
       count = new_count;
       file_name = new_file_name;
     }
+  }
+
+  // reset to another file or another size with readonly permissions
+  void
+  map_readonly(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
+    map(new_file_name, new_count, advice, true /* readonly */);
   }
 
   // drop the map
@@ -250,6 +263,8 @@ template <class T> class sequence {
 public:
   // static_assert(std::is_pod<T>::value, "sequence requires POD types for now");
   static const size_t npos = -1;
+
+  using value_type = T;
 
   sequence() = delete;
 
@@ -310,7 +325,11 @@ public:
     return npos;
   }
 
-  // sort the file based on the predicate
+  // sort the file based on the predicate, and outputs to output_seq
+  //
+  // Strategy is to first sort sub-ranges of length buffer_size in place.
+  // These should all fit in memory. Then, merge the sub-ranges into the
+  // output sequence via priority queue.
   void sort(const std::function<bool(const T&, const T&)>& predicate,
             size_t buffer_size = 1024 * 1024 * 512 / sizeof(T)) {
     flush();
@@ -318,7 +337,59 @@ public:
     if (memmap.size() == 0) {
       return;
     }
-    std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
+
+    // If there wont be any merging we may as well take the simple approach
+    if (buffer_size > memmap.size() + write_buffer.size()) {
+      std::sort(static_cast<T*>(memmap), static_cast<T*>(memmap) + memmap.size(), predicate);
+      return;
+    }
+
+    auto tmp_path = filesystem::path(file_name).replace_filename(
+        filesystem::path(file_name).filename().string() + ".tmp");
+    {
+      // we need a temporary sequence to merge the sorted subsections into
+      sequence<T> output_seq(tmp_path.string(), true);
+
+      // Comparator needs to be inverted for pq to provide constant time *smallest* lookup
+      // Pq keeps track of element and its index.
+      auto cmp = [&predicate](const std::pair<T, size_t>& a, std::pair<T, size_t>& b) {
+        return predicate(b.first, a.first);
+      };
+      std::priority_queue<std::pair<T, size_t>, std::vector<std::pair<T, size_t>>, decltype(cmp)> pq(
+          cmp);
+
+      // Sort the subsections
+      for (size_t i = 0; i < memmap.size(); i += buffer_size) {
+        std::sort(static_cast<T*>(memmap) + i,
+                  static_cast<T*>(memmap) + std::min(memmap.size(), i + buffer_size), predicate);
+        pq.emplace(*at(i), i);
+      }
+
+      // Perform the merge
+      while (!pq.empty()) {
+        auto tmp = pq.top();
+        pq.pop();
+        output_seq.push_back(tmp.first);
+        size_t new_idx = tmp.second + 1;
+        if (new_idx % buffer_size != 0 && new_idx < memmap.size()) {
+          pq.emplace(*at(new_idx), new_idx);
+        }
+      }
+      output_seq.flush();
+    }
+
+    // Forget about this file for a second so we can swap in the temp file
+    file.reset();
+    memmap.unmap();
+
+    // Move the sorted result back into place
+    filesystem::remove(file_name);
+    filesystem::rename(tmp_path, file_name);
+
+    // Reload the sequence
+    sequence<T> reloaded(file_name, false);
+    std::swap(file, reloaded.file);
+    std::swap(memmap, reloaded.memmap);
     return;
   }
 
@@ -368,6 +439,12 @@ public:
     friend class sequence;
 
   public:
+    using iterator_category = std::random_access_iterator_tag;
+    using value_type = T;
+    using difference_type = std::ptrdiff_t;
+    using pointer = T*;
+    using reference = T&;
+
     // static_assert(std::is_pod<T>::value, "sequence_element requires POD types for now");
     iterator() = delete;
     iterator& operator=(const iterator& other) {
@@ -445,6 +522,7 @@ public:
     size_t position() const {
       return index;
     }
+    iterator(const iterator&) = default;
 
   protected:
     iterator(sequence* base, size_t offset) : parent(base), index(offset) {
@@ -517,6 +595,7 @@ protected:
 
 struct tar {
   struct header_t {
+    // 512 byte "block" size
     char name[100];
     char mode[8];
     char uid[8];
@@ -580,7 +659,19 @@ struct tar {
     }
   };
 
-  tar(const std::string& tar_file, bool regular_files_only = true)
+  // all of the info about which tar is memory mapped and where each file within
+  // the tar is found in the map
+  std::string tar_file;
+  mem_map<char> mm;
+  using entry_name_t = std::string;
+  using entry_location_t = std::pair<const char*, size_t>;
+  std::unordered_map<entry_name_t, entry_location_t> contents;
+  size_t corrupt_blocks;
+
+  tar(const std::string& tar_file,
+      bool regular_files_only = true,
+      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
+          from_index = nullptr)
       : tar_file(tar_file), corrupt_blocks(0) {
     // get the file size
     struct stat s;
@@ -590,11 +681,10 @@ struct tar {
       throw std::runtime_error(tar_file + "(stat): invalid archive size " +
                                std::to_string(s.st_size) + " with header size " +
                                std::to_string(sizeof(header_t)));
-      return;
     }
 
     // map the file
-    mm.map(tar_file, s.st_size);
+    mm.map_readonly(tar_file, s.st_size);
 
     // determine opposite of preferred path separator (needed to update OS-specific path separator)
     const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
@@ -602,6 +692,7 @@ struct tar {
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
+    bool tried_index = false;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
       // get the header for this file
@@ -618,6 +709,16 @@ struct tar {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::string name{h->name};
         std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
+        // the caller may be able to construct the contents via an index header let them try
+        if (!tried_index && from_index != nullptr) {
+          tried_index = true;
+          contents = from_index(name, position, mm.get(), size);
+          // if it was able to intialize from an index we bail
+          if (!contents.empty()) {
+            return;
+          }
+        }
+        // otherwise we just get each item at a time
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                          std::forward_as_tuple(position, size));
       }
@@ -626,16 +727,7 @@ struct tar {
       position += blocks * sizeof(header_t);
     }
   }
-
-  std::string tar_file;
-  mem_map<char> mm;
-  using entry_name_t = std::string;
-  using entry_location_t = std::pair<const char*, size_t>;
-  std::unordered_map<entry_name_t, entry_location_t> contents;
-  size_t corrupt_blocks;
 };
 
 } // namespace midgard
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_SEQUENCE_H_

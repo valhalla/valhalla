@@ -66,7 +66,7 @@ TEST(Encode, Polyline5) {
   auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}}, 1e5);
   EXPECT_EQ(encoded, "s}ksFfkupMz@fT");
 
-  do_polyline_pair5({{41.37084, -5.03016}, {76.8342, 42.01251}}, "pmu]wfo{Fw_c~G_mmwE");
+  do_polyline_pair5({{41.37084, -5.03016}, {76.8342, 42.01251}}, "nmu]wfo{Fu_c~G_mmwE");
 
   do_polyline_pair5(
       {{-9.42372, 152.03805},
@@ -78,23 +78,36 @@ TEST(Encode, Polyline5) {
        {-78.55439, -25.28158},
        {-31.92992, 103.20477},
        {58.26482, -169.02219}},
-      "y|}~[fqox@jqrzEyjkm@~yfza@vmvgL}k~uXwkpcYrprzZ`ow~DisbzDrh{lSaebeCxqna@u~eoW}iq{Gnip|r@cdoeP");
+      "y|}~[fqox@jqrzEyjkm@~yfza@vmvgL_l~uXwkpcYtprzZ`ow~DisbzDrh{lSaebeCxqna@u~eoW}iq{Gnip|r@cdoeP");
 }
 
 TEST(Encode, Polyline) {
+
   /**
    * #to generate these a new test cases grab google polyline encoder for python:
    * wget "https://py-gpolyencode.googlecode.com/svn/trunk/python/gpolyencode.py"
    * sed -i -e "s/15E/16E/g" gpolyencode.py
    * #then generate a test case with python:
-   * python -c "import random; import gpolyencode; x = [ [round(random.random() * 180 - 90, 5),
-   * round(random.random() * 360 - 180, 5)] for a in range(0, random.randint(1,100)) ]; p =
-   * gpolyencode.GPolyEncoder().encode(x)['points']; print; print 'do_pair(' +
-   * str(x).replace('[','{').replace(']','}') + ', \"' + repr(p)[1:-1] + '\");'; print"
    */
 
+  // clang-format off
+/*
+
+python2 -c "
+import random;
+import gpolyencode;
+x = [ [round(random.random() * 180 - 90, 5), round(random.random() * 360 - 180, 5)] for a in range(0, random.randint(1,100)) ];
+p = gpolyencode.GPolyEncoder().encode(x)['points']; print;
+print 'do_polyline_pair(' + str(x).replace('[','{').replace(']','}') + ', \"' + repr(p)[1:-1] + '\");'; print"
+
+*/
+  // clang-format on
+
   // check an easy case first just to be sure its working
-  auto encoded = encode<container_t>({{-76.3002, 40.0433}, {-76.3036, 40.043}});
+  auto encoded = encode<container_t>({
+      {-76.3002, 40.0433},
+      {-76.3036, 40.043},
+  });
   EXPECT_EQ(encoded, "gq`kkAny~opCvQnsE");
 
   // note we are testing with higher precision to avoid truncation/roundoff errors just to make the
@@ -115,26 +128,27 @@ TEST(Encode, Polyline) {
       "bmnHvkbu\\kbtreDblojcAchm{o@_awfa@zsebk@kqqszCwtdlgJnc``Hj~{yrJz}esQc{od_GnuynOfcktuBk`~_"
       "KrntbyG~kofuE{wsa_Ckyzo_DfsxipDggc`_@k}~nmS~ckl~Ej|oe`Okn}{oCbe_eaAwf_nwCogncgHrk~lhAgypuw@"
       "rkg}`C{xccxA~rylUb|_feBr`jrqAb~_f`E{dyb~CfkygoAvvsvr@wbo}iB~mnjbAzot_aFz|nhU_ysvnFk{wnuF");
-  do_polyline_pair({{-15.14467, 95.09918},
-                    {-0.52122, -136.82914},
-                    {65.10222, 77.44049},
-                    {-69.52769, -130.85075},
-                    {46.36195, -33.8091},
-                    {4.62432, -55.24198},
-                    {-85.23295, 56.73264},
-                    {-34.87542, -148.58007},
-                    {-88.75693, 73.15576},
-                    {14.66023, -174.40911},
-                    {-17.84068, 133.05384},
-                    {74.64337, -148.80224},
-                    {-61.31799, -145.47643},
-                    {45.99419, 133.9817},
-                    {34.77185, -75.40288},
-                    {35.42642, -167.09832},
-                    {84.2264, -103.19799}},
-                   "wqkktDzlj{[~~wjyLslp{Z{j~twK_xid|BnyahlKj`dx_Gcn}axDo}i`|E~ad{g@"
-                   "zxmrnAwlkqtEjnmkjDjkhrfKspq`_Bkxt|eLjitweBjcdewMosagdEkq`miQziu~|@~ccrxOc|"
-                   "wkoDcv~iE~olibGatw_tOgbytkEdgyjnKfs}kT~ss{mDsm}f@sid{xBwmoa|A");
+  do_polyline_pair(
+      {
+          {-15.14467, 95.09918},
+          {-0.52122, -136.82914},
+          {65.10222, 77.44049},
+          {-69.52769, -130.85075},
+          {46.36195, -33.8091},
+          {4.62432, -55.24198},
+          {-85.23295, 56.73264},
+          {-34.87542, -148.58007},
+          {-88.75693, 73.15576},
+          {14.66023, -174.40911},
+          {-17.84068, 133.05384},
+          {74.64337, -148.80224},
+          {-61.31799, -145.47643},
+          {45.99419, 133.9817},
+          {34.77185, -75.40288},
+          {35.42642, -167.09832},
+          {84.2264, -103.19799},
+      },
+      "wqkktDzlj{[~~wjyLslp{Z{j~twK_xid|BnyahlKj`dx_Gcn}axDo}i`|E~ad{g@zxmrnAwlkqtEjnmkjDjkhrfKspq`_Bkxt|eLjitweBjcdewMosagdEkq`miQziu~|@~ccrxOc|wkoDcv~iE~olibGctw_tOgbytkEfgyjnKfs}kT~ss{mDsm}f@sid{xBwmoa|A");
   do_polyline_pair({{10.33681, 13.20223},
                     {-54.25453, 52.78416},
                     {2.80146, -1.14462},
@@ -165,21 +179,19 @@ TEST(Encode, Polyline) {
        {65.67464, 55.57602},  {78.45655, 65.85946},    {-70.17561, 169.4693},
        {-48.9856, -65.40795}, {44.18882, 15.81999},    {-75.78086, -168.70654},
        {70.58843, 0.90691},   {58.08244, 25.21063}},
-      "zwd{]{racyCo}jyx@~s_ghDrj}wyDzr{ygBghpskAkhzxoBnfco~D~lhxOrxksn@{pxcuAwu_j~Mvoi|aDvackqE{ni}"
-      "uDchjawFf|uih@nblodMjuju\\ai`|yFoxyudAhu~pcIkv`x[cfjl}PrgzhsFv{to_CgweglCjkplzDgtdkWwny~rDo~"
-      "qf}A_zsrRktckW_~yrdE~dxnzGbsw~~Lsvilg@giw|yCgh|upDbkr}~I~wjycFsgkobIsotdvGoekjm@jwhzV");
-  do_polyline_pair({{-66.08387, -49.71979},
-                    {-73.78285, -48.51323},
-                    {9.34045, 113.87993},
-                    {43.50452, 1.63821},
-                    {-34.9178, -80.0957},
-                    {10.05031, 156.94869},
-                    {-1.01914, 42.48849},
-                    {-60.53017, 29.84393},
-                    {-80.30977, -63.88584},
-                    {55.21413, -50.18415}},
-                   "z}sy}A|`m`}B_qshAda|tMocuvtHgemp}CnbuauEkued`Ajps{zC~qoqtCki`ccM{iswtAnabiyEr_"
-                   "sbT~kwbWjngopBr}xwqD~_gvd@sbhcYwbvnaG");
+      "zwd{]{racyCo}jyx@~s_ghDrj}wyDzr{ygBghpskAkhzxoBnfco~D~lhxOrxksn@{pxcuAwu_j~Mvoi|aDvackqE{ni}uDchjawFf|uih@nblodMjuju\\ci`|yFoxyudAju~pcIkv`x[cfjl}PrgzhsFv{to_CgweglCjkplzDgtdkWwny~rDo~qf}A_zsrRktckW_~yrdE~dxnzGbsw~~Lsvilg@giw|yCgh|upDbkr}~I~wjycFsgkobIsotdvGoekjm@jwhzV");
+  do_polyline_pair(
+      {{-66.08387, -49.71979},
+       {-73.78285, -48.51323},
+       {9.34045, 113.87993},
+       {43.50452, 1.63821},
+       {-34.9178, -80.0957},
+       {10.05031, 156.94869},
+       {-1.01914, 42.48849},
+       {-60.53017, 29.84393},
+       {-80.30977, -63.88584},
+       {55.21413, -50.18415}},
+      "z}sy}Az`m`}B_qshAfa|tMocuvtHgemp}CnbuauEkued`Ajps{zC~qoqtCki`ccM{iswtAnabiyEr_sbT~kwbWjngopBr}xwqD~_gvd@sbhcYwbvnaG");
   do_polyline_pair({{-9.59238, -59.68037},
                     {-80.40085, -45.96192},
                     {-50.2141, -91.43616},
@@ -205,10 +217,7 @@ TEST(Encode, Polyline) {
        {-16.70451, 112.07603}, {16.28222, 114.26197},  {60.96175, -130.56696},
        {53.15759, -124.62571}, {13.86561, 136.02146},  {-39.9363, 161.60008},
        {-59.07013, 62.61662},  {85.62251, -145.65735}, {-14.96798, 166.5488}},
-      "wobd_Egpp~x@vjzgiJ~nxbyCbbwwbAb|shc@_cyeeFk}~ylHbddcqBn_~hnHw_zskGc`|d{Dbb_`wCrsiduCg~nht@_"
-      "llvt@{qu}dHcppsRnvbk~KcfgnN_}oyoEjoytf@fplk`Kw}qc_@{p|roPzwl|l@vhsmhJo}qxd@fqakgFzzdcpA_sz`"
-      "sA_fmtnEwqnhGsq|_~@fxbttBfa~asHwe}ciO{{jjlBglldCqej|}@bod~qMuu_ftAc_siJ~ni{McoscpNvce}"
-      "iAwfexo@jzxreBfanx{Djwync@bb`glK_yi~rGkspnrQrxpz~D");
+      "wobd_Egpp~x@vjzgiJ~nxbyCbbwwbAb|shc@_cyeeFk}~ylHbddcqBn_~hnHw_zskGc`|d{Dbb_`wCrsiduCg~nht@_llvt@{qu}dHcppsRnvbk~KcfgnN_}oyoEjoytf@fplk`Kw}qc_@{p|roPzwl|l@vhsmhJo}qxd@fqakgFzzdcpA_sz`sA_fmtnEwqnhGsq|_~@fxbttBfa~asHwe}ciO{{jjlBglldCsej|}@bod~qMsu_ftAc_siJ~ni{McoscpNvce}iAwfexo@jzxreBfanx{Djwync@bb`glK_yi~rGkspnrQrxpz~D");
   do_polyline_pair(
       {{23.86009, -92.13773},  {88.11646, -35.54743}, {-10.58013, -128.94492},
        {-83.30518, 110.36499}, {-85.0673, 8.89085},   {63.74281, -159.81506},
@@ -229,9 +238,7 @@ TEST(Encode, Polyline) {
        {-74.94886, -72.13421}, {-32.88714, 153.28987},  {21.31903, 11.5894},
        {38.21212, -8.08468},   {82.36711, -79.93899},   {-16.43777, -16.22507},
        {-4.6856, 151.33454},   {43.6428, 38.2291},      {36.94968, -165.55867}},
-      "_qnbaCrrijM{ity_DrmnseB~zp~aGg`mxzE~bcyrFaqxiSo}}n{B|cdqTk}ubhE_mnnUfl}hkEba|pIaxs~qIzjkqfB`"
-      "hsu_J{`i}rBkkkfrGtzqj}BbnvjsL|kqiaDsy`|Ass`pwBofj|{BvhdtcB_lx}lLmxffoAjvugmGulnkfB`}xod@"
-      "ciaf_@hms`hC{e_fsA_gxoxB~gqm{Dsz_r~HsmhlU~`lvvE_lvd{Ar~eucK~nowK");
+      "_qnbaCrrijM{ity_DrmnseB~zp~aGg`mxzE~bcyrFcqxiSo}}n{B~cdqTk}ubhE_mnnUfl}hkEba|pIcxs~qIzjkqfBbhsu_J{`i}rBkkkfrGrzqj}BbnvjsL~kqiaDsy`|Ass`pwBofj|{BvhdtcB_lx}lLoxffoAjvugmGslnkfB~|xod@ciaf_@jms`hC{e_fsA_gxoxB~gqm{Dsz_r~HsmhlU~`lvvE_lvd{Ar~eucK~nowK");
   do_polyline_pair(
       {{-34.28558, 167.99824}, {-7.31514, 10.55876},    {-79.67137, 157.13177},
        {25.71649, 109.01104},  {-5.60888, -38.33339},   {-18.47462, -162.75213},
@@ -267,19 +274,19 @@ TEST(Encode, Polyline) {
       "cbddbErp_mcDgmyka@sqhefHfvmwfLsygfb@{srn`N~`ay`A~ercwPwsia`Acpv|~Jf|{jHgm~gaFzqoiKzb`mtPzwp_"
       "r@nm}npAvedjzFsnwv`PfuuzHrrwrrNcbszfEsgpk{JfortuAb~anxGcfwq}@_j}}zBbxtfYzkogeAw`oqh@nqm~`C{}"
       "{qh@oefupGrnxv^okgk`Gbyfu]rplpyEfd}kY~_mcX_xqzd@svrciGc{r_vBrta|zGbrijzCrnkq`Jfx{gxB");
-  do_polyline_pair({{82.55686, 40.18149},
-                    {-79.6624, -167.21023},
-                    {-1.04267, -66.55423},
-                    {61.73513, -170.40375},
-                    {9.68077, 110.51218},
-                    {79.7428, 104.78995},
-                    {78.90557, -78.36458},
-                    {-0.7791, -149.20926},
-                    {-67.01631, -126.5595},
-                    {-82.51481, -19.16425},
-                    {53.91056, 7.59478}},
-                   "cnnskAwzzm|Cn}dqjKvnaltH}vp~~Dcdq}tC|anaeEo{svvBs|vxvOntchbBjfg|I{{fsdCbuzi|"
-                   "Izebr@no_cfCzbq~vC_ylej@tpxi}Bcj{ykEdo}p\\kvf`r@sxvecG");
+  do_polyline_pair(
+      {{82.55686, 40.18149},
+       {-79.6624, -167.21023},
+       {-1.04267, -66.55423},
+       {61.73513, -170.40375},
+       {9.68077, 110.51218},
+       {79.7428, 104.78995},
+       {78.90557, -78.36458},
+       {-0.7791, -149.20926},
+       {-67.01631, -126.5595},
+       {-82.51481, -19.16425},
+       {53.91056, 7.59478}},
+      "cnnskAwzzm|Cn}dqjKvnaltH_wp~~Dcdq}tC~anaeEo{svvBs|vxvOntchbBjfg|I{{fsdCbuzi|Izebr@no_cfCzbq~vC_ylej@rpxi}Bcj{ykEfo}p\\kvf`r@sxvecG");
   do_polyline_pair({{0.23265, 88.237},
                     {71.47586, -61.6458},
                     {-75.11235, 14.23395},
@@ -373,10 +380,7 @@ TEST(Encode, Polyline) {
        {-14.68048, -156.22143}, {59.84613, -167.75286},  {-88.33815, 125.94346},
        {71.80321, -81.51938},   {-89.91225, 141.35892},  {-15.68731, -146.83647},
        {-54.43659, -28.82345},  {-71.59295, 7.44686},    {24.65526, -68.24392}},
-      "ohpzhCwijm_Db`_quMvd~leEk{~akSvu``D~hnodJnqcr]fzcbuGoj{mmAorjeyChz~z_Cg~orf@dvpyDwbmnkEwpd`"
-      "uEff`jrJztyztAsi}x~A~ecfoCg{gdCgmsjbCshlnaC__umdD_lam_AbioshH~uo_uC__{_dCoyob{BnddcFocgv]"
-      "rwiya@selodCgxxziBvzpjwEzj|s_An}_q`F~uypMjiy~TcxvcmC_sxdoPnlmsyGnzoujK_bgmpHwdlbhLfoimsHzr`"
-      "udPwqiqlCwd}a`F~da|hAkmwddAnocv_@vpxjoCcxoqvD");
+      "ohpzhCwijm_Db`_quMvd~leEk{~akSvu``D~hnodJnqcr]fzcbuGoj{mmAorjeyCfz~z_Cg~orf@fvpyDwbmnkEwpd`uEff`jrJztyztAsi}x~A~ecfoCg{gdCgmsjbCshlnaC__umdD_lam_AbioshH~uo_uC__{_dCoyob{BnddcFocgv]rwiya@selodCgxxziBvzpjwEzj|s_An}_q`F~uypMjiy~TcxvcmC_sxdoPnlmsyGnzoujK_bgmpHwdlbhLfoimsHzr`udPwqiqlCwd}a`F~da|hAkmwddAnocv_@vpxjoCcxoqvD");
   do_polyline_pair({{-9.42372, 152.03805},
                     {-1.82375, 116.05687},
                     {-71.41203, -66.66489},

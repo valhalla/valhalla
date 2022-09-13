@@ -28,7 +28,7 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
-     $<$<BOOL:${MSVC}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
      ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
@@ -37,6 +37,7 @@ set(includes
 set(sources
     accessrestriction.cc
     admin.cc
+    attributes_controller.cc
     compression_utils.cc
     connectivity_map.cc
     curler.cc
@@ -47,14 +48,16 @@ set(sources
     graphreader.cc
     graphtile.cc
     graphtileheader.cc
+    incident_singleton.h
     edgetracker.cc
     merge.cc
     nodeinfo.cc
-    openlr.cc
     location.cc
     pathlocation.cc
+    predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
+    shortcut_recovery.h
     streetname.cc
     streetnames.cc
     streetnames_factory.cc
@@ -88,11 +91,11 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
     tz_alt.cpp)
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Werror")
-endif (UNIX)
+endif()
 
 #ios we have more work to make use of system tzdb
 if(APPLE)

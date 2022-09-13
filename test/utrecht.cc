@@ -16,7 +16,6 @@
 #define VALHALLA_SOURCE_DIR
 #endif
 
-using namespace std;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
@@ -26,6 +25,7 @@ namespace {
 std::string ways_file = "test_ways_utrecht.bin";
 std::string way_nodes_file = "test_way_nodes_utrecht.bin";
 std::string access_file = "test_access_utrecht.bin";
+std::string pronunciation_file = "test_pronunciation_utrecht.bin";
 std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
 std::string bss_file = "test_bss_nodes_utrecht.bin";
@@ -63,7 +63,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_127361688.moped_forward());
   EXPECT_TRUE(way_127361688.bus_forward());
   EXPECT_TRUE(way_127361688.bike_forward());
-  EXPECT_TRUE(way_127361688.pedestrian());
+  EXPECT_TRUE(way_127361688.pedestrian_forward());
+  EXPECT_TRUE(way_127361688.pedestrian_backward());
   EXPECT_TRUE(way_127361688.auto_backward());
   EXPECT_TRUE(way_127361688.moped_backward());
   EXPECT_TRUE(way_127361688.bus_backward());
@@ -74,7 +75,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_7062008.moped_forward());
   EXPECT_TRUE(way_7062008.bus_forward());
   EXPECT_TRUE(way_7062008.bike_forward());
-  EXPECT_TRUE(way_7062008.pedestrian());
+  EXPECT_TRUE(way_7062008.pedestrian_forward());
+  EXPECT_TRUE(way_7062008.pedestrian_backward());
   EXPECT_FALSE(way_7062008.auto_backward());
   EXPECT_FALSE(way_7062008.moped_backward());
   EXPECT_FALSE(way_7062008.bus_backward());
@@ -85,7 +87,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_48672084.moped_forward());
   EXPECT_TRUE(way_48672084.bus_forward());
   EXPECT_TRUE(way_48672084.bike_forward());
-  EXPECT_TRUE(way_48672084.pedestrian());
+  EXPECT_TRUE(way_48672084.pedestrian_forward());
+  EXPECT_TRUE(way_48672084.pedestrian_backward());
   EXPECT_FALSE(way_48672084.auto_backward());
   EXPECT_FALSE(way_48672084.moped_backward());
   EXPECT_FALSE(way_48672084.bus_backward());
@@ -95,7 +98,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_7053107.auto_forward());
   EXPECT_TRUE(way_7053107.bus_forward());
   EXPECT_TRUE(way_7053107.bike_forward());
-  EXPECT_TRUE(way_7053107.pedestrian());
+  EXPECT_TRUE(way_7053107.pedestrian_forward());
+  EXPECT_TRUE(way_7053107.pedestrian_backward());
   EXPECT_FALSE(way_7053107.auto_backward());
   EXPECT_FALSE(way_7053107.bus_backward());
   EXPECT_TRUE(way_7053107.bike_backward());
@@ -105,7 +109,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_7053048.moped_forward());
   EXPECT_TRUE(way_7053048.bus_forward());
   EXPECT_TRUE(way_7053048.bike_forward());
-  EXPECT_TRUE(way_7053048.pedestrian());
+  EXPECT_TRUE(way_7053048.pedestrian_forward());
+  EXPECT_TRUE(way_7053048.pedestrian_backward());
   EXPECT_FALSE(way_7053048.auto_backward());
   EXPECT_FALSE(way_7053048.moped_backward());
   EXPECT_TRUE(way_7053048.bike_backward());
@@ -116,7 +121,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_221051138.moped_forward());
   EXPECT_TRUE(way_221051138.bus_forward());
   EXPECT_TRUE(way_221051138.bike_forward());
-  EXPECT_TRUE(way_221051138.pedestrian());
+  EXPECT_TRUE(way_221051138.pedestrian_forward());
+  EXPECT_TRUE(way_221051138.pedestrian_backward());
   EXPECT_FALSE(way_221051138.auto_backward());
   EXPECT_FALSE(way_221051138.moped_backward());
   EXPECT_FALSE(way_221051138.bus_backward());
@@ -127,7 +133,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_23544607.moped_forward());
   EXPECT_TRUE(way_23544607.bus_forward());
   EXPECT_TRUE(way_23544607.bike_forward());
-  EXPECT_TRUE(way_23544607.pedestrian());
+  EXPECT_TRUE(way_23544607.pedestrian_forward());
+  EXPECT_TRUE(way_23544607.pedestrian_backward());
   EXPECT_TRUE(way_23544607.auto_backward());
   EXPECT_TRUE(way_23544607.moped_backward());
   EXPECT_TRUE(way_23544607.bus_backward());
@@ -138,7 +145,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_221051142.moped_forward());
   EXPECT_FALSE(way_221051142.bus_forward());
   EXPECT_TRUE(way_221051142.bike_forward());
-  EXPECT_FALSE(way_221051142.pedestrian());
+  EXPECT_FALSE(way_221051142.pedestrian_forward());
+  EXPECT_FALSE(way_221051142.pedestrian_backward());
   EXPECT_FALSE(way_221051142.auto_backward());
   EXPECT_FALSE(way_221051142.moped_backward());
   EXPECT_FALSE(way_221051142.bus_backward());
@@ -149,7 +157,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_72906238.moped_forward());
   EXPECT_TRUE(way_72906238.bus_forward());
   EXPECT_TRUE(way_72906238.bike_forward());
-  EXPECT_TRUE(way_72906238.pedestrian());
+  EXPECT_TRUE(way_72906238.pedestrian_forward());
+  EXPECT_TRUE(way_72906238.pedestrian_backward());
   EXPECT_FALSE(way_72906238.auto_backward());
   EXPECT_FALSE(way_72906238.moped_backward());
   EXPECT_FALSE(way_72906238.bus_backward());
@@ -160,7 +169,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_7010549.moped_forward());
   EXPECT_TRUE(way_7010549.bus_forward());
   EXPECT_TRUE(way_7010549.bike_forward());
-  EXPECT_TRUE(way_7010549.pedestrian());
+  EXPECT_TRUE(way_7010549.pedestrian_forward());
+  EXPECT_TRUE(way_7010549.pedestrian_backward());
   EXPECT_FALSE(way_7010549.auto_backward());
   EXPECT_FALSE(way_7010549.moped_backward());
   EXPECT_FALSE(way_7010549.bus_backward());
@@ -171,7 +181,8 @@ TEST(Utrecth, TestBike) {
   EXPECT_TRUE(way_7007629.moped_forward());
   EXPECT_TRUE(way_7007629.bus_forward());
   EXPECT_TRUE(way_7007629.bike_forward());
-  EXPECT_TRUE(way_7007629.pedestrian());
+  EXPECT_TRUE(way_7007629.pedestrian_forward());
+  EXPECT_TRUE(way_7007629.pedestrian_backward());
   EXPECT_FALSE(way_7007629.auto_backward());
   EXPECT_FALSE(way_7007629.moped_backward());
   EXPECT_FALSE(way_7007629.bus_backward());
@@ -191,7 +202,8 @@ TEST(Utrecht, TestBus) {
   EXPECT_TRUE(way_33648196.moped_forward());
   EXPECT_TRUE(way_33648196.bus_forward());
   EXPECT_TRUE(way_33648196.bike_forward());
-  EXPECT_TRUE(way_33648196.pedestrian());
+  EXPECT_TRUE(way_33648196.pedestrian_forward());
+  EXPECT_TRUE(way_33648196.pedestrian_backward());
   EXPECT_FALSE(way_33648196.auto_backward());
   EXPECT_TRUE(way_33648196.moped_backward());
   EXPECT_TRUE(way_33648196.bus_backward());
@@ -209,7 +221,7 @@ public:
     auto osmdata =
         PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                   {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                  ways_file, way_nodes_file, access_file);
+                                  ways_file, way_nodes_file, access_file, pronunciation_file);
 
     PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                    {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
@@ -217,7 +229,7 @@ public:
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                               ways_file, way_nodes_file, bss_file, osmdata);
+                               way_nodes_file, bss_file, osmdata);
   }
 
   void TearDown() override {

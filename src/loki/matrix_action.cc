@@ -30,10 +30,8 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       auto path_distance = to_ll(source).Distance(to_ll(target));
 
       // only want to log the maximum distance between 2 locations for matrix
-      LOG_DEBUG("path_distance -> " + std::to_string(path_distance));
       if (path_distance >= max_location_distance) {
         max_location_distance = path_distance;
-        LOG_DEBUG("max_location_distance -> " + std::to_string(max_location_distance));
       }
 
       if (path_distance > matrix_max_distance) {
@@ -87,9 +85,12 @@ void loki_worker_t::init_matrix(Api& request) {
 }
 
 void loki_worker_t::matrix(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   init_matrix(request);
   auto& options = *request.mutable_options();
-  const auto& costing_name = Costing_Enum_Name(options.costing());
+  const auto& costing_name = Costing_Enum_Name(options.costing_type());
 
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
@@ -97,7 +98,7 @@ void loki_worker_t::matrix(Api& request) {
 
   // check that location size does not exceed max.
   auto max = max_matrix_locations.find(costing_name)->second;
-  if (options.sources_size() > max || options.targets_size() > max) {
+  if (options.sources_size() * options.targets_size() > max) {
     throw valhalla_exception_t{150, std::to_string(max)};
   };
 
@@ -120,17 +121,17 @@ void loki_worker_t::matrix(Api& request) {
       const auto& l = sources_targets[i];
       const auto& projection = searched.at(l);
       PathLocation::toPBF(projection,
-                          i < options.sources_size()
+                          i < static_cast<size_t>(options.sources_size())
                               ? options.mutable_sources(i)
-                              : options.mutable_targets(i - options.sources_size()),
+                              : options.mutable_targets(i -
+                                                        static_cast<size_t>(options.sources_size())),
                           *reader);
       // TODO: get transit level for transit costing
       // TODO: if transit send a non zero radius
       if (!connectivity_map) {
         continue;
       }
-      auto colors =
-          connectivity_map->get_colors(TileHierarchy::levels().rbegin()->first, projection, 0);
+      auto colors = connectivity_map->get_colors(TileHierarchy::levels().back().level, projection, 0);
       for (auto& color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {
@@ -156,12 +157,6 @@ void loki_worker_t::matrix(Api& request) {
   if (!connected) {
     throw valhalla_exception_t{170};
   };
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
-                                        "km",
-                                    " [ANALYTICS] ");
-  }
 }
 } // namespace loki
 } // namespace valhalla

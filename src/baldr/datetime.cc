@@ -282,7 +282,7 @@ bool is_conditional_active(const bool type,
     return false;
 
   bool dow_in_range = true;
-  bool dt_in_range = false;
+  bool dt_in_range = true;
 
   // date::time_of_day()
   std::chrono::minutes b_td = std::chrono::hours(0);
@@ -365,7 +365,7 @@ bool is_conditional_active(const bool type,
 
     bool edge_case = false; // Jan 04 to Jan 01
     // month only
-    if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !b_week) &&
+    if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !e_week) &&
         b_month == e_month) {
 
       dt_in_range = (b_month <= unsigned(d.month()) && unsigned(d.month()) <= e_month);
@@ -448,7 +448,7 @@ bool is_conditional_active(const bool type,
         end_date = date::year_month_day(date::year(e_year), date::month(e_month),
                                         date::day(e_day_dow)); // Dec 5 to Mar 3
       }
-    } else { // do we have just time?
+    } else { // just time or dow with or without time
 
       if (begin_hrs || begin_mins || end_hrs || end_mins) {
         b_td = std::chrono::hours(begin_hrs) + std::chrono::minutes(begin_mins);
@@ -469,9 +469,11 @@ bool is_conditional_active(const bool type,
     }
 
     // Time does not matter here; we are only dealing with dates.
-    auto b_in_local_time = date::make_zoned(time_zone, date::local_days(begin_date));
-    auto local_dt = date::make_zoned(time_zone, date::local_days(d));
-    auto e_in_local_time = date::make_zoned(time_zone, date::local_days(end_date));
+    auto b_in_local_time =
+        date::make_zoned(time_zone, date::local_days(begin_date), date::choose::latest);
+    auto local_dt = date::make_zoned(time_zone, date::local_days(d), date::choose::latest);
+    auto e_in_local_time =
+        date::make_zoned(time_zone, date::local_days(end_date), date::choose::latest);
 
     if (edge_case) {
 
@@ -482,11 +484,13 @@ bool is_conditional_active(const bool type,
       // end date = Jan 02, 2021
       date::year_month_day new_ed =
           date::year_month_day(date::year(b_year), date::month(12), date::day(31));
-      auto new_e_in_local_time = date::make_zoned(time_zone, date::local_days(new_ed));
+      auto new_e_in_local_time =
+          date::make_zoned(time_zone, date::local_days(new_ed), date::choose::latest);
 
       date::year_month_day new_bd =
           date::year_month_day(date::year(b_year), date::month(1), date::day(1));
-      auto new_b_in_local_time = date::make_zoned(time_zone, date::local_days(new_bd));
+      auto new_b_in_local_time =
+          date::make_zoned(time_zone, date::local_days(new_bd), date::choose::latest);
 
       // we need to check Jan 04, 2021 to Dec 31, 2021 and Jan 01, 2021 to Jan 02, 2021
       dt_in_range = (((b_in_local_time.get_local_time() <= local_dt.get_local_time() &&

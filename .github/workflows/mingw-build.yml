@@ -1,0 +1,48 @@
+name: Valhalla MinGW Build
+on: [pull_request]
+
+jobs:
+  build:
+    name: MinGW64 build
+    runs-on: ubuntu-latest
+    container: fedora:rawhide
+    steps:
+      - name: Get dependencies
+        run: |
+          dnf install -y \
+            cmake \
+            gcc-c++ \
+            git \
+            make \
+            mingw64-curl \
+            mingw64-boost \
+            mingw64-protobuf \
+            mingw64-geos \
+            mingw64-python3 \
+            protobuf-compiler
+      - uses: actions/checkout@v2
+      - name: Checkout submodules
+        shell: bash
+        run: |
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+      - name: Configure and run build
+        run: |
+          mkdir build && cd build \
+          && mingw64-cmake .. \
+            -DCMAKE_CROSS_COMPILING=1 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_TOOLS=OFF \
+            -DENABLE_DATA_TOOLS=OFF \
+            -DENABLE_SERVICES=OFF \
+            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_CCACHE=OFF \
+            -DENABLE_TESTS=OFF \
+            -DENABLE_BENCHMARKS=OFF \
+            -DLOGGING_LEVEL=DEBUG \
+            -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
+            -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \
+            -DPYTHON_LIBRARIES=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libpython3.9.dll.a \
+            -DPYTHON_INCLUDE_DIRS=/usr/x86_64-w64-mingw32/sys-root/mingw/include/python3.9 \
+          && mingw64-make -j$(nproc)

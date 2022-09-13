@@ -46,7 +46,7 @@ rapidjson::Document d;
 /*************************************************************/
 
 TEST_F(Admin, Iso) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -55,12 +55,12 @@ TEST_F(Admin, Iso) {
   EXPECT_EQ(leg.admin(0).state_code(), "PA");   // AB
   EXPECT_EQ(leg.admin(1).country_code(), "US"); // BC
   EXPECT_EQ(leg.admin(1).state_code(), "MD");   // BC
-  EXPECT_TRUE(leg.node(0).edge().drive_on_right());
-  EXPECT_FALSE(leg.node(1).edge().drive_on_right());
+  EXPECT_FALSE(leg.node(0).edge().drive_on_left());
+  EXPECT_TRUE(leg.node(1).edge().drive_on_left());
 }
 
 TEST_F(Admin, test_admin_response) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   ASSERT_EQ(d["routes"].Size(), 1);

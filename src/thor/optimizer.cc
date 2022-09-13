@@ -106,7 +106,8 @@ void Optimizer::CreateRandomTour() {
   for (uint32_t i = 1; i < count_ - 1; i++) {
     tour_.push_back(i);
   }
-  std::random_shuffle(tour_.begin(), tour_.end());
+  std::random_device rd;
+  std::shuffle(tour_.begin(), tour_.end(), std::mt19937(rd()));
   tour_.insert(tour_.begin(), 0);
   tour_.push_back(count_ - 1);
 }

@@ -31,7 +31,7 @@ void assert_tile_equalish(const GraphTile& a,
                           const GraphTile& b,
                           size_t difference,
                           const std::array<std::vector<GraphId>, kBinCount>& bins,
-                          const std::string& msg) {
+                          const std::string& /*msg*/) {
   // expected size
   ASSERT_EQ(a.header()->end_offset() + difference, b.header()->end_offset());
 
@@ -69,8 +69,8 @@ void assert_tile_equalish(const GraphTile& a,
       ah->schedulecount() == bh->schedulecount() && ah->version() == bh->version()) {
     // make sure the edges' shape and names match
     for (size_t i = 0; i < ah->directededgecount(); ++i) {
-      auto a_info = a.edgeinfo(a.directededge(i)->edgeinfo_offset());
-      auto b_info = b.edgeinfo(b.directededge(i)->edgeinfo_offset());
+      auto a_info = a.edgeinfo(a.directededge(i));
+      auto b_info = b.edgeinfo(b.directededge(i));
       ASSERT_EQ(a_info.encoded_shape(), b_info.encoded_shape());
       ASSERT_EQ(a_info.GetNames().size(), b_info.GetNames().size());
       for (size_t j = 0; j < a_info.GetNames().size(); ++j)
@@ -106,65 +106,66 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // load a test builder
   std::string test_dir = "test/data/builder_tiles";
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
+  test.directededges().emplace_back();
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly two of these in here";
 
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
-                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly two of these in here";
 
   test.StoreTileData();
   test_graph_tile_builder test2(test_dir, GraphId(0, 2, 0), false);
-  auto ei = test2.edgeinfo(0);
+  auto ei = test2.edgeinfo(&test2.directededge(0));
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
-  auto n1 = test2.GetNames(0, false);
+  auto n1 = ei.GetNames();
   EXPECT_EQ(n1.size(), 1);
   EXPECT_EQ(n1.at(0), "einzelweg");
 
-  auto n2 = test2.GetNames(0); // defaults to false
+  auto n2 = ei.GetNames(); // defaults to false
   EXPECT_EQ(n2.size(), 1);
   EXPECT_EQ(n2.at(0), "einzelweg");
 
-  auto n3 = test2.GetNames(0, true);
+  auto n3 = ei.GetTaggedValues();
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
-  auto names_and_types = ei.GetNamesAndTypes(true);
-  EXPECT_EQ(names_and_types.size(), 2);
+  std::vector<uint8_t> types;
+  auto names_and_types = ei.GetNamesAndTypes(types, false);
+  EXPECT_EQ(names_and_types.size(), 1);
+  EXPECT_EQ(types.size(), 1);
 
   auto n4 = names_and_types.at(0);
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  auto n5 = names_and_types.at(1);
-  EXPECT_EQ(n5.first, "xyz tunnel"); // no tag type in GetNamesAndTypes
-  EXPECT_EQ(n5.second, false);
+  auto t = types.at(0);
+  EXPECT_EQ(t, false);
 
-  names_and_types = ei.GetNamesAndTypes(false);
+  const auto& names_and_types_tagged = ei.GetTags();
+  EXPECT_EQ(names_and_types_tagged.size(), 1);
+
+  n4 = names_and_types.at(0);
+  EXPECT_EQ(n4.first, "einzelweg");
+  EXPECT_EQ(n4.second, false);
+
+  types.clear();
+  names_and_types = ei.GetNamesAndTypes(types); // defaults to false
   EXPECT_EQ(names_and_types.size(), 1);
 
   n4 = names_and_types.at(0);
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  names_and_types = ei.GetNamesAndTypes(); // defaults to false
-  EXPECT_EQ(names_and_types.size(), 1);
-
-  n4 = names_and_types.at(0);
-  EXPECT_EQ(n4.first, "einzelweg");
-  EXPECT_EQ(n4.second, false);
-
-  auto tagged_names_and_types = ei.GetTaggedNamesAndTypes();
-  for (const auto& tagged_name_and_type : tagged_names_and_types) {
-    EXPECT_EQ(tagged_name_and_type.first, "xyz tunnel");
-    EXPECT_EQ(tagged_name_and_type.second, 1);
-  }
+  const auto& tags = ei.GetTags();
+  EXPECT_EQ(tags.size(), 1);
+  EXPECT_EQ(tags.find(TaggedValue::kTunnel)->second, "xyz tunnel");
 }
 
 TEST(GraphTileBuilder, TestAddBins) {
@@ -188,15 +189,15 @@ TEST(GraphTileBuilder, TestAddBins) {
     // load a tile
     GraphId id(test_tile.second, 2, 0);
     std::string no_bin_dir = VALHALLA_SOURCE_DIR "test/data/bin_tiles/no_bin";
-    GraphTile t(no_bin_dir, id);
-    EXPECT_TRUE(t.header()) << "Couldn't load test tile";
+    auto t = GraphTile::Create(no_bin_dir, id);
+    ASSERT_TRUE(t && t->header()) << "Couldn't load test tile";
 
     // alter the config to point to another dir
     std::string bin_dir = "test/data/bin_tiles/bin";
 
     // send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
 
     // check the new tile is the same as the old one
     {
@@ -215,31 +216,31 @@ TEST(GraphTileBuilder, TestAddBins) {
     // send fake bins, we'll throw one in each bin
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 0);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     auto increase = bins.size() * sizeof(GraphId);
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
                          "New tiles edgeinfo or names arent matching up: 1");
 
     // append some more
     for (auto& bin : bins)
       bin.emplace_back(test_tile.second, 2, 1);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     increase = bins.size() * sizeof(GraphId) * 2;
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
                          "New tiles edgeinfo or names arent matching up: 2");
 
     // check that appending works
-    t = GraphTile(bin_dir, id);
-    GraphTileBuilder::AddBins(bin_dir, &t, bins);
+    t = GraphTile::Create(bin_dir, id);
+    GraphTileBuilder::AddBins(bin_dir, t, bins);
     for (auto& bin : bins)
       bin.insert(bin.end(), bin.begin(), bin.end());
 
     // check the new tile isnt broken and is exactly the right size bigger
-    assert_tile_equalish(t, GraphTile(bin_dir, id), increase, bins,
+    assert_tile_equalish(*t, *GraphTile::Create(bin_dir, id), increase, bins,
                          "New tiles edgeinfo or names arent matching up: 3");
   }
 }
@@ -249,8 +250,8 @@ public:
   fake_tile(const std::string& plyenc_shape) {
     auto s = valhalla::midgard::decode<std::vector<PointLL>>(plyenc_shape);
     auto e = valhalla::midgard::encode7(s);
-    auto l = TileHierarchy::levels().rbegin()->first;
-    auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
+    auto l = TileHierarchy::levels().back().level;
+    auto tiles = TileHierarchy::levels().back().tiles;
     auto id = GraphId(tiles.TileId(s.front()), l, 0);
     auto o_id = GraphId(tiles.TileId(s.front()), l, tiles.TileId(s.back()));
     o_id.set_id(o_id == id);
@@ -293,11 +294,11 @@ TEST(GraphTileBuilder, TestBinEdges) {
       "JiGlJqAfDbAtE~A~GgBdFyKlJy[xWqMvMqTlKoPfCeKiBkHeF}E{KoD{JaLsGwSeEg~BqR";
   auto decoded_shape = valhalla::midgard::decode<std::vector<PointLL>>(encoded_shape5);
   auto encoded_shape7 = valhalla::midgard::encode7(decoded_shape);
-  fake_tile fake(encoded_shape5);
-  auto info = fake.edgeinfo(fake.directededge(0)->edgeinfo_offset());
+  graph_tile_ptr fake{new fake_tile(encoded_shape5)};
+  auto info = fake->edgeinfo(fake->directededge(0));
   EXPECT_EQ(info.encoded_shape(), encoded_shape7);
   GraphTileBuilder::tweeners_t tweeners;
-  auto bins = GraphTileBuilder::BinEdges(&fake, tweeners);
+  auto bins = GraphTileBuilder::BinEdges(fake, tweeners);
   EXPECT_EQ(tweeners.size(), 1) << "This edge leaves a tile for 1 other tile and comes back.";
 }
 

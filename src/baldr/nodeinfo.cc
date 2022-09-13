@@ -72,27 +72,39 @@ NodeInfo::NodeInfo() {
 }
 
 NodeInfo::NodeInfo(const PointLL& tile_corner,
-                   const std::pair<float, float>& ll,
-                   const RoadClass rc,
+                   const PointLL& ll,
                    const uint32_t access,
                    const NodeType type,
-                   const bool traffic_signal) {
+                   const bool traffic_signal,
+                   const bool tagged_access,
+                   const bool private_access,
+                   const bool cash_only_toll) {
   memset(this, 0, sizeof(NodeInfo));
   set_latlng(tile_corner, ll);
   set_access(access);
   set_type(type);
   set_traffic_signal(traffic_signal);
+  set_tagged_access(tagged_access);
+  set_private_access(private_access);
+  set_cash_only_toll(cash_only_toll);
 }
 
 // Sets the latitude and longitude.
-void NodeInfo::set_latlng(const PointLL& tile_corner, const std::pair<float, float>& ll) {
+void NodeInfo::set_latlng(const PointLL& tile_corner, const PointLL& ll) {
   // Protect against a node being slightly outside the tile (due to float roundoff)
-  lat_offset_ = ll.second < tile_corner.lat()
-                    ? 0
-                    : static_cast<uint32_t>((ll.second - tile_corner.lat()) / kDegreesPrecision);
-  lon_offset_ = ll.first < tile_corner.lng()
-                    ? 0
-                    : static_cast<uint32_t>((ll.first - tile_corner.lng()) / kDegreesPrecision);
+  lat_offset_ = 0;
+  if (ll.lat() > tile_corner.lat()) {
+    auto lat = std::round((ll.lat() - tile_corner.lat()) / 1e-7);
+    lat_offset_ = lat / 10;
+    lat_offset7_ = lat - lat_offset_ * 10;
+  }
+
+  lon_offset_ = 0;
+  if (ll.lng() > tile_corner.lng()) {
+    auto lon = std::round((ll.lng() - tile_corner.lng()) / 1e-7);
+    lon_offset_ = lon / 10;
+    lon_offset7_ = lon - lon_offset_ * 10;
+  }
 }
 
 // Set the index in the node's tile of its first outbound edge.
@@ -196,6 +208,11 @@ void NodeInfo::set_drive_on_right(const bool rsd) {
   drive_on_right_ = rsd;
 }
 
+// Sets the flag indicating if access was originally tagged.
+void NodeInfo::set_tagged_access(const bool tagged_access) {
+  tagged_access_ = tagged_access;
+}
+
 // Sets the flag indicating a mode change is allowed at this node.
 // The access data tells which modes are allowed at the node. Examples
 // include transit stops, bike share locations, and parking locations.
@@ -218,15 +235,6 @@ void NodeInfo::set_stop_index(const uint32_t stop_index) {
   transition_index_ = stop_index;
 }
 
-// Get the heading of the local edge given its local index. Supports
-// up to 8 local edges. Headings are expanded from 8 bits.
-uint32_t NodeInfo::heading(const uint32_t localidx) const {
-  // Make sure everything is 64 bit!
-  uint64_t shift = localidx * 8; // 8 bits per index
-  return static_cast<uint32_t>(std::round(
-      ((headings_ & (static_cast<uint64_t>(255) << shift)) >> shift) * kHeadingExpandFactor));
-}
-
 // Set the heading of the local edge given its local index. Supports
 // up to 8 local edges. Headings are reduced to 8 bits.
 void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
@@ -244,18 +252,20 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
   headings_ = wayid;
 }
 
-json::MapPtr NodeInfo::json(const GraphTile* tile) const {
+json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
   auto m = json::map({
-      {"lon", json::fp_t{latlng(tile->header()->base_ll()).first, 6}},
-      {"lat", json::fp_t{latlng(tile->header()->base_ll()).second, 6}},
+      {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
+      {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
       {"access", access_json(access_)},
+      {"tagged_access", static_cast<bool>(tagged_access_)},
       {"intersection_type", to_string(static_cast<IntersectionType>(intersection_))},
       {"administrative", admin_json(tile->admininfo(admin_index_), timezone_)},
       {"density", static_cast<uint64_t>(density_)},
       {"local_edge_count", static_cast<uint64_t>(local_edge_count_ + 1)},
       {"drive_on_right", static_cast<bool>(drive_on_right_)},
       {"mode_change", static_cast<bool>(mode_change_)},
+      {"private_access", static_cast<bool>(private_access_)},
       {"traffic_signal", static_cast<bool>(traffic_signal_)},
       {"type", to_string(static_cast<NodeType>(type_))},
       {"transition count", static_cast<uint64_t>(transition_count_)},

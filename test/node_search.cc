@@ -85,15 +85,14 @@ void graph_writer::write_tiles() {
 
     // write the bin data
     GraphTileBuilder::tweeners_t tweeners;
-    GraphTile reloaded(test_tile_dir, tile_id);
-    auto bins = GraphTileBuilder::BinEdges(&reloaded, tweeners);
-    GraphTileBuilder::AddBins(test_tile_dir, &reloaded, bins);
+    auto reloaded = GraphTile::Create(test_tile_dir, tile_id);
+    auto bins = GraphTileBuilder::BinEdges(reloaded, tweeners);
+    GraphTileBuilder::AddBins(test_tile_dir, reloaded, bins);
 
     // merge tweeners into global
     for (const auto& entry : tweeners) {
       auto status = all_tweeners.insert(entry);
       if (!status.second) {
-        auto tile_id = entry.first;
         const auto& bins = entry.second;
         auto itr = status.first;
 
@@ -107,8 +106,8 @@ void graph_writer::write_tiles() {
 
   for (const auto& entry : all_tweeners) {
     // re-open tiles to add tweeners back in.
-    vb::GraphTile tile(test_tile_dir, entry.first);
-    vj::GraphTileBuilder::AddBins(test_tile_dir, &tile, entry.second);
+    auto tile = vb::GraphTile::Create(test_tile_dir, entry.first);
+    vj::GraphTileBuilder::AddBins(test_tile_dir, tile, entry.second);
   }
 }
 
@@ -233,7 +232,7 @@ void graph_builder::write_tiles(uint8_t level) const {
     vm::PointLL end_point = writer.node_latlng(e.second);
 
     DirectedEdgeBuilder edge_builder({}, e.second, forward, start_point.Distance(end_point), 1, 1, {},
-                                     {}, 0, false, 0, 0, false);
+                                     {}, 0, false, false, false, false, 0, 0, false);
 
     auto opp = std::make_pair(e.second, e.first);
     auto itr =
@@ -261,7 +260,7 @@ void graph_builder::write_tiles(uint8_t level) const {
       // make more complex edge geom so that there are 3 segments, affine
       // combination doesnt properly handle arcs but who cares
       edge_info_offset = tile.AddEdgeInfo(edge_index, e.first, e.second, 123, 456, 0, 55, shape,
-                                          {std::to_string(edge_index)}, {}, 0, add);
+                                          {std::to_string(edge_index)}, {}, {}, 0, add);
     }
     edge_builder.set_edgeinfo_offset(edge_info_offset);
 

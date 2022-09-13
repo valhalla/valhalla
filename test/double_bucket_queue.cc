@@ -16,36 +16,39 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t>& expectedorder) {
-  std::vector<float> edgelabels;
+struct simple_label {
+  float c;
+  float sortcost() const {
+    return c;
+  }
+};
 
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
+void TryAddRemove(const std::vector<uint32_t>& costs, const std::vector<uint32_t>& expectedorder) {
+  std::vector<simple_label> edgelabels;
 
   uint32_t i = 0;
-  DoubleBucketQueue adjlist(0, 10000, 1, edgecost);
+  DoubleBucketQueue<simple_label> adjlist(0, 10000, 1, &edgelabels);
   for (auto cost : costs) {
-    edgelabels.emplace_back(cost);
+    edgelabels.emplace_back(simple_label{static_cast<float>(cost)});
     adjlist.add(i);
-    i++;
+    ++i;
   }
   for (auto expected : expectedorder) {
-    // Do the same transform that's done in `edgecost()`
-    expected = (uint32_t)(float)expected;
     uint32_t labelindex = adjlist.pop();
-    auto edgelabel = 0;
+    simple_label edgelabel{};
     if (labelindex != baldr::kInvalidLabel) {
       edgelabel = edgelabels[labelindex];
     }
-    EXPECT_EQ(edgelabel, expected) << "TryAddRemove: expected order test failed";
+    // Do the same transform that's done in `edgecost()`
+    EXPECT_EQ(edgelabel.sortcost(), (float)expected) << "TryAddRemove: expected order test failed";
   }
 }
 
 TEST(DoubleBucketQueue, TestInvalidConstruction) {
-  std::vector<float> edgelabels;
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
-  EXPECT_THROW(DoubleBucketQueue adjlist(0, 10000, 0, edgecost), runtime_error)
+  std::vector<simple_label> edgelabels;
+  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 10000, 0, &edgelabels), runtime_error)
       << "Invalid bucket size not caught";
-  EXPECT_THROW(DoubleBucketQueue adjlist(0, 0.0f, 1, edgecost), runtime_error)
+  EXPECT_THROW(DoubleBucketQueue<simple_label> adjlist(0, 0.0f, 1, &edgelabels), runtime_error)
       << "Invalid cost range not caught";
 }
 
@@ -59,12 +62,10 @@ TEST(DoubleBucketQueue, TestAddRemove) {
 
 void TryClear(const std::vector<uint32_t>& costs) {
   uint32_t i = 0;
-  std::vector<float> edgelabels;
-
-  const auto edgecost = [&edgelabels](const uint32_t label) { return edgelabels[label]; };
-  DoubleBucketQueue adjlist(0, 10000, 50, edgecost);
+  std::vector<simple_label> edgelabels;
+  DoubleBucketQueue<simple_label> adjlist(0, 10000, 50, &edgelabels);
   for (auto cost : costs) {
-    edgelabels.emplace_back(cost);
+    edgelabels.emplace_back(simple_label{static_cast<float>(cost)});
     adjlist.add(i);
     i++;
   }
@@ -100,13 +101,15 @@ TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
    }
 */
 
-void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vector<float>& costs) {
+void TryRemove(DoubleBucketQueue<simple_label>& dbqueue,
+               size_t num_to_remove,
+               const std::vector<simple_label>& costs) {
   auto previous_cost = -std::numeric_limits<float>::infinity();
   for (size_t i = 0; i < num_to_remove; ++i) {
     const auto top = dbqueue.pop();
     EXPECT_NE(top, baldr::kInvalidLabel)
         << "TryAddRemove: expected " + std::to_string(num_to_remove) + " labels to remove";
-    const auto cost = costs[top];
+    const auto cost = costs[top].sortcost();
     EXPECT_LE(previous_cost, cost) << "TryAddRemove: expected order test failed";
     previous_cost = cost;
   }
@@ -117,8 +120,8 @@ void TryRemove(DoubleBucketQueue& dbqueue, size_t num_to_remove, const std::vect
   }
 }
 
-void TrySimulation(DoubleBucketQueue& dbqueue,
-                   std::vector<float>& costs,
+void TrySimulation(DoubleBucketQueue<simple_label>& dbqueue,
+                   std::vector<simple_label>& costs,
                    size_t loop_count,
                    size_t expansion_size,
                    size_t max_increment_cost) {
@@ -126,7 +129,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
   std::unordered_set<uint32_t> addedLabels;
 
   const uint32_t idx = costs.size();
-  costs.push_back(10.f);
+  costs.push_back({10.f});
   dbqueue.add(idx);
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -136,10 +139,10 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
       break;
     }
 
-    const auto min_cost = costs[key];
+    const auto min_cost = costs[key].sortcost();
     // Must be the minimal one among the tracked labels
     for (auto k : addedLabels) {
-      EXPECT_LE(min_cost, costs[k]) << "Simulation: minimal cost expected";
+      EXPECT_LE(min_cost, costs[k].sortcost()) << "Simulation: minimal cost expected";
     }
     addedLabels.erase(key);
 
@@ -148,9 +151,9 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
       if (i % 2 == 0 && !addedLabels.empty()) {
         // Decrease cost
         const auto idx = *std::next(addedLabels.begin(), test::rand01(gen) * (addedLabels.size()));
-        if (newcost < costs[idx]) {
+        if (newcost < costs[idx].sortcost()) {
           dbqueue.decrease(idx, newcost);
-          costs[idx] = newcost;
+          costs[idx] = {newcost};
           // todo: why commented??
           // EXPECT_EQ(dbqueue.cost(idx), newcost) << "failed to decrease cost";
         } else {
@@ -164,7 +167,7 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
       } else {
         // Add new label
         const uint32_t idx = costs.size();
-        costs.push_back(newcost);
+        costs.push_back({newcost});
         dbqueue.add(idx);
         addedLabels.insert(idx);
       }
@@ -176,26 +179,26 @@ void TrySimulation(DoubleBucketQueue& dbqueue,
 
 TEST(DoubleBucketQueue, TestSimulation) {
   {
-    std::vector<float> costs;
-    DoubleBucketQueue dbqueue1(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
+    std::vector<simple_label> costs;
+    DoubleBucketQueue<simple_label> dbqueue1(0, 1, 100000, &costs);
     TrySimulation(dbqueue1, costs, 1000, 10, 1000);
   }
 
   {
-    std::vector<float> costs;
-    DoubleBucketQueue dbqueue2(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
+    std::vector<simple_label> costs;
+    DoubleBucketQueue<simple_label> dbqueue2(0, 1, 100000, &costs);
     TrySimulation(dbqueue2, costs, 222, 40, 100);
   }
 
   {
-    std::vector<float> costs;
-    DoubleBucketQueue dbqueue3(0, 1, 100000, [&costs](const uint32_t label) { return costs[label]; });
+    std::vector<simple_label> costs;
+    DoubleBucketQueue<simple_label> dbqueue3(0, 1, 100000, &costs);
     TrySimulation(dbqueue3, costs, 333, 60, 100);
   }
 
   {
-    std::vector<float> costs;
-    DoubleBucketQueue dbqueue4(0, 1, 1000, [&costs](const uint32_t label) { return costs[label]; });
+    std::vector<simple_label> costs;
+    DoubleBucketQueue<simple_label> dbqueue4(0, 1, 1000, &costs);
     TrySimulation(dbqueue4, costs, 333, 60, 100);
   }
 }

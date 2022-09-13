@@ -1,5 +1,4 @@
 #include "test.h"
-#include "utils.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -20,43 +19,73 @@ using namespace valhalla::midgard;
 namespace {
 
 // fake config
-const auto conf = test::json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-    "loki":{
-      "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes"],
-      "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-    },
-    "thor":{"logging":{"long_request": 110}},
-    "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-    "meili":{"customizable": ["turn_penalty_factor","max_route_distance_factor","max_route_time_factor","search_radius"],
-             "mode":"auto","grid":{"cache_size":100240,"size":500},
-             "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-             "max_route_distance_factor":5,"max_route_time_factor":5,"max_search_radius":200,"route":true,
-             "search_radius":15.0,"sigma_z":4.07,"turn_penalty_factor":200}},
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })");
+const auto conf = test::make_config("test/data/utrecht_tiles");
 
 TEST(ShapeAttributes, test_shape_attributes_included) {
   tyr::actor_t actor(conf);
 
   auto result_json = actor.trace_attributes(
       R"({"shape":[
+        {"lat":52.09110,"lon":5.09806},
+        {"lat":52.09050,"lon":5.09769},
+        {"lat":52.09098,"lon":5.09679}
+      ],"costing":"auto","shape_match":"map_snap",
+      "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "action":"include"}})");
+
+  rapidjson::Document doc;
+  doc.Parse(result_json);
+  EXPECT_FALSE(doc.HasParseError()) << "Could not parse json response";
+
+  auto shape =
+      midgard::decode<std::vector<PointLL>>(rapidjson::Pointer("/shape").Get(doc)->GetString());
+  auto shape_attributes_time = rapidjson::Pointer("/shape_attributes/time").Get(doc)->GetArray();
+  auto shape_attributes_length = rapidjson::Pointer("/shape_attributes/length").Get(doc)->GetArray();
+  auto shape_attributes_speed = rapidjson::Pointer("/shape_attributes/speed").Get(doc)->GetArray();
+  auto edges = rapidjson::Pointer("/edges").Get(doc)->GetArray();
+
+  EXPECT_EQ(shape_attributes_time.Size(), shape.size() - 1);
+  EXPECT_EQ(shape_attributes_length.Size(), shape.size() - 1);
+  EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
+
+  // Measures the length between point
+  for (int i = 1; i < shape.size(); i++) {
+    auto distance = shape[i].Distance(shape[i - 1]) * .001f;
+
+    // Measuring that the length between shape pts is approx. to the shape attributes length
+    EXPECT_NEAR(distance, shape_attributes_length[i - 1].GetFloat(), .01f);
+  }
+
+  // Assert that the shape attributes (time, length, speed) are equal to their corresponding edge
+  // attributes
+  for (int e = 0; e < edges.Size(); e++) {
+    auto edge_length = edges[e]["length"].GetDouble();
+    auto edge_speed = edges[e]["speed"].GetDouble();
+
+    double sum_times = 0;
+    double sum_lengths = 0;
+    for (int j = edges[e]["begin_shape_index"].GetInt(); j < edges[e]["end_shape_index"].GetInt();
+         j++) {
+      sum_times += shape_attributes_time[j].GetDouble();
+      sum_lengths += shape_attributes_length[j].GetDouble();
+
+      EXPECT_NEAR(edge_speed, shape_attributes_speed[j].GetDouble(), .15);
+    }
+
+    // Can't assert that sum of shape times equals edge's elapsed_time because elapsed_time includes
+    // transition costs and shape times do not.
+    EXPECT_NEAR(3600 * edge_length / edge_speed, sum_times, .1);
+    EXPECT_NEAR(edge_length, sum_lengths, .1);
+  }
+}
+
+TEST(ShapeAttributes, test_shape_attributes_duplicated_point) {
+  tyr::actor_t actor(conf);
+
+  auto result_json = actor.trace_attributes(
+      R"({"shape":[
+        {"lat":52.09110,"lon":5.09806},
         {"lat":52.09110,"lon":5.09806},
         {"lat":52.09050,"lon":5.09769},
         {"lat":52.09098,"lon":5.09679}

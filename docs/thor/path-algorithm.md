@@ -16,7 +16,7 @@ The basic algorithm provided within Thor is an A\* algorithm. This algorithm sea
 
 #### Bidirectional A\*
 
-The primary algorithm used for most types of routes is a bidirectional A\* method. This algorithm searches for the lowest cost path in two directions: one from the origin towards the destination and the other "backwards" from the destination towards the origin. This algorithm has better performance the the A\* algorithm since it more effectively cuts the search space. However, there are some complexities added to handle the backwards progression from the destination to the origin. Turn restrictions and transition costing is more complicated. Also, the determination of the connection point between the two searches (determination of route completion) is more complex. Another strength of the bidirectional A* method is that hierarchy transitions near the destination are simplified.
+The primary algorithm used for most types of routes is a bidirectional A\* method. This algorithm searches for the lowest cost path in two directions: one from the origin towards the destination and the other "backwards" from the destination towards the origin. This algorithm has better performance then the A\* algorithm since it more effectively cuts the search space. However, there are some complexities added to handle the backwards progression from the destination to the origin. Turn restrictions and transition costing is more complicated. Also, the determination of the connection point between the two searches (determination of route completion) is more complex. Another strength of the bidirectional A* method is that hierarchy transitions near the destination are simplified. Currently bidirectional A* performs only invariant behaviour of traffic update, there is no algorithm implemented for correct evaluation of edge passing time.
 
 Pedestrian and bicycle routes use just the local graph hierarchy. They never transition to the arterial or highway levels and thus never use shortcut edges.
 
@@ -54,11 +54,14 @@ Several other pieces of information about the prior edge are also kept to avoid 
 
 #### Edge Status
 
-An unordered map (hash map) is used to identify the state of directed edges. The GraphId of the directed edge is used as the key. Values in the EdgeStatus map are the index of the edge in the EdgeLabels vector and the current edge label state: temporary or permanent. Any edge that is not yet visited will not be part of the EdgeStatus map.
+An unordered map (hash map) is used to identify the state of directed edges. The map contains tile id as key and array of EdgeStatusInfo which contains 
+index of the edge in the EdgeLabels vector and the current edge label state: kUnreachedOrReset, temporary or permanent.
+Whenever a new tile (new edge in previously unvisited tile) is encountered a new value in the map is inserted with key as tile id and EdgeStatusInfo array of length equal to number of directed edges in the tile as value, all directed edges in the new array are initialized with kUnreachedOrReset status.
+
+The index of edge in EdgeStatusInfo array is equal to it's id in the tile
 
 EdgeStatus is constructed given an initial size of the edge status map. To avoid rehashing the initial size should be large enough.
 
-- **Init** - Initialize the status to unreached for all edges by clearing the edge status map.
 - **Set** - Sets the status of a directed edge given its GraphId.
 - **Update** - Updates the status of a directed edge given its GraphId.
 - **Get** - Gets the status info of a directed edge given its GraphId.

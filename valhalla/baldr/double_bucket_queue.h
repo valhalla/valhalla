@@ -1,20 +1,14 @@
-#ifndef VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
-#define VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_
+#pragma once
 
 #include <algorithm>
-#include <baldr/graphconstants.h>
 #include <cmath>
 #include <cstdint>
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/midgard/util.h>
 #include <vector>
 
 namespace valhalla {
 namespace baldr {
-
-/**
- * A callable element which returns the cost for a label.
- */
-using LabelCost = std::function<float(const uint32_t label)>;
 
 // Bucket type and bucket list type.
 using bucket_t = std::vector<uint32_t>;
@@ -27,8 +21,15 @@ using buckets_t = std::vector<bucket_t>;
  * into the overflow bucket and are moved into the low-level buckets as
  * needed. Each bucket stores label indexes into external data.
  */
-class DoubleBucketQueue final {
+template <typename label_t> class DoubleBucketQueue final {
 public:
+  /**
+   * Default c-tor creates empty object that needs to be initialized with `reuse` method
+   */
+  DoubleBucketQueue() {
+    reuse(0.f, 1.f, 1, nullptr);
+  }
+
   /**
    * Constructor given a minimum cost, a range of costs held within the
    * bucket sort, and a bucket size. All costs above mincost + range are
@@ -38,12 +39,35 @@ public:
    * @param range      Cost range for low-level buckets.
    * @param bucketsize Bucket size (range of costs within same bucket).
    *                   Must be an integer value.
-   * @param labelcost  Functor to get a cost given a label index.
+   * @param labelcontainer  Container of labels with sortcosts.
    */
   DoubleBucketQueue(const float mincost,
                     const float range,
                     const uint32_t bucketsize,
-                    const LabelCost& labelcost) {
+                    const std::vector<label_t>* labelcontainer) {
+    reuse(mincost, range, bucketsize, labelcontainer);
+  }
+
+  DoubleBucketQueue(DoubleBucketQueue&&) = default;
+  DoubleBucketQueue& operator=(DoubleBucketQueue&&) = default;
+  DoubleBucketQueue(const DoubleBucketQueue&) = delete;
+  DoubleBucketQueue& operator=(const DoubleBucketQueue&) = delete;
+
+  /**
+   * The same as c-tor, but without buffers reallocation. Before call this
+   * method you should clean up the current state (call `clear`).
+   * @param mincost    Minimum cost. Used to create the initial range for
+   *                   bucket sorting.
+   * @param range      Cost range for low-level buckets.
+   * @param bucketsize Bucket size (range of costs within same bucket).
+   *                   Must be an integer value.
+   * @param labelcontainer  Container of labels with sortcosts.
+   */
+  void reuse(const float mincost,
+             const float range,
+             const uint32_t bucketsize,
+             const std::vector<label_t>* labelcontainer) {
+    labelcontainer_ = labelcontainer;
     // We need at least a bucketsize of 1 or more
     if (bucketsize < 1) {
       throw std::runtime_error("Bucketsize must be 1 or greater");
@@ -55,7 +79,7 @@ public:
     }
 
     // Adjust min cost to be the start of a bucket
-    uint32_t c = static_cast<uint32_t>(mincost);
+    const uint32_t c = static_cast<uint32_t>(mincost);
     currentcost_ = (c - (c % bucketsize));
     mincost_ = currentcost_;
     bucketrange_ = range;
@@ -66,18 +90,16 @@ public:
     maxcost_ = mincost_ + bucketrange_;
 
     // Allocate the low-level buckets
-    size_t bucketcount = (range / bucketsize_) + 1;
+    const size_t bucketcount = (range / bucketsize_) + 1;
     buckets_.resize(bucketcount);
 
     // Set the current bucket to the lowest cost low level bucket
     currentbucket_ = buckets_.begin();
-
-    // Set the cost function.
-    labelcost_ = labelcost;
   }
 
   /**
-   * Clear all labels from the low-level buckets and the overflow buckets.
+   * Clear all labels from the low-level buckets and the overflow buckets and deallocates buckets
+   * memory.
    */
   void clear() {
     // Empty the overflow bucket and each bucket
@@ -100,7 +122,7 @@ public:
    * @param   label  Label index to add to the queue.
    */
   void add(const uint32_t label) {
-    get_bucket(labelcost_(label)).push_back(label);
+    get_bucket((*labelcontainer_)[label].sortcost()).push_back(label);
   }
 
   /**
@@ -113,7 +135,7 @@ public:
   void decrease(const uint32_t label, const float newcost) {
     // Get the buckets of the previous and new costs. Nothing needs to be done
     // if old cost and the new cost are in the same buckets.
-    bucket_t& prevbucket = get_bucket(labelcost_(label));
+    bucket_t& prevbucket = get_bucket((*labelcontainer_)[label].sortcost());
     bucket_t& newbucket = get_bucket(newcost);
     if (prevbucket != newbucket) {
       // Add label to newbucket and remove from previous bucket
@@ -134,7 +156,7 @@ public:
         // Return an invalid label if no labels are in the overflow buckets.
         // Reset currentbucket to the last bucket - in case another access of
         // adjacency list is done.
-        currentbucket_--;
+        --currentbucket_;
         return baldr::kInvalidLabel;
       } else {
         // Move labels from the overflow bucket to the low level buckets.
@@ -147,7 +169,7 @@ public:
     }
 
     // Return label from lowest non-empty bucket
-    uint32_t label = currentbucket_->back();
+    const uint32_t label = currentbucket_->back();
     currentbucket_->pop_back();
     return label;
   }
@@ -169,8 +191,8 @@ private:
   // Overflow bucket
   bucket_t overflowbucket_;
 
-  // Cost function to get cost given the label index.
-  LabelCost labelcost_;
+  // Access to a container of labels to get cost given the label index.
+  const std::vector<label_t>* labelcontainer_;
 
   /**
    * Returns the bucket given the cost.
@@ -191,7 +213,7 @@ private:
    */
   bool empty() {
     while (currentbucket_ != buckets_.end() && currentbucket_->empty()) {
-      currentbucket_++;
+      ++currentbucket_;
       currentcost_ += bucketsize_;
     }
     return currentbucket_ == buckets_.end();
@@ -205,13 +227,15 @@ private:
     // Get the minimum label so we can figure out where the new range should be
     auto itr =
         std::min_element(overflowbucket_.begin(), overflowbucket_.end(),
-                         [this](uint32_t a, uint32_t b) { return labelcost_(a) < labelcost_(b); });
+                         [this](uint32_t a, uint32_t b) {
+                           return (*labelcontainer_)[a].sortcost() < (*labelcontainer_)[b].sortcost();
+                         });
 
     // If there is actually stuff to move
     if (itr != overflowbucket_.end()) {
 
       // Adjust cost range so smallest element is in the buckets_
-      float min = labelcost_(*itr);
+      float min = (*labelcontainer_)[*itr].sortcost();
       mincost_ += (std::floor((min - mincost_) / bucketrange_)) * bucketrange_;
 
       // Avoid precision issues
@@ -223,19 +247,17 @@ private:
       maxcost_ = mincost_ + bucketrange_;
 
       // Move elements within the range from overflow to buckets
-      bucket_t tmp;
-      for (const auto& label : overflowbucket_) {
-        // Get the cost (using the label cost function)
-        float cost = labelcost_(label);
-        if (cost < maxcost_) {
-          buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
-        } else {
-          tmp.push_back(label);
-        }
-      }
-
-      // Add any labels that lie outside the new range back to overflow bucket
-      overflowbucket_ = std::move(tmp);
+      auto minLabelsIt =
+          std::remove_if(overflowbucket_.begin(), overflowbucket_.end(), [this](const auto label) {
+            float cost = (*labelcontainer_)[label].sortcost();
+            if (cost < maxcost_) {
+              buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)].push_back(label);
+              return true;
+            }
+            return false;
+          });
+      // Remove labels with min costs from overflow bucket
+      overflowbucket_.erase(minLabelsIt, overflowbucket_.end());
     }
 
     // Reset current cost and bucket to beginning of low level buckets
@@ -246,5 +268,3 @@ private:
 
 } // namespace baldr
 } // namespace valhalla
-
-#endif // VALHALLA_BALDR_DOUBLE_BUCKET_QUEUE_H_

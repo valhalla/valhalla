@@ -1,13 +1,15 @@
-#ifndef VALHALLA_MIDGARD_UTIL_H_
-#define VALHALLA_MIDGARD_UTIL_H_
+#pragma once
 
 #include <cstdint>
+#include <cstring>
+#include <functional>
 #include <limits>
 #include <memory>
 #include <ostream>
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -19,6 +21,8 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/tiles.h>
 #include <valhalla/midgard/util_core.h>
+
+#define UNUSED(x) (void)(x)
 
 namespace valhalla {
 namespace midgard {
@@ -133,9 +137,9 @@ inline float normalize(const float num, const float den) {
 template <class container_t>
 typename container_t::value_type::first_type length(const container_t& pts) {
   if (pts.size() < 2) {
-    return 0.0f;
+    return 0.0;
   }
-  typename container_t::value_type::first_type length = 0.0f;
+  typename container_t::value_type::first_type length = 0.0;
   for (auto p = std::next(pts.cbegin()); p != pts.end(); ++p) {
     length += p->Distance(*std::prev(p));
   }
@@ -154,7 +158,7 @@ typename iterator_t::value_type::first_type length(const iterator_t& begin, cons
     return 0.0;
   }
 
-  typename iterator_t::value_type::first_type length = 0.0f;
+  typename iterator_t::value_type::first_type length = 0.0;
   for (auto vertex = std::next(begin); vertex != end; vertex++) {
     length += std::prev(vertex)->Distance(*vertex);
   }
@@ -283,13 +287,17 @@ void trim_shape(float start,
  * @param shape  Shape / polyline geometry.
  * @param sample_distance Distance to sample when computing heading.
  * @param forward Boolean value whether to test in forward or reverse direction.
+ * @param first_segment_index Index into the shape pointing to the first stopping point.
+ * @param last_segment_index Index into the shape pointing to the last stopping point.
  * @return Returns the angle in degrees relative to N.
  */
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward);
+                    bool forward,
+                    size_t first_segment_index = 0,
+                    size_t last_segment_index = std::numeric_limits<size_t>::max());
 
 // useful in converting from one iteratable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
@@ -418,7 +426,7 @@ public:
   using iterator = T*;
   iterable_t(T* first, size_t size) : head(first), tail(first + size), count(size) {
   }
-  iterable_t(T* first, T* end) : head(first), tail(end), count(end - first) {
+  iterable_t(T* first, T* end) : head(first), tail(end), count(tail - head) {
   }
   T* begin() {
     return head;
@@ -426,7 +434,16 @@ public:
   T* end() {
     return tail;
   }
+  const T* begin() const {
+    return head;
+  }
+  const T* end() const {
+    return tail;
+  }
   T& operator[](size_t index) {
+    return *(head + index);
+  }
+  const T& operator[](size_t index) const {
     return *(head + index);
   }
   size_t size() const {
@@ -452,29 +469,8 @@ template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
 
 /**
- * Return the intercept of the line passing through uv with the horizontal line defined by y
- * @param u  first point on line
- * @param v  second point on line
- * @param y  y component of horizontal line
- * @return x component (or NaN if parallel) of the intercept of uv with the horizontal line
- */
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y = 0);
-/**
- * Return the intercept of the line passing through uv with the vertical line defined by x
- * @param u  first point on line
- * @param v  second point on line
- * @param x  x component of vertical line
- * @return y component (or NaN if parallel) of the intercept of uv with the vertical line
- */
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x = 0);
-
-/**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
- * this will return a positive value for clockwise wound polygons and negative otherwise.
+ * this will return a positive value for counterclockwise wound polygons and negative otherwise.
  * Works with rings where the polygons first and last points are the same or not
  *
  * NOTE: this is good for relative area but the units for spherical coordinates
@@ -483,7 +479,8 @@ x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_t
  * @param polygon   the list of points comprising the polygon
  * @return the area of the polygon
  */
-template <class container_t> float polygon_area(const container_t& polygon);
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon);
 
 template <typename T> struct ring_queue_t {
   ring_queue_t(size_t limit) : limit(limit), i(0) {
@@ -597,8 +594,8 @@ struct projector_t {
 
     // project a onto b where b is the origin vector representing this segment
     // and a is the origin vector to the point we are projecting, (a.b/b.b)*b
-    auto bx = double(v.first) - u.first;
-    auto by = double(v.second) - u.second;
+    auto bx = v.first - u.first;
+    auto by = v.second - u.second;
 
     // Scale longitude when finding the projection
     auto bx2 = bx * lon_scale;
@@ -626,6 +623,19 @@ struct projector_t {
 };
 
 /**
+ * Use the barycentric technique to test if the point p is inside the triangle formed by (a, b, c).
+ * If p is along the triangle's nodes/edges, this is not considered contained.
+ * Note to user: this is entirely done in 2-D; no effort is made to approximate earth curvature.
+ * @param  a  first triangle point
+ * @param  b  second triangle point
+ * @param  c  third triangle point
+ * @param  p  point to test for containment
+ * @return    true/false if contained.
+ */
+template <typename coord_t>
+bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p);
+
+/**
  * Convert the input units, in either imperial or metric, into meters.
  * @param   units_km_or_mi (kms or miles), to convert to meters
  * @param   true if input units are in metric, false if they're in imperial
@@ -647,7 +657,45 @@ std::string encode64(const std::string& val);
  */
 std::string decode64(const std::string& val);
 
+// Convert big endian bytes to little endian
+inline int16_t to_little_endian(uint16_t val) {
+  return (val << 8) | ((val >> 8) & 0x00ff);
+}
+
+// Convert little endian bytes to big endian
+inline uint16_t to_big_endian(uint16_t val) {
+  return (val << 8) | (val >> 8);
+}
+
+template <class T> inline void hash_combine(std::size_t& seed, const T& v) {
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+template <typename T> struct Finally {
+  T t;
+  explicit Finally(T t) : t(t){};
+  Finally() = delete;
+  Finally(Finally&& f) = default;
+  Finally(const Finally&) = delete;
+  Finally& operator=(const Finally&) = delete;
+  Finally& operator=(Finally&&) = delete;
+  ~Finally() {
+    t();
+  };
+};
+
+template <typename T> Finally<T> make_finally(T t) {
+  return Finally<T>{t};
+};
+
+template <typename T>
+typename std::enable_if<std::is_trivially_copy_assignable<T>::value, T>::type
+unaligned_read(const void* ptr) {
+  T r;
+  std::memcpy(&r, ptr, sizeof(T));
+  return r;
+}
+
 } // namespace midgard
 } // namespace valhalla
-  //
-#endif // VALHALLA_MIDGARD_UTIL_H_

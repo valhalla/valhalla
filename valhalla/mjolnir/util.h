@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <sqlite3.h>
+// needs to be after sqlite include
+#include <spatialite.h>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -40,6 +42,10 @@ enum class BuildStage : int8_t {
   kValidate = 14,
   kCleanup = 15
 };
+
+constexpr uint8_t kMinor = 1;
+constexpr uint8_t kStopSign = 2;
+constexpr uint8_t kYieldSign = 4;
 
 // Convert string to BuildStage
 inline BuildStage string_to_buildstage(const std::string& s) {
@@ -122,11 +128,12 @@ bool shapes_match(const std::vector<midgard::PointLL>& shape1,
 uint32_t compute_curvature(const std::list<midgard::PointLL>& shape);
 
 /**
- * Loads spatialite extension for sqlite
- * @param db_handle   the handle to the open sqlite database
- * @return returns true if the module was successfully loaded
+ * Will allocate a spatialite connection
+ *
+ * @param handle The sqlite database handle
+ * @return a shared pointer to the connection which cleans up after itself when destructed
  */
-bool load_spatialite(sqlite3* db_handle);
+std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
 
 /**
  * Build an entire valhalla tileset give a config file and some input pbfs. The

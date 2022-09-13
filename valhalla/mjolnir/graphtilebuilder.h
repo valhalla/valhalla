@@ -136,6 +136,15 @@ public:
    * @param  idx  Directed edge index.
    * @param  signs  Sign information.
    */
+  void AddSigns(const uint32_t idx,
+                const std::vector<baldr::SignInfo>& signs,
+                const std::vector<std::string>& pronunciations);
+
+  /**
+   * Add sign information.
+   * @param  idx  Directed edge index.
+   * @param  signs  Sign information.
+   */
   void AddSigns(const uint32_t idx, const std::vector<baldr::SignInfo>& signs);
 
   /**
@@ -180,26 +189,27 @@ public:
   /**
    * Add the edge info to the tile.
    *
-   * @param  edgeindex  The index of the edge - used with nodea and nodeb to
-   *                    form tuple that uniquely identifies the edge info since
-   *                    there are two directed edges per edge info.
-   * @param  nodea  One of two nodes - used with edgeindex and nodeb to
-   *                form tuple that uniquely identifies the edge info since
-   *                there are two directed edges per edge info.
-   * @param  nodeb  One of two nodes - used with edgeindex and nodea to
-   *                form tuple that uniquely identifies the edge info since
-   *                there are two directed edges per edge info.
-   * @param  wayid  The target edge is part of this the way id.
-   * @param  elev   Mean elevation.
-   * @param  bn     Bike network.
-   * @param  spd    Speed limit. [kph]
-   * @param  lls    The shape of the target edge.
-   * @param  names  The names of the target edge.
-   * @param  types  Bits indicating if the name is a ref vs a name.
-   * @param  added  Set to true if the target edge was newly added to the list,
-   *                set to false if the target edge was already in the list.
-   * @param  diff_names Indicates the opposing direction has different names.
-   *                    If true a new EdgeInfo is always added.
+   * @param  edgeindex      The index of the edge - used with nodea and nodeb to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  nodea          One of two nodes - used with edgeindex and nodeb to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  nodeb          One of two nodes - used with edgeindex and nodea to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  wayid          The target edge is part of this the way id.
+   * @param  elev           Mean elevation.
+   * @param  bn             Bike network.
+   * @param  spd            Speed limit. [kph]
+   * @param  lls            The shape of the target edge.
+   * @param  names          The names of the target edge.
+   * @param  pronunciations The pronunciations of the target edge.
+   * @param  types          Bits indicating if the name is a ref vs a name.
+   * @param  added          Set to true if the target edge was newly added to the list,
+   *                        set to false if the target edge was already in the list.
+   * @param  diff_names     Indicates the opposing direction has different names.
+   *                        If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   template <class shape_container_t>
@@ -212,34 +222,36 @@ public:
                        const uint32_t spd,
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
-                       const std::vector<std::string>& tagged_names,
+                       const std::vector<std::string>& tagged_values,
+                       const std::vector<std::string>& pronunciations,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
 
   /**
    * Add the edge info to the tile. This method accepts an encoded shape string.
-   * @param  edgeindex    The index of the edge - used with nodea and nodeb to
-   *                      form tuple that uniquely identifies the edge info since
-   *                      there are two directed edges per edge info.
-   * @param  nodea        One of two nodes - used with edgeindex and nodeb to
-   *                      form tuple that uniquely identifies the edge info since
-   *                      there are two directed edges per edge info.
-   * @param  nodeb        One of two nodes - used with edgeindex and nodea to
-   *                      form tuple that uniquely identifies the edge info since
-   *                      there are two directed edges per edge info.
-   * @param  wayid        The target edge is part of this the way id.
-   * @param  elev         Mean elevation.
-   * @param  bn           Bike network.
-   * @param  spd          Speed limit.
-   * @param  llstr        The shape of the target edge as an encoded string.
-   * @param  names        The names of the target edge.
-   * @param  tagged_names The tagged names of the target edge.
-   * @param  types        Bits indicating if the name is a ref vs a name.
-   * @param  added        Set to true if the target edge was newly added to the list,
-   *                      set to false if the target edge was already in the list.
-   * @param  diff_names   Indicates the opposing direction has different names.
-   *                      If true a new EdgeInfo is always added.
+   * @param  edgeindex      The index of the edge - used with nodea and nodeb to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  nodea          One of two nodes - used with edgeindex and nodeb to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  nodeb          One of two nodes - used with edgeindex and nodea to
+   *                        form tuple that uniquely identifies the edge info since
+   *                        there are two directed edges per edge info.
+   * @param  wayid          The target edge is part of this the way id.
+   * @param  elev           Mean elevation.
+   * @param  bn             Bike network.
+   * @param  spd            Speed limit.
+   * @param  llstr          The shape of the target edge as an encoded string.
+   * @param  names          The names of the target edge.
+   * @param  tagged_values   The tagged names of the target edge.
+   * @param  pronunciations The pronunciations of the target edge.
+   * @param  types          Bits indicating if the name is a ref vs a name.
+   * @param  added          Set to true if the target edge was newly added to the list,
+   *                        set to false if the target edge was already in the list.
+   * @param  diff_names     Indicates the opposing direction has different names.
+   *                        If true a new EdgeInfo is always added.
    * @return  The edge info offset that will be stored in the directed edge.
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
@@ -251,7 +263,8 @@ public:
                        const uint32_t spd,
                        const std::string& llstr,
                        const std::vector<std::string>& names,
-                       const std::vector<std::string>& tagged_names,
+                       const std::vector<std::string>& tagged_values,
+                       const std::vector<std::string>& pronunciations,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
@@ -360,14 +373,14 @@ public:
    *              directed edge index) within the tile.
    * @return  Returns a reference to the sign builder.
    */
-  Sign& sign(const size_t idx);
+  valhalla::baldr::Sign& sign(const size_t idx);
 
   /**
    * Get the sign builder at the specified index.
    * @param  idx  Index of the sign builder.
    * @return  Returns a reference to the sign builder.
    */
-  Sign& sign_builder(const size_t idx);
+  valhalla::baldr::Sign& sign_builder(const size_t idx);
 
   /**
    * Gets a const admin builder at specified index.
@@ -388,7 +401,7 @@ public:
    * @param tweeners   the additional bins in other tiles that intersect this tiles edges
    */
   using tweeners_t = std::unordered_map<GraphId, std::array<std::vector<GraphId>, kBinCount>>;
-  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const GraphTile* tile,
+  static std::array<std::vector<GraphId>, kBinCount> BinEdges(const graph_tile_ptr& tile,
                                                               tweeners_t& tweeners);
 
   /**
@@ -399,7 +412,7 @@ public:
    * @param more_bins  the extra bin data to append to the tile
    */
   static void AddBins(const std::string& tile_dir,
-                      const GraphTile* tile,
+                      const graph_tile_ptr& tile,
                       const std::array<std::vector<GraphId>, kBinCount>& more_bins);
 
   /**
@@ -436,7 +449,7 @@ public:
    * @param  predicted_count_hint  How many predicted speeds should we expect to add
    */
   void AddPredictedSpeed(const uint32_t idx,
-                         const std::vector<int16_t>& profile,
+                         const std::array<int16_t, kCoefficientCount>& coefficients,
                          const size_t predicted_count_hint = 256);
 
   /**
@@ -515,7 +528,7 @@ protected:
 
   // List of signs. This is a fixed size structure so it can be
   // indexed directly.
-  std::vector<Sign> signs_builder_;
+  std::vector<valhalla::baldr::Sign> signs_builder_;
 
   // List of admins. This is a fixed size structure so it can be
   // indexed directly.
@@ -560,6 +573,12 @@ protected:
   // lane connectivity list offset
   uint32_t lane_connectivity_offset_ = 0;
 };
+
+#ifdef ENABLE_THREAD_SAFE_TILE_REF_COUNT
+using graph_tile_builder_ptr = std::shared_ptr<GraphTileBuilder>;
+#else
+using graph_tile_builder_ptr = boost::intrusive_ptr<GraphTileBuilder>;
+#endif
 
 } // namespace mjolnir
 } // namespace valhalla

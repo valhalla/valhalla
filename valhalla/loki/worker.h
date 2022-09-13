@@ -43,6 +43,7 @@ public:
   void trace(Api& request);
   std::string height(Api& request);
   std::string transit_available(Api& request);
+  void status(Api& request) const;
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -73,7 +74,8 @@ protected:
   std::unordered_map<std::string, float> max_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   std::unordered_map<std::string, float> max_matrix_locations;
-  size_t max_avoid_locations;
+  size_t max_exclude_locations;
+  float max_exclude_polygons_length;
   unsigned int max_reachability;
   unsigned int default_reachability;
   unsigned int max_radius;
@@ -84,21 +86,27 @@ protected:
   unsigned int default_street_side_tolerance;
   unsigned int default_street_side_max_distance;
   float default_breakage_distance;
-  float long_request;
   // Minimum and maximum walking distances (to validate input).
   size_t min_transit_walking_dis;
   size_t max_transit_walking_dis;
   size_t max_contours;
-  size_t max_time;
+  size_t max_contour_min;
+  size_t max_contour_km;
   size_t max_trace_shape;
   float max_gps_accuracy;
   float max_search_radius;
-  unsigned int max_best_paths;
-  size_t max_best_paths_shape;
+  unsigned int max_trace_alternates;
+  size_t max_trace_alternates_shape;
   skadi::sample sample;
   size_t max_elevation_shape;
   float min_resample;
   unsigned int max_alternates;
+  bool allow_verbose;
+
+private:
+  std::string service_name() const override {
+    return "loki";
+  }
 };
 } // namespace loki
 } // namespace valhalla

@@ -5,7 +5,6 @@
 #include "tyr/serializers.h"
 
 #include <cmath>
-#include <iomanip>
 #include <sstream>
 #include <utility>
 
@@ -18,25 +17,26 @@ using rgba_t = std::tuple<float, float, float>;
 namespace valhalla {
 namespace tyr {
 
-template <class coord_t>
-std::string
-serializeIsochrones(const Api& request,
-                    const typename midgard::GriddedData<coord_t>::contours_t& grid_contours,
-                    bool polygons,
-                    const std::unordered_map<float, std::string>& colors,
-                    bool show_locations) {
+std::string serializeIsochrones(const Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons,
+                                bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
-  for (const auto& interval : grid_contours) {
-    auto color_itr = colors.find(interval.first);
+  assert(intervals.size() == contours.size());
+  for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
+    const auto& interval = intervals[contour_index];
+    const auto& feature_collection = contours[contour_index];
+
     // color was supplied
     std::stringstream hex;
-    if (color_itr != colors.end() && !color_itr->second.empty()) {
-      hex << "#" << color_itr->second;
+    if (!std::get<3>(interval).empty()) {
+      hex << "#" << std::get<3>(interval);
     } // or we computed it..
     else {
-      auto h = i * (150.f / grid_contours.size());
+      auto h = i * (150.f / intervals.size());
       auto c = .5f;
       auto x = c * (1 - std::abs(std::fmod(h / 60.f, 2.f) - 1));
       auto m = .25f;
@@ -49,14 +49,14 @@ serializeIsochrones(const Api& request,
     ++i;
 
     // for each feature on that interval
-    for (const auto& feature : interval.second) {
+    for (const auto& feature : feature_collection) {
       // for each contour in that feature
       auto geom = array({});
       for (const auto& contour : feature) {
         // make some geometry
         auto coords = array({});
         for (const auto& coord : contour) {
-          coords->push_back(array({fp_t{coord.first, 6}, fp_t{coord.second, 6}}));
+          coords->push_back(array({fixed_t{coord.first, 6}, fixed_t{coord.second, 6}}));
         }
         // its either a ring
         if (polygons) {
@@ -74,13 +74,14 @@ serializeIsochrones(const Api& request,
                            {"coordinates", geom},
                        })},
           {"properties", map({
-                             {"contour", static_cast<uint64_t>(interval.first)},
-                             {"color", hex.str()},            // lines
-                             {"fill", hex.str()},             // geojson.io polys
-                             {"fillColor", hex.str()},        // leaflet polys
-                             {"opacity", fp_t{.33f, 2}},      // lines
-                             {"fill-opacity", fp_t{.33f, 2}}, // geojson.io polys
-                             {"fillOpacity", fp_t{.33f, 2}},  // leaflet polys
+                             {"metric", std::get<2>(interval)},
+                             {"contour", baldr::json::float_t{std::get<1>(interval)}},
+                             {"color", hex.str()},               // lines
+                             {"fill", hex.str()},                // geojson.io polys
+                             {"fillColor", hex.str()},           // leaflet polys
+                             {"opacity", fixed_t{.33f, 2}},      // lines
+                             {"fill-opacity", fixed_t{.33f, 2}}, // geojson.io polys
+                             {"fillOpacity", fixed_t{.33f, 2}},  // leaflet polys
                          })},
       }));
     }
@@ -92,13 +93,13 @@ serializeIsochrones(const Api& request,
       // first add all snapped points as MultiPoint feature per origin point
       auto snapped_points_array = array({});
       std::unordered_set<midgard::PointLL> snapped_points;
-      for (const auto& path_edge : location.path_edges()) {
+      for (const auto& path_edge : location.correlation().edges()) {
         const midgard::PointLL& snapped_current =
             midgard::PointLL(path_edge.ll().lng(), path_edge.ll().lat());
         // remove duplicates of path_edges in case the snapped object is a node
         if (snapped_points.insert(snapped_current).second) {
           snapped_points_array->push_back(
-              array({fp_t{snapped_current.lng(), 6}, fp_t{snapped_current.lat(), 6}}));
+              array({fixed_t{snapped_current.lng(), 6}, fixed_t{snapped_current.lat(), 6}}));
         }
       };
       features->emplace_back(map(
@@ -110,7 +111,8 @@ serializeIsochrones(const Api& request,
 
       // then each user input point as separate Point feature
       const valhalla::LatLng& input_latlng = location.ll();
-      const auto input_array = array({fp_t{input_latlng.lng(), 6}, fp_t{input_latlng.lat(), 6}});
+      const auto input_array =
+          array({fixed_t{input_latlng.lng(), 6}, fixed_t{input_latlng.lat(), 6}});
       features->emplace_back(map(
           {{"type", std::string("Feature")},
            {"properties",
@@ -126,27 +128,14 @@ serializeIsochrones(const Api& request,
       {"features", features},
   });
 
-  if (request.options().has_id()) {
+  if (request.options().has_id_case()) {
     feature_collection->emplace("id", request.options().id());
   }
 
   std::stringstream ss;
   ss << *feature_collection;
+
   return ss.str();
 }
-
-template std::string
-serializeIsochrones<midgard::Point2>(const Api&,
-                                     const midgard::GriddedData<midgard::Point2>::contours_t&,
-                                     bool,
-                                     const std::unordered_map<float, std::string>&,
-                                     bool);
-template std::string
-serializeIsochrones<midgard::PointLL>(const Api&,
-                                      const midgard::GriddedData<midgard::PointLL>::contours_t&,
-                                      bool,
-                                      const std::unordered_map<float, std::string>&,
-                                      bool);
-
 } // namespace tyr
 } // namespace valhalla

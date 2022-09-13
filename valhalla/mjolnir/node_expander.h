@@ -39,6 +39,13 @@ struct Edge {
     uint64_t traffic_signal : 1;
     uint64_t forward_signal : 1;
     uint64_t backward_signal : 1;
+    uint64_t stop_sign : 1;
+    uint64_t forward_stop : 1;
+    uint64_t backward_stop : 1;
+    uint64_t yield_sign : 1;
+    uint64_t forward_yield : 1;
+    uint64_t backward_yield : 1;
+    uint64_t direction : 1;
     uint64_t link : 1;
     uint64_t reclass_link : 1;
     uint64_t has_names : 1;
@@ -53,9 +60,7 @@ struct Edge {
     uint64_t turn_channel : 1;  // Link edge should be a turn channel
     uint64_t way_begin : 1;     // True if first edge of way
     uint64_t way_end : 1;       // True if last edge of way
-    uint64_t way_next : 1;      // True if next edge after the first edge of the way
-    uint64_t way_prior : 1;     // True if prior edge after the last edge of the way
-    uint64_t spare : 30;
+    uint64_t spare : 23;
   };
   EdgeAttributes attributes;
 
@@ -80,7 +85,10 @@ struct Edge {
    * @param wayindex     Index into list of OSM ways
    * @param ll           Lat,lng at the start of the edge.
    */
-  static Edge make_edge(const uint32_t wayindex, const uint32_t llindex, const OSMWay& way) {
+  static Edge make_edge(const uint32_t wayindex,
+                        const uint32_t llindex,
+                        const OSMWay& way,
+                        const bool infer_turn_channels) {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
@@ -100,7 +108,14 @@ struct Edge {
     e.attributes.has_names =
         (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
          way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
-    e.attributes.turn_channel = way.turn_channel();
+
+    // If this data has turn_channels set and we are not inferring turn channels then we need to
+    // use the flag. Otherwise the turn_channel is set in the reclassify links.  Also, an edge can't
+    // be a ramp and a turn channel.
+    if (!infer_turn_channels && way.turn_channel() && !way.link())
+      e.attributes.turn_channel = true;
+    else
+      e.attributes.turn_channel = false;
     return e;
   }
 
@@ -150,10 +165,10 @@ struct Node {
   baldr::GraphId graph_id;
 
   bool is_start() const {
-    return start_of != -1;
+    return start_of != static_cast<uint32_t>(-1);
   }
   bool is_end() const {
-    return end_of != -1;
+    return end_of != static_cast<uint32_t>(-1);
   }
 };
 

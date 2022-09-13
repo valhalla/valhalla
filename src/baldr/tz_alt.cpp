@@ -62,6 +62,11 @@
    // that "If you define NTDDI_VERSION, you must also define _WIN32_WINNT."
    // So we declare we require Vista or greater.
 #  ifdef __MINGW32__
+   // otherwise LOGFONTW is not defined (defined in shobjidl.h if not NOGDI)
+   // https://sourceforge.net/p/mingw-w64/bugs/834/
+#    ifdef NOGDI
+#      undef NOGDI
+#    endif
 
 #    ifndef NTDDI_VERSION
 #      define NTDDI_VERSION 0x06000000
@@ -3476,7 +3481,7 @@ init_tzdb()
                 }
                 else
                 {
-                    std::cerr << line << '\n';
+                    ;
                 }
             }
         }
@@ -4100,7 +4105,7 @@ init_tzdb_strings()
                 }
                 else
                 {
-                    std::cerr << line << '\n';
+                    ;
                 }
             }
         }

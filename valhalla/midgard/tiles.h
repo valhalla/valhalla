@@ -171,7 +171,7 @@ public:
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
    *          outside the bounding box of the tiling sytem).
    */
-  int32_t TileId(const float y, const float x) const {
+  int32_t TileId(const typename coord_t::first_type y, const typename coord_t::first_type x) const {
     // Return -1 if totally outside the extent.
     if (y < tilebounds_.miny() || x < tilebounds_.minx() || y > tilebounds_.maxy() ||
         x > tilebounds_.maxx()) {
@@ -389,7 +389,8 @@ public:
    * @param seed   the point at for which we measure 'closeness'
    * @return       the functor to be called
    */
-  std::function<std::tuple<int32_t, unsigned short, float>()> ClosestFirst(const coord_t& seed) const;
+  std::function<std::tuple<int32_t, unsigned short, double>()>
+  ClosestFirst(const coord_t& seed) const;
 
 protected:
   // Does the tile bounds wrap in the x direction (e.g. at longitude = 180)

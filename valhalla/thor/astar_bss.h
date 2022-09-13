@@ -30,8 +30,9 @@ class AStarBSSAlgorithm : public PathAlgorithm {
 public:
   /**
    * Constructor.
+   * @param config A config object of key, value pairs
    */
-  AStarBSSAlgorithm();
+  explicit AStarBSSAlgorithm(const boost::property_tree::ptree& config = {});
 
   /**
    * Destructor
@@ -56,6 +57,14 @@ public:
               const sif::mode_costing_t& mode_costing,
               const sif::TravelMode mode,
               const Options& options = Options::default_instance()) override;
+
+  /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const override {
+    return "a*_bike_share_station";
+  }
 
   /**
    * Clear the temporary information generated during path construction.
@@ -88,7 +97,7 @@ protected:
   std::vector<sif::EdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  std::shared_ptr<baldr::DoubleBucketQueue> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus pedestrian_edgestatus_;

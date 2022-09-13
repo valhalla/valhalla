@@ -10,14 +10,17 @@
 #include <algorithm>
 #include <cstdint>
 #include <exception>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/graphmemory.h>
+#include <valhalla/baldr/json.h>
 #include <vector>
 #else
 #include <stdint.h>
 #endif
-#include <valhalla.h>
+#include <valhalla/valhalla.h>
 
 #ifndef C_ONLY_INTERFACE
 namespace valhalla {
@@ -48,10 +51,11 @@ constexpr uint8_t UNKNOWN_CONGESTION_VAL = 0;
 constexpr uint8_t MAX_CONGESTION_VAL = 63;
 
 struct TrafficSpeed {
-  uint64_t overall_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
-  uint64_t speed1 : 7;        // 0-255kph in 2kph resolution (access with `get_speed(0)`)
-  uint64_t speed2 : 7;
-  uint64_t speed3 : 7;
+  uint64_t
+      overall_encoded_speed : 7; // 0-255kph in 2kph resolution (access with `get_overall_speed()`)
+  uint64_t encoded_speed1 : 7;   // 0-255kph in 2kph resolution (access with `get_speed(0)`)
+  uint64_t encoded_speed2 : 7;
+  uint64_t encoded_speed3 : 7;
   uint64_t breakpoint1 : 8;   // position = length * (breakpoint1 / 255)
   uint64_t breakpoint2 : 8;   // position = length * (breakpoint2 / 255)
   uint64_t congestion1 : 6;   // Stores 0 (unknown), or 1->63 (no congestion->max congestion)
@@ -61,23 +65,24 @@ struct TrafficSpeed {
   uint64_t spare : 1;
 
 #ifndef C_ONLY_INTERFACE
-  inline bool valid() const volatile {
-    return breakpoint1 != 0;
+  inline bool speed_valid() const volatile {
+    return breakpoint1 != 0 && overall_encoded_speed != UNKNOWN_TRAFFIC_SPEED_RAW;
   }
+
   inline bool closed() const volatile {
-    return valid() && overall_speed == 0;
+    return breakpoint1 != 0 && overall_encoded_speed == 0;
   }
 
   inline bool closed(std::size_t subsegment) const volatile {
-    if (!valid())
+    if (!speed_valid())
       return false;
     switch (subsegment) {
       case 0:
-        return speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
+        return encoded_speed1 == 0 || congestion1 == MAX_CONGESTION_VAL;
       case 1:
-        return breakpoint1 < 255 && (speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
+        return breakpoint1 < 255 && (encoded_speed2 == 0 || congestion2 == MAX_CONGESTION_VAL);
       case 2:
-        return breakpoint2 < 255 && (speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
+        return breakpoint2 < 255 && (encoded_speed3 == 0 || congestion3 == MAX_CONGESTION_VAL);
       default:
         assert(false);
         throw std::logic_error("Bad subsegment");
@@ -86,7 +91,7 @@ struct TrafficSpeed {
 
   /// Returns overall speed in kph across edge
   inline uint8_t get_overall_speed() const volatile {
-    return overall_speed << 1;
+    return overall_encoded_speed << 1;
   }
 
   /**
@@ -96,15 +101,15 @@ struct TrafficSpeed {
    * @return returns the speed of the subsegment or UNKNOWN_TRAFFIC_SPEED_KPH if unknown
    */
   inline uint8_t get_speed(std::size_t subsegment) const volatile {
-    if (!valid())
+    if (!speed_valid())
       return UNKNOWN_TRAFFIC_SPEED_KPH;
     switch (subsegment) {
       case 0:
-        return speed1 << 1;
+        return encoded_speed1 << 1;
       case 1:
-        return speed2 << 1;
+        return encoded_speed2 << 1;
       case 2:
-        return speed3 << 1;
+        return encoded_speed3 << 1;
       default:
         assert(false);
         throw std::logic_error("Bad subsegment");
@@ -112,11 +117,12 @@ struct TrafficSpeed {
   }
 
   constexpr TrafficSpeed()
-      : overall_speed{0}, speed1{0}, speed2{0}, speed3{0}, breakpoint1{0}, breakpoint2{0},
-        congestion1{0}, congestion2{0}, congestion3{0}, has_incidents{0}, spare{0} {
+      : overall_encoded_speed{0}, encoded_speed1{0}, encoded_speed2{0}, encoded_speed3{0},
+        breakpoint1{0}, breakpoint2{0}, congestion1{0}, congestion2{0}, congestion3{0},
+        has_incidents{0}, spare{0} {
   }
 
-  constexpr TrafficSpeed(const uint32_t overall_speed,
+  constexpr TrafficSpeed(const uint32_t overall_encoded_speed,
                          const uint32_t s1,
                          const uint32_t s2,
                          const uint32_t s3,
@@ -126,9 +132,51 @@ struct TrafficSpeed {
                          const uint32_t c2,
                          const uint32_t c3,
                          const bool incidents)
-      : overall_speed{overall_speed}, speed1{s1}, speed2{s2}, speed3{s3}, breakpoint1{b1},
-        breakpoint2{b2}, congestion1{c1}, congestion2{c2}, congestion3{c3},
-        has_incidents{incidents}, spare{0} {
+      : overall_encoded_speed{overall_encoded_speed}, encoded_speed1{s1}, encoded_speed2{s2},
+        encoded_speed3{s3}, breakpoint1{b1}, breakpoint2{b2}, congestion1{c1}, congestion2{c2},
+        congestion3{c3}, has_incidents{incidents}, spare{0} {
+  }
+
+  json::MapPtr json() const volatile {
+    auto live_speed = json::map({});
+    if (speed_valid()) {
+      live_speed->emplace("overall_speed", static_cast<uint64_t>(get_overall_speed()));
+      auto speed = static_cast<uint64_t>(get_speed(0));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_0", nullptr);
+      else
+        live_speed->emplace("speed_0", speed);
+      auto congestion = (congestion1 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_0", nullptr);
+      else
+        live_speed->emplace("congestion_0", json::fixed_t{congestion, 2});
+      live_speed->emplace("breakpoint_0", json::fixed_t{breakpoint1 / 255.0, 2});
+
+      speed = static_cast<uint64_t>(get_speed(1));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_1", nullptr);
+      else
+        live_speed->emplace("speed_1", speed);
+      congestion = (congestion2 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_1", nullptr);
+      else
+        live_speed->emplace("congestion_1", json::fixed_t{congestion, 2});
+      live_speed->emplace("breakpoint_1", json::fixed_t{breakpoint2 / 255.0, 2});
+
+      speed = static_cast<uint64_t>(get_speed(2));
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        live_speed->emplace("speed_2", nullptr);
+      else
+        live_speed->emplace("speed_2", speed);
+      congestion = (congestion3 - 1.0) / 62.0;
+      if (congestion < 0)
+        live_speed->emplace("congestion_2", nullptr);
+      else
+        live_speed->emplace("congestion_2", json::fixed_t{congestion, 2});
+    }
+    return live_speed;
   }
 #endif
 };
@@ -181,9 +229,20 @@ static_assert(MAX_TRAFFIC_SPEED_KPH == valhalla::baldr::kMaxTrafficSpeed,
 } // namespace
 class TrafficTile {
 public:
-  TrafficTile(char* tile_ptr)
-      : header{reinterpret_cast<volatile TrafficTileHeader*>(tile_ptr)},
-        speeds{reinterpret_cast<volatile TrafficSpeed*>(tile_ptr + sizeof(TrafficTileHeader))} {
+  // Disallow copying
+  TrafficTile(const TrafficTile&) = delete;
+  TrafficTile& operator=(const TrafficTile&) = delete;
+
+  // Allow moving
+  TrafficTile(TrafficTile&&) = default;
+  TrafficTile& operator=(TrafficTile&&) = default;
+
+  TrafficTile(std::unique_ptr<const GraphMemory> memory)
+      : memory_(std::move(memory)),
+        header(memory_ ? reinterpret_cast<volatile TrafficTileHeader*>(memory_->data) : nullptr),
+        speeds(memory_ ? reinterpret_cast<volatile TrafficSpeed*>(memory_->data +
+                                                                  sizeof(TrafficTileHeader))
+                       : nullptr) {
   }
 
   const volatile TrafficSpeed& trafficspeed(const uint32_t directed_edge_offset) const {
@@ -203,6 +262,10 @@ public:
     return header != nullptr;
   }
 
+private:
+  std::unique_ptr<const GraphMemory> memory_;
+
+public:
   // These are all const pointers to data structures - once assigned,
   // the pointer values won't change.  The pointer targets are marked
   // as const volatile because they can be modified by code outside

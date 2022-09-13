@@ -8,9 +8,8 @@
 #include "config.h"
 
 #include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <ostream>
 
 #include "baldr/directededge.h"
@@ -20,13 +19,10 @@
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 
-namespace bpo = boost::program_options;
-
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
-std::vector<std::string> input_files;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -38,56 +34,40 @@ struct EdgeAndDirection {
 };
 
 bool ParseArguments(int argc, char* argv[]) {
-
-  bpo::options_description options(
-      "ways_to_edges " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: ways_to_edges [options]\n"
-      "\n"
-      "ways_to_edges is a program that creates a list of edges for each OSM way "
-      "on the local level tiles."
-      "\n"
-      "\n");
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.")
-      // positional arguments
-      ("input_files",
-       boost::program_options::value<std::vector<std::string>>(&input_files)->multitoken());
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("input_files", 16);
-
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_ways_to_edges",
+      "valhalla_ways_to_edges " VALHALLA_VERSION "\n\n"
+      "valhalla_ways_to_edges is a program that creates a list of edges for each auto-driveable OSM way.\n\n");
 
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+    // clang-format on
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
+    auto result = options.parse(argc, argv);
 
-  if (vm.count("version")) {
-    std::cout << "ways_to_edges " << VALHALLA_VERSION << "\n";
-    return true;
-  }
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      exit(0);
+    }
 
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
+    if (result.count("version")) {
+      std::cout << "valhalla_ways_to_edges " << VALHALLA_VERSION << "\n";
+      exit(0);
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(config_file_path =
+                                        filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
     }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
   }
 
   return false;
@@ -105,28 +85,23 @@ int main(int argc, char** argv) {
   boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
 
-  // Get something we can use to fetch tiles
-  auto tile_properties = pt.get_child("mjolnir");
-  auto local_level = TileHierarchy::levels().rbegin()->second.level;
-  auto tiles = TileHierarchy::levels().rbegin()->second.tiles;
-
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
-  // Iterate through tiles at the local level
   GraphReader reader(pt.get_child("mjolnir"));
-  for (uint32_t id = 0; id < tiles.TileCount(); id++) {
+  // Iterate through all tiles
+  for (auto edge_id : reader.GetTileSet()) {
     // If tile exists add it to the queue
-    GraphId edge_id(id, local_level, 0);
     if (!reader.DoesTileExist(edge_id)) {
       continue;
     }
 
-    const GraphTile* tile = reader.GetGraphTile(edge_id);
+    graph_tile_ptr tile = reader.GetGraphTile(edge_id);
     for (uint32_t n = 0; n < tile->header()->directededgecount(); n++, ++edge_id) {
       const DirectedEdge* edge = tile->directededge(edge_id);
       if (edge->IsTransitLine() || edge->use() == Use::kTransitConnection ||
-          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection) {
+          edge->use() == Use::kEgressConnection || edge->use() == Use::kPlatformConnection ||
+          edge->is_shortcut()) {
         continue;
       }
 
@@ -136,13 +111,14 @@ int main(int argc, char** argv) {
       }
 
       // Get the way Id
-      uint64_t wayid = tile->edgeinfo(edge->edgeinfo_offset()).wayid();
+      uint64_t wayid = tile->edgeinfo(edge).wayid();
       ways_edges[wayid].push_back({edge->forward(), edge_id});
     }
   }
 
   std::ofstream ways_file;
-  std::string fname = pt.get<std::string>("mjolnir.tile_dir") + "/way_edges.txt";
+  std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
+                      filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
     ways_file << way.first;

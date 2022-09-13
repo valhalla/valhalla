@@ -233,16 +233,6 @@ public:
   uint32_t Clip(std::vector<coord_t>& pts, const bool closed) const;
 
   /**
-   * Intersects the segment formed by u,v with the bounding box
-   *
-   * @param  u  the first point in the segment
-   * @param  v  the second point in the segment
-   * @return Returns true if the segment actually intersected the bounding box
-   *         and moves u and v to actually reflect the intersection points
-   */
-  bool Intersect(coord_t& u, coord_t& v) const;
-
-  /**
    * Expands (if necessary) the bounding box to include the specified
    * bounding box.
    * @param  r2  Bounding bounding box to "combine" with this bounding box.
@@ -265,20 +255,27 @@ public:
   /**
    * Expands (if necessary) the bounding box to include the specified point.
    * @param  point  Point to "add" to this bounding box.
+   * @return returns true if the bbox was expanded
    */
-  void Expand(const coord_t& point) {
+  bool Expand(const coord_t& point) {
+    bool expanded = false;
     if (point.x() < minx_) {
       minx_ = point.x();
+      expanded = true;
     }
     if (point.y() < miny_) {
       miny_ = point.y();
+      expanded = true;
     }
     if (point.x() > maxx_) {
       maxx_ = point.x();
+      expanded = true;
     }
     if (point.y() > maxy_) {
       maxy_ = point.y();
+      expanded = true;
     }
+    return expanded;
   }
 
 protected:

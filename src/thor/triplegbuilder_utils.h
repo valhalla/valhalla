@@ -1,8 +1,8 @@
+#include "baldr/attributes_controller.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/time_info.h"
 #include "proto/api.pb.h"
-#include "thor/attributes_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -11,11 +11,6 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-
-// Adds incidents to a TripLeg_Edge
-void addIncidents(TripLeg::Edge& trip_edge, GraphReader& graphreader, const GraphId& edge_id) {
-  // TODO
-}
 
 /**
  * A simple way to encapsulate the marshalling of native data types specific to multi modal into
@@ -40,12 +35,13 @@ struct MultimodalBuilder {
              const GraphId& startnode,
              const DirectedEdge* directededge,
              const GraphId& edge,
-             const GraphTile* start_tile,
-             const GraphTile* graphtile,
+             graph_tile_ptr start_tile,
+             graph_tile_ptr graphtile,
              const mode_costing_t& mode_costing,
              const AttributesController& controller,
              GraphReader& graphreader) {
-    AddBssNode(trip_node, node, startnode, mode_costing, controller);
+
+    AddBssNode(trip_node, node, directededge, start_tile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
@@ -56,28 +52,32 @@ private:
    *
    * @param trip_node
    * @param node
-   * @param startnode
+   * @param directed_edge
    * @param start_tile
-   * @param graphtile
    * @param mode_costing
    * @param controller
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId& startnode,
+                  const DirectedEdge* directededge,
+                  graph_tile_ptr start_tile,
                   const mode_costing_t& mode_costing,
-                  const AttributesController& controller) {
-    auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
+                  const AttributesController&) {
+
+    auto pedestrian_costing = mode_costing[static_cast<size_t>(travel_mode_t::kPedestrian)];
+    auto bicycle_costing = mode_costing[static_cast<size_t>(travel_mode_t::kBicycle)];
 
     if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
+
+      EdgeInfo edgeinfo = start_tile->edgeinfo(directededge);
+      auto taggedValue = edgeinfo.GetTags();
+
       auto* bss_station_info = trip_node->mutable_bss_info();
       // TODO: import more BSS data, can be used to display capacity in real time
-      bss_station_info->set_name("BSS 42");
-      bss_station_info->set_ref("BSS 42 ref");
-      bss_station_info->set_capacity("42");
-      bss_station_info->set_network("universe");
-      bss_station_info->set_operator_("Douglas");
+      auto tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssInfo);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->ParseFromString(tag_range.first->second);
+      }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
     }
@@ -95,8 +95,8 @@ private:
   void AddTransitNodes(TripLeg_Node* trip_node,
                        const NodeInfo* node,
                        const GraphId& startnode,
-                       const GraphTile* start_tile,
-                       const GraphTile* graphtile,
+                       graph_tile_ptr start_tile,
+                       graph_tile_ptr graphtile,
                        const AttributesController& controller) {
 
     if (node->type() == NodeType::kTransitStation) {
@@ -106,21 +106,20 @@ private:
 
       if (transit_station) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitStationInfoOnestopId) &&
-            transit_station->one_stop_offset()) {
+        if (controller(kNodeTransitStationInfoOnestopId) && transit_station->one_stop_offset()) {
           transit_station_info->set_onestop_id(
               graphtile->GetName(transit_station->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitStationInfoName) && transit_station->name_offset()) {
+        if (controller(kNodeTransitStationInfoName) && transit_station->name_offset()) {
           transit_station_info->set_name(graphtile->GetName(transit_station->name_offset()));
         }
 
         // Set latitude and longitude
         LatLng* stop_ll = transit_station_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitStationInfoLatLon)) {
+        if (controller(kNodeTransitStationInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -135,20 +134,19 @@ private:
 
       if (transit_egress) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoOnestopId) &&
-            transit_egress->one_stop_offset()) {
+        if (controller(kNodeTransitEgressInfoOnestopId) && transit_egress->one_stop_offset()) {
           transit_egress_info->set_onestop_id(graphtile->GetName(transit_egress->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoName) && transit_egress->name_offset()) {
+        if (controller(kNodeTransitEgressInfoName) && transit_egress->name_offset()) {
           transit_egress_info->set_name(graphtile->GetName(transit_egress->name_offset()));
         }
 
         // Set latitude and longitude
         LatLng* stop_ll = transit_egress_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoLatLon)) {
+        if (controller(kNodeTransitEgressInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -160,12 +158,12 @@ private:
   void AddTransitInfo(TripLeg_Node* trip_node,
                       uint32_t trip_id,
                       const NodeInfo* node,
-                      const GraphId& startnode,
+                      const GraphId&,
                       const DirectedEdge* directededge,
                       const GraphId& edge,
-                      const GraphTile* start_tile,
-                      const GraphTile* graphtile,
-                      const sif::mode_costing_t& mode_costing,
+                      graph_tile_ptr start_tile,
+                      graph_tile_ptr graphtile,
+                      const sif::mode_costing_t&,
                       const AttributesController& controller,
                       GraphReader& graphreader) {
     if (node->is_transit()) {
@@ -178,18 +176,18 @@ private:
       // Set type
       if (directededge->use() == Use::kRail) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStation);
         }
         prev_transit_node_type = TransitPlatformInfo_Type_kStation;
       } else if (directededge->use() == Use::kPlatformConnection) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(prev_transit_node_type);
         }
       } else { // bus logic
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStop);
         }
         prev_transit_node_type = TransitPlatformInfo_Type_kStop;
@@ -197,15 +195,13 @@ private:
 
       if (transit_platform) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoOnestopId) &&
-            transit_platform->one_stop_offset()) {
+        if (controller(kNodeTransitPlatformInfoOnestopId) && transit_platform->one_stop_offset()) {
           transit_platform_info->set_onestop_id(
               graphtile->GetName(transit_platform->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoName) &&
-            transit_platform->name_offset()) {
+        if (controller(kNodeTransitPlatformInfoName) && transit_platform->name_offset()) {
           transit_platform_info->set_name(graphtile->GetName(transit_platform->name_offset()));
         }
 
@@ -214,20 +210,19 @@ private:
         for (uint32_t index = 0; index < node->edge_count(); ++index, dir_edge++) {
           if (dir_edge->use() == Use::kPlatformConnection) {
             GraphId endnode = dir_edge->endnode();
-            const GraphTile* endtile = graphreader.GetGraphTile(endnode);
+            graph_tile_ptr endtile = graphreader.GetGraphTile(endnode);
             const NodeInfo* nodeinfo2 = endtile->node(endnode);
             const TransitStop* transit_station = endtile->GetTransitStop(nodeinfo2->stop_index());
 
             // Set station onstop_id if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoStationOnestopId) &&
+            if (controller(kNodeTransitPlatformInfoStationOnestopId) &&
                 transit_station->one_stop_offset()) {
               transit_platform_info->set_station_onestop_id(
                   endtile->GetName(transit_station->one_stop_offset()));
             }
 
             // Set station name if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoStationName) &&
-                transit_station->name_offset()) {
+            if (controller(kNodeTransitPlatformInfoStationName) && transit_station->name_offset()) {
               transit_platform_info->set_station_name(
                   endtile->GetName(transit_station->name_offset()));
             }
@@ -240,7 +235,7 @@ private:
         // Set latitude and longitude
         LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoLatLon)) {
+        if (controller(kNodeTransitPlatformInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -249,8 +244,7 @@ private:
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure) if requested
-      if (controller.attributes.at(kNodeTransitPlatformInfoArrivalDateTime) &&
-          !arrival_time.empty()) {
+      if (controller(kNodeTransitPlatformInfoArrivalDateTime) && !arrival_time.empty()) {
         transit_platform_info->set_arrival_date_time(arrival_time);
       }
 
@@ -263,12 +257,12 @@ private:
 
         assumed_schedule = false;
         uint32_t date, day = 0;
-        if (origin.has_date_time()) {
+        if (!origin.date_time().empty()) {
           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
 
           if (graphtile->header()->date_created() > date) {
             // Set assumed schedule if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule)) {
+            if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
               transit_platform_info->set_assumed_schedule(true);
             }
             assumed_schedule = true;
@@ -276,7 +270,7 @@ private:
             day = date - graphtile->header()->date_created();
             if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
               // Set assumed schedule if requested
-              if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule)) {
+              if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
                 transit_platform_info->set_assumed_schedule(true);
               }
               assumed_schedule = true;
@@ -300,7 +294,7 @@ private:
           }
 
           // Set departure time from this transit stop if requested
-          if (controller.attributes.at(kNodeTransitPlatformInfoDepartureDateTime)) {
+          if (controller(kNodeTransitPlatformInfoDepartureDateTime)) {
             transit_platform_info->set_departure_date_time(dt);
           }
 
@@ -330,7 +324,7 @@ private:
         block_id = 0;
 
         // Set assumed schedule if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule) && assumed_schedule) {
+        if (controller(kNodeTransitPlatformInfoAssumedSchedule) && assumed_schedule) {
           transit_platform_info->set_assumed_schedule(true);
         }
         assumed_schedule = false;
@@ -338,173 +332,5 @@ private:
     }
   }
 };
-
-/**
- * Add trip intersecting edge.
- * @param  controller   Controller to determine which attributes to set.
- * @param  directededge Directed edge on the path.
- * @param  prev_de  Previous directed edge on the path.
- * @param  local_edge_index  Index of the local intersecting path edge at intersection.
- * @param  nodeinfo  Node information of the intersection.
- * @param  trip_node  Trip node that will store the intersecting edge information.
- * @param  intersecting_de Intersecting directed edge. Will be nullptr except when
- *                         on the local hierarchy.
- */
-void AddTripIntersectingEdge(const AttributesController& controller,
-                             const DirectedEdge* directededge,
-                             const DirectedEdge* prev_de,
-                             uint32_t local_edge_index,
-                             const NodeInfo* nodeinfo,
-                             TripLeg_Node* trip_node,
-                             const DirectedEdge* intersecting_de) {
-  TripLeg_IntersectingEdge* itersecting_edge = trip_node->add_intersecting_edge();
-
-  // Set the heading for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeBeginHeading)) {
-    itersecting_edge->set_begin_heading(nodeinfo->heading(local_edge_index));
-  }
-
-  Traversability traversability = Traversability::kNone;
-  // Determine walkability
-  if (intersecting_de->forwardaccess() & kPedestrianAccess) {
-    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
-                         ? Traversability::kBoth
-                         : Traversability::kForward;
-  } else {
-    traversability = (intersecting_de->reverseaccess() & kPedestrianAccess)
-                         ? Traversability::kBackward
-                         : Traversability::kNone;
-  }
-  // Set the walkability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeWalkability)) {
-    itersecting_edge->set_walkability(GetTripLegTraversability(traversability));
-  }
-
-  traversability = Traversability::kNone;
-  // Determine cyclability
-  if (intersecting_de->forwardaccess() & kBicycleAccess) {
-    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBoth
-                                                                         : Traversability::kForward;
-  } else {
-    traversability = (intersecting_de->reverseaccess() & kBicycleAccess) ? Traversability::kBackward
-                                                                         : Traversability::kNone;
-  }
-  // Set the cyclability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeCyclability)) {
-    itersecting_edge->set_cyclability(GetTripLegTraversability(traversability));
-  }
-
-  // Set the driveability flag for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeDriveability)) {
-    itersecting_edge->set_driveability(
-        GetTripLegTraversability(nodeinfo->local_driveability(local_edge_index)));
-  }
-
-  // Set the previous/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeFromEdgeNameConsistency)) {
-    bool name_consistency =
-        (prev_de == nullptr) ? false : prev_de->name_consistency(local_edge_index);
-    itersecting_edge->set_prev_name_consistency(name_consistency);
-  }
-
-  // Set the current/intersecting edge name consistency if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeToEdgeNameConsistency)) {
-    itersecting_edge->set_curr_name_consistency(directededge->name_consistency(local_edge_index));
-  }
-
-  // Set the use for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeUse)) {
-    itersecting_edge->set_use(GetTripLegUse(intersecting_de->use()));
-  }
-
-  // Set the road class for the intersecting edge if requested
-  if (controller.attributes.at(kNodeIntersectingEdgeRoadClass)) {
-    itersecting_edge->set_road_class(GetRoadClass(intersecting_de->classification()));
-  }
-}
-
-/**
- * Adds the intersecting edges in the graph at the current node. Skips edges which are on the path
- * as well as those which are duplicates due to shortcut edges.
- * @param controller               tells us what info we should add about the intersecting edges
- * @param start_tile               the tile which contains the node
- * @param node                     the node at which we are copying intersecting edges
- * @param directededge             the current edge leaving the current node in the path
- * @param prev_de                  the previous edge in the path
- * @param prior_opp_local_index    opposing edge local index of previous edge in the path
- * @param graphreader              graph reader for graph access
- * @param trip_node                pbf node in the pbf structure we ar ebuilding
- */
-void AddIntersectingEdges(const AttributesController& controller,
-                          const GraphTile* start_tile,
-                          const NodeInfo* node,
-                          const DirectedEdge* directededge,
-                          const DirectedEdge* prev_de,
-                          uint32_t prior_opp_local_index,
-                          GraphReader& graphreader,
-                          valhalla::TripLeg::Node* trip_node) {
-  // Add connected edges from the start node. Do this after the first trip
-  // edge is added
-  //
-  // Our path is from 1 to 2 to 3 (nodes) to ... n nodes.
-  // Each letter represents the edge info.
-  // So at node 2, we will store the edge info for D and we will store the
-  // intersecting edge info for B, C, E, F, and G.  We need to make sure
-  // that we don't store the edge info from A and D again.
-  //
-  //     (X)    (3)   (X)
-  //       \\   ||   //
-  //      C \\ D|| E//
-  //         \\ || //
-  //      B   \\||//   F
-  // (X)======= (2) ======(X)
-  //            ||\\
-  //          A || \\ G
-  //            ||  \\
-  //            (1)  (X)
-
-  // Iterate through edges on this level to find any intersecting edges
-  // Follow any upwards or downward transitions
-  const DirectedEdge* de = start_tile->directededge(node->edge_index());
-  for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, de++) {
-
-    // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
-    // the current edge in the path AND the superceded edge of the current edge in the path
-    // if the current edge in the path is a shortcut
-    if (de->is_shortcut() || de->localedgeidx() == prior_opp_local_index ||
-        de->localedgeidx() == directededge->localedgeidx() ||
-        (directededge->is_shortcut() && directededge->shortcut() & de->superseded())) {
-      continue;
-    }
-
-    // Add intersecting edges on the same hierarchy level and not on the path
-    AddTripIntersectingEdge(controller, directededge, prev_de, de->localedgeidx(), node, trip_node,
-                            de);
-  }
-
-  // Add intersecting edges on different levels (follow NodeTransitions)
-  if (node->transition_count() > 0) {
-    const NodeTransition* trans = start_tile->transition(node->transition_index());
-    for (uint32_t i = 0; i < node->transition_count(); ++i, ++trans) {
-      // Get the end node tile and its directed edges
-      GraphId endnode = trans->endnode();
-      const GraphTile* endtile = graphreader.GetGraphTile(endnode);
-      if (endtile == nullptr) {
-        continue;
-      }
-      const NodeInfo* nodeinfo2 = endtile->node(endnode);
-      const DirectedEdge* de2 = endtile->directededge(nodeinfo2->edge_index());
-      for (uint32_t idx2 = 0; idx2 < nodeinfo2->edge_count(); ++idx2, de2++) {
-        // Skip shortcut edges and edges on the path
-        if (de2->is_shortcut() || de2->localedgeidx() == prior_opp_local_index ||
-            de2->localedgeidx() == directededge->localedgeidx()) {
-          continue;
-        }
-        AddTripIntersectingEdge(controller, directededge, prev_de, de2->localedgeidx(), nodeinfo2,
-                                trip_node, de2);
-      }
-    }
-  }
-}
 
 } // namespace

@@ -34,8 +34,6 @@ void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& s
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) + "). The limit is " +
                                         std::to_string(max_shape)};
   };
-
-  valhalla::midgard::logging::Log("trace_size::" + std::to_string(shape.size()), " [ANALYTICS] ");
 }
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
@@ -67,10 +65,6 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
   if (!can_be_matched) {
     throw valhalla_exception_t{172, " " + std::to_string(max_breakage_distance) + " meters"};
   }
-
-  valhalla::midgard::logging::Log("location_distance::" +
-                                      std::to_string(crow_distance * kKmPerMeter) + "km",
-                                  " [ANALYTICS] ");
 }
 
 void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
@@ -89,15 +83,15 @@ void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
   }
 }
 
-void check_best_paths_shape(unsigned int best_paths,
+void check_alternates_shape(unsigned int alternates,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
-                            size_t max_best_paths_shape) {
+                            size_t max_alternates_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if ((best_paths > 1) && (shape.size() > max_best_paths_shape)) {
+  if ((alternates > 1) && (shape.size() > max_alternates_shape)) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +
                                         "). The best paths shape limit is " +
-                                        std::to_string(max_best_paths_shape)};
+                                        std::to_string(max_alternates_shape)};
   }
 }
 
@@ -105,18 +99,12 @@ void check_gps_accuracy(const float input_gps_accuracy, const float max_gps_accu
   if (input_gps_accuracy > max_gps_accuracy || input_gps_accuracy < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("gps_accuracy::" + std::to_string(input_gps_accuracy) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_search_radius(const float input_search_radius, const float max_search_radius) {
   if (input_search_radius > max_search_radius || input_search_radius < 0.f) {
     throw valhalla_exception_t{158};
   }
-
-  valhalla::midgard::logging::Log("search_radius::" + std::to_string(input_search_radius) + "meters",
-                                  " [ANALYTICS] ");
 }
 
 void check_turn_penalty_factor(const float input_turn_penalty_factor) {
@@ -148,23 +136,22 @@ void loki_worker_t::init_trace(Api& request) {
   // Validate shape count and distance (for now, just send max_factor for distance)
   check_shape(options.shape(), max_trace_shape);
   float breakage_distance =
-      options.has_breakage_distance() ? options.breakage_distance() : default_breakage_distance;
+      options.has_breakage_distance_case() ? options.breakage_distance() : default_breakage_distance;
   check_distance(options.shape(), max_distance.find("trace")->second, breakage_distance, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (options.shape_match() == ShapeMatch::map_snap) {
-    check_best_paths(options.best_paths(), max_best_paths);
-    check_best_paths_shape(options.best_paths(), options.shape(), max_best_paths_shape);
+    check_alternates_shape(options.alternates() + 1, options.shape(), max_trace_alternates_shape);
   }
 
   // Validate optional trace options
-  if (options.has_gps_accuracy()) {
+  if (options.has_gps_accuracy_case()) {
     check_gps_accuracy(options.gps_accuracy(), max_gps_accuracy);
   }
-  if (options.has_search_radius()) {
+  if (options.has_search_radius_case()) {
     check_search_radius(options.search_radius(), max_search_radius);
   }
-  if (options.has_turn_penalty_factor()) {
+  if (options.has_turn_penalty_factor_case()) {
     check_turn_penalty_factor(options.turn_penalty_factor());
   }
 
@@ -173,13 +160,17 @@ void loki_worker_t::init_trace(Api& request) {
 }
 
 void loki_worker_t::trace(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   init_trace(request);
-  const auto& costing = Costing_Enum_Name(request.options().costing());
-  if (costing == "multimodal") {
+  if (request.options().costing_type() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
   };
 }
 
+// TODO: remove this, it was a hack to support display_ll for map matching, what we can do is
+// actually use the display_ll now as its  used in loki::Search
 void loki_worker_t::locations_from_shape(Api& request) {
   auto& options = *request.mutable_options();
   std::vector<baldr::Location> locations{PathLocation::fromPBF(*options.shape().begin()),
@@ -218,11 +209,11 @@ void loki_worker_t::locations_from_shape(Api& request) {
       auto orig = options.mutable_locations(0);
       orig->mutable_ll()->set_lng(orig_ll.lng());
       orig->mutable_ll()->set_lat(orig_ll.lat());
-      for (auto& e : *orig->mutable_path_edges()) {
+      for (auto& e : *orig->mutable_correlation()->mutable_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de).shape();
         auto closest = orig_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method
@@ -245,11 +236,11 @@ void loki_worker_t::locations_from_shape(Api& request) {
       auto dest = options.mutable_locations(1);
       dest->mutable_ll()->set_lng(dest_ll.lng());
       dest->mutable_ll()->set_lat(dest_ll.lat());
-      for (auto& e : *dest->mutable_path_edges()) {
+      for (auto& e : *dest->mutable_correlation()->mutable_edges()) {
         GraphId edgeid(e.graph_id());
-        const GraphTile* tile = reader->GetGraphTile(edgeid);
+        graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
-        auto& shape = tile->edgeinfo(de->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(de).shape();
         auto closest = dest_ll.ClosestPoint(shape);
 
         // TODO - consider consolidating side of street logic into a common method

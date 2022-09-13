@@ -1,11 +1,57 @@
 #include "baldr/json.h"
+#include "baldr/openlr.h"
 #include "tyr/serializers.h"
 #include <cstdint>
 
 using namespace valhalla;
+using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 namespace {
+
+OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de) {
+  if (de->classification() == valhalla::baldr::RoadClass::kMotorway)
+    return OpenLR::LocationReferencePoint::MOTORWAY;
+  else if (de->roundabout())
+    return OpenLR::LocationReferencePoint::ROUNDABOUT;
+  else if (de->use() == valhalla::baldr::Use::kRamp ||
+           de->use() == valhalla::baldr::Use::kTurnChannel)
+    return OpenLR::LocationReferencePoint::SLIPROAD;
+  else if ((de->forwardaccess() & kVehicularAccess) && (de->reverseaccess() & kVehicularAccess))
+    return OpenLR::LocationReferencePoint::MULTIPLE_CARRIAGEWAY;
+  else if ((de->forwardaccess() & kVehicularAccess) || (de->reverseaccess() & kVehicularAccess))
+    return OpenLR::LocationReferencePoint::SINGLE_CARRIAGEWAY;
+
+  return OpenLR::LocationReferencePoint::OTHER;
+}
+
+std::string
+linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeInfo& edgeinfo) {
+  const auto fow = get_fow(de);
+  const auto frc = static_cast<uint8_t>(de->classification());
+
+  auto shape = edgeinfo.shape();
+  if (!de->forward())
+    std::reverse(shape.begin(), shape.end());
+  float forward_heading = midgard::tangent_angle(0, shape.front(), shape, 20.f, true);
+  float reverse_heading = midgard::tangent_angle(shape.size() - 1, shape.back(), shape, 20.f, false);
+
+  std::vector<OpenLR::LocationReferencePoint> lrps;
+  lrps.emplace_back(shape.front().lng(), shape.front().lat(), forward_heading, frc, fow, nullptr,
+                    de->length(), frc);
+  lrps.emplace_back(shape.back().lng(), shape.back().lat(), reverse_heading, frc, fow, &lrps.back());
+
+  uint8_t poff = static_cast<uint8_t>(std::min(255.f, percent_along * 255 + .5f));
+
+  return OpenLR::OpenLr{lrps,
+                        poff,
+                        0,
+                        true,
+                        OpenLR::Orientation::FirstLrpTowardsSecond,
+                        OpenLR::SideOfTheRoad::DirectlyOnRoadOrNotApplicable}
+      .toBase64();
+}
+
 json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader, bool verbose) {
   auto array = json::array({});
   for (const auto& edge : location.edges) {
@@ -13,9 +59,19 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
       // get the osm way id
       auto tile = reader.GetGraphTile(edge.id);
       auto* directed_edge = tile->directededge(edge.id);
-      auto edge_info = tile->edgeinfo(directed_edge->edgeinfo_offset());
+      auto edge_info = tile->edgeinfo(directed_edge);
       // they want MOAR!
       if (verbose) {
+        // live traffic information
+        const volatile auto& traffic = tile->trafficspeed(directed_edge);
+        auto live_speed = traffic.json();
+
+        // incident information
+        if (traffic.has_incidents) {
+          // TODO: incidents
+        }
+
+        // historical traffic information
         auto predicted_speeds = json::array({});
         if (directed_edge->has_predicted_speed()) {
           for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
@@ -23,33 +79,38 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
                 static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }
         }
+
+        // basic rest of it plus edge metadata
         array->emplace_back(json::map({
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
+            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
             {"side_of_street",
              edge.sos == PathLocation::LEFT
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
-            {"distance", json::fp_t{edge.distance, 1}},
+            {"percent_along", json::fixed_t{edge.percent_along, 5}},
+            {"distance", json::fixed_t{edge.distance, 1}},
+            {"heading", json::fixed_t{edge.projected_heading, 1}},
             {"outbound_reach", static_cast<int64_t>(edge.outbound_reach)},
             {"inbound_reach", static_cast<int64_t>(edge.inbound_reach)},
             {"edge_id", edge.id.json()},
             {"edge", directed_edge->json()},
             {"edge_info", edge_info.json()},
+            {"linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info)},
             {"predicted_speeds", predicted_speeds},
+            {"live_speed", live_speed},
         }));
       } // they want it lean and mean
       else {
         array->emplace_back(json::map({
             {"way_id", static_cast<uint64_t>(edge_info.wayid())},
-            {"correlated_lat", json::fp_t{edge.projected.lat(), 6}},
-            {"correlated_lon", json::fp_t{edge.projected.lng(), 6}},
+            {"correlated_lat", json::fixed_t{edge.projected.lat(), 6}},
+            {"correlated_lon", json::fixed_t{edge.projected.lng(), 6}},
             {"side_of_street",
              edge.sos == PathLocation::LEFT
                  ? std::string("left")
                  : (edge.sos == PathLocation::RIGHT ? std::string("right") : std::string("neither"))},
-            {"percent_along", json::fp_t{edge.percent_along, 5}},
+            {"percent_along", json::fixed_t{edge.percent_along, 5}},
         }));
       }
     } catch (...) {
@@ -72,7 +133,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
   auto array = json::array({});
   for (auto node_id : nodes) {
     GraphId n(node_id);
-    const GraphTile* tile = reader.GetGraphTile(n);
+    graph_tile_ptr tile = reader.GetGraphTile(n);
     auto* node_info = tile->node(n);
     json::MapPtr node;
     if (verbose) {
@@ -81,7 +142,7 @@ json::ArrayPtr serialize_nodes(const PathLocation& location, GraphReader& reader
     } else {
       midgard::PointLL node_ll = tile->get_node_ll(n);
       node = json::map({
-          {"lon", json::fp_t{node_ll.first, 6}}, {"lat", json::fp_t{node_ll.second, 6}},
+          {"lon", json::fixed_t{node_ll.first, 6}}, {"lat", json::fixed_t{node_ll.second, 6}},
           // TODO: osm_id
       });
     }
@@ -96,8 +157,8 @@ json::MapPtr serialize(const PathLocation& location, GraphReader& reader, bool v
   auto m = json::map({
       {"edges", serialize_edges(location, reader, verbose)},
       {"nodes", serialize_nodes(location, reader, verbose)},
-      {"input_lat", json::fp_t{location.latlng_.lat(), 6}},
-      {"input_lon", json::fp_t{location.latlng_.lng(), 6}},
+      {"input_lat", json::fixed_t{location.latlng_.lat(), 6}},
+      {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
   });
   return m;
 }
@@ -106,8 +167,8 @@ json::MapPtr serialize(const midgard::PointLL& ll, const std::string& reason, bo
   auto m = json::map({
       {"edges", static_cast<std::nullptr_t>(nullptr)},
       {"nodes", static_cast<std::nullptr_t>(nullptr)},
-      {"input_lat", json::fp_t{ll.lat(), 6}},
-      {"input_lon", json::fp_t{ll.lng(), 6}},
+      {"input_lat", json::fixed_t{ll.lat(), 6}},
+      {"input_lon", json::fixed_t{ll.lng(), 6}},
   });
   if (verbose) {
     m->emplace("reason", reason);

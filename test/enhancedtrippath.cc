@@ -13,11 +13,10 @@ using namespace valhalla::baldr;
 
 namespace {
 
-void TryCalculateRightLeftIntersectingEdgeCounts(
-    uint32_t from_heading,
-    std::unique_ptr<EnhancedTripLeg_Node> node,
-    const IntersectingEdgeCounts& expected_xedge_counts,
-    const TripLeg_TravelMode travel_mode = TripLeg_TravelMode_kDrive) {
+void TryCalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
+                                                 std::unique_ptr<EnhancedTripLeg_Node> node,
+                                                 const IntersectingEdgeCounts& expected_xedge_counts,
+                                                 const TravelMode travel_mode = TravelMode::kDrive) {
 
   IntersectingEdgeCounts xedge_counts;
   xedge_counts.clear();
@@ -145,6 +144,12 @@ TEST(EnhancedTripPathCalculateRightLeftIntersectingEdgeCounts, SharpLeftRightLef
                                               IntersectingEdgeCounts(5, 0, 0, 0, 1, 1, 0, 0));
 }
 
+TEST(EnhancedTripPathDefaultTurnLaneState, True) {
+  TripLeg_Edge edge;
+  edge.add_turn_lanes()->set_directions_mask(kTurnLaneLeft);
+  ASSERT_EQ(edge.mutable_turn_lanes(0)->state(), TurnLane::kInvalid);
+}
+
 void TryHasActiveTurnLane(std::unique_ptr<EnhancedTripLeg_Edge> edge, bool expected) {
   EXPECT_EQ(edge->HasActiveTurnLane(), expected);
 }
@@ -164,17 +169,17 @@ TEST(EnhancedTripPathHasActiveTurnLane, True) {
   edge.add_turn_lanes()->set_directions_mask(kTurnLaneRight);
 
   // Left active
-  edge.mutable_turn_lanes(0)->set_is_active(true);
+  edge.mutable_turn_lanes(0)->set_state(TurnLane::kActive);
   TryHasActiveTurnLane(std::make_unique<EnhancedTripLeg_Edge>(&edge), true);
 
   // Straight active
-  edge.mutable_turn_lanes(0)->set_is_active(false);
-  edge.mutable_turn_lanes(1)->set_is_active(true);
+  edge.mutable_turn_lanes(0)->set_state(TurnLane::kInvalid);
+  edge.mutable_turn_lanes(1)->set_state(TurnLane::kActive);
   TryHasActiveTurnLane(std::make_unique<EnhancedTripLeg_Edge>(&edge), true);
 
   // Right active
-  edge.mutable_turn_lanes(1)->set_is_active(false);
-  edge.mutable_turn_lanes(2)->set_is_active(true);
+  edge.mutable_turn_lanes(1)->set_state(TurnLane::kInvalid);
+  edge.mutable_turn_lanes(2)->set_state(TurnLane::kActive);
   TryHasActiveTurnLane(std::make_unique<EnhancedTripLeg_Edge>(&edge), true);
 }
 
@@ -204,7 +209,7 @@ TEST(EnhancedTripPathHasNonDirectionalTurnLane, True) {
 
 void ClearActiveTurnLanes(::google::protobuf::RepeatedPtrField<::valhalla::TurnLane>* turn_lanes) {
   for (auto& turn_lane : *(turn_lanes)) {
-    turn_lane.set_is_active(false);
+    turn_lane.clear_state();
   }
 }
 

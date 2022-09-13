@@ -22,8 +22,8 @@ protected:
               ||
          I----JK----L
          M----NO----P----A----B----C
-              ||       D-----/|\-----F
-              ||              |
+              ||             /|\
+              ||       D----- | -----F
               ||              |
               ||              |
               QR              E
@@ -75,7 +75,7 @@ gurka::map InstructionsTurnToward::map = {};
 // Turn right toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, TurnRightToward) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -86,6 +86,7 @@ TEST_F(InstructionsTurnToward, TurnRightToward) {
   // Verify the turn right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Turn right toward Baltimore/Washington.",
+      "Turn right toward Baltimore, Washington. Then You will arrive at your destination.",
       "Turn right toward Baltimore.",
       "Turn right toward Baltimore, Washington. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -95,7 +96,7 @@ TEST_F(InstructionsTurnToward, TurnRightToward) {
 // Make a sharp right toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, SharpRightToward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -106,6 +107,7 @@ TEST_F(InstructionsTurnToward, SharpRightToward) {
   // Verify the sharp right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a sharp right toward Pittsburgh/Columbus.",
+      "Make a sharp right toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Make a sharp right toward Pittsburgh.",
       "Make a sharp right toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -115,7 +117,7 @@ TEST_F(InstructionsTurnToward, SharpRightToward) {
 // Bear right toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, BearRightToward) {
-  auto result = gurka::route(map, "A", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -126,6 +128,7 @@ TEST_F(InstructionsTurnToward, BearRightToward) {
   // Verify the slight right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Bear right toward Philadelphia/New York.",
+      "Bear right toward Philadelphia, New York. Then You will arrive at your destination.",
       "Bear right toward Philadelphia.",
       "Bear right toward Philadelphia, New York. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -135,7 +138,7 @@ TEST_F(InstructionsTurnToward, BearRightToward) {
 // Turn right toward ignore junction name
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, TurnRightTowardIgnoreJunctionName) {
-  auto result = gurka::route(map, "G", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"G", "I"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -145,7 +148,9 @@ TEST_F(InstructionsTurnToward, TurnRightTowardIgnoreJunctionName) {
 
   // Verify the turn right toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn right toward Lancaster.", "Turn right toward Lancaster.",
+      result, maneuver_index, "Turn right toward Lancaster.",
+      "Turn right toward Lancaster. Then You will arrive at your destination.",
+      "Turn right toward Lancaster.",
       "Turn right toward Lancaster. Then You will arrive at your destination.",
       "Continue for 80 meters.");
 }
@@ -154,7 +159,7 @@ TEST_F(InstructionsTurnToward, TurnRightTowardIgnoreJunctionName) {
 // Turn left toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, TurnLeftToward) {
-  auto result = gurka::route(map, "C", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "E"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -164,7 +169,9 @@ TEST_F(InstructionsTurnToward, TurnLeftToward) {
 
   // Verify the turn left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left toward Baltimore/Washington.", "Turn left toward Baltimore.",
+      result, maneuver_index, "Turn left toward Baltimore/Washington.",
+      "Turn left toward Baltimore, Washington. Then You will arrive at your destination.",
+      "Turn left toward Baltimore.",
       "Turn left toward Baltimore, Washington. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -173,7 +180,7 @@ TEST_F(InstructionsTurnToward, TurnLeftToward) {
 // Make a sharp left toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, SharpLeftToward) {
-  auto result = gurka::route(map, "C", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "F"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -184,6 +191,7 @@ TEST_F(InstructionsTurnToward, SharpLeftToward) {
   // Verify the sharp left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a sharp left toward Philadelphia/New York.",
+      "Make a sharp left toward Philadelphia, New York. Then You will arrive at your destination.",
       "Make a sharp left toward Philadelphia.",
       "Make a sharp left toward Philadelphia, New York. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -193,7 +201,7 @@ TEST_F(InstructionsTurnToward, SharpLeftToward) {
 // Bear left toward
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, BearLeftToward) {
-  auto result = gurka::route(map, "C", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"C", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -203,7 +211,9 @@ TEST_F(InstructionsTurnToward, BearLeftToward) {
 
   // Verify the slight left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Bear left toward Pittsburgh/Columbus.", "Bear left toward Pittsburgh.",
+      result, maneuver_index, "Bear left toward Pittsburgh/Columbus.",
+      "Bear left toward Pittsburgh, Columbus. Then You will arrive at your destination.",
+      "Bear left toward Pittsburgh.",
       "Bear left toward Pittsburgh, Columbus. Then You will arrive at your destination.",
       "Continue for 100 meters.");
 }
@@ -212,7 +222,7 @@ TEST_F(InstructionsTurnToward, BearLeftToward) {
 // Turn left toward using internal edge
 // "5": "Turn/Bear/Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, TurnLeftTowardUsingInternalEdge) {
-  auto result = gurka::route(map, "M", "H", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"M", "H"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -222,7 +232,9 @@ TEST_F(InstructionsTurnToward, TurnLeftTowardUsingInternalEdge) {
 
   // Verify the turn left toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, maneuver_index, "Turn left toward B1/C1/Little Italy.", "Turn left toward B1.",
+      result, maneuver_index, "Turn left toward B1/C1/Little Italy.",
+      "Turn left toward B1, Little Italy. Then You will arrive at your destination.",
+      "Turn left toward B1.",
       "Turn left toward B1, Little Italy. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -231,7 +243,7 @@ TEST_F(InstructionsTurnToward, TurnLeftTowardUsingInternalEdge) {
 // Make a left U-turn toward using internal edges
 // "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
 TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
-  auto result = gurka::route(map, "M", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"M", "I"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -242,6 +254,7 @@ TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
   // Verify the left u-turn toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Make a left U-turn toward Lancaster.",
+      "Make a left U-turn toward Lancaster. Then You will arrive at your destination.",
       "Make a left U-turn toward Lancaster.",
       "Make a left U-turn toward Lancaster. Then You will arrive at your destination.",
       "Continue for 100 meters.");
@@ -254,7 +267,7 @@ TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
 // "6": "Continue toward <TOWARD_SIGN>."
 // TODO: expand map for obvious maneuver
 // TEST_F(InstructionsTurnToward, ContinueTowardUsingInternalEdge) {
-//  auto result = gurka::route(map, "R", "H", "auto");
+//  auto result = gurka::do_action(valhalla::Options::route, map, {"R", "H"}, "auto");
 //
 //  // Verify maneuver types
 //  gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -264,7 +277,7 @@ TEST_F(InstructionsTurnToward, LeftUturnTowardUsingInternalEdges) {
 //
 //  // Verify the turn left toward instructions
 //  gurka::assert::raw::expect_instructions_at_maneuver_index(
-//      result, maneuver_index, "Continue toward B1/C1/Little Italy.", "Continue toward B1.",
-//      "Continue toward B1, Little Italy. Then You will arrive at your destination.",
-//      "Continue for 200 meters.");
+//      result, maneuver_index, "Continue toward B1/C1/Little Italy.", "Continue.", "Continue toward
+//      B1.", "Continue toward B1, Little Italy. Then You will arrive at your destination.", "Continue
+//      for 200 meters.");
 //}

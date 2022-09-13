@@ -14,15 +14,14 @@ namespace {
 
 TEST(TileHierarchy, Parse) {
   EXPECT_EQ(TileHierarchy::levels().size(), 3) << "Incorrect number of hierarchy levels";
-  EXPECT_EQ((++TileHierarchy::levels().begin())->second.name, "arterial")
+  EXPECT_EQ((++TileHierarchy::levels().begin())->name, "arterial")
       << "Middle hierarchy should be named arterial";
-  EXPECT_EQ(TileHierarchy::levels().begin()->second.level, 0) << "Top hierarchy should have level 0";
-  EXPECT_EQ(TileHierarchy::levels().rbegin()->second.tiles.TileSize(), .25f)
+  EXPECT_EQ(TileHierarchy::levels().begin()->level, 0) << "Top hierarchy should have level 0";
+  EXPECT_EQ(TileHierarchy::levels().rbegin()->tiles.TileSize(), .25f)
       << "Bottom hierarchy should have tile size of .25f";
-  EXPECT_EQ(TileHierarchy::levels().find(5), TileHierarchy::levels().end())
-      << "There should only be levels 0, 1, 2";
-  EXPECT_NE(TileHierarchy::levels().find(2), TileHierarchy::levels().end())
-      << "There should be a level 2";
+  EXPECT_EQ(TileHierarchy::levels()[0].level, 0);
+  EXPECT_EQ(TileHierarchy::levels()[1].level, 1);
+  EXPECT_EQ(TileHierarchy::levels()[2].level, 2);
   GraphId id = TileHierarchy::GetGraphId(PointLL(0, 0), 34);
 
   EXPECT_FALSE(id.Is_Valid()) << "GraphId should be invalid as the level doesn't exist";
@@ -33,11 +32,11 @@ TEST(TileHierarchy, Parse) {
   EXPECT_EQ(id.tileid(), (522 * 1440) + 414);
   EXPECT_EQ(id.id(), 0);
 
-  EXPECT_EQ(TileHierarchy::levels().begin()->second.importance, RoadClass::kPrimary)
+  EXPECT_EQ(TileHierarchy::levels().begin()->importance, RoadClass::kPrimary)
       << "Importance should be set to primary";
-  EXPECT_EQ((++TileHierarchy::levels().begin())->second.importance, RoadClass::kTertiary)
+  EXPECT_EQ((++TileHierarchy::levels().begin())->importance, RoadClass::kTertiary)
       << "Importance should be set to tertiary";
-  EXPECT_EQ(TileHierarchy::levels().rbegin()->second.importance, RoadClass::kServiceOther)
+  EXPECT_EQ(TileHierarchy::levels().rbegin()->importance, RoadClass::kServiceOther)
       << "Importance should be set to service/other";
 }
 

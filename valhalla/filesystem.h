@@ -7,22 +7,39 @@
  */
 
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <fstream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <thread>
 #include <vector>
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include <direct.h> // _mkdir
 #include <fcntl.h>
 #include <io.h> // _chsize
 #else
 #include <unistd.h>
+#endif
+
+#ifdef __MINGW32__
+#include <limits>
+#define _SH_DENYNO 0x40
+#endif
+
+#ifdef _WIN32
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#elif __APPLE__
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#else
+#define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
 #endif
 
 namespace filesystem {
@@ -129,6 +146,7 @@ std::basic_istream<CharT, Traits>& operator>>(std::basic_istream<CharT, Traits>&
   return is;
 }
 
+bool exists(const filesystem::path& p);
 class directory_iterator;
 class recursive_directory_iterator;
 class directory_entry {
@@ -171,6 +189,7 @@ public:
   friend bool is_empty(const class path&);
 
 private:
+  friend bool exists(const filesystem::path& p);
   friend directory_iterator;
   friend recursive_directory_iterator;
   directory_entry(const filesystem::path& path, bool iterate)
@@ -180,7 +199,10 @@ private:
     if (stat(path_.c_str(), &s) == 0) {
       // if it is a directory and we are going to iterate over it
       if (S_ISDIR(s.st_mode) && iterate) {
-        dir_.reset(opendir(path_.c_str()), [](DIR* d) { closedir(d); });
+        dir_.reset(opendir(path_.c_str()), [](DIR* d) {
+          if (d)
+            closedir(d);
+        });
         return;
       }
       // make a dirent from stat info for starting out
@@ -245,6 +267,7 @@ private:
     }
     return entry_.get();
   }
+
   std::shared_ptr<DIR> dir_;
   std::shared_ptr<dirent> entry_;
   filesystem::path path_;
@@ -334,7 +357,7 @@ inline bool operator!=(const recursive_directory_iterator& lhs,
 }
 
 inline bool exists(const path& p) {
-  return directory_entry(p).exists();
+  return directory_entry(p, false).exists();
 }
 
 inline bool is_directory(const path& p) {
@@ -370,10 +393,10 @@ inline bool create_directories(const path& p) {
     auto partial = p.path_name_.substr(0, sep);
     if (stat(partial.c_str(), &s) != 0) {
       // create this piece with filesystem::permissions::all
-#ifdef _MSC_VER
-      if (_mkdir(partial.c_str()) != 0) {
+#ifdef _WIN32
+      if (_mkdir(partial.c_str()) != 0 && errno != EEXIST) {
 #else
-      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0) {
+      if (mkdir(partial.c_str(), S_IRWXU | S_IRWXG | S_IRWXO) != 0 && errno != EEXIST) {
 #endif
         return false;
         // throw std::runtime_error(std::string("Failed to create path: ") + strerror(errno));
@@ -387,10 +410,10 @@ inline bool create_directories(const path& p) {
 
   // make it!
   return true;
-}
+} // namespace filesystem
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
-#ifdef _MSC_VER
+#ifdef _WIN32
   auto truncate = [](char const* filepath, std::uintmax_t length) -> int {
     // _chsize expects value in range of signed long
     if (length > (std::numeric_limits<long>::max)())
@@ -410,23 +433,137 @@ inline void resize_file(const path& p, std::uintmax_t new_size) {
     throw std::runtime_error(std::string("Failed to resize path: ") + strerror(errno));
 }
 
-inline bool remove(const path& p) {
-  return ::remove(p.c_str()) == 0;
+inline bool rename(const path& p, const path& q) {
+  return ::rename(p.c_str(), q.c_str()) == 0;
 }
 
-inline bool remove_all(const path& p) {
+inline bool remove(const path& p) {
+  bool ret = ::remove(p.c_str()) == 0;
+
+  // it can occur that another thread is removing the same file
+  // object at the same time. Occasionally it will occur that
+  // while one thread is deleting (thread 1), the other thread
+  // (thread 2) will receive -1 from ::remove() and (errno==ENOENT
+  // or errno==EINVAL). And yet, the file still exists until thread 1
+  // is finished deleting. In this exact moment, if thread 2 calls
+  // stat() on the file object in question it will get 0 which means
+  // "file object exists". We kinda want thread 2 to wait for the
+  // file object to truly go out of existence. Hence, this spin loop.
+  if (!ret) {
+    if ((errno == EINVAL) || (errno == ENOENT)) {
+      const int max_tries = 10000;
+      int tries = 0;
+      struct stat s;
+      while ((stat(p.c_str(), &s) == 0) && (tries < max_tries))
+        tries++;
+    } else
+      throw std::runtime_error("filesystem_error filesystem::remove");
+  }
+
+  return ret;
+}
+
+inline std::uintmax_t remove_all(const path& p) {
+  std::uintmax_t num_removed = 0;
+
   // for each entry in this directory
   for (directory_iterator i(p), end; i != end; ++i) {
     // if its a directory we recurse depth first
     if (i->is_directory()) {
-      if (!remove_all(i->path()))
-        return false;
-    } // otherwise its a file or link try to delete it
-    else if (!remove(i->path()))
-      return false;
+      auto sub_num_removed = remove_all(i->path());
+      num_removed += sub_num_removed;
+    }
+    // otherwise its a file or link try to delete it
+    else {
+      if (remove(i->path()))
+        num_removed++;
+    }
   }
+
   // delete the root
-  return remove(p);
+  if (remove(p))
+    num_removed++;
+
+  return num_removed;
+}
+
+inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const path& p) {
+  struct stat s;
+  if (stat(p.c_str(), &s) != 0)
+    throw std::runtime_error("could not stat " + p.string());
+  return std::chrono::system_clock::from_time_t(FS_MTIME(s));
+}
+
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+
+/**
+ * @brief Saves data to the path.
+ * @attention Will replace the contents in case if fpath already exists. Will create
+ * new directory if directory did not exist before hand.
+ * */
+template <typename Container>
+typename std::enable_if<has_data<Container>::value, bool>::type inline save(
+    const std::string& fpath,
+    const Container& data = {}) {
+  if (fpath.empty())
+    return false;
+
+  auto dir = filesystem::path(fpath);
+  dir.replace_filename("");
+
+  filesystem::path tmp_location;
+  if (!filesystem::exists(dir) && !filesystem::create_directories(dir))
+    return false;
+
+  auto generate_tmp_suffix = []() -> std::string {
+    std::stringstream ss;
+    ss << ".tmp_" << std::this_thread::get_id() << "_"
+       << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return ss.str();
+  };
+
+  // Technically this is a race condition but its super unlikely (famous last words)
+  while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    tmp_location = fpath + generate_tmp_suffix();
+
+  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  file.write(data.data(), data.size());
+  file.close();
+
+  if (file.fail()) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * @brief Returns all regular files from the directory.
+ * @param[in] root_dir Directory to search files in.
+ * @attention Files returned in absolute path form.
+ * @return
+ *  - in case of errors or invalid parameters empty container will be returned.
+ * */
+inline std::vector<std::string> get_files(const std::string& root_dir) {
+  std::vector<std::string> files;
+  for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+    if (i->is_regular_file() || i->is_symlink())
+      files.push_back(i->path().string());
+  }
+
+  return files;
 }
 
 } // namespace filesystem

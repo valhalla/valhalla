@@ -34,15 +34,16 @@ namespace {
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
-  float length;
+  double length;
   uint64_t wayid;
   std::vector<std::string> names;
-  std::vector<std::string> tagged_names;
+  std::vector<std::string> tagged_values;
+  std::vector<std::string> pronunciations;
   std::list<PointLL> shape;
 
   OSMConnectionEdge(const GraphId& f,
                     const GraphId& t,
-                    const float l,
+                    const double l,
                     const uint64_t w,
                     const std::vector<std::string>& n,
                     const std::list<PointLL>& s)
@@ -81,7 +82,7 @@ GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& til
 
 void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     GraphTileBuilder& tilebuilder_transit,
-                    const GraphTile* tile,
+                    const graph_tile_ptr& tile,
                     GraphReader& reader_transit_level,
                     std::mutex& lock,
                     const std::unordered_set<GraphId>& tiles,
@@ -94,7 +95,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t nodecount = currentnodes.size();
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
-  uint32_t edgecount = currentedges.size();
   tilebuilder_local.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -156,7 +156,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     // Add directed edges for any connections from the OSM node
     // to an egress
     // level 2
-    const GraphTile* end_tile = nullptr;
+    graph_tile_ptr end_tile;
     while (added_edges < connection_edges.size() &&
            connection_edges[added_edges].osm_node.id() == nodeid) {
       const OSMConnectionEdge& conn = connection_edges[added_edges];
@@ -193,13 +193,14 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
           directededge.set_reverseaccess(tc_access);
         }
       }
-      directededge.set_named(conn.names.size() > 0 || conn.tagged_names.size() > 0);
+      directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
 
       // Add edge info to the tile and set the offset in the directed edge
       bool added = false;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_names, 0, added);
+                                        conn.names, conn.tagged_values, conn.pronunciations, 0,
+                                        added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -229,7 +230,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   nodecount = currentnodes.size();
   tilebuilder_transit.nodes().clear();
   currentedges = tilebuilder_transit.directededges();
-  edgecount = currentedges.size();
   tilebuilder_transit.directededges().clear();
 
   // Get the directed edge index of the first sign. If no signs are
@@ -306,7 +306,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
             directededge.set_reverseaccess(tc_access);
           }
         }
-        directededge.set_named(conn.names.size() > 0 || conn.tagged_names.size() > 0);
+        directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
@@ -314,7 +314,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
-                                            r_shape, conn.names, conn.tagged_names, 0, added);
+                                            r_shape, conn.names, conn.tagged_values,
+                                            conn.pronunciations, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -360,10 +361,11 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid()) + ": added " +
            std::to_string(connedges) + " connection edges, " + std::to_string(nodecount) +
-           " nodes. time = " + std::to_string(msecs) + " ms");
+           " nodes. time = " +
+           std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) +
+           " ms");
 }
 
 // Fallback to find connection edges from the transit stop to an OSM edge.
@@ -375,29 +377,28 @@ void FindOSMConnection(const PointLL& stop_ll,
                        GraphId& startnode,
                        GraphId& endnode,
                        std::vector<PointLL>& closest_shape,
-                       std::tuple<PointLL, float, int>& closest) {
+                       std::tuple<PointLL, PointLL::first_type, int>& closest) {
   // Let's try a fallback.  Use approximator to find the closest edge.
   // We do this because the associated way could have been deleted from the
   // OSM data, but we may have not updated the stops yet in TransitLand.
-  float mindist = 10000000.0f;
-  uint32_t edgelength = 0;
-  float rm = kMetersPerKm; // one km
-  float mr2 = rm * rm;
+  double mindist = 10000000.0;
+  double rm = kMetersPerKm; // one km
+  double mr2 = rm * rm;
 
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
-  const float kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
+  const auto& tiles = TileHierarchy::levels().back().tiles;
+  const auto kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
-  AABB2<PointLL> bbox(Point2(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
-                      Point2(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
+  double lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
+  AABB2<PointLL> bbox(Point2d(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
+                      Point2d(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
-  const auto& local_level = TileHierarchy::levels().rbegin()->second.level;
+  const auto& local_level = TileHierarchy::levels().back().level;
   for (auto t : tilelist) {
     // Check all the nodes within the tile. Skip if tile has no nodes
     lock.lock();
-    const GraphTile* newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
+    auto newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
     lock.unlock();
     if (!newtile || newtile->header()->nodecount() == 0) {
       continue;
@@ -412,7 +413,7 @@ void FindOSMConnection(const PointLL& stop_ll,
       if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
         for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
           const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
-          auto edgeinfo = newtile->edgeinfo(directededge->edgeinfo_offset());
+          auto edgeinfo = newtile->edgeinfo(directededge);
 
           // Get shape and find closest point
           auto this_shape = edgeinfo.shape();
@@ -437,7 +438,6 @@ void FindOSMConnection(const PointLL& stop_ll,
             mindist = std::get<1>(this_closest);
             closest = this_closest;
             closest_shape = this_shape;
-            edgelength = directededge->length();
           }
         }
       }
@@ -449,25 +449,25 @@ void FindOSMConnection(const PointLL& stop_ll,
 void AddOSMConnection(const GraphId& transit_stop_node,
                       const NodeInfo* transit_node,
                       const std::string& stop_name,
-                      const GraphTile* tile,
+                      const graph_tile_ptr& tile,
                       GraphReader& reader_local_level,
                       std::mutex& lock,
                       std::vector<OSMConnectionEdge>& connection_edges) {
-
+  assert(tile);
   const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
   uint64_t wayid = transit_node->connecting_wayid();
 
-  float mindist = 10000000.0f;
+  double mindist = 10000000.0;
   uint32_t edgelength = 0;
   GraphId startnode, endnode;
   std::vector<PointLL> closest_shape;
-  std::tuple<PointLL, float, int> closest;
+  std::tuple<PointLL, PointLL::first_type, int> closest;
   std::vector<std::string> names;
   for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
     const NodeInfo* node = tile->node(i);
     for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
       const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
-      auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+      auto edgeinfo = tile->edgeinfo(directededge);
 
       if (edgeinfo.wayid() == wayid) {
 
@@ -515,17 +515,17 @@ void AddOSMConnection(const GraphId& transit_stop_node,
 
   // Check if stop is in same tile as the start node
   uint32_t conn_count = 0;
-  float length = 0.0f;
+  double length = 0.0;
   if (transit_stop_node.Tile_Base() == startnode.Tile_Base()) {
     // Add shape from node along the edge until the closest point, then add
     // the closest point and a straight line to the stop lat,lng
     std::list<PointLL> shape;
-    for (uint32_t i = 0; i <= std::get<2>(closest); i++) {
+    for (int i = 0; i <= std::get<2>(closest); i++) {
       shape.push_back(closest_shape[i]);
     }
     shape.push_back(std::get<0>(closest));
     shape.push_back(stop_ll);
-    length = std::max(1.0f, valhalla::midgard::length(shape));
+    length = std::max(1.0, valhalla::midgard::length(shape));
 
     // Add connection to start node
     connection_edges.push_back({startnode, transit_stop_node, length, wayid, names, shape});
@@ -533,7 +533,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
   }
 
   // Check if stop is in same tile as end node
-  float length2 = 0.0f;
+  double length2 = 0.0;
   if (transit_stop_node.Tile_Base() == endnode.Tile_Base()) {
     // Add connection to end node
     if (startnode.tileid() == endnode.tileid()) {
@@ -544,7 +544,7 @@ void AddOSMConnection(const GraphId& transit_stop_node,
       }
       shape2.push_back(std::get<0>(closest));
       shape2.push_back(stop_ll);
-      length2 = std::max(1.0f, valhalla::midgard::length(shape2));
+      length2 = std::max(1.0, valhalla::midgard::length(shape2));
 
       // Add connection to the end node
       connection_edges.push_back({endnode, transit_stop_node, length2, wayid, names, shape2});
@@ -563,12 +563,12 @@ void AddOSMConnection(const GraphId& transit_stop_node,
               " Start Node Tile: " + std::to_string(startnode.tileid()) +
               " End Node Tile: " + std::to_string(endnode.tileid()));
   }
+  UNUSED(stop_name);
 }
 
 // We make sure to lock on reading and writing since tiles are now being
 // written. Also lock on queue access since shared by different threads.
-void build(const std::string& transit_dir,
-           const boost::property_tree::ptree& pt,
+void build(const boost::property_tree::ptree& pt,
            std::mutex& lock,
            const std::unordered_set<GraphId>& tiles,
            std::unordered_set<GraphId>::const_iterator tile_start,
@@ -594,11 +594,11 @@ void build(const std::string& transit_dir,
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
-    const GraphTile* local_tile = reader_local_level.GetGraphTile(tile_id);
+    graph_tile_ptr local_tile = reader_local_level.GetGraphTile(tile_id);
     GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(), tile_id, true);
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
-    const GraphTile* transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
+    graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
 
     lock.unlock();
@@ -674,7 +674,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   // Get a list of tiles that are on both level 2 (local) and level 3 (transit)
   transit_dir->push_back(filesystem::path::preferred_separator);
   GraphReader reader(hierarchy_properties);
-  auto local_level = TileHierarchy::levels().rbegin()->first;
+  auto local_level = TileHierarchy::levels().back().level;
   if (filesystem::is_directory(*transit_dir + std::to_string(local_level + 1) +
                                filesystem::path::preferred_separator)) {
     filesystem::recursive_directory_iterator transit_file_itr(
@@ -687,7 +687,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
         if (reader.DoesTileExist(local_graph_id)) {
-          const GraphTile* tile = reader.GetGraphTile(local_graph_id);
+          graph_tile_ptr tile = reader.GetGraphTile(local_graph_id);
           tiles.emplace(local_graph_id);
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
                                                filesystem::path::preferred_separator +
@@ -748,8 +748,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     std::advance(tile_end, tile_count);
     // Make the thread
     results.emplace_back();
-    threads[i].reset(new std::thread(build, *transit_dir, std::cref(pt.get_child("mjolnir")),
-                                     std::ref(lock), std::cref(tiles), tile_start, tile_end,
+    threads[i].reset(new std::thread(build, std::cref(pt.get_child("mjolnir")), std::ref(lock),
+                                     std::cref(tiles), tile_start, tile_end,
                                      std::ref(results.back())));
   }
 

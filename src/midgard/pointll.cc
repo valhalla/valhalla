@@ -1,4 +1,5 @@
 #include "midgard/pointll.h"
+#include "midgard/util.h"
 
 #include <list>
 
@@ -13,10 +14,10 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   if (distance == 1)
     return p;
   // radians
-  const auto lon1 = first * -RAD_PER_DEG;
-  const auto lat1 = second * RAD_PER_DEG;
-  const auto lon2 = p.first * -RAD_PER_DEG;
-  const auto lat2 = p.second * RAD_PER_DEG;
+  const auto lon1 = first * -kRadPerDegD;
+  const auto lat1 = second * kRadPerDegD;
+  const auto lon2 = p.first * -kRadPerDegD;
+  const auto lat2 = p.second * kRadPerDegD;
   // useful throughout
   const auto sl1 = sin(lat1);
   const auto sl2 = sin(lat2);
@@ -34,8 +35,8 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   const auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
   const auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
   const auto z = a * sl1 + b * sl2;
-  return GeoPoint<PrecisionT>(atan2(y, x) * -DEG_PER_RAD,
-                              atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD);
+  return GeoPoint<PrecisionT>(atan2(y, x) * -kDegPerRadD,
+                              atan2(z, sqrt(x * x + y * y)) * kDegPerRadD);
 }
 
 /**
@@ -54,9 +55,9 @@ template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const G
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
-  double deltalng = (ll2.lng() - lng()) * RAD_PER_DEG;
-  double a = lat() * RAD_PER_DEG;
-  double c = ll2.lat() * RAD_PER_DEG;
+  double deltalng = (ll2.lng() - lng()) * kRadPerDegD;
+  double a = lat() * kRadPerDegD;
+  double c = ll2.lat() * kRadPerDegD;
 
   // Find the angle subtended in radians (law of cosines)
   double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));
@@ -77,7 +78,7 @@ template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const G
  * computing the radius of the circle that circumscribes the 3 positions.
  * @param   ll1   Second lng,lat position
  * @param   ll2   Third lng,lat position
- * @return  Returns the curvature in meters. Returns max float if the points
+ * @return  Returns the curvature in meters. Returns max PrecisionT if the points
  *          are collinear.
  */
 template <typename PrecisionT>
@@ -140,7 +141,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
                                    PrecisionT forward_dist_cutoff,
                                    PrecisionT reverse_dist_cutoff) const {
   // setup
-  if (pts.empty() || pivot_index < 0 || pivot_index > pts.size() - 1)
+  if (pts.empty() || pivot_index < 0 || pivot_index > static_cast<int>(pts.size()) - 1)
     return std::make_tuple(GeoPoint(), std::numeric_limits<PrecisionT>::max(), -1);
 
   int closest_segment = pivot_index;
@@ -156,7 +157,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
     int indices = reverse ? pivot_index : (pts.size() - 1) - pivot_index;
 
     GeoPoint point;
-    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.f;
+    for (int index = pivot_index - reverse; indices > 0 && dist_cutoff > 0.;
          index += increment, --indices) {
       // Get the current segment
       const GeoPoint& u = pts[index];
@@ -173,14 +174,14 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
       auto sq = bx2 * bx2 + by * by;
       auto scale =
           sq > 0 ? (((lng() - u.lng()) * approx.GetLngScale() * bx2 + (lat() - u.lat()) * by) / sq)
-                 : 0.f;
+                 : 0.;
 
       // Projects along the ray before u
       bool right_most = false;
-      if (scale <= 0.f) {
+      if (scale <= 0.) {
         point = {u.lng(), u.lat()};
       } // Projects along the ray after v
-      else if (scale >= 1.f) {
+      else if (scale >= 1.) {
         point = {v.lng(), v.lat()};
         right_most = true;
       } // Projects along the ray between u and v
@@ -197,7 +198,7 @@ GeoPoint<PrecisionT>::ClosestPoint(const std::vector<GeoPoint>& pts,
       }
 
       // Check if we should bail early because of looking at too much shape
-      if (dist_cutoff != std::numeric_limits<float>::infinity())
+      if (dist_cutoff != std::numeric_limits<PrecisionT>::infinity())
         dist_cutoff -= u.Distance(v);
     }
   }
@@ -223,21 +224,20 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAlongPolyline(const std::vector<GeoPoint
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
   if (n < 1) {
     LOG_ERROR("PointLL::HeadingAlongPolyline has < 2 vertices");
-    return 0.0f;
+    return 0.0;
   }
 
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
     double d = 0.0;
-    double seglength = 0.0;
     auto pt0 = pts.begin() + idx0;
     auto pt1 = pt0 + 1;
     while (d < dist && pt1 <= pts.begin() + idx1) {
-      seglength = pt0->Distance(*pt1);
+      auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
-        float pct = static_cast<float>((dist - d) / seglength);
+        double pct = static_cast<double>((dist - d) / seglength);
         GeoPoint ll(pt0->lng() + ((pt1->lng() - pt0->lng()) * pct),
                     pt0->lat() + ((pt1->lat() - pt0->lat()) * pct));
         return pts[idx0].Heading(ll);
@@ -272,29 +272,32 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAtEndOfPolyline(const std::vector<GeoPoi
   int n = static_cast<int>(idx1) - static_cast<int>(idx0);
   if (n < 1) {
     LOG_ERROR("PointLL::HeadingAtEndOfPolyline has < 2 vertices");
-    return 0.0f;
+    return 0.0;
   }
 
   // If more than 2 points, walk edges of the polyline until the length
   // is exceeded.
   if (n > 1) {
     double d = 0.0;
-    double seglength;
     auto pt1 = pts.begin() + idx1;
     auto pt0 = pt1 - 1;
     while (d < dist && pt0 >= pts.begin() + idx0) {
-      seglength = pt0->Distance(*pt1);
+      auto seglength = pt0->Distance(*pt1);
       if (d + seglength > dist) {
         // Set the extrapolated point along the line.
-        float pct = static_cast<float>((dist - d) / seglength);
+        double pct = static_cast<double>((dist - d) / seglength);
         GeoPoint ll(pt1->lng() + ((pt0->lng() - pt1->lng()) * pct),
                     pt1->lat() + ((pt0->lat() - pt1->lat()) * pct));
         return ll.Heading(pts[idx1]);
-      } else {
-        d += seglength;
-        pt1--;
-        pt0--;
       }
+
+      if (pt0 == pts.begin()) {
+        break;
+      }
+
+      d += seglength;
+      pt1--;
+      pt0--;
     }
   }
 
@@ -361,7 +364,7 @@ GeoPoint<PrecisionT>::Project(const GeoPoint& u, const GeoPoint& v, PrecisionT l
                (second - u.second) * by; // only need the numerator at first
 
   // projects along the ray before u
-  if (scale <= 0.f) {
+  if (scale <= 0.) {
     return u;
     // projects along the ray after v
   } else if (scale >= sq) {
@@ -387,7 +390,7 @@ GeoPoint<PrecisionT>::Project(const std::vector<GeoPoint>& pts) const {
   auto v = pts.begin();
   std::advance(v, 1);
 
-  auto min_distance = std::numeric_limits<float>::max();
+  auto min_distance = std::numeric_limits<PrecisionT>::max();
   auto best = GeoPoint{};
   int best_index = 0;
   while (v != pts.end()) {
@@ -413,3 +416,12 @@ template bool GeoPoint<double>::WithinPolygon(const std::vector<GeoPoint<double>
 template bool GeoPoint<double>::WithinPolygon(const std::list<GeoPoint<double>>&) const;
 } // namespace midgard
 } // namespace valhalla
+
+namespace std {
+size_t hash<valhalla::midgard::PointLL>::operator()(const valhalla::midgard::PointLL& p) const {
+  size_t seed = 0;
+  valhalla::midgard::hash_combine(seed, p.first);
+  valhalla::midgard::hash_combine(seed, p.second);
+  return seed;
+}
+} // namespace std

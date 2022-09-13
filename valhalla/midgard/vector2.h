@@ -19,7 +19,7 @@ public:
   /**
    * Default constructor
    */
-  VectorXY<PrecisionT>() : x_(0.0f), y_(0.0f) {
+  VectorXY<PrecisionT>() : x_(0.0), y_(0.0) {
   }
 
   /**
@@ -254,7 +254,7 @@ public:
   VectorXY<PrecisionT>& Normalize() {
     // Normalize the vector if the norm is not 0 or 1
     PrecisionT n = Norm();
-    if (n > kEpsilon && n != 1.0f) {
+    if (n > kEpsilon && n != 1.0) {
       x_ /= n;
       y_ /= n;
     }
@@ -269,7 +269,7 @@ public:
    */
   PrecisionT Component(const VectorXY<PrecisionT>& w) const {
     PrecisionT n = w.Dot(w);
-    return (n != 0.0f) ? (Dot(w) / n) : 0.0f;
+    return (n != 0.0) ? (Dot(w) / n) : 0.0;
   }
 
   /**
@@ -302,7 +302,7 @@ public:
    */
   VectorXY<PrecisionT> Reflect(const VectorXY<PrecisionT>& normal) const {
     VectorXY<PrecisionT> d = *this;
-    return (d - (normal * (2.0f * (d.Dot(normal)))));
+    return (d - (normal * (2.0 * (d.Dot(normal)))));
   }
 
 private:
@@ -312,6 +312,7 @@ private:
 };
 
 using Vector2 = VectorXY<float>;
+using Vector2d = VectorXY<double>;
 
 /**
  * Creates a new vector that is the specified vector multiplied
@@ -321,6 +322,8 @@ using Vector2 = VectorXY<float>;
  * @return  Returns the resulting vector
  */
 Vector2 operator*(float s, const Vector2& v);
+
+Vector2d operator*(double s, const Vector2d& v);
 
 } // namespace midgard
 } // namespace valhalla

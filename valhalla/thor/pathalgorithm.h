@@ -21,6 +21,8 @@ namespace thor {
 constexpr uint32_t kBucketCount = 20000;
 constexpr size_t kInterruptIterationsInterval = 5000;
 
+enum class ExpansionType { forward = 0, reverse = 1, multimodal = 2 };
+
 /**
  * Pure virtual class defining the interface for PathAlgorithm - the algorithm
  * to create shortest path.
@@ -30,8 +32,14 @@ public:
   /**
    * Constructor
    */
-  PathAlgorithm() : interrupt(nullptr), has_ferry_(false), expansion_callback_() {
+  PathAlgorithm(uint32_t max_reserved_labels_count, bool clear_reserved_memory)
+      : interrupt(nullptr), has_ferry_(false), not_thru_pruning_(true), expansion_callback_(),
+        max_reserved_labels_count_(max_reserved_labels_count),
+        clear_reserved_memory_(clear_reserved_memory) {
   }
+
+  PathAlgorithm(const PathAlgorithm&) = delete;
+  PathAlgorithm& operator=(const PathAlgorithm&) = delete;
 
   /**
    * Destructor
@@ -59,6 +67,12 @@ public:
               const Options& options = Options::default_instance()) = 0;
 
   /**
+   * Returns the name of the algorithm
+   * @return the name of the algorithm
+   */
+  virtual const char* name() const = 0;
+
+  /**
    * Clear the temporary information generated during path construction.
    */
   virtual void Clear() = 0;
@@ -81,13 +95,39 @@ public:
   }
 
   /**
+   *
+   * There is a rare case where we may encounter only_restrictions with edges being
+   * marked as not_thru.  Basically the only way to get in this area is via one edge
+   * and all other edges are restricted, but this one edge is also marked as not_thru.
+   * Therefore, on the first pass the expansion stops as we cannot take the restricted
+   * turns and we cannot go into the not_thru region. On the 2nd pass, we now ignore
+   * not_thru flags and allow entry into the not_thru region due to the fact that
+   * not_thru_pruning_ is false.  See the gurka test not_thru_pruning_.
+   *
+   * Set the not_thru_pruning_
+   * @param pruning  set the not_thru_pruning_ to pruning value.
+   *                 only set on the second pass
+   */
+  void set_not_thru_pruning(const bool pruning) {
+    not_thru_pruning_ = pruning;
+  }
+
+  /**
+   * Get the not thru pruning
+   * @return  Returns not_thru_pruning_
+   */
+  bool not_thru_pruning() {
+    return not_thru_pruning_;
+  }
+
+  /**
    * Sets the functor which will track the algorithms expansion.
    *
    * @param  expansion_callback  the functor to call back when the algorithm makes progress
    *                             on a given edge
    */
-  using expansion_callback_t =
-      std::function<void(baldr::GraphReader&, const char*, baldr::GraphId, const char*, bool)>;
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -97,11 +137,18 @@ protected:
 
   bool has_ferry_; // Indicates whether the path has a ferry
 
+  bool not_thru_pruning_; // Indicates whether to allow access into a not-thru region.
+
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  uint32_t max_reserved_labels_count_;
+
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
 
   /**
    * Check for path completion along the same edge. Edge ID in question
@@ -115,9 +162,9 @@ protected:
   virtual bool IsTrivial(const baldr::GraphId& edgeid,
                          const valhalla::Location& origin,
                          const valhalla::Location& destination) const {
-    for (const auto& destination_edge : destination.path_edges()) {
+    for (const auto& destination_edge : destination.correlation().edges()) {
       if (destination_edge.graph_id() == edgeid) {
-        for (const auto& origin_edge : origin.path_edges()) {
+        for (const auto& origin_edge : origin.correlation().edges()) {
           if (origin_edge.graph_id() == edgeid &&
               origin_edge.percent_along() <= destination_edge.percent_along()) {
             return true;
@@ -137,7 +184,7 @@ struct EdgeMetadata {
 
   inline static EdgeMetadata make(const baldr::GraphId& node,
                                   const baldr::NodeInfo* nodeinfo,
-                                  const baldr::GraphTile* tile,
+                                  const graph_tile_ptr& tile,
                                   EdgeStatus& edge_status_) {
     baldr::GraphId edge_id = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* edge_status = edge_status_.GetPtr(edge_id, tile);
@@ -145,10 +192,19 @@ struct EdgeMetadata {
     return {directededge, edge_id, edge_status};
   }
 
-  inline void increment_pointers() {
+  inline EdgeMetadata& operator++() {
     ++edge;
     ++edge_id;
     ++edge_status;
+    return *this;
+  }
+
+  inline operator bool() const {
+    return edge;
+  }
+
+  inline bool operator!() const {
+    return !edge;
   }
 };
 

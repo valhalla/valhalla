@@ -98,6 +98,16 @@ struct OSMRestriction {
   uint64_t time_domain() const;
 
   /**
+   * Set the probability
+   */
+  void set_probability(uint8_t probability);
+
+  /**
+   * Get the probability.
+   */
+  uint8_t probability() const;
+
+  /**
    * overloaded < operator - used to sort
    */
   bool operator<(const OSMRestriction& o) const {
@@ -105,7 +115,11 @@ struct OSMRestriction {
       if (to() == o.to()) {
         if (std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0) {
           if (modes() == o.modes()) {
-            return (time_domain() < o.time_domain());
+            if (probability() == o.probability()) {
+              return (time_domain() < o.time_domain());
+            } else {
+              return (probability() < o.probability());
+            }
           } else {
             return modes() < o.modes();
           }
@@ -125,7 +139,8 @@ struct OSMRestriction {
    */
   bool operator==(const OSMRestriction& o) const {
     return (from() == o.from() && to() == o.to() && std::memcmp(vias_, o.vias_, sizeof(vias_)) == 0 &&
-            modes() == o.modes() && time_domain() == o.time_domain());
+            modes() == o.modes() && probability() == o.probability() &&
+            time_domain() == o.time_domain());
   }
 
   // from is a way - uses OSM way Id.
@@ -154,7 +169,8 @@ struct OSMRestriction {
   struct Attributes {
     uint32_t type_ : 4;
     uint32_t modes_ : 12;
-    uint32_t spare_ : 16;
+    uint32_t probability_ : 7;
+    uint32_t spare_ : 9;
   };
   Attributes attributes_;
 };

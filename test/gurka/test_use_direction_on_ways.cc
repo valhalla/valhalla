@@ -50,7 +50,7 @@ gurka::map UseDirectionOnWays::map = {};
 /*************************************************************/
 
 TEST_F(UseDirectionOnWays, CheckNamesAndRefs) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   gurka::assert::osrm::expect_steps(result, {"AB", "BC", "CD", "DE"});
   gurka::assert::raw::expect_path(result,
                                   {"AB/US 30 East/US 222 North", "BC/I-95 North/US 40 East",

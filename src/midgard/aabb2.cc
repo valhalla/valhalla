@@ -76,10 +76,10 @@ template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& a, const
   // IsLeft == 0 and we count as an intersection (trivial rejection cases
   // above mean the segment reaches the corner point)
   LineSegment2<coord_t> s(a, b);
-  float s1 = s.IsLeft(coord_t(minx_, miny_));
-  return ((s1 * s.IsLeft(coord_t(minx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(coord_t(maxx_, maxy_)) <= 0.0f) ||
-          (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0f));
+  auto s1 = s.IsLeft(coord_t(minx_, miny_));
+  return ((s1 * s.IsLeft(coord_t(minx_, maxy_)) <= 0.0) ||
+          (s1 * s.IsLeft(coord_t(maxx_, maxy_)) <= 0.0) ||
+          (s1 * s.IsLeft(coord_t(maxx_, miny_)) <= 0.0));
 }
 
 template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& c, float r) const {
@@ -105,52 +105,6 @@ template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& c, float
          c.DistanceSquared(coord_t{maxx_, horizontal}) <= r || // intersects the right side
          c.DistanceSquared(coord_t{vertical, miny_}) <= r ||   // intersects the bottom side
          c.DistanceSquared(coord_t{vertical, maxy_}) <= r;     // intersects the top side
-}
-
-// Intersects the segment formed by u,v with the bounding box
-template <class coord_t> bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) const {
-  // which do we need to move
-  bool need_u = u.first < minx_ || u.first > maxx_ || u.second < miny_ || u.second > maxy_;
-  bool need_v = v.first < minx_ || v.first > maxx_ || v.second < miny_ || v.second > maxy_;
-  if (!(need_u || need_v)) {
-    return true;
-  }
-  // find intercepts with each box edge
-  std::list<coord_t> intersections;
-  x_t x;
-  y_t y;
-  // intersect with each edge keeping it if its on this box and on the segment uv
-  if (!std::isnan(x = y_intercept(u, v, miny_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first)) {
-    intersections.emplace_back(x, miny_);
-  }
-  if (!std::isnan(x = y_intercept(u, v, maxy_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first)) {
-    intersections.emplace_back(x, maxy_);
-  }
-  if (!std::isnan(y = x_intercept(u, v, maxx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second)) {
-    intersections.emplace_back(maxx_, y);
-  }
-  if (!std::isnan(y = x_intercept(u, v, minx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second)) {
-    intersections.emplace_back(minx_, y);
-  }
-  // pick the best one for each that needs it
-  float u_dist = std::numeric_limits<float>::infinity(),
-        v_dist = std::numeric_limits<float>::infinity(), d;
-  for (const auto& intersection : intersections) {
-    if (need_u && (d = u.DistanceSquared(intersection)) < u_dist) {
-      u = intersection;
-      u_dist = d;
-    }
-    if (need_v && (d = v.DistanceSquared(intersection)) < v_dist) {
-      v = intersection;
-      v_dist = d;
-    }
-  }
-  // are we inside now?
-  return intersections.size();
 }
 
 // Clips the input set of vertices to the specified boundary.  Uses a
@@ -225,11 +179,11 @@ template <class coord_t>
 coord_t AABB2<coord_t>::ClipIntersection(const ClipEdge bdry,
                                          const coord_t& insidept,
                                          const coord_t& outsidept) const {
-  float t = 0.0f;
-  float inx = insidept.x();
-  float iny = insidept.y();
-  float dx = outsidept.x() - inx;
-  float dy = outsidept.y() - iny;
+  typename coord_t::value_type t = 0.0;
+  auto inx = insidept.x();
+  auto iny = insidept.y();
+  auto dx = outsidept.x() - inx;
+  auto dy = outsidept.y() - iny;
   switch (bdry) {
     case kLeft:
       t = (minx_ - inx) / dx;

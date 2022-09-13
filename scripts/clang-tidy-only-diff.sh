@@ -48,12 +48,6 @@ readonly num_jobs="${1:-$(nproc)}"
 # -p Tells clang-tidy where to find the `compile_commands.json`.
 # `{}` specifies where `parallel` adds the command-line arguments.
 # `:::` separates the command `parallel` should execute from the arguments it should pass to the commands.
-{
-  while true; do
-    sleep 30
-    echo .
-  done
-} &
 parallel \
   -m \
   -j $num_jobs \
