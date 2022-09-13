@@ -64,7 +64,7 @@ gurka::map InstructionsNamedRoundabout::map = {};
 // enter_roundabout_verbal
 // "8": "Enter <STREET_NAMES>"
 TEST_F(InstructionsNamedRoundabout, RoundaboutEnterOnly) {
-  auto result = gurka::route(map, "A", "E", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kDestination});
@@ -73,6 +73,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutEnterOnly) {
   // TODO: known issue - future update to end on a roundabout
   // Verify the enter_roundabout instructions
   //  gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
+  //                                                            "Enter the roundabout.",
   //                                                            "Enter Dupont Circle.",
   //                                                            "Enter Dupont Circle.",
   //                                                            "Enter Dupont Circle.", "");
@@ -81,7 +82,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutEnterOnly) {
 // enter_roundabout_verbal
 // 9": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit."
 TEST_F(InstructionsNamedRoundabout, RoundaboutOrdinalOnly) {
-  auto result = gurka::route(map, "A", "I", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -92,19 +93,21 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutOrdinalOnly) {
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Enter Dupont Circle and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
                                             "Enter Dupont Circle and take the 3rd exit.",
                                             "Enter Dupont Circle and take the 3rd exit.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout.", "",
+      result, ++maneuver_index, "Exit the roundabout.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout. Then You will arrive at your destination.", "Continue for 200 meters.");
 }
 
 // enter_roundabout_verbal
 // "10": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto <ROUNDABOUT_EXIT_STREET_NAMES>."
 TEST_F(InstructionsNamedRoundabout, RoundaboutOntoStreetName) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -114,12 +117,14 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutOntoStreetName) {
   // Verify the enter_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index, "Enter Dupont Circle and take the 1st exit onto Homestead Lane.",
+      "Enter the roundabout and take the 1st exit.",
       "Enter Dupont Circle and take the 1st exit onto Homestead Lane.",
       "Enter Dupont Circle and take the 1st exit onto Homestead Lane.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.", "",
+      result, ++maneuver_index, "Exit the roundabout onto Homestead Lane.",
+      "Exit the roundabout. Then You will arrive at your destination.", "",
       "Exit the roundabout onto Homestead Lane. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -128,7 +133,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutOntoStreetName) {
 // "11": Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit onto
 // <ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>."
 TEST_F(InstructionsNamedRoundabout, RoundaboutOntoBeginStreetName) {
-  auto result = gurka::route(map, "A", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -139,21 +144,22 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutOntoBeginStreetName) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
       "Enter Dupont Circle and take the 2nd exit onto East Governor Road/A 1 East.",
+      "Enter the roundabout and take the 2nd exit.",
       "Enter Dupont Circle and take the 2nd exit onto East Governor Road.",
       "Enter Dupont Circle and take the 2nd exit onto East Governor Road, A 1 East.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, ++maneuver_index,
-      "Exit the roundabout onto East Governor Road/A 1 East. Continue on A 1 East.", "",
-      "Exit the roundabout onto East Governor Road, A 1 East.",
+      "Exit the roundabout onto East Governor Road/A 1 East. Continue on A 1 East.",
+      "Exit the roundabout.", "", "Exit the roundabout onto East Governor Road, A 1 East.",
       "Continue on A 1 East for 300 meters.");
 }
 
 // enter_roundabout_verbal
 // "12": "Enter <STREET_NAMES> and take the <ORDINAL_VALUE> exit toward <TOWARD_SIGN>."
 TEST_F(InstructionsNamedRoundabout, RoundaboutToward) {
-  auto result = gurka::route(map, "I", "A", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"I", "A"}, "auto");
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutExit,
@@ -164,12 +170,14 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutToward) {
   gurka::assert::raw::expect_instructions_at_maneuver_index(
       result, maneuver_index,
       "Enter Dupont Circle and take the 1st exit toward A 95/B 2/München/Kürten.",
+      "Enter the roundabout and take the 1st exit toward A 95, München.",
       "Enter Dupont Circle and take the 1st exit toward A 95.",
       "Enter Dupont Circle and take the 1st exit toward A 95, München.", "");
 
   // Verify the exit_roundabout instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.", "",
+      result, ++maneuver_index, "Exit the roundabout toward A 95/B 2/München/Kürten.",
+      "Exit the roundabout toward A 95, München. Then You will arrive at your destination.", "",
       "Exit the roundabout toward A 95, München. Then You will arrive at your destination.",
       "Continue for 200 meters.");
 }
@@ -183,7 +191,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
        std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
        std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
           .str();
-  auto result = gurka::route(map, request);
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
                                                 DirectionsLeg_Maneuver_Type_kRoundaboutEnter,
@@ -194,6 +202,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
   gurka::assert::raw::
       expect_instructions_at_maneuver_index(result, maneuver_index,
                                             "Enter Dupont Circle and take the 3rd exit.",
+                                            "Enter the roundabout and take the 3rd exit.",
                                             "Enter Dupont Circle and take the 3rd exit.",
                                             "Enter Dupont Circle and take the 3rd exit.",
                                             "Continue for 200 meters.");
@@ -201,6 +210,7 @@ TEST_F(InstructionsNamedRoundabout, RoundaboutExitSuppressed) {
   // Verify the exit_roundabout is suppressed
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, ++maneuver_index,
                                                             "You have arrived at your destination.",
+                                                            "",
                                                             "You will arrive at your destination.",
                                                             "You have arrived at your destination.",
                                                             "");

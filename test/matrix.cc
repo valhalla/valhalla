@@ -30,19 +30,20 @@ public:
    * Constructor.
    * @param  options Request options in a pbf
    */
-  SimpleCost(const CostingOptions& options) : DynamicCost(options, TravelMode::kDrive, kAutoAccess) {
+  SimpleCost(const Costing& options) : DynamicCost(options, sif::TravelMode::kDrive, kAutoAccess) {
   }
 
   ~SimpleCost() {
   }
 
   bool Allowed(const DirectedEdge* edge,
+               const bool /*is_dest*/,
                const EdgeLabel& pred,
-               const GraphTile* /*tile*/,
+               const graph_tile_ptr& /*tile*/,
                const GraphId& edgeid,
                const uint64_t /*current_time*/,
                const uint32_t /*tz_index*/,
-               int& /*restriction_idx*/) const override {
+               uint8_t& /*restriction_idx*/) const override {
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
@@ -55,11 +56,11 @@ public:
   bool AllowedReverse(const DirectedEdge* edge,
                       const EdgeLabel& pred,
                       const DirectedEdge* opp_edge,
-                      const GraphTile* /*tile*/,
+                      const graph_tile_ptr& /*tile*/,
                       const GraphId& opp_edgeid,
                       const uint64_t /*current_time*/,
                       const uint32_t /*tz_index*/,
-                      int& /*restriction_idx*/) const override {
+                      uint8_t& /*restriction_idx*/) const override {
     if (!IsAccessible(opp_edge) ||
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
@@ -77,8 +78,9 @@ public:
   }
 
   Cost EdgeCost(const DirectedEdge* edge,
-                const GraphTile* /*tile*/,
-                const uint32_t /*seconds*/) const override {
+                const graph_tile_ptr& /*tile*/,
+                const baldr::TimeInfo& /*time_info*/,
+                uint8_t& /*flow_sources*/) const override {
     float sec = static_cast<float>(edge->length());
     return {sec / 10.0f, sec};
   }
@@ -92,7 +94,9 @@ public:
   Cost TransitionCostReverse(const uint32_t /*idx*/,
                              const NodeInfo* /*node*/,
                              const DirectedEdge* /*opp_edge*/,
-                             const DirectedEdge* /*opp_pred_edge*/) const override {
+                             const DirectedEdge* /*opp_pred_edge*/,
+                             const bool /*has_measured_speed*/,
+                             const InternalTurn /*internal_turn*/) const override {
     return {5.0f, 5.0f};
   }
 
@@ -100,7 +104,7 @@ public:
     return 0.1f;
   }
 
-  float Filter(const baldr::DirectedEdge* edge, const baldr::GraphTile*) const override {
+  bool Allowed(const baldr::DirectedEdge* edge, const graph_tile_ptr&, uint16_t) const override {
     auto access_mask = (ignore_access_ ? kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
@@ -112,7 +116,7 @@ public:
   }
 };
 
-cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
+cost_ptr_t CreateSimpleCost(const Costing& options) {
   return std::make_shared<SimpleCost>(options);
 }
 
@@ -124,72 +128,15 @@ cost_ptr_t CreateSimpleCost(const CostingOptions& options) {
 // may want to do this in loki. At this point in thor the costing method
 // has not yet been constructed.
 const std::unordered_map<std::string, float> kMaxDistances = {
-    {"auto", 43200.0f},      {"auto_shorter", 43200.0f}, {"bicycle", 7200.0f},
-    {"bus", 43200.0f},       {"hov", 43200.0f},          {"motor_scooter", 14400.0f},
-    {"multimodal", 7200.0f}, {"pedestrian", 7200.0f},    {"transit", 14400.0f},
-    {"truck", 43200.0f},     {"taxi", 43200.0f},
+    {"auto", 43200.0f},      {"auto_shorter", 43200.0f},  {"bicycle", 7200.0f},
+    {"bus", 43200.0f},       {"motor_scooter", 14400.0f}, {"multimodal", 7200.0f},
+    {"pedestrian", 7200.0f}, {"transit", 14400.0f},       {"truck", 43200.0f},
+    {"taxi", 43200.0f},
 };
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-void adjust_scores(Options& options) {
-  for (auto* locations :
-       {options.mutable_locations(), options.mutable_sources(), options.mutable_targets()}) {
-    for (auto& location : *locations) {
-      // get the minimum score for all the candidates
-      auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
-        for (auto& candidate : *candidates) {
-          // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
-            candidate.set_distance(0);
-          // scale the score to favor closer results more
-          else
-            candidate.set_distance(candidate.distance() * candidate.distance() * kDistanceScale);
-          // remember the min score
-          if (minScore > candidate.distance())
-            minScore = candidate.distance();
-        }
-      }
-
-      // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
-        for (auto& candidate : *candidates) {
-          candidate.set_distance(candidate.distance() - minScore);
-          if (candidate.distance() > max_score->second)
-            candidate.set_distance(max_score->second);
-        }
-      }
-    }
-  }
-}
-
-const auto config = test::json_to_pt(R"({
-    "meili": { "default": { "breakage_distance": 2000} },
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-    "loki":{
-      "actions":["sources_to_targets"],
-      "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-    },
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })");
+const auto config = test::make_config("test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[
@@ -223,10 +170,10 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   }&format=osrm)";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2389, 2208}, {4164, 3839},
-                                            {1518, 1397}, {1809, 1639}, {2043, 1938}, {3946, 3641},
-                                            {2299, 2109}, {687, 637},   {0, 0},       {2809, 2623},
-                                            {5554, 5178}, {3942, 3706}, {4344, 4104}, {1815, 1679}};
+std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
+                                            {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
+                                            {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
+                                            {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -240,18 +187,18 @@ TEST(Matrix, test_matrix) {
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
-  adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_scores(*request.mutable_options());
 
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+  std::vector<TimeDistance> results =
+      cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                 mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
@@ -262,9 +209,35 @@ TEST(Matrix, test_matrix) {
                " to expected value for CostMatrix";
   }
 
+  CostMatrix cost_matrix_abort_source;
+  results = cost_matrix_abort_source.SourceToTarget(request.options().sources(),
+                                                    request.options().targets(), reader, mode_costing,
+                                                    sif::TravelMode::kDrive, 100000.0);
+
+  uint32_t found = 0;
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist < kMaxCost) {
+      ++found;
+    }
+  }
+  EXPECT_EQ(found, 15) << " not the number of results as expected";
+
+  CostMatrix cost_matrix_abort_target;
+  results = cost_matrix_abort_target.SourceToTarget(request.options().sources(),
+                                                    request.options().targets(), reader, mode_costing,
+                                                    sif::TravelMode::kDrive, 50000.0);
+
+  found = 0;
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist < kMaxCost) {
+      ++found;
+    }
+  }
+  EXPECT_EQ(found, 10) << " not the number of results as expected";
+
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
@@ -284,18 +257,18 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
 
   loki_worker.matrix(request);
-  adjust_scores(*request.mutable_options());
+  thor_worker_t::adjust_scores(*request.mutable_options());
 
   GraphReader reader(config.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
-  mode_costing[0] = CreateSimpleCost(
-      request.options().costing_options(static_cast<int>(request.options().costing())));
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
   std::vector<TimeDistance> results;
   results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                       reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -308,7 +281,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   TimeDistanceMatrix timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, TravelMode::kDrive, 400000.0);
+                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -318,6 +291,48 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
         << "result " + std::to_string(i) +
                "'s time is not equal to the expected value for TimeDistMatrix";
   }
+}
+
+const auto test_request_partial = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto",
+    "matrix_locations":2
+  })";
+
+TEST(Matrix, partial_matrix) {
+  loki_worker_t loki_worker(config);
+
+  Api request;
+  ParseApi(test_request_partial, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  GraphReader reader(config.get_child("mjolnir"));
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+
+  TimeDistanceMatrix timedist_matrix;
+  std::vector<TimeDistance> results =
+      timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                     mode_costing, sif::TravelMode::kDrive, 400000.0,
+                                     request.options().matrix_locations());
+  uint32_t found = 0;
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    if (results[i].dist > 0) {
+      ++found;
+    }
+  }
+  EXPECT_EQ(found, 2) << " partial result did not find 2 results as expected";
 }
 
 int main(int argc, char* argv[]) {

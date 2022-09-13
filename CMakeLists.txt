@@ -7,13 +7,14 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
 include(GNUInstallDirs)
 
 set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
@@ -31,6 +32,11 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
+option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
+option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
+# useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
+option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
+
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -65,16 +71,18 @@ if(NOT MSVC_IDE) # TODO: May need to be extended for Xcode, CLion, etc.
   endif()
 endif()
 
-if(CMAKE_BUILD_TYPE MATCHES Debug)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
   message(STATUS "Configuring in debug mode")
-elseif(CMAKE_BUILD_TYPE MATCHES Release)
+elseif(CMAKE_BUILD_TYPE STREQUAL Release)
   message(STATUS "Configuring in release mode")
-elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
   message(STATUS "Configuring in release mode with debug flags")
-elseif(CMAKE_BUILD_TYPE MATCHES MinRelSize)
+elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
   message(STATUS "Configuring in release mode with minimized size")
+elseif(CMAKE_BUILD_TYPE STREQUAL None)
+  message(STATUS "Configuring without a mode, no optimization flags will be set")
 else()
-  message(STATUS "Unrecognized build type - will use cmake defaults")
+  message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
 endif()
 
 function(create_source_groups prefix)
@@ -124,6 +132,31 @@ endif()
 ## Dependencies
 find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
+
+# try to find an installed boost or install locally with conan
+set(boost_VERSION "1.71")
+find_package(Boost ${boost_VERSION} QUIET)
+if (NOT Boost_FOUND)
+  # bail if there's no conan installed
+  message(STATUS "No compatible boost version detected, using conan...")
+  find_program(conan_FOUND conan)
+  if (NOT conan_FOUND)
+    message(FATAL_ERROR "conan needs to be installed for boost, see https://docs.conan.io/en/latest/installation.html.")
+  endif()
+
+  # build dir needs to be added, that's where conan writes some info
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+  include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
+
+  conan_cmake_autodetect(settings)
+  conan_cmake_install(PATH_OR_REFERENCE ${VALHALLA_SOURCE_DIR}/conanfile.txt
+                      REMOTE conancenter
+                      SETTINGS ${settings}
+                      OUTPUT_QUIET)
+endif()
+find_package(Boost ${boost_VERSION} REQUIRED)
+add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
@@ -210,7 +243,7 @@ endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
+  add_compile_definitions(DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
   find_package(LuaJIT)
@@ -218,25 +251,28 @@ if(ENABLE_DATA_TOOLS)
   set_target_properties(Lua::Lua PROPERTIES
     INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
     INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
-## Top level executables
-elseif(ENABLE_TOOLS)
-  find_package(Boost 1.51 REQUIRED COMPONENTS program_options)
-## Header only boost for the library without mjolnir
-elseif(NOT Boost_FOUND)
-  find_package(Boost 1.51 REQUIRED)
 endif()
-add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+
+if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
+ add_definitions(-DENABLE_THREAD_SAFE_TILE_REF_COUNT)
+endif ()
 
 ## libvalhalla
 add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  #TODO: need to make sure they actually have python
-  add_subdirectory(src/bindings/python)
-  install(FILES COPYING CHANGELOG.md
-    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
-    COMPONENT python)
+  # favors Py3, falls back to Py2
+  find_package(Python COMPONENTS Development Interpreter)
+  if (Python_FOUND)
+    add_subdirectory(src/bindings/python)
+    install(FILES COPYING CHANGELOG.md
+      DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/doc/python-valhalla"
+      COMPONENT python)
+  else()
+    set(ENABLE_PYTHON_BINDINGS OFF)
+    message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
+  endif()
 endif()
 
 ## Executable targets
@@ -260,7 +296,8 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
-  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic)
+  valhalla_convert_transit valhalla_fetch_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
+  valhalla_assign_speeds valhalla_add_elevation)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -271,7 +308,8 @@ if(ENABLE_TOOLS)
     add_executable(${program} ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
-    target_link_libraries(${program} Boost::program_options valhalla)
+    target_link_libraries(${program} valhalla)
+    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
@@ -285,9 +323,10 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_link_libraries(${program} valhalla Boost::program_options)
-    if (LUAJIT_FOUND AND APPLE)
-      # Using LuaJIT on macOS requires a couple of extra linker flags
+    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_link_libraries(${program} valhalla)
+    if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+      # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
     if(MSVC)
@@ -296,7 +335,7 @@ if(ENABLE_DATA_TOOLS)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
-  # Target-specific depedencies
+  # Target-specific dependencies
   find_package(GEOS)
   target_link_libraries(valhalla_build_admins GEOS::GEOS)
   target_sources(valhalla_build_statistics
@@ -310,23 +349,28 @@ if(ENABLE_SERVICES)
     add_executable(${program} src/${program}.cc)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
-    target_link_libraries(${program} valhalla Boost::program_options)
+    target_link_libraries(${program} valhalla)
+    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
 
-install(
-  FILES
-    scripts/valhalla_build_config
-    scripts/valhalla_build_elevation
-    scripts/valhalla_build_transit
-    scripts/valhalla_build_timezones
-  DESTINATION "${CMAKE_INSTALL_BINDIR}"
-  PERMISSIONS
-    OWNER_READ OWNER_WRITE OWNER_EXECUTE
-    GROUP_READ GROUP_EXECUTE
-    WORLD_READ WORLD_EXECUTE
-  COMPONENT runtime)
+# add the scripts to the build folder as well
+foreach(script valhalla_build_config valhalla_build_elevation valhalla_build_transit
+  valhalla_build_extract valhalla_build_timezones)
+  configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
+  
+  install(
+    FILES
+      scripts/${script}
+    DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    PERMISSIONS
+      OWNER_READ OWNER_WRITE OWNER_EXECUTE
+      GROUP_READ GROUP_EXECUTE
+      WORLD_READ WORLD_EXECUTE
+      COMPONENT runtime
+    )
+endforeach()
 
 install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"

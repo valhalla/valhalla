@@ -45,10 +45,10 @@ std::string print_result(const StateContainer& container,
 struct Interpolation {
   midgard::PointLL projected;
   baldr::GraphId edgeid;
-  float sq_distance;
-  float route_distance;
-  float route_time;
-  float edge_distance;
+  double sq_distance;
+  double route_distance;
+  double route_time;
+  double edge_distance;
   std::vector<EdgeSegment>::const_iterator segment;
 
   float sortcost(const EmissionCostModel& emission_model,
@@ -93,7 +93,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
                                      float match_measurement_time,
                                      const midgard::PointLL& left_most_projected_point,
                                      const midgard::PointLL& right_most_projected_point) {
-  const baldr::GraphTile* tile(nullptr);
+  graph_tile_ptr tile;
   midgard::projector_t projector(measurement.lnglat());
 
   // Route distance from each segment begin to the beginning segment
@@ -108,7 +108,7 @@ Interpolation InterpolateMeasurement(const MapMatcher& mapmatcher,
       continue;
     }
 
-    const auto edgeinfo = tile->edgeinfo(directededge->edgeinfo_offset());
+    const auto edgeinfo = tile->edgeinfo(directededge);
 
     auto shape = edgeinfo.lazy_shape();
     if (shape.empty()) {
@@ -281,10 +281,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
       break;
     node_id = rbegin->nodeid();
     while (rbegin != rend && !prev_edge.Is_Valid()) {
-      // the very first state will have an initial dummy label with invalid edge/node ids
       const auto& label = *rbegin;
-      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
-        break;
       prev_edge = label.edgeid();
       rbegin++;
     }
@@ -318,12 +315,11 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
     if (rbegin == rend)
       break;
     while (rbegin != rend) {
-      // the very first state will have an initial dummy label with invalid edge/node ids
       const auto& label = *rbegin;
-      if (!label.edgeid().Is_Valid() && !label.nodeid().Is_Valid())
-        break;
-      next_edge = label.edgeid();
-      node_id = label.nodeid();
+      if (label.nodeid().Is_Valid())
+        node_id = label.nodeid();
+      if (label.edgeid().Is_Valid())
+        next_edge = label.edgeid();
       rbegin++;
     }
   }
@@ -347,7 +343,7 @@ MatchResult FindMatchResult(const MapMatcher& mapmatcher,
   }
 
   // find which candidate was used for this state
-  const baldr::GraphTile* tile = nullptr;
+  graph_tile_ptr tile;
   for (const auto& edge : state.candidate().edges) {
     // if it matches either end of the path coming into this state or the beginning of the
     // path leaving this state, then we are good to go and have found the match

@@ -7,18 +7,17 @@ set(sources
   motorcyclecost.cc
   motorscootercost.cc
   nocost.cc
-  osrm_car_duration.h
   pedestriancost.cc
   transitcost.cc
   truckcost.cc
   dynamiccost.cc
   recost.cc)
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
-  set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-Werror")
-endif (UNIX)
+  set_source_files_properties(${sources} PROPERTIES COMPILE_FLAGS "-Werror -Wall")
+endif()
 
 valhalla_module(NAME sif
   SOURCES ${sources}

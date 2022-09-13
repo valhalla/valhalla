@@ -36,3 +36,4 @@
 -j '{"locations":[{"lat":40.261631,"lon":-76.772942,"street":""},{"lat":40.259148,"lon":-76.759148,"street":"Chambers Hill Road"}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.436016,"lon":-79.963051,"street":"McDevitt Place"},{"lat":40.446468,"lon":-80.011719,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}'
 -j '{"locations":[{"lat":40.446468,"lon":-80.011719,"street":""},{"lat":40.436016,"lon":-79.963051,"street":"McDevitt Place"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":38.013354,"lon":-122.559635,"street":""},{"lat":38.014542,"lon":-122.560361,"street":""}],"costing":"auto","directions_options":{"units":"miles"}}'

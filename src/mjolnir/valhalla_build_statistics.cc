@@ -4,8 +4,8 @@
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>
@@ -17,6 +17,8 @@
 #include <thread>
 #include <utility>
 #include <vector>
+
+#include "config.h"
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
@@ -33,7 +35,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
-namespace bpo = boost::program_options;
 filesystem::path config_file_path;
 
 namespace {
@@ -47,13 +48,13 @@ struct HGVRestrictionTypes {
   bool width;
 };
 
-bool IsLoopTerminal(const GraphTile& tile,
+bool IsLoopTerminal(const graph_tile_ptr& tile,
                     GraphReader& reader,
                     const DirectedEdge& directededge,
                     statistics::RouletteData& rd) {
   // Get correct tile to work with
-  auto end_tile = (tile.id() == directededge.endnode().tileid())
-                      ? &tile
+  auto end_tile = (tile->id() == directededge.endnode().tileid())
+                      ? tile
                       : reader.GetGraphTile(directededge.endnode());
   auto endnodeinfo = end_tile->node(directededge.endnode());
   // If there aren't 3 edges we don't want it
@@ -131,13 +132,12 @@ bool IsLoopTerminal(const GraphTile& tile,
       if (loop_node_info->edge_count() == 2 ||
           (loop_node_info->edge_count() == 3 && !outboundIsRestrictive())) {
         // Victory
-        auto shape = tile.edgeinfo(first_edge->edgeinfo_offset()).shape();
-        auto second_shape = tile.edgeinfo(last_edge->edgeinfo_offset()).shape();
+        auto shape = tile->edgeinfo(first_edge).shape();
+        auto second_shape = tile->edgeinfo(last_edge).shape();
         for (auto& point : second_shape) {
           shape.push_back(point);
         }
-        rd.AddTask(AABB2<PointLL>(shape), tile.edgeinfo(first_edge->edgeinfo_offset()).wayid(),
-                   shape);
+        rd.AddTask(AABB2<PointLL>(shape), tile->edgeinfo(first_edge).wayid(), shape);
         return true;
       }
     }
@@ -160,13 +160,13 @@ bool IsLoop(GraphReader& reader,
   };
 
   const auto* current_edge = &directededge;
-  const auto* starttile = reader.GetGraphTile(startnode);
+  auto starttile = reader.GetGraphTile(startnode);
   const auto* opp_edge = starttile->directededge(startnode);
   // keep looking while we are stuck on a oneway and we don't look too far
   for (size_t i = 0; i < 3; ++i) {
     // where can we go from here
     const DirectedEdge* next = nullptr;
-    const auto* tile = reader.GetGraphTile(current_edge->endnode());
+    auto tile = reader.GetGraphTile(current_edge->endnode());
     const auto* end_node = tile->node(current_edge->endnode());
     const auto* edge = tile->directededge(end_node->edge_index());
     for (size_t j = 0; j < end_node->edge_count(); ++j, ++edge) {
@@ -186,9 +186,8 @@ bool IsLoop(GraphReader& reader,
     }
     // continue the loop if you haven't finished it
     if (next == &directededge) {
-      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next->edgeinfo_offset()).shape()),
-                 tile->edgeinfo(next->edgeinfo_offset()).wayid(),
-                 tile->edgeinfo(next->edgeinfo_offset()).shape());
+      rd.AddTask(AABB2<PointLL>(tile->edgeinfo(next).shape()), tile->edgeinfo(next).wayid(),
+                 tile->edgeinfo(next).shape());
       return true;
     }
     if (next) {
@@ -240,7 +239,7 @@ void checkExitInfo(GraphReader& reader,
   if (startnodeinfo.type() == NodeType::kMotorWayJunction) {
     // Check to see if the motorway continues, if it does, this is an exit ramp,
     // otherwise if all forward edges are links, it is a fork
-    const GraphTile* tile = reader.GetGraphTile(startnode);
+    graph_tile_ptr tile = reader.GetGraphTile(startnode);
     const DirectedEdge* otheredge = tile->directededge(startnodeinfo.edge_index());
     std::vector<std::pair<uint64_t, bool>> tile_fork_signs;
     std::vector<std::pair<std::string, bool>> ctry_fork_signs;
@@ -288,7 +287,7 @@ void AddStatistics(statistics& stats,
                    GraphId& node,
                    const NodeInfo& nodeinfo) {
 
-  auto rclass = directededge.classification();
+  const auto rclass = directededge.classification();
   float edge_length = (tileid == directededge.endnode().tileid()) ? directededge.length() * 0.5f
                                                                   : directededge.length() * 0.25f;
 
@@ -349,7 +348,7 @@ void AddStatistics(statistics& stats,
       stats.add_country_speed_info(begin_node_iso, rclass, edge_length);
     }
     // Check if edge has any names
-    if (tile.edgeinfo(directededge.edgeinfo_offset()).name_count() > 0) {
+    if (tile.edgeinfo(&directededge).name_count() > 0) {
       stats.add_tile_named(tileid, rclass, edge_length);
       stats.add_country_named(begin_node_iso, rclass, edge_length);
     }
@@ -383,11 +382,11 @@ void build(const boost::property_tree::ptree& pt,
 
     // Point tiles to the set we need for current level
     auto level = tile_id.level();
-    if (TileHierarchy::levels().rbegin()->second.level + 1 == level) {
-      level = TileHierarchy::levels().rbegin()->second.level;
+    if (TileHierarchy::levels().back().level + 1 == level) {
+      level = TileHierarchy::levels().back().level;
     }
 
-    const auto& tiles = TileHierarchy::levels().find(level)->second.tiles;
+    const auto& tiles = TileHierarchy::levels()[level].tiles;
     level = tile_id.level();
     auto tileid = tile_id.tileid();
 
@@ -395,7 +394,7 @@ void build(const boost::property_tree::ptree& pt,
     std::vector<DirectedEdge> directededges;
 
     // Get this tile
-    const GraphTile* tile = graph_reader.GetGraphTile(tile_id);
+    graph_tile_ptr tile = graph_reader.GetGraphTile(tile_id);
 
     // Iterate through the nodes and the directed edges
     float roadlength = 0.0f;
@@ -506,8 +505,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   // Create a randomized queue of tiles to work from
   std::deque<GraphId> tilequeue;
   for (const auto& tier : TileHierarchy::levels()) {
-    auto level = tier.second.level;
-    auto tiles = tier.second.tiles;
+    auto level = tier.level;
+    const auto& tiles = tier.tiles;
     for (uint32_t id = 0; id < tiles.TileCount(); id++) {
       // If tile exists add it to the queue
       GraphId tile_id(id, level, 0);
@@ -517,7 +516,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
     }
 
     // transit level
-    if (level == TileHierarchy::levels().rbegin()->second.level) {
+    if (level == TileHierarchy::levels().back().level) {
       level += 1;
       for (uint32_t id = 0; id < tiles.TileCount(); id++) {
         // If tile exists add it to the queue
@@ -564,37 +563,44 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   }
   LOG_INFO("Finished");
 
-  stats.build_db(pt);
+  stats.build_db();
   stats.roulette_data.GenerateTasks(pt);
 }
 
 bool ParseArguments(int argc, char* argv[]) {
-  bpo::options_description options("Usage: valhalla_build_statistics --config conf/valhalla.json");
-  options.add_options()("help,h",
-                        "Print this help message")("config,c",
-                                                   boost::program_options::value<filesystem::path>(
-                                                       &config_file_path)
-                                                       ->required(),
-                                                   "Path to the json configuration file.");
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).run(), vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n";
-    return false;
-  }
+    // clang-format off
+    cxxopts::Options options("valhalla_build_statistics",
+        "valhalla_build_statistics " VALHALLA_VERSION "\n\n"
+        "valhalla_build_statistics is a program that builds a statistics database.\n\n");
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
+    options.add_options()
+      ("h,help", "Print this help message")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      exit(0);
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_build_statistics " << VALHALLA_VERSION << "\n";
+      exit(0);
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(config_file_path =
+                                        filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
     }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
   }
 
   return false;

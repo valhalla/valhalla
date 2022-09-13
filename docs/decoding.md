@@ -159,5 +159,127 @@ def decode(encoded):
   #hand back the list of coordinates
   return decoded
 
-print decode(sys.argv[1])
+print(decode(sys.argv[1]))
+```
+
+## R
+
+Here is an example of decoding in R.
+
+``` r
+library(tidyverse)
+
+decode <- function(encoded) {
+  chars <- stringr::str_split(encoded, "")[[1]]
+  lats <- vector(mode = "integer", length = 1)
+  lons <- vector(mode = "integer", length = 1)
+  i <- 0
+  
+  while (i < length(chars)){
+    shift <- 0
+    result <- 0
+    byte <- 0x20L
+    
+    while (byte >= 0x20) {  
+      i <- i + 1
+      byte <- chars[[i]] %>% utf8ToInt() - 63
+      result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
+      shift <- shift + 5
+      if (byte < 0x20) break
+    }
+    
+    if (bitwAnd(result, 1)) {
+      result <- result %>% bitwShiftR(1) %>% bitwNot()
+    } else {
+      result <- result %>% bitwShiftR(1)
+    }
+    
+    lats <- c(lats, (lats[[length(lats)]] + result))
+    
+    shift <- 0
+    result <- 0
+    byte <- 10000L
+    
+    while (byte >= 0x20) {  
+      i <- i + 1
+      byte <- chars[[i]] %>% utf8ToInt() - 63
+      result <- bitwOr(result, bitwAnd(byte, 0x1f) %>% bitwShiftL(shift))
+      shift <- shift + 5
+      if (byte < 0x20) break
+    }
+    
+    if (bitwAnd(result, 1)) {
+      result <- result %>% bitwShiftR(1) %>% bitwNot()
+    } else {
+      result <- result %>% bitwShiftR(1)
+    }
+    
+    lons <- c(lons, (lons[[length(lons)]] + result))
+  }
+  
+  decoded <- tibble::tibble(lat = lats[2:length(lats)]/1000000,
+                            lng = lons[2:length(lons)]/1000000)
+  
+  return (decoded)
+}
+```
+
+## Go
+
+```go
+func decodePolyline(encoded *string, precisionOptional ...int) [][]float64 {
+	// default to 6 digits of precision
+	precision := 6
+	if len(precisionOptional) > 0 {
+		precision = precisionOptional[0]
+	}
+	factor := math.Pow10(precision)
+
+	// Coordinates have variable length when encoded, so just keep
+	// track of whether we've hit the end of the string. In each
+	// loop iteration, a single coordinate is decoded.
+	lat, lng := 0, 0
+	var coordinates [][]float64
+	index := 0
+	for index < len(*encoded) {
+		// Consume varint bits for lat until we run out
+		var byte int = 0x20
+		shift, result := 0, 0
+		for byte >= 0x20 {
+			byte = int((*encoded)[index]) - 63
+			result |= (byte & 0x1f) << shift
+			shift += 5
+			index++
+		}
+
+		// check if we need to go negative or not
+		if (result & 1) > 0 {
+			lat += ^(result >> 1)
+		} else {
+			lat += result >> 1
+		}
+
+		// Consume varint bits for lng until we run out
+		byte = 0x20
+		shift, result = 0, 0
+		for byte >= 0x20 {
+			byte = int((*encoded)[index]) - 63
+			result |= (byte & 0x1f) << shift
+			shift += 5
+			index++
+		}
+
+		// check if we need to go negative or not
+		if (result & 1) > 0 {
+			lng += ^(result >> 1)
+		} else {
+			lng += result >> 1
+		}
+
+		// scale the int back to floating point and store it
+		coordinates = append(coordinates, []float64{float64(lat) / factor, float64(lng) / factor})
+	}
+
+	return coordinates
+}
 ```

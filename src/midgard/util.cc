@@ -25,10 +25,6 @@
 
 namespace {
 
-constexpr double RAD_PER_METER = 1.0 / 6378160.187;
-constexpr double RAD_PER_DEG = valhalla::midgard::kPiDouble / 180.0;
-constexpr double DEG_PER_RAD = 180.0 / valhalla::midgard::kPiDouble;
-
 std::vector<valhalla::midgard::PointLL>
 resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
   std::vector<valhalla::midgard::PointLL> resampled;
@@ -59,6 +55,10 @@ namespace midgard {
 // scalar * vector operator.
 Vector2 operator*(float s, const Vector2& v) {
   return Vector2(v.x() * s, v.y() * s);
+}
+
+Vector2d operator*(double s, const Vector2d& v) {
+  return Vector2d(v.x() * s, v.y() * s);
 }
 
 // Trim the front of a polyline (represented as a list or vector of Point2).
@@ -132,11 +132,19 @@ float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,
                     const float sample_distance,
-                    bool forward) {
+                    bool forward,
+                    size_t first_segment_index,
+                    size_t last_segment_index) {
+  assert(!shape.empty());
+  assert(index < shape.size());
+  first_segment_index = std::min(first_segment_index, index);
+  last_segment_index = std::min(std::max(last_segment_index, index), shape.size() - 1);
   // depending on if we are going forward or backward we choose a different increment
   auto increment = forward ? -1 : 1;
-  auto first_end = forward ? shape.cbegin() : shape.cend() - 1;
-  auto second_end = forward ? shape.cend() - 1 : shape.cbegin();
+  auto first_end =
+      forward ? (shape.cbegin() + first_segment_index) : (shape.cbegin() + last_segment_index);
+  auto second_end =
+      forward ? (shape.cbegin() + last_segment_index) : (shape.cbegin() + first_segment_index);
 
   // u and v will be points we move along the shape until we have enough distance between them or
   // run out of points
@@ -251,19 +259,19 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
   container_t resampled = {polyline.front()};
   resolution *= RAD_PER_METER;
   double remaining = resolution;
-  PointLL last = resampled.back();
+  auto last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // radians
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     // how much do we have left on this segment from where we are (in great arc radians)
-    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) /
-    // 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2)
-    // *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
+    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * kRadPerDegD - lat2) /
+    // 2.0), 2.0) + cos(resampled.back().second * kRadPerDegD) * cos(lat2)
+    // *pow(sin((resampled.back().first * -kRadPerDegD - lon2) / 2.0), 2.0)));
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       // set d to 0, do not skip in case we are preserving coordinates
       d = 0.0;
@@ -272,8 +280,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -283,8 +291,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
       // we just consumed a bit
       d -= remaining;
@@ -334,7 +342,6 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   // Compute sample distance that splits the polyline equally to create n vertices.
   // Divisor is n-1 since there is 1 more vertex than edge on the subdivided polyline.
   double sample_distance = length / (n - 1);
-  double d0 = sample_distance;
 
   // for each point
   std::vector<PointLL> resampled = {polyline.front()};
@@ -343,12 +350,12 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   PointLL last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // Distance between this vertex and last (in great arc radians)
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       continue;
     }
@@ -356,8 +363,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -368,8 +375,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
 
       // Update to reduce d and update...
@@ -391,7 +398,7 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   if (resampled.size() != n) {
     LOG_ERROR("resampled polyline not expected size! n: " + std::to_string(n) +
               " actual: " + std::to_string(resampled.size()) + " length: " + std::to_string(length) +
-              " d: " + std::to_string(d0));
+              " d: " + std::to_string(sample_distance));
   }
   return resampled;
 }
@@ -455,6 +462,63 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
   return resampled;
 }
 
+// Use the barycentric technique to test if the point p is inside the triangle formed by (a, b, c).
+// If p is along the triangle's nodes/edges, this is not considered contained.
+// Note to user: this is entirely done in 2-D; no effort is made to approximate earth curvature.
+template <typename coord_t>
+bool triangle_contains(const coord_t& a, const coord_t& b, const coord_t& c, const coord_t& p) {
+  double v0x = c.x() - a.x();
+  double v0y = c.y() - a.y();
+  double v1x = b.x() - a.x();
+  double v1y = b.y() - a.y();
+  double v2x = p.x() - a.x();
+  double v2y = p.y() - a.y();
+
+  double dot00 = v0x * v0x + v0y * v0y;
+  double dot01 = v0x * v1x + v0y * v1y;
+  double dot02 = v0x * v2x + v0y * v2y;
+  double dot11 = v1x * v1x + v1y * v1y;
+  double dot12 = v1x * v2x + v1y * v2y;
+
+  double denom = dot00 * dot11 - dot01 * dot01;
+
+  // Triangle with very small area, e.g., nearly a line.
+  // This seemingly very small tolerance is reasonable if you
+  // consider that these are deltas of squared deltas from lat/lon's
+  // that might be close. Derived empirically during the development
+  // of the non-intersecting douglas-peucker logic in ::Normalize.
+  if (std::fabs(denom) < 1e-20)
+    return false;
+
+  double u = (dot11 * dot02 - dot01 * dot12) / denom;
+  double v = (dot00 * dot12 - dot01 * dot02) / denom;
+
+  // if u & v are very close to 0 (or exactly 0), that means the input
+  // point p is (very nearly) the same as one of the triangle's vertices.
+  // For the algorithm I'm using, that's okay - so I'm adding a slight
+  // tolerance check here.
+
+  // Check if point is in triangle
+  return (u >= 1e-16) && (v >= 1e-16) && (u + v < 1);
+}
+
+template bool triangle_contains(const PointXY<float>& a,
+                                const PointXY<float>& b,
+                                const PointXY<float>& c,
+                                const PointXY<float>& p);
+template bool triangle_contains(const PointXY<double>& a,
+                                const PointXY<double>& b,
+                                const PointXY<double>& c,
+                                const PointXY<double>& p);
+template bool triangle_contains(const GeoPoint<float>& a,
+                                const GeoPoint<float>& b,
+                                const GeoPoint<float>& c,
+                                const GeoPoint<float>& p);
+template bool triangle_contains(const GeoPoint<double>& a,
+                                const GeoPoint<double>& b,
+                                const GeoPoint<double>& c,
+                                const GeoPoint<double>& p);
+
 // Return the intersection of two infinite lines if any
 template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i) {
@@ -481,70 +545,16 @@ template bool intersect<PointLL>(const PointLL& u,
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
 
-// Return the intercept of the line passing through uv with the horizontal line defined by y
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return u.first;
-  }
-  if (std::abs(u.second - u.second) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return (y - b) / m;
-}
-template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
-
-// Return the intercept of the line passing through uv with the vertical line defined by x
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
-  if (std::abs(u.second - v.second) < 1e-5) {
-    return u.second;
-  }
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return x * m + b;
-}
-template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
-
-template <class container_t> float polygon_area(const container_t& polygon) {
+template <class container_t>
+typename container_t::value_type::first_type polygon_area(const container_t& polygon) {
+  // Shoelace formula
   typename container_t::value_type::first_type area =
-      polygon.back() == polygon.front() ? 0.f
-                                        : (polygon.back().first + polygon.front().first) *
-                                              (polygon.back().second + polygon.front().second);
+      polygon.back() == polygon.front() ? 0.
+                                        : (polygon.back().first * polygon.front().second -
+                                           polygon.back().second * polygon.front().first);
   for (auto p1 = polygon.cbegin(), p2 = std::next(polygon.cbegin()); p2 != polygon.cend();
        ++p1, ++p2) {
-    area += (p1->first + p2->first) * (p1->second + p2->second);
+    area += p1->first * p2->second - p1->second * p2->first;
   }
   return area * .5;
 }

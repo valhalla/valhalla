@@ -1,14 +1,11 @@
 #include "statistics.h"
 #include <cstdint>
 
+#include <boost/property_tree/ptree.hpp>
+
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-
-// sqlite is included in util.h and must be before spatialite
-#include <spatialite.h>
-
-#include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -17,13 +14,11 @@ using namespace valhalla::mjolnir;
 namespace valhalla {
 namespace mjolnir {
 
-void statistics::build_db(const boost::property_tree::ptree& pt) {
+void statistics::build_db() {
   std::string database = "statistics.sqlite";
   if (filesystem::exists(database)) {
     filesystem::remove(database);
   }
-
-  spatialite_init(0);
 
   sqlite3* db_handle = nullptr;
   char* err_msg = nullptr;
@@ -36,10 +31,8 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   }
 
   // loading SpatiaLite as an extension
-  if (!load_spatialite(db_handle)) {
-    sqlite3_close(db_handle);
-    return;
-  }
+  auto db_conn = make_spatialite_cache(db_handle);
+
   LOG_INFO("Writing statistics database");
 
   // Turn on foreign keys
@@ -55,13 +48,13 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   LOG_INFO("Creating tables");
 
   sqlite3_stmt* stmt = nullptr;
-  create_tile_tables(db_handle, stmt);
+  create_tile_tables(db_handle);
   LOG_INFO("Created tile tables");
 
-  create_country_tables(db_handle, stmt);
+  create_country_tables(db_handle);
   LOG_INFO("Created country tables");
 
-  create_exit_tables(db_handle, stmt);
+  create_exit_tables(db_handle);
   LOG_INFO("Created exit tables");
 
   insert_tile_data(db_handle, stmt);
@@ -104,13 +97,13 @@ void statistics::build_db(const boost::property_tree::ptree& pt) {
   sqlite3_close(db_handle);
   LOG_INFO("Statistics database saved to statistics.sqlite");
 }
-void statistics::create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_tile_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
 
   // Create table for tiles
-  sql = "SELECT InitSpatialMetaData(); CREATE TABLE tiledata (";
+  sql = "SELECT InitSpatialMetaData(1); CREATE TABLE tiledata (";
   sql += "tileid INTEGER PRIMARY KEY,";
   sql += "tilearea REAL,";
   sql += "totalroadlen REAL,";
@@ -179,7 +172,7 @@ void statistics::create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 }
 
-void statistics::create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_country_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
@@ -242,7 +235,7 @@ void statistics::create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
   }
 }
 
-void statistics::create_exit_tables(sqlite3* db_handle, sqlite3_stmt* stmt) {
+void statistics::create_exit_tables(sqlite3* db_handle) {
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;

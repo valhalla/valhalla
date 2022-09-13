@@ -3,9 +3,10 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
-#include <spatialite.h>
 #include <sqlite3.h>
 #include <unordered_map>
+
+#include <spatialite.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,20 +17,10 @@ sqlite3* GetDBHandle(const std::string& database) {
   // Initialize the admin DB (if it exists)
   sqlite3* db_handle = nullptr;
   if (!database.empty() && filesystem::exists(database)) {
-    spatialite_init(0);
-    sqlite3_stmt* stmt = 0;
-    char* err_msg = nullptr;
-    std::string sql;
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
                                    SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {
       LOG_ERROR("cannot open " + database);
-      sqlite3_close(db_handle);
-      return nullptr;
-    }
-
-    // loading SpatiaLite as an extension
-    if (!load_spatialite(db_handle)) {
       sqlite3_close(db_handle);
       return nullptr;
     }
@@ -39,7 +30,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys,
                         const PointLL& ll,
                         GraphTileBuilder& graphtile) {
   uint32_t index = 0;
@@ -58,8 +49,7 @@ uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_ty
 
 // Get the polygon index.  Used by tz and admin areas.  Checks if the pointLL is covered_by the
 // poly.
-uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
-                        const PointLL& ll) {
+uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys, const PointLL& ll) {
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
@@ -70,16 +60,15 @@ uint32_t GetMultiPolyId(const std::unordered_multimap<uint32_t, multi_polygon_ty
 }
 
 // Get the timezone polys from the db
-std::unordered_multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
-                                                                   const AABB2<PointLL>& aabb) {
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
+                                                         const AABB2<PointLL>& aabb) {
+  std::multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }
 
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char* err_msg = nullptr;
   uint32_t result = 0;
 
   std::string sql = "select TZID, st_astext(geom) from tz_world where ";
@@ -130,7 +119,7 @@ void GetData(sqlite3* db_handle,
              sqlite3_stmt* stmt,
              const std::string& sql,
              GraphTileBuilder& tilebuilder,
-             std::unordered_multimap<uint32_t, multi_polygon_type>& polys,
+             std::multimap<uint32_t, multi_polygon_type>& polys,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names) {
   uint32_t result = 0;
@@ -200,13 +189,13 @@ void GetData(sqlite3* db_handle,
 }
 
 // Get the admin polys that intersect with the tile bounding box.
-std::unordered_multimap<uint32_t, multi_polygon_type>
+std::multimap<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
              std::unordered_map<uint32_t, bool>& drive_on_right,
              std::unordered_map<uint32_t, bool>& allow_intersection_names,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
-  std::unordered_multimap<uint32_t, multi_polygon_type> polys;
+  std::multimap<uint32_t, multi_polygon_type> polys;
   if (!db_handle) {
     return polys;
   }
@@ -257,7 +246,6 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 
   sqlite3_stmt* stmt = 0;
   uint32_t ret;
-  char* err_msg = nullptr;
   uint32_t result = 0;
   std::string sql = "SELECT iso_code, trunk, trunk_link, track, footway, pedestrian, bridleway, "
                     "cycleway, path, motorroad from admin_access";

@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <functional>
@@ -31,9 +32,6 @@ using namespace valhalla::tyr;
 using namespace std;
 
 namespace {
-midgard::PointLL to_ll(const LatLng& ll) {
-  return midgard::PointLL{ll.lng(), ll.lat()};
-}
 using FormOfWay = valhalla::baldr::OpenLR::LocationReferencePoint::FormOfWay;
 
 FormOfWay road_class_to_fow(const valhalla::TripLeg::Edge& edge) {
@@ -69,15 +67,19 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
     const FormOfWay fow = road_class_to_fow(edge);
     const auto frc = static_cast<uint8_t>(edge.road_class());
 
-    const auto& start = shape[edge.begin_shape_index()];
+    const auto begin_index = edge.begin_shape_index();
+    const auto end_index = edge.end_shape_index();
+
+    const auto& start = shape[begin_index];
     float forward_heading =
-        midgard::tangent_angle(edge.begin_shape_index(), start, shape, 20.f, true);
-    const auto& end = shape[edge.end_shape_index()];
-    float reverse_heading = midgard::tangent_angle(edge.end_shape_index(), end, shape, 20.f, false);
+        midgard::tangent_angle(begin_index, start, shape, 20.f, true, begin_index, end_index);
+    const auto& end = shape[end_index];
+    float reverse_heading =
+        midgard::tangent_angle(end_index, end, shape, 20.f, false, begin_index, end_index);
 
     std::vector<baldr::OpenLR::LocationReferencePoint> lrps;
-    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr, edge.length(),
-                      frc);
+    lrps.emplace_back(start.lng(), start.lat(), forward_heading, frc, fow, nullptr,
+                      edge.length_km() * valhalla::midgard::kMetersPerKm, frc);
     lrps.emplace_back(end.lng(), end.lat(), reverse_heading, frc, fow, &lrps.back());
     openlrs.emplace_back(baldr::OpenLR::OpenLr{lrps, 0, 0}.toBase64());
   }
@@ -86,6 +88,42 @@ std::vector<std::string> openlr_edges(const TripLeg& leg) {
 } // namespace
 namespace valhalla {
 namespace tyr {
+std::string serializeStatus(Api& request) {
+
+  if (request.options().format() == Options_Format_pbf)
+    return serializePbf(request);
+
+  rapidjson::Document status_doc;
+  status_doc.SetObject();
+  auto& alloc = status_doc.GetAllocator();
+
+  status_doc.AddMember("version", rapidjson::Value().SetString(request.status().version(), alloc),
+                       alloc);
+  status_doc.AddMember("tileset_last_modified",
+                       rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
+
+  if (request.status().has_has_tiles_case())
+    status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
+                         alloc);
+  if (request.status().has_has_admins_case())
+    status_doc.AddMember("has_admins", rapidjson::Value().SetBool(request.status().has_admins()),
+                         alloc);
+  if (request.status().has_has_timezones_case())
+    status_doc.AddMember("has_timezones",
+                         rapidjson::Value().SetBool(request.status().has_timezones()), alloc);
+  if (request.status().has_has_live_traffic_case())
+    status_doc.AddMember("has_live_traffic",
+                         rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+
+  rapidjson::Document bbox_doc;
+  if (request.status().has_bbox_case()) {
+    bbox_doc.Parse(request.status().bbox());
+    rapidjson::SetValueByPointer(status_doc, "/bbox", bbox_doc, alloc);
+  }
+
+  return rapidjson::to_string(status_doc);
+}
+
 void route_references(json::MapPtr& route_json, const TripRoute& route, const Options& options) {
   const bool linear_reference =
       options.linear_references() &&
@@ -95,11 +133,83 @@ void route_references(json::MapPtr& route_json, const TripRoute& route, const Op
   }
   json::ArrayPtr references = json::array({});
   for (const TripLeg& leg : route.legs()) {
-    for (const std::string& openlr : openlr_edges(leg)) {
+    auto edge_references = openlr_edges(leg);
+    references->reserve(references->size() + edge_references.size());
+    for (const std::string& openlr : edge_references) {
       references->emplace_back(openlr);
     }
   }
   route_json->emplace("linear_references", references);
+}
+
+void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  // you have to have requested it and you have to be some kind of route response
+  if (!api.options().linear_references() ||
+      (api.options().action() != Options::trace_route && api.options().action() != Options::route))
+    return;
+
+  writer.start_array("linear_references");
+  for (const TripLeg& leg : api.trip().routes(route_index).legs()) {
+    for (const std::string& openlr : openlr_edges(leg)) {
+      writer(openlr);
+    }
+  }
+  writer.end_array();
+}
+
+std::string serializePbf(Api& request) {
+  // if they dont want to select the parts just pick the obvious thing they would want based on action
+  PbfFieldSelector selection = request.options().pbf_field_selector();
+  if (!request.options().has_pbf_field_selector()) {
+    switch (request.options().action()) {
+      // route like requests
+      case Options::route:
+      case Options::centroid:
+      case Options::optimized_route:
+      case Options::trace_route:
+        selection.set_directions(true);
+        break;
+      // meta data requests
+      case Options::trace_attributes:
+        selection.set_trip(true);
+        break;
+      // service stats
+      case Options::status:
+        selection.set_status(true);
+        break;
+      // should never get here, actions which dont have pbf yet return json
+      default:
+        throw std::logic_error("Requested action is not yet serializable as pbf");
+    }
+  }
+
+  // if they dont want the options object but its a service request we have to work around it
+  bool skip_options = !request.options().pbf_field_selector().options() && request.has_info() &&
+                      request.info().is_service();
+  Options dummy;
+  if (skip_options) {
+    request.mutable_options()->Swap(&dummy);
+  }
+
+  // disable all the stuff we need to disable, options must be last since we are referencing it
+  if (!selection.trip())
+    request.clear_trip();
+  if (!selection.directions())
+    request.clear_directions();
+  if (!selection.status())
+    request.clear_status();
+  if (!selection.options())
+    request.clear_options();
+
+  // serialize the bytes
+  auto bytes = request.SerializeAsString();
+
+  // we do need to keep the options object though because downstream request handling relies on it
+  if (skip_options) {
+    request.mutable_options()->Swap(&dummy);
+  }
+
+  return bytes;
 }
 } // namespace tyr
 } // namespace valhalla
@@ -116,14 +226,15 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // Output location as a lon,lat array. Note this is the projected
   // lon,lat on the nearest road.
   auto loc = json::array({});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lng(), 6});
-  loc->emplace_back(json::fp_t{location.path_edges(0).ll().lat(), 6});
+  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lng(), 6});
+  loc->emplace_back(json::fixed_t{location.correlation().edges(0).ll().lat(), 6});
   waypoint->emplace("location", loc);
 
   // Add street name.
-  std::string name = location.path_edges_size() && location.path_edges(0).names_size()
-                         ? location.path_edges(0).names(0)
-                         : "";
+  std::string name =
+      location.correlation().edges_size() && location.correlation().edges(0).names_size()
+          ? location.correlation().edges(0).names(0)
+          : "";
   waypoint->emplace("name", name);
 
   // Add distance in meters from the input location to the nearest
@@ -131,20 +242,23 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   // TODO: since distance was normalized in thor - need to recalculate here
   //       in the future we shall have store separately from score
   waypoint->emplace("distance",
-                    json::fp_t{to_ll(location.ll()).Distance(to_ll(location.path_edges(0).ll())), 3});
+                    json::fixed_t{to_ll(location.ll())
+                                      .Distance(to_ll(location.correlation().edges(0).ll())),
+                                  3});
 
   // If the location was used for a tracepoint we trigger extra serialization
   if (is_tracepoint) {
-    waypoint->emplace("alternatives_count", static_cast<uint64_t>(location.path_edges_size() - 1));
-    uint32_t waypoint_index = location.shape_index();
-    if (waypoint_index == numeric_limits<uint32_t>::max()) {
+    waypoint->emplace("alternatives_count",
+                      static_cast<uint64_t>(location.correlation().edges_size() - 1));
+    if (location.correlation().waypoint_index() == numeric_limits<uint32_t>::max()) {
       // when tracepoint is neither a break nor leg's starting/ending
       // point (shape_index is uint32_t max), we assign null to its waypoint_index
       waypoint->emplace("waypoint_index", static_cast<std::nullptr_t>(nullptr));
     } else {
-      waypoint->emplace("waypoint_index", static_cast<uint64_t>(waypoint_index));
+      waypoint->emplace("waypoint_index",
+                        static_cast<uint64_t>(location.correlation().waypoint_index()));
     }
-    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.route_index()));
+    waypoint->emplace("matchings_index", static_cast<uint64_t>(location.correlation().route_index()));
   }
 
   // If the location was used for optimized route we add trips_index and waypoint
@@ -152,7 +266,8 @@ waypoint(const valhalla::Location& location, bool is_tracepoint, bool is_optimiz
   if (is_optimized) {
     int trips_index = 0; // TODO
     waypoint->emplace("trips_index", static_cast<uint64_t>(trips_index));
-    waypoint->emplace("waypoint_index", static_cast<uint64_t>(location.shape_index()));
+    waypoint->emplace("waypoint_index",
+                      static_cast<uint64_t>(location.correlation().waypoint_index()));
   }
 
   return waypoint;
@@ -164,7 +279,7 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
                          bool is_tracepoint) {
   auto waypoints = json::array({});
   for (const auto& location : locations) {
-    if (location.path_edges().size() == 0) {
+    if (location.correlation().edges().size() == 0) {
       waypoints->emplace_back(static_cast<std::nullptr_t>(nullptr));
     } else {
       waypoints->emplace_back(waypoint(location, is_tracepoint));
@@ -176,16 +291,43 @@ json::ArrayPtr waypoints(const google::protobuf::RepeatedPtrField<valhalla::Loca
 json::ArrayPtr waypoints(const valhalla::Trip& trip) {
   auto waypoints = json::array({});
   // For multi-route the same waypoints are used for all routes.
-  const auto& legs = trip.routes(0).legs();
-  for (const auto& leg : legs) {
-    for (const auto& location : leg.location()) {
-      if (&location == &leg.location(0) && &leg != &*legs.begin()) {
+  for (const auto& leg : trip.routes(0).legs()) {
+    for (int i = 0; i < leg.location_size(); ++i) {
+      // we skip the first location of legs > 0 because that would duplicate waypoints
+      if (i == 0 && !waypoints->empty()) {
         continue;
       }
-      waypoints->emplace_back(waypoint(location, false));
+      waypoints->emplace_back(waypoint(leg.location(i), false));
     }
   }
   return waypoints;
+}
+
+/*
+ * This function takes any waypoints (excluding origin and destination) and gets
+ * the associated leg shape index (geometry index) from the location.  We use
+ * that geometry index to calculate the distance_from_leg_start.
+ * Then we serialize the via_waypoints object.
+ *
+ */
+json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg) {
+  // Create a vector of indexes based on the number of locations.
+  auto via_waypoints = json::array({});
+  // only loop thru the locations that are not origin or destinations
+  for (const auto& loc : leg.location()) {
+    // Only create via_waypoints object if the locations are via or through types
+    if (loc.type() == valhalla::Location::kVia || loc.type() == valhalla::Location::kThrough) {
+      auto via_waypoint = json::map({});
+      via_waypoint->emplace("geometry_index",
+                            static_cast<uint64_t>(loc.correlation().leg_shape_index()));
+      via_waypoint->emplace("distance_from_start",
+                            json::fixed_t{loc.correlation().distance_from_leg_origin(), 3});
+      via_waypoint->emplace("waypoint_index",
+                            static_cast<uint64_t>(loc.correlation().original_index()));
+      via_waypoints->emplace_back(via_waypoint);
+    }
+  }
+  return via_waypoints;
 }
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
@@ -204,6 +346,10 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   if (!incident_metadata.iso_3166_1_alpha2().empty()) {
     writer.Key(key_prefix + "iso_3166_1_alpha2");
     writer.String(incident_metadata.iso_3166_1_alpha2());
+  }
+  if (!incident_metadata.iso_3166_1_alpha3().empty()) {
+    writer.Key(key_prefix + "iso_3166_1_alpha3");
+    writer.String(incident_metadata.iso_3166_1_alpha3());
   }
   if (!incident_metadata.description().empty()) {
     writer.Key(key_prefix + "description");
@@ -260,6 +406,11 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
   if (!incident_metadata.clear_lanes().empty()) {
     writer.Key(key_prefix + "clear_lanes");
     writer.String(incident_metadata.clear_lanes());
+  }
+
+  if (incident_metadata.length() > 0) {
+    writer.Key(key_prefix + "length");
+    writer.Int(incident_metadata.length());
   }
 
   if (incident_metadata.road_closed()) {

@@ -12,15 +12,6 @@ namespace baldr {
 namespace merge {
 
 namespace {
-
-uint64_t count_tiles_in_levels(GraphReader& reader) {
-  uint64_t tile_count = 0;
-  for (const auto& level : TileHierarchy::levels() | bra::map_values) {
-    tile_count += level.tiles.ncolumns() * level.tiles.nrows();
-  }
-  return tile_count;
-}
-
 namespace iter {
 
 // the "edges" struct provides a container wrapper for the edges leaving a node
@@ -69,7 +60,7 @@ struct edges {
     }
   };
 
-  edges(const GraphTile* tile, GraphId node_id) {
+  edges(const graph_tile_ptr& tile, GraphId node_id) {
     auto* node_info = tile->node(node_id);
     auto edge_idx = node_info->edge_index();
     m_begin = const_iterator(tile->directededge(edge_idx), node_id.Tile_Base() + uint64_t(edge_idx));
@@ -109,7 +100,7 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
   GraphId first, second;
 
   // Get the tile of the node, return none if the tile is not found
-  auto* tile = m_reader.GetGraphTile(node_id);
+  auto tile = m_reader.GetGraphTile(node_id);
   if (tile == nullptr) {
     return none;
   }
@@ -173,7 +164,7 @@ GraphId edge_collapser::next_node_id(GraphId last_node_id, GraphId node_id) {
 // is no "allowed" edge between the 2 nodes.
 GraphId edge_collapser::edge_between(GraphId cur, GraphId next) {
   // Get the tile of the current node, return none if the tile is not found
-  const GraphTile* tile = m_reader.GetGraphTile(cur);
+  auto tile = m_reader.GetGraphTile(cur);
   if (tile == nullptr) {
     return {};
   }

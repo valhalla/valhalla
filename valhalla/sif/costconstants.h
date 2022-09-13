@@ -20,6 +20,8 @@ enum class TravelMode : uint8_t {
   kPublicTransit = 3,
   kMaxTravelMode = 4
 };
+// To avoid collisions with pbf version
+using travel_mode_t = TravelMode;
 
 // Vehicle travel type
 enum class VehicleType : uint8_t {
@@ -42,6 +44,16 @@ enum class BicycleType : uint8_t {
   kMountain = 3
 };
 
+// Did we make a turn on a short internal edge
+enum class InternalTurn : uint8_t {
+  kNoTurn = 0,
+  kLeftTurn = 1,
+  kRightTurn = 2,
+};
+
+// This is the edge length, in meters, that we consider short for internal edges.
+const float kShortInternalLength = 8.0f;
+
 // Transit travel type
 // TODO: these are in graphconstants
 // decide what to do
@@ -63,7 +75,7 @@ enum class BicycleType : uint8_t {
  */
 struct AvoidEdge {
   baldr::GraphId id;
-  float percent_along;
+  double percent_along;
 };
 
 /**
@@ -73,6 +85,9 @@ struct AvoidEdge {
 struct Cost {
   float cost;
   float secs;
+  // TODO:
+  // float dist;
+  // float consumption;
 
   /**
    * Default constructor

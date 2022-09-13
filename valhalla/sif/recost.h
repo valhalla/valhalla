@@ -1,5 +1,6 @@
 #pragma once
 #include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/time_info.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 
@@ -23,8 +24,10 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * @param label_cb          the callback used to emit each label in the path
  * @param source_pct        the percent along the initial edge the source location is
  * @param target_pct        the percent along the final edge the target location is
- * @param date_time         the time string representing the local time before traversing the first
- *                          edge. of the format YYYY-MM-DDTHH:mm
+ * @param time_info         the time tracking information representing the local time before
+ *                          traversing the first edge
+ * @param invariant         static date_time, dont offset the time as the path lengthens
+ * @param ignore_access     ignore access restrictions for edges and nodes if it's true
  */
 void recost_forward(baldr::GraphReader& reader,
                     const sif::DynamicCost& costing,
@@ -32,6 +35,8 @@ void recost_forward(baldr::GraphReader& reader,
                     const LabelCallback& label_cb,
                     float source_pct = 0.f,
                     float target_pct = 1.f,
-                    const std::string& date_time = "");
+                    const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
+                    const bool invariant = false,
+                    const bool ignore_access = false);
 } // namespace sif
 } // namespace valhalla

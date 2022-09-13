@@ -49,7 +49,7 @@ gurka::map InstructionsFerryToward::map = {};
 // Take the ferry toward (forward)
 // "3": "Take the ferry toward <TOWARD_SIGN>."
 TEST_F(InstructionsFerryToward, TakeFerryTowardForward) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -60,7 +60,7 @@ TEST_F(InstructionsFerryToward, TakeFerryTowardForward) {
 
   // Verify the ferry toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Take the ferry toward Cape May.",
+                                                            "Take the ferry toward Cape May.", "",
                                                             "Take the ferry toward Cape May.",
                                                             "Take the ferry toward Cape May.",
                                                             "Continue for 3 kilometers.");
@@ -70,7 +70,7 @@ TEST_F(InstructionsFerryToward, TakeFerryTowardForward) {
 // Take the ferry toward (backward)
 // "3": "Take the ferry toward <TOWARD_SIGN>."
 TEST_F(InstructionsFerryToward, TakeFerryTowardBackward) {
-  auto result = gurka::route(map, "D", "A", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "A"}, "auto");
 
   // Verify maneuver types
   gurka::assert::raw::expect_maneuvers(result, {DirectionsLeg_Maneuver_Type_kStart,
@@ -81,7 +81,7 @@ TEST_F(InstructionsFerryToward, TakeFerryTowardBackward) {
 
   // Verify the ferry toward instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(result, maneuver_index,
-                                                            "Take the ferry toward Lewes.",
+                                                            "Take the ferry toward Lewes.", "",
                                                             "Take the ferry toward Lewes.",
                                                             "Take the ferry toward Lewes.",
                                                             "Continue for 3 kilometers.");

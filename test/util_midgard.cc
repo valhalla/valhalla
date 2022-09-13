@@ -2,8 +2,10 @@
 #include "midgard/distanceapproximator.h"
 #include "midgard/encoded.h"
 #include "midgard/polyline2.h"
+#include "midgard/sequence.h"
 #include "midgard/util.h"
 #include <cmath>
+#include <cstdlib>
 #include <random>
 
 #include <list>
@@ -173,7 +175,7 @@ TEST(UtilMidgard, TestResample) {
     for (const auto& p : resampled) {
       auto cp = p.ClosestPoint(input_shape);
       auto dist = std::get<1>(cp);
-      if (!equal(dist, 0.f, 1.2f)) {
+      if (!equal(dist, 0., 1.2)) {
         throw std::runtime_error("Sampled point was not found on original line");
       }
     }
@@ -223,7 +225,7 @@ TEST(UtilMidgard, TestResampleDuplicate) {
   for (const auto& p : resampled) {
     auto cp = p.ClosestPoint(polyline);
     auto dist = std::get<1>(cp);
-    if (!equal(dist, 0.f, 1.2f)) {
+    if (!equal(dist, 0., 1.2)) {
       throw std::runtime_error("Sampled point was not found on original line");
     }
   }
@@ -620,6 +622,23 @@ TEST(UtilMidgard, TestTangentAngle) {
   EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
 }
 
+TEST(UtilMidgard, TestTangentAngleOnSegment) {
+  std::vector<PointLL> shape{{-122.839104f, 38.3988266f},
+                             {-122.839539f, 38.3988342f},
+                             {-122.839546f, 38.3990479f}};
+  const float kTestDistance = length(shape);
+
+  float expected = shape[1].Heading(shape[2]);
+  // calculate the angle taking into account only second and third points on the curve
+  float tang = tangent_angle(1, shape[1], shape, kTestDistance, true, 1, 2);
+  EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
+
+  expected = shape[1].Heading(shape[0]);
+  // calculate the angle taking into account only first and second points on the curve
+  tang = tangent_angle(1, shape[1], shape, kTestDistance, false, 0, 1);
+  EXPECT_NEAR(tang, expected, 5.0f) << "tangent_angle outside expected tolerance";
+}
+
 TEST(UtilMidgard, TestExpandLocation) {
   // Expand to create a box approx 200x200 meters
   PointLL loc(-77.0f, 39.0f);
@@ -691,6 +710,74 @@ TEST(UtilMidgard, Base64) {
     EXPECT_EQ(encode64(decoded), encoded);
     EXPECT_EQ(decode64(encoded), decoded);
     EXPECT_EQ(decode64(encode64(decoded)), decoded);
+  }
+}
+
+TEST(UtilMidgard, SequenceSort) {
+  std::vector<uint8_t> in_mem;
+  valhalla::midgard::sequence<uint8_t> merge("char_sequence_test_merge.bin", true, 1327);
+  valhalla::midgard::sequence<uint8_t> standard("char_sequence_test_standard.bin", true, 1327 * 5);
+
+  for (int i = 0; i < int(1327 * 4.5); ++i) {
+    auto n = static_cast<uint8_t>(rand() % std::numeric_limits<uint8_t>::max());
+    in_mem.push_back(n);
+    merge.push_back(n);
+    standard.push_back(n);
+  }
+
+  std::sort(in_mem.begin(), in_mem.end());
+  merge.sort(std::less<uint8_t>(), 1327);
+  standard.sort(std::less<uint8_t>(), 1327 * 5);
+
+  EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), merge.begin()));
+  EXPECT_TRUE(std::equal(in_mem.begin(), in_mem.end(), standard.begin()));
+}
+
+TEST(UtilMidgard, TriangleContains) {
+  PointLL a = {1, 1}, b = {2, 1}, c = {2, 2};
+
+  // obviously not in triangle
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{0, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{2, 0}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{3, 1}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{3, 3}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{2, 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{0, 1}));
+
+  // close but not in triangle
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1.01, 1.1}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{1.5, 0.99}));
+
+  // in triangle
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.2, 1.01}));
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.5, 1.3}));
+  EXPECT_TRUE(triangle_contains(a, b, c, PointLL{1.7, 1.1}));
+
+  // triangle corners are not considered contained
+  EXPECT_FALSE(triangle_contains(a, b, c, a));
+  EXPECT_FALSE(triangle_contains(a, b, c, b));
+  EXPECT_FALSE(triangle_contains(a, b, c, c));
+
+  // triangle edges are not considered contained
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + b.x()) / 2, (a.y() + b.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(a.x() + c.x()) / 2, (a.y() + c.y()) / 2}));
+  EXPECT_FALSE(triangle_contains(a, b, c, PointLL{(c.x() + b.x()) / 2, (c.y() + b.y()) / 2}));
+}
+
+TEST(UtilMidgard, PolygonArea) {
+  std::vector<PointLL> a{{1, 1}, {2, 2}, {3, 1}};
+  {
+    // area is negative in case of clockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, -1, 1e-7);
+  }
+
+  std::reverse(a.begin(), a.end());
+  {
+    // area is positive in case of counterclockwise order
+    float area = polygon_area(a);
+    EXPECT_NEAR(area, 1, 1e-7);
   }
 }
 

@@ -28,8 +28,9 @@
 
 #include "filesystem.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
+#include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
 
 using namespace boost::property_tree;
@@ -166,7 +167,7 @@ std::priority_queue<weighted_tile_t> which_tiles(const ptree& pt, const std::str
           : "";
 
   std::set<GraphId> tiles;
-  const auto& tile_level = TileHierarchy::levels().rbegin()->second;
+  const auto& tile_level = TileHierarchy::levels().back();
   pt_curler_t curler;
   auto request = url("/api/v1/feeds.geojson?per_page=false", pt);
   request += transit_bounding_box;
@@ -285,9 +286,9 @@ void get_stop_stations(Transit& tile,
                        std::unordered_map<std::string, uint64_t>& platforms,
                        const GraphId& tile_id,
                        const ptree& response,
-                       const AABB2<PointLL>& filter,
+                       const AABB2<PointLL>& filter/*,
                        bool tile_within_one_tz,
-                       const std::unordered_multimap<uint32_t, multi_polygon_type>& tz_polys) {
+                       const std::multimap<uint32_t, multi_polygon_type>& tz_polys*/) {
 
   for (const auto& station_pt : response.get_child("stop_stations")) {
 
@@ -718,7 +719,7 @@ void fetch_tiles(const ptree& pt,
                  std::priority_queue<weighted_tile_t>& queue,
                  unique_transit_t& uniques,
                  std::promise<std::list<GraphId>>& promise) {
-  const auto& tiles = TileHierarchy::levels().rbegin()->second.tiles;
+  const auto& tiles = TileHierarchy::levels().back().tiles;
   std::list<GraphId> dangling;
   pt_curler_t curler;
   auto now = time(nullptr);
@@ -734,6 +735,7 @@ void fetch_tiles(const ptree& pt,
   } else if (!tz_db_handle) {
     LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
   }
+  auto tz_conn = valhalla::mjolnir::make_spatialite_cache(tz_db_handle);
 
   // for each tile
   while (true) {
@@ -774,7 +776,7 @@ void fetch_tiles(const ptree& pt,
     LOG_INFO("Fetching " + transit_tile.string());
 
     bool tile_within_one_tz = false;
-    std::unordered_multimap<uint32_t, multi_polygon_type> tz_polys;
+    std::multimap<uint32_t, multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, filter);
       if (tz_polys.size() == 1) {
@@ -797,8 +799,8 @@ void fetch_tiles(const ptree& pt,
       // grab some stuff
       response = curler(*request, "stop_stations");
       // copy stops in, keeping map of stopid to graphid
-      get_stop_stations(tile, nodes, platforms, current, response, filter, tile_within_one_tz,
-                        tz_polys);
+      get_stop_stations(tile, nodes, platforms, current, response, filter/*, tile_within_one_tz,
+                        tz_polys*/);
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");
 
@@ -923,6 +925,10 @@ void fetch_tiles(const ptree& pt,
 
   // give back the work for later
   promise.set_value(dangling);
+
+  if (tz_db_handle) {
+    sqlite3_close(tz_db_handle);
+  }
 }
 
 std::list<GraphId> fetch(const ptree& pt,
@@ -978,7 +984,7 @@ void stitch_tiles(const ptree& pt,
                   const std::unordered_set<GraphId>& all_tiles,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
-  auto grid = TileHierarchy::levels().rbegin()->second.tiles;
+  auto grid = TileHierarchy::levels().back().tiles;
   auto tile_name = [&pt](const GraphId& id) {
     auto file_name = GraphTile::FileSuffix(id);
     file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
@@ -1062,7 +1068,11 @@ void stitch_tiles(const ptree& pt,
         }
       }
       lock.lock();
+#if GOOGLE_PROTOBUF_VERSION >= 3001000
+      auto size = tile.ByteSizeLong();
+#else
       auto size = tile.ByteSize();
+#endif
       valhalla::midgard::mem_map<char> buffer;
       buffer.create(file_name, size);
       tile.SerializeToArray(buffer.get(), size);
@@ -1157,7 +1167,7 @@ int main(int argc, char** argv) {
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-      std::to_string(TileHierarchy::levels().rbegin()->first));
+      std::to_string(TileHierarchy::levels().back().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {

@@ -35,14 +35,14 @@ protected:
                               {"BC",
                                {{"highway", "motorway_link"},
                                 {"service", "rest_area"},
-                                {"destination", "Rest Area"}}},
+                                {"destination", "Bear Peak Rest Area"}}},
                               {"BD", {{"highway", "motorway"}}},
                               {"DE", {{"highway", "motorway"}}},
                               {"EF",
                                {{"highway", "motorway_link"},
                                 {"service", "rest_area"},
                                 {"amenity", "yes"},
-                                {"destination", "Service Area"}}},
+                                {"destination", "Bear Peak Service Area"}}},
                               {"EG", {{"highway", "motorway"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
@@ -55,7 +55,7 @@ gurka::map Use::map = {};
 /*************************************************************/
 
 TEST_F(Use, EdgeUse) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
 
   // rest_area
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
@@ -63,14 +63,14 @@ TEST_F(Use, EdgeUse) {
   EXPECT_EQ(leg.node(1).edge().use(), TripLeg::Use::TripLeg_Use_kRestAreaUse); // BC
 
   // service_area
-  result = gurka::route(map, "A", "F", "auto");
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");
 
   leg = result.trip().routes(0).legs(0);
   EXPECT_EQ(leg.node(3).edge().use(), TripLeg::Use::TripLeg_Use_kServiceAreaUse); // EF
 }
 
 TEST_F(Use, test_passing_rest_area) {
-  auto result = gurka::route(map, "A", "D", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -90,6 +90,8 @@ TEST_F(Use, test_passing_rest_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
   EXPECT_TRUE(steps[step_idx]["intersections"][1].HasMember("rest_stop"));
   EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["type"].GetString(), "rest_area");
+  EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["name"].GetString(),
+               "Bear Peak Rest Area");
 
   // Expect no rest stops on last step
   step_idx++;
@@ -98,7 +100,7 @@ TEST_F(Use, test_passing_rest_area) {
 }
 
 TEST_F(Use, test_entering_rest_area) {
-  auto result = gurka::route(map, "A", "C", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -124,8 +126,10 @@ TEST_F(Use, test_entering_rest_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Rest Area.", "Turn left toward Rest Area.",
-      "Turn left toward Rest Area. Then You will arrive at your destination.",
+      result, step_idx, "Turn left toward Bear Peak Rest Area.",
+      "Turn left toward Bear Peak Rest Area. Then You will arrive at your destination.",
+      "Turn left toward Bear Peak Rest Area.",
+      "Turn left toward Bear Peak Rest Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 
   // Expect no rest stops on third step
@@ -135,7 +139,7 @@ TEST_F(Use, test_entering_rest_area) {
 }
 
 TEST_F(Use, test_passing_service_area) {
-  auto result = gurka::route(map, "D", "G", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -155,6 +159,8 @@ TEST_F(Use, test_passing_service_area) {
   EXPECT_FALSE(steps[step_idx]["intersections"][0].HasMember("rest_stop"));
   EXPECT_TRUE(steps[step_idx]["intersections"][1].HasMember("rest_stop"));
   EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["type"].GetString(), "service_area");
+  EXPECT_STREQ(steps[step_idx]["intersections"][1]["rest_stop"]["name"].GetString(),
+               "Bear Peak Service Area");
 
   // Expect no rest stops on last step
   step_idx++;
@@ -163,7 +169,7 @@ TEST_F(Use, test_passing_service_area) {
 }
 
 TEST_F(Use, test_entering_service_area) {
-  auto result = gurka::route(map, "D", "F", "auto");
+  auto result = gurka::do_action(valhalla::Options::route, map, {"D", "F"}, "auto");
   auto d = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
 
   // Assert expected number of routes, legs, steps
@@ -189,8 +195,10 @@ TEST_F(Use, test_entering_service_area) {
 
   // Verify the second maneuver instructions
   gurka::assert::raw::expect_instructions_at_maneuver_index(
-      result, step_idx, "Turn left toward Service Area.", "Turn left toward Service Area.",
-      "Turn left toward Service Area. Then You will arrive at your destination.",
+      result, step_idx, "Turn left toward Bear Peak Service Area.",
+      "Turn left toward Bear Peak Service Area. Then You will arrive at your destination.",
+      "Turn left toward Bear Peak Service Area.",
+      "Turn left toward Bear Peak Service Area. Then You will arrive at your destination.",
       "Continue for 400 meters.");
 
   // Expect no rest stops on third step

@@ -13,39 +13,47 @@ using namespace valhalla::sif;
 
 namespace {
 
-static TravelMode get_other_travel_mode(const TravelMode current_mode) {
+static travel_mode_t get_other_travel_mode(const travel_mode_t current_mode) {
   static const auto bss_modes =
-      std::vector<TravelMode>{TravelMode::kPedestrian, TravelMode::kBicycle};
-  return bss_modes[static_cast<size_t>(current_mode == TravelMode::kPedestrian)];
+      std::vector<travel_mode_t>{travel_mode_t::kPedestrian, travel_mode_t::kBicycle};
+  return bss_modes[static_cast<size_t>(current_mode == travel_mode_t::kPedestrian)];
 }
 } // namespace
 
 namespace valhalla {
 namespace thor {
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
+constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination
 constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 
 // Default constructor
-AStarBSSAlgorithm::AStarBSSAlgorithm()
-    : PathAlgorithm(), mode_(TravelMode::kDrive), travel_type_(0), adjacencylist_(nullptr),
-      max_label_count_(std::numeric_limits<uint32_t>::max()) {
+AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
+      travel_type_(0) {
 }
 
 // Destructor
 AStarBSSAlgorithm::~AStarBSSAlgorithm() {
-  Clear();
 }
 
 // Clear the temporary information generated during path construction.
 void AStarBSSAlgorithm::Clear() {
+  // Reduce edge labels capacity if it's more than limit
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
+    edgelabels_.shrink_to_fit();
+  }
+
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
   edgelabels_.clear();
   destinations_.clear();
-  adjacencylist_.reset();
+  adjacencylist_.clear();
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 
@@ -76,16 +84,13 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects.
   // TODO - reserve based on estimate based on distance and route type.
-  edgelabels_.reserve(kInitialEdgeLabelCount);
-
-  // Set up lambda to get sort costs
-  const auto edgecost = [this](const uint32_t label) { return edgelabels_[label].sortcost(); };
+  edgelabels_.reserve(std::min(kInitialEdgeLabelCount, max_reserved_labels_count_));
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.
   uint32_t bucketsize = std::max(pedestrian_costing_->UnitSize(), bicycle_costing_->UnitSize());
   float range = kBucketCount * bucketsize;
-  adjacencylist_ = std::make_shared<DoubleBucketQueue>(mincost, range, bucketsize, edgecost);
+  adjacencylist_.reuse(mincost, range, bucketsize, &edgelabels_);
   pedestrian_edgestatus_.clear();
   bicycle_edgestatus_.clear();
 }
@@ -100,17 +105,17 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
                                       const uint32_t pred_idx,
                                       const bool from_transition,
                                       const bool from_bss,
-                                      const sif::TravelMode mode,
+                                      const sif::travel_mode_t mode,
                                       const valhalla::Location& destination,
                                       std::pair<int32_t, float>& best_path) {
   const auto& current_costing =
-      (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
   const auto& current_heuristic =
-      (mode == TravelMode::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_astarheuristic_ : bicycle_astarheuristic_);
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
-  const GraphTile* tile = graphreader.GetGraphTile(node);
+  graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
     return;
   }
@@ -125,7 +130,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
 
   EdgeStatusInfo* current_es =
-      (mode == TravelMode::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
+      (mode == travel_mode_t::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
           .GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
 
@@ -145,9 +150,11 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Skip this edge if permanently labeled (best path already found to this
     // directed edge), if no access is allowed to this edge (based on costing method),
     // or if a complex restriction exists.
-    int has_time_restrictions = -1;
+    uint8_t has_time_restrictions = -1;
+    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
     if (current_es->set() == EdgeSet::kPermanent ||
-        !current_costing->Allowed(directededge, pred, tile, edgeid, 0, 0, has_time_restrictions) ||
+        !current_costing->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0,
+                                  has_time_restrictions) ||
         current_costing->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
       continue;
     }
@@ -161,7 +168,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge).
-    auto p = mode != TravelMode::kPedestrian ? destinations_.end() : destinations_.find(edgeid);
+    auto p = mode != travel_mode_t::kPedestrian ? destinations_.end() : destinations_.find(edgeid);
     if (p != destinations_.end()) {
       // Subtract partial cost and time
       newcost -= p->second;
@@ -169,7 +176,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       // Find the destination edge and update cost to include the edge score.
       // Note - with high edge scores the convergence test fails some routes
       // so reduce the edge score.
-      for (const auto& destination_edge : destination.path_edges()) {
+      for (const auto& destination_edge : destination.correlation().edges()) {
         if (destination_edge.graph_id() == edgeid) {
           newcost.cost += destination_edge.distance();
         }
@@ -193,7 +200,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
       EdgeLabel& lab = edgelabels_[current_es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_->decrease(current_es->index(), newsortcost);
+        adjacencylist_.decrease(current_es->index(), newsortcost);
         lab.Update(pred_idx, newcost, newsortcost, transition_cost, has_time_restrictions);
       }
       continue;
@@ -206,7 +213,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     float sortcost = newcost.cost;
 
     if (p == destinations_.end()) {
-      const GraphTile* t2 =
+      graph_tile_ptr t2 =
           directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
@@ -217,9 +224,10 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost);
+                             transition_cost, baldr::kInvalidRestriction, true, false,
+                             InternalTurn::kNoTurn);
     *current_es = {EdgeSet::kTemporary, idx};
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
   }
 
   if (!from_bss && nodeinfo->type() == NodeType::kBikeShare) {
@@ -244,21 +252,22 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
                                valhalla::Location& destination,
                                GraphReader& graphreader,
                                const sif::mode_costing_t& mode_costing,
-                               const TravelMode mode,
-                               const Options& options) {
+                               const travel_mode_t mode,
+                               const Options&) {
   // Set the mode and costing
   mode_ = mode;
-  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
-  bicycle_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kBicycle)];
+  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
+  bicycle_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kBicycle)];
   travel_type_ = pedestrian_costing_->travel_type();
 
   // Initialize - create adjacency list, edgestatus support, A*, etc.
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
-                                   destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.correlation().edges(0).ll().lng(),
+                              origin.correlation().edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
+                                   destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = pedestrian_astarheuristic_.GetDistance(origin_new);
 
@@ -288,7 +297,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
-    uint32_t predindex = adjacencylist_->pop();
+    const uint32_t predindex = adjacencylist_.pop();
     if (predindex == kInvalidLabel) {
       LOG_ERROR("Route failed after iterations = " + std::to_string(edgelabels_.size()));
       return {};
@@ -298,11 +307,11 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
 
-    const GraphTile* tile = graphreader.GetGraphTile(pred.endnode());
+    graph_tile_ptr tile = graphreader.GetGraphTile(pred.endnode());
     auto ll = tile->get_node_ll(pred.endnode());
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
-        pred.mode() == TravelMode::kPedestrian) {
+        pred.mode() == travel_mode_t::kPedestrian) {
       // Check if a trivial path. Skip if no predecessor and not
       // trivial (cannot reach destination along this one edge).
       if (pred.predecessor() == kInvalidLabel) {
@@ -316,11 +325,11 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
-    if (!pred.origin() && pred.mode() == TravelMode::kPedestrian) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kPedestrian) {
       pedestrian_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-    if (!pred.origin() && pred.mode() == TravelMode::kBicycle) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kBicycle) {
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
@@ -353,16 +362,16 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const auto& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
   // Check if the origin edge matches a destination edge at the node.
-  auto trivial_at_node = [this, &destination](const valhalla::Location::PathEdge& edge) {
+  auto trivial_at_node = [this, &destination](const auto& edge) {
     auto p = destinations_.find(edge.graph_id());
     if (p != destinations_.end()) {
-      for (const auto& destination_edge : destination.path_edges()) {
+      for (const auto& destination_edge : destination.correlation().edges()) {
         if (destination_edge.graph_id() == edge.graph_id()) {
           return true;
         }
@@ -374,7 +383,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
   // Iterate through edges and add to adjacency list
   const NodeInfo* nodeinfo = nullptr;
   const NodeInfo* closest_ni = nullptr;
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1) unless the
     // destination is also at the same end node (trivial path).
     if (has_other_edges && edge.end_node() && !trivial_at_node(edge)) {
@@ -388,12 +397,12 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     }
 
     // Get the directed edge
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
     const DirectedEdge* directededge = tile->directededge(edgeid);
 
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
-    const GraphTile* endtile = graphreader.GetGraphTile(directededge->endnode());
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
     if (endtile == nullptr) {
       continue;
     }
@@ -419,7 +428,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     if (p != destinations_.end()) {
       if (IsTrivial(edgeid, origin, destination)) {
         // Find the destination edge and update cost.
-        for (const auto& destination_edge : destination.path_edges()) {
+        for (const auto& destination_edge : destination.correlation().edges()) {
           if (destination_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
@@ -451,20 +460,21 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         TravelMode::kPedestrian, d, Cost{});
+                         travel_mode_t::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true,
+                         false, sif::InternalTurn::kNoTurn);
     // Set the origin flag
     edge_label.set_origin();
 
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
     edgelabels_.push_back(std::move(edge_label));
-    adjacencylist_->add(idx);
+    adjacencylist_.add(idx);
 
     // DO NOT SET EdgeStatus - it messes up trivial paths with oneways
   }
 
   // Set the origin timezone
-  if (closest_ni != nullptr && origin.has_date_time() && origin.date_time() == "current") {
+  if (closest_ni != nullptr && !origin.date_time().empty() && origin.date_time() == "current") {
     origin.set_date_time(
         DateTime::iso_date_time(DateTime::get_tz_db().from_index(closest_ni->timezone())));
   }
@@ -475,14 +485,14 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
 
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
+                [&has_other_edges](const auto& e) {
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && edge.begin_node()) {
       continue;
@@ -496,11 +506,9 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
 
     // Keep the cost to traverse the partial distance for the remainder of the edge. This cost
     // is subtracted from the total cost up to the end of the destination edge.
-    const GraphTile* tile = graphreader.GetGraphTile(edgeid);
+    auto tile = graphreader.GetGraphTile(edgeid);
+    assert(tile);
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    auto* endonode = tile->node(directededge->endnode());
-    GraphId startnode =
-        tile->directededge(endonode->edge_index() + directededge->opp_index())->endnode();
 
     destinations_[edge.graph_id()] =
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
@@ -522,16 +530,17 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
 
   // Work backwards from the destination
   std::vector<PathInfo> path;
-  TravelMode old = TravelMode::kPedestrian;
+  travel_mode_t old = travel_mode_t::kPedestrian;
   int mode_change_count = 0;
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
     const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
-                      edgelabel.restriction_idx(), edgelabel.transition_cost());
+                      edgelabel.path_distance(), edgelabel.restriction_idx(),
+                      edgelabel.transition_cost());
 
-    const GraphTile* tile = graphreader.GetGraphTile(edgelabel.edgeid());
+    graph_tile_ptr tile = graphreader.GetGraphTile(edgelabel.edgeid());
     const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());
     auto ll = tile->get_node_ll(directededge->endnode());
 

@@ -107,7 +107,7 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
  * @param  tile          Graph tile of the edge
  * @param  directededge  Directed edge to match.
  */
-bool OpposingEdgeInfoMatches(const GraphTile* tile, const DirectedEdge* edge) {
+bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
   // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
   // true if a matching edgeinfo offset if found.
   const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
@@ -162,7 +162,7 @@ void FormTilesInNewLevel(GraphReader& reader,
   // highway level is done first.
   reader.Clear();
   bool added = false;
-  uint8_t current_level;
+  uint8_t current_level = std::numeric_limits<uint8_t>::max();
   GraphId tile_id;
   std::hash<std::string> hasher;
   PointLL base_ll;
@@ -194,7 +194,7 @@ void FormTilesInNewLevel(GraphReader& reader,
 
     // Get the node in the base level
     GraphId base_node = (*new_node).second;
-    const GraphTile* tile = reader.GetGraphTile(base_node);
+    graph_tile_ptr tile = reader.GetGraphTile(base_node);
     if (tile == nullptr) {
       LOG_ERROR("Base tile is null? ");
       continue;
@@ -308,7 +308,6 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
       // If end node is in the same tile and there is no opposing edge with matching
       // edge_info_offset).
-      uint32_t idx = directededge->edgeinfo_offset();
       bool diff_names = directededge->endnode().tileid() == base_edge_id.tileid() &&
                         !OpposingEdgeInfoMatches(tile, directededge);
 
@@ -316,14 +315,16 @@ void FormTilesInNewLevel(GraphReader& reader,
       // new. Cannot use edge info offset since edges in arterial and
       // highway hierarchy can cross base tiles! Use a hash based on the
       // encoded shape plus way Id.
-      auto edgeinfo = tile->edgeinfo(idx);
+      auto edgeinfo = tile->edgeinfo(directededge);
       std::string encoded_shape = edgeinfo.encoded_shape();
       uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
       uint32_t edge_info_offset =
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
-                                   tile->GetNames(idx), tile->GetNames(idx, true),
-                                   tile->GetTypes(idx), added, diff_names);
+                                   edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
+                                   edgeinfo.GetTaggedValues(true), edgeinfo.GetTypes(), added,
+                                   diff_names);
+
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
@@ -339,10 +340,11 @@ void FormTilesInNewLevel(GraphReader& reader,
     } else if (current_level == 1) {
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
       AddDownwardTransition(new_nodes.local_node, tilebuilder);
-    }
-    if (current_level == 2) {
+    } else if (current_level == 2) {
       AddUpwardTransition(new_nodes.highway_node, tilebuilder);
       AddUpwardTransition(new_nodes.arterial_node, tilebuilder);
+    } else {
+      throw std::logic_error("current_level was never set");
     }
 
     // Set the node transition count and index
@@ -386,8 +388,8 @@ void CreateNodeAssociations(GraphReader& reader,
   // Map of tiles vs. count of nodes. Used to construct new node Ids.
   std::unordered_map<GraphId, uint32_t> new_nodes;
 
-  // lambda to get the next "new" node Id given a tile
-  auto get_new_node = [&new_nodes](const GraphId& tile) {
+  // lambda to get the next "new" node Id in a given tile
+  auto get_new_node = [&new_nodes](const GraphId& tile) -> GraphId {
     auto itr = new_nodes.find(tile);
     if (itr == new_nodes.end()) {
       GraphId new_node(tile.tileid(), tile.level(), 0);
@@ -407,25 +409,22 @@ void CreateNodeAssociations(GraphReader& reader,
   sequence<OldToNewNodes> old_to_new(old_to_new_file, true);
 
   // Hierarchy level information
-  auto tile_level = TileHierarchy::levels().rbegin();
-  auto& base_level = tile_level->second;
-  tile_level++;
-  auto& arterial_level = tile_level->second;
-  tile_level++;
-  auto& highway_level = tile_level->second;
-
-  // Get the set of tiles on the local level
-  auto local_tiles = reader.GetTileSet(base_level.level);
+  const auto& arterial_level = TileHierarchy::levels()[1];
+  uint32_t al = static_cast<uint32_t>(arterial_level.level);
+  const auto& highway_level = TileHierarchy::levels()[0];
+  uint32_t hl = static_cast<uint32_t>(highway_level.level);
 
   // Iterate through all tiles in the local level
-  uint32_t ntiles = base_level.tiles.TileCount();
-  uint32_t bl = static_cast<uint32_t>(base_level.level);
-  uint32_t al = static_cast<uint32_t>(arterial_level.level);
-  uint32_t hl = static_cast<uint32_t>(highway_level.level);
+  auto local_tiles = reader.GetTileSet();
   for (const auto& base_tile_id : local_tiles) {
+    // We keep all transit data inside the transit hierarchy
+    if (base_tile_id.level() == TileHierarchy::GetTransitLevel().level) {
+      continue;
+    }
+
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
-    const GraphTile* tile = reader.GetGraphTile(base_tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    graph_tile_ptr tile = reader.GetGraphTile(base_tile_id);
+    if (!tile) {
       continue;
     }
 
@@ -498,13 +497,12 @@ void UpdateTransitConnections(GraphReader& reader, const std::string& old_to_new
   // Use the sorted sequence that associates old nodes to new nodes
   sequence<OldToNewNodes> old_to_new(old_to_new_file, false);
 
-  auto tile_level = TileHierarchy::levels().rbegin();
-  uint8_t transit_level = tile_level->second.level + 1;
+  uint8_t transit_level = TileHierarchy::GetTransitLevel().level;
   auto transit_tiles = reader.GetTileSet(transit_level);
   for (const auto& tile_id : transit_tiles) {
     // Skip if no nodes exist in the tile
-    const GraphTile* tile = reader.GetGraphTile(tile_id);
-    if (tile == nullptr || tile->header()->nodecount() == 0) {
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    if (!tile) {
       continue;
     }
 

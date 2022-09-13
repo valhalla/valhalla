@@ -10,8 +10,6 @@
 #include <iostream>
 #include <map>
 #include <ostream>
-#include <spatialite.h>
-#include <sqlite3.h>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -45,20 +43,20 @@ template <class T> T merge_counts(T& a, T b) {
   }
   return tmp;
 }
+
+// merge two hashes by key and merge underlying hash buckets
+template <class T> T deep_merge_counts(T& a, T const& b) {
+  T tmp(a);
+  for (auto it = b.begin(); it != b.end(); it++) {
+    tmp[it->first] = merge_counts(tmp[it->first], it->second);
+  }
+  return tmp;
+}
+
 } // namespace
 
 namespace valhalla {
 namespace mjolnir {
-
-statistics::statistics()
-    : tile_lengths(), country_lengths(), tile_int_edges(), country_int_edges(), tile_one_way(),
-      country_one_way(), tile_speed_info(), country_speed_info(), tile_named(), country_named(),
-      tile_truck_route(), country_truck_route(), tile_hazmat(), country_hazmat(), tile_height(),
-      country_height(), tile_width(), country_width(), tile_length(), country_length(), tile_weight(),
-      country_weight(), tile_axle_load(), country_axle_load(), tile_exit_signs(), tile_fork_signs(),
-      ctry_exit_signs(), ctry_fork_signs(), tile_exit_count(), tile_fork_count(), ctry_exit_count(),
-      ctry_fork_count(), tile_areas(), tile_geometries(), iso_codes(), tile_ids() {
-}
 
 void statistics::add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length) {
   tile_ids.insert(tile_id);
@@ -415,18 +413,18 @@ void statistics::add(const statistics& stats) {
   tile_axle_load = merge(tile_axle_load, stats.get_tile_axle_load());
 
   // Combine country statistics
-  country_lengths = merge(country_lengths, stats.get_country_lengths());
-  country_one_way = merge(country_one_way, stats.get_country_one_way());
-  country_speed_info = merge(country_speed_info, stats.get_country_speed_info());
-  country_int_edges = merge(country_int_edges, stats.get_country_int_edges());
-  country_named = merge(country_named, stats.get_country_named());
-  country_hazmat = merge(country_hazmat, stats.get_country_hazmat());
-  country_truck_route = merge(country_truck_route, stats.get_country_truck_route());
-  country_height = merge(country_height, stats.get_country_height());
-  country_width = merge(country_width, stats.get_country_width());
-  country_length = merge(country_length, stats.get_country_length());
-  country_weight = merge(country_weight, stats.get_country_weight());
-  country_axle_load = merge(country_axle_load, stats.get_country_axle_load());
+  country_lengths = deep_merge_counts(country_lengths, stats.get_country_lengths());
+  country_one_way = deep_merge_counts(country_one_way, stats.get_country_one_way());
+  country_speed_info = deep_merge_counts(country_speed_info, stats.get_country_speed_info());
+  country_int_edges = deep_merge_counts(country_int_edges, stats.get_country_int_edges());
+  country_named = deep_merge_counts(country_named, stats.get_country_named());
+  country_hazmat = deep_merge_counts(country_hazmat, stats.get_country_hazmat());
+  country_truck_route = deep_merge_counts(country_truck_route, stats.get_country_truck_route());
+  country_height = deep_merge_counts(country_height, stats.get_country_height());
+  country_width = deep_merge_counts(country_width, stats.get_country_width());
+  country_length = deep_merge_counts(country_length, stats.get_country_length());
+  country_weight = deep_merge_counts(country_weight, stats.get_country_weight());
+  country_axle_load = deep_merge_counts(country_axle_load, stats.get_country_axle_load());
 
   // Combine exit statistics
   tile_exit_signs = merge_counts(tile_exit_signs, stats.get_tile_exit_info());
@@ -469,17 +467,18 @@ void statistics::RouletteData::Add(const RouletteData& rd) {
   unroutable_nodes = merge(unroutable_nodes, rd.unroutable_nodes);
 }
 
-void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& pt) const {
+void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& /*pt*/) const {
   // build a task list for each collected wayid
   json::ArrayPtr tasks = json::array({});
   for (auto& id : way_IDs) {
     // build shape array before the rest of the json
-    json::ArrayPtr coords = json::array({json::array(
-        {json::fp_t{way_shapes.at(id)[0].lng(), 5}, json::fp_t{way_shapes.at(id)[0].lat(), 5}})});
+    json::ArrayPtr coords =
+        json::array({json::array({json::fixed_t{way_shapes.at(id)[0].lng(), 5},
+                                  json::fixed_t{way_shapes.at(id)[0].lat(), 5}})});
     for (size_t i = 1; i < way_shapes.at(id).size(); ++i) {
       const auto& way_point = way_shapes.at(id)[i];
       coords->emplace_back(
-          json::array({json::fp_t{way_point.lng(), 5}, json::fp_t{way_point.lat(), 5}}));
+          json::array({json::fixed_t{way_point.lng(), 5}, json::fixed_t{way_point.lat(), 5}}));
     }
     // build each task into the json array
     tasks->emplace_back(json::map(
@@ -493,8 +492,8 @@ void statistics::RouletteData::GenerateTasks(const boost::property_tree::ptree& 
   auto hasher = std::hash<PointLL>();
   for (auto it = unroutable_nodes.cbegin(); it != unroutable_nodes.cend(); it++) {
     tasks->emplace_back(json::map(
-        {{"geometry", json::map({{"coordinates", json::array({{json::fp_t{it->lng(), 5}},
-                                                              {json::fp_t{it->lat(), 5}}})},
+        {{"geometry", json::map({{"coordinates", json::array({{json::fixed_t{it->lng(), 5}},
+                                                              {json::fixed_t{it->lat(), 5}}})},
                                  {"type", std::string("Point")}})},
          {"properties",
           json::map({{"type", std::string("Node")}, {"key", static_cast<uint64_t>(hasher(*it))}})},

@@ -8,6 +8,7 @@
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -41,7 +42,7 @@ TEST(TimeTracking, make) {
     // no time
     auto ti = baldr::TimeInfo::make(location, reader, cache);
     ASSERT_EQ(ti, basic_ti);
-    ASSERT_FALSE(location.has_date_time());
+    ASSERT_TRUE(location.date_time().empty());
 
     // bad timezone defaults to UTC
     location.set_date_time("2020-04-01T12:34");
@@ -192,13 +193,8 @@ TEST(TimeTracking, routes) {
 
   // pick out a start and end ll by finding the appropriate edges in the graph
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  auto opp_start_edge = gurka::findEdge(reader, map.nodes, "AB", "B");
-  const baldr::GraphTile* tile = nullptr;
-  const auto* node = reader.nodeinfo(std::get<3>(opp_start_edge)->endnode(), tile);
-  auto start = node->latlng(tile->header()->base_ll());
-  auto end_edge = gurka::findEdge(reader, map.nodes, "GH", "H");
-  node = reader.nodeinfo(std::get<1>(end_edge)->endnode(), tile);
-  auto end = node->latlng(tile->header()->base_ll());
+  auto start = map.nodes["A"];
+  auto end = map.nodes["H"];
 
   // route between them with a current time
   auto req =
@@ -218,10 +214,9 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  std::vector<double> expected = {0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+  const std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
+                                        193.9319, 245.4273, 269.4273, 293.4273};
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a depart_at
   req =
@@ -239,10 +234,7 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  expected = {0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 
   // route between them with a arrive_by
   req =
@@ -260,11 +252,8 @@ TEST(TimeTracking, routes) {
       }
     }
   }
-  // TODO: why does arrive by have an extra node in here...
-  expected = {0, 0, 17.1429, 34.2857, 176.789, 228.2844, 252.2844, 276.2844};
-  ASSERT_EQ(times.size(), expected.size());
-  ASSERT_TRUE(std::equal(times.begin(), times.end(), expected.begin(), expected.end(),
-                         [](double a, double b) { return std::abs(a - b) < .0001; }));
+
+  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
 }
 
 TEST(TimeTracking, dst) {

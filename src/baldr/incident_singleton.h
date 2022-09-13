@@ -1,6 +1,7 @@
 #pragma once
 
 #include "baldr/graphreader.h"
+#include "filesystem.h"
 #include "midgard/sequence.h"
 
 #include <chrono>
@@ -14,14 +15,6 @@
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
 
 namespace {
-
-#ifdef _WIN32
-#define MTIME(st_stat) st_stat.st_mtime
-#elif __APPLE__
-#define MTIME(st_stat) st_stat.st_mtime
-#else
-#define MTIME(st_stat) st_stat.st_mtim.tv_sec
-#endif
 
 constexpr time_t DEFAULT_MAX_LOADING_LATENCY = 60;
 constexpr size_t DEFAULT_MAX_LATENT_COUNT = 5;
@@ -146,7 +139,7 @@ protected:
       }
       // actually make a spot in the cache synchronously
       try {
-        std::unique_lock<std::mutex>(state->mutex);
+        std::unique_lock<std::mutex> lock(state->mutex);
         found = state->cache.insert({tile_id, {}}).first;
       } // if anything went wrong we have to catch it so that the mutex is unlocked
       catch (...) {
@@ -265,7 +258,7 @@ protected:
           valhalla::baldr::GraphId tile_id(((uint64_t(1) << 25) - 1) & entry);
           seen.insert(tile_id);
           // spare last 39 bits are the timestamp, leaves us with something like 17k years
-          uint64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
+          int64_t timestamp = (entry >> 25) & ((uint64_t(1) << 39) - 1);
           // check the timestamp part of the tile id to see if its newer
           if (last_scan <= timestamp) {
             // concoct a file name from the tile_id
@@ -287,11 +280,15 @@ protected:
                 (tile_id = valhalla::baldr::GraphTile::GetTileId(i->path().string())).Is_Valid()) {
               // and if the tile was updated since the last time we scanned we load it
               seen.insert(tile_id);
-              struct stat s;
-              if (stat(i->path().c_str(), &s) == 0 && last_scan <= MTIME(s)) {
-                // update the tile
-                update_count += update_tile(state, tile_id, read_tile(i->path().string()));
-              }
+              try {
+                time_t m_time =
+                    std::chrono::system_clock::to_time_t(filesystem::last_write_time(i->path()));
+                if (last_scan <= m_time) {
+                  // update the tile
+                  update_count += update_tile(state, tile_id, read_tile(i->path().string()));
+                }
+              } // if we couldnt get the last modified time we skip
+              catch (...) {}
             }
           } // happens when there is a file in the directory that doesnt have a tile-looking name
           catch (...) {}

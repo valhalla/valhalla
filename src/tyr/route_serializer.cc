@@ -5,7 +5,6 @@
 
 #include "midgard/encoded.h"
 #include "midgard/util.h"
-#include "odin/util.h"
 #include "route_serializer_osrm.cc"
 #include "route_serializer_valhalla.cc"
 #include "tyr/serializers.h"
@@ -32,7 +31,7 @@ namespace {
 std::string pathToGPX(const google::protobuf::RepeatedPtrField<TripLeg>& legs) {
   // start the gpx, we'll use 6 digits of precision
   std::stringstream gpx;
-  gpx << std::setprecision(6) << std::fixed;
+  gpx << std::setprecision(DIGITS_PRECISION) << std::fixed;
   gpx << R"(<?xml version="1.0" encoding="UTF-8" standalone="no"?><gpx version="1.1" creator="libvalhalla"><metadata/>)";
 
   // for each leg
@@ -85,6 +84,8 @@ std::string serializeDirections(Api& request) {
       return pathToGPX(request.trip().routes(0).legs());
     case Options_Format_json:
       return valhalla_serializers::serialize(request);
+    case Options_Format_pbf:
+      return serializePbf(request);
     default:
       throw;
   }

@@ -1,18 +1,21 @@
 #!/bin/sh
 
 error_exit() {
-  echo "$1" 1>&2
-  exit 1
+  echo "error: $1" 1>&2
+  # geos 3.9* has a double free bug which, although it crashes the programs
+  # that use it when they go to exit, works fine otherwise in terms of the
+  # output. so here if we detect that we ignore the failure and keep going
+  if [ $(pkg-config geos --modversion | grep -cvF "3.9") -eq 0 ]; then
+    exit 1
+  fi
 }
 
 if  ! which spatialite >/dev/null; then
-    echo "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
-    exit 1
+    error_exit "spatialite not found which is required.  Please install via:  sudo apt-get install spatialite-bin"
 fi
 
 if  ! which unzip >/dev/null; then
-    echo "unzip not found which is required.  Please install via:  sudo apt-get install unzip"
-    exit 1
+    error_exit "unzip not found which is required.  Please install via:  sudo apt-get install unzip"
 fi
 
 rm -rf dist
@@ -227,13 +230,13 @@ Africa/Timbuktu,Africa/Abidjan
 Atlantic/St_Helena,Africa/Abidjan
 EOF
 
-echo "downloading timezone polygon file." 1>&2 
+echo "downloading timezone polygon file." 1>&2
 curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "wget failed for " ${url}
 unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 tz_file=$(mktemp)
 spatialite_tool -i -shp ./dist/combined-shapefile-with-oceans -d ${tz_file} -t tz_world -s 4326 -g geom -c UTF-8 1>&2 || error_exit "spatialite_tool import failed"
-spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed" 
+spatialite ${tz_file} "SELECT CreateSpatialIndex('tz_world', 'geom');" 1>&2 || error_exit "SpatialIndex failed"
 
 spatialite ${tz_file} "DROP TABLE IF EXISTS "alias";" 1>&2 || error_exit "drop table alias failed"
 spatialite ${tz_file} "CREATE TABLE "alias" (alias_TZID text,alias_new_TZID text);" 1>&2 || error_exit "create table alias failed"

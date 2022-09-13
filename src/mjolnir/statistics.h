@@ -123,8 +123,6 @@ public:
     void GenerateTasks(const boost::property_tree::ptree& pt) const;
   } roulette_data;
 
-  statistics();
-
   void add_tile_road(const uint64_t& tile_id, const RoadClass& rclass, const float length);
   void add_country_road(const std::string& ctry_code, const RoadClass& rclass, const float length);
 
@@ -280,14 +278,14 @@ public:
 
   void add(const statistics& stats);
 
-  void build_db(const boost::property_tree::ptree& pt);
+  void build_db();
 
 private:
-  void create_tile_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_tile_tables(sqlite3* db_handle);
 
-  void create_country_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_country_tables(sqlite3* db_handle);
 
-  void create_exit_tables(sqlite3* db_handle, sqlite3_stmt* stmt);
+  void create_exit_tables(sqlite3* db_handle);
 
   void insert_tile_data(sqlite3* db_handle, sqlite3_stmt* stmt);
 

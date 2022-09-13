@@ -4,7 +4,7 @@ This document describes how to run an elevation lookup service using Valhalla. D
 
 ## Running
 
-The easiest way to start an elevation service is to install Valhalla from PPA, download elevation data, and start the service. Or you can build Valhalla from source. See the main [README](index.md) for installation instructions.
+The easiest way to start an elevation service is to run valhalla via Docker, download elevation data, and start the service. Or you can build Valhalla from source. See the main [README](index.md) for installation instructions.
 
 The following bash should be enough to make some get some elevation data and start a server using it:
 

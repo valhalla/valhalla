@@ -30,10 +30,12 @@ valhalla_tyr_worker
 valhalla_associate_segments
 valhalla_fetch_transit
 valhalla_pack_elevation
+valhalla_add_elevation
 genfiles/
 locales/*.UTF-8
 !locales/merge-en.sh
 py-compile
+__pycache__
 *.la
 *.o
 .deps/
@@ -53,15 +55,18 @@ scripts/gdal-2.0.0.tar.gz
 .cproject
 .project
 .settings
+CMakeLists.txt.user
 /.vs*/
 /*build*/
 /CMakeSettings.json
-/.idea
+.idea
 /.tidytmp
 
-# nodejs
-node_modules
-lib/binding/node_valhalla.node
+# python
+.venv
+
+# clangd
+.cache/
 
 # documentation
 site/

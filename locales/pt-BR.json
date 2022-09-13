@@ -1,8 +1,6 @@
 {
   "posix_locale": "pt_BR.UTF-8",
-  "aliases": [
-    "ptbr"
-  ],
+  "aliases": [],
   "instructions": {
     "arrive": {
       "phrases": {
@@ -44,7 +42,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -83,7 +82,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -140,7 +140,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -171,7 +172,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilômetros",
@@ -224,7 +226,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -360,7 +363,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "ferry_label": "Balsa",
       "example_phrases": {
@@ -388,7 +392,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "ferry_label": "Balsa",
       "example_phrases": {
@@ -440,7 +445,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -536,7 +542,8 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail"
+        "the mountain bike trail",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -715,7 +722,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -742,7 +750,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -890,7 +899,8 @@
       "empty_street_name_labels": [
         "a estrada pedonal",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -936,7 +946,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -970,7 +981,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -1008,7 +1020,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -1060,7 +1073,8 @@
       "empty_street_name_labels": [
         "calçada",
         "ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1099,7 +1113,8 @@
       "empty_street_name_labels": [
         "calçada",
         "ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1145,7 +1160,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilômetros",
@@ -1380,7 +1396,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -1419,7 +1436,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -1474,7 +1492,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "example_phrases": {
         "0": [
@@ -1561,7 +1580,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "metric_lengths": [
         "<KILOMETERS> quilômetros",
@@ -1935,7 +1955,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -1974,7 +1995,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -2015,7 +2037,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -2062,7 +2085,8 @@
       "empty_street_name_labels": [
         "a calçada",
         "a ciclovia",
-        "a trilha de mountain bike"
+        "a trilha de mountain bike",
+        "the crosswalk"
       ],
       "relative_directions": [
         "à esquerda",
@@ -2144,6 +2168,88 @@
       "example_phrases": {
         "0": [
           "In a quarter mile, Turn right onto North Gay Street."
+        ]
+      }
+    },
+    "elevator": {
+      "phrases": {
+        "0": "Take the elevator.",
+        "1": "Take the elevator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the elevator."
+        ],
+        "1": [
+          "Take the elevator to Level 1."
+        ]
+      }
+    },
+    "steps": {
+      "phrases": {
+        "0": "Take the stairs.",
+        "1": "Take the stairs to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the stairs."
+        ],
+        "1": [
+          "Take the stairs to Level 2."
+        ]
+      }
+    },
+    "escalator": {
+      "phrases": {
+        "0": "Take the escalator.",
+        "1": "Take the escalator to <LEVEL>."
+      },
+      "example_phrases": {
+        "0": [
+          "Take the escalator."
+        ],
+        "1": [
+          "Take the escalator to Level 3."
+        ]
+      }
+    },
+    "enter_building": {
+      "phrases": {
+        "0": "Enter the building.",
+        "1": "Enter the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Enter the building."
+        ],
+        "1": [
+          "Enter the building, and continue on the walkway."
+        ]
+      }
+    },
+    "exit_building": {
+      "phrases": {
+        "0": "Exit the building.",
+        "1": "Exit the building, and continue on <STREET_NAMES>."
+      },
+      "empty_street_name_labels": [
+        "the walkway",
+        "the cycleway",
+        "the mountain bike trail",
+        "the crosswalk"
+      ],
+      "example_phrases": {
+        "0": [
+          "Exit the building."
+        ],
+        "1": [
+          "Exit the building, and continue on the walkway."
         ]
       }
     }

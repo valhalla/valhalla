@@ -18,63 +18,30 @@
 using namespace valhalla;
 
 zmq::context_t context;
+const std::string tile_remote_address{"127.0.0.1:48004"};
 
 std::string get_tile_url() {
   std::ostringstream oss;
-  oss << test_tile_server_t::server_url << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
+  oss << tile_remote_address << "/route-tile/v1/" << baldr::GraphTile::kTilePathPattern
       << "?version=%version&access_token=%token";
-
   return oss.str();
 }
 
 boost::property_tree::ptree
 make_conf(const std::string& tile_dir, bool tile_url_gz, size_t curler_count) {
-  // fake up config against pine grove traffic extract
-  auto conf = test::json_to_pt(R"({
-      "mjolnir":{
-        "user_agent":"MapboxNavigationNative"
-      },
-      "loki":{
-        "actions":["locate","route","sources_to_targets","optimized_route","isochrone","trace_route","trace_attributes","transit_available"],
-        "logging":{"long_request": 100},
-        "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-      },
-      "thor":{"logging":{"long_request": 110}},
-      "skadi":{"actons":["height"],"logging":{"long_request": 5}},
-      "meili":{"customizable": ["breakage_distance"],
-               "mode":"auto","grid":{"cache_size":100240,"size":500},
-               "default":{"beta":3,"breakage_distance":2000,"geometry":false,"gps_accuracy":5.0,"interpolation_distance":10,
-               "max_route_distance_factor":3,"max_route_time_factor":3,"max_search_radius":100,"route":true,
-               "search_radius":50,"sigma_z":4.07,"turn_penalty_factor":200}},
-      "service_limits": {
-        "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-        "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-        "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-        "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-        "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-        "skadi": {"max_shape": 750000,"min_resample": 10.0},
-        "trace": { "max_best_paths": 4, "max_best_paths_shape": 100, "max_distance": 200000.0, "max_gps_accuracy": 100.0, "max_search_radius": 100, "max_shape": 16000 },
-        "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-        "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-      }
-    })");
+  auto conf = test::make_config(tile_dir, {{"mjolnir.user_agent", "MapboxNavigationNative"}});
 
-  conf.get_child("mjolnir").put("tile_url", get_tile_url());
-  if (!tile_dir.empty()) {
-    conf.get_child("mjolnir").put("tile_dir", tile_dir);
+  conf.put("mjolnir.tile_url", get_tile_url());
+  if (tile_dir.empty()) {
+    conf.erase("mjolnir.tile_dir");
   }
 
   if (curler_count > 1) {
-    conf.get_child("mjolnir").put("max_concurrent_reader_users", curler_count);
+    conf.put("mjolnir.max_concurrent_reader_users", curler_count);
   }
 
-  conf.get_child("mjolnir").put("tile_url_gz", tile_url_gz);
-  conf.get_child("loki").put("use_connectivity", false);
+  conf.put("mjolnir.tile_url_gz", tile_url_gz);
+  conf.put("loki.use_connectivity", false);
   return conf;
 }
 
@@ -137,7 +104,7 @@ struct TestTileDownloadData {
     return test_tile_ids.back();
   }
 
-  const std::string tile_url_base = "127.0.0.1:8004/route-tile/v1/";
+  const std::string tile_url_base = tile_remote_address + "/route-tile/v1/";
   const std::string request_params = "?version=%version&access_token=%token";
   const std::string full_tile_url_pattern =
       tile_url_base + baldr::GraphTile::kTilePathPattern + request_params;
@@ -178,8 +145,9 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
           auto result = tile_getter.get(tile_uri);
 
           if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-            auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
-            EXPECT_EQ(tile.id(), expected_tile_id);
+            auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+            ASSERT_TRUE(tile);
+            EXPECT_EQ(tile->id(), expected_tile_id);
           } else {
             EXPECT_EQ(expected_tile_id, non_existent_tile_id);
           }
@@ -219,9 +187,10 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
             GraphTile::CacheTileURL(params.full_tile_url_pattern, expected_tile_id, &tile_getter, "");
 
         if (expected_tile_id != non_existent_tile_id) {
-          EXPECT_EQ(tile.id(), expected_tile_id);
+          ASSERT_TRUE(tile);
+          EXPECT_EQ(tile->id(), expected_tile_id);
         } else {
-          EXPECT_EQ(tile.header(), nullptr) << "Expected empty header";
+          EXPECT_FALSE(tile) << "Expected no tile";
         }
       }
     });
@@ -277,7 +246,7 @@ TEST(HttpTiles, test_interrupt) {
   };
 
   tile_getter.set_interrupt(&interrupt);
-  for (int tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
+  for (size_t tile_i = 0; tile_i < params.test_tile_ids.size(); ++tile_i) {
     auto test_tile_index = tile_i % params.test_tile_names.size();
     auto expected_tile_id = params.test_tile_ids[test_tile_index];
 
@@ -289,8 +258,9 @@ TEST(HttpTiles, test_interrupt) {
 
     auto result = tile_getter.get(tile_uri);
     if (result.status_ == tile_getter_t::status_code_t::SUCCESS) {
-      auto tile = GraphTile(GraphId(), result.bytes_.data(), result.bytes_.size());
-      EXPECT_EQ(tile.id(), expected_tile_id);
+      auto tile = GraphTile::Create(GraphId(), std::move(result.bytes_));
+      ASSERT_TRUE(tile);
+      EXPECT_EQ(tile->id(), expected_tile_id);
     } else {
       EXPECT_EQ(expected_tile_id, non_existent_tile_id);
     }
@@ -301,7 +271,9 @@ class HttpTilesEnv : public ::testing::Environment {
 public:
   void SetUp() override {
     // start a file server for utrecht tiles
-    test_tile_server_t::start("test/data/utrecht_tiles", context);
+    valhalla::test_tile_server_t server;
+    server.set_url(tile_remote_address);
+    server.start("test/data/utrecht_tiles", context);
   }
 
   void TearDown() override {

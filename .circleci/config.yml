@@ -3,270 +3,172 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 11.1.0
+      xcode: 13.4.1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
+      CXXFLAGS: -DGEOS_INLINE
 
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost-python libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-
-jobs:
-  build-base:
-    docker:
-      - image: docker:18.06.3-ce-git
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: /usr/bin/python3 -m pip install --user requests
+      - run: pip3 install shapely conan
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
+  install_linux_dependencies:
     steps:
-      - setup_remote_docker
+      - run: sudo bash ./scripts/install-linux-deps.sh
+
+jobs:    
+  build-docker-images:
+    machine:
+      image: ubuntu-2004:current
+    steps:
       - checkout
       - run:
-          name: Build Valhalla base Dockerfile
+          name: Build and push Valhalla Docker image
           command: |
-            docker build -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
-      - run:
-          name: Build Valhalla base Dockerfile x86
-          command: |
-            docker build -f ./docker/Dockerfile-build-x86 --tag valhalla/valhalla:build-x86-latest ./docker
-      - run:
-          name: Push Valhalla base image
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+            if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
+              BUILD_TAG="${CIRCLE_TAG:-latest}"
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:build-x86-latest
+              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
+              docker push valhalla/valhalla:run-${BUILD_TAG}
             fi
 
-  build-release-binary-linux:
-    docker:
-      - image: valhalla/valhalla:build-latest
-    steps:
-      - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-release-linux-x86_64-{{ .Branch }}
-            - ccache-release-linux-x86_64
-      - run: mkdir build
-      - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: make -C build -j4
-      - save_cache:
-          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
-      - run: make -C build install
-      - run: make -C build package
-
-  build-debug-binary-linux:
-    docker:
-      - image: valhalla/valhalla:build-latest
-    steps:
-      - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-debug-linux-x86_64-{{ .Branch }}
-            - ccache-debug-linux-x86_64
-      - run: mkdir build
-      - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SERVICES=OFF
-      - run: make -C build -j4
-      - save_cache:
-          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
-      - run: make -C build install
-      - run: make -C build package
-
   lint-build-debug:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
+    resource_class: xlarge
     steps:
       - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-{{ .Branch }}
-            - ccache-debug-linux-x86_64
+            - ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
           cd build \
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+                -DLOGGING_LEVEL=INFO \
                 -DENABLE_PYTHON_BINDINGS=On
-      - run: make -C build -j3
+      - run: python3 ./scripts/valhalla_build_config
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
-          make -C build -j2 coverage
-      - run: /bin/bash <(curl -s https://codecov.io/bash) || echo "Codecov did not collect coverage reports"
+          make -C build -j8 coverage
+      - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
+    resource_class: xlarge
     steps:
       - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-{{ .Branch }}
-            - ccache-release-linux-x86_64
+            - ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-          -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_ADDRESS_SANITIZER=ON
-      - run: make -C build -j2
+                -DLOGGING_LEVEL=TRACE \
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
+      - run: make -C build -j8 tests
       # leaks in glibc we cant control for
-      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j2 check
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
-      - run: make -C build install
+            - ~/.conan
+      - run: sudo make -C build install
       - run: make -C build package
-
-  build-release-x86:
-    docker:
-      - image: valhalla/valhalla:build-x86-latest
-    steps:
-      - checkout
-      #- run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-release-linux-x86_32-{{ .Branch }}
-            - ccache-release-linux-x86_32
-      - run: mkdir build
-      - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release
-      - run: make -C build -j4
-      - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
-      - run: make -C build run-benchmarks
-      - save_cache:
-          key: ccache-release-linux-x86_32-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
 
   build-osx:
     executor: macos
+    resource_class: large
     steps:
-      - install_macos_dependencies
       - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - install_macos_dependencies
+      - run: |
+            if ! ./scripts/needs_ci_run; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-macos-{{ .Branch }}
-            - ccache-release-macos
-      - run: wget https://raw.githubusercontent.com/valhalla/homebrew-valhalla/master/Formula/prime_server.rb
-      - run: brew install --build-from-source ./prime_server.rb
+            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: mkdir -p build
-      - run: cd build && cmake .. -DENABLE_PYTHON_BINDINGS=Off
-      - run: make -C build -j4
+      - run: cd build && cmake ..
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 check
+      - run: make -C build -j8 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
-
-  build-release-binary-osx:
-    executor: macos
-    steps:
-      - install_macos_dependencies
-      - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-release-macos-{{ .Branch }}
-            - ccache-release-macos
-      - run: mkdir -p build
-      - run: cd build && cmake .. -DBUILD_SHARED_LIBS=Off -DENABLE_PYTHON_BINDINGS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: make -C build -j4
-      - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
-
-  build-debug-binary-osx:
-    executor: macos
-    steps:
-      - install_macos_dependencies
-      - checkout
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
-      - run: git submodule sync && git submodule update --init
-      - restore_cache:
-          keys:
-            - ccache-debug-macos-{{ .Branch }}
-            - ccache-debug-macos
-      - run: mkdir -p build
-      - run: cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PYTHON_BINDINGS=Off -DBUILD_SHARED_LIBS=Off -DENABLE_DATA_TOOLS=OFF -DENABLE_SERVICES=OFF -DBoost_USE_STATIC_LIBS=ON -DProtobuf_USE_STATIC_LIBS=ON -DLZ4_USE_STATIC_LIBS=ON
-      - run: make -C build -j4
-      - save_cache:
-          key: ccache-debug-macos-{{ .Branch }}-{{ epoch }}
-          paths:
-            - ~/.ccache
+            - ~/.conan
 
 workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-base
-      - lint-build-debug
-      - build-release
-      - build-release-x86
-      - build-osx
-      - build-release-binary-osx:
+      - build-docker-images:
           filters:
             tags:
               only: /.*/
-            branches:
+      - lint-build-debug:
+          filters:
+            tags:
               ignore: /.*/
-      - build-debug-binary-osx:
+      - build-release:
           filters:
             tags:
-              only: /.*/
-            branches:
               ignore: /.*/
-      - build-release-binary-linux:
+      - build-osx:
           filters:
             tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - build-debug-binary-linux:
-          filters:
-            tags:
-              only: /.*/
-            branches:
               ignore: /.*/

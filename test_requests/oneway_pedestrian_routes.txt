@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":14.329390,"lon":120.958529,"street":""},{"lat":14.329510,"lon":120.958267,"street":""}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":14.329497,"lon":120.958293,"street":""},{"lat":14.329414,"lon":120.958532,"street":""}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":50.091929,"lon":14.403410,"street":"Zlatá ulička u Daliborky"},{"lat":50.091760,"lon":14.403757,"street":"Zlatá ulička u Daliborky"}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":50.091760,"lon":14.403757,"street":"Zlatá ulička u Daliborky"},{"lat":50.091929,"lon":14.403410,"street":"Zlatá ulička u Daliborky"}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":40.007383,"lon":-76.186494,"street":""},{"lat":40.007777,"lon":-76.186604,"street":""}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":40.007777,"lon":-76.186604,"street":""},{"lat":40.007383,"lon":-76.186494,"street":""}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":28.408374,"lon":-81.463064,"street":"Stadium Circle"},{"lat":28.407003,"lon":-81.463180,"street":"Exit from Grover Coaster"}],"costing":"pedestrian","units":"miles"}'
+-j '{"locations":[{"lat":28.408374,"lon":-81.463064,"street":"Stadium Circle"},{"lat":28.407003,"lon":-81.463180,"street":"Exit from Grover Coaster"},{"lat":28.407093,"lon":-81.462211,"street":""}],"costing":"pedestrian","units":"miles"}'

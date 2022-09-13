@@ -69,9 +69,6 @@ struct relation {
 using relations = std::vector<relation>;
 
 namespace detail {
-boost::property_tree::ptree
-build_config(const std::string& tiledir,
-             const std::unordered_map<std::string, std::string>& config_options);
 
 /**
  * Given a string that's an "ASCII map", will decide on coordinates
@@ -93,6 +90,13 @@ void build_pbf(const nodelayout& node_locations,
                const relations& relations,
                const std::string& filename,
                const uint64_t initial_osm_id = 0);
+
+/**
+ * Extract list of edge names from route result.
+ * @param result the result of a /route or /match request
+ * @return list of edge names
+ */
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result);
 } // namespace detail
 
 /**
@@ -153,45 +157,36 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& begin_node_name,
                 const std::string& end_node_name);
 
-valhalla::Api route(const map& map,
-                    const std::string& request_json,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
-
 /**
- * Calculates a route along a set of waypoints with a given costing model, and returns the
- * valhalla::Api result.
+ * Finds a node in the graph based on its node name
  *
- * @param map a map returned by buildtiles
- * @param waypoints an array of node names to use as waypoints
- * @param costing the name of the costing model to use
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
  */
-valhalla::Api route(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader = {});
+baldr::GraphId
+findNode(valhalla::baldr::GraphReader& reader, const nodelayout& nodes, const std::string& node_name);
 
-// TODO: delete this
-valhalla::Api route(const map& map,
-                    const std::string& origin,
-                    const std::string& destination,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+std::string do_action(const map& map,
+                      valhalla::Api& api,
+                      std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
 
-valhalla::Api match(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& stop_type,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options = {},
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader = {});
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& request_json,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* json = nullptr);
 
-valhalla::Api locate(const map& map,
-                     const std::vector<std::string>& waypoints,
-                     const std::string& costing,
-                     const std::unordered_map<std::string, std::string>& options = {},
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
-                     std::string* json = nullptr);
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& waypoints,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* json = nullptr,
+                        const std::string& stop_type = "break",
+                        std::string* request_json = nullptr);
 
 /* Returns the raw_result formatted as a JSON document in the given format.
  *
@@ -225,6 +220,17 @@ void expect_steps(valhalla::Api& raw_result,
                   const std::vector<std::string>& expected_names,
                   bool dedupe = true,
                   const std::string& route_name = "routes");
+
+/**
+ * Tests if the result, which may be comprised of multiple routes,
+ * have summaries that match the expected_summaries.
+ *
+ * Note: For simplicity's sake, this logic looks at the first leg of each route.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_summaries the route/leg summaries expected
+ */
+void expect_summaries(valhalla::Api& raw_result, const std::vector<std::string>& expected_summaries);
 
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -267,6 +273,8 @@ void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
  * @param result the result of a /route or /match request
  * @param maneuver_index the specified maneuver index to inspect
  * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_succinct_transition_instruction the expected verbal succinct transition
+ *                                                     instruction
  * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
  *                                                     instruction
  * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
@@ -276,6 +284,7 @@ void expect_instructions_at_maneuver_index(
     const valhalla::Api& result,
     int maneuver_index,
     const std::string& expected_text_instruction,
+    const std::string& expected_verbal_succinct_transition_instruction,
     const std::string& expected_verbal_transition_alert_instruction,
     const std::string& expected_verbal_pre_transition_instruction,
     const std::string& expected_verbal_post_transition_instruction);
@@ -293,8 +302,11 @@ void expect_eta(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param expected_names the names of the edges the path should traverse in order
+ * @param message the message prints if a test is failed
  */
-void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names);
+void expect_path(const valhalla::Api& result,
+                 const std::vector<std::string>& expected_names,
+                 const std::string& message = "");
 
 } // namespace raw
 } // namespace assert

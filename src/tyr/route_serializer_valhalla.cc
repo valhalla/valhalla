@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "baldr/json.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "odin/util.h"
@@ -12,7 +11,6 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
-using namespace std;
 
 namespace {
 
@@ -39,7 +37,8 @@ valhalla output looks like this:
     "summary":
 {
     "distance": 4973,
-    "time": 325
+    "time": 325,
+    "cost": 304
 },
 "legs":
 [
@@ -47,7 +46,8 @@ valhalla output looks like this:
       "summary":
   {
       "distance": 4973,
-      "time": 325
+      "time": 325,
+      "cost": 304
   },
   "maneuvers":
   [
@@ -60,7 +60,8 @@ valhalla output looks like this:
             "West Market Street"
         ],
         "type": 1,
-        "time": 41
+        "time": 41,
+        "cost": 23
     },
     {
         "beginShapeIndex": 7,
@@ -71,14 +72,16 @@ valhalla output looks like this:
             "Jonestown Road"
         ],
         "type": 8,
-        "time": 284
+        "time": 284,
+        "cost": 281
     },
     {
         "beginShapeIndex": 40,
         "distance": 0,
         "writtenInstruction": "You have arrived at your destination.",
         "type": 4,
-        "time": 0
+        "time": 0,
+        "cost": 0
     }
 ],
 "shape":
@@ -90,22 +93,23 @@ valhalla output looks like this:
 "id": "work route"
 }
 */
-using namespace std;
 
-json::MapPtr summary(const valhalla::Api& api) {
-
-  double time = 0;
-  double length = 0;
+void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  double route_time = 0;
+  double route_length = 0;
+  double route_cost = 0;
   bool has_time_restrictions = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
-  for (int leg_index = 0; leg_index < api.directions().routes(0).legs_size(); ++leg_index) {
-    const auto& leg = api.directions().routes(0).legs(leg_index);
-    time += leg.summary().time();
-    length += leg.summary().length();
+  for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
+    const auto& leg = api.directions().routes(route_index).legs(leg_index);
+    const auto& trip_leg = api.trip().routes(route_index).legs(leg_index);
+    route_time += leg.summary().time();
+    route_length += leg.summary().length();
+    route_cost += trip_leg.node().rbegin()->cost().elapsed_cost().cost();
 
     // recostings
-    const auto& recosts = api.trip().routes(0).legs(leg_index).node().rbegin()->recosts();
+    const auto& recosts = trip_leg.node().rbegin()->recosts();
     auto recost_time_itr = recost_times.begin();
     for (const auto& recost : recosts) {
       if (!recost.has_elapsed_cost() || (*recost_time_itr) < 0)
@@ -121,451 +125,350 @@ json::MapPtr summary(const valhalla::Api& api) {
     has_time_restrictions = has_time_restrictions || leg.summary().has_time_restrictions();
   }
 
-  auto route_summary = json::map({});
-  route_summary->emplace("time", json::fp_t{time, 3});
-  route_summary->emplace("length", json::fp_t{length, 3});
-  route_summary->emplace("min_lat", json::fp_t{bbox.miny(), 6});
-  route_summary->emplace("min_lon", json::fp_t{bbox.minx(), 6});
-  route_summary->emplace("max_lat", json::fp_t{bbox.maxy(), 6});
-  route_summary->emplace("max_lon", json::fp_t{bbox.maxx(), 6});
-  route_summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
+  writer.start_object("summary");
+  writer("has_time_restrictions", has_time_restrictions);
+  writer.set_precision(6);
+  writer("min_lat", bbox.miny());
+  writer("min_lon", bbox.minx());
+  writer("max_lat", bbox.maxy());
+  writer("max_lon", bbox.maxx());
+  writer.set_precision(3);
+  writer("time", route_time);
+  writer("length", route_length);
+  writer("cost", route_cost);
   auto recost_itr = api.options().recostings().begin();
   for (auto recost : recost_times) {
     if (recost < 0)
-      route_summary->emplace("time_" + recost_itr->name(), nullptr_t());
+      writer("time_" + recost_itr->name(), std::nullptr_t());
     else
-      route_summary->emplace("time_" + recost_itr->name(), json::fp_t{recost, 3});
+      writer("time_" + recost_itr->name(), recost);
     ++recost_itr;
   }
-  LOG_DEBUG("trip_time::" + std::to_string(time) + "s");
-  return route_summary;
+  writer.end_object();
+
+  writer("status_message", "Found route between points");
+  writer("status", static_cast<uint64_t>(0)); // 0 success
+  writer("units", valhalla::Options_Units_Enum_Name(api.options().units()));
+  writer("language", api.options().language());
+
+  LOG_DEBUG("trip_time::" + std::to_string(route_time) + "s");
 }
 
-json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::DirectionsLeg>& legs) {
-  auto locations = json::array({});
+void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
 
   int index = 0;
-  for (auto leg = legs.begin(); leg != legs.end(); ++leg) {
-    for (auto location = leg->location().begin() + index; location != leg->location().end();
+  writer.set_precision(6);
+  writer.start_array("locations");
+  for (const auto& leg : api.directions().routes(route_index).legs()) {
+    for (auto location = leg.location().begin() + index; location != leg.location().end();
          ++location) {
       index = 1;
-      auto loc = json::map({});
-      if (location->type() == valhalla::Location_Type_kThrough) {
-        loc->emplace("type", std::string("through"));
-      } else if (location->type() == valhalla::Location_Type_kVia) {
-        loc->emplace("type", std::string("via"));
-      } else if (location->type() == valhalla::Location_Type_kBreakThrough) {
-        loc->emplace("type", std::string("break_through"));
-      } else {
-        loc->emplace("type", std::string("break"));
-      }
-      loc->emplace("lat", json::fp_t{location->ll().lat(), 6});
-      loc->emplace("lon", json::fp_t{location->ll().lng(), 6});
+      writer.start_object();
+
+      writer("type", Location_Type_Enum_Name(location->type()));
+      writer("lat", location->ll().lat());
+      writer("lon", location->ll().lng());
       if (!location->name().empty()) {
-        loc->emplace("name", location->name());
+        writer("name", location->name());
       }
+
       if (!location->street().empty()) {
-        loc->emplace("street", location->street());
+        writer("street", location->street());
       }
-      if (!location->city().empty()) {
-        loc->emplace("city", location->city());
+
+      if (location->has_heading_case()) {
+        writer("heading", static_cast<uint64_t>(location->heading()));
       }
-      if (!location->state().empty()) {
-        loc->emplace("state", location->state());
-      }
-      if (!location->postal_code().empty()) {
-        loc->emplace("postal_code", location->postal_code());
-      }
-      if (!location->country().empty()) {
-        loc->emplace("country", location->country());
-      }
-      if (location->has_heading()) {
-        loc->emplace("heading", static_cast<uint64_t>(location->heading()));
-      }
+
       if (!location->date_time().empty()) {
-        loc->emplace("date_time", location->date_time());
-      }
-      if (location->has_side_of_street()) {
-        if (location->side_of_street() == valhalla::Location::kLeft) {
-          loc->emplace("side_of_street", std::string("left"));
-        } else if (location->side_of_street() == valhalla::Location::kRight) {
-          loc->emplace("side_of_street", std::string("right"));
-        }
-      }
-      if (location->has_original_index()) {
-        loc->emplace("original_index", static_cast<uint64_t>(location->original_index()));
+        writer("date_time", location->date_time());
       }
 
-      // loc->emplace("sideOfStreet",location->side_of_street());
+      if (location->side_of_street() != valhalla::Location::kNone) {
+        writer("side_of_street", Location_SideOfStreet_Enum_Name(location->side_of_street()));
+      }
 
-      locations->emplace_back(loc);
+      writer("original_index", static_cast<uint64_t>(location->correlation().original_index()));
+
+      writer.end_object();
     }
   }
 
-  return locations;
+  writer.end_array();
 }
 
-const std::unordered_map<int, std::string> vehicle_to_string{
-    {static_cast<int>(DirectionsLeg_VehicleType_kCar), "car"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kAutoBus), "bus"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
-    {static_cast<int>(DirectionsLeg_VehicleType_kMotorScooter), "motor_scooter"},
-};
-
-std::unordered_map<int, std::string> pedestrian_to_string{
-    {static_cast<int>(DirectionsLeg_PedestrianType_kFoot), "foot"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<int>(DirectionsLeg_PedestrianType_kSegway), "segway"},
-};
-
-std::unordered_map<int, std::string> bicycle_to_string{
-    {static_cast<int>(DirectionsLeg_BicycleType_kRoad), "road"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kCross), "cross"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kHybrid), "hybrid"},
-    {static_cast<int>(DirectionsLeg_BicycleType_kMountain), "mountain"},
-};
-
-std::unordered_map<int, std::string> transit_to_string{
-    {static_cast<int>(DirectionsLeg_TransitType_kTram), "tram"},
-    {static_cast<int>(DirectionsLeg_TransitType_kMetro), "metro"},
-    {static_cast<int>(DirectionsLeg_TransitType_kRail), "rail"},
-    {static_cast<int>(DirectionsLeg_TransitType_kBus), "bus"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFerry), "ferry"},
-    {static_cast<int>(DirectionsLeg_TransitType_kCableCar), "cable_car"},
-    {static_cast<int>(DirectionsLeg_TransitType_kGondola), "gondola"},
-    {static_cast<int>(DirectionsLeg_TransitType_kFunicular), "funicular"},
-};
-
-std::pair<std::string, std::string>
-travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver) {
-  switch (maneuver.travel_mode()) {
-    case DirectionsLeg_TravelMode_kDrive: {
-      auto i = maneuver.has_vehicle_type() ? vehicle_to_string.find(maneuver.vehicle_type())
-                                           : vehicle_to_string.cend();
-      return i == vehicle_to_string.cend() ? make_pair("drive", "car")
-                                           : make_pair("drive", i->second);
-    }
-    case DirectionsLeg_TravelMode_kPedestrian: {
-      auto i = maneuver.has_pedestrian_type() ? pedestrian_to_string.find(maneuver.pedestrian_type())
-                                              : pedestrian_to_string.cend();
-      return i == pedestrian_to_string.cend() ? make_pair("pedestrian", "foot")
-                                              : make_pair("pedestrian", i->second);
-    }
-    case DirectionsLeg_TravelMode_kBicycle: {
-      auto i = maneuver.has_bicycle_type() ? bicycle_to_string.find(maneuver.bicycle_type())
-                                           : bicycle_to_string.cend();
-      return i == bicycle_to_string.cend() ? make_pair("bicycle", "road")
-                                           : make_pair("bicycle", i->second);
-    }
-    case DirectionsLeg_TravelMode_kTransit: {
-      auto i = maneuver.has_transit_type() ? transit_to_string.find(maneuver.transit_type())
-                                           : transit_to_string.cend();
-      return i == transit_to_string.cend() ? make_pair("transit", "rail")
-                                           : make_pair("transit", i->second);
-    }
-  }
-  throw std::runtime_error("Unhandled case");
-}
-
-json::ArrayPtr legs(const valhalla::Api& api) {
-
-  auto legs = json::array({});
-  const auto& directions_legs = api.directions().routes(0).legs();
-  auto trip_leg_itr = api.trip().routes(0).legs().begin();
+void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t& writer) {
+  writer.start_array("legs");
+  const auto& directions_legs = api.directions().routes(route_index).legs();
+  auto trip_leg_itr = api.trip().routes(route_index).legs().begin();
   for (const auto& directions_leg : directions_legs) {
-    auto leg = json::map({});
-    auto summary = json::map({});
-    auto maneuvers = json::array({});
+    writer.start_object(); // leg
     bool has_time_restrictions = false;
 
-    for (const auto& maneuver : directions_leg.maneuver()) {
+    if (directions_leg.maneuver_size())
+      writer.start_array("maneuvers");
 
-      auto man = json::map({});
+    for (const auto& maneuver : directions_leg.maneuver()) {
+      writer.start_object();
 
       // Maneuver type
-      man->emplace("type", static_cast<uint64_t>(maneuver.type()));
+      writer("type", static_cast<uint64_t>(maneuver.type()));
 
       // Instruction and verbal instructions
-      man->emplace("instruction", maneuver.text_instruction());
-      if (maneuver.has_verbal_transition_alert_instruction()) {
-        man->emplace("verbal_transition_alert_instruction",
-                     maneuver.verbal_transition_alert_instruction());
+      writer("instruction", maneuver.text_instruction());
+      if (!maneuver.verbal_transition_alert_instruction().empty()) {
+        writer("verbal_transition_alert_instruction", maneuver.verbal_transition_alert_instruction());
       }
-      if (maneuver.has_verbal_pre_transition_instruction()) {
-        man->emplace("verbal_pre_transition_instruction",
-                     maneuver.verbal_pre_transition_instruction());
+      if (!maneuver.verbal_succinct_transition_instruction().empty()) {
+        writer("verbal_succinct_transition_instruction",
+               maneuver.verbal_succinct_transition_instruction());
       }
-      if (maneuver.has_verbal_post_transition_instruction()) {
-        man->emplace("verbal_post_transition_instruction",
-                     maneuver.verbal_post_transition_instruction());
+      if (!maneuver.verbal_pre_transition_instruction().empty()) {
+        writer("verbal_pre_transition_instruction", maneuver.verbal_pre_transition_instruction());
+      }
+      if (!maneuver.verbal_post_transition_instruction().empty()) {
+        writer("verbal_post_transition_instruction", maneuver.verbal_post_transition_instruction());
       }
 
       // Set street names
       if (maneuver.street_name_size() > 0) {
-        auto street_names = json::array({});
+        writer.start_array("street_names");
         for (int i = 0; i < maneuver.street_name_size(); i++) {
-          street_names->emplace_back(maneuver.street_name(i).value());
+          writer(maneuver.street_name(i).value());
         }
-        man->emplace("street_names", std::move(street_names));
+        writer.end_array();
       }
 
       // Set begin street names
       if (maneuver.begin_street_name_size() > 0) {
-        auto begin_street_names = json::array({});
+        writer.start_array("begin_street_names");
         for (int i = 0; i < maneuver.begin_street_name_size(); i++) {
-          begin_street_names->emplace_back(maneuver.begin_street_name(i).value());
+          writer(maneuver.begin_street_name(i).value());
         }
-        man->emplace("begin_street_names", std::move(begin_street_names));
+        writer.end_array();
       }
 
-      // Time, length, and shape indexes
-      man->emplace("time", json::fp_t{maneuver.time(), 3});
-      man->emplace("length", json::fp_t{maneuver.length(), 3});
-      man->emplace("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
-      man->emplace("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
+      // Time, length, cost, and shape indexes
+      const auto& end_node = trip_leg_itr->node(maneuver.end_path_index());
+      const auto& begin_node = trip_leg_itr->node(maneuver.begin_path_index());
+      auto cost = end_node.cost().elapsed_cost().cost() - begin_node.cost().elapsed_cost().cost();
+
+      writer.set_precision(3);
+      writer("time", maneuver.time());
+      writer("length", maneuver.length());
+      writer("cost", cost);
+      writer("begin_shape_index", static_cast<uint64_t>(maneuver.begin_shape_index()));
+      writer("end_shape_index", static_cast<uint64_t>(maneuver.end_shape_index()));
       auto recost_itr = api.options().recostings().begin();
-      auto begin_recost_itr = trip_leg_itr->node(maneuver.begin_path_index()).recosts().begin();
-      for (const auto& end_recost : trip_leg_itr->node(maneuver.end_path_index()).recosts()) {
+      auto begin_recost_itr = begin_node.recosts().begin();
+      for (const auto& end_recost : end_node.recosts()) {
         if (end_recost.has_elapsed_cost())
-          man->emplace("time_" + recost_itr->name(),
-                       json::fp_t{end_recost.elapsed_cost().seconds() -
-                                      begin_recost_itr->elapsed_cost().seconds(),
-                                  3});
+          writer("time_" + recost_itr->name(),
+                 end_recost.elapsed_cost().seconds() - begin_recost_itr->elapsed_cost().seconds());
         else
-          man->emplace("time_" + recost_itr->name(), nullptr_t());
+          writer("time_" + recost_itr->name(), std::nullptr_t());
         ++recost_itr;
       }
 
       // Portions toll and rough
       if (maneuver.portions_toll()) {
-        man->emplace("toll", maneuver.portions_toll());
+        writer("toll", maneuver.portions_toll());
       }
       if (maneuver.portions_unpaved()) {
-        man->emplace("rough", maneuver.portions_unpaved());
+        writer("rough", maneuver.portions_unpaved());
       }
       if (maneuver.has_time_restrictions()) {
-        man->emplace("has_time_restrictions", maneuver.has_time_restrictions());
+        writer("has_time_restrictions", maneuver.has_time_restrictions());
         has_time_restrictions = true;
       }
 
       // Process sign
       if (maneuver.has_sign()) {
-        auto sign = json::map({});
+        writer.start_object("sign");
 
         // Process exit number
         if (maneuver.sign().exit_numbers_size() > 0) {
-          auto exit_number_elements = json::array({});
+          writer.start_array("exit_number_elements");
           for (int i = 0; i < maneuver.sign().exit_numbers_size(); ++i) {
-            auto exit_number_element = json::map({});
-
+            writer.start_object();
             // Add the exit number text
-            exit_number_element->emplace("text", maneuver.sign().exit_numbers(i).text());
-
+            writer("text", maneuver.sign().exit_numbers(i).text());
             // Add the exit number consecutive count only if greater than zero
             if (maneuver.sign().exit_numbers(i).consecutive_count() > 0) {
-              exit_number_element->emplace("consecutive_count",
-                                           static_cast<uint64_t>(
-                                               maneuver.sign().exit_numbers(i).consecutive_count()));
+              writer("consecutive_count",
+                     static_cast<uint64_t>(maneuver.sign().exit_numbers(i).consecutive_count()));
             }
-
-            exit_number_elements->emplace_back(exit_number_element);
+            writer.end_object();
           }
-          sign->emplace("exit_number_elements", std::move(exit_number_elements));
+          writer.end_array();
         }
 
         // Process exit branch
         if (maneuver.sign().exit_onto_streets_size() > 0) {
-          auto exit_branch_elements = json::array({});
+          writer.start_array("exit_branch_elements");
           for (int i = 0; i < maneuver.sign().exit_onto_streets_size(); ++i) {
-            auto exit_branch_element = json::map({});
-
+            writer.start_object();
             // Add the exit branch text
-            exit_branch_element->emplace("text", maneuver.sign().exit_onto_streets(i).text());
-
+            writer("text", maneuver.sign().exit_onto_streets(i).text());
             // Add the exit branch consecutive count only if greater than zero
             if (maneuver.sign().exit_onto_streets(i).consecutive_count() > 0) {
-              exit_branch_element
-                  ->emplace("consecutive_count",
-                            static_cast<uint64_t>(
-                                maneuver.sign().exit_onto_streets(i).consecutive_count()));
+              writer("consecutive_count",
+                     static_cast<uint64_t>(maneuver.sign().exit_onto_streets(i).consecutive_count()));
             }
-
-            exit_branch_elements->emplace_back(exit_branch_element);
+            writer.end_object();
           }
-          sign->emplace("exit_branch_elements", std::move(exit_branch_elements));
+          writer.end_array();
         }
 
         // Process exit toward
         if (maneuver.sign().exit_toward_locations_size() > 0) {
-          auto exit_toward_elements = json::array({});
+          writer.start_array("exit_toward_elements");
           for (int i = 0; i < maneuver.sign().exit_toward_locations_size(); ++i) {
-            auto exit_toward_element = json::map({});
-
+            writer.start_object();
             // Add the exit toward text
-            exit_toward_element->emplace("text", maneuver.sign().exit_toward_locations(i).text());
-
+            writer("text", maneuver.sign().exit_toward_locations(i).text());
             // Add the exit toward consecutive count only if greater than zero
             if (maneuver.sign().exit_toward_locations(i).consecutive_count() > 0) {
-              exit_toward_element
-                  ->emplace("consecutive_count",
-                            static_cast<uint64_t>(
-                                maneuver.sign().exit_toward_locations(i).consecutive_count()));
+              writer("consecutive_count",
+                     static_cast<uint64_t>(
+                         maneuver.sign().exit_toward_locations(i).consecutive_count()));
             }
-
-            exit_toward_elements->emplace_back(exit_toward_element);
+            writer.end_object();
           }
-          sign->emplace("exit_toward_elements", std::move(exit_toward_elements));
+          writer.end_array();
         }
 
         // Process exit name
         if (maneuver.sign().exit_names_size() > 0) {
-          auto exit_name_elements = json::array({});
+          writer.start_array("exit_name_elements");
           for (int i = 0; i < maneuver.sign().exit_names_size(); ++i) {
-            auto exit_name_element = json::map({});
-
+            writer.start_object();
             // Add the exit name text
-            exit_name_element->emplace("text", maneuver.sign().exit_names(i).text());
-
+            writer("text", maneuver.sign().exit_names(i).text());
             // Add the exit name consecutive count only if greater than zero
             if (maneuver.sign().exit_names(i).consecutive_count() > 0) {
-              exit_name_element->emplace("consecutive_count",
-                                         static_cast<uint64_t>(
-                                             maneuver.sign().exit_names(i).consecutive_count()));
+              writer("consecutive_count",
+                     static_cast<uint64_t>(maneuver.sign().exit_names(i).consecutive_count()));
             }
-
-            exit_name_elements->emplace_back(exit_name_element);
+            writer.end_object();
           }
-          sign->emplace("exit_name_elements", std::move(exit_name_elements));
+          writer.end_array();
         }
 
-        man->emplace("sign", std::move(sign));
+        writer.end_object(); // sign
       }
 
       // Roundabout count
-      if (maneuver.has_roundabout_exit_count()) {
-        man->emplace("roundabout_exit_count",
-                     static_cast<uint64_t>(maneuver.roundabout_exit_count()));
+      if (maneuver.roundabout_exit_count() > 0) {
+        writer("roundabout_exit_count", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
       }
 
       // Depart and arrive instructions
-      if (maneuver.has_depart_instruction()) {
-        man->emplace("depart_instruction", maneuver.depart_instruction());
+      if (!maneuver.depart_instruction().empty()) {
+        writer("depart_instruction", maneuver.depart_instruction());
       }
-      if (maneuver.has_verbal_depart_instruction()) {
-        man->emplace("verbal_depart_instruction", maneuver.verbal_depart_instruction());
+      if (!maneuver.verbal_depart_instruction().empty()) {
+        writer("verbal_depart_instruction", maneuver.verbal_depart_instruction());
       }
-      if (maneuver.has_arrive_instruction()) {
-        man->emplace("arrive_instruction", maneuver.arrive_instruction());
+      if (!maneuver.arrive_instruction().empty()) {
+        writer("arrive_instruction", maneuver.arrive_instruction());
       }
-      if (maneuver.has_verbal_arrive_instruction()) {
-        man->emplace("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
+      if (!maneuver.verbal_arrive_instruction().empty()) {
+        writer("verbal_arrive_instruction", maneuver.verbal_arrive_instruction());
       }
 
       // Process transit route
       if (maneuver.has_transit_info()) {
         const auto& transit_info = maneuver.transit_info();
-        auto json_transit_info = json::map({});
+        writer.start_object("transit_info");
 
-        if (transit_info.has_onestop_id()) {
-          json_transit_info->emplace("onestop_id", transit_info.onestop_id());
-          valhalla::midgard::logging::Log("transit_route_stopid::" + transit_info.onestop_id(),
-                                          " [ANALYTICS] ");
+        if (!transit_info.onestop_id().empty()) {
+          writer("onestop_id", transit_info.onestop_id());
         }
-        if (transit_info.has_short_name()) {
-          json_transit_info->emplace("short_name", transit_info.short_name());
+        if (!transit_info.short_name().empty()) {
+          writer("short_name", transit_info.short_name());
         }
-        if (transit_info.has_long_name()) {
-          json_transit_info->emplace("long_name", transit_info.long_name());
+        if (!transit_info.long_name().empty()) {
+          writer("long_name", transit_info.long_name());
         }
-        if (transit_info.has_headsign()) {
-          json_transit_info->emplace("headsign", transit_info.headsign());
+        if (!transit_info.headsign().empty()) {
+          writer("headsign", transit_info.headsign());
         }
-        if (transit_info.has_color()) {
-          json_transit_info->emplace("color", static_cast<uint64_t>(transit_info.color()));
+        writer("color", static_cast<uint64_t>(transit_info.color()));
+        writer("text_color", static_cast<uint64_t>(transit_info.text_color()));
+        if (!transit_info.description().empty()) {
+          writer("description", transit_info.description());
         }
-        if (transit_info.has_text_color()) {
-          json_transit_info->emplace("text_color", static_cast<uint64_t>(transit_info.text_color()));
+        if (!transit_info.operator_onestop_id().empty()) {
+          writer("operator_onestop_id", transit_info.operator_onestop_id());
         }
-        if (transit_info.has_description()) {
-          json_transit_info->emplace("description", transit_info.description());
+        if (!transit_info.operator_name().empty()) {
+          writer("operator_name", transit_info.operator_name());
         }
-        if (transit_info.has_operator_onestop_id()) {
-          json_transit_info->emplace("operator_onestop_id", transit_info.operator_onestop_id());
-        }
-        if (transit_info.has_operator_name()) {
-          json_transit_info->emplace("operator_name", transit_info.operator_name());
-        }
-        if (transit_info.has_operator_url()) {
-          json_transit_info->emplace("operator_url", transit_info.operator_url());
+        if (!transit_info.operator_url().empty()) {
+          writer("operator_url", transit_info.operator_url());
         }
 
         // Add transit stops
         if (transit_info.transit_stops().size() > 0) {
-          auto json_transit_stops = json::array({});
+          writer.start_array("transit_stops");
           for (const auto& transit_stop : transit_info.transit_stops()) {
-            auto json_transit_stop = json::map({});
+            writer.start_object("transit_stop");
 
             // type
-            if (transit_stop.has_type()) {
-              if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
-                json_transit_stop->emplace("type", std::string("station"));
-              } else {
-                json_transit_stop->emplace("type", std::string("stop"));
-              }
+            if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {
+              writer("type", std::string("station"));
+            } else {
+              writer("type", std::string("stop"));
             }
 
             // onestop_id - using the station onestop_id
-            if (transit_stop.has_station_onestop_id()) {
-              json_transit_stop->emplace("onestop_id", transit_stop.station_onestop_id());
-              valhalla::midgard::logging::Log("transit_stopid::" + transit_stop.station_onestop_id(),
-                                              " [ANALYTICS] ");
+            if (!transit_stop.station_onestop_id().empty()) {
+              writer("onestop_id", transit_stop.station_onestop_id());
             }
 
             // name - using the station name
-            if (transit_stop.has_station_name()) {
-              json_transit_stop->emplace("name", transit_stop.station_name());
+            if (!transit_stop.station_name().empty()) {
+              writer("name", transit_stop.station_name());
             }
 
             // arrival_date_time
-            if (transit_stop.has_arrival_date_time()) {
-              json_transit_stop->emplace("arrival_date_time", transit_stop.arrival_date_time());
+            if (!transit_stop.arrival_date_time().empty()) {
+              writer("arrival_date_time", transit_stop.arrival_date_time());
             }
 
             // departure_date_time
-            if (transit_stop.has_departure_date_time()) {
-              json_transit_stop->emplace("departure_date_time", transit_stop.departure_date_time());
+            if (!transit_stop.departure_date_time().empty()) {
+              writer("departure_date_time", transit_stop.departure_date_time());
             }
 
             // assumed_schedule
-            if (transit_stop.has_assumed_schedule()) {
-              json_transit_stop->emplace("assumed_schedule", transit_stop.assumed_schedule());
-            }
+            writer("assumed_schedule", transit_stop.assumed_schedule());
 
             // latitude and longitude
             if (transit_stop.has_ll()) {
-              json_transit_stop->emplace("lat", json::fp_t{transit_stop.ll().lat(), 6});
-              json_transit_stop->emplace("lon", json::fp_t{transit_stop.ll().lng(), 6});
+              writer.set_precision(6);
+              writer("lat", transit_stop.ll().lat());
+              writer("lon", transit_stop.ll().lng());
             }
 
-            json_transit_stops->emplace_back(json_transit_stop);
+            writer.end_object(); // transit_stop
           }
-          json_transit_info->emplace("transit_stops", std::move(json_transit_stops));
+          writer.end_array(); // transit_stops
         }
-
-        man->emplace("transit_info", std::move(json_transit_info));
+        writer.end_object(); // transit_info
       }
 
       if (maneuver.verbal_multi_cue()) {
-        man->emplace("verbal_multi_cue", maneuver.verbal_multi_cue());
+        writer("verbal_multi_cue", maneuver.verbal_multi_cue());
       }
 
       // Travel mode
       auto mode_type = travel_mode_type(maneuver);
-      man->emplace("travel_mode", mode_type.first);
+      writer("travel_mode", mode_type.first);
 
       // Travel type
-      man->emplace("travel_type", mode_type.second);
+      writer("travel_type", mode_type.second);
 
       //  man->emplace("hasGate", maneuver.);
       //  man->emplace("hasFerry", maneuver.);
@@ -573,54 +476,87 @@ json::ArrayPtr legs(const valhalla::Api& api) {
       //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
       //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
       //“checkFerryInfoNote” : “<checkFerryInfoNote>”
-      maneuvers->emplace_back(man);
+
+      writer.end_object(); // maneuver
     }
-    if (directions_leg.maneuver_size() > 0) {
-      leg->emplace("maneuvers", maneuvers);
+    if (directions_leg.maneuver_size()) {
+      writer.end_array(); // maneuvers
     }
-    summary->emplace("time", json::fp_t{directions_leg.summary().time(), 3});
-    summary->emplace("length", json::fp_t{directions_leg.summary().length(), 3});
-    summary->emplace("min_lat", json::fp_t{directions_leg.summary().bbox().min_ll().lat(), 6});
-    summary->emplace("min_lon", json::fp_t{directions_leg.summary().bbox().min_ll().lng(), 6});
-    summary->emplace("max_lat", json::fp_t{directions_leg.summary().bbox().max_ll().lat(), 6});
-    summary->emplace("max_lon", json::fp_t{directions_leg.summary().bbox().max_ll().lng(), 6});
-    summary->emplace("has_time_restrictions", json::Value{has_time_restrictions});
+
+    writer.start_object("summary");
+    writer("has_time_restrictions", has_time_restrictions);
+    writer.set_precision(6);
+    writer("min_lat", directions_leg.summary().bbox().min_ll().lat());
+    writer("min_lon", directions_leg.summary().bbox().min_ll().lng());
+    writer("max_lat", directions_leg.summary().bbox().max_ll().lat());
+    writer("max_lon", directions_leg.summary().bbox().max_ll().lng());
+    writer.set_precision(3);
+    writer("time", directions_leg.summary().time());
+    writer("length", directions_leg.summary().length());
+    writer("cost", trip_leg_itr->node().rbegin()->cost().elapsed_cost().cost());
     auto recost_itr = api.options().recostings().begin();
     for (const auto& recost : trip_leg_itr->node().rbegin()->recosts()) {
       if (recost.has_elapsed_cost())
-        summary->emplace("time_" + recost_itr->name(),
-                         json::fp_t{recost.elapsed_cost().seconds(), 3});
+        writer("time_" + recost_itr->name(), recost.elapsed_cost().seconds());
       else
-        summary->emplace("time_" + recost_itr->name(), nullptr_t());
+        writer("time_" + recost_itr->name(), std::nullptr_t());
       ++recost_itr;
     }
     ++trip_leg_itr;
+    writer.end_object();
 
-    leg->emplace("summary", summary);
-    leg->emplace("shape", directions_leg.shape());
+    writer("shape", directions_leg.shape());
 
-    legs->emplace_back(leg);
+    writer.end_object(); // leg
   }
-  return legs;
+  writer.end_array(); // legs
 }
 
 std::string serialize(const Api& api) {
-  // build up the json object
-  auto trip_json = json::map({{"locations", locations(api.directions().routes(0).legs())},
-                              {"summary", summary(api)},
-                              {"legs", legs(api)},
-                              {"status_message", string("Found route between points")},
-                              {"status", static_cast<uint64_t>(0)}, // 0 success
-                              {"units", valhalla::Options_Units_Enum_Name(api.options().units())},
-                              {"language", api.options().language()}});
-  tyr::route_references(trip_json, api.trip().routes(0), api.options());
-  auto json = json::map({{"trip", trip_json}});
-  if (api.options().has_id()) {
-    json->emplace("id", api.options().id());
+  // build up the json object, reserve 4k bytes
+  rapidjson::writer_wrapper_t writer(4096);
+
+  // for each route
+  for (int i = 0; i < api.directions().routes_size(); ++i) {
+    if (i == 1) {
+      writer.start_array("alternates");
+    }
+
+    // the route itself
+    writer.start_object();
+    writer.start_object("trip");
+
+    // the locations in the trip
+    locations(api, i, writer);
+
+    // the actual meat of the route
+    legs(api, i, writer);
+
+    // openlr references of the edges in the route
+    valhalla::tyr::openlr(api, i, writer);
+
+    // summary time/distance and other stats
+    summary(api, i, writer);
+
+    writer.end_object(); // trip
+
+    // leave space for alternates by closing this one outside the loop
+    if (i > 0) {
+      writer.end_object();
+    }
   }
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+
+  if (api.directions().routes_size() > 1) {
+    writer.end_array(); // alternates
+  }
+
+  if (api.options().has_id_case()) {
+    writer("id", api.options().id());
+  }
+
+  writer.end_object(); // outer object
+
+  return writer.get_buffer();
 }
 } // namespace valhalla_serializers
 } // namespace

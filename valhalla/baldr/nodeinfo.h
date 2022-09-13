@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/midgard/util.h>
@@ -11,16 +12,10 @@
 namespace valhalla {
 namespace baldr {
 
-class GraphTile;
-
 constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
 constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
-
-// Lat,lon precision (TODO - evaluate using 7 digits precision - which may
-// mean we need double precision)
-constexpr float kDegreesPrecision = 0.000001f;
 
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
@@ -49,10 +44,13 @@ public:
    * @param  traffic_signal Has a traffic signal at this node?
    */
   NodeInfo(const midgard::PointLL& tile_corner,
-           const std::pair<float, float>& ll,
+           const midgard::PointLL& ll,
            const uint32_t access,
            const baldr::NodeType type,
-           const bool traffic_signal);
+           const bool traffic_signal,
+           const bool tagged_access,
+           const bool private_access,
+           const bool cash_only_toll);
 
   /**
    * Get the latitude, longitude of the node.
@@ -60,8 +58,8 @@ public:
    * @return  Returns the latitude and longitude of the node.
    */
   midgard::PointLL latlng(const midgard::PointLL& tile_corner) const {
-    return midgard::PointLL(tile_corner.lng() + (lon_offset_ * kDegreesPrecision),
-                            tile_corner.lat() + (lat_offset_ * kDegreesPrecision));
+    return midgard::PointLL(tile_corner.lng() + (lon_offset_ * 1e-6 + lon_offset7_ * 1e-7),
+                            tile_corner.lat() + (lat_offset_ * 1e-6 + lat_offset7_ * 1e-7));
   }
 
   /**
@@ -69,7 +67,7 @@ public:
    * @param  tile_corner Lower left (SW) corner of the tile.
    * @param  ll  Lat,lng position of the node.
    */
-  void set_latlng(const midgard::PointLL& tile_corner, const std::pair<float, float>& ll);
+  void set_latlng(const midgard::PointLL& tile_corner, const midgard::PointLL& ll);
 
   /**
    * Get the index of the first outbound edge from this node. Since
@@ -249,6 +247,54 @@ public:
   void set_drive_on_right(const bool rsd);
 
   /**
+   * Was the access information originally set in the data?
+   * True if any tags like "access", "auto", "truck", "foot", etc were specified.
+   * @return  Returns true if access was specified.
+   */
+  bool tagged_access() const {
+    return tagged_access_;
+  }
+
+  /**
+   * Sets the flag indicating if the access information was specified.
+   * True if any tags like "access", "auto", "truck", "foot", etc were specified.
+   * @param  tagged_access True if any access was set for the node.
+   */
+  void set_tagged_access(const bool tagged_access);
+
+  /**
+   * Is access set as private?
+   * @return  Returns true if node access is private.
+   */
+  bool private_access() const {
+    return private_access_;
+  }
+
+  /**
+   * Sets private_access flag. It is true when access is private for all travel modes.
+   * @param  private_access  True if node access is private.
+   */
+  void set_private_access(const bool private_access) {
+    private_access_ = private_access;
+  }
+
+  /**
+   * Is this node a cash only toll (booth/barrier)?
+   * @return  Returns true if node is a cash only toll (booth/barrier).
+   */
+  bool cash_only_toll() const {
+    return cash_only_toll_;
+  }
+
+  /**
+   * Sets cash_only_toll flag. It is true when the node is a cash only toll (booth/barrier).
+   * @param  cash_only_toll  True if node is a cash only toll (booth/barrier).
+   */
+  void set_cash_only_toll(const bool cash_only_toll) {
+    cash_only_toll_ = cash_only_toll;
+  }
+
+  /**
    * Is a mode change allowed at this node? The access data tells which
    * modes are allowed at the node. Examples include transit stops, bike
    * share locations, and parking locations.
@@ -333,6 +379,11 @@ public:
    * @return Returns heading relative to N (0-360 degrees).
    */
   inline uint32_t heading(const uint32_t localidx) const {
+    if (localidx > kMaxLocalEdgeIndex) {
+      LOG_WARN("Local index " + std::to_string(localidx) + " exceeds max value of " +
+               std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
+      return 0;
+    }
     // Make sure everything is 64 bit!
     uint64_t shift = localidx * 8; // 8 bits per index
     return static_cast<uint32_t>(std::round(
@@ -384,15 +435,17 @@ public:
    * @param tile the tile required to get admin information
    * @return  json object
    */
-  json::MapPtr json(const GraphTile* tile) const;
+  json::MapPtr json(const graph_tile_ptr& tile) const;
 
 protected:
   // Organized into 8-byte words so structure will align to 8 byte boundaries.
 
-  // 26 bits for lat,lon offset allows 7 digit precision within 4 degree tiles. Note that
-  // this would require using double precision to actually achieve this precision.
-  uint64_t lat_offset_ : 26; // Latitude offset from tile base latitude
-  uint64_t lon_offset_ : 26; // Longitude offset from tile base longitude
+  // 26 bits for lat,lon offset allows 7 digits of precision even in 4 degree tiles
+  // to stay backwards compatible we have to break 6 digits and the 7th digit into two parts
+  uint64_t lat_offset_ : 22; // Latitude offset from tile base latitude in int 6 digit precision
+  uint64_t lat_offset7_ : 4; // Latitude offset 7th digit of precision
+  uint64_t lon_offset_ : 22; // Longitude offset from tile base longitude in int 6 digit precision
+  uint64_t lon_offset7_ : 4; // Longitude offset 7th digit of precision
   uint64_t access_ : 12;     // Access through the node - bit field
 
   uint64_t edge_index_ : 21;    // Index within the node's tile of its first outbound directed edge
@@ -414,8 +467,10 @@ protected:
   uint64_t local_edge_count_ : 3;    // # of regular edges across all levels
                                      // (up to kMaxLocalEdgeIndex+1)
   uint64_t drive_on_right_ : 1;      // Driving side. Right if true (false=left)
-
-  uint64_t spare2_ : 20;
+  uint64_t tagged_access_ : 1;       // Was access initially tagged?
+  uint64_t private_access_ : 1;      // Is the access private?
+  uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
+  uint64_t spare2_ : 17;
 
   // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
   // for all other levels. Connecting way Id (for transit level) while data build occurs.

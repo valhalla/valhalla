@@ -20,6 +20,18 @@ namespace vb = valhalla::baldr;
 
 namespace {
 
+class SharedVectorGraphMemory final : public vb::GraphMemory {
+public:
+  SharedVectorGraphMemory(std::shared_ptr<const std::vector<char>> memory)
+      : memory_(std::move(memory)) {
+    data = const_cast<char*>(memory_->data());
+    size = memory_->size();
+  }
+
+private:
+  const std::shared_ptr<const std::vector<char>> memory_;
+};
+
 struct graph_tile_builder {
   void append_node(valhalla::midgard::PointLL& base_ll,
                    float lon,
@@ -27,7 +39,7 @@ struct graph_tile_builder {
                    uint32_t edge_count,
                    uint32_t first_edge) {
     nodes.push_back(vb::NodeInfo(base_ll, std::make_pair(lon, lat), vb::kAllAccess,
-                                 vb::NodeType::kStreetIntersection, false));
+                                 vb::NodeType::kStreetIntersection, false, true, false, false));
     nodes.back().set_edge_count(edge_count);
     nodes.back().set_edge_index(first_edge);
   }
@@ -59,9 +71,9 @@ struct graph_tile_builder {
     ptr += nodes_size;
     memcpy(ptr, edges.data(), edges_size);
 
-    auto res = memory.emplace(id, std::move(mem));
-    auto& mem2 = res.first->second;
-    tiles.emplace(id, vb::GraphTile(id, mem2.data(), mem2.size()));
+    auto res = memory.emplace(id, std::make_shared<std::vector<char>>(std::move(mem)));
+    auto mem2 = std::make_unique<SharedVectorGraphMemory>(res.first->second);
+    tiles.emplace(id, vb::GraphTile::Create(id, std::move(mem2)));
     nodes.clear();
     edges.clear();
   }
@@ -69,8 +81,8 @@ struct graph_tile_builder {
   std::vector<vb::NodeInfo> nodes;
   std::vector<vb::DirectedEdge> edges;
 
-  std::unordered_map<vb::GraphId, std::vector<char>> memory;
-  std::unordered_map<vb::GraphId, vb::GraphTile> tiles;
+  std::unordered_map<vb::GraphId, std::shared_ptr<std::vector<char>>> memory;
+  std::unordered_map<vb::GraphId, graph_tile_ptr> tiles;
 };
 
 boost::property_tree::ptree read_json(const std::string& json) {
@@ -83,10 +95,10 @@ boost::property_tree::ptree read_json(const std::string& json) {
 const boost::property_tree::ptree fake_config = read_json("{\"tile_dir\": \"/file/does/not/exist\"}");
 
 struct test_graph_reader : public vb::GraphReader {
-  test_graph_reader(const std::unordered_map<vb::GraphId, vb::GraphTile>& tiles)
+  test_graph_reader(const std::unordered_map<vb::GraphId, graph_tile_ptr>& tiles)
       : GraphReader(fake_config) {
-    for (const auto& it : tiles)
-      cache_->Put(it.first, it.second, 0);
+    for (auto&& it : tiles)
+      cache_->Put(it.first, std::move(it.second), 0);
   }
 };
 

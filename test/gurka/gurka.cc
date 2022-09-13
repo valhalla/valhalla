@@ -40,101 +40,6 @@ namespace valhalla {
 namespace gurka {
 namespace detail {
 
-boost::property_tree::ptree
-build_config(const std::string& tiledir,
-             const std::unordered_map<std::string, std::string>& config_options) {
-
-  const std::string default_config = R"(
-    {"mjolnir":{"id_table_size":1000,"tile_dir":"", "concurrency": 1},
-     "thor":{
-       "logging" : {"long_request" : 100}
-     },
-     "meili":{
-       "logging" : {"long_request" : 100},
-       "grid" : {"cache_size" : 100, "size": 100 },
-       "default": {
-         "beta": 3,
-         "breakage_distance": 2000,
-         "geometry": false,
-         "gps_accuracy": 5.0,
-         "interpolation_distance": 10,
-         "max_route_distance_factor": 5,
-         "max_route_time_factor": 5,
-         "max_search_radius": 100,
-         "route": true,
-         "search_radius": 50,
-         "sigma_z": 4.07,
-         "turn_penalty_factor": 0,
-         "penalize_immediate_uturn": true
-       },
-       "customizable": [
-         "mode",
-         "search_radius",
-         "turn_penalty_factor",
-         "gps_accuracy",
-         "interpolation_distance",
-         "sigma_z",
-         "beta",
-         "max_route_distance_factor",
-         "max_route_time_factor",
-         "penalize_immediate_uturn"
-       ]
-     },
-     "loki":{
-       "actions": [
-         "locate",
-         "route",
-         "height",
-         "sources_to_targets",
-         "optimized_route",
-         "isochrone",
-         "trace_route",
-         "trace_attributes",
-         "transit_available"
-       ],
-       "logging" : {"long_request" : 100},
-       "service_defaults" : {
-         "minimum_reachability" : 50,
-         "radius" : 0,
-         "search_cutoff" : 35000,
-         "node_snap_tolerance" : 5,
-         "street_side_tolerance" : 5,
-         "street_side_max_distance": 1000,
-         "heading_tolerance" : 60
-        }
-     },
-     "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_data_fix": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-      "motorcycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "motor_scooter": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50},
-
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time": 120},
-      "max_avoid_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_locations": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_locations": 50},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_locations": 50}
-    }
-  })";
-
-  std::stringstream stream(default_config);
-  boost::property_tree::ptree ptree;
-  boost::property_tree::json_parser::read_json(stream, ptree);
-  ptree.put("mjolnir.tile_dir", tiledir);
-  for (const auto& kv : config_options) {
-    ptree.put(kv.first, kv.second);
-  }
-  return ptree;
-}
-
 midgard::PointLL to_ll(const nodelayout& nodes, const std::string& node_name) {
   return nodes.at(node_name);
 }
@@ -192,7 +97,6 @@ std::string build_valhalla_request(const std::string& location_type,
 
   rapidjson::Value co(rapidjson::kObjectType);
   if (!custom_speed_types) {
-    rapidjson::Value dt(rapidjson::kObjectType);
     rapidjson::Value speed_types(rapidjson::kArrayType);
     speed_types.PushBack("freeflow", allocator);
     speed_types.PushBack("constrained", allocator);
@@ -405,11 +309,7 @@ inline void build_pbf(const nodelayout& node_locations,
     auto way_id = osm_id++;
     auto found = way.second.find("osm_id");
     if (found != way.second.cend()) {
-      uint64_t id = std::stoull(found->second);
-      if (id < osm_id) {
-        throw std::invalid_argument("Osm way id has already been used");
-      }
-      way_id = id;
+      way_id = std::stoull(found->second);
     }
 
     way_osm_id_map[way.first] = way_id;
@@ -509,6 +409,22 @@ to_string(const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& st
   return str;
 }
 
+std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
+  std::vector<std::vector<std::string>> paths;
+  for (const auto& route : result.trip().routes()) {
+    std::vector<std::string> path;
+    for (const auto& leg : route.legs()) {
+      for (const auto& node : leg.node()) {
+        if (node.has_edge()) {
+          path.push_back(detail::to_string(node.edge().name()));
+        }
+      }
+    }
+    paths.push_back(std::move(path));
+  }
+  return paths;
+}
+
 } // namespace detail
 
 /**
@@ -534,7 +450,7 @@ map buildtiles(const nodelayout& layout,
                const std::unordered_map<std::string, std::string>& config_options) {
 
   map result;
-  result.config = detail::build_config(workdir, config_options);
+  result.config = test::make_config(workdir, config_options);
   result.nodes = layout;
 
   // Sanity check so that we don't blow away / by mistake
@@ -586,7 +502,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
   // Iterate over all the tiles, there wont be many in unit tests..
   const auto& end_node_coordinates = nodes.at(end_node);
   for (auto tile_id : tileset) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
@@ -596,13 +512,14 @@ findEdge(valhalla::baldr::GraphReader& reader,
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-        auto names = tile->GetNames(forward_directed_edge->edgeinfo_offset());
+        auto names = tile->GetNames(forward_directed_edge);
         for (const auto& name : names) {
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            auto reverse_edge_id = tile->GetOpposingEdgeId(forward_directed_edge);
-            auto* reverse_directed_edge = tile->directededge(i);
+            graph_tile_ptr reverse_tile = nullptr;
+            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
                                    reverse_directed_edge);
           }
@@ -629,7 +546,7 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const std::string& end_node_name) {
   // Iterate over all the tiles, there wont be many in unit tests..
   for (auto tile_id : reader.GetTileSet()) {
-    auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     // Iterate over all directed edges to find one with the name we want
     for (const auto& e : tile->GetDirectedEdges()) {
       // Bail if wrong end node
@@ -654,96 +571,113 @@ findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                            end_node_name);
 }
 
-valhalla::Api route(const map& map,
-                    const std::string& request_json,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  if (!reader)
-    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  actor.route(request_json, nullptr, &api);
-  return api;
-}
-
 /**
- * Calculates a route along a set of waypoints with a given costing model, and returns the
- * valhalla::Api result.
+ * Finds a node in the graph based on its node name
  *
- * @param map a map returned by buildtiles
- * @param waypoints an array of node names to use as waypoints
- * @param costing the name of the costing model to use
+ * @param reader           graph reader to look up tiles and edges
+ * @param nodes            a lookup table from node names to coordinates
+ * @param node_name        name of the node
+ * @return the node_id
  */
-valhalla::Api route(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
-  std::cerr << "[          ] Routing with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  return route(map, request_json, reader);
+baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
+                        const nodelayout& nodes,
+                        const std::string& node_name) {
+  // Iterate over all the tiles, there wont be many in unit tests..
+  for (auto tile_id : reader.GetTileSet()) {
+    auto tile = reader.GetGraphTile(tile_id);
+    // Iterate over all nodes to find one with the name we want
+    for (auto node_id = tile_id; node_id.id() < tile->header()->nodecount(); ++node_id) {
+      auto ll = tile->get_node_ll(node_id);
+      if (ll.ApproximatelyEqual(nodes.at(node_name))) {
+        return node_id;
+      }
+    }
+  }
+  throw std::runtime_error("Could not find node " + node_name);
 }
 
-valhalla::Api route(const map& map,
-                    const std::string& origin,
-                    const std::string& destination,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
-  return route(map, {origin, destination}, costing, options, std::move(reader));
-}
-
-valhalla::Api match(const map& map,
-                    const std::vector<std::string>& waypoints,
-                    const std::string& stop_type,
-                    const std::string& costing,
-                    const std::unordered_map<std::string, std::string>& options,
-                    std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+std::string
+do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
+  std::cerr << "[          ] Valhalla request is pbf " << std::endl;
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+  valhalla::tyr::actor_t actor(map.config, *reader, true);
+  return actor.act(api);
+}
 
-  std::cerr << "[          ] Matching with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with waypoints ";
-  bool first = true;
-  for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << " -> ";
-    std::cerr << waypoint;
-    first = false;
-  };
-  std::cerr << " with costing " << costing << std::endl;
-  auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("shape", lls, costing, options, stop_type);
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::string& request_json,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* response) {
   std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
+  if (!reader)
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);
   valhalla::Api api;
-  actor.trace_route(request_json, nullptr, &api);
+  std::string json_str;
+  switch (action) {
+    case valhalla::Options::route:
+      json_str = actor.route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_route:
+      json_str = actor.trace_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::trace_attributes:
+      json_str = actor.trace_attributes(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::locate:
+      json_str = actor.locate(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::centroid:
+      json_str = actor.centroid(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::expansion:
+      json_str = actor.expansion(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::isochrone:
+      json_str = actor.isochrone(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::optimized_route:
+      json_str = actor.optimized_route(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::sources_to_targets:
+      json_str = actor.matrix(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::height:
+      json_str = actor.height(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::status:
+      json_str = actor.status(request_json, nullptr, &api);
+      break;
+    case valhalla::Options::transit_available:
+      json_str = actor.transit_available(request_json, nullptr, &api);
+      break;
+    default:
+      throw std::logic_error("Unsupported action");
+      break;
+  }
+  if (response) {
+    *response = json_str;
+  }
   return api;
 }
 
-valhalla::Api locate(const map& map,
-                     const std::vector<std::string>& waypoints,
-                     const std::string& costing,
-                     const std::unordered_map<std::string, std::string>& options,
-                     std::shared_ptr<valhalla::baldr::GraphReader> reader,
-                     std::string* json) {
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& waypoints,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* response,
+                        const std::string& stop_type,
+                        std::string* request_json) {
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
 
-  std::cerr << "[          ] Locate with mjolnir.tile_dir = "
-            << map.config.get<std::string>("mjolnir.tile_dir") << " with locations ";
+  std::cerr << "[          ] " << Options_Action_Enum_Name(action)
+            << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
+            << " with locations ";
   bool first = true;
   for (const auto& waypoint : waypoints) {
     if (!first)
@@ -753,16 +687,16 @@ valhalla::Api locate(const map& map,
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
-  auto request_json = detail::build_valhalla_request("locations", lls, costing, options);
-  std::cerr << "[          ] Valhalla request is: " << request_json << std::endl;
-
-  valhalla::tyr::actor_t actor(map.config, *reader, true);
-  valhalla::Api api;
-  auto json_str = actor.locate(request_json, nullptr, &api);
-  if (json) {
-    *json = json_str;
+  auto location_type = action == Options::trace_route || action == Options::trace_attributes ||
+                               action == Options::height
+                           ? "shape"
+                           : "locations";
+  std::string dummy_request_json;
+  if (!request_json) {
+    request_json = &dummy_request_json;
   }
-  return api;
+  *request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
+  return do_action(action, map, *request_json, reader, response);
 }
 
 /* Returns the raw_result formatted as a JSON document in the given format.
@@ -793,11 +727,11 @@ std::string dump_geojson_graph(const map& graph) {
   for (auto tile_id : reader.GetTileSet()) {
     if (reader.OverCommitted())
       reader.Trim();
-    const auto* tile = reader.GetGraphTile(tile_id);
+    auto tile = reader.GetGraphTile(tile_id);
     for (const auto& edge : tile->GetDirectedEdges()) {
       valhalla::baldr::GraphId edge_id(tile_id.tileid(), tile_id.level(),
                                        &edge - tile->directededge(0));
-      auto info = tile->edgeinfo(edge.edgeinfo_offset());
+      auto info = tile->edgeinfo(&edge);
 
       // add some properties
       rapidjson::Value properties(rapidjson::kObjectType);
@@ -805,10 +739,14 @@ std::string dump_geojson_graph(const map& graph) {
       for (const std::string& name : info.GetNames()) {
         names.PushBack(rapidjson::Value(name, doc.GetAllocator()).Move(), doc.GetAllocator());
       }
-      properties.AddMember("edge_id", std::to_string(edge_id), doc.GetAllocator());
-      properties.AddMember("opp_edge_id", std::to_string(reader.GetOpposingEdgeId(edge_id)),
-                           doc.GetAllocator());
+
+      // TODO: why on earth do we need decltype?
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "edge_id" : "opp_edge_id"),
+                           std::to_string(edge_id), doc.GetAllocator());
+      properties.AddMember(decltype(doc)::StringRefType(edge.forward() ? "opp_edge_id" : "edge_id"),
+                           std::to_string(reader.GetOpposingEdgeId(edge_id)), doc.GetAllocator());
       properties.AddMember("names", names, doc.GetAllocator());
+      properties.AddMember("is_shortcut", edge.is_shortcut() ? true : false, doc.GetAllocator());
 
       // add the geom
       rapidjson::Value geometry(rapidjson::kObjectType);
@@ -917,6 +855,49 @@ void expect_steps(valhalla::Api& raw_result,
   }
 
   EXPECT_EQ(actual_names, expected_names) << "Actual steps didn't match expected steps";
+}
+/**
+ * Tests if the result, which may be comprised of multiple routes,
+ * have summaries that match the expected_summaries.
+ *
+ * Note: For simplicity's sake, this logic looks at the first leg of each route.
+ *
+ * @param result the result of a /route or /match request
+ * @param expected_summaries the route/leg summaries expected
+ */
+void expect_summaries(valhalla::Api& raw_result, const std::vector<std::string>& expected_summaries) {
+
+  rapidjson::Document result = convert_to_json(raw_result, valhalla::Options_Format_osrm);
+  if (result.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
+
+  const std::string& route_name = "routes";
+
+  EXPECT_TRUE(result.HasMember(route_name));
+  EXPECT_TRUE(result[route_name].IsArray());
+  EXPECT_EQ(result[route_name].Size(), expected_summaries.size());
+
+  size_t i = 0;
+  for (auto route_iter = result[route_name].Begin(); route_iter != result[route_name].End();
+       ++route_iter, ++i) {
+
+    EXPECT_TRUE(route_iter->HasMember("legs"));
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.IsArray());
+    EXPECT_TRUE(route_iter->FindMember("legs")->value.Size() > 0);
+
+    // here's where we only grab the first leg
+    auto leg_iter = route_iter->FindMember("legs")->value.Begin();
+
+    EXPECT_TRUE(leg_iter->IsObject());
+    EXPECT_TRUE(leg_iter->HasMember("summary"));
+    EXPECT_TRUE(leg_iter->FindMember("summary")->value.IsString());
+
+    std::string actual_summary = leg_iter->FindMember("summary")->value.GetString();
+
+    EXPECT_EQ(actual_summary, expected_summaries[i])
+        << "Actual summary didn't match expected summary";
+  }
 }
 /**
  * Tests if a found path traverses the expected roads in the expected order
@@ -1028,6 +1009,8 @@ void expect_maneuver_begin_path_indexes(const valhalla::Api& result,
  * @param result the result of a /route or /match request
  * @param maneuver_index the specified maneuver index to inspect
  * @param expected_text_instruction the expected text instruction
+ * @param expected_verbal_succinct_transition_instruction the expected verbal succinct transition
+ *                                                     instruction
  * @param expected_verbal_transition_alert_instruction the expected verbal transition alert
  *                                                     instruction
  * @param expected_verbal_pre_transition_instruction the expected verbal pre-transition instruction
@@ -1037,6 +1020,7 @@ void expect_instructions_at_maneuver_index(
     const valhalla::Api& result,
     int maneuver_index,
     const std::string& expected_text_instruction,
+    const std::string& expected_verbal_succinct_transition_instruction,
     const std::string& expected_verbal_transition_alert_instruction,
     const std::string& expected_verbal_pre_transition_instruction,
     const std::string& expected_verbal_post_transition_instruction) {
@@ -1048,6 +1032,8 @@ void expect_instructions_at_maneuver_index(
   const auto& maneuver = result.directions().routes(0).legs(0).maneuver(maneuver_index);
 
   EXPECT_EQ(maneuver.text_instruction(), expected_text_instruction);
+  EXPECT_EQ(maneuver.verbal_succinct_transition_instruction(),
+            expected_verbal_succinct_transition_instruction);
   EXPECT_EQ(maneuver.verbal_transition_alert_instruction(),
             expected_verbal_transition_alert_instruction);
   EXPECT_EQ(maneuver.verbal_pre_transition_instruction(), expected_verbal_pre_transition_instruction);
@@ -1078,7 +1064,7 @@ void expect_path_length(const valhalla::Api& result,
   for (const auto& leg : result.trip().routes(0).legs()) {
     for (const auto& node : leg.node()) {
       if (node.has_edge())
-        length_km += node.edge().length();
+        length_km += node.edge().length_km();
     }
   }
 
@@ -1122,20 +1108,14 @@ void expect_eta(const valhalla::Api& result,
  *
  * @param result the result of a /route or /match request
  * @param expected_names the names of the edges the path should traverse in order
+ * @param message the message prints if a test is failed
  */
-void expect_path(const valhalla::Api& result, const std::vector<std::string>& expected_names) {
+void expect_path(const valhalla::Api& result,
+                 const std::vector<std::string>& expected_names,
+                 const std::string& message) {
   EXPECT_EQ(result.trip().routes_size(), 1);
-
-  std::vector<std::string> actual_names;
-  for (const auto& leg : result.trip().routes(0).legs()) {
-    for (const auto& node : leg.node()) {
-      if (node.has_edge()) {
-        actual_names.push_back(detail::to_string(node.edge().name()));
-      }
-    }
-  }
-
-  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path";
+  const auto actual_names = detail::get_paths(result).front();
+  EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path. " << message;
 }
 
 } // namespace raw

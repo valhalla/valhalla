@@ -23,7 +23,7 @@ struct tile_cache {
     return *this;
   }
 
-  inline const vb::GraphTile* tile() {
+  inline graph_tile_ptr tile() {
     return m_tile;
   }
 
@@ -72,7 +72,7 @@ private:
 
   vb::GraphReader& m_reader;
   vb::GraphId m_last_tile_id;
-  const vb::GraphTile* m_tile;
+  graph_tile_ptr m_tile;
   const vb::NodeInfo* m_nodes;
   const vb::DirectedEdge* m_edges;
 };
@@ -368,8 +368,8 @@ std::vector<baldr::GraphId> nodes_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
                                           baldr::GraphReader& reader) {
   std::vector<vb::GraphId> nodes;
 
-  auto tiles = vb::TileHierarchy::levels().rbegin()->second.tiles;
-  const uint8_t bin_level = vb::TileHierarchy::levels().rbegin()->second.level;
+  const auto& tiles = vb::TileHierarchy::levels().back().tiles;
+  const uint8_t bin_level = vb::TileHierarchy::levels().back().level;
 
   // if the bbox only touches the edge of the tile or bin, then we need to
   // include neighbouring bins as well, in case both the edge and its opposite
@@ -425,8 +425,8 @@ std::vector<baldr::GraphId> nodes_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
 std::vector<baldr::GraphId> edges_in_bbox(const vm::AABB2<vm::PointLL>& bbox,
                                           baldr::GraphReader& reader) {
 
-  auto tiles = vb::TileHierarchy::levels().rbegin()->second.tiles;
-  const uint8_t bin_level = vb::TileHierarchy::levels().rbegin()->second.level;
+  auto tiles = vb::TileHierarchy::levels().back().tiles;
+  const uint8_t bin_level = vb::TileHierarchy::levels().back().level;
 
   // if the bbox only touches the edge of the tile or bin, then we need to
   // include neighbouring bins as well, in case both the edge and its opposite

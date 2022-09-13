@@ -18,9 +18,12 @@
 #define RAPIDJSON_ASSERT(x)                                                                          \
   if (!(x))                                                                                          \
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))
-// Because we now throw exceptions, we need to turn of RAPIDJSON_NOEXCEPT
+// Because we now throw exceptions, we need to turn off RAPIDJSON_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
+// Enbale std::string overloads
+#define RAPIDJSON_HAS_STDSTRING 1
 
+#include <rapidjson/allocators.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
@@ -33,13 +36,12 @@
 
 namespace rapidjson {
 
-template <typename T>
-inline std::string to_string(const T& document_or_value, int decimal_places = -1) {
+inline std::string to_string(const rapidjson::Value& value, int decimal_places = -1) {
   rapidjson::StringBuffer buffer;
   rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
   if (decimal_places >= 0)
     writer.SetMaxDecimalPlaces(decimal_places);
-  document_or_value.Accept(writer);
+  value.Accept(writer);
   return std::string(buffer.GetString(), buffer.GetSize());
 }
 
@@ -129,6 +131,15 @@ template <typename V> inline const rapidjson::Value& get_child(const V& v, const
   const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
   if (!ptr) {
     throw std::runtime_error(std::string("No child: ") + source);
+  }
+  return *ptr;
+}
+
+template <typename V>
+inline const rapidjson::Value& get_child(const V& v, const char* source, const rapidjson::Value& t) {
+  const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
+  if (!ptr) {
+    return t;
   }
   return *ptr;
 }
@@ -237,6 +248,180 @@ inline std::string serialize(const rapidjson::Document& doc) {
   doc.Accept(writer);
   return buffer.GetString();
 }
+
+inline Document read_json(std::ifstream& stream) {
+  Document d;
+  IStreamWrapper wrapper(stream);
+  d.ParseStream(wrapper);
+  if (d.HasParseError())
+    throw std::runtime_error("Could not parse json, error at offset: " +
+                             std::to_string(d.GetErrorOffset()));
+  if (!d.IsObject() && !d.IsArray())
+    throw std::runtime_error("Json is not an object or array");
+  return d;
+}
+
+inline Document read_json(const std::string& filename, const std::locale& loc = std::locale()) {
+  std::ifstream stream(filename);
+  if (!stream)
+    throw std::runtime_error("Cannot open file " + filename);
+  stream.imbue(loc);
+  return rapidjson::read_json(stream);
+}
+
+/**
+ * A convenience class to the writer stringbuffer rapidjson pattern. This takes whatever
+ * data you want and serializes it directly to a json string rather than keeping it organized
+ * as json in an in memory object. If you are familiar with XML parsing/writing this is analogous
+ * to a SAX style writer/generator for json, as opposed to DOM (object model in memory) style
+ *
+ * Rapidjson's write is pretty complete but its quite verbose for common operations like
+ * adding a key value pair. Because of that we have a small wrapper here to make it less verbose
+ */
+class writer_wrapper_t {
+protected:
+  rapidjson::StringBuffer buffer;
+  rapidjson::Writer<decltype(buffer)> writer;
+
+public:
+  writer_wrapper_t(size_t reservation = 0) : buffer(), writer(buffer) {
+    if (reservation != 0)
+      buffer.Reserve(reservation);
+  }
+
+  inline void start_object() {
+    writer.StartObject();
+  }
+
+  inline void start_object(const char* name) {
+    writer.String(name);
+    writer.StartObject();
+  }
+
+  inline void start_array() {
+    writer.StartArray();
+  }
+
+  inline void start_array(const char* name) {
+    writer.String(name);
+    writer.StartArray();
+  }
+
+  inline void end_object() {
+    writer.EndObject();
+  }
+
+  inline void end_array() {
+    writer.EndArray();
+  }
+
+  inline const char* get_buffer() const {
+    return buffer.GetString();
+  }
+
+  inline void set_precision(int precision) {
+    writer.SetMaxDecimalPlaces(precision);
+  }
+
+  inline void operator()(const char* key, const char* value) {
+    writer.String(key);
+    writer.String(value);
+  }
+
+  inline void operator()(const char* key, const std::string& value) {
+    writer.String(key);
+    writer.String(value);
+  }
+
+  inline void operator()(const char* key, const double value) {
+    writer.String(key);
+    writer.Double(value);
+  }
+
+  inline void operator()(const char* key, const uint64_t value) {
+    writer.String(key);
+    writer.Uint64(value);
+  }
+
+  inline void operator()(const char* key, const int64_t value) {
+    writer.String(key);
+    writer.Int64(value);
+  }
+
+  inline void operator()(const char* key, const bool value) {
+    writer.String(key);
+    writer.Bool(value);
+  }
+
+  inline void operator()(const char* key, const std::nullptr_t) {
+    writer.String(key);
+    writer.Null();
+  }
+
+  inline void operator()(const std::string& key, const char* value) {
+    writer.String(key);
+    writer.String(value);
+  }
+
+  inline void operator()(const std::string& key, const std::string& value) {
+    writer.String(key);
+    writer.String(value);
+  }
+
+  inline void operator()(const std::string& key, const double value) {
+    writer.String(key);
+    writer.Double(value);
+  }
+
+  inline void operator()(const std::string& key, const uint64_t value) {
+    writer.String(key);
+    writer.Uint64(value);
+  }
+
+  inline void operator()(const std::string& key, const int64_t value) {
+    writer.String(key);
+    writer.Int64(value);
+  }
+
+  inline void operator()(const std::string& key, const bool value) {
+    writer.String(key);
+    writer.Bool(value);
+  }
+
+  inline void operator()(const std::string& key, const std::nullptr_t) {
+    writer.String(key);
+    writer.Null();
+  }
+
+  inline void operator()(const char* value) {
+    writer.String(value);
+  }
+
+  inline void operator()(const std::string& value) {
+    writer.String(value);
+  }
+
+  inline void operator()(const double value) {
+    writer.Double(value);
+  }
+
+  inline void operator()(const uint64_t value) {
+    writer.Uint64(value);
+  }
+
+  inline void operator()(const int64_t value) {
+    writer.Int64(value);
+  }
+
+  inline void operator()(const bool value) {
+
+    writer.Bool(value);
+  }
+
+  inline void operator()(const std::nullptr_t) {
+    writer.Null();
+  }
+};
 
 } // namespace rapidjson
 

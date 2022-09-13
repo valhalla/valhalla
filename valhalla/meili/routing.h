@@ -60,7 +60,10 @@ public:
                        mode,
                        0,
                        sif::Cost{},
-                       restriction_idx),
+                       restriction_idx,
+                       true,
+                       false,
+                       sif::InternalTurn::kNoTurn),
         nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
     // Validate inputs
     if (!(0.f <= source && source <= target && target <= 1.f)) {
@@ -178,7 +181,7 @@ public:
       dest_status_.emplace(dest, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
       labels_.back().InitAsOrigin(mode, dest, {});
-      queue_->add(idx);
+      queue_.add(idx);
     }
   }
 
@@ -195,7 +198,7 @@ public:
       node_status_.emplace(nodeid, idx);
       labels_.emplace_back(edgelabel ? *edgelabel : Label());
       labels_.back().InitAsOrigin(mode, kInvalidDestination, nodeid);
-      queue_->add(idx);
+      queue_.add(idx);
     }
   }
 
@@ -249,7 +252,7 @@ public:
    * Clear the priority queue.
    */
   void clear_queue() {
-    queue_->clear();
+    queue_.clear();
   }
 
   /**
@@ -261,7 +264,7 @@ public:
   }
 
 private:
-  std::shared_ptr<baldr::DoubleBucketQueue> queue_;        // Priority queue
+  baldr::DoubleBucketQueue<Label> queue_;                  // Priority queue
   std::unordered_map<baldr::GraphId, Status> node_status_; // Node status
   std::unordered_map<uint16_t, Status> dest_status_;       // Destination status
   std::vector<Label> labels_;                              // Label list.

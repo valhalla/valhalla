@@ -23,12 +23,15 @@ public:
    * @param  ways_file                      where to store the ways so they are not in memory
    * @param  way_nodes_file                 where to store the nodes so they are not in memory
    * @param  access_file                    where to store the access tags so they are not in memory
+   * @param  pronunciation_file             where to store the pronunciations so they are not in
+   * memory
    */
   static OSMData ParseWays(const boost::property_tree::ptree& pt,
                            const std::vector<std::string>& input_files,
                            const std::string& ways_file,
                            const std::string& way_nodes_file,
-                           const std::string& access_file);
+                           const std::string& access_file,
+                           const std::string& pronunciation_file);
 
   /**
    * Loads given input files

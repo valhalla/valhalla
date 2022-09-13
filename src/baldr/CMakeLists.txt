@@ -37,6 +37,7 @@ set(includes
 set(sources
     accessrestriction.cc
     admin.cc
+    attributes_controller.cc
     compression_utils.cc
     connectivity_map.cc
     curler.cc
@@ -56,6 +57,7 @@ set(sources
     predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
+    shortcut_recovery.h
     streetname.cc
     streetnames.cc
     streetnames_factory.cc
@@ -89,11 +91,11 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
     tz_alt.cpp)
 
-if (UNIX)
+if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
   set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Werror")
-endif (UNIX)
+endif()
 
 #ios we have more work to make use of system tzdb
 if(APPLE)

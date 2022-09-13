@@ -42,7 +42,7 @@ We may introduce forward-compatible changes: query parameters and response prope
 1. Check out the appropriate release branch `x.y`.
 2. Make sure `CHANGELOG.md` is up to date.
 3. Make sure all tests are passing (e.g. Circle CI gives you a :green_apple:).
-4. Make sure the [`valhalla/valhalla.h.in`](../valhalla/valhalla.h.in) has been updated.
+4. Make sure the [`valhalla/valhalla.h`](../valhalla/valhalla.h) has been updated.
 5. Use an annotated tag to mark the release: `git tag x.y.z -a`. The body of the tag description
    should be the changelog entries.
 6. Push tags and commits: `git push; git push --tags`

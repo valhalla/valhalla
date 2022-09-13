@@ -13,18 +13,12 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
 }
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    float matrix_max_distance,
-                    float& max_location_distance) {
+                    float matrix_max_distance) {
   // see if any locations pairs are unreachable or too far apart
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(*source).Distance(to_ll(*target));
-
-      if (path_distance >= max_location_distance) {
-        max_location_distance = path_distance;
-      }
-
       if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154};
       };
@@ -55,15 +49,20 @@ void loki_worker_t::init_isochrones(Api& request) {
     throw valhalla_exception_t{152, std::to_string(max_contours)};
   }
 
-  // validate the contour time by checking the last one
-  const auto contour = options.contours().rbegin();
-  if (contour->time() > max_time) {
-    throw valhalla_exception_t{151, std::to_string(max_time)};
+  // check the contour metrics
+  for (auto& contour : options.contours()) {
+    if (contour.has_time_case() && contour.time() > max_contour_min)
+      throw valhalla_exception_t{151, std::to_string(max_contour_min)};
+    if (contour.has_distance_case() && contour.distance() > max_contour_km)
+      throw valhalla_exception_t{166, std::to_string(max_contour_km)};
   }
 
   parse_costing(request);
 }
 void loki_worker_t::isochrones(Api& request) {
+  // time this whole method and save that statistic
+  auto _ = measure_scope_time(request);
+
   init_isochrones(request);
   auto& options = *request.mutable_options();
   // check that location size does not exceed max
@@ -72,14 +71,7 @@ void loki_worker_t::isochrones(Api& request) {
   };
 
   // check the distances
-  auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.locations(), max_distance.find("isochrone")->second, max_location_distance);
-  if (!options.do_not_track()) {
-    valhalla::midgard::logging::Log("max_location_distance::" +
-                                        std::to_string(max_location_distance * midgard::kKmPerMeter) +
-                                        "km",
-                                    " [ANALYTICS] ");
-  }
+  check_distance(options.locations(), max_distance.find("isochrone")->second);
 
   try {
     // correlate the various locations to the underlying graph

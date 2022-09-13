@@ -35,9 +35,9 @@ public:
 
   MapMatcher* Create(const Options& options);
 
-  MapMatcher* Create(const Costing costing) {
+  MapMatcher* Create(const Costing::Type costing_type) {
     Options options;
-    options.set_costing(costing);
+    options.set_costing_type(costing_type);
     return Create(options);
   }
 

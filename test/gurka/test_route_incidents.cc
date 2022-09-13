@@ -29,20 +29,35 @@ protected:
 
     // connect the ways via the nodes
     const gurka::ways ways = {
-        {"AB", {{"highway", "tertiary"}}},  {"BC", {{"highway", "tertiary"}}},
-        {"DEF", {{"highway", "primary"}}},  {"GHI", {{"highway", "primary"}}},
-        {"ADG", {{"highway", "motorway"}}}, {"BE", {{"highway", "secondary"}}},
-        {"EH", {{"highway", "service"}}},
+        {"AB", {{"highway", "tertiary"}, {"driving_side", "left"}}},
+        {"BC", {{"highway", "service"}, {"driving_side", "left"}}},
+        {"DEF", {{"highway", "primary"}, {"driving_side", "left"}}},
+        {"GHI", {{"highway", "primary"}, {"driving_side", "left"}}},
+        {"ADG", {{"highway", "motorway"}, {"driving_side", "left"}}},
+        {"BE", {{"highway", "secondary"}, {"driving_side", "left"}}},
+        {"EH", {{"highway", "tertiary"}, {"driving_side", "left"}}},
     };
 
     // generate the lls for the nodes in the map
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {.2f, .2f});
 
+    // Set country codes for nodes
+    const gurka::nodes nodes = {{"A", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
+                                {"B", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
+                                {"C", {{"iso:3166_1", "CA"}, {"iso:3166_2", "CA-BC"}}},
+                                {"D", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
+                                {"E", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
+                                {"F", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
+                                {"G", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
+                                {"H", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}},
+                                {"I", {{"iso:3166_1", "US"}, {"iso:3166_2", "US-WA"}}}};
+
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
-    map = gurka::buildtiles(layout, ways, {}, {}, tile_dir,
+    map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir,
                             {
                                 {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
+                                {"mjolnir.data_processing.use_admin_db", "false"},
                             });
 
     // stage up some live traffic data
@@ -61,6 +76,11 @@ struct incident_location {
   double begin_pct;
   uint32_t end_edge_index;
   double end_pct;
+};
+
+struct incident_country_code {
+  std::string iso_3166_1_alpha2;
+  std::string iso_3166_1_alpha3;
 };
 
 void check_incident_locations(const valhalla::Api& api,
@@ -137,6 +157,20 @@ void check_incident_locations(const valhalla::Api& api,
   }
 
   ASSERT_EQ(incident_count, locations.size()) << "Expected number of incidents does not match actual";
+}
+
+void check_incident_country_code(const valhalla::TripLeg& leg,
+                                 const std::vector<incident_country_code>& expected_country_codes) {
+  ASSERT_EQ(leg.incidents_size(), expected_country_codes.size())
+      << "Expected number of incidents does not match actual";
+
+  for (int i = 0; i < leg.incidents_size(); i++) {
+    const auto& incident_metadata = leg.incidents(i).metadata();
+    EXPECT_EQ(incident_metadata.iso_3166_1_alpha2(), expected_country_codes[i].iso_3166_1_alpha2)
+        << "Expected iso_3166_1_alpha2 code of incident at index " << i << " did not match";
+    EXPECT_EQ(incident_metadata.iso_3166_1_alpha3(), expected_country_codes[i].iso_3166_1_alpha3)
+        << "Expected iso_3166_1_alpha3 code of incident at index " << i << " did not match";
+  }
 }
 
 // provides us an easy way to mock having incident tiles, each test can override the tile in question
@@ -249,14 +283,18 @@ TEST_F(IncidentsTest, simple_cut) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .25, .75), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {1234, 0, 0, .25, 0, .75},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, whole_edge) {
@@ -269,14 +307,19 @@ TEST_F(IncidentsTest, whole_edge) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., 1.), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {1234, 0, 0, 0., 0, 1.},
                                    });
+
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, left) {
@@ -289,14 +332,19 @@ TEST_F(IncidentsTest, left) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), 0., .5), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {1234, 0, 0, 0., 0, .5},
                                    });
+
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, right) {
@@ -309,14 +357,18 @@ TEST_F(IncidentsTest, right) {
   reader->add(edge_ids[0], createIncidentLocation(edge_ids[0].id(), .5, 1.), 1234);
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {1234, 0, 0, .5, 0, 1.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, multiedge) {
@@ -331,10 +383,12 @@ TEST_F(IncidentsTest, multiedge) {
   reader->add(edge_ids[2], createIncidentLocation(edge_ids[2].id(), 0., .5), 5555);
   reader->sort();
 
+  //  std::cout << gurka::dump_geojson_graph(map) << std::endl;
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -342,6 +396,11 @@ TEST_F(IncidentsTest, multiedge) {
                                        {8888, 0, 0, 1., 2, 0.},
                                        {5555, 0, 2, 0., 2, 0.5},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
+                                                                     {"US", "USA"},
+                                                                     {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, multiincident) {
@@ -359,9 +418,10 @@ TEST_F(IncidentsTest, multiincident) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -369,6 +429,11 @@ TEST_F(IncidentsTest, multiincident) {
                                        {456, 0, 0, .5, 2, .5},
                                        {789, 0, 2, .75, 2, .9},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
+                                                                     {"CA", "CAN"},
+                                                                     {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, interleaved) {
@@ -386,9 +451,10 @@ TEST_F(IncidentsTest, interleaved) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -396,6 +462,11 @@ TEST_F(IncidentsTest, interleaved) {
                                        {456, 0, 0, .5, 2, .5},
                                        {789, 0, 2, .25, 2, .9},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
+                                                                     {"CA", "CAN"},
+                                                                     {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, collisions) {
@@ -413,9 +484,10 @@ TEST_F(IncidentsTest, collisions) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -423,6 +495,11 @@ TEST_F(IncidentsTest, collisions) {
                                        {456, 0, 0, .5, 2, .5},
                                        {789, 0, 2, .5, 2, .9},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
+                                                                     {"CA", "CAN"},
+                                                                     {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, full_overlap) {
@@ -437,15 +514,19 @@ TEST_F(IncidentsTest, full_overlap) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, .5, 0, 1.},
                                        {456, 0, 0, .5, 0, 1.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, multileg) {
@@ -466,9 +547,10 @@ TEST_F(IncidentsTest, multileg) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B", "E", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B", "E", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -479,6 +561,13 @@ TEST_F(IncidentsTest, multileg) {
                                        {456, 2, 0, 0., 0, .5},
                                        {789, 2, 0, 0., 0, .9},
                                    });
+  // check incident country code for different legs
+  const std::vector<incident_country_code> expected_cc_leg_1 = {{"CA", "CAN"}, {"CA", "CAN"}};
+  const std::vector<incident_country_code> expected_cc_leg_2 = {{"US", "USA"}, {"US", "USA"}};
+  const std::vector<incident_country_code> expected_cc_leg_3 = {{"US", "USA"}, {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_cc_leg_1);
+  check_incident_country_code(result.trip().routes(0).legs(1), expected_cc_leg_2);
+  check_incident_country_code(result.trip().routes(0).legs(2), expected_cc_leg_3);
 }
 
 TEST_F(IncidentsTest, clipped) {
@@ -493,15 +582,20 @@ TEST_F(IncidentsTest, clipped) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
+  gurka::assert::raw::expect_path(result, {"BC", "BE", "EH", "GHI"});
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, 0., 0, .5},
                                        {456, 0, 3, .5, 3, 1.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, missed) {
@@ -516,9 +610,10 @@ TEST_F(IncidentsTest, missed) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {});
@@ -535,14 +630,18 @@ TEST_F(IncidentsTest, simple_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, .25, 0, .25},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, left_point) {
@@ -556,14 +655,18 @@ TEST_F(IncidentsTest, left_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, 0., 0, 0.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, right_point) {
@@ -577,14 +680,18 @@ TEST_F(IncidentsTest, right_point) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "B"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "B"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, 1., 0, 1.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, multipoint) {
@@ -600,9 +707,10 @@ TEST_F(IncidentsTest, multipoint) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -610,6 +718,11 @@ TEST_F(IncidentsTest, multipoint) {
                                        {456, 0, 1, 0., 1, 0.},
                                        {789, 0, 2, .2, 2, .2},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"},
+                                                                     {"US", "USA"},
+                                                                     {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, point_collisions) {
@@ -628,9 +741,10 @@ TEST_F(IncidentsTest, point_collisions) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
@@ -641,6 +755,11 @@ TEST_F(IncidentsTest, point_collisions) {
                                        {654, 0, 2, .9, 2, .9},
                                        {321, 0, 2, .9, 2, .9},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"CA", "CAN"},
+                                                                     {"US", "USA"}, {"US", "USA"},
+                                                                     {"US", "USA"}, {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, point_shared) {
@@ -657,15 +776,19 @@ TEST_F(IncidentsTest, point_shared) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"C", "H"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"C", "H"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {
                                        {123, 0, 0, 1., 0, 1.},
                                        {456, 0, 1, 1., 1, 1.},
                                    });
+  // check incident country code
+  const std::vector<incident_country_code> expected_country_codes = {{"CA", "CAN"}, {"US", "USA"}};
+  check_incident_country_code(result.trip().routes(0).legs(0), expected_country_codes);
 }
 
 TEST_F(IncidentsTest, armageddon) {
@@ -705,9 +828,10 @@ TEST_F(IncidentsTest, armageddon) {
   reader->sort();
 
   // do the route
-  auto result = gurka::route(map, {"1", "B", "E", "9"}, "auto",
-                             {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
-                             graphreader);
+  auto result =
+      gurka::do_action(valhalla::Options::route, map, {"1", "B", "E", "9"}, "auto",
+                       {{"/filters/action", "include"}, {"/filters/attributes/0", "incidents"}},
+                       graphreader);
 
   // check its right
   check_incident_locations(result, {

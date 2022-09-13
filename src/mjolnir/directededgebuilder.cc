@@ -21,6 +21,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const RoadClass rc,
                                          const uint32_t localidx,
                                          const bool signal,
+                                         const bool stop_sign,
+                                         const bool yield_sign,
+                                         const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
                                          const bool reclass_ferry)
@@ -34,10 +37,10 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_length(std::max(length, kMinimumEdgeLength), true);
 
   // Override use for ferries/rail ferries. TODO - set this in lua
-  if (way.ferry()) {
+  if (way.ferry() && way.use() != Use::kConstruction) {
     set_use(Use::kFerry);
   }
-  if (way.rail()) {
+  if (way.rail() && way.use() != Use::kConstruction) {
     set_use(Use::kRailFerry);
   }
   set_toll(way.toll());
@@ -53,8 +56,9 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
   // the destination only attribution
   set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic()))
+  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
+  }
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
@@ -62,11 +66,19 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_tunnel(way.tunnel());
   set_roundabout(way.roundabout());
   set_bridge(way.bridge());
+  set_indoor(way.indoor());
   set_link(way.link());
+  set_hov_type(way.hov_type());
   set_classification(rc);
   set_localedgeidx(localidx);
   set_restrictions(restrictions);
   set_traffic_signal(signal);
+
+  set_stop_sign(stop_sign);
+  set_yield_sign(yield_sign);
+
+  // temporarily set the deadend flag to indicate if the stop or yield should be at the minor roads
+  set_deadend(minor);
 
   set_sidewalk_left(way.sidewalk_left());
   set_sidewalk_right(way.sidewalk_right());
@@ -133,14 +145,24 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.taxi_forward() && !forward) || (way.taxi_backward() && forward)) {
     reverse_access |= kTaxiAccess;
   }
-  if (way.pedestrian()) {
+  if ((way.pedestrian_forward() && forward) || (way.pedestrian_backward() && !forward)) {
     forward_access |= kPedestrianAccess;
+  }
+  if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
     reverse_access |= kPedestrianAccess;
   }
-  if (way.use() != Use::kSteps &&
-      ((way.wheelchair_tag() && way.wheelchair()) || (!way.wheelchair_tag() && way.pedestrian()))) {
-    forward_access |= kWheelchairAccess;
-    reverse_access |= kWheelchairAccess;
+  if (way.use() != Use::kSteps && way.use() != Use::kConstruction) {
+    if (way.wheelchair_tag() && way.wheelchair()) {
+      forward_access |= kWheelchairAccess;
+      reverse_access |= kWheelchairAccess;
+    } else if (!way.wheelchair_tag()) {
+      if ((way.pedestrian_forward() && forward) || (way.pedestrian_backward() && !forward)) {
+        forward_access |= kWheelchairAccess;
+      }
+      if ((way.pedestrian_forward() && !forward) || (way.pedestrian_backward() && forward)) {
+        reverse_access |= kWheelchairAccess;
+      }
+    }
   }
 
   // Set access modes

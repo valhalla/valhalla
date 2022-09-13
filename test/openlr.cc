@@ -6,8 +6,8 @@
 #include "baldr/openlr.h"
 #include "midgard/encoded.h"
 #include "midgard/pointll.h"
+#include "proto/common.pb.h"
 #include "proto/trip.pb.h"
-#include "proto/tripcommon.pb.h"
 #include "tyr/serializers.h"
 
 #include "test.h"
@@ -143,17 +143,17 @@ TEST(OpenLR, InternalReferencePoints) {
   EXPECT_NEAR(locRef.poff, 0, 1e-3);
   EXPECT_NEAR(locRef.noff, 0, 1e-3);
 
-  for (float poff = 0; poff < locRef.lrps[0].distance;
+  for (double poff = 0; poff < locRef.lrps[0].distance;
        poff += locRef.lrps[0].distance / 3) { // NOLINT
-    for (float noff = 0; noff < locRef.lrps[1].distance;
+    for (double noff = 0; noff < locRef.lrps[1].distance;
          noff += locRef.lrps[1].distance / 3) { // NOLINT
-      locRef.poff = poff;
-      locRef.noff = noff;
+      locRef.poff = 256 * poff / locRef.lrps[0].distance;
+      locRef.noff = 256 * noff / locRef.lrps[1].distance;
       OpenLr tryRef(locRef.toBinary());
 
       EXPECT_NEAR(tryRef.getLength(), 2 * 12774.8, 1e-3) << "Distance incorrect.";
-      EXPECT_NEAR(tryRef.poff, locRef.poff, 58.6) << "Positive offset incorrect.";
-      EXPECT_NEAR(tryRef.noff, locRef.noff, 58.6) << "Negative offset incorrect.";
+      EXPECT_EQ(tryRef.poff, locRef.poff) << "Positive offset incorrect.";
+      EXPECT_EQ(tryRef.noff, locRef.noff) << "Negative offset incorrect.";
     }
   }
 
@@ -163,7 +163,7 @@ TEST(OpenLR, InternalReferencePoints) {
   EXPECT_NEAR(locRef.getLength(), 5 * 12774.8, 1e-3) << "Distance incorrect.";
 
   auto hex =
-      " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 44 44";
+      " 0b 01 b5 01 22 b7 3e 10 fc da cc f4 08 80 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da 00 00 00 00 10 f3 da fc de 14 71 10 63 aa aa";
   EXPECT_EQ(to_hex(locRef.toBinary()), hex) << "Incorrectly encoded reference";
 }
 
@@ -231,6 +231,38 @@ TEST(OpenLR, CreateLinearReference) {
   OpenLr short_location(lrps, 0, 0);
   EXPECT_EQ(short_location.poff, 0);
   EXPECT_EQ(short_location.noff, 0);
+}
+
+TEST(OpenLR, EncodeDecodeDistancePrecision) {
+  for (double dist = 0; dist < 15000; dist += 58.6) {
+    // construct location reference points (truncate precision)
+    LocationReferencePoint first(-76.550157, 40.482238, 0.f, 0,
+                                 LocationReferencePoint::FormOfWay::MOTORWAY, nullptr, dist);
+    LocationReferencePoint last(-76.550602, 40.482758, 0.f, 0,
+                                LocationReferencePoint::FormOfWay::MOTORWAY, nullptr, 0.);
+    OpenLr record({first, last}, 0, 0);
+    // encode-decode openlr record
+    OpenLr decoded(record.toBinary());
+    // compare distance value after decoding
+    ASSERT_NEAR(decoded.lrps.front().distance, first.distance, 1e-3);
+  }
+}
+
+TEST(OpenLR, EncodeDecodeBearingPrecision) {
+  for (double bearing = 0; bearing < 360; bearing += 11.25) {
+    // construct location reference points (truncate precision)
+    LocationReferencePoint first(-76.550157, 40.482238, bearing, 0,
+                                 LocationReferencePoint::FormOfWay::MOTORWAY, nullptr);
+    auto last_bearing = bearing < 180 ? (bearing + 180) : (bearing - 180);
+    LocationReferencePoint last(-76.550602, 40.482758, last_bearing, 0,
+                                LocationReferencePoint::FormOfWay::MOTORWAY, nullptr);
+    OpenLr record({first, last}, 0, 0);
+    // encode-decode openlr record
+    OpenLr decoded(record.toBinary());
+    // compare bearing values after decoding
+    ASSERT_NEAR(decoded.lrps.front().bearing, first.bearing, 1e-3);
+    ASSERT_NEAR(decoded.lrps.back().bearing, last.bearing, 1e-3);
+  }
 }
 
 TripLeg CreateLeg(const std::vector<PointLL>& points) {

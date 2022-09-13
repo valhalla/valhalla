@@ -1,5 +1,6 @@
 #include "midgard/tiles.h"
 #include "midgard/aabb2.h"
+#include "midgard/encoded.h"
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
@@ -262,7 +263,7 @@ TEST(Tiles, test_intersect_linestring) {
   assert_answer(t, {{1, 2}, {2, 4}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
   assert_answer(t, {{2, 4}, {1, 2}}, intersect_t{{0, {6, 7, 12, 13, 19, 20, 25, 26}}});
 
-  // some real locations on earth (without polar coordinates accounted for)
+  // some real locations on earth
   Tiles<PointLL> ll(AABB2<PointLL>{-180, -90, 180, 90}, .25, 5);
   std::vector<PointLL> shape{{9.5499754, 47.250248}, {9.55031681, 47.2501144}};
   auto intersection = ll.Intersect(shape);
@@ -275,6 +276,58 @@ TEST(Tiles, test_intersect_linestring) {
   for (const auto& i : intersection)
     count += i.second.size();
   EXPECT_LE(count, 2) << "Unexpected number of intersections for this shape";
+
+  // the following short shapes all end up going to rasterization because they are on the boundary of
+  // subdivisions. when the rasterization algorithm was using single precision floats these shapes
+  // would cause a tie breaker scenario in which it would only rasterize the y direction. the thing is
+  // it was the precision that caused the tie breaker in the first place. switching to double fixes
+  // this because if you make the line long enough to cross more than 2 adjacent bins, it gets
+  // resampled along the geodesic, and when you do this resampling and you do it all in double it
+  // properly projects to the curve which then is never along a perfectly horizontal trajectory
+  // except for at the equator but the resampling also spaces the points out such that they are never
+  // far apart enough to ever do the rasterization step, its all just neighbor pixels and we have a
+  // shortcut for those
+  std::vector<std::string> shapes{
+      R"({wvueB{knms@GdU)",
+      R"(}~etdBcnwfk@dE}YnS_oA|OwaAjAwIGudBEuD_Ey^wHwk@]mVxFss@eTu}G_Iuk@}@mZt@mW\sNcLueAN{PvXseBrFq\)",
+      R"({d{gbBwdpsZ]s~AG}bAFqhAd@goA\_pAUq`B)",
+      R"(eibz`Bc_ysVFse@)",
+      R"(uhbz`BziwcnEUgyl@)",
+      R"(m{~s`B_qbfOu@rDiBxDqCbK]tH?dOd@v\t@x`@l@tZe@dU?bc@Lxh@NrTt@h[\nWN`WmAbTiB`V]vOyClTuDzT)",
+      R"(_qwg`Bkf}qQgN}g@kAkLiCs`@gCm_@_@wHEcHr@qKbBwK`CqM)",
+      R"(cqsa~Aym}kSbBqH|c@ikBd@oH?aEm@eDaC}FwCiG}D}FkGeIyWeVwCgCcAqB}@uD{@gMe@wT_@_UN{I)",
+      R"(swk{yAm{vp\fIiKtJ}[bU}_AbW{{AdEyXl@cNGagAqBut@wD_t@{F}{@wCmy@aCca@mEyYcFyQ)",
+      R"(o_}tyAfwu_iC{FqaDkQgaBiCgaBlEed@rLiWhu@cp@pHk`@t@ce@kLumAav@skDkQ?{P|_@eTlgAaShXuThBipA_s@ag@mJw\aRyRia@uEoSOkqDcKi_Bz_@y_AeE}Tst@qq@kFaSm@mJnNia@L}i@{Jsd@{Vyk@cj@_J_JwNk[wfEyV{k@afAijAcL_^iC_Tf@ce@dYaaEqB}_@)",
+      R"(wqkdxA_cbeeAG|E)",
+      R"(q_lgxAkorvq@ud@|}@}@lEEfCLpCd@`CdKnNrPhW|~@|tAv\zg@)",
+      R"(qbjvpAjpjlcDwDcG{AuEUuEFwMGya@O{~@e@orA]mT)",
+      R"(ehtwkAznrdgELxhB^|@z@z@~eBkAnDm@`CM)",
+      R"(uvwijArilewCiCaHmEqGsLl@yLz@}IiBiMOaSfDsPbFkFjBmEtEkB~HFxzE)",
+      R"(c}kweA~|lpNNnAu@`GgDfG{AdEe@fC{@dAkAZsAA}@cAqBeEwHkQuEmHyBsDe@mD)",
+      R"(u`sidA`nzecF]m@W{AMkBF_S)",
+      R"({{at_Ajmkj`F]o|@O{_@?O?aRNekCz@eFbBiBbFkAly@}@jL??g`BlJen@r@m@d~@cz@)",
+      R"(syhxt@kqlv~CyByCkD}IyBkBkD]uD]aA{ANkAdB]nDz@dE\~CMjD{AtBiCt@uDfAuEdAwDTsFlBqG~FuE|GeE`KeEpEeF~C_IzCoHfGaHtGeFbGaGlGsGzCqGrAoI\_IbBaHFqHpBsPt@sQWiL]mJQsF`BuEhCgDfCkBdFqGfFcFnLyMxDmJ~DuErE{K`FaHnC]jEm@jCiBfBwCr@aHl@eFrAgDxB]tCNhDLxCkA`EcGdCgDrCwC)",
+      R"(kchiYyi`x~DPkk@)",
+      R"(r`egLc~vakEf@]d@m@n@gCf@iCFiBIgDQwD?{A@?FM~@_@xA]|A]p@O~CgCnDcG^]h@m@hC}@`A{@^m@DkAUkBkAqGOiCHwCpEmUhCiL\m@^m@^]nDkB`CgCjDeEhCyCpAkAn@{ATyBCyBK{AE{@B]Hm@fAiCD{@A}@aBwNo@oHGmJ)",
+      R"(tcyyTunevjAbc@dhAJpg@zB`GKdd@dIzz@q@vH}IvIaBnXrEv]yE`l@oGpv@)",
+      R"(_n_gnAlrqwuDFyLl@_}@VuwA?sf@Wk}At@qzAe@enALk_@t@afAm@emBl@ocDGg~Cd@e~D]wsDUsxATieOkAojGFse@r@snA?_i@)",
+  };
+  for (const auto& shape : shapes) {
+    auto decoded = decode<std::vector<PointLL>>(shape);
+    auto intersected = ll.Intersect(decoded);
+    ASSERT_LE(intersected.size(), 3) << "Too many level 2 tiles intersected by " << shape;
+  }
+
+  // horizontal over 3 subdivisions (bins) so that its forced to do bresenham rasterization. also,
+  // note that we do this one in the plane to avoid resampling (adding points along the line) which is
+  // done in the spherical algorithm to account for the curvature of the geodescic. we dont want that
+  // to happen because inserting extra points reverts the test case to a simple sequence of
+  // neighboring bins which takes away our ability to test this a regression in which perfectly
+  // horizontal rasterization marked way too many subdivisions
+  Tiles<Point2> planar(AABB2<Point2>{-180, -90, 180, 90}, .25, 5);
+  auto rasterized = planar.Intersect(std::vector<Point2>{{0.04, 0}, {0.11, 0}});
+  ASSERT_EQ(rasterized.size(), 1) << "One tile should be intersected";
+  ASSERT_EQ(rasterized.begin()->second.size(), 3) << "Three subtiles (bins) should be intersected";
 }
 
 TEST(Tiles, test_random_linestring) {
@@ -342,7 +395,7 @@ template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t&
   auto a = t.ClosestFirst(p);
   size_t size = 0;
   size_t zeros = 0;
-  std::tuple<int32_t, unsigned short, float> last{-1, -1, 0};
+  std::tuple<int32_t, unsigned short, double> last{-1, -1, 0};
   while (true) {
     try {
       // keep track of zero distsance subdivisions
@@ -375,10 +428,6 @@ template <class coord_t> void test_point(const Tiles<coord_t>& t, const coord_t&
 }
 
 TEST(Tiles, test_closest_first) {
-
-  auto m = PointLL(8.99546623, -78.2651062).Distance({-91.2, 90});
-  auto n = PointLL(8.99546623, -78.2651062).Distance({-92, 90});
-
   // test a simple 8x4 grid for polar and meridian wrapping
   Tiles<PointLL> t(AABB2<PointLL>{-180, -90, 180, 90}, 90, 2);
   auto y = t.ClosestFirst({179.99, -16.825});
@@ -434,7 +483,7 @@ TEST(Tiles, test_closest_first) {
   std::mt19937 generator;
   std::uniform_real_distribution<> distribution(0, 360);
   for (size_t i = 0; i < 25; ++i) {
-    PointLL p{distribution(generator) - 180.f, distribution(generator) / 2 - 90.f};
+    PointLL p{distribution(generator) - 180.0, distribution(generator) / 2 - 90.0};
     test_point(t, p);
   }
 }
