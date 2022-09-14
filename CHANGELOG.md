@@ -49,6 +49,7 @@
    * FIXED: CostMatrix incorrect tile usage with oppedge. [#3719](https://github.com/valhalla/valhalla/pull/3719)
    * FIXED: Fix elevation serializing [#3735](https://github.com/valhalla/valhalla/pull/3735)
    * FIXED: Fix returning a potentially uninitialized value in PointXY::ClosestPoint [#3737](https://github.com/valhalla/valhalla/pull/3737)
+   * FIXED: Wales and Scotland name change. [#3746](https://github.com/valhalla/valhalla/pull/3746)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
