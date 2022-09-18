@@ -85,7 +85,7 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {151, {151, "Exceeded max time", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_time"}},
     {152, {152, "Exceeded max contours", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_contours"}},
     {153, {153, "Too many shape points", 400, HTTP_400, OSRM_INVALID_VALUE, "too_large_shape"}},
-    {154, {154, "Path distance exceeds the max distance limit", 400, HTTP_400, OSRM_DISTANCE_EXCEEDED, "too_large_distance"}},
+    {154, {154, "Path distance exceeds the max distance limit, max distance is " + to_string(max_distance) + " Kilometers.", 400, HTTP_400, OSRM_DISTANCE_EXCEEDED, "too_large_distance"}},
     {155, {155, "Outside the valid walking distance at the beginning or end of a multimodal route", 400, HTTP_400, OSRM_INVALID_URL, "too_large_first_last_walking_distance"}},
     {156, {156, "Outside the valid walking distance between stops of a multimodal route", 400, HTTP_400, OSRM_INVALID_URL, "too_large_in_between_walking_distance"}},
     {157, {157, "Exceeded max avoid locations", 400, HTTP_400, OSRM_INVALID_VALUE, "too_many_avoids"}},
