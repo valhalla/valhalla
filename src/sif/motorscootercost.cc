@@ -382,7 +382,8 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 
@@ -409,7 +410,8 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && opp_edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 

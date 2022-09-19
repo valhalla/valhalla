@@ -439,7 +439,8 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) ||
       (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 
@@ -466,7 +467,8 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) ||
       (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && opp_edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 

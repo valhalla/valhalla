@@ -135,8 +135,6 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 | `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
 | `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
-
-
 The following options are available for `truck` costing.
 
 | Truck options | Description |

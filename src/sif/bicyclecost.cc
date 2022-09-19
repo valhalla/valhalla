@@ -548,7 +548,8 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
       (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
       IsUserAvoidEdge(edgeid) || (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 
@@ -587,7 +588,8 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
       IsUserAvoidEdge(opp_edgeid) || (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
-      (exclude_tolls_ && !pred.toll() && opp_edge->toll())) {
+      (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
+      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 
