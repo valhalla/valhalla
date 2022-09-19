@@ -589,7 +589,7 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       IsUserAvoidEdge(opp_edgeid) || (exclude_bridges_ && !pred.bridge() && opp_edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_tolls_ && !pred.toll() && opp_edge->toll()) ||
-      (edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
+      (opp_edge->is_shortcut() && (exclude_bridges_ || exclude_tunnels_))) {
     return false;
   }
 
