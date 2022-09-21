@@ -1,18 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 import fnmatch
+from os import path, environ
+import requests
 import sys
 import subprocess
-import requests
-
-
-from os import path, environ
 
 
 # jobs defined in .circleci/config.yml
-JOBS = ['build-docker-images',
-        'lint-build-debug',
-        'build-release',
-        'build-osx']
+JOBS = ['build-docker-images', 'lint-build-debug', 'build-release', 'build-osx']
 
 CIRCLE_JOB_STATUS_SUCCESS = 'success'
 
@@ -51,8 +46,7 @@ def last_build_successful():
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run
-    cci_api_url = \
-        f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}'
+    cci_api_url = f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}'
 
     resp = requests.get(cci_api_url)
     resp.raise_for_status()
@@ -73,12 +67,10 @@ def last_build_successful():
         # workflow ID
         if build['workflows']['workflow_id'] == current_workflow_id:
             continue
-        job_status[build['workflows']['job_name']] = (
-            build['status'], build['vcs_revision'])
+        job_status[build['workflows']['job_name']] = (build['status'], build['vcs_revision'])
 
     if sorted(job_status.keys()) != sorted(JOBS):
-        print(
-            f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
+        print(f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
         return False, None
 
     # Return False if any of the jobs were not in 'success' state
@@ -104,9 +96,10 @@ if not status:
     sys.exit(0)
 
 # if commit does not exist anymore, dont skip
-if subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'],
-                  capture_output=True,
-                  text=True).stdout != 'commit':
+if (
+    subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'], capture_output=True, text=True).stdout
+    != 'commit'
+):
     sys.exit(0)
 
 
@@ -114,9 +107,7 @@ if subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'],
 GIT_CMD = ['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 
 # Get list of changed files staged for commit
-changed_files = subprocess.run(GIT_CMD,
-                               capture_output=True,
-                               text=True).stdout.splitlines()
+changed_files = subprocess.run(GIT_CMD, capture_output=True, text=True).stdout.splitlines()
 # Get CI ignore rules
 with open(CI_IGNORE_FILE, 'r') as f:
     CI_IGNORE_RULES = f.readlines()
@@ -127,6 +118,9 @@ for changed_file in changed_files:
     for ignore_rule in CI_IGNORE_RULES:
         if fnmatch.fnmatch(changed_file, ignore_rule):
             ignored_files.append(changed_file)
+
+print(f"changed files: {changed_files}")
+print(f"ignored files: {ignored_files}")
 
 if sorted(ignored_files) == sorted(changed_files):
     # everything was ignored, skip CI

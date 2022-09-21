@@ -137,7 +137,7 @@ make -C build -j$(nproc)
 sudo make -C build install
 ```
 
-### Building from Source - MacOS
+### Building from Source - macOS
 
 #### Configuring Rosetta for ARM64 MacBook
 
@@ -162,6 +162,7 @@ You will use them to specify the platform when installing a library. Note: use `
 
 **_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
 
+**_NOTE:_** It is possible to build Valhalla natively for Apple Silicon, but some dependencies(e.g. LuaJIT) don't have stable versions supporting Apple Silicon and have to be built and installed manually from source.
 
 #### Installing dependencies
 

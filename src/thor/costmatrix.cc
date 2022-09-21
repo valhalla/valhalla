@@ -141,6 +141,20 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
         target_status_[i].threshold--;
         BackwardSearch(i, graphreader);
         if (target_status_[i].threshold == 0) {
+          for (uint32_t source = 0; source < source_count_; source++) {
+            //  Get all targets remaining for the origin
+            auto& targets = source_status_[source].remaining_locations;
+            auto it = targets.find(i);
+            if (it != targets.end()) {
+              targets.erase(it);
+              if (targets.empty() && source_status_[source].threshold > 0) {
+                source_status_[i].threshold = -1;
+                if (remaining_sources_ > 0) {
+                  remaining_sources_--;
+                }
+              }
+            }
+          }
           target_status_[i].threshold = -1;
           if (remaining_targets_ > 0) {
             remaining_targets_--;
@@ -155,6 +169,20 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
         source_status_[i].threshold--;
         ForwardSearch(i, n, graphreader);
         if (source_status_[i].threshold == 0) {
+          for (uint32_t target = 0; target < target_count_; target++) {
+            //  Get all sources remaining for the destination
+            auto& sources = target_status_[target].remaining_locations;
+            auto it = sources.find(i);
+            if (it != sources.end()) {
+              sources.erase(it);
+              if (sources.empty() && target_status_[target].threshold > 0) {
+                target_status_[i].threshold = -1;
+                if (remaining_targets_ > 0) {
+                  remaining_targets_--;
+                }
+              }
+            }
+          }
           source_status_[i].threshold = -1;
           if (remaining_sources_ > 0) {
             remaining_sources_--;
@@ -607,7 +635,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       uint8_t flow_sources;
       Cost newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,

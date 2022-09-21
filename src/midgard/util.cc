@@ -262,16 +262,16 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
   auto last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // radians
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     // how much do we have left on this segment from where we are (in great arc radians)
-    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * RAD_PER_DEG - lat2) /
-    // 2.0), 2.0) + cos(resampled.back().second * RAD_PER_DEG) * cos(lat2)
-    // *pow(sin((resampled.back().first * -RAD_PER_DEG - lon2) / 2.0), 2.0)));
+    // double d = 2.0 * asin(sqrt(pow(sin((resampled.back().second * kRadPerDegD - lat2) /
+    // 2.0), 2.0) + cos(resampled.back().second * kRadPerDegD) * cos(lat2)
+    // *pow(sin((resampled.back().first * -kRadPerDegD - lon2) / 2.0), 2.0)));
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       // set d to 0, do not skip in case we are preserving coordinates
       d = 0.0;
@@ -280,8 +280,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
     // keep placing points while we can fit them
     while (d > remaining) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -291,8 +291,8 @@ resample_spherical_polyline(const container_t& polyline, double resolution, bool
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
       // we just consumed a bit
       d -= remaining;
@@ -350,12 +350,12 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
   PointLL last = resampled.back();
   for (auto p = std::next(polyline.cbegin()); p != polyline.cend(); ++p) {
     // Distance between this vertex and last (in great arc radians)
-    auto lon2 = p->first * -RAD_PER_DEG;
-    auto lat2 = p->second * RAD_PER_DEG;
+    auto lon2 = p->first * -kRadPerDegD;
+    auto lat2 = p->second * kRadPerDegD;
     auto d = (last == *p) ? 0.0
-                          : acos(sin(last.second * RAD_PER_DEG) * sin(lat2) +
-                                 cos(last.second * RAD_PER_DEG) * cos(lat2) *
-                                     cos(last.first * -RAD_PER_DEG - lon2));
+                          : acos(sin(last.second * kRadPerDegD) * sin(lat2) +
+                                 cos(last.second * kRadPerDegD) * cos(lat2) *
+                                     cos(last.first * -kRadPerDegD - lon2));
     if (std::isnan(d)) {
       continue;
     }
@@ -363,8 +363,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
     // Place resampled points on this segment as long as remaining distance is < d
     while (remaining < d) {
       // some precomputed stuff
-      auto lon1 = last.first * -RAD_PER_DEG;
-      auto lat1 = last.second * RAD_PER_DEG;
+      auto lon1 = last.first * -kRadPerDegD;
+      auto lat1 = last.second * kRadPerDegD;
       auto sd = sin(d);
       auto a = sin(d - remaining) / sd;
       auto acs1 = a * cos(lat1);
@@ -375,8 +375,8 @@ std::vector<PointLL> uniform_resample_spherical_polyline(const std::vector<Point
       auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
       auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
       auto z = a * sin(lat1) + b * sin(lat2);
-      last.first = atan2(y, x) * -DEG_PER_RAD;
-      last.second = atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD;
+      last.first = atan2(y, x) * -kDegPerRadD;
+      last.second = atan2(z, sqrt(x * x + y * y)) * kDegPerRadD;
       resampled.push_back(last);
 
       // Update to reduce d and update...
@@ -544,62 +544,6 @@ template bool intersect<PointLL>(const PointLL& u,
                                  PointLL& i);
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
-
-// Return the intercept of the line passing through uv with the horizontal line defined by y
-template <class coord_t>
-typename coord_t::first_type
-y_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type y) {
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return u.first;
-  }
-  if (std::abs(u.second - u.second) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return (y - b) / m;
-}
-template PointXY<float>::first_type y_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type y_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type y_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-y_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
-
-// Return the intercept of the line passing through uv with the vertical line defined by x
-template <class coord_t>
-typename coord_t::first_type
-x_intercept(const coord_t& u, const coord_t& v, const typename coord_t::second_type x) {
-  if (std::abs(u.second - v.second) < 1e-5) {
-    return u.second;
-  }
-  if (std::abs(u.first - v.first) < 1e-5) {
-    return NAN;
-  }
-  auto m = (v.second - u.second) / (v.first - u.first);
-  auto b = u.second - (u.first * m);
-  return x * m + b;
-}
-template PointXY<float>::first_type x_intercept<PointXY<float>>(const PointXY<float>&,
-                                                                const PointXY<float>&,
-                                                                const PointXY<float>::first_type);
-template GeoPoint<float>::first_type x_intercept<GeoPoint<float>>(const GeoPoint<float>&,
-                                                                  const GeoPoint<float>&,
-                                                                  const GeoPoint<float>::first_type);
-template PointXY<double>::first_type x_intercept<PointXY<double>>(const PointXY<double>&,
-                                                                  const PointXY<double>&,
-                                                                  const PointXY<double>::first_type);
-template GeoPoint<double>::first_type
-x_intercept<GeoPoint<double>>(const GeoPoint<double>&,
-                              const GeoPoint<double>&,
-                              const GeoPoint<double>::first_type);
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {

@@ -6,6 +6,10 @@ using namespace valhalla::midgard;
 
 namespace valhalla {
 
+// Use a short snap to node distance in Project helper methods. This seems to fix
+// a bug where an incorrect turn + immediate Uturn exists when this distance = 0.
+constexpr double kSnapToNodeDistance = 1.0; // meters
+
 namespace meili {
 
 struct CandidateCollector {
@@ -78,7 +82,8 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     const bool edge_included = !costing || costing->Allowed(edge, tile, sif::kDisallowShortcut);
 
     if (edge_included) {
-      std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
+      std::tie(point, sq_distance, segment, offset) =
+          helpers::Project(projector, shape, kSnapToNodeDistance);
 
       if (sq_distance <= sq_search_radius) {
         const double dist = edge->forward() ? offset : 1.0 - offset;
@@ -97,7 +102,8 @@ CandidateCollector::WithinSquaredDistance(const midgard::PointLL& location,
     if (oppedge_included) {
       // No need to project again if we already did it above
       if (!edge_included) {
-        std::tie(point, sq_distance, segment, offset) = helpers::Project(projector, shape);
+        std::tie(point, sq_distance, segment, offset) =
+            helpers::Project(projector, shape, kSnapToNodeDistance);
       }
       if (sq_distance <= sq_search_radius) {
         const double dist = opp_edge->forward() ? offset : 1.0 - offset;

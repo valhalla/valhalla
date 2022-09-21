@@ -28,8 +28,8 @@
 
 #include "filesystem.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
 
