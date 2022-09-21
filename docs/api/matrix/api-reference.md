@@ -72,7 +72,7 @@ These are the results of a request to the Time-Distance Matrix service.
 | `from_index` | The origin index into the locations array. |
 | `locations` | The specified array of lat/lngs from the input request.
 | `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
-| `warnings`  | A warnings array. This array may contain descriptive text about notices of deprecated request parameters, clamped values etc. | 
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 See the [HTTP return codes](/docs/api/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
