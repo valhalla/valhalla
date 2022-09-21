@@ -15,7 +15,6 @@ json::MapPtr serialize(const PathLocation& location, bool istransit) {
                          {"input_lon", json::fixed_t{location.latlng_.lng(), 6}},
                          {"radius", static_cast<uint64_t>(location.radius_)}});
   json->emplace("istransit", istransit);
-
   return json;
 }
 } // namespace
@@ -23,14 +22,13 @@ json::MapPtr serialize(const PathLocation& location, bool istransit) {
 namespace valhalla {
 namespace tyr {
 
-std::string serializeTransitAvailable(const Api& request,
+std::string serializeTransitAvailable(const Api& /* request */,
                                       const std::vector<baldr::Location>& locations,
                                       const std::unordered_set<baldr::Location>& found) {
   auto json = json::array({});
   for (const auto& location : locations) {
     json->emplace_back(serialize(location, found.find(location) != found.cend()));
   }
-
   std::stringstream ss;
   ss << *json;
   return ss.str();
