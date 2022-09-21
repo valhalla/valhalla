@@ -134,7 +134,7 @@ std::string serializeIsochrones(const Api& request,
 
   // add warnings to json response
   if (request.info().warnings_size() >= 1) {
-    feature_collection->emplace("warnings", valhalla::tyr::serializeWarnings(request));
+    feature_collection->emplace("warnings", serializeWarnings(request));
   }
 
   std::stringstream ss;

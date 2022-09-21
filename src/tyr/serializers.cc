@@ -160,22 +160,23 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("warnings");
   for (int i = 0; i < api.info().warnings_size(); i++) {
-    writer(std::to_string(api.info().warnings(i).code()), api.info().warnings(i).description());
+    writer.start_object();
+    writer("code", api.info().warnings(i).code());
+    writer("text", api.info().warnings(i).description());
+    writer.end_object();
   }
   writer.end_array();
 }
 
-std::string serializeWarnings(const valhalla::Api& api) {
+json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
   auto warnings = json::array({});
-  auto warnings_text = json::map({});
   for (int i = 0; i < api.info().warnings_size(); i++) {
-    warnings_text->emplace(std::to_string(api.info().warnings(i).code()),
-                           api.info().warnings(i).description());
+    warnings->emplace_back(json::map({
+      {"code", api.info().warnings(i).code()},
+      {"text", api.info().warnings(i).description()}
+    }));
   }
-  warnings->emplace_back(warnings_text);
-  std::stringstream ss;
-  ss << *warnings;
-  return ss.str();
+  return warnings;
 }
 
 std::string serializePbf(Api& request) {

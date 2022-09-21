@@ -47,6 +47,6 @@ The route narrative/guidance generating code is located in the *odin* directory.
       - toJSON - Returns a trip object formated to JSON
     - **jsonToProtoRoute**(json_route, proto_route) → used by navigator
       - Transfers the JSON route information returned from a route request into the Route pbf object passed in by reference.
-  - To summarize, Valhalla builds a JSON “trip” object which contains the locations, route summary with basic info about the trip, a list of legs of the trip, status, units, language and a warnings array if any deprecated parameters or clamped values etc, are used in the request.
+  - To summarize, Valhalla builds a JSON “trip” object which contains the locations, route summary with basic info about the trip, a list of legs of the trip, status, units and language.
   - A more in depth description of the results can be found [here](https://github.com/valhalla/valhalla-docs/blob/master/turn-by-turn/api-reference.md#outputs-of-a-route).
 

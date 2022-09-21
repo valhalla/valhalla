@@ -1726,6 +1726,11 @@ std::string serialize(valhalla::Api& api) {
   json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes",
                 std::move(routes));
 
+  // get serialized warnings
+  if (api.info().warnings_size() >= 1) {
+    json->emplace("warnings", serializeWarnings(api));
+  }
+
   std::stringstream ss;
   ss << *json;
   return ss.str();

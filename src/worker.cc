@@ -139,18 +139,19 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
 };
 
 // unordered map for warning pairs
-const std::unordered_map<int, std::string> warnings_object = {
-    {100, "auto_shorter is deprecated and will be turned into the shotest costing option"},
-    {101,
-     "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"},
-    {102, "auto_data_fix is deprecated and will be turned to ignore all the things costing option"},
-    {103, "best_paths has been deprecated. use alternates instead"},
+const std::unordered_map<int, std::string> warning_codes = {
+  // 1xx is for deprecations
+  {100, "auto_shorter costing is deprecated, use \"shortest\" costing option instead"},
+  {101,
+    "hov costing is deprecated, use \"include_hov2\" costing option instead"},
+  {102, "auto_data_fix is deprecated, use the \"ignore_*\" costing options instead"},
+  {103, "best_paths has been deprecated, use \"alternates\" instead"}
 };
 
 // function to add warnings to proto info object
 void add_warning(valhalla::Api& api, int code) {
-  auto message = warnings_object.find(code);
-  if (message != warnings_object.end()) {
+  auto message = warning_codes.find(code);
+  if (message != warning_codes.end()) {
     auto* warning = api.mutable_info()->mutable_warnings()->Add();
     warning->set_description(message->second);
     warning->set_code(message->first);
