@@ -37,7 +37,7 @@ jobs:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: 'f4bd6423'
+      VCPKG_REF: '2022.08.15'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
