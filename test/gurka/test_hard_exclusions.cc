@@ -22,52 +22,37 @@ namespace {
     "exclude_tolls"
   };
 
-  // const std::vector<std::tuple<std::string, std::string>> kParameterTuples(kSupportedCostingModels.size() * kExclusionParameters.size());
+  constexpr double grid_size_meters = 100.;
 
-} // namespace
+  const std::string ascii_map = R"(
+  E----F----G----H----I----A----J----K----L
+                                |    |
+                                |    |
+                                |    |
+                                |    |
+                                M----N
+  )";
 
-class ExclusionTest : public ::testing::TestWithParam<std::vector<std::string>> {
-protected:
-  static gurka::map map;
+  const gurka::ways ways = {
+      {"EF", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+      {"FG", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+      {"GH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+      {"IA", {{"highway", "residential"}}},
+      {"IJ", {{"highway", "residential"}}},
+      {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
+      {"KL", {{"highway", "residential"}}},
+      {"JM", {{"highway", "residential"}}},
+      {"MN", {{"highway", "residential"}}},
+      {"NK", {{"highway", "residential"}}},
+  };
 
-  static void SetUpTestSuite() {
-    constexpr double grid_size_meters = 100.;
-
-    const std::string ascii_map = R"(
-   E----F----G----H----I----A----J----K----L
-                                 |    |
-                                 |    |
-                                 |    |
-                                 |    |
-                                 M----N
-    )";
-
-    const gurka::ways ways = {
-        {"EF", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
-        {"FG", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
-        {"GH", {{"highway", "residential"}}},
-        {"HI", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
-        {"IA", {{"highway", "residential"}}},
-        {"IJ", {{"highway", "residential"}}},
-        {"JK", {{"highway", "residential"}, {"bridge", "yes"}, {"tunnel", "yes"}, {"toll", "yes"}}},
-        {"KL", {{"highway", "residential"}}},
-        {"JM", {{"highway", "residential"}}},
-        {"MN", {{"highway", "residential"}}},
-        {"NK", {{"highway", "residential"}}},
-    };
-
-    const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
-                            {{"service_limits.allow_hard_exclusions", "true"}});
-
-    //for (size_t i = 0, s = kSupportedCostingModels.size(); i < kParameterTuples.size(); ++i) {
-    //  kParameterTuples[i] = {kExclusionParameters[i/s], kSupportedCostingModels[i%s]};
-    //}
-  }
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
 
   void check_result(const std::string& exclude_parameter_value,
                     const std::vector<std::string>& waypoints,
                     const std::vector<std::string>& expected_names,
+                    gurka::map map,
                     const std::vector<std::string>& props = {}) {
 
     const std::string& costing = props[0];
@@ -77,26 +62,68 @@ protected:
     gurka::assert::raw::expect_path(result, expected_names);
   }
 
+} // namespace
+
+class ExclusionTest : public ::testing::TestWithParam<std::vector<std::string>> {
+protected:
+  static gurka::map map;
+  static gurka::map mapNotAllowed;
+
+  static void SetUpTestSuite() {
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude",
+                            {{"service_limits.allow_hard_exclusions", "true"}});
+    mapNotAllowed = gurka::buildtiles(layout, ways, {}, {}, "test/data/hard_exclude");
+
+  }
 };
 
 gurka::map ExclusionTest::map = {};
+gurka::map ExclusionTest::mapNotAllowed = {};
 
 TEST_P(ExclusionTest, InTheMiddle) {
-  check_result("0", {"I","L"}, {"IJ", "JK", "KL"}, GetParam());
-  check_result("1", {"I","L"}, {"IJ", "JM", "MN", "NK", "KL"}, GetParam());
+  check_result("0", {"I","L"}, {"IJ", "JK", "KL"}, map, GetParam());
+  check_result("1", {"I","L"}, {"IJ", "JM", "MN", "NK", "KL"}, map, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheBeginning) {
-  check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, GetParam());
-  check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, GetParam());
+  check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, map, GetParam());
+  check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, map, GetParam());
 }
 
 TEST_P(ExclusionTest, InTheEnd) {
-  check_result("0", {"H", "E"}, {"GH", "FG", "EF"}, GetParam());
-  check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, GetParam());
+  check_result("0", {"H", "E"}, {"GH", "FG", "EF"}, map, GetParam());
+  check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, map, GetParam());
+}
+
+TEST_P(ExclusionTest, InTheMiddleNotAllowed) {
+  check_result("0", {"I","L"}, {"IJ", "JK", "KL"}, mapNotAllowed, GetParam());
+  try {
+    check_result("1", {"I","L"}, {"IJ", "JM", "MN", "NK", "KL"}, mapNotAllowed, GetParam());
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_P(ExclusionTest, InTheBeginningNotAllowed) {
+  check_result("0", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
+  try {
+    check_result("1", {"E", "H"}, {"EF", "FG", "GH"}, mapNotAllowed, GetParam());
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
+}
+
+TEST_P(ExclusionTest, InTheEndNotAllowed) {
+  check_result("0", {"H", "E"}, {"GH", "FG", "EF"}, mapNotAllowed, GetParam());
+  try {
+    check_result("1", {"H", "E"}, {"GH", "FG", "EF"}, mapNotAllowed, GetParam());
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 145); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  };
 }
 
 INSTANTIATE_TEST_SUITE_P(ExcludePropsTest,
                          ExclusionTest,
                          ::testing::Values(::testing::Combine(::testing::Values(kSupportedCostingModels),
-                                                               ::testing::Values(kExclusionParameters))));
+                                                              ::testing::Values(kExclusionParameters))));

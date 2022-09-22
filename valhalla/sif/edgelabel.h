@@ -82,17 +82,10 @@ public:
         not_thru_(edge->not_thru()), deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
-<<<<<<< HEAD
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
+        bridge_(edge->bridge()), tunnel_(edge->tunnel()),
         has_measured_speed_(has_measured_speed), cost_(cost), sortcost_(sortcost) {
-=======
-        closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
-        restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        unpaved_(edge->unpaved()), bridge_(edge->bridge()), tunnel_(edge->tunnel()),
-        cost_(cost), sortcost_(sortcost), distance_(dist),
-        transition_cost_(transition_cost) {
->>>>>>> 4f1806b2b (Add exclude_toll, exclude_bridge and exclude_tunnel options)
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -453,20 +446,13 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-<<<<<<< HEAD
   uint32_t has_measured_speed_ : 1;
-=======
-<<<<<<< HEAD
->>>>>>> 4f1806b2b (Add exclude_toll, exclude_bridge and exclude_tunnel options)
-  uint32_t spare : 13;
-=======
   // Flag indicating edge is a bridge.
   uint32_t bridge_ : 1;
   // Flag indicating edge is a tunnel.
   uint32_t tunnel_ : 1;
 
-  uint32_t spare : 12;
->>>>>>> a78f66955 (Add exclude_toll, exclude_bridge and exclude_tunnel options)
+  uint32_t spare : 13;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
