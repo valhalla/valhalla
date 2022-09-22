@@ -50,6 +50,7 @@
    * FIXED: Fix elevation serializing [#3735](https://github.com/valhalla/valhalla/pull/3735)
    * FIXED: Fix returning a potentially uninitialized value in PointXY::ClosestPoint [#3737](https://github.com/valhalla/valhalla/pull/3737)
    * FIXED: Wales and Scotland name change. [#3746](https://github.com/valhalla/valhalla/pull/3746)
+   * FIXED: Pedestrian crossings are allowed for bikes [#3751](https://github.com/valhalla/valhalla/pull/3751)
    * FIXED: Fix for Mac OSx.  Small update for the workdir for the admin_sidewalk_override test.  [#3757](https://github.com/valhalla/valhalla/pull/3757)
 
 * **Enhancement**

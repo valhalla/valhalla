@@ -26,13 +26,17 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
         |               |
         |  I--------J   |
         |               |
+        |  K--------L   |
+        |               |
         F-------E-------D
   )";
 
   // To define an administrative boundary, the nodes must form a closed polygon.
-  const gurka::ways ways = {{"ABCDEFA", {}},
-                            {"GH", {{"highway", "footway"}}},
-                            {"IJ", {{"highway", "footway"}, {"footway", "sidewalk"}}}};
+  const gurka::ways ways =
+      {{"ABCDEFA", {}},
+       {"GH", {{"highway", "footway"}}},
+       {"IJ", {{"highway", "footway"}, {"footway", "sidewalk"}}},
+       {"KL", {{"highway", "footway"}, {"crossing", "zebra"}, {"footway", "crossing"}}}};
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABCDEFA", "outer"}}},
                                        {{"type", "boundary"},
@@ -193,4 +197,23 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
 
   EXPECT_EQ(JI_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
   EXPECT_EQ(JI_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+
+  //----------------------------
+  // Get/assert info on K & L
+  //----------------------------
+  GraphId KL_edge_id;
+  const DirectedEdge* KL_edge = nullptr;
+  GraphId LK_edge_id;
+  const DirectedEdge* LK_edge = nullptr;
+  std::tie(KL_edge_id, KL_edge, LK_edge_id, LK_edge) =
+      findEdge(graph_reader, admin_map.nodes, "KL", "L");
+  EXPECT_NE(KL_edge, nullptr);
+  EXPECT_NE(LK_edge, nullptr);
+
+  // sidewalk
+  EXPECT_EQ(KL_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+  EXPECT_EQ(KL_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+
+  EXPECT_EQ(LK_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+  EXPECT_EQ(LK_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
 }
