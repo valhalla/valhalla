@@ -119,7 +119,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   //======================================================================
 
   // Create test/data/admin/map.pbf
-  const std::string workdir = "test/data/admin_uk";
+  const std::string workdir = "test/data/admin_belarus";
 
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
