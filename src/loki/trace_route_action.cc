@@ -58,7 +58,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
 
     if (crow_distance > max_distance) {
-      throw valhalla_exception_t{154};
+      throw valhalla_exception_t{154, std::to_string(max_distance)};
     }
   }
 

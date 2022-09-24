@@ -33,7 +33,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       auto dist = to_ll(locations.Get(i)).Distance(to_ll(locations.Get(j)));
       total_path_distance += i + 1 == j ? dist : 0;
       if ((!all_pairs && total_path_distance > max_distance) || (all_pairs && dist > max_distance))
-        throw valhalla_exception_t{154};
+        throw valhalla_exception_t{154, std::to_string(max_distance)};
       if (!all_pairs)
         break;
     }

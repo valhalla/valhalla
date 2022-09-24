@@ -20,7 +20,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(*source).Distance(to_ll(*target));
       if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
+        throw valhalla_exception_t{154, std::to_string(matrix_max_distance)};
       };
     }
   }
