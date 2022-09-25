@@ -1523,10 +1523,11 @@ void enhance(const boost::property_tree::ptree& pt,
           if (admin_index != 0 && country_iterator != country_access.end() &&
               directededge.use() != Use::kFerry &&
               (directededge.classification() <= RoadClass::kPrimary ||
-               directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
-               directededge.use() == Use::kSidewalk || directededge.use() == Use::kPedestrian ||
                directededge.use() == Use::kBridleway || directededge.use() == Use::kCycleway ||
-               directededge.use() == Use::kPath)) {
+               directededge.use() == Use::kFootway || directededge.use() == Use::kPath ||
+               directededge.use() == Use::kPedestrian ||
+               directededge.use() == Use::kPedestrianCrossing ||
+               directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
             std::vector<int> access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
