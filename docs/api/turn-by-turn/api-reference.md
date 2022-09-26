@@ -135,6 +135,7 @@ The following options are available for `truck` costing.
 | `length` | The length of the truck (in meters). Default 21.64. |
 | `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
