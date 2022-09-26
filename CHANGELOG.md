@@ -1,11 +1,5 @@
 ## Release Date: 2021-??-?? Valhalla 3.1.5
 
-## Release Date: 2016-01-04
-* **Removed**
-* **Bug Fix**
-* **Enhancement** 
-   * ADDED: MaxAxle count to restrictions [#3648](https://github.com/valhalla/valhalla/pull/3648)
-
 * **Removed**
    * REMOVED: "build-*" docker image to decrease complexity [#3689](https://github.com/valhalla/valhalla/pull/3541)
 * **Bug Fix**
@@ -120,6 +114,7 @@
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
+   * ADDED: axle_count costing option for hgv [#3648](https://github.com/valhalla/valhalla/pull/3648)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
