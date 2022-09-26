@@ -52,6 +52,7 @@ constexpr float kDefaultTruckAxleLoad = 9.07f; // Metric Tons (20,000 lbs)
 constexpr float kDefaultTruckHeight = 4.11f;   // Meters (13 feet 6 inches)
 constexpr float kDefaultTruckWidth = 2.6f;     // Meters (102.36 inches)
 constexpr float kDefaultTruckLength = 21.64f;  // Meters (71 feet)
+constexpr uint32_t kDefaultAxleCount = 5;      // 5 axles for above truck config
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -72,6 +73,7 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<uint32_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -268,12 +270,13 @@ public:
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
-  bool hazmat_;     // Carrying hazardous materials
-  float weight_;    // Vehicle weight in metric tons
-  float axle_load_; // Axle load weight in metric tons
-  float height_;    // Vehicle height in meters
-  float width_;     // Vehicle width in meters
-  float length_;    // Vehicle length in meters
+  bool hazmat_;         // Carrying hazardous materials
+  float weight_;        // Vehicle weight in metric tons
+  float axle_load_;     // Axle load weight in metric tons
+  float height_;        // Vehicle height in meters
+  float width_;         // Vehicle width in meters
+  float length_;        // Vehicle length in meters
+  uint32_t axle_count_; // Vehicle axle count
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -300,6 +303,7 @@ TruckCost::TruckCost(const Costing& costing)
   height_ = costing_options.height();
   width_ = costing_options.width();
   length_ = costing_options.length();
+  axle_count_ = costing_options.axle_count();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -349,7 +353,7 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
       }
       break;
     case AccessType::kMaxAxles:
-      if (axles > static_cast<int>(restriction.value())) {
+      if (axle_count_ > static_cast<uint32_t>(restriction.value())) {
         return false;
       }
       break;
@@ -649,6 +653,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kAxleCountRange, json, "/axle_count", axle_count);
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {

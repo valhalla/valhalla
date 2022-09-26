@@ -138,7 +138,7 @@ constexpr float kDefaultTruck_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultTruck_LowClassPenalty = 30.0f;         // Seconds
 constexpr float kDefaultTruck_TruckWeight = 21.77f;            // Metric Tons (48,000 lbs)
 constexpr float kDefaultTruck_TruckAxleLoad = 9.07f;           // Metric Tons (20,000 lbs)
-constexpr float kDefaultTruck_TruckAxles = 3.f;                // Count
+constexpr uint32_t kDefaultTruck_TruckAxles = 5;               // Count
 constexpr float kDefaultTruck_TruckHeight = 4.11f;             // Meters (13 feet 6 inches)
 constexpr float kDefaultTruck_TruckWidth = 2.6f;               // Meters (102.36 inches)
 constexpr float kDefaultTruck_TruckLength = 21.64f;            // Meters (71 feet)
@@ -661,7 +661,7 @@ void test_default_truck_cost_options(const Costing::Type costing_type, const Opt
   validate("hazmat", false, options.hazmat());
   validate("weight", kDefaultTruck_TruckWeight, options.weight());
   validate("axle_load", kDefaultTruck_TruckAxleLoad, options.axle_load());
-  validate("axles", kDefaultTruck_TruckAxles, options.axles());
+  validate("axle_count", kDefaultTruck_TruckAxles, options.axle_count());
   validate("height", kDefaultTruck_TruckHeight, options.height());
   validate("width", kDefaultTruck_TruckWidth, options.width());
   validate("length", kDefaultTruck_TruckLength, options.length());
@@ -1342,21 +1342,20 @@ void test_axle_load_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.axle_load());
 }
 
-
-void test_axles_parsing(const Costing::Type costing_type,
-                            const string specified_value,
-                            const string expected_value,
-                            const Options::Action action = Options::route) {
+void test_axle_count_parsing(const Costing::Type costing_type,
+                             const uint32_t specified_value,
+                             const uint32_t expected_value,
+                             const Options::Action action = Options::route) {
   // Create the costing string
   auto costing_str = get_costing_str(costing_type);
   const std::string grandparent_key = "costing_options";
   const std::string& parent_key = costing_str;
-  const std::string key = "axles";
+  const std::string key = "axle_count";
 
   Api request =
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   const auto& options = request.options().costings().find(costing_type)->second.options();
-  validate(key, expected_value, options.axles());
+  validate(key, expected_value, options.axle_count());
 }
 
 void test_height_parsing(const Costing::Type costing_type,
@@ -2690,13 +2689,13 @@ TEST(ParseRequest, test_axle_load) {
   test_axle_load_parsing(costing, 100.f, default_value);
 }
 
-TEST(ParseRequest, test_axles) {
+TEST(ParseRequest, test_axle_count) {
   Costing::Type costing = Costing::truck;
-  float default_value = kDefaultTruck_TruckAxles;
-  test_axles_parsing(costing, default_value, default_value);
-  test_axles_parsing(costing, 2.f, 2.f);
-  test_axles_parsing(costing, 3.f, default_value);
-  test_axles_parsing(costing, 5.f, 5.f);
+  uint32_t default_value = kDefaultTruck_TruckAxles;
+  test_axle_count_parsing(costing, default_value, default_value);
+  test_axle_count_parsing(costing, 2, 2);
+  test_axle_count_parsing(costing, -10, default_value);
+  test_axle_count_parsing(costing, 30, default_value);
 }
 
 TEST(ParseRequest, test_height) {

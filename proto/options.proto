@@ -307,6 +307,9 @@ message Costing {
     oneof has_elevator_penalty {
       float elevator_penalty = 79;
     }
+    oneof has_axle_count {
+      int32 axle_count = 80;
+    }
   }
 
   oneof has_options {

@@ -749,7 +749,7 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
-     tag_handlers_["maxaxles"] = [this]() {
+    tag_handlers_["maxaxles"] = [this]() {
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxAxles);
       restriction.set_value(std::stoul(tag_.second));
