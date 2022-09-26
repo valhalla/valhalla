@@ -52,6 +52,7 @@
    * FIXED: Wales and Scotland name change. [#3746](https://github.com/valhalla/valhalla/pull/3746)
    * FIXED: Pedestrian crossings are allowed for bikes [#3751](https://github.com/valhalla/valhalla/pull/3751)
    * FIXED: Fix for Mac OSx.  Small update for the workdir for the admin_sidewalk_override test.  [#3757](https://github.com/valhalla/valhalla/pull/3757)
+   * FIXED: Add missing service road case from GetTripLegUse method. [#3763](https://github.com/valhalla/valhalla/pull/3763)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
