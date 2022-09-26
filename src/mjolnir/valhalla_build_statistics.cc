@@ -46,6 +46,7 @@ struct HGVRestrictionTypes {
   bool length;
   bool weight;
   bool width;
+  bool axles;
 };
 
 bool IsLoopTerminal(const graph_tile_ptr& tile,
