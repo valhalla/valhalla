@@ -1820,20 +1820,20 @@ public:
 
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
-               tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
-               tag_.first.substr(0, 19) == "bicycle:conditional" ||
-               tag_.first.substr(0, 22) == "motorcycle:conditional" ||
-               tag_.first.substr(0, 16) == "foot:conditional" ||
-               tag_.first.substr(0, 22) == "pedestrian:conditional" ||
-               tag_.first.substr(0, 15) == "hgv:conditional" ||
-               tag_.first.substr(0, 17) == "moped:conditional" ||
-               tag_.first.substr(0, 16) == "mofa:conditional" ||
-               tag_.first.substr(0, 15) == "psv:conditional" ||
-               tag_.first.substr(0, 16) == "taxi:conditional" ||
-               tag_.first.substr(0, 15) == "bus:conditional" ||
-               tag_.first.substr(0, 15) == "hov:conditional" ||
-               tag_.first.substr(0, 21) == "emergency:conditional") {
+      else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "bicycle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "motorcycle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "pedestrian:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "hgv:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "mofa:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "psv:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "taxi:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "bus:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "hov:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
 
         std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
@@ -1851,31 +1851,31 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
-              tag_.first.substr(0, 25) == "motor_vehicle:conditional") {
+          if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
+              boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag_.first.substr(0, 19) == "bicycle:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
-          } else if (tag_.first.substr(0, 16) == "foot:conditional" ||
-                     tag_.first.substr(0, 22) == "pedestrian:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
+                     boost::algorithm::starts_with(tag_.first, "pedestrian:conditional")) {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag_.first.substr(0, 15) == "hgv:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "hgv:conditional")) {
             mode = kTruckAccess;
-          } else if (tag_.first.substr(0, 17) == "moped:conditional" ||
-                     tag_.first.substr(0, 16) == "mofa:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
+                     boost::algorithm::starts_with(tag_.first, "mofa:conditional")) {
             mode = kMopedAccess;
-          } else if (tag_.first.substr(0, 22) == "motorcycle:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
             mode = kMotorcycleAccess;
-          } else if (tag_.first.substr(0, 15) == "psv:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag_.first.substr(0, 16) == "taxi:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
             mode = kTaxiAccess;
-          } else if (tag_.first.substr(0, 15) == "bus:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "bus:conditional")) {
             mode = kBusAccess;
-          } else if (tag_.first.substr(0, 15) == "hov:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "hov:conditional")) {
             mode = kHOVAccess;
-          } else if (tag_.first.substr(0, 21) == "emergency:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);
