@@ -35,7 +35,13 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       }
 
       if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
+        throw valhalla_exception_t{154,
+                                   "Path distance exceeds the max distance limit of" +
+                                       std::to_string(matrix_max_distance) + " meters",
+                                   400,
+                                   HTTP_400,
+                                   OSRM_DISTANCE_EXCEEDED,
+                                   "too_large_distance"};
       };
     }
   }
