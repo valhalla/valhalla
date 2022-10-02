@@ -126,7 +126,8 @@ protected:
 
   // Time distance matrix
   CostMatrix costmatrix_;
-  TimeDistanceMatrix time_distance_matrix_;
+  TimeDistMatrixForward time_dist_matrix_forward_;
+  TimeDistMatrixReverse time_dist_matrix_reverse_;
   TimeDistanceBSSMatrix time_distance_bss_matrix_;
 
   Isochrone isochrone_gen;

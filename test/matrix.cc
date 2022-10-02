@@ -235,7 +235,7 @@ TEST(Matrix, test_matrix) {
   }
   EXPECT_EQ(found, 10) << " not the number of results as expected";
 
-  TimeDistanceMatrix timedist_matrix;
+  TimeDistMatrixForward timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                            reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
@@ -279,7 +279,7 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
                "'s time is not close enough to expected value for CostMatrix.";
   }
 
-  TimeDistanceMatrix timedist_matrix;
+  TimeDistMatrixForward timedist_matrix;
   results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
                                            reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
@@ -321,7 +321,7 @@ TEST(Matrix, partial_matrix) {
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
-  TimeDistanceMatrix timedist_matrix;
+  TimeDistMatrixForward timedist_matrix;
   std::vector<TimeDistance> results =
       timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
                                      mode_costing, sif::TravelMode::kDrive, 400000.0,

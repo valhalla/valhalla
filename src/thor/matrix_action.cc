@@ -34,6 +34,7 @@ std::string thor_worker_t::matrix(Api& request) {
 
   // Distance scaling (miles or km)
   double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
+  bool forward_search = options.sources().size() <= options.targets().size();
 
   // lambdas to do the real work
   std::vector<TimeDistance> time_distances;
@@ -42,10 +43,17 @@ std::string thor_worker_t::matrix(Api& request) {
                                       mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
-                                                mode_costing, mode,
-                                                max_matrix_distance.find(costing)->second,
-                                                options.matrix_locations());
+    time_distances =
+        forward_search
+            ? time_dist_matrix_forward_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                       mode_costing, mode,
+                                                       max_matrix_distance.find(costing)->second,
+                                                       options.matrix_locations())
+            : time_dist_matrix_reverse_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                       mode_costing, mode,
+                                                       max_matrix_distance.find(costing)->second,
+                                                       options.matrix_locations());
+    return time_distances;
   };
 
   if (costing == "bikeshare") {

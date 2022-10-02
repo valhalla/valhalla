@@ -13,7 +13,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
@@ -23,6 +22,8 @@ namespace valhalla {
 namespace thor {
 
 // Class to compute time + distance matrices among locations.
+template <const ExpansionType expansion_direction,
+          const bool FORWARD = expansion_direction == ExpansionType::forward>
 class TimeDistanceMatrix {
 public:
   /**
@@ -30,69 +31,6 @@ public:
    * the constructor mainly just sets some internals to a default empty value.
    */
   TimeDistanceMatrix();
-
-  /**
-   * One to many time and distance cost matrix. Computes time and distance
-   * matrix from one origin location to many other locations.
-   * @param  origin        Location of the origin.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance from origin index to all other locations
-   */
-  std::vector<TimeDistance>
-  OneToMany(const valhalla::Location& origin,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to one time and distance cost matrix. Computes time and distance
-   * matrix from many locations to one destination location.
-   * @param  dest          Location of the destination.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance to the destination index from all other locations
-   */
-  std::vector<TimeDistance>
-  ManyToOne(const valhalla::Location& dest,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to many time and distance cost matrix. Computes time and distance
-   * matrix from many locations to many locations.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @return time/distance between all pairs of locations
-   */
-  std::vector<TimeDistance>
-  ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-             baldr::GraphReader& graphreader,
-             const sif::mode_costing_t& mode_costing,
-             const sif::TravelMode mode,
-             const float max_matrix_distance);
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -113,7 +51,7 @@ public:
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode mode,
+                 const sif::travel_mode_t mode,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations);
 
@@ -150,8 +88,6 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  AStarHeuristic astarheuristic_;
-
   sif::TravelMode mode_;
 
   /**
@@ -166,29 +102,11 @@ protected:
    * @param  from_transition True if this method is called from a transition
    *                         edge.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition);
-
-  /**
-   * Expand from the node along the reverse search path. Immediately expands
-   * from the end node of any transition edge (so no transition edges are added
-   * to the adjacency list or EdgeLabel list). Does not expand transition
-   * edges if from_transition is false.
-   * @param  graphreader  Graph tile reader.
-   * @param  node         Graph Id of the node being expanded.
-   * @param  pred         Predecessor edge label (for costing).
-   * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition);
+  void Expand(baldr::GraphReader& graphreader,
+              const baldr::GraphId& node,
+              const sif::EdgeLabel& pred,
+              const uint32_t pred_idx,
+              const bool from_transition);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -202,14 +120,7 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  void SetOriginOneToMany(baldr::GraphReader& graphreader, const valhalla::Location& origin);
-
-  /**
-   * Sets the origin for a many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  dest          Destination
-   */
-  void SetOriginManyToOne(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
    * Add destinations.
@@ -218,15 +129,6 @@ protected:
    */
   void SetDestinations(baldr::GraphReader& graphreader,
                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
-
-  /**
-   * Set destinations for the many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  locations     List of locations.
-   */
-  void
-  SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -256,6 +158,9 @@ protected:
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix();
 };
+
+using TimeDistMatrixForward = TimeDistanceMatrix<ExpansionType::forward>;
+using TimeDistMatrixReverse = TimeDistanceMatrix<ExpansionType::reverse>;
 
 } // namespace thor
 } // namespace valhalla
