@@ -311,7 +311,7 @@ void thor_worker_t::cleanup() {
   bss_astar.Clear();
   trace.clear();
   costmatrix_.clear();
-  time_dist_matrix_.clear();
+  time_distance_matrix_.clear();
   time_distance_bss_matrix_.clear();
   isochrone_gen.Clear();
   centroid_gen.Clear();

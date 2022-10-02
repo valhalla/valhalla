@@ -42,10 +42,10 @@ std::string thor_worker_t::matrix(Api& request) {
                                       mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    return time_dist_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
-                                            mode_costing, mode,
-                                            max_matrix_distance.find(costing)->second,
-                                            options.matrix_locations());
+    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                mode_costing, mode,
+                                                max_matrix_distance.find(costing)->second,
+                                                options.matrix_locations());
   };
 
   if (costing == "bikeshare") {
