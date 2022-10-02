@@ -28,20 +28,13 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-template <const ExpansionType expansion_direction, const bool FORWARD>
-TimeDistanceMatrix<expansion_direction, FORWARD>::TimeDistanceMatrix()
+TimeDistanceMatrix::TimeDistanceMatrix()
     : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
-// Default constructors
-template TimeDistanceMatrix<ExpansionType::forward>::TimeDistanceMatrix();
-template TimeDistanceMatrix<ExpansionType::reverse>::TimeDistanceMatrix();
-
 // Compute a cost threshold in seconds based on average speed for the travel mode.
 // Use a conservative speed estimate (in MPH) for each travel mode.
-template <const ExpansionType expansion_direction, const bool FORWARD>
-float TimeDistanceMatrix<expansion_direction, FORWARD>::GetCostThreshold(
-    const float max_matrix_distance) const {
+float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
   float average_speed_mph;
   switch (mode_) {
     case travel_mode_t::kBicycle:
@@ -62,8 +55,7 @@ float TimeDistanceMatrix<expansion_direction, FORWARD>::GetCostThreshold(
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix<expansion_direction, FORWARD>::clear() {
+void TimeDistanceMatrix::clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -76,16 +68,14 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::clear() {
   edgestatus_.clear();
 }
 
-template void TimeDistanceMatrix<ExpansionType::forward>::clear();
-template void TimeDistanceMatrix<ExpansionType::reverse>::clear();
-
 // Expand from a node in the forward direction
-template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graphreader,
-                                                              const GraphId& node,
-                                                              const EdgeLabel& pred,
-                                                              const uint32_t pred_idx,
-                                                              const bool from_transition) {
+template <const ExpansionType expansion_direction>
+void TimeDistanceMatrix::Expand(GraphReader& graphreader,
+                                const GraphId& node,
+                                const EdgeLabel& pred,
+                                const uint32_t pred_idx,
+                                const bool from_transition) {
+  const auto FORWARD = expansion_direction == ExpansionType::forward;
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -199,13 +189,13 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      Expand(graphreader, trans->endnode(), pred, pred_idx, true);
+      Expand<expansion_direction>(graphreader, trans->endnode(), pred, pred_idx, true);
     }
   }
 }
 
-template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::SourceToTarget(
+template <const ExpansionType expansion_direction>
+std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
@@ -213,6 +203,7 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
     const sif::travel_mode_t mode,
     const float max_matrix_distance,
     const uint32_t matrix_locations) {
+  const auto FORWARD = expansion_direction == ExpansionType::forward;
   // Run a series of one to many calls and concatenate the results.
   const auto& origins = FORWARD ? source_location_list : target_location_list;
   const auto& destinations = FORWARD ? target_location_list : source_location_list;
@@ -234,8 +225,8 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
 
     // Initialize the origin and destination locations
     settled_count_ = 0;
-    SetOrigin(graphreader, origin);
-    SetDestinations(graphreader, destinations);
+    SetOrigin<expansion_direction>(graphreader, origin);
+    SetDestinations<expansion_direction>(graphreader, destinations);
 
     // Find shortest path
     graph_tile_ptr tile;
@@ -280,7 +271,7 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
       }
 
       // Expand forward from the end node of the predecessor edge.
-      Expand(graphreader, pred.endnode(), pred, predindex, false);
+      Expand<expansion_direction>(graphreader, pred.endnode(), pred, predindex, false);
     }
 
     // Insert one-to-many into many-to-many
@@ -301,7 +292,7 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
   return many_to_many;
 }
 
-template std::vector<TimeDistance> TimeDistanceMatrix<ExpansionType::forward>::SourceToTarget(
+template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward>(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
@@ -309,7 +300,7 @@ template std::vector<TimeDistance> TimeDistanceMatrix<ExpansionType::forward>::S
     const sif::travel_mode_t mode,
     const float max_matrix_distance,
     const uint32_t matrix_locations);
-template std::vector<TimeDistance> TimeDistanceMatrix<ExpansionType::reverse>::SourceToTarget(
+template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse>(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
@@ -319,9 +310,9 @@ template std::vector<TimeDistance> TimeDistanceMatrix<ExpansionType::reverse>::S
     const uint32_t matrix_locations);
 
 // Add edges at the origin to the adjacency list
-template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix<expansion_direction, FORWARD>::SetOrigin(GraphReader& graphreader,
-                                                                 const valhalla::Location& origin) {
+template <const ExpansionType expansion_direction>
+void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader, const valhalla::Location& origin) {
+  const auto FORWARD = expansion_direction == ExpansionType::forward;
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
   std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
@@ -408,10 +399,11 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::SetOrigin(GraphReader& gr
 }
 
 // Set destinations
-template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix<expansion_direction, FORWARD>::SetDestinations(
+template <const ExpansionType expansion_direction>
+void TimeDistanceMatrix::SetDestinations(
     GraphReader& graphreader,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  const auto FORWARD = expansion_direction == ExpansionType::forward;
   // For each destination
   uint32_t idx = 0;
   for (const auto& loc : locations) {
@@ -464,8 +456,7 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::SetDestinations(
 
 // Update any destinations along the edge. Returns true if all destinations
 // have be settled or if the specified location count has been met or exceeded.
-template <const ExpansionType expansion_direction, const bool FORWARD>
-bool TimeDistanceMatrix<expansion_direction, FORWARD>::UpdateDestinations(
+bool TimeDistanceMatrix::UpdateDestinations(
     const valhalla::Location& origin,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
@@ -560,8 +551,7 @@ bool TimeDistanceMatrix<expansion_direction, FORWARD>::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::FormTimeDistanceMatrix() {
+std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix() {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
     td.emplace_back(dest.best_cost.secs, dest.distance);

@@ -22,8 +22,6 @@ namespace valhalla {
 namespace thor {
 
 // Class to compute time + distance matrices among locations.
-template <const ExpansionType expansion_direction,
-          const bool FORWARD = expansion_direction == ExpansionType::forward>
 class TimeDistanceMatrix {
 public:
   /**
@@ -46,14 +44,26 @@ public:
    *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance>
+  inline std::vector<TimeDistance>
   SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::travel_mode_t mode,
                  const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations);
+                 const uint32_t matrix_locations = kAllLocations) {
+    bool forward_search = source_location_list.size() <= target_location_list.size();
+    switch (forward_search) {
+      case true:
+        return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
+                                                     graphreader, mode_costing, mode,
+                                                     max_matrix_distance, matrix_locations);
+      case false:
+        return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
+                                                     graphreader, mode_costing, mode,
+                                                     max_matrix_distance, matrix_locations);
+    }
+  };
 
   /**
    * Clear the temporary information generated during time+distance
@@ -90,6 +100,16 @@ protected:
 
   sif::TravelMode mode_;
 
+  template <const ExpansionType expansion_direction>
+  std::vector<TimeDistance>
+  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                baldr::GraphReader& graphreader,
+                const sif::mode_costing_t& mode_costing,
+                const sif::travel_mode_t mode,
+                const float max_matrix_distance,
+                const uint32_t matrix_locations = kAllLocations);
+
   /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
@@ -102,6 +122,7 @@ protected:
    * @param  from_transition True if this method is called from a transition
    *                         edge.
    */
+  template <const ExpansionType expansion_direction>
   void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
               const sif::EdgeLabel& pred,
@@ -120,6 +141,7 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
+  template <const ExpansionType expansion_direction>
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
@@ -127,6 +149,7 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
+  template <const ExpansionType expansion_direction>
   void SetDestinations(baldr::GraphReader& graphreader,
                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
@@ -158,9 +181,6 @@ protected:
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix();
 };
-
-using TimeDistMatrixForward = TimeDistanceMatrix<ExpansionType::forward>;
-using TimeDistMatrixReverse = TimeDistanceMatrix<ExpansionType::reverse>;
 
 } // namespace thor
 } // namespace valhalla
