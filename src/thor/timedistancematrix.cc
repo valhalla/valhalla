@@ -140,14 +140,14 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
     // Get cost and update distance
     uint8_t flow_sources;
+    Cost newcost = FORWARD ? costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources)
+                           : costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
     auto transition_cost =
         FORWARD ? costing_->TransitionCost(directededge, nodeinfo, pred)
                 : costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
-    Cost newcost = FORWARD ? costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources)
-                           : costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
     newcost += pred.cost() + transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
