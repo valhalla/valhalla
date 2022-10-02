@@ -100,7 +100,8 @@ protected:
 
   sif::TravelMode mode_;
 
-  template <const ExpansionType expansion_direction>
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   std::vector<TimeDistance>
   ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
@@ -122,7 +123,8 @@ protected:
    * @param  from_transition True if this method is called from a transition
    *                         edge.
    */
-  template <const ExpansionType expansion_direction>
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
               const sif::EdgeLabel& pred,
@@ -141,7 +143,8 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  template <const ExpansionType expansion_direction>
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
@@ -149,7 +152,8 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
-  template <const ExpansionType expansion_direction>
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
   void SetDestinations(baldr::GraphReader& graphreader,
                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
