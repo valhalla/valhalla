@@ -218,11 +218,13 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
     const float max_matrix_distance,
     const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
-  std::vector<TimeDistance> many_to_many;
   const auto& origins = FORWARD ? source_location_list : target_location_list;
   const auto& destinations = FORWARD ? target_location_list : source_location_list;
 
-  for (const auto& origin : origins) {
+  std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
+  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+    const auto& origin = origins.Get(origin_index);
+
     std::vector<TimeDistance> one_to_many;
     // Set the mode and costing
     mode_ = mode;
@@ -286,7 +288,17 @@ std::vector<TimeDistance> TimeDistanceMatrix<expansion_direction, FORWARD>::Sour
     }
 
     // Insert one-to-many into many-to-many
-    many_to_many.insert(many_to_many.end(), one_to_many.begin(), one_to_many.end());
+    if (FORWARD) {
+      for (size_t target_index = 0; target_index < destinations.size(); target_index++) {
+        size_t index = origin_index * origins.size() + target_index;
+        many_to_many[index] = one_to_many[target_index];
+      }
+    } else {
+      for (size_t source_index = 0; source_index < destinations.size(); source_index++) {
+        size_t index = source_index * origins.size() + origin_index;
+        many_to_many[index] = one_to_many[source_index];
+      }
+    }
     clear();
   }
 
