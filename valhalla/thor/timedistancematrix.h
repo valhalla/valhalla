@@ -52,16 +52,15 @@ public:
                  const sif::travel_mode_t mode,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations) {
-    bool forward_search = source_location_list.size() <= target_location_list.size();
-    switch (forward_search) {
-      case true:
-        return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                     graphreader, mode_costing, mode,
-                                                     max_matrix_distance, matrix_locations);
-      case false:
-        return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                     graphreader, mode_costing, mode,
-                                                     max_matrix_distance, matrix_locations);
+    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    if (forward_search) {
+      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
+                                                   graphreader, mode_costing, mode,
+                                                   max_matrix_distance, matrix_locations);
+    } else {
+      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
+                                                   graphreader, mode_costing, mode,
+                                                   max_matrix_distance, matrix_locations);
     }
   };
 
@@ -100,6 +99,10 @@ protected:
 
   sif::TravelMode mode_;
 
+  /**
+   * Computes the matrix after SourceToTarget decided which direction
+   * the algorithm should traverse.
+   */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
   std::vector<TimeDistance>
