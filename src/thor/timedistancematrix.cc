@@ -97,6 +97,16 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
     return;
   }
 
+  const DirectedEdge* opp_pred_edge = nullptr;
+  if (!FORWARD) {
+    opp_pred_edge = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, opp_pred_edge++) {
+      if (opp_pred_edge->localedgeidx() == pred.opp_local_idx()) {
+        break;
+      }
+    }
+  }
+
   // Expand from end node.
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es = edgestatus_.GetPtr(edgeid, tile);
@@ -110,7 +120,6 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
     graph_tile_ptr t2 = nullptr;
     GraphId opp_edge_id;
     const DirectedEdge* opp_edge = nullptr;
-    const DirectedEdge* opp_pred_edge = nullptr;
     if (!FORWARD) {
       // Get opposing edge Id and end node tile
       graph_tile_ptr t2 =
@@ -120,12 +129,6 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
       }
       GraphId opp_edge_id = t2->GetOpposingEdgeId(directededge);
       opp_edge = t2->directededge(opp_edge_id);
-
-      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, opp_pred_edge++) {
-        if (opp_pred_edge->localedgeidx() == pred.opp_local_idx()) {
-          break;
-        }
-      }
     }
 
     // Skip this edge if permanently labeled (best path already found to this

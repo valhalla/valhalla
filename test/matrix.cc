@@ -249,6 +249,58 @@ TEST(Matrix, test_matrix) {
   }
 }
 
+TEST(Matrix, test_timedistancematrix_results_sequence) {
+  // Input request is the same as `test_request`, but without the last target
+  const auto test_request_more_sources = R"({
+    "sources":[
+      {"lat":52.106337,"lon":5.101728},
+      {"lat":52.111276,"lon":5.089717},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005}
+    ],
+    "costing":"auto"
+  })";
+
+  loki_worker_t loki_worker(config);
+
+  Api request;
+  ParseApi(test_request_more_sources, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  GraphReader reader(config.get_child("mjolnir"));
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+
+  TimeDistMatrixReverse timedist_matrix;
+  std::vector<TimeDistance> results =
+      timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+                                     mode_costing, sif::TravelMode::kDrive, 400000.0);
+
+  // expected results are the same as `matrix_answers`, but without the last column
+  std::vector<TimeDistance> expected_results = {
+      {28, 28},     {2027, 1837}, {2403, 2213}, {1519, 1398}, {1808, 1638}, {2061, 1951},
+      {2311, 2111}, {701, 641},   {0, 0},       {5562, 5177}, {3952, 3707}, {4367, 4107},
+  };
+
+  for (uint32_t i = 0; i < results.size(); ++i) {
+    EXPECT_NEAR(results[i].dist, expected_results[i].dist, kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal to" +
+               " the expected value for TimeDistMatrix";
+
+    EXPECT_NEAR(results[i].time, expected_results[i].time, kThreshold)
+        << "result " + std::to_string(i) +
+               "'s time is not equal to the expected value for TimeDistMatrix";
+  }
+}
+
 // TODO: it was commented before. Why?
 TEST(Matrix, DISABLED_test_matrix_osrm) {
   loki_worker_t loki_worker(config);
