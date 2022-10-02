@@ -142,7 +142,6 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
         continue;
       }
     } else {
-      // TODO: is the Restricted() function correct here passing directed_edge & pred & tile?
       if (!costing_->AllowedReverse(directededge, pred, opp_edge, t2, opp_edge_id, 0, 0,
                                     restriction_idx) ||
           (costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, FORWARD))) {
@@ -185,15 +184,12 @@ void TimeDistanceMatrix<expansion_direction, FORWARD>::Expand(GraphReader& graph
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge));
     } else {
-      edgelabels_
-          .emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_, distance,
-                        transition_cost, restriction_idx,
-                        // TODO: Shouldn't we look for the opp_edge's closure, or not at all, since
-                        // we're the costing/allowed is not caring about the directededge directly?
-                        (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                        static_cast<bool>(flow_sources & kDefaultFlowMask),
-                        costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
-                                           opp_pred_edge));
+      edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
+                               distance, transition_cost, restriction_idx,
+                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge));
     }
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);

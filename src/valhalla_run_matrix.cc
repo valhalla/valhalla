@@ -244,12 +244,16 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, res);
 
   // Run with TimeDistanceMatrix
-  TimeDistanceMatrix tdm;
+  const bool forward_search = options.sources().size() <= options.targets().size();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                             max_distance);
-    tdm.clear();
+    if (forward_search) {
+      res = TimeDistMatrixForward().SourceToTarget(options.sources(), options.targets(), reader,
+                                                   mode_costing, mode, max_distance);
+    } else {
+      res = TimeDistMatrixReverse().SourceToTarget(options.sources(), options.targets(), reader,
+                                                   mode_costing, mode, max_distance);
+    }
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
