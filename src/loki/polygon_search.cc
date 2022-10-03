@@ -109,7 +109,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    throw valhalla_exception_t(167, std::to_string(max_length) + " meters");
+    throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
   }
 
   // Get the lowest level and tiles
