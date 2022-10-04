@@ -255,7 +255,6 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto _ = measure_scope_time(request);
 
   // basic init
-  parse_locations(request);
   controller = AttributesController(request.options());
   auto costing_str = parse_costing(request);
   auto& options = *request.mutable_options();
