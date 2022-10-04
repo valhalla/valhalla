@@ -94,12 +94,23 @@ std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::Grap
 namespace valhalla {
 namespace loki {
 
+std::unordered_set<vb::GraphId> edges_in_rings(const Ring& ring_pbf,
+                                               baldr::GraphReader& reader,
+                                               const std::shared_ptr<sif::DynamicCost>& costing,
+                                               float max_length,
+                                               const Purpose purpose) {
+  google::protobuf::RepeatedPtrField<valhalla::Ring> rings;
+  rings.Add()->CopyFrom(ring_pbf);
+
+  return edges_in_rings(rings, reader, costing, max_length, purpose);
+}
+
 std::unordered_set<vb::GraphId>
 edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_pbf,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length,
-               const std::string& mode) {
+               const Purpose purpose) {
   // convert to bg object and check length restriction
   double rings_length = 0;
   std::vector<ring_bg_t> rings_bg;
@@ -109,9 +120,9 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    if (mode == "avoid_polygons") {
+    if (purpose == Purpose::AVOID) {
       throw valhalla_exception_t(167, std::to_string(max_length));
-    } else if (mode == "chinese_postman") {
+    } else if (purpose == Purpose::CHINESE) {
       throw valhalla_exception_t(173, std::to_string(max_length));
     } else {
       throw valhalla_exception_t(107);
@@ -124,7 +135,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
 
   // keep track which tile's bins intersect which rings
   bins_collector bins_intersected;
-  std::unordered_set<vb::GraphId> avoid_edge_ids;
+  std::unordered_set<vb::GraphId> result_edge_ids;
 
   // first pull out all *unique* bins which intersect the rings
   for (size_t ring_idx = 0; ring_idx < rings_bg.size(); ring_idx++) {
@@ -145,7 +156,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
       // tile will be mutated most likely in the loop
       reader.GetGraphTile({intersection.first, bin_level, 0}, tile);
       for (const auto& edge_id : tile->GetBin(bin.first)) {
-        if (avoid_edge_ids.count(edge_id) != 0) {
+        if (result_edge_ids.count(edge_id) != 0) {
           continue;
         }
         // TODO: optimize the tile switching by enqueuing edges
@@ -158,49 +169,40 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
         auto opp_tile = tile;
         const baldr::DirectedEdge* opp_edge = nullptr;
         baldr::GraphId opp_id;
+        bool edge_allowed = false;
+        bool opp_allowed = false;
 
         // bail if we wouldnt be allowed on this edge anyway (or its opposing)
-        if (!costing->Allowed(edge, tile) &&
+        if (!(edge_allowed = costing->Allowed(edge, tile)) &&
             (!(opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile)).Is_Valid() ||
-             !costing->Allowed(opp_edge, opp_tile))) {
+             !(opp_allowed = costing->Allowed(opp_edge, opp_tile)))) {
           continue;
         }
         // TODO: some logic to set percent_along for origin/destination edges
         // careful: polygon can intersect a single edge multiple times
         auto edge_info = tile->edgeinfo(edge);
-        if (mode == "avoid_polygons") {
-          bool intersects = false;
-          for (const auto& ring_loc : bin.second) {
-            intersects = bg::intersects(rings_bg[ring_loc], line_bg_t(edge_info.shape().begin(),
-                                                                      edge_info.shape().end()));
-            if (intersects) {
-              break;
-            }
-          }
-          if (intersects) {
-            avoid_edge_ids.emplace(edge_id);
-            avoid_edge_ids.emplace(
-                opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile));
-          }
-        } else if (mode == "chinese_postman") {
-          bool is_within = false;
-          for (const auto& ring_loc : bin.second) {
-            is_within = bg::within(line_bg_t(edge_info.shape().begin(), edge_info.shape().end()),
+        bool predicate = false;
+        for (const auto& ring_loc : bin.second) {
+          opp_id = opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
+          if (purpose == Purpose::AVOID) {
+            predicate = bg::intersects(rings_bg[ring_loc],
+                                       line_bg_t(edge_info.shape().begin(), edge_info.shape().end()));
+            // for avoids, at this point we want to add both regardless if one of them is not allowed
+            opp_allowed = edge_allowed = true;
+          } else if (purpose == Purpose::CHINESE) {
+            predicate = bg::within(line_bg_t(edge_info.shape().begin(), edge_info.shape().end()),
                                    rings_bg[ring_loc]);
-            if (is_within) {
-              break;
-            }
+            // for chinese edges, we actually have to know if the opposite edge was allowed or not
+            opp_allowed =
+                opp_allowed || (opp_id.Is_Valid() ? costing->Allowed(opp_edge, opp_tile) : false);
           }
-          if (is_within) {
-            if (costing->IsAccessible(edge)) {
-              avoid_edge_ids.emplace(edge_id);
-            }
-            // Add the opposite edge if a two way.
-            opp_id = reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-            if (costing->IsAccessible(opp_edge)) {
-              avoid_edge_ids.emplace(opp_id);
-            }
+          if (predicate) {
+            break;
           }
+        }
+        if (predicate) {
+          result_edge_ids.emplace(edge_allowed ? edge_id : vb::GraphId());
+          result_edge_ids.emplace(opp_allowed ? opp_id : vb::GraphId());
         }
       }
     }
@@ -214,7 +216,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
     }
   }
 #endif
-  return avoid_edge_ids;
+  return result_edge_ids;
 }
 
 } // namespace loki

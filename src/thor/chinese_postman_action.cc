@@ -20,31 +20,30 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::sif;
 
-namespace valhalla {
-namespace thor {
-
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
+namespace {
 
 // Return the index of an edge compared to the path_edge from a location. Assuming the path_edge is
 // ordered by the best.
 int get_node_candidate_index(const valhalla::Location& location,
                              const GraphId& edge_id,
-                             double* percent_along) {
+                             double& percent_along) {
   // see if this edge is an edge candidate for this location
   for (int i = 0; i < location.correlation().edges_size(); ++i) {
     const auto& e = location.correlation().edges(i);
     if (e.graph_id() == edge_id) {
       // TODO: shouldnt we just round this to 0 always, basically if it lands on the edge at all lets
       //  include it in the postman route right?
-      *percent_along = e.percent_along();
+      percent_along = e.percent_along();
       return i;
     }
   }
   // this signals its not found, ie its not an origin or destination edge candidate
   return location.correlation().edges_size();
 }
+} // namespace
+
+namespace valhalla {
+namespace thor {
 
 using sources_targets_pair = std::pair<google::protobuf::RepeatedPtrField<valhalla::Location>,
                                        google::protobuf::RepeatedPtrField<valhalla::Location>>;
@@ -255,48 +254,46 @@ void thor_worker_t::chinese_postman(Api& request) {
   auto _ = measure_scope_time(request);
 
   // basic init
-  controller = AttributesController(request.options());
   auto costing_str = parse_costing(request);
-  auto& options = *request.mutable_options();
+  auto& options = request.options();
   const auto& costing_ = mode_costing[static_cast<uint32_t>(mode)];
-  auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
-
-  // remember excluded edges
-  std::unordered_set<uint64_t> exclude_edge_ids;
-  for (auto& exclude_edge : co.exclude_edges()) {
-    exclude_edge_ids.insert(exclude_edge.id());
-  }
 
   // setup for the origin location
-  auto& origin = *request.mutable_options()->mutable_locations(0);
+  auto origin = options.locations(0);
   int currentOriginNodeIndex = origin.correlation().edges().size();
   GraphId originVertex;
   int candidateOriginNodeIndex;
   double originPercentAlong;
 
   // setup for the destination location
-  auto& destination = *request.mutable_options()->mutable_locations(1);
+  auto destination = options.locations(1);
   int currentDestinationNodeIndex = destination.correlation().edges().size();
   GraphId destinationVertex;
   int candidateDestinationNodeIndex;
   double destinationPercentAlong;
 
-  // Add chinese edges to the CP Graph
+  // Add edges to the CP Graph, which were found from the spatial bins in loki
+  // avoided_edges
   ChinesePostmanGraph G;
-  for (auto& edge : co.chinese_edges()) {
-    // Exclude the edge if the edge is in exclude_edges
-    if (exclude_edge_ids.find(edge.id()) != exclude_edge_ids.end())
-      continue;
+  graph_tile_ptr tile;
 
+  // TODO(nils): originVertex and destinationVertex is literally the only things
+  // this loop looks up. that seems super wasteful, iterating over all correlated edges of both
+  // origin/destination for every single chinese edge, only to find the origin/destination vertices.
+  // aren't all correlated edges automatically part of the chinese edges so we can shortcut this
+  // tremendously? the case out origin/destination outside of the polygon should be checked somewhere
+  // else also the decision based on percentalong() which node should be , but maybe I just didn't
+  // look enough into the rest yet..
+  for (const auto& edge : options.chinese_edges()) {
     // we need to figure out which end of the edge we are going to go with
-    GraphId end_vertex = reader->edge_endnode(GraphId(edge.id()));
+    const auto edge_id = GraphId(edge.id());
+    GraphId end_vertex = reader->edge_endnode(edge_id, tile);
     if (!end_vertex.Is_Valid())
       continue;
-    GraphId start_vertex = reader->edge_startnode(GraphId(edge.id()));
+    GraphId start_vertex = reader->edge_startnode(edge_id, tile);
 
     // Find the vertex for the origin
-    candidateOriginNodeIndex =
-        get_node_candidate_index(origin, GraphId(edge.id()), &originPercentAlong);
+    candidateOriginNodeIndex = get_node_candidate_index(origin, edge_id, originPercentAlong);
     if (candidateOriginNodeIndex < currentOriginNodeIndex) {
       if (originPercentAlong < 0.5) {
         originVertex = start_vertex;
@@ -309,7 +306,7 @@ void thor_worker_t::chinese_postman(Api& request) {
 
     // Find the vertex for the destination
     candidateDestinationNodeIndex =
-        get_node_candidate_index(destination, GraphId(edge.id()), &destinationPercentAlong);
+        get_node_candidate_index(destination, edge_id, destinationPercentAlong);
     if (candidateDestinationNodeIndex < currentDestinationNodeIndex) {
       // Check this part of the code
       if (destinationPercentAlong < 0.5) {
@@ -326,7 +323,7 @@ void thor_worker_t::chinese_postman(Api& request) {
     // The cost is only considered when matching the unbalanced nodes.
     // TODO: probably remove this since we use edge length as the heuristic
     Cost cost(1, 1);
-    CPEdge cpEdge{cost, GraphId(edge.id())};
+    CPEdge cpEdge{cost, edge_id};
     G.addEdge(start_vertex, end_vertex, cpEdge);
   }
 
@@ -450,8 +447,8 @@ void thor_worker_t::chinese_postman(Api& request) {
   // Form output information based on path edges
   std::vector<std::string> algorithms{"Chinese Postman"};
   auto& leg = *request.mutable_trip()->mutable_routes()->Add()->mutable_legs()->Add();
-  TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(), origin,
-                        destination, leg, algorithms, interrupt);
+  TripLegBuilder::Build(options, AttributesController(request.options()), *reader, mode_costing,
+                        path.begin(), path.end(), origin, destination, leg, algorithms, interrupt);
 }
 
 } // namespace thor

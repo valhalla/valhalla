@@ -50,7 +50,7 @@ rapidjson::Value get_chinese_polygon(ring_bg_t ring, rapidjson::MemoryPoolAlloca
   return ring_j;
 }
 
-std::unordered_set<valhalla::baldr::GraphId> get_edges(gurka::map map, std::string nodes) {
+std::vector<valhalla::baldr::GraphId> get_edges(gurka::map map, std::string nodes) {
   valhalla::Options options;
   options.set_costing_type(Costing::auto_);
   auto& co = (*options.mutable_costings())[valhalla::Costing::auto_];
@@ -77,8 +77,15 @@ std::unordered_set<valhalla::baldr::GraphId> get_edges(gurka::map map, std::stri
     ll->set_lat(coord.lat());
     ll->set_lng(coord.lng());
   }
-  return vl::edges_in_rings(rings, reader, costing, 10000, "chinese_postman");
-  // return vl::edges_in_ring(*ring, reader, costing, 10000);
+
+  std::vector<GraphId> valid_edges;
+  for (const auto& edge_id :
+       vl::edges_in_rings(rings, reader, costing, 10000, vl::Purpose::CHINESE)) {
+    if (edge_id.Is_Valid()) {
+      valid_edges.push_back(edge_id);
+    }
+  };
+  return valid_edges;
 }
 
 // common method can't deal with arrays of floats
@@ -356,17 +363,10 @@ protected:
                                             {{"service_limits.max_exclude_polygons_length", "1000"},
                                              {"service_limits.max_chinese_polygon_length", "1000"}});
 
-    // Setup complex_chinese_postman_map "AB", "BC", "CD", "DE", "EA"
-    // B----<---A--->----F
-    //  \       | \     /|
-    //   \      |  ^   v |
-    //    \     v   \ /  |
-    //     v    |    E   v
-    //      \   |     \  |
-    //       \  |      ^ |
-    //        \ |       \|
-    //          C---->---D
-
+    // TODO: this is kinda of a bad graph for testing as there's more than one solution for e.g. F ->
+    // E, when covering the whole graph, it could be either one of these two and both are exactly
+    // equal in cost: { "FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FE", "EA", "AC", "CD",
+    // "DE" } { "FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE" }
     const std::string complex_ascii_map = R"(
             p----------------x----------q
             |    B--------A--|------F   |
@@ -477,7 +477,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodes) {
 TEST_P(ChinesePostmanTest, TestChinesePostmanUnbalancedNodesComplex) {
   // create a chinese polygon (pqsr)
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "B", "B",
-               {"BC", "CD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE",
+               {"BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE",
                 "EA", "AB"});
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "C", "C",
                {"CD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FD", "DE", "EA", "AF", "FE",
@@ -513,7 +513,7 @@ TEST_P(ChinesePostmanTest, TestChinesePostmanDifferentOriginDestination) {
 
   // A more complex example, non-ideal graph
   test_request(complex_chinese_postman_map, GetParam(), "pqsr", "", "F", "E",
-               {"FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AC", "CD", "DE", "EA", "AF", "FE"});
+               {"FD", "DE", "EA", "AB", "BC", "CD", "DE", "EA", "AF", "FE", "EA", "AC", "CD", "DE"});
 }
 
 TEST_P(ChinesePostmanTest, TestChinesePostmanOutsidePolygon) {

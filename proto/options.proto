@@ -316,7 +316,6 @@ message Costing {
     oneof has_elevator_penalty {
       float elevator_penalty = 79;
     }
-    repeated ChinesePostmanEdge chinese_edges = 80;   // Edges to be visited for chinese postman algorithm
   }
 
   oneof has_options {
@@ -409,6 +408,7 @@ message Options {
   repeated Location exclude_locations = 15;                        // Avoids for any costing
   repeated Location sources = 16;                                  // Sources for /sources_to_targets
   repeated Location targets = 17;                                  // Targets for /sources_to_targets
+  repeated ChinesePostmanEdge chinese_edges = 80;                  // Edges to be visited for chinese postman algorithm
   DateTimeType date_time_type = 18;                                // Are you leaving now or then or arriving then
   oneof has_date_time {
     string date_time = 19;                                         // And what day and time

@@ -135,7 +135,7 @@ find_package(ZLIB REQUIRED)
 
 # try to find an installed boost or install locally with conan
 set(boost_VERSION "1.71")
-find_package(Boost ${boost_VERSION} QUIET)
+find_package(Boost ${boost_VERSION} EXACT QUIET)
 if (NOT Boost_FOUND)
   # bail if there's no conan installed
   message(STATUS "No compatible boost version detected, using conan...")
@@ -263,7 +263,7 @@ add_subdirectory(src)
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
   # favors Py3, falls back to Py2
-  find_package(Python3 COMPONENTS Development Interpreter)
+  find_package(Python COMPONENTS Development Interpreter)
   if (Python_FOUND)
     add_subdirectory(src/bindings/python)
     install(FILES COPYING CHANGELOG.md
