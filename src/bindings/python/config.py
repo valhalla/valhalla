@@ -12,14 +12,16 @@ def _sanitize_config(dict_: dict = None) -> dict:
             del dict_[k]
         elif isinstance(v, dict):
             _sanitize_config(v)
-    
+
     return dict_
 
 
-def get_config(tile_dir: Union[str, Path], tile_extract: Union[str, Path] = "valhalla_tiles.tar") -> dict:
+def get_config(
+    tile_dir: Union[str, Path], tile_extract: Union[str, Path] = "valhalla_tiles.tar"
+) -> dict:
     """
     Returns a default Valhalla configuration expecting an existing tile directory.
-    
+
     :param tile_dir: The directory path where the graph tiles should be stored.
     :param tile_extract: The file path (with .tar extension) of the tile extract, if present.
     """
@@ -28,7 +30,7 @@ def get_config(tile_dir: Union[str, Path], tile_extract: Union[str, Path] = "val
 
     tile_dir = Path(tile_dir)
     tile_extract = Path(tile_extract)
-    
+
     # insert the tile paths
     if not tile_dir.is_dir():
         raise FileNotFoundError(f"'tile_dir': {tile_dir.resolve()} is not an existing Valhalla graph.")

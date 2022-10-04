@@ -408,21 +408,29 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const float max_matrix_distance,
     const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
-  std::vector<TimeDistance> many_to_many;
+  std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
-    for (const auto& origin : source_location_list) {
+    for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
+      const auto& origin = source_location_list[source_index];
       std::vector<TimeDistance> td =
           OneToMany(origin, target_location_list, graphreader, mode_costing, mode,
                     max_matrix_distance, matrix_locations);
-      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
+      for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
+        size_t index = source_index * target_location_list.size() + target_index;
+        many_to_many[index] = td[target_index];
+      }
       clear();
     }
   } else {
-    for (const auto& destination : target_location_list) {
+    for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
+      const auto& destination = target_location_list[target_index];
       std::vector<TimeDistance> td =
           ManyToOne(destination, source_location_list, graphreader, mode_costing, mode,
                     max_matrix_distance, matrix_locations);
-      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
+      for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
+        size_t index = source_index * target_location_list.size() + target_index;
+        many_to_many[index] = td[source_index];
+      }
       clear();
     }
   }

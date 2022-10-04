@@ -37,7 +37,9 @@ jobs:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: 'f4bd6423'
+      VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      VCPKG_REF: '2022.08.15'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
@@ -107,7 +109,7 @@ jobs:
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
       - powershell: |
-          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
+          wget https://github.com/ninja-build/ninja/releases/download/v1.11.0/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
           Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
         displayName: 'Download Ninja'
 

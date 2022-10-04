@@ -4,7 +4,7 @@ package valhalla.mjolnir;
 
 message Transit {
 
-  message Node {
+  message Node { // stations
     optional float lon = 1;
     optional float lat = 2;
     optional uint32 type = 3;

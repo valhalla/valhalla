@@ -255,6 +255,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "timezone": "%%/tz_world.sqlite",
         "traffic_extract": "%%/traffic.tar",
         "transit_dir": "%%/transit",
+        "transit_feeds_dir": "%%/transit_feeds",
         "use_lru_mem_cache": false
       },
       "odin": {
