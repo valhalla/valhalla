@@ -59,8 +59,10 @@ ring_bg_t PBFToRing(const valhalla::Ring& ring_pbf) {
 #ifdef LOGGING_LEVEL_TRACE
 // serializes an edge to geojson
 std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::GraphReader& reader) {
-  if (edge_ids.empty())
-    [return "None found";] auto features = array({});
+  if (edge_ids.empty()) {
+    return "None found";
+  }
+  auto features = array({});
   for (const auto& edge_id : edge_ids) {
     auto tile = reader.GetGraphTile(edge_id);
     auto edge = tile->directededge(edge_id);
