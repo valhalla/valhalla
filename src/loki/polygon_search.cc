@@ -213,7 +213,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
 
 // log the GeoJSON of avoided edges
 #ifdef LOGGING_LEVEL_TRACE
-  if (strage == SearchStrategy::AVOID) {
+  if (strategy == SearchStrategy::AVOID) {
     LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(result_edge_ids, reader));
   }
 #endif
