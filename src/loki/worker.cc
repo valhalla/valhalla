@@ -89,7 +89,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   std::unordered_set<GraphId> avoid_edges;
   if (options.exclude_polygons_size()) {
     avoid_edges = edges_in_rings(options.exclude_polygons(), *reader, costing,
-                                 max_exclude_polygons_length, Purpose::AVOID);
+                                 max_exclude_polygons_length, SearchStrategy::AVOID);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
     for (const auto& edge_id : avoid_edges) {
       auto* avoid = co.add_exclude_edges();
@@ -150,7 +150,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   // Save the edges for chinese postman graph
   if (options.has_chinese_polygon()) {
     const auto chinese_edges = edges_in_rings(options.chinese_polygon(), *reader, costing,
-                                              max_chinese_polygon_length, Purpose::CHINESE);
+                                              max_chinese_polygon_length, SearchStrategy::CHINESE);
     for (const auto& edge_id : chinese_edges) {
       if (avoid_edges.find(edge_id) != avoid_edges.end()) {
         continue;

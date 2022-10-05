@@ -59,7 +59,8 @@ ring_bg_t PBFToRing(const valhalla::Ring& ring_pbf) {
 #ifdef LOGGING_LEVEL_TRACE
 // serializes an edge to geojson
 std::string to_geojson(const std::unordered_set<vb::GraphId>& edge_ids, vb::GraphReader& reader) {
-  auto features = array({});
+  if (edge_ids.empty())
+    [return "None found";] auto features = array({});
   for (const auto& edge_id : edge_ids) {
     auto tile = reader.GetGraphTile(edge_id);
     auto edge = tile->directededge(edge_id);
@@ -98,11 +99,11 @@ std::unordered_set<vb::GraphId> edges_in_rings(const Ring& ring_pbf,
                                                baldr::GraphReader& reader,
                                                const std::shared_ptr<sif::DynamicCost>& costing,
                                                float max_length,
-                                               const Purpose purpose) {
+                                               const SearchStrategy strategy) {
   google::protobuf::RepeatedPtrField<valhalla::Ring> rings;
   rings.Add()->CopyFrom(ring_pbf);
 
-  return edges_in_rings(rings, reader, costing, max_length, purpose);
+  return edges_in_rings(rings, reader, costing, max_length, strategy);
 }
 
 std::unordered_set<vb::GraphId>
@@ -110,7 +111,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length,
-               const Purpose purpose) {
+               const SearchStrategy strategy) {
   // convert to bg object and check length restriction
   double rings_length = 0;
   std::vector<ring_bg_t> rings_bg;
@@ -120,9 +121,9 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    if (purpose == Purpose::AVOID) {
+    if (strategy == SearchStrategy::AVOID) {
       throw valhalla_exception_t(167, std::to_string(max_length));
-    } else if (purpose == Purpose::CHINESE) {
+    } else if (strategy == SearchStrategy::CHINESE) {
       throw valhalla_exception_t(173, std::to_string(max_length));
     } else {
       throw valhalla_exception_t(107);
@@ -184,12 +185,12 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
         bool predicate = false;
         for (const auto& ring_loc : bin.second) {
           opp_id = opp_id.Is_Valid() ? opp_id : reader.GetOpposingEdgeId(edge_id, opp_edge, opp_tile);
-          if (purpose == Purpose::AVOID) {
+          if (strategy == SearchStrategy::AVOID) {
             predicate = bg::intersects(rings_bg[ring_loc],
                                        line_bg_t(edge_info.shape().begin(), edge_info.shape().end()));
             // for avoids, at this point we want to add both regardless if one of them is not allowed
             opp_allowed = edge_allowed = true;
-          } else if (purpose == Purpose::CHINESE) {
+          } else if (strategy == SearchStrategy::CHINESE) {
             predicate = bg::within(line_bg_t(edge_info.shape().begin(), edge_info.shape().end()),
                                    rings_bg[ring_loc]);
             // for chinese edges, we actually have to know if the opposite edge was allowed or not
@@ -210,10 +211,8 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
 
 // log the GeoJSON of avoided edges
 #ifdef LOGGING_LEVEL_TRACE
-  if (mode == "avoid_polygons") {
-    if (!avoid_edge_ids.empty()) {
-      LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(avoid_edge_ids, reader));
-    }
+  if (strage == SearchStrategy::AVOID) {
+    LOG_TRACE("Avoided edges GeoJSON: \n" + to_geojson(result_edge_ids, reader));
   }
 #endif
   return result_edge_ids;

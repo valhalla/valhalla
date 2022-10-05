@@ -80,7 +80,7 @@ std::vector<valhalla::baldr::GraphId> get_edges(gurka::map map, std::string node
 
   std::vector<GraphId> valid_edges;
   for (const auto& edge_id :
-       vl::edges_in_rings(rings, reader, costing, 10000, vl::Purpose::CHINESE)) {
+       vl::edges_in_rings(rings, reader, costing, 10000, vl::SearchStrategy::CHINESE)) {
     if (edge_id.Is_Valid()) {
       valid_edges.push_back(edge_id);
     }

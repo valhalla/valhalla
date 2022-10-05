@@ -8,7 +8,7 @@
 namespace valhalla {
 namespace loki {
 
-enum Purpose { AVOID, CHINESE };
+enum SearchStrategy { AVOID, CHINESE };
 
 /**
  * Finds all edge IDs which are intersected by or within the single ring
@@ -16,8 +16,7 @@ enum Purpose { AVOID, CHINESE };
  * @param ring The (optionally closed) ring to intersect edges with
  * @param reader GraphReader instance
  * @param max_length The maximum length of the total perimeters of all rings
- * @param mode The method to extract the edges and the exception thrown. It is either `avoid_polygons`
- * (using intersect) or `chinese_postman` (using within)
+ * @param mode Determines the search stragegy, either for avoids or chinese polygon.
  *
  */
 std::unordered_set<valhalla::baldr::GraphId>
@@ -25,7 +24,7 @@ edges_in_rings(const valhalla::Ring& ring,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length,
-               const Purpose purpose);
+               const SearchStrategy strategy);
 
 /**
  * Finds all edge IDs which are intersected by or within the rings
@@ -33,8 +32,7 @@ edges_in_rings(const valhalla::Ring& ring,
  * @param rings The (optionally closed) rings to intersect edges with
  * @param reader GraphReader instance
  * @param max_length The maximum length of the total perimeters of all rings
- * @param mode The method to extract the edges and the exception thrown. It is either `avoid_polygons`
- * (using intersect) or `chinese_postman` (using within)
+ * @param strategy Determines the search stragegy, either for avoids or chinese polygon.
  *
  */
 std::unordered_set<valhalla::baldr::GraphId>
@@ -42,7 +40,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings,
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length,
-               const Purpose purpose);
+               const SearchStrategy strategy);
 
 } // namespace loki
 } // namespace valhalla
