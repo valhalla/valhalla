@@ -134,7 +134,7 @@ find_package(Threads REQUIRED)
 find_package(ZLIB REQUIRED)
 
 # try to find an installed boost or install locally with conan
-set(boost_VERSION "1.79")
+set(boost_VERSION "1.71")
 find_package(Boost ${boost_VERSION} EXACT QUIET)
 if (NOT Boost_FOUND)
   # bail if there's no conan installed
