@@ -145,8 +145,8 @@ if (NOT Boost_FOUND)
   endif()
 
   # build dir needs to be added, that's where conan writes some info
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR})
   include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
 
   conan_cmake_autodetect(settings)
