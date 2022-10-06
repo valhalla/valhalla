@@ -468,11 +468,11 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
     tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
     if ((tile_id_strlen - ind) % 4 == 0) {
-      tile_id_str[ind--] = separator;
+      ind--; // skip an additional character to leave space for separators
     }
   }
-  // add missing separators
-  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+  // add separators
+  for (size_t sep_ind = 0; sep_ind < tile_id_strlen; sep_ind += 4) {
     tile_id_str[sep_ind] = separator;
   }
 
