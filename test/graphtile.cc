@@ -35,6 +35,7 @@ TEST(Graphtile, FileSuffix) {
 
   TileLevel level{7, valhalla::baldr::RoadClass::kSecondary, "half_degree_is_a_multiple_of_3",
                   Tiles<PointLL>{{{-180, -90}, {180, 90}}, .5, 1}};
+
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(1234, 7, 0), ".qux", false, &level), "7/001/234.qux");
   EXPECT_EQ(GraphTile::FileSuffix(GraphId(123456, 7, 0), ".qux", false, &level), "7/123/456.qux");
 }
