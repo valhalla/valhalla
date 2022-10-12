@@ -185,8 +185,8 @@ namespace valhalla {
 namespace baldr {
 curler_t::curler_t(const std::string& user_agent) {
 }
-std::vector<char> curler_t::
-operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
+std::vector<char>
+curler_t::operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }
