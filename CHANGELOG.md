@@ -116,6 +116,7 @@
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
+   * ADDED: Add helpers for DirectedEdgeExt and save them to file in GraphTileBuilder [#3562](https://github.com/valhalla/valhalla/pull/3562)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
