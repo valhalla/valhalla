@@ -171,8 +171,7 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
 json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
   auto warnings = json::array({});
   for (const auto& warning : api.info().warnings()) {
-    warnings->emplace_back(json::map(
-        {{"code", warning.code()}, {"text", warning.description()}}));
+    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
   }
   return warnings;
 }
