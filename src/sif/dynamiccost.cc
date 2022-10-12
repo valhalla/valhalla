@@ -385,9 +385,6 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
 
-  // fixed speed
-  JSON_PBF_RANGED_DEFAULT(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
-
   // destination only penalty
   JSON_PBF_RANGED_DEFAULT(co, cfg.dest_only_penalty_, json, "/destination_only_penalty",
                           destination_only_penalty);
