@@ -307,7 +307,7 @@ message Costing {
     oneof has_elevator_penalty {
       float elevator_penalty = 79;
     }
-    float fixed_speed = 80;
+    uint32 fixed_speed = 80;
     }
 
   oneof has_options {

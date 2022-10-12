@@ -463,6 +463,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+
+  co->set_fixed_speed(
+      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
 }
 
 void ParseCosting(const rapidjson::Document& doc,
