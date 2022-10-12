@@ -45,8 +45,16 @@
    * FIXED: Some interpolated points had invalid edge_index in trace_attributes response [#3646](https://github.com/valhalla/valhalla/pull/3670)
    * FIXED: Use a small node snap distance in map-matching. FIxes issue with incorrect turn followed by Uturn. [#3677](https://github.com/valhalla/valhalla/pull/3677)
    * FIXED: Conan error when building Docker image. [#3689](https://github.com/valhalla/valhalla/pull/3689)
+   * FIXED: Allow country overrides for sidewalk [#3711](https://github.com/valhalla/valhalla/pull/3711)
    * FIXED: CostMatrix incorrect tile usage with oppedge. [#3719](https://github.com/valhalla/valhalla/pull/3719)
    * FIXED: Fix elevation serializing [#3735](https://github.com/valhalla/valhalla/pull/3735)
+   * FIXED: Fix returning a potentially uninitialized value in PointXY::ClosestPoint [#3737](https://github.com/valhalla/valhalla/pull/3737)
+   * FIXED: Wales and Scotland name change. [#3746](https://github.com/valhalla/valhalla/pull/3746)
+   * FIXED: Pedestrian crossings are allowed for bikes [#3751](https://github.com/valhalla/valhalla/pull/3751)
+   * FIXED: Fix for Mac OSx.  Small update for the workdir for the admin_sidewalk_override test.  [#3757](https://github.com/valhalla/valhalla/pull/3757)
+   * FIXED: Add missing service road case from GetTripLegUse method. [#3763](https://github.com/valhalla/valhalla/pull/3763)
+   * FIXED: Fix TimeDistanceMatrix results sequence [#3738](https://github.com/valhalla/valhalla/pull/3738)
+   * FIXED: Fix status endpoint not reporting that the service is shutting down [#3785](https://github.com/valhalla/valhalla/pull/3785)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -107,6 +115,7 @@
    * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
+   * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
