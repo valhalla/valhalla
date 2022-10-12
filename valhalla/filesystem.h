@@ -7,14 +7,18 @@
  */
 
 #include <cerrno>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <dirent.h>
+#include <fstream>
 #include <iomanip>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/stat.h>
+#include <thread>
 #include <vector>
 
 #ifdef _WIN32
@@ -28,6 +32,14 @@
 #ifdef __MINGW32__
 #include <limits>
 #define _SH_DENYNO 0x40
+#endif
+
+#ifdef _WIN32
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#elif __APPLE__
+#define FS_MTIME(st_stat) st_stat.st_mtime
+#else
+#define FS_MTIME(st_stat) st_stat.st_mtim.tv_sec
 #endif
 
 namespace filesystem {
@@ -398,7 +410,7 @@ inline bool create_directories(const path& p) {
 
   // make it!
   return true;
-}
+} // namespace filesystem
 
 inline void resize_file(const path& p, std::uintmax_t new_size) {
 #ifdef _WIN32
@@ -473,6 +485,85 @@ inline std::uintmax_t remove_all(const path& p) {
     num_removed++;
 
   return num_removed;
+}
+
+inline std::chrono::time_point<std::chrono::system_clock> last_write_time(const path& p) {
+  struct stat s;
+  if (stat(p.c_str(), &s) != 0)
+    throw std::runtime_error("could not stat " + p.string());
+  return std::chrono::system_clock::from_time_t(FS_MTIME(s));
+}
+
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+
+/**
+ * @brief Saves data to the path.
+ * @attention Will replace the contents in case if fpath already exists. Will create
+ * new directory if directory did not exist before hand.
+ * */
+template <typename Container>
+typename std::enable_if<has_data<Container>::value, bool>::type inline save(
+    const std::string& fpath,
+    const Container& data = {}) {
+  if (fpath.empty())
+    return false;
+
+  auto dir = filesystem::path(fpath);
+  dir.replace_filename("");
+
+  filesystem::path tmp_location;
+  if (!filesystem::exists(dir) && !filesystem::create_directories(dir))
+    return false;
+
+  auto generate_tmp_suffix = []() -> std::string {
+    std::stringstream ss;
+    ss << ".tmp_" << std::this_thread::get_id() << "_"
+       << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return ss.str();
+  };
+
+  // Technically this is a race condition but its super unlikely (famous last words)
+  while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    tmp_location = fpath + generate_tmp_suffix();
+
+  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  file.write(data.data(), data.size());
+  file.close();
+
+  if (file.fail()) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+    filesystem::remove(tmp_location);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * @brief Returns all regular files from the directory.
+ * @param[in] root_dir Directory to search files in.
+ * @attention Files returned in absolute path form.
+ * @return
+ *  - in case of errors or invalid parameters empty container will be returned.
+ * */
+inline std::vector<std::string> get_files(const std::string& root_dir) {
+  std::vector<std::string> files;
+  for (filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+    if (i->is_regular_file() || i->is_symlink())
+      files.push_back(i->path().string());
+  }
+
+  return files;
 }
 
 } // namespace filesystem

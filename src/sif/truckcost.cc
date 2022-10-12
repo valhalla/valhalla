@@ -76,8 +76,6 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
-  cfg.disable_ferry_ = true;
-  cfg.disable_rail_ferry_ = true;
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
@@ -98,7 +96,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  TruckCost(const CostingOptions& costing_options);
+  TruckCost(const Costing& costing_options);
 
   virtual ~TruckCost();
 
@@ -191,12 +189,12 @@ public:
    * the time (seconds) to traverse the edge.
    * @param  edge      Pointer to a directed edge.
    * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
+   * @param  time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
 
   /**
@@ -282,15 +280,16 @@ public:
 };
 
 // Constructor
-TruckCost::TruckCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kTruckAccess, true),
+TruckCost::TruckCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kTruckAccess, true),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+  const auto& costing_options = costing.options();
 
   type_ = VehicleType::kTractorTrailer;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   low_class_penalty_ = costing_options.low_class_penalty();
 
@@ -425,9 +424,10 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
 // Get the cost to traverse the edge in seconds
 Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
-                         const uint32_t seconds,
+                         const baldr::TimeInfo& time_info,
                          uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, true, &flow_sources);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, true, &flow_sources,
+                                   time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -435,9 +435,20 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // TODO: factor hasn't been extensively tested, might alter the speed penaltys in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  float factor = density_factor_[edge->density()] + speed_penalty;
+  float factor = 1.f;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = density_factor_[edge->density()];
+      break;
+  }
+  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
@@ -616,73 +627,26 @@ uint8_t TruckCost::travel_type() const {
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::truck);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                           Costing* c) {
+  c->set_type(Costing::truck);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
-
-    // low_class_penalty
-    pbf_costing_options->set_low_class_penalty(kLowClassPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/low_class_penalty")
-            .get_value_or(kDefaultLowClassPenalty)));
-
-    // hazmat
-    pbf_costing_options->set_hazmat(
-        rapidjson::get_optional<bool>(*json_costing_options, "/hazmat").get_value_or(false));
-
-    // weight
-    pbf_costing_options->set_weight(
-        kTruckWeightRange(rapidjson::get_optional<float>(*json_costing_options, "/weight")
-                              .get_value_or(kDefaultTruckWeight)));
-
-    // axle_load
-    pbf_costing_options->set_axle_load(
-        kTruckAxleLoadRange(rapidjson::get_optional<float>(*json_costing_options, "/axle_load")
-                                .get_value_or(kDefaultTruckAxleLoad)));
-
-    // height
-    pbf_costing_options->set_height(
-        kTruckHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
-                              .get_value_or(kDefaultTruckHeight)));
-
-    // width
-    pbf_costing_options->set_width(
-        kTruckWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
-                             .get_value_or(kDefaultTruckWidth)));
-
-    // length
-    pbf_costing_options->set_length(
-        kTruckLengthRange(rapidjson::get_optional<float>(*json_costing_options, "/length")
-                              .get_value_or(kDefaultTruckLength)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_low_class_penalty(kDefaultLowClassPenalty);
-    pbf_costing_options->set_hazmat(false);
-    pbf_costing_options->set_weight(kDefaultTruckWeight);
-    pbf_costing_options->set_axle_load(kDefaultTruckAxleLoad);
-    pbf_costing_options->set_height(kDefaultTruckHeight);
-    pbf_costing_options->set_width(kDefaultTruckWidth);
-    pbf_costing_options->set_length(kDefaultTruckLength);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-  }
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kLowClassPenaltyRange, json, "/low_class_penalty", low_class_penalty);
+  JSON_PBF_DEFAULT(co, false, json, "/hazmat", hazmat);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWeightRange, json, "/weight", weight);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckAxleLoadRange, json, "/axle_load", axle_load);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckHeightRange, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
 }
 
-cost_ptr_t CreateTruckCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTruckCost(const Costing& costing_options) {
   return std::make_shared<TruckCost>(costing_options);
 }
 
@@ -700,7 +664,7 @@ namespace {
 
 class TestTruckCost : public TruckCost {
 public:
-  TestTruckCost(const CostingOptions& costing_options) : TruckCost(costing_options){};
+  TestTruckCost(const Costing& costing_options) : TruckCost(costing_options){};
 
   using TruckCost::alley_penalty_;
   using TruckCost::country_crossing_cost_;
@@ -718,7 +682,7 @@ TestTruckCost* make_truckcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestTruckCost(request.options().costing_options(static_cast<int>(Costing::truck)));
+  return new TestTruckCost(request.options().costings().find(Costing::truck)->second);
 }
 
 std::uniform_real_distribution<float>*
@@ -812,7 +776,13 @@ TEST(TruckCost, testTruckCostParams) {
                                     defaults.country_crossing_cost_.def));
   }
 
-  // Ferry transition cost and ferry use not yet supported
+  // ferry_transition_cost_ (Cost.secs)
+  distributor.reset(make_distributor_from_range(defaults.ferry_cost_));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("ferry_cost", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
+                test::IsBetween(defaults.ferry_cost_.min, defaults.ferry_cost_.max));
+  }
 
   // low_class_penalty_
   distributor.reset(make_distributor_from_range(kLowClassPenaltyRange));

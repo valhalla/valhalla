@@ -1,0 +1,279 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message LatLng {
+  oneof has_lat {
+    double lat = 1;
+  }
+  oneof has_lng {
+    double lng = 2;
+  }
+}
+
+message BoundingBox {
+  LatLng min_ll = 1;
+  LatLng max_ll = 2;
+}
+
+message SearchFilter {
+  // frc
+  oneof has_min_road_class {
+    RoadClass min_road_class = 1; // lowest road class to allow in loki results [default = kServiceOther]
+  }
+  oneof has_max_road_class {
+    RoadClass max_road_class = 2; // highest road class to allow in loki results [default = kMotorway]
+  }
+
+  // form of way
+  bool exclude_tunnel = 3;  // whether to exclude tunnels from loki results [default = false]
+  bool exclude_bridge = 4;  // whether to exclude bridges from loki results [default = false]
+  bool exclude_ramp = 5;    // whether to exclude roads with ramp use from loki results [default = false]
+  oneof has_exclude_closures {
+    bool exclude_closures = 6;// whether to exclude roads marked as closed due to traffic [default = true]
+  }
+}
+
+message PathEdge {
+  uint64 graph_id = 1;
+  double percent_along = 2;
+  LatLng ll = 3;
+  Location.SideOfStreet side_of_street = 4;
+  double distance = 5;
+  bool begin_node = 7;
+  bool end_node = 8;
+  repeated string names = 10;
+  int32 outbound_reach = 11;
+  int32 inbound_reach = 12;
+  float heading = 13;
+}
+
+// Output information about how the location object below is correlated to the graph or to the route etc
+message Correlation {
+  repeated PathEdge edges = 1;
+  repeated PathEdge filtered_edges = 2;
+  uint32 original_index = 3;
+  LatLng projected_ll = 4;
+  uint32 leg_shape_index = 5;
+  double distance_from_leg_origin = 6;
+  uint32 route_index = 7;     // primarily for matchings index in osrm map matching
+  uint32 waypoint_index = 8;  // primarily for matched point index in osrm map matching
+}
+
+message Location {
+  enum Type {
+    kBreak = 0;
+    kThrough = 1;
+    kVia = 2;
+    kBreakThrough = 3;
+  }
+
+  enum PreferredSide {
+    either = 0;
+    same = 1;
+    opposite = 2;
+  }
+
+  enum SideOfStreet {
+    kNone = 0;
+    kLeft = 1;
+    kRight = 2;
+  }
+
+  LatLng ll = 1;
+  Type type = 2;                                      // [default = kBreak]
+  oneof has_heading {
+    uint32 heading = 3;                                 // 0-359
+  }
+  string name = 4;
+  string street = 5;
+  string date_time = 12;
+  SideOfStreet side_of_street = 13;
+  oneof has_heading_tolerance {
+    uint32 heading_tolerance = 14;
+  }
+  oneof has_node_snap_tolerance {
+    uint32 node_snap_tolerance = 15;
+  }
+  oneof has_minimum_reachability {
+    uint32 minimum_reachability = 17;
+  }
+  oneof has_radius {
+    uint32 radius = 18;
+  }
+  oneof has_accuracy {
+    uint32 accuracy = 19;
+  }
+  oneof has_time {
+    double time = 20;
+  }
+  bool skip_ranking_candidates = 21;
+  PreferredSide preferred_side = 22;
+  LatLng display_ll = 23;
+  oneof has_search_cutoff {
+    uint32 search_cutoff = 24;
+  }
+  oneof has_street_side_tolerance {
+    uint32 street_side_tolerance = 25;
+  }
+  SearchFilter search_filter = 26;
+  oneof has_street_side_max_distance {
+    uint32 street_side_max_distance = 27;
+  }
+  oneof has_preferred_layer {
+    int32 preferred_layer = 28;
+  }
+
+  // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
+  Correlation correlation = 90;
+}
+
+message TransitEgressInfo {
+  string onestop_id = 1;        // Unique transitland ID
+  string name = 2;              // The name of the egress
+  LatLng ll = 3;                // Latitude, longitude of the egress
+}
+
+message TransitStationInfo {
+  string onestop_id = 1;        // Unique transitland ID
+  string name = 2;              // The name of the station
+  LatLng ll = 3;                // Latitude, longitude of the station
+}
+
+message BikeShareStationInfo {
+  string name = 1;
+  string ref = 2;
+  uint32 capacity = 3;
+  string network = 4;
+  string operator = 5;
+  float rent_cost = 6;
+  float return_cost = 7;
+}
+
+message TransitPlatformInfo {
+  enum Type {
+    kStop = 0;
+    kStation = 1;
+  }
+  Type type = 1;                  // The type of stop (station or simple stop)
+  string onestop_id = 2;          // Unique transitland ID
+  string name = 3;                // The name of the platform
+  string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
+  string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
+  bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
+  LatLng ll = 7;                  // Latitude, longitude of the transit stop
+  string station_onestop_id = 8;  // Unique transitland station ID
+  string station_name = 9;        // The station name of the platform
+}
+
+message TransitRouteInfo {
+  string onestop_id = 1;
+  uint32 block_id = 2;
+  uint32 trip_id = 3;
+  string short_name = 4;
+  string long_name = 5;
+  string headsign = 6;
+  uint32 color = 7;
+  uint32 text_color = 8;
+  string description = 9;
+  string operator_onestop_id = 10;
+  string operator_name = 11;
+  string operator_url = 12;
+  repeated TransitPlatformInfo transit_stops = 13;
+}
+
+message Pronunciation {
+  enum Alphabet {
+    kIpa = 0;
+    kXKatakana = 1;
+    kXJeita = 2;
+    kNtSampa = 3;
+  }
+  Alphabet alphabet = 1;
+  string value = 2;
+}
+
+message StreetName {
+  string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
+  bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
+  Pronunciation pronunciation = 3; // The pronunciation associated with this street name
+}
+
+message TurnLane {
+  enum State {
+    kInvalid = 0;
+    kValid = 1;
+    kActive = 2;
+  }
+  uint32 directions_mask = 1;
+  State state = 2;
+  uint32 active_direction = 3;
+}
+
+enum RoadClass {
+  kMotorway = 0;
+  kTrunk = 1;
+  kPrimary = 2;
+  kSecondary = 3;
+  kTertiary = 4;
+  kUnclassified = 5;
+  kResidential = 6;
+  kServiceOther = 7;
+}
+
+message TaggedValue {
+  // dont renumber these they match the c++ definitions
+  enum Type {
+    kNone = 0;
+    kLayer = 1;
+    kPronunciation = 2;
+    kBssInfo = 3;
+    kLevel = 4;
+    kLevelRef = 5;
+    kTunnel = 49;
+    kBridge = 50;    
+  }
+  bytes value = 1;    // The actual tagged name value, examples: Ted Williams Tunnel
+  Type type = 2;      // The type of tagged name (tunnel or bridge)
+}
+
+enum TravelMode {
+  kDrive = 0;
+  kPedestrian = 1;
+  kBicycle = 2;
+  kTransit = 3;
+}
+
+// TODO: review and update as needed
+enum VehicleType {
+  kCar = 0;
+  kMotorcycle = 1;
+  kAutoBus = 2;
+  kTractorTrailer = 3;
+  kMotorScooter = 4;
+}
+
+// TODO: review and update as needed
+enum PedestrianType {
+  kFoot = 0;
+  kWheelchair = 1;
+  kSegway = 2;
+}
+
+enum BicycleType {
+  kRoad = 0;
+  kCross = 1;
+  kHybrid = 2;
+  kMountain = 3;
+}
+
+enum TransitType {
+  kTram = 0;
+  kMetro = 1;
+  kRail = 2;
+  kBus = 3;
+  kFerry = 4;
+  kCableCar = 5;
+  kGondola = 6;
+  kFunicular = 7;
+}

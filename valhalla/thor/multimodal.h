@@ -12,7 +12,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/sif/hierarchylimits.h>
@@ -101,7 +101,6 @@ protected:
 
   // Vector of edge labels (requires access by index).
   std::vector<sif::MMEdgeLabel> edgelabels_;
-  uint32_t max_reserved_labels_count_;
 
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::MMEdgeLabel> adjacencylist_;

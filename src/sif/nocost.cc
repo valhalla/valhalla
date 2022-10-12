@@ -31,8 +31,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  NoCost(const CostingOptions& costing_options)
-      : DynamicCost(costing_options, TravelMode::kDrive, kAllAccess) {
+  NoCost(const Costing& costing) : DynamicCost(costing, TravelMode::kDrive, kAllAccess) {
   }
 
   virtual ~NoCost() {
@@ -134,14 +133,14 @@ public:
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge    Pointer to a directed edge.
-   * @param   tile    Graph tile.
-   * @param   seconds Time of week in seconds.
+   * @param   edge      Pointer to a directed edge.
+   * @param   tile      Graph tile.
+   * @param   time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr&,
-                        const uint32_t,
+                        const baldr::TimeInfo&,
                         uint8_t&) const override {
     return {static_cast<float>(edge->length()), static_cast<float>(edge->length())};
   }
@@ -205,15 +204,13 @@ public:
   }
 };
 
-void ParseNoCostOptions(const rapidjson::Document&,
-                        const std::string&,
-                        CostingOptions* pbf_costing_options) {
+void ParseNoCostOptions(const rapidjson::Document&, const std::string&, Costing* c) {
   // this is probably not needed but its part of the contract for costing..
-  pbf_costing_options->set_costing(Costing::none_);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+  c->set_type(Costing::none_);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateNoCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateNoCost(const Costing& costing_options) {
   return std::make_shared<NoCost>(costing_options);
 }
 

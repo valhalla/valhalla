@@ -365,7 +365,7 @@ bool is_conditional_active(const bool type,
 
     bool edge_case = false; // Jan 04 to Jan 01
     // month only
-    if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !b_week) &&
+    if (type == kYMD && (b_month && e_month) && (!b_day_dow && !e_day_dow && !b_week && !e_week) &&
         b_month == e_month) {
 
       dt_in_range = (b_month <= unsigned(d.month()) && unsigned(d.month()) <= e_month);

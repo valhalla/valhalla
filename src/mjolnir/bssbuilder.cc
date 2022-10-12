@@ -14,6 +14,7 @@
 
 #include <boost/range/algorithm.hpp>
 
+#include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
@@ -43,6 +44,7 @@ struct BestProjection {
  *  waynode -> BSS
  */
 struct BSSConnection {
+  OSMNode osm_node = {};
   PointLL bss_ll = {};
   GraphId bss_node_id = {};
   GraphId way_node_id = {};
@@ -50,6 +52,8 @@ struct BSSConnection {
   uint64_t wayid = std::numeric_limits<uint64_t>::max();
   std::vector<std::string> names = {};
   std::vector<std::string> tagged_values = {};
+  std::vector<std::string> pronunciations = {};
+
   std::vector<PointLL> shape = {};
   // Is the outbound edge from the waynode is forward?
   bool is_forward_from_waynode = true;
@@ -64,12 +68,13 @@ struct BSSConnection {
 
   BSSConnection() = default;
 
-  BSSConnection(PointLL bss_ll,
+  BSSConnection(OSMNode osm_node,
+                PointLL bss_ll,
                 GraphId way_node_id,
                 const EdgeInfo& edgeinfo,
                 bool is_forward,
                 const BestProjection& best)
-      : bss_ll(std::move(bss_ll)), way_node_id(way_node_id) {
+      : osm_node(osm_node), bss_ll(std::move(bss_ll)), way_node_id(way_node_id) {
     /*
      * In this constructor: bss_node_id, shapes are left on default value on purpose
      * 	they are to be updated once the bss node is added into the local tile
@@ -77,6 +82,8 @@ struct BSSConnection {
     wayid = edgeinfo.wayid();
     names = edgeinfo.GetNames();
     tagged_values = edgeinfo.GetTaggedValues();
+    pronunciations = edgeinfo.GetTaggedValues(true);
+
     is_forward_from_waynode = is_forward;
     speed = best.directededge->speed();
     surface = best.directededge->surface();
@@ -115,7 +122,6 @@ DirectedEdge make_directed_edge(const GraphId endnode,
   directededge.set_forwardaccess(accesses[static_cast<size_t>(!is_forward)]);
   directededge.set_reverseaccess(accesses[static_cast<size_t>(is_forward)]);
 
-  directededge.set_named(conn.names.size());
   directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
   directededge.set_forward(is_forward);
   directededge.set_bss_connection(true);
@@ -140,6 +146,12 @@ void compute_and_fill_shape(const BestProjection& best,
   end.shape.push_back(closest_point);
   std::copy(best.shape.begin() + cloest_index + 1, best.shape.end(), std::back_inserter(end.shape));
 }
+
+const static auto VALID_EDGE_USES = std::unordered_set<Use>{
+    Use::kRoad, Use::kLivingStreet, Use::kCycleway, Use::kSidewalk,    Use::kFootway,
+    Use::kPath, Use::kPedestrian,   Use::kAlley,    Use::kServiceRoad,
+
+};
 
 std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vector<OSMNode>& osm_bss) {
   auto t1 = std::chrono::high_resolution_clock::now();
@@ -175,11 +187,11 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
         const DirectedEdge* directededge = local_tile.directededge(node->edge_index() + j);
         auto edgeinfo = local_tile.edgeinfo(directededge);
 
-        if (directededge->use() == Use::kTransitConnection ||
-            directededge->use() == Use::kEgressConnection ||
-            directededge->use() == Use::kPlatformConnection) {
+        auto found = VALID_EDGE_USES.count(directededge->use());
+        if (!found) {
           continue;
         }
+
         if ((!(directededge->forwardaccess() & kBicycleAccess) &&
              !(directededge->forwardaccess() & kPedestrianAccess)) ||
             directededge->is_shortcut()) {
@@ -220,7 +232,8 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
 
     auto edgeinfo_ped = local_tile.edgeinfo(best_ped.directededge);
     // Store the information of the edge start <-> bss for pedestrian
-    auto start_ped = BSSConnection{bss_ll,
+    auto start_ped = BSSConnection{bss,
+                                   bss_ll,
                                    {local_tile.id().tileid(), local_level, best_ped.startnode},
                                    edgeinfo_ped,
                                    // In order to simplify the problem, we ALWAYS consider that the
@@ -230,21 +243,23 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
 
     // Store the information of the edge end <-> bss for pedestrian
     auto end_ped =
-        BSSConnection{bss_ll, best_ped.directededge->endnode(), edgeinfo_ped, false, best_ped};
+        BSSConnection{bss, bss_ll, best_ped.directededge->endnode(), edgeinfo_ped, false, best_ped};
 
     auto edgeinfo_bicycle = local_tile.edgeinfo(best_bicycle.directededge);
 
     // Store the information of the edge start <-> bss for bicycle
     auto start_bicycle =
-        BSSConnection{bss_ll,
+        BSSConnection{bss,
+                      bss_ll,
                       {local_tile.id().tileid(), local_level, best_bicycle.startnode},
                       edgeinfo_bicycle,
                       true,
                       best_bicycle};
 
     // Store the information of the edge end <-> bss for bicycle
-    auto end_bicycle = BSSConnection{bss_ll, best_bicycle.directededge->endnode(), edgeinfo_bicycle,
-                                     false, best_bicycle};
+    auto end_bicycle =
+        BSSConnection{bss,   bss_ll,      best_bicycle.directededge->endnode(), edgeinfo_bicycle,
+                      false, best_bicycle};
 
     compute_and_fill_shape(best_ped, bss_ll, start_ped, end_ped);
     compute_and_fill_shape(best_bicycle, bss_ll, start_bicycle, end_bicycle);
@@ -260,6 +275,7 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
 
 void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
                              const GraphTile& tile,
+                             const OSMData& osm_data,
                              std::mutex& lock,
                              std::vector<BSSConnection>& new_connections) {
   auto local_level = TileHierarchy::levels().back().level;
@@ -273,6 +289,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
   for (auto it = new_connections.begin(); it != new_connections.end(); std::advance(it, 4)) {
     size_t edge_index = tilebuilder_local.directededges().size();
+
     NodeInfo new_bss_node{tile.header()->base_ll(),
                           it->bss_ll,
                           (kPedestrianAccess | kBicycleAccess),
@@ -293,10 +310,17 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
 
     tilebuilder_local.nodes().emplace_back(std::move(new_bss_node));
 
+    auto encode_tag = [](TaggedValue tag) {
+      return std::string(1, static_cast<std::string::value_type>(tag));
+    };
+
     for (int j = 0; j < 4; j++) {
       auto& bss_to_waynode = *(it + j);
       bss_to_waynode.bss_node_id = new_bss_node_graphid;
-      bool added;
+      bss_to_waynode.tagged_values.push_back(encode_tag(TaggedValue::kBssInfo) +
+                                             osm_data.node_names.name(it->osm_node.bss_info_index()));
+
+      bool added{false};
       auto directededge =
           make_directed_edge(bss_to_waynode.way_node_id, bss_to_waynode.shape, bss_to_waynode,
                              !bss_to_waynode.is_forward_from_waynode, 0);
@@ -305,7 +329,9 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
           tilebuilder_local.AddEdgeInfo(tilebuilder_local.directededges().size(),
                                         new_bss_node_graphid, bss_to_waynode.way_node_id,
                                         bss_to_waynode.wayid, 0, 0, 0, bss_to_waynode.shape,
-                                        bss_to_waynode.names, bss_to_waynode.tagged_values, 0, added);
+                                        bss_to_waynode.names, bss_to_waynode.tagged_values,
+                                        bss_to_waynode.pronunciations, 0, added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
     }
@@ -316,6 +342,7 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
                                std::mutex& lock,
                                bss_by_tile_t::const_iterator tile_start,
                                bss_by_tile_t::const_iterator tile_end,
+                               const OSMData& osm_data,
                                std::vector<BSSConnection>& all) {
 
   GraphReader reader_local_level(pt);
@@ -332,7 +359,7 @@ void project_and_add_bss_nodes(const boost::property_tree::ptree& pt,
     }
 
     auto new_connections = project(*local_tile, tile_start->second);
-    add_bss_nodes_and_edges(*tilebuilder_local, *local_tile, lock, new_connections);
+    add_bss_nodes_and_edges(*tilebuilder_local, *local_tile, osm_data, lock, new_connections);
     {
       std::lock_guard<std::mutex> l{lock};
       std::move(new_connections.begin(), new_connections.end(), std::back_inserter(all));
@@ -442,7 +469,9 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(tilebuilder_local.directededges().size(), lower->way_node_id,
                                         lower->bss_node_id, lower->wayid, 0, 0, 0, lower->shape,
-                                        lower->names, lower->tagged_values, 0, added);
+                                        lower->names, lower->tagged_values, lower->pronunciations, 0,
+                                        added);
+
       directededge.set_edgeinfo_offset(edge_info_offset);
 
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -546,7 +575,9 @@ namespace mjolnir {
  *
  *
  * */
-void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string& bss_nodes_bin) {
+void BssBuilder::Build(const boost::property_tree::ptree& pt,
+                       const OSMData& osmdata,
+                       const std::string& bss_nodes_bin) {
 
   if (!pt.get<bool>("mjolnir.import_bike_share_stations", false)) {
     return;
@@ -610,7 +641,8 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt, const std::string&
       std::advance(tile_end, tile_count);
       // Make the thread
       threads[i].reset(new std::thread(project_and_add_bss_nodes, std::cref(pt.get_child("mjolnir")),
-                                       std::ref(lock), tile_start, tile_end, std::ref(all)));
+                                       std::ref(lock), tile_start, tile_end, std::cref(osmdata),
+                                       std::ref(all)));
     }
 
     for (auto& thread : threads) {

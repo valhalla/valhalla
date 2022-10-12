@@ -63,7 +63,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  TransitCost(const CostingOptions& costing_options);
+  TransitCost(const Costing& costing_options);
 
   virtual ~TransitCost();
 
@@ -171,7 +171,7 @@ public:
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge*,
                         const graph_tile_ptr&,
-                        const uint32_t,
+                        const baldr::TimeInfo&,
                         uint8_t&) const override {
     throw std::runtime_error("TransitCost::EdgeCost only supports transit edges");
   }
@@ -309,8 +309,9 @@ public:
 
 // Constructor. Parse pedestrian options from property tree. If option is
 // not present, set the default.
-TransitCost::TransitCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kPublicTransit, kPedestrianAccess) {
+TransitCost::TransitCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kPublicTransit, kPedestrianAccess) {
+  const auto& costing_options = costing.options();
 
   mode_factor_ = costing_options.mode_factor();
 
@@ -342,38 +343,32 @@ TransitCost::TransitCost(const CostingOptions& costing_options)
   transfer_penalty_ = costing_options.transfer_penalty();
 
   // Process stop filters
-  if (costing_options.has_filter_stop_action()) {
-    auto stop_action = costing_options.filter_stop_action();
-    for (const auto& id : costing_options.filter_stop_ids()) {
-      if (stop_action == FilterAction::exclude) {
-        stop_exclude_onestops_.emplace(id);
-      } else if (stop_action == FilterAction::include) {
-        stop_include_onestops_.emplace(id);
-      }
+  auto stop_action = costing_options.filter_stop_action();
+  for (const auto& id : costing_options.filter_stop_ids()) {
+    if (stop_action == FilterAction::exclude) {
+      stop_exclude_onestops_.emplace(id);
+    } else if (stop_action == FilterAction::include) {
+      stop_include_onestops_.emplace(id);
     }
   }
 
   // Process operator filters
-  if (costing_options.has_filter_operator_action()) {
-    auto operator_action = costing_options.filter_operator_action();
-    for (const auto& id : costing_options.filter_operator_ids()) {
-      if (operator_action == FilterAction::exclude) {
-        operator_exclude_onestops_.emplace(id);
-      } else if (operator_action == FilterAction::include) {
-        operator_include_onestops_.emplace(id);
-      }
+  auto operator_action = costing_options.filter_operator_action();
+  for (const auto& id : costing_options.filter_operator_ids()) {
+    if (operator_action == FilterAction::exclude) {
+      operator_exclude_onestops_.emplace(id);
+    } else if (operator_action == FilterAction::include) {
+      operator_include_onestops_.emplace(id);
     }
   }
 
   // Process route filters
-  if (costing_options.has_filter_route_action()) {
-    auto route_action = costing_options.filter_route_action();
-    for (const auto& id : costing_options.filter_route_ids()) {
-      if (route_action == FilterAction::exclude) {
-        route_exclude_onestops_.emplace(id);
-      } else if (route_action == FilterAction::include) {
-        route_include_onestops_.emplace(id);
-      }
+  auto route_action = costing_options.filter_route_action();
+  for (const auto& id : costing_options.filter_route_ids()) {
+    if (route_action == FilterAction::exclude) {
+      route_exclude_onestops_.emplace(id);
+    } else if (route_action == FilterAction::include) {
+      route_include_onestops_.emplace(id);
     }
   }
 
@@ -631,122 +626,79 @@ uint32_t TransitCost::UnitSize() const {
 
 void ParseTransitCostOptions(const rapidjson::Document& doc,
                              const std::string& costing_options_key,
-                             CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::transit);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                             Costing* c) {
+  c->set_type(Costing::transit);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
+  // TODO: no base costing parsing because transit doesnt care about any of those options?
 
-    // mode_factor
-    pbf_costing_options->set_mode_factor(
-        kModeFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/mode_factor")
-                             .get_value_or(kModeFactor)));
+  JSON_PBF_RANGED_DEFAULT(co, kModeFactorRange, json, "/mode_factor", mode_factor);
+  JSON_PBF_DEFAULT(co, false, json, "/wheelchair", wheelchair);
+  JSON_PBF_DEFAULT(co, false, json, "/bicycle", bicycle);
+  JSON_PBF_RANGED_DEFAULT(co, kUseBusRange, json, "/use_bus", use_bus);
+  JSON_PBF_RANGED_DEFAULT(co, kUseRailRange, json, "/use_rail", use_rail);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTransfersRange, json, "/use_transfers", use_transfers);
+  JSON_PBF_RANGED_DEFAULT(co, kTransferCostRange, json, "/transfer_cost", transfer_cost);
+  JSON_PBF_RANGED_DEFAULT(co, kTransferPenaltyRange, json, "/transfer_penalty", transfer_penalty);
 
-    // wheelchair
-    pbf_costing_options->set_wheelchair(
-        rapidjson::get_optional<bool>(*json_costing_options, "/wheelchair").get_value_or(false));
-
-    // bicycle
-    pbf_costing_options->set_bicycle(
-        rapidjson::get_optional<bool>(*json_costing_options, "/bicycle").get_value_or(false));
-
-    // use_bus
-    pbf_costing_options->set_use_bus(
-        kUseBusRange(rapidjson::get_optional<float>(*json_costing_options, "/use_bus")
-                         .get_value_or(kDefaultUseBus)));
-
-    // use_rail
-    pbf_costing_options->set_use_rail(
-        kUseRailRange(rapidjson::get_optional<float>(*json_costing_options, "/use_rail")
-                          .get_value_or(kDefaultUseRail)));
-
-    // use_transfers
-    pbf_costing_options->set_use_transfers(
-        kUseTransfersRange(rapidjson::get_optional<float>(*json_costing_options, "/use_transfers")
-                               .get_value_or(kDefaultUseTransfers)));
-
-    // transfer_cost
-    pbf_costing_options->set_transfer_cost(
-        kTransferCostRange(rapidjson::get_optional<float>(*json_costing_options, "/transfer_cost")
-                               .get_value_or(kDefaultTransferCost)));
-
-    // transfer_penalty
-    pbf_costing_options->set_transfer_penalty(kTransferPenaltyRange(
-        rapidjson::get_optional<float>(*json_costing_options, "/transfer_penalty")
-            .get_value_or(kDefaultTransferPenalty)));
-
-    // filter_stop_action
-    auto filter_stop_action_str =
-        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/stops/action");
-    FilterAction filter_stop_action;
-    if (filter_stop_action_str &&
-        FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
-      pbf_costing_options->set_filter_stop_action(filter_stop_action);
-      // filter_stop_ids
-      auto filter_stop_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
-                                                                "/filters/stops/ids");
-      if (filter_stop_ids_json) {
-        for (const auto& filter_stop_id_json : *filter_stop_ids_json) {
-          pbf_costing_options->add_filter_stop_ids(filter_stop_id_json.GetString());
-        }
+  // filter_stop_action
+  auto filter_stop_action_str = rapidjson::get_optional<std::string>(json, "/filters/stops/action");
+  FilterAction filter_stop_action;
+  if (filter_stop_action_str &&
+      FilterAction_Enum_Parse(*filter_stop_action_str, &filter_stop_action)) {
+    co->set_filter_stop_action(filter_stop_action);
+    // filter_stop_ids
+    auto filter_stop_ids_json =
+        rapidjson::get_optional<rapidjson::Value::ConstArray>(json, "/filters/stops/ids");
+    if (filter_stop_ids_json) {
+      co->clear_filter_stop_ids();
+      for (const auto& filter_stop_id_json : *filter_stop_ids_json) {
+        co->add_filter_stop_ids(filter_stop_id_json.GetString());
       }
     }
+  }
 
-    // filter_operator_action
-    auto filter_operator_action_str =
-        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/operators/action");
-    FilterAction filter_operator_action;
-    if (filter_operator_action_str &&
-        FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
-      pbf_costing_options->set_filter_operator_action(filter_operator_action);
-      // filter_operator_ids
-      auto filter_operator_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
-                                                                "/filters/operators/ids");
-      if (filter_operator_ids_json) {
-        for (const auto& filter_operator_id_json : *filter_operator_ids_json) {
-          pbf_costing_options->add_filter_operator_ids(filter_operator_id_json.GetString());
-        }
+  // filter_operator_action
+  auto filter_operator_action_str =
+      rapidjson::get_optional<std::string>(json, "/filters/operators/action");
+  FilterAction filter_operator_action;
+  if (filter_operator_action_str &&
+      FilterAction_Enum_Parse(*filter_operator_action_str, &filter_operator_action)) {
+    co->set_filter_operator_action(filter_operator_action);
+    // filter_operator_ids
+    auto filter_operator_ids_json =
+        rapidjson::get_optional<rapidjson::Value::ConstArray>(json, "/filters/operators/ids");
+    if (filter_operator_ids_json) {
+      co->clear_filter_operator_ids();
+      for (const auto& filter_operator_id_json : *filter_operator_ids_json) {
+        co->add_filter_operator_ids(filter_operator_id_json.GetString());
       }
     }
+  }
 
-    // filter_route_action
-    auto filter_route_action_str =
-        rapidjson::get_optional<std::string>(*json_costing_options, "/filters/routes/action");
-    FilterAction filter_route_action;
-    if (filter_route_action_str &&
-        FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
-      pbf_costing_options->set_filter_route_action(filter_route_action);
-      // filter_route_ids
-      auto filter_route_ids_json =
-          rapidjson::get_optional<rapidjson::Value::ConstArray>(*json_costing_options,
-                                                                "/filters/routes/ids");
-      if (filter_route_ids_json) {
-        for (const auto& filter_route_id_json : *filter_route_ids_json) {
-          pbf_costing_options->add_filter_route_ids(filter_route_id_json.GetString());
-        }
+  // filter_route_action
+  auto filter_route_action_str = rapidjson::get_optional<std::string>(json, "/filters/routes/action");
+  FilterAction filter_route_action;
+  if (filter_route_action_str &&
+      FilterAction_Enum_Parse(*filter_route_action_str, &filter_route_action)) {
+    co->set_filter_route_action(filter_route_action);
+    // filter_route_ids
+    auto filter_route_ids_json =
+        rapidjson::get_optional<rapidjson::Value::ConstArray>(json, "/filters/routes/ids");
+    if (filter_route_ids_json) {
+      co->clear_filter_route_ids();
+      for (const auto& filter_route_id_json : *filter_route_ids_json) {
+        co->add_filter_route_ids(filter_route_id_json.GetString());
       }
     }
-
-  } else {
-    // Set pbf values to defaults
-    pbf_costing_options->set_mode_factor(kModeFactor);
-    pbf_costing_options->set_wheelchair(false);
-    pbf_costing_options->set_bicycle(false);
-    pbf_costing_options->set_use_bus(kDefaultUseBus);
-    pbf_costing_options->set_use_rail(kDefaultUseRail);
-    pbf_costing_options->set_use_transfers(kDefaultUseTransfers);
-    pbf_costing_options->set_transfer_cost(kDefaultTransferCost);
-    pbf_costing_options->set_transfer_penalty(kDefaultTransferPenalty);
   }
 }
 
-cost_ptr_t CreateTransitCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTransitCost(const Costing& costing_options) {
   return std::make_shared<TransitCost>(costing_options);
 }
 
@@ -767,7 +719,7 @@ TransitCost* make_transitcost_from_json(const std::string& property, float testV
   ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TransitCost(request.options().costing_options(static_cast<int>(Costing::transit)));
+  return new TransitCost(request.options().costings().find(Costing::transit)->second);
 }
 
 std::uniform_real_distribution<float>*

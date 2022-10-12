@@ -1,9 +1,10 @@
-#include <thor/attributes_controller.h>
+#include "baldr/attributes_controller.h"
+#include "midgard/logging.h"
 
 #include <string>
 
 namespace valhalla {
-namespace thor {
+namespace baldr {
 
 /*
  * Map of attributes that a user can request to enable or disable, and their defaults.
@@ -77,6 +78,7 @@ const std::unordered_map<std::string, bool> AttributesController::kDefaultAttrib
     {kEdgeDestinationOnly, true},
     {kEdgeIsUrban, false},
     {kEdgeTaggedValues, true},
+    {kEdgeIndoor, true},
 
     // Node keys
     {kIncidents, false},
@@ -142,10 +144,42 @@ AttributesController::AttributesController() {
   attributes = kDefaultAttributes;
 }
 
+AttributesController::AttributesController(const Options& options, bool is_strict_filter) {
+  // Set default controller
+  attributes = kDefaultAttributes;
+
+  switch (options.filter_action()) {
+    case (FilterAction::include): {
+      if (is_strict_filter)
+        disable_all();
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          attributes.at(filter_attribute) = true;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+      }
+      break;
+    }
+    case (FilterAction::exclude): {
+      for (const auto& filter_attribute : options.filter_attributes()) {
+        try {
+          attributes.at(filter_attribute) = false;
+        } catch (...) { LOG_ERROR("Invalid filter attribute " + filter_attribute); }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 void AttributesController::disable_all() {
   for (auto& pair : attributes) {
     pair.second = false;
   }
+}
+
+bool AttributesController::operator()(const std::string& key) const {
+  return attributes.at(key);
 }
 
 // Used to check if any keys starting with the `category` string are enabled.
@@ -160,5 +194,5 @@ bool AttributesController::category_attribute_enabled(const std::string& categor
   return false;
 }
 
-} // namespace thor
+} // namespace baldr
 } // namespace valhalla

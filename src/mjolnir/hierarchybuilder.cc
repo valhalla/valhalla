@@ -322,7 +322,9 @@ void FormTilesInNewLevel(GraphReader& reader,
           tilebuilder->AddEdgeInfo(w, nodea, nodeb, edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
                                    edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
-                                   edgeinfo.GetTypes(), added, diff_names);
+                                   edgeinfo.GetTaggedValues(true), edgeinfo.GetTypes(), added,
+                                   diff_names);
+
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Add directed edge
@@ -415,6 +417,11 @@ void CreateNodeAssociations(GraphReader& reader,
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet();
   for (const auto& base_tile_id : local_tiles) {
+    // We keep all transit data inside the transit hierarchy
+    if (base_tile_id.level() == TileHierarchy::GetTransitLevel().level) {
+      continue;
+    }
+
     // Get the graph tile. Skip if no tile exists or no nodes exist in the tile.
     graph_tile_ptr tile = reader.GetGraphTile(base_tile_id);
     if (!tile) {

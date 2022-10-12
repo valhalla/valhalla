@@ -105,7 +105,7 @@ public:
    * @param  costing specified costing type.
    * @param  costing_options pbf with request costing_options.
    */
-  MotorcycleCost(const CostingOptions& costing_options);
+  MotorcycleCost(const Costing& costing_options);
 
   virtual ~MotorcycleCost();
 
@@ -188,12 +188,12 @@ public:
    * the time (seconds) to traverse the edge.
    * @param  edge      Pointer to a directed edge.
    * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
+   * @param  time_info Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
 
   /**
@@ -278,16 +278,18 @@ public:
 };
 
 // Constructor
-MotorcycleCost::MotorcycleCost(const CostingOptions& costing_options)
-    : DynamicCost(costing_options, TravelMode::kDrive, kMotorcycleAccess),
+MotorcycleCost::MotorcycleCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kMotorcycleAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+
+  const auto& costing_options = costing.options();
 
   // Vehicle type is motorcycle
   type_ = VehicleType::kMotorcycle;
 
   // Get the base costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Preference to use highways. Is a value from 0 to 1
   // Factor for highway use - use a non-linear factor with values at 0.5 being neutral (factor
@@ -394,9 +396,10 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
-                              const uint32_t seconds,
+                              const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                                   time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
 
   float sec = (edge->length() * speedfactor_[final_speed]);
@@ -414,9 +417,7 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   float factor = density_factor_[edge->density()] +
                  highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
                  surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-  // TODO: factor hasn't been extensively tested, might alter this in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-  factor += speed_penalty;
+  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->toll()) {
     factor += toll_factor_;
   }
@@ -566,42 +567,21 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::motorcycle);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                                Costing* c) {
+  c->set_type(Costing::motorcycle);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-
-    // use_trails
-    pbf_costing_options->set_use_trails(
-        kUseTrailsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_trails")
-                            .get_value_or(kDefaultUseTrails)));
-  } else {
-    // Set pbf values to defaults
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_use_trails(kDefaultUseTrails);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-  }
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
 }
 
-cost_ptr_t CreateMotorcycleCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {
   return std::make_shared<MotorcycleCost>(costing_options);
 }
 
@@ -619,7 +599,7 @@ namespace {
 
 class TestMotorcycleCost : public MotorcycleCost {
 public:
-  TestMotorcycleCost(const CostingOptions& costing_options) : MotorcycleCost(costing_options){};
+  TestMotorcycleCost(const Costing& costing_options) : MotorcycleCost(costing_options){};
 
   using MotorcycleCost::alley_penalty_;
   using MotorcycleCost::country_crossing_cost_;
@@ -637,8 +617,7 @@ TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, f
   ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return new TestMotorcycleCost(
-      request.options().costing_options(static_cast<int>(Costing::motorcycle)));
+  return new TestMotorcycleCost(request.options().costings().find(Costing::motorcycle)->second);
 }
 
 template <typename T>

@@ -13,7 +13,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/baldr/time_info.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
@@ -63,6 +63,18 @@ public:
               baldr::GraphReader& reader,
               const sif::mode_costing_t& costings,
               const sif::TravelMode mode);
+
+  /**
+   * Sets the functor which will track the Dijkstra expansion.
+   *
+   * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
+   *                             on a given edge
+   */
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
+  }
 
 protected:
   /**
@@ -130,6 +142,9 @@ protected:
   std::vector<sif::MMEdgeLabel> mmedgelabels_;
   uint32_t max_reserved_labels_count_;
 
+  // if `true` clean reserved memory for edge labels
+  bool clear_reserved_memory_;
+
   // Adjacency list - approximate double bucket sort
   baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
   baldr::DoubleBucketQueue<sif::MMEdgeLabel> mmadjacencylist_;
@@ -139,6 +154,9 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  // for tracking the expansion of the Dijkstra
+  expansion_callback_t expansion_callback_;
 
   // when expanding should we treat each location as its own individual path to track concurrently but
   // separately from the other paths

@@ -13,7 +13,6 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-#include "thor/attributes_controller.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
 
@@ -47,11 +46,11 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  parse_locations(request);
+  adjust_scores(*request.mutable_options());
   parse_costing(request);
   parse_measurements(request);
-  parse_filter_attributes(request, true);
-  const auto& options = *request.mutable_options();
+  const auto& options = request.options();
+  controller = AttributesController(options, true);
 
   /*
    * A flag indicating whether the input shape is a GPS trace or exact points from a

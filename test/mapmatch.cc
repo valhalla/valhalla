@@ -223,8 +223,8 @@ TEST(Mapmatch, test_matcher) {
           R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
               json_escape(encoded_shape) + "\"}",
           nullptr, &api);
-      EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
-      EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
+      EXPECT_NE(api.trip().routes(0).legs(0).location(0).correlation().edges_size(), 0);
+      EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
       walked = test::json_to_pt(walked_json);
     } catch (...) {
       std::cout << test_case << std::endl;
@@ -475,7 +475,7 @@ TEST(Mapmatch, test_edges_discontinuity_with_multi_routes) {
     for (const auto& route : response.trip().routes()) {
       leg_count += route.legs_size();
       for (const auto& leg : route.legs()) {
-        if (leg.location(0).has_date_time()) {
+        if (!leg.location(0).date_time().empty()) {
           EXPECT_TRUE(std::get<2>(test_answers[i]))
               << "Found a leg with a start time when it shouldnt have had one";
         } else {
@@ -952,8 +952,8 @@ TEST(Mapmatch, test_now_matches) {
       json_escape(encoded_shape) + "\"}";
   Api api;
   actor.trace_route(test_case, nullptr, &api);
-  EXPECT_NE(api.trip().routes(0).legs(0).location(0).path_edges_size(), 0);
-  EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->path_edges_size(), 0);
+  EXPECT_NE(api.trip().routes(0).legs(0).location(0).correlation().edges_size(), 0);
+  EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
 }
 
 TEST(Mapmatch, test_leg_duration_trimming) {
@@ -1442,9 +1442,9 @@ TEST(Mapmatch, openlr_parameter_true_osrm_api) {
   const auto& matches = response.get_child("matchings");
   EXPECT_EQ(matches.size(), 1);
   const std::vector<std::string>& expected = {
-      "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//8iGw==",
-      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOduyULYiKJAAAV//0iGQ==",
+      "CwOdxCULYCKKAAAN//8iGg==",
+      "CwOdySULXyKLAAAf//EiGw==",
       "CwOd1yULWCKLAQBV/84iGw==",
   };
   for (const auto& match : matches) {
@@ -1464,9 +1464,9 @@ TEST(Mapmatch, openlr_parameter_true_native_api) {
   tyr::actor_t actor(conf, true);
   const auto& response = test::json_to_pt(actor.trace_route(request));
   const std::vector<std::string>& expected = {
-      "CwOduyULYiKJAAAV//0iGw==",
-      "CwOdxCULYCKJAAAN//8iGw==",
-      "CwOdySULXyKJAAAf//EiGw==",
+      "CwOduyULYiKJAAAV//0iGQ==",
+      "CwOdxCULYCKKAAAN//8iGg==",
+      "CwOdySULXyKLAAAf//EiGw==",
       "CwOd1yULWCKLAQBV/84iGw==",
   };
   std::vector<std::string> references;

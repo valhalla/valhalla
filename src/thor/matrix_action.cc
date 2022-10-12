@@ -28,42 +28,40 @@ std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  parse_locations(request);
+  adjust_scores(*request.mutable_options());
   auto costing = parse_costing(request);
   const auto& options = request.options();
 
-  // Parse out units; if none specified, use kilometers
-  double distance_scale = kKmPerMeter;
-  if (options.units() == Options::miles) {
-    distance_scale = kMilePerMeter;
-  }
+  // Distance scaling (miles or km)
+  double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
 
-  json::MapPtr json;
-  // do the real work
+  // lambdas to do the real work
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
-    thor::CostMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                 max_matrix_distance.find(costing)->second);
+    return costmatrix_.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing,
+                                      mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    thor::TimeDistanceMatrix matrix;
-    return matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                 max_matrix_distance.find(costing)->second);
+    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                mode_costing, mode,
+                                                max_matrix_distance.find(costing)->second,
+                                                options.matrix_locations());
   };
+
   if (costing == "bikeshare") {
-    thor::TimeDistanceBSSMatrix matrix;
     time_distances =
-        matrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                              max_matrix_distance.find(costing)->second);
+        time_distance_bss_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
+                                                 mode_costing, mode,
+                                                 max_matrix_distance.find(costing)->second,
+                                                 options.matrix_locations());
     return tyr::serializeMatrix(request, time_distances, distance_scale);
   }
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
       switch (mode) {
-        case TravelMode::kPedestrian:
-        case TravelMode::kBicycle:
+        case travel_mode_t::kPedestrian:
+        case travel_mode_t::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
           if (options.sources().size() > kCostMatrixThreshold &&
@@ -73,7 +71,7 @@ std::string thor_worker_t::matrix(Api& request) {
             time_distances = timedistancematrix();
           }
           break;
-        case TravelMode::kPublicTransit:
+        case travel_mode_t::kPublicTransit:
           time_distances = timedistancematrix();
           break;
         default:

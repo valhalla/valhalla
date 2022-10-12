@@ -22,8 +22,8 @@
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
 
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"
@@ -39,10 +39,6 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 
-// sqlite is included in util.h and must be before spatialite
-#include <spatialite.h>
-
-namespace bpo = boost::program_options;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
@@ -161,7 +157,6 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 
   sqlite3* db_handle = nullptr;
   if (filesystem::exists(*database)) {
-    spatialite_init(0);
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
@@ -170,19 +165,14 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       return;
     }
 
-    // loading SpatiaLite as an extension
-    if (!valhalla::mjolnir::load_spatialite(db_handle)) {
-      sqlite3_close(db_handle);
-      return;
-    }
   } else {
     LOG_ERROR("Admin db " + *database + " not found.");
     return;
   }
+  auto admin_conn = valhalla::mjolnir::make_spatialite_cache(db_handle);
 
   // Graphreader
-  auto hierarchy_properties = pt.get_child("mjolnir");
-  GraphReader reader(hierarchy_properties);
+  GraphReader reader(pt);
   auto local_level = TileHierarchy::levels().back().level;
   auto tiles = TileHierarchy::levels().back().tiles;
 
@@ -205,53 +195,47 @@ void Benchmark(const boost::property_tree::ptree& pt) {
       LOG_INFO("Tiles with " + std::to_string(i) + " admin polys: " + std::to_string(counts[i]));
     }
   }
+  sqlite3_close(db_handle);
 }
 
 bool ParseArguments(int argc, char* argv[]) {
   std::vector<std::string> input_files;
-  bpo::options_description options("adminbenchmark " VALHALLA_VERSION "\n"
-                                   "\n"
-                                   " Usage: adminbenchmark [options] \n"
-                                   "\n"
-                                   "adminbenchmark is a program to time the admin queries "
-                                   "\n"
-                                   "\n");
 
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "config,c", boost::program_options::value<filesystem::path>(&config_file_path)->required(),
-      "Path to the json configuration file.");
-
-  bpo::positional_options_description pos_options;
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options("valhalla_benchmark_admins", 
+      "valhalla_benchmark_admins " VALHALLA_VERSION "\n\n"
+      "valhalla_benchmark_admins is a program to time the admin queries\n");
 
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
-  }
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+    // clang-format on
 
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return true;
-  }
+    auto result = options.parse(argc, argv);
 
-  if (vm.count("version")) {
-    std::cout << "adminbenchmark " << VALHALLA_VERSION << "\n";
-    return true;
-  }
+    if (result.count("version")) {
+      std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
 
-  if (vm.count("config")) {
-    if (filesystem::is_regular_file(config_file_path)) {
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(config_file_path =
+                                        filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
-      std::cerr << "Configuration file is required\n\n" << options << "\n\n";
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
     }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
   }
+
   return false;
 }
 

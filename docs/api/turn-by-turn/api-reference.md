@@ -120,22 +120,22 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). |
-| `width` | The width of the vehicle (in meters). |
-| `exclude_unpaved` | This value indicates the whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. |
-| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. |
-| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous |
-| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous |
-| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met |
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 2.6 for truck. |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 4.11 for truck. |
+| `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
+| `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
+| `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
+| `include_hov3` | A boolean value which indicates the desire to include HOV roads with a 3-occupant requirement in the route when advantageous. Default false. |
+| `include_hot` | A boolean value which indicates the desire to include tolled HOV roads which require the driver to pay a toll if the occupant requirement isn't met. Default false. |
 
 The following options are available for `truck` costing.
 
 | Truck options | Description |
 | :-------------------------- | :----------- |
-| `length` | The length of the truck (in meters). |
-| `weight` | The weight of the truck (in metric tons). |
-| `axle_load` | The axle load of the truck (in metric tons). |
-| `hazmat` | A value indicating if the truck is carrying hazardous materials. |
+| `length` | The length of the truck (in meters). Default 21.64. |
+| `weight` | The weight of the truck (in metric tons). Default 21.77. |
+| `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
@@ -257,14 +257,14 @@ A multimodal request with a filter for certain Onestop IDs:
 
 #### Directions options
 
-Directions options should be specified at the top level of the JSON, and usage of the `directions_options` nested structure is deprecated.
+Directions options should be specified at the top level of the JSON object.
 
 | Options | Description |
 | :------------------ | :----------- |
 | `units` | Distance units for output. Allowable unit types are miles (or mi) and kilometers (or km). If no unit type is specified, the units default to kilometers. |
 | `language` | The language of the narration instructions based on the [IETF BCP 47](https://tools.ietf.org/html/bcp47) language tag string. If no language is specified or the specified language is unsupported, United States-based English (en-US) is used. [Currently supported language list](#supported-language-tags) |
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
-| `narrative` |  **DEPRECATED** Should use `directions_type` instead. Boolean to allow you to disable narrative production. Locations, shape, length, and time are still returned. The narrative production is enabled by default. Set the value to `false` to disable the narrative. |
+| `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
 
 ##### Supported language tags
 
@@ -276,8 +276,8 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `da-DK` | `da` | Danish (Denmark) |
 | `de-DE` | `de` | German (Germany) |
 | `el-GR` | `el` | Greek (Greece) |
-| `en-GB` | `engb` | English (United Kingdom) |
-| `en-US-x-pirate` | `pirate` | English (United States) Pirate |
+| `en-GB` | | English (United Kingdom) |
+| `en-US-x-pirate` | `en-x-pirate` | English (United States) Pirate |
 | `en-US` | `en` | English (United States) |
 | `es-ES` | `es` | Spanish (Spain) |
 | `et-EE` | `et` | Estonian (Estonia) |
@@ -287,10 +287,10 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `hu-HU` | `hu` | Hungarian (Hungary) |
 | `it-IT` | `it` | Italian (Italy) |
 | `ja-JP` | `ja` | Japanese (Japan) |
-| `nb-NO` | `nbno` | Bokmal (Norway) |
+| `nb-NO` | `nb` | Bokmal (Norway) |
 | `nl-NL` | `nl` | Dutch (Netherlands) |
 | `pl-PL` | `pl` | Polish (Poland) |
-| `pt-BR` | `ptbr` | Portuguese (Brazil) |
+| `pt-BR` | | Portuguese (Brazil) |
 | `pt-PT` | `pt` | Portuguese (Portugal) |
 | `ro-RO` | `ro` | Romanian (Romania) |
 | `ru-RU` | `ru` | Russian (Russia) |
@@ -310,6 +310,7 @@ Directions options should be specified at the top level of the JSON, and usage o
 | `out_format` | Output format. If no `out_format` is specified, JSON is returned. Future work includes PBF (protocol buffer) support. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
 | `linear_references` | When present and `true`, the successful `route` response will include a key `linear_references`. Its value is an array of base64-encoded [OpenLR location references][openlr], one for each graph edge of the road network matched by the input trace. |
+| `prioritize_bidirectional` | Prioritize `bidirectional a*` when `date_time.type = depart_at/current`. By default `time_dependent_forward a*` is used in these cases, but `bidirectional a*` is much faster. Currently it does not update the time (and speeds) when searching for the route path, but the ETA on that route is recalculated based on the time-dependent speeds |
 
 [openlr]: https://www.openlr-association.com/fileadmin/user_upload/openlr-whitepaper_v1.5.pdf
 

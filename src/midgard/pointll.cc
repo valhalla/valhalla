@@ -14,10 +14,10 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   if (distance == 1)
     return p;
   // radians
-  const auto lon1 = first * -RAD_PER_DEG;
-  const auto lat1 = second * RAD_PER_DEG;
-  const auto lon2 = p.first * -RAD_PER_DEG;
-  const auto lat2 = p.second * RAD_PER_DEG;
+  const auto lon1 = first * -kRadPerDegD;
+  const auto lat1 = second * kRadPerDegD;
+  const auto lon2 = p.first * -kRadPerDegD;
+  const auto lat2 = p.second * kRadPerDegD;
   // useful throughout
   const auto sl1 = sin(lat1);
   const auto sl2 = sin(lat2);
@@ -35,8 +35,8 @@ GeoPoint<PrecisionT> GeoPoint<PrecisionT>::PointAlongSegment(const GeoPoint<Prec
   const auto x = acs1 * cos(lon1) + bcs2 * cos(lon2);
   const auto y = acs1 * sin(lon1) + bcs2 * sin(lon2);
   const auto z = a * sl1 + b * sl2;
-  return GeoPoint<PrecisionT>(atan2(y, x) * -DEG_PER_RAD,
-                              atan2(z, sqrt(x * x + y * y)) * DEG_PER_RAD);
+  return GeoPoint<PrecisionT>(atan2(y, x) * -kDegPerRadD,
+                              atan2(z, sqrt(x * x + y * y)) * kDegPerRadD);
 }
 
 /**
@@ -55,9 +55,9 @@ template <typename PrecisionT> PrecisionT GeoPoint<PrecisionT>::Distance(const G
 
   // Delta longitude. Don't need to worry about crossing 180
   // since cos(x) = cos(-x)
-  double deltalng = (ll2.lng() - lng()) * RAD_PER_DEG;
-  double a = lat() * RAD_PER_DEG;
-  double c = ll2.lat() * RAD_PER_DEG;
+  double deltalng = (ll2.lng() - lng()) * kRadPerDegD;
+  double a = lat() * kRadPerDegD;
+  double c = ll2.lat() * kRadPerDegD;
 
   // Find the angle subtended in radians (law of cosines)
   double cosb = (sin(a) * sin(c)) + (cos(a) * cos(c) * cos(deltalng));
@@ -289,11 +289,15 @@ PrecisionT GeoPoint<PrecisionT>::HeadingAtEndOfPolyline(const std::vector<GeoPoi
         GeoPoint ll(pt1->lng() + ((pt0->lng() - pt1->lng()) * pct),
                     pt1->lat() + ((pt0->lat() - pt1->lat()) * pct));
         return ll.Heading(pts[idx1]);
-      } else {
-        d += seglength;
-        pt1--;
-        pt0--;
       }
+
+      if (pt0 == pts.begin()) {
+        break;
+      }
+
+      d += seglength;
+      pt1--;
+      pt0--;
     }
   }
 

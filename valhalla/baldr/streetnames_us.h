@@ -6,6 +6,7 @@
 
 #include <valhalla/baldr/streetname_us.h>
 #include <valhalla/baldr/streetnames.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -15,6 +16,8 @@ public:
   StreetNamesUs();
 
   StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names);
+
+  StreetNamesUs(const google::protobuf::RepeatedPtrField<valhalla::StreetName>& names);
 
   ~StreetNamesUs();
 

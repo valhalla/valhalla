@@ -1,11 +1,11 @@
-#ifndef VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_
-#define VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_
-
+#pragma once
 #include <string>
 #include <unordered_map>
 
+#include <valhalla/proto/options.pb.h>
+
 namespace valhalla {
-namespace thor {
+namespace baldr {
 
 // Edge keys
 const std::string kEdgeNames = "edge.names";
@@ -74,6 +74,7 @@ const std::string kEdgeDefaultSpeed = "edge.default_speed";
 const std::string kEdgeDestinationOnly = "edge.destination_only";
 const std::string kEdgeIsUrban = "edge.is_urban";
 const std::string kEdgeTaggedValues = "edge.tagged_values";
+const std::string kEdgeIndoor = "edge.indoor";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";
@@ -153,15 +154,22 @@ const std::string kShapeAttributesCategory = "shape_attributes.";
  */
 struct AttributesController {
 
-  /*
-   * Attributes that are required by the route action to make guidance instructions.
-   */
+  // Attributes that are required by the route action to make guidance instructions.
   static const std::unordered_map<std::string, bool> kDefaultAttributes;
 
-  /*
+  /**
    * Constructor that will use the default values for all of the attributes.
    */
   AttributesController();
+
+  /**
+   * Apply attribute filters from the request to the AttributesController. These filters
+   * allow including or excluding specific attributes from the response in route,
+   * trace_route, and trace_attributes actions.
+   * @param options             request options
+   * @param is_strict_filter    whether or not the include/exclude option is strict
+   */
+  AttributesController(const Options& options, bool is_strict_filter = false);
 
   /**
    * Disable all of the attributes.
@@ -173,10 +181,10 @@ struct AttributesController {
    */
   bool category_attribute_enabled(const std::string& category) const;
 
+  bool operator()(const std::string& key) const;
+
   std::unordered_map<std::string, bool> attributes;
 };
 
-} // namespace thor
+} // namespace baldr
 } // namespace valhalla
-
-#endif // VALHALLA_THOR_ATTRIBUTES_CONTROLLER_H_

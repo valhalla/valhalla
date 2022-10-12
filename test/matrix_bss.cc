@@ -30,20 +30,6 @@ namespace rj = rapidjson;
 
 namespace {
 
-valhalla::sif::cost_ptr_t create_costing() {
-  valhalla::Options options;
-  for (int i = 0; i < valhalla::Costing_MAX; ++i)
-    options.add_costing_options();
-
-  for (auto costing_str : {"pedestrian", "bicycle"}) {
-    valhalla::Costing costing;
-    if (valhalla::Costing_Enum_Parse(costing_str, &costing)) {
-      options.set_costing(costing);
-    }
-  }
-  return valhalla::sif::CostFactory{}.Create(options);
-}
-
 // Note that the "loki/radius" is intentionally left to 10, since the bss_connection is a duplication
 // of the existing way on which the bike share sation is projected. It would be advisable to not set
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
@@ -61,9 +47,9 @@ class MatrixBssTest : public ::testing::Test {
 public:
   MatrixBssTest() {
     Options options;
-    options.set_costing(Costing::bikeshare);
+    options.set_costing_type(Costing::bikeshare);
     rapidjson::Document doc;
-    sif::ParseCostingOptions(doc, "/costing_options", options);
+    sif::ParseCosting(doc, "/costing_options", options);
     sif::TravelMode mode;
     mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
   }
@@ -131,7 +117,7 @@ public:
     auto matrix_results =
         timedist_matrix_bss.SourceToTarget(matrix_request.options().sources(),
                                            matrix_request.options().targets(), reader, mode_costing,
-                                           TravelMode::kPedestrian, 400000.0);
+                                           sif::TravelMode::kPedestrian, 400000.0);
 
     auto s_size = sources.size();
     auto t_size = targets.size();

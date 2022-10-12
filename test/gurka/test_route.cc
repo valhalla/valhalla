@@ -217,13 +217,14 @@ TEST(AutoDataFix, deprecation) {
       R"("costing_options":{"auto":{"use_ferry":0.8}, "auto_data_fix":{"use_ferry":0.1, "use_tolls": 0.77}}})";
   ParseApi(request_str, Options::route, request);
 
-  EXPECT_EQ(request.options().costing(), valhalla::auto_);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_access(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_closures(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_oneways(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).ignore_restrictions(), true);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_ferry(), 0.1f);
-  EXPECT_EQ(request.options().costing_options(valhalla::auto_).use_tolls(), 0.77f);
+  EXPECT_EQ(request.options().costing_type(), Costing::auto_);
+  const auto& co = request.options().costings().find(Costing::auto_)->second.options();
+  EXPECT_EQ(co.ignore_access(), true);
+  EXPECT_EQ(co.ignore_closures(), true);
+  EXPECT_EQ(co.ignore_oneways(), true);
+  EXPECT_EQ(co.ignore_restrictions(), true);
+  EXPECT_EQ(co.use_ferry(), 0.1f);
+  EXPECT_EQ(co.use_tolls(), 0.77f);
 }
 
 /*************************************************************/
@@ -316,7 +317,7 @@ gurka::map AlgorithmTest::map = {};
 uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTest::constrained = 0,
          AlgorithmTest::freeflow = 0;
 
-uint32_t speed_from_edge(const valhalla::Api& api) {
+uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
   uint32_t kmh = -1;
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
@@ -328,7 +329,7 @@ uint32_t speed_from_edge(const valhalla::Api& api) {
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1)
+    if (kmh != -1 && compare_with_previous_edge)
       EXPECT_EQ(kmh, new_kmh);
     kmh = new_kmh;
   }
@@ -403,7 +404,9 @@ TEST_F(AlgorithmTest, Bidir) {
                                  {"/date_time/value", "2020-10-30T09:00"},
                                  {"/costing_options/auto/speed_types/0", "current"}});
     EXPECT_EQ(api.trip().routes(0).legs(0).algorithms(0), "bidirectional_a*");
-    EXPECT_EQ(speed_from_edge(api), current);
+    // Because of live-traffic smoothing, speed will be mixed with default edge speed in the end of
+    // the route.
+    EXPECT_LE(speed_from_edge(api, false), current);
   }
 
   {
@@ -830,7 +833,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
                             {"DA", {{"highway", "primary"}}},
                             {"AY", {{"highway", "primary"}}},
                             {"YZ", {{"highway", "primary"}}}};
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/search_filter");
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_swap_dest_only");
 
   // Notes on this test:
   // * We want the first leg to choose bidir A*:
@@ -885,7 +888,7 @@ TEST(AlgorithmTestDest, TestAlgoSwapAndDestOnly) {
   std::vector<int> actual_path_edge_sizes;
   actual_path_edge_sizes.reserve(api.options().locations_size());
   for (int i = 0; i < api.options().locations_size(); i++) {
-    actual_path_edge_sizes.emplace_back(api.options().locations(i).path_edges().size());
+    actual_path_edge_sizes.emplace_back(api.options().locations(i).correlation().edges().size());
   }
   ASSERT_EQ(expected_path_edge_sizes, actual_path_edge_sizes);
 }

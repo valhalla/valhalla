@@ -1,8 +1,8 @@
+#include "baldr/attributes_controller.h"
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/time_info.h"
 #include "proto/api.pb.h"
-#include "thor/attributes_controller.h"
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -40,7 +40,8 @@ struct MultimodalBuilder {
              const mode_costing_t& mode_costing,
              const AttributesController& controller,
              GraphReader& graphreader) {
-    AddBssNode(trip_node, node, startnode, mode_costing, controller);
+
+    AddBssNode(trip_node, node, directededge, start_tile, mode_costing, controller);
     AddTransitNodes(trip_node, node, startnode, start_tile, graphtile, controller);
     AddTransitInfo(trip_node, trip_id, node, startnode, directededge, edge, start_tile, graphtile,
                    mode_costing, controller, graphreader);
@@ -51,28 +52,32 @@ private:
    *
    * @param trip_node
    * @param node
-   * @param startnode
+   * @param directed_edge
    * @param start_tile
-   * @param graphtile
    * @param mode_costing
    * @param controller
    */
   void AddBssNode(TripLeg_Node* trip_node,
                   const NodeInfo* node,
-                  const GraphId&,
+                  const DirectedEdge* directededge,
+                  graph_tile_ptr start_tile,
                   const mode_costing_t& mode_costing,
                   const AttributesController&) {
-    auto pedestrian_costing = mode_costing[static_cast<size_t>(TravelMode::kPedestrian)];
-    auto bicycle_costing = mode_costing[static_cast<size_t>(TravelMode::kBicycle)];
+
+    auto pedestrian_costing = mode_costing[static_cast<size_t>(travel_mode_t::kPedestrian)];
+    auto bicycle_costing = mode_costing[static_cast<size_t>(travel_mode_t::kBicycle)];
 
     if (node->type() == NodeType::kBikeShare && pedestrian_costing && bicycle_costing) {
+
+      EdgeInfo edgeinfo = start_tile->edgeinfo(directededge);
+      auto taggedValue = edgeinfo.GetTags();
+
       auto* bss_station_info = trip_node->mutable_bss_info();
       // TODO: import more BSS data, can be used to display capacity in real time
-      bss_station_info->set_name("BSS 42");
-      bss_station_info->set_ref("BSS 42 ref");
-      bss_station_info->set_capacity("42");
-      bss_station_info->set_network("universe");
-      bss_station_info->set_operator_("Douglas");
+      auto tag_range = taggedValue.equal_range(baldr::TaggedValue::kBssInfo);
+      if (tag_range.first != tag_range.second) {
+        bss_station_info->ParseFromString(tag_range.first->second);
+      }
       bss_station_info->set_rent_cost(pedestrian_costing->BSSCost().secs);
       bss_station_info->set_return_cost(bicycle_costing->BSSCost().secs);
     }
@@ -101,21 +106,20 @@ private:
 
       if (transit_station) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitStationInfoOnestopId) &&
-            transit_station->one_stop_offset()) {
+        if (controller(kNodeTransitStationInfoOnestopId) && transit_station->one_stop_offset()) {
           transit_station_info->set_onestop_id(
               graphtile->GetName(transit_station->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitStationInfoName) && transit_station->name_offset()) {
+        if (controller(kNodeTransitStationInfoName) && transit_station->name_offset()) {
           transit_station_info->set_name(graphtile->GetName(transit_station->name_offset()));
         }
 
         // Set latitude and longitude
         LatLng* stop_ll = transit_station_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitStationInfoLatLon)) {
+        if (controller(kNodeTransitStationInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -130,20 +134,19 @@ private:
 
       if (transit_egress) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoOnestopId) &&
-            transit_egress->one_stop_offset()) {
+        if (controller(kNodeTransitEgressInfoOnestopId) && transit_egress->one_stop_offset()) {
           transit_egress_info->set_onestop_id(graphtile->GetName(transit_egress->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoName) && transit_egress->name_offset()) {
+        if (controller(kNodeTransitEgressInfoName) && transit_egress->name_offset()) {
           transit_egress_info->set_name(graphtile->GetName(transit_egress->name_offset()));
         }
 
         // Set latitude and longitude
         LatLng* stop_ll = transit_egress_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitEgressInfoLatLon)) {
+        if (controller(kNodeTransitEgressInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -173,18 +176,18 @@ private:
       // Set type
       if (directededge->use() == Use::kRail) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStation);
         }
         prev_transit_node_type = TransitPlatformInfo_Type_kStation;
       } else if (directededge->use() == Use::kPlatformConnection) {
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(prev_transit_node_type);
         }
       } else { // bus logic
         // Set node transit info type if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoType)) {
+        if (controller(kNodeTransitPlatformInfoType)) {
           transit_platform_info->set_type(TransitPlatformInfo_Type_kStop);
         }
         prev_transit_node_type = TransitPlatformInfo_Type_kStop;
@@ -192,15 +195,13 @@ private:
 
       if (transit_platform) {
         // Set onstop_id if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoOnestopId) &&
-            transit_platform->one_stop_offset()) {
+        if (controller(kNodeTransitPlatformInfoOnestopId) && transit_platform->one_stop_offset()) {
           transit_platform_info->set_onestop_id(
               graphtile->GetName(transit_platform->one_stop_offset()));
         }
 
         // Set name if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoName) &&
-            transit_platform->name_offset()) {
+        if (controller(kNodeTransitPlatformInfoName) && transit_platform->name_offset()) {
           transit_platform_info->set_name(graphtile->GetName(transit_platform->name_offset()));
         }
 
@@ -214,15 +215,14 @@ private:
             const TransitStop* transit_station = endtile->GetTransitStop(nodeinfo2->stop_index());
 
             // Set station onstop_id if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoStationOnestopId) &&
+            if (controller(kNodeTransitPlatformInfoStationOnestopId) &&
                 transit_station->one_stop_offset()) {
               transit_platform_info->set_station_onestop_id(
                   endtile->GetName(transit_station->one_stop_offset()));
             }
 
             // Set station name if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoStationName) &&
-                transit_station->name_offset()) {
+            if (controller(kNodeTransitPlatformInfoStationName) && transit_station->name_offset()) {
               transit_platform_info->set_station_name(
                   endtile->GetName(transit_station->name_offset()));
             }
@@ -235,7 +235,7 @@ private:
         // Set latitude and longitude
         LatLng* stop_ll = transit_platform_info->mutable_ll();
         // Set transit stop lat/lon if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoLatLon)) {
+        if (controller(kNodeTransitPlatformInfoLatLon)) {
           PointLL ll = node->latlng(start_tile->header()->base_ll());
           stop_ll->set_lat(ll.lat());
           stop_ll->set_lng(ll.lng());
@@ -244,8 +244,7 @@ private:
 
       // Set the arrival time at this node (based on schedule from last trip
       // departure) if requested
-      if (controller.attributes.at(kNodeTransitPlatformInfoArrivalDateTime) &&
-          !arrival_time.empty()) {
+      if (controller(kNodeTransitPlatformInfoArrivalDateTime) && !arrival_time.empty()) {
         transit_platform_info->set_arrival_date_time(arrival_time);
       }
 
@@ -258,12 +257,12 @@ private:
 
         assumed_schedule = false;
         uint32_t date, day = 0;
-        if (origin.has_date_time()) {
+        if (!origin.date_time().empty()) {
           date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
 
           if (graphtile->header()->date_created() > date) {
             // Set assumed schedule if requested
-            if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule)) {
+            if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
               transit_platform_info->set_assumed_schedule(true);
             }
             assumed_schedule = true;
@@ -271,7 +270,7 @@ private:
             day = date - graphtile->header()->date_created();
             if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
               // Set assumed schedule if requested
-              if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule)) {
+              if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
                 transit_platform_info->set_assumed_schedule(true);
               }
               assumed_schedule = true;
@@ -295,7 +294,7 @@ private:
           }
 
           // Set departure time from this transit stop if requested
-          if (controller.attributes.at(kNodeTransitPlatformInfoDepartureDateTime)) {
+          if (controller(kNodeTransitPlatformInfoDepartureDateTime)) {
             transit_platform_info->set_departure_date_time(dt);
           }
 
@@ -325,7 +324,7 @@ private:
         block_id = 0;
 
         // Set assumed schedule if requested
-        if (controller.attributes.at(kNodeTransitPlatformInfoAssumedSchedule) && assumed_schedule) {
+        if (controller(kNodeTransitPlatformInfoAssumedSchedule) && assumed_schedule) {
           transit_platform_info->set_assumed_schedule(true);
         }
         assumed_schedule = false;

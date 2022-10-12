@@ -83,7 +83,7 @@ TEST_F(TaggedValues, Tunnel) {
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
-  EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
+  EXPECT_EQ(leg.node(0).edge().tunnel(), false);
 
   EXPECT_EQ(leg.node(1).edge().tunnel(), true);
   EXPECT_EQ(leg.node(1).edge().tagged_value().Get(0).type(), TaggedValue_Type_kLayer);
@@ -103,9 +103,9 @@ TEST_F(TaggedValues, Tunnel) {
   EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).type() == TaggedValue_Type_kTunnel);
   EXPECT_TRUE(leg.node(3).edge().tagged_value().Get(1).value() == "Fort McHenry Tunnel");
 
-  EXPECT_EQ(leg.node(4).edge().has_tunnel(), false);
+  EXPECT_EQ(leg.node(4).edge().tunnel(), false);
 
-  EXPECT_EQ(leg.node(5).edge().has_tunnel(), false);
+  EXPECT_EQ(leg.node(5).edge().tunnel(), false);
 }
 
 TEST_F(TaggedValues, NoTunnel) {
@@ -113,9 +113,9 @@ TEST_F(TaggedValues, NoTunnel) {
 
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
   auto leg = result.trip().routes(0).legs(0);
-  EXPECT_EQ(leg.node(0).edge().has_tunnel(), false);
-  EXPECT_EQ(leg.node(1).edge().has_tunnel(), false);
-  EXPECT_EQ(leg.node(2).edge().has_tunnel(), false);
+  EXPECT_EQ(leg.node(0).edge().tunnel(), false);
+  EXPECT_EQ(leg.node(1).edge().tunnel(), false);
+  EXPECT_EQ(leg.node(2).edge().tunnel(), false);
 }
 
 TEST_F(TaggedValues, test_taking_tunnel) {

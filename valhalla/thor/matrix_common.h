@@ -22,6 +22,9 @@
 namespace valhalla {
 namespace thor {
 
+// Default for time distance matrix is to find all locations
+constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
+
 // Structure to hold information about each destination.
 struct Destination {
   bool settled;        // Has the best time/distance to this destination

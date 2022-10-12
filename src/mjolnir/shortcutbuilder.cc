@@ -109,7 +109,8 @@ GraphId GetOpposingEdge(const GraphId& node,
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, directededge++, ++edgeid) {
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection) {
+        directededge->use() == Use::kPlatformConnection ||
+        directededge->use() == Use::kConstruction) {
       continue;
     }
     if (directededge->endnode() == node && directededge->classification() == edge->classification() &&
@@ -198,7 +199,8 @@ bool CanContract(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edgeid);
     if (!directededge->is_shortcut() && directededge->use() != Use::kTransitConnection &&
         directededge->use() != Use::kEgressConnection &&
-        directededge->use() != Use::kPlatformConnection && !directededge->start_restriction() &&
+        directededge->use() != Use::kPlatformConnection &&
+        directededge->use() != Use::kConstruction && !directededge->start_restriction() &&
         !directededge->end_restriction()) {
       edges.push_back(edgeid);
     }
@@ -386,7 +388,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     const DirectedEdge* directededge = tile->directededge(edge_id);
     if (directededge->use() == Use::kTransitConnection ||
         directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection || directededge->bss_connection()) {
+        directededge->use() == Use::kPlatformConnection || directededge->bss_connection() ||
+        directededge->use() == Use::kConstruction) {
       continue;
     }
 
@@ -423,9 +426,11 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
 
-      // Get names and types - they apply over all edges of the shortcut
+      // Get names - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
       auto tagged_values = edgeinfo.GetTaggedValues();
+      auto pronunciations = edgeinfo.GetTaggedValues(true);
+
       auto types = edgeinfo.GetTypes();
 
       // Add any access restriction records. TODO - make sure we don't contract
@@ -490,8 +495,9 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, types, forward,
-                                  diff_names);
+                                  edgeinfo.speed_limit(), shape, names, tagged_values, pronunciations,
+                                  types, forward, diff_names);
+
       newedge.set_edgeinfo_offset(edge_info_offset);
 
       // Set the forward flag on this directed edge. If a new edge was added
@@ -682,7 +688,8 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTaggedValues(true),
+                                    edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Set the superseded mask - this is the shortcut mask that supersedes this edge

@@ -35,7 +35,8 @@ public:
              const double score,
              const SideOfStreet sos = NONE,
              const unsigned int outbound_reach = 0,
-             const unsigned int inbound_reach = 0);
+             const unsigned int inbound_reach = 0,
+             const float projected_heading = -1);
     // the directed edge it appears on
     GraphId id;
     // how far along the edge it is (as a percentage  from 0 - 1)
@@ -56,6 +57,8 @@ public:
     unsigned int outbound_reach;
     // minimum number of nodes that can reach this edge
     unsigned int inbound_reach;
+    // the heading of the projected point
+    float projected_heading;
   };
 
   // list of edges this location appears on within the graph
@@ -105,18 +108,6 @@ public:
     if (!pl.street_.empty()) {
       l->set_street(pl.street_);
     }
-    if (!pl.city_.empty()) {
-      l->set_city(pl.city_);
-    }
-    if (!pl.state_.empty()) {
-      l->set_state(pl.state_);
-    }
-    if (!pl.zip_.empty()) {
-      l->set_postal_code(pl.zip_);
-    }
-    if (!pl.country_.empty()) {
-      l->set_country(pl.country_);
-    }
     if (pl.date_time_) {
       l->set_date_time(*pl.date_time_);
     }
@@ -127,9 +118,6 @@ public:
     l->set_node_snap_tolerance(pl.node_snap_tolerance_);
     if (pl.preferred_layer_) {
       l->set_preferred_layer(*pl.preferred_layer_);
-    }
-    if (pl.way_id_) {
-      l->set_way_id(*pl.way_id_);
     }
     l->set_minimum_reachability(std::max(pl.min_outbound_reach_, pl.min_inbound_reach_));
     l->set_radius(pl.radius_);
@@ -143,7 +131,7 @@ public:
     l->mutable_search_filter()->set_exclude_ramp(pl.search_filter_.exclude_ramp_);
     l->mutable_search_filter()->set_exclude_closures(pl.search_filter_.exclude_closures_);
 
-    auto* path_edges = l->mutable_path_edges();
+    auto* path_edges = l->mutable_correlation()->mutable_edges();
     for (const auto& e : pl.edges) {
       auto* edge = path_edges->Add();
       edge->set_graph_id(e.id);
@@ -162,9 +150,10 @@ public:
       for (const auto& n : reader.edgeinfo(e.id).GetNames()) {
         edge->mutable_names()->Add()->assign(n);
       }
+      edge->set_heading(e.projected_heading);
     }
 
-    auto* filtered_edges = l->mutable_filtered_edges();
+    auto* filtered_edges = l->mutable_correlation()->mutable_filtered_edges();
     for (const auto& e : pl.filtered_edges) {
       auto* edge = filtered_edges->Add();
       edge->set_graph_id(e.id);
@@ -205,46 +194,28 @@ public:
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
                loc.minimum_reachability(), loc.radius(), side, search_filter);
 
-    if (loc.has_name()) {
-      l.name_ = loc.name();
-    }
-    if (loc.has_street()) {
-      l.street_ = loc.street();
-    }
-    if (loc.has_city()) {
-      l.city_ = loc.city();
-    }
-    if (loc.has_state()) {
-      l.state_ = loc.state();
-    }
-    if (loc.has_postal_code()) {
-      l.zip_ = loc.postal_code();
-    }
-    if (loc.has_country()) {
-      l.country_ = loc.country();
-    }
-    if (loc.has_date_time()) {
+    l.name_ = loc.name();
+    l.street_ = loc.street();
+
+    if (!loc.date_time().empty()) {
       l.date_time_ = loc.date_time();
     }
-    if (loc.has_heading()) {
+    if (loc.has_heading_case()) {
       l.heading_ = loc.heading();
     }
-    if (loc.has_heading_tolerance()) {
+    if (loc.has_heading_tolerance_case()) {
       l.heading_tolerance_ = loc.heading_tolerance();
     }
-    if (loc.has_node_snap_tolerance()) {
+    if (loc.has_node_snap_tolerance_case()) {
       l.node_snap_tolerance_ = loc.node_snap_tolerance();
     }
-    if (loc.has_way_id()) {
-      l.way_id_ = loc.way_id();
-    }
-    if (loc.has_search_cutoff()) {
+    if (loc.has_search_cutoff_case()) {
       l.search_cutoff_ = loc.search_cutoff();
     }
-    if (loc.has_street_side_tolerance()) {
+    if (loc.has_street_side_tolerance_case()) {
       l.street_side_tolerance_ = loc.street_side_tolerance();
     }
-    if (loc.has_street_side_max_distance()) {
+    if (loc.has_street_side_max_distance_case()) {
       l.street_side_max_distance_ = loc.street_side_max_distance();
     }
     if (loc.has_search_filter()) {
@@ -258,7 +229,7 @@ public:
     if (loc.has_display_ll()) {
       l.display_latlng_ = midgard::PointLL{loc.display_ll().lng(), loc.display_ll().lat()};
     }
-    if (loc.has_preferred_layer()) {
+    if (loc.has_preferred_layer_case()) {
       l.preferred_layer_ = loc.preferred_layer();
     }
     return l;

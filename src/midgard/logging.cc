@@ -1,4 +1,5 @@
 #include "midgard/logging.h"
+#include "filesystem.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -135,6 +136,7 @@ public:
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
 #ifdef __ANDROID__
+    std::string tmp = custom_directive; // to prevent -Wunused-parameter
     __android_log_print(ANDROID_LOG_INFO, "valhalla", "%s", message.c_str());
 #else
     std::string output;
@@ -164,6 +166,7 @@ class StdErrLogger : public StdOutLogger {
   using StdOutLogger::StdOutLogger;
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
 #ifdef __ANDROID__
+    std::string tmp = custom_directive; // to prevent -Wunused-parameter
     __android_log_print(ANDROID_LOG_ERROR, "valhalla", "%s", message.c_str());
 #else
     std::string output;
@@ -238,7 +241,18 @@ protected:
         file.close();
       } catch (...) {}
       try {
+        // Ensure directory for log file exists. Otherwise, log file creation is silently skipped.
+        // e.g. if "mjolnir.logging.file_name" points to location inside "mjolnir.tile_dir"
+        const auto parent_dir = filesystem::path(file_name).parent_path();
+        if (!filesystem::is_directory(parent_dir)) {
+          if (!filesystem::create_directories(parent_dir)) {
+            throw std::runtime_error("Cannot create directory for log file: " + parent_dir.string());
+          }
+        }
         file.open(file_name, std::ofstream::out | std::ofstream::app);
+        if (file.fail()) {
+          throw std::runtime_error("Cannot create log file: " + file_name);
+        }
         last_reopen = std::chrono::system_clock::now();
       } catch (std::exception& e) {
         try {

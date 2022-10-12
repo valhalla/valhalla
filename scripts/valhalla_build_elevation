@@ -1,81 +1,327 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env python3
 
-function usage() {
-	echo "Usage: $0 min_x max_x min_y max_y [target_dir=elevation] [parallelism=$(nproc)] [decompress=true]"
-	exit 1
-}
+import argparse
+from collections import namedtuple
+from enum import Enum, unique
+from functools import partial
+import gzip
+import json
+import logging
+from math import ceil, floor
+from multiprocessing import cpu_count
+from multiprocessing.dummy import Pool as ThreadPool
+import os
+from pathlib import Path
+import sys
+from typing import List, Iterable, Set
+from urllib import request
+from urllib.error import URLError
 
-#validate ranges
-if [ -z "$4" ]; then
-	usage
-fi
-min_x=$(python3 -c "import math; print(int(math.floor($1)))")
-max_x=$(python3 -c "import math; print(int(math.ceil($2) - 1))")
-min_y=$(python3 -c "import math; print(int(math.floor($3)))")
-max_y=$(python3 -c "import math; print(int(math.ceil($4) - 1))")
+# hack so ArgumentParser can accept negative numbers
+# see https://github.com/valhalla/valhalla/issues/3426
+for i, arg in enumerate(sys.argv):
+    if not len(arg) > 1:
+        continue
+    if (arg[0] == '-') and arg[1].isdigit():
+        sys.argv[i] = ' ' + arg
 
-if [ $min_x -gt $max_x ] || [ $min_x -lt -180 ] || [ $max_x -gt 180 ]; then
-	usage
-fi
-if [ $min_y -gt $max_y ] || [ $min_y -lt -90 ] || [ $max_y -gt 90 ]; then
-	usage
-fi
+description = """Downloads Tilezen's elevation tiles that either intersect with features in all .geojson files in
+              --input-geojson-dir or that intersect with --bbox. NOTE: geojson method requires shapely.
+              """
 
-if [ -z $5 ]; then
-	dest=elevation
-else
-	dest="$5"
-fi
-if [ -z $6 ]; then
-	para=$(nproc)
-else
-	para="$6"
-fi
-if [[ -z $7 ]] || [[ $7 != "false" ]]; then
-	decomp=true
-	export decomp
-else
-	unset decomp
-fi
+# set up the logger basics
+LOGGER = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"))
+LOGGER.addHandler(handler)
 
-#get dirs
-for y in $(seq ${min_y} 1 ${max_y}); do
-	dir=$(python3 -c "print('%s%02d' % ('S' if ${y} < 0 else 'N', abs(${y})))")
-	echo "${dest}/${dir}"
-done | while read d; do mkdir -p $d; done
 
-#get the data
-expected=$((($max_x - $min_x + 1)*($max_y - $min_y + 1)))
-echo "extracting $expected elevation tiles"
-ext=$( [[ ${decomp} ]] && echo "" || echo ".gz" )
-for x in $(seq ${min_x} 1 ${max_x}); do
-	for y in $(seq ${min_y} 1 ${max_y}); do
-		file=$(python3 -c "print('%s%02d%s%03d.hgt' % ('S' if ${y} < 0 else 'N', abs(${y}), 'W' if ${x} < 0 else 'E', abs(${x})))")
-		dir=$(echo ${file} | sed "s/^\([NS][0-9]\{2\}\).*/\1/g")
-		#if we dont already have it or its the wrong size
-		if [ ! -e ${dest}/${dir}/${file} ] || [ $(stat -c %s ${dest}/${dir}/${file}) -ne $((3601*3601*2)) ]; then
-			echo "http://s3.amazonaws.com/elevation-tiles-prod/skadi/${dir}/${file}.gz ${dest}/${dir}/${file}${ext}"
-		fi
-	done
-done | parallel --env decomp --progress -C ' ' -P ${para} 'curl --retry 3 --retry-delay 0 --max-time 100 -s -o - {1} | ( [[ ! ${decomp} ]] && cat || gunzip ) > {2}'
+# Argument parser
+@unique
+class TileCompression(Enum):
+    UNCOMPRESSED = 1
+    GZIP = 2
+    LZ4 = 3
 
-#check they are all there
-echo "checking all files exist"
-total=$(find ${dest} | grep -cF hgt)
-if [ ${total} -ne ${expected} ]; then
-	echo "try again, $((${expected} - ${total})) files are missing"
-	exit 1
-fi
+    @property
+    def extension(self):
+        if self is TileCompression.UNCOMPRESSED:
+            return ""
+        elif self is TileCompression.GZIP:
+            return ".gz"
+        elif self is TileCompression.LZ4:
+            return ".lz4"
 
-#check their sizes
-echo "checking file sizes"
-if [ ${decomp} ]; then
-	found=$(find ${dest} -type f -size $((3601*3601*2))c | wc -l)
-else
-	found=$(for f in $(find ${dest} -type f); do gzip -l $f | tail -n 1; done | grep -cvF $((3601*3601*2)))
-fi
-if [ ${found} -ne ${expected} ]; then
-	echo "try again, $((${expected} - ${found})) files are corrupt"
-	exit 1
-fi
+
+parser = argparse.ArgumentParser(description=description)
+method = parser.add_mutually_exclusive_group()
+method.add_argument(
+    "-g",
+    "--from-geojson",
+    help="Absolute or relative path to directory with .geojson files used "
+    "as input to tile intersection. Requires shapely.",
+    type=Path,
+)
+method.add_argument(
+    "-b",
+    "--from-bbox",
+    help="Bounding box coordinates in the format 'minX,minY,maxX,maxY'.",
+    type=str,
+)
+method.add_argument(
+    "-t",
+    "--from-tiles",
+    help="Only download tiles covered by the Valhalla graph (requires a Valhalla config JSON file).",
+    action="store_true",
+)
+parser.add_argument(
+    "-c",
+    "--config",
+    help="Absolute or relative path to the Valhalla config JSON. "
+    "If present, can be used for download location and bbox.",
+    type=Path,
+)
+parser.add_argument(
+    "-o",
+    "--outdir",
+    help="Absolute or relative path to the directory where the tiles will be saved. Overrides config JSON.",
+    type=Path,
+)
+parser.add_argument(
+    "-p", "--parallelism", help="Number of processing units to use.", type=int, default=cpu_count()
+)
+parser.add_argument(
+    "-v",
+    "--verbosity",
+    help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG",
+    action="count",
+    default=0,
+)
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument(
+    "-d",
+    "--decompress",
+    help="If set, downloaded files will be decompressed (default format is gzip).",
+    action="store_true",
+)
+group.add_argument(
+    "-z",
+    "--lz4",
+    help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
+    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
+    "initial download, tiles will be several times faster to decompress vz gzip.",
+    action="store_true",
+)
+
+Tile = namedtuple("Tile", ["name", "dir"])
+LOCAL_SIZE = 0.25
+
+
+def get_tile_info(
+    x: int,
+    y: int,
+) -> Tile:
+    hemisphere = "S" if y < 0 else "N"
+    dir_name = "%s%02d" % (hemisphere, abs(y))
+    tile_name = "%s%02d%s%03d.hgt" % (
+        hemisphere,
+        abs(y),
+        "W" if x < 0 else "E",
+        abs(x),
+    )
+
+    return Tile(tile_name, dir_name)
+
+
+def grid_from_bounds(bounds: List[float]) -> List[List[int]]:
+    """Creates a regular grid of size 1x1 within specified bounds"""
+    # expand bbox by snapping to a 1 x 1 degree grid
+    # loop through x and y range and create the grid
+    min_x, min_y = [floor(x) for x in bounds[:2]]
+    max_x, max_y = [ceil(x) for x in bounds[-2:]]
+    for x in range(min_x, max_x):
+        for y in range(min_y, max_y):
+            yield [x, y, x + 1, y + 1]
+
+
+def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
+    try:
+        from shapely.geometry import Polygon, box
+    except ImportError:
+        LOGGER.critical(
+            "Could not import shapely. Please install shapely or use another download method instead."
+        )
+        sys.exit(1)
+
+    if not input_dir.is_dir() or not len(list(input_dir.glob('*.geojson'))) > 0:
+        LOGGER.critical(
+            f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}"
+        )
+        sys.exit(1)
+
+    def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
+        for file in input_dir.glob("*.geojson"):
+            with open(file) as f:
+                geojson = json.load(f)
+            for feature in geojson["features"]:
+                if feature["geometry"]["type"] == "Polygon":
+                    yield Polygon(feature["geometry"]["coordinates"][0])
+                if feature["geometry"]["type"] == "MultiPolygon":
+                    for single_polygon in feature["geometry"]["coordinates"]:
+                        yield Polygon(single_polygon[0])
+
+    tile_infos = set()
+    for poly in get_outer_rings(input_dir):
+        for rect in grid_from_bounds(poly.bounds):
+            if poly.intersects(box(*rect)):
+                tile_x, tile_y, *_ = rect
+                tile_infos.add(get_tile_info(tile_x, tile_y))
+
+    return tile_infos
+
+
+def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
+    try:
+        bbox = min_x, min_y, max_x, max_y = [float(x) for x in bbox_str.split(",")]
+    except ValueError:
+        LOGGER.critical(f"BBOX {bbox_str} is not a comma-separated string of coordinates.")
+        sys.exit(1)
+
+    # validate bbox
+    if min_x > max_x or min_x < -180 or max_x > 180 or min_y > max_y or min_y < -90 or max_y > 90:
+        LOGGER.critical(f"Bbox invalid: {bbox}")
+        sys.exit(1)
+
+    LOGGER.debug(f"Received valid bbox: {bbox}")
+
+    tile_infos = set()
+    for grid in grid_from_bounds(bbox):
+        tile_x, tile_y = grid[:2]
+        tile_infos.add(get_tile_info(tile_x, tile_y))
+
+    return tile_infos
+
+
+def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
+    if not graph_dir.is_dir():
+        LOGGER.critical(f"Graph directory {graph_dir.resolve()} does not exist.")
+        sys.exit(1)
+
+    tile_infos = set()
+    local_dir = graph_dir.joinpath('2')
+    tile_width = int(360 / LOCAL_SIZE)
+    for tile_fp in local_dir.rglob('*.gph'):
+        # turn the path into a tile ID
+        tile_id = int(
+            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, '')
+        )
+        tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(
+            int(tile_id / tile_width) * LOCAL_SIZE - 90
+        )
+
+        tile_infos.add(get_tile_info(tile_x, tile_y))
+
+    return tile_infos
+
+
+def download(tile: Tile, output_dir, compression: TileCompression):
+    dest_directory = Path(output_dir, tile.dir)
+    dest_directory.mkdir(parents=True, exist_ok=True)
+
+    filepath = dest_directory.joinpath(tile.name + compression.extension)
+    if filepath.is_file():
+        # Skip if the file already exists
+        return False
+
+    url = f"http://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile.dir}/{tile.name}.gz"
+
+    LOGGER.info(f"Downloading tile {tile.name}")
+    try:
+        with request.urlopen(url) as res, open(filepath, "wb") as f:
+            if compression is TileCompression.GZIP:
+                f.write(res.read())
+            else:
+                with gzip.GzipFile(fileobj=res, mode="rb") as gz:
+                    uncompressed = gz.read()
+                    if compression is TileCompression.UNCOMPRESSED:
+                        f.write(uncompressed)
+                    elif compression is TileCompression.LZ4:
+                        # Compression level 6 was chosen after some benchmarking as the approx efficient frontier
+                        # between compression time and space savings (decompression time is roughly constant regardless
+                        # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
+                        # by around 12%.
+                        import lz4.frame
+
+                        with lz4.frame.LZ4FrameCompressor(
+                            block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
+                        ) as compressor:
+                            # Optimization: we know the exact size of every uncompressed hgt file
+                            f.write(compressor.begin(25934402))
+                            f.write(compressor.compress(uncompressed))
+                            f.write(compressor.flush())
+
+            LOGGER.debug(f"Successfully downloaded tile {tile.name}")
+
+        return True
+    except URLError as e:
+        LOGGER.critical(f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}")
+        return False
+    except ImportError:
+        LOGGER.critical("Could not import lz4. Please install lz4 or use another compression format.")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    args = parser.parse_args()
+
+    # set the right logger level
+    if args.verbosity == 0:
+        LOGGER.setLevel(logging.CRITICAL)
+    elif args.verbosity == 1:
+        LOGGER.setLevel(logging.INFO)
+    elif args.verbosity >= 2:
+        LOGGER.setLevel(logging.DEBUG)
+
+    config = None
+    if args.config:
+        with open(args.config) as f:
+            config = json.load(f)
+
+    if args.outdir:
+        elevation_fp = args.outdir
+    elif config is not None:
+        elevation_fp = Path(config["additional_data"]["elevation"] or "elevation")
+    else:
+        LOGGER.critical("Either config or outdir is required.")
+        sys.exit(1)
+
+    if args.from_geojson:
+        tiles = get_tiles_with_geojson(args.from_geojson)
+    elif args.from_bbox:
+        tiles = get_tiles_with_bbox(args.from_bbox)
+    elif args.from_tiles:
+        if config is None:
+            LOGGER.critical("--from-tiles requires a config to be specified.")
+            sys.exit(1)
+        tiles = get_tiles_with_graph(Path(config["mjolnir"]["tile_dir"]))
+    else:
+        LOGGER.critical("No download method specified.")
+        sys.exit(1)
+
+    tile_compression = TileCompression.GZIP
+    if args.decompress:
+        tile_compression = TileCompression.UNCOMPRESSED
+    elif args.lz4:
+        tile_compression = TileCompression.LZ4
+
+    LOGGER.debug(sorted(tiles, key=lambda x: x.name))
+
+    # create the threadpool and download
+    pool = ThreadPool(args.parallelism)
+    results = pool.imap_unordered(
+        partial(download, output_dir=elevation_fp, compression=tile_compression), tiles
+    )
+
+    sum_downloaded = list(filter(lambda res: res is True, results))
+    LOGGER.info(f"Downloaded {len(sum_downloaded)} tiles. Exiting.")

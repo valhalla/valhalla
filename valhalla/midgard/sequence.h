@@ -154,7 +154,7 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    auto target_size = new_count * sizeof(T);
+    decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
@@ -595,6 +595,7 @@ protected:
 
 struct tar {
   struct header_t {
+    // 512 byte "block" size
     char name[100];
     char mode[8];
     char uid[8];
@@ -658,7 +659,19 @@ struct tar {
     }
   };
 
-  tar(const std::string& tar_file, bool regular_files_only = true)
+  // all of the info about which tar is memory mapped and where each file within
+  // the tar is found in the map
+  std::string tar_file;
+  mem_map<char> mm;
+  using entry_name_t = std::string;
+  using entry_location_t = std::pair<const char*, size_t>;
+  std::unordered_map<entry_name_t, entry_location_t> contents;
+  size_t corrupt_blocks;
+
+  tar(const std::string& tar_file,
+      bool regular_files_only = true,
+      const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
+          from_index = nullptr)
       : tar_file(tar_file), corrupt_blocks(0) {
     // get the file size
     struct stat s;
@@ -668,7 +681,6 @@ struct tar {
       throw std::runtime_error(tar_file + "(stat): invalid archive size " +
                                std::to_string(s.st_size) + " with header size " +
                                std::to_string(sizeof(header_t)));
-      return;
     }
 
     // map the file
@@ -680,6 +692,7 @@ struct tar {
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
     // lax about it and we'll count the ones we cant make sense of
+    bool tried_index = false;
     const char* position = mm.get();
     while (position < mm.get() + mm.size()) {
       // get the header for this file
@@ -696,6 +709,16 @@ struct tar {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::string name{h->name};
         std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
+        // the caller may be able to construct the contents via an index header let them try
+        if (!tried_index && from_index != nullptr) {
+          tried_index = true;
+          contents = from_index(name, position, mm.get(), size);
+          // if it was able to intialize from an index we bail
+          if (!contents.empty()) {
+            return;
+          }
+        }
+        // otherwise we just get each item at a time
         contents.emplace(std::piecewise_construct, std::forward_as_tuple(name),
                          std::forward_as_tuple(position, size));
       }
@@ -704,13 +727,6 @@ struct tar {
       position += blocks * sizeof(header_t);
     }
   }
-
-  std::string tar_file;
-  mem_map<char> mm;
-  using entry_name_t = std::string;
-  using entry_location_t = std::pair<const char*, size_t>;
-  std::unordered_map<entry_name_t, entry_location_t> contents;
-  size_t corrupt_blocks;
 };
 
 } // namespace midgard

@@ -184,9 +184,9 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
-  options.set_costing(valhalla::Costing::truck);
-  auto* co = options.add_costing_options();
-  co->set_costing(valhalla::Costing::truck);
+  options.set_costing_type(valhalla::Costing::truck);
+  auto& co = (*options.mutable_costings())[Costing::truck];
+  co.set_type(valhalla::Costing::truck);
 
   // create the polygon intersecting a shortcut
   auto* rings = options.mutable_exclude_polygons();
@@ -198,7 +198,7 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
     ll->set_lng(coord.lng());
   }
 
-  const auto costing = valhalla::sif::CostFactory{}.Create(*co);
+  const auto costing = valhalla::sif::CostFactory{}.Create(co);
   GraphReader reader(avoid_map.config.get_child("mjolnir"));
 
   // should return the shortcut edge ID as well

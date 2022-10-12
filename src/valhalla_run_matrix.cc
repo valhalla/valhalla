@@ -1,11 +1,11 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -30,8 +30,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
-
-namespace bpo = boost::program_options;
 
 // Format the time string
 std::string GetFormattedTime(uint32_t secs) {
@@ -85,60 +83,68 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
-  bpo::options_description poptions(
-      "valhalla_run_matrix " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_run_matrix [options]\n"
-      "\n"
-      "valhalla_run_matrix is a command line test tool for time+distance matrix routing. "
-      "\n"
-      "Use the -j option for specifying source to target locations."
-      "\n"
-      "\n");
+  // args
+  std::string json_str, config;
+  uint32_t iterations;
 
-  std::string json, config;
-  uint32_t iterations = 1;
-  poptions.add_options()("help,h", "Print this help message.")("version,v",
-                                                               "Print the version of this software.")(
-      // TODO - update example
-      "json,j", boost::program_options::value<std::string>(&json),
-      "JSON Example: "
-      "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
-      "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
-      "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
-      "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
-      "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
-      "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'")(
-      "multi-run", bpo::value<uint32_t>(&iterations),
-      "Generate the route N additional times before exiting.")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-  bpo::variables_map vm;
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(poptions).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_run_matrix",
+      "valhalla_run_matrix " VALHALLA_VERSION "\n\n"
+      "valhalla_run_matrix is a command line test tool for time+distance matrix routing.\n"
+      "Use the -j option for specifying source to target locations.");
+
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("j,json", "JSON Example: "
+        "'{\"locations\":[{\"lat\":40.748174,\"lon\":-73.984984,\"type\":\"break\",\"heading\":200,"
+        "\"name\":\"Empire State Building\",\"street\":\"350 5th Avenue\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10118-0110\",\"country\":\"US\"},{\"lat\":40."
+        "749231,\"lon\":-73.968703,\"type\":\"break\",\"name\":\"United Nations "
+        "Headquarters\",\"street\":\"405 East 42nd Street\",\"city\":\"New "
+        "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
+        "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
+      ("m,multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>()->default_value("1"))
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+    // clang-format on
+
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_run_matrix " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
+      config = result["config"].as<std::string>();
+    } else {
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
+      return EXIT_FAILURE;
+    }
+
+    if (!result.count("json")) {
+      std::cerr << "A JSON format request must be present."
+                << "\n";
+      return EXIT_FAILURE;
+    }
+    json_str = result["json"].as<std::string>();
+
+    iterations = result["multi-run"].as<uint32_t>();
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
   }
 
-  if (vm.count("help")) {
-    std::cout << poptions << "\n";
-    return EXIT_SUCCESS;
-  }
-  if (vm.count("version")) {
-    std::cout << "timedistance_test " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
-  }
-
   Api request;
-  ParseApi(json, valhalla::Options::sources_to_targets, request);
+  ParseApi(json_str, valhalla::Options::sources_to_targets, request);
   const auto& options = request.options();
 
   // parse the config
@@ -162,11 +168,11 @@ int main(int argc, char* argv[]) {
   CostFactory factory;
 
   // Get type of route - this provides the costing method to use.
-  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing());
+  const std::string& routetype = valhalla::Costing_Enum_Name(options.costing_type());
   LOG_INFO("routetype: " + routetype);
 
   // Get the costing method - pass the JSON configuration
-  TravelMode mode;
+  sif::TravelMode mode;
   auto mode_costing = factory.CreateModeCosting(options, mode);
 
   // Find path locations (loki) for sources and targets
@@ -183,7 +189,9 @@ int main(int argc, char* argv[]) {
     // Skip over any service limits that are not for a costing method
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone") {
+        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
+        kv.first == "status") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -221,13 +229,13 @@ int main(int argc, char* argv[]) {
 
   // Timing with CostMatrix
   std::vector<TimeDistance> res;
+  CostMatrix matrix;
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    CostMatrix matrix;
     res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                 max_distance);
-    matrix.Clear();
+    matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -236,12 +244,12 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, res);
 
   // Run with TimeDistanceMatrix
+  TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    TimeDistanceMatrix tdm;
     res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                              max_distance);
-    tdm.Clear();
+    tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

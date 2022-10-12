@@ -36,7 +36,7 @@ struct NameInfo {
                                    // phonetic string, etc.
   uint32_t is_route_num_ : 1;      // Flag used to indicate if this is a route number
                                    // vs just a name.
-  uint32_t tagged_ : 1;            // Future use - this indicates the text string is
+  uint32_t tagged_ : 1;            // This indicates the text string is
                                    // specially tagged (for example uses the first char as
                                    // the tag type). To make this forward and backward
                                    // compatible, tagged text will not be read in GetNames
@@ -51,6 +51,15 @@ struct NameInfo {
   bool operator<(const NameInfo& other) const {
     return (name_offset_ < other.name_offset_);
   }
+};
+
+struct linguistic_text_header_t {
+  uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
+  uint32_t length_ : 8;   // pronunciation length
+  uint32_t phonetic_alphabet_ : 3;
+  uint32_t name_index_ : 4; // what name is this pronunciation for
+  uint32_t spare_ : 1;
+  uint32_t DO_NOT_USE_ : 8; // DONT EVER USE THIS WE DON'T ACTUALLY STORE IT IN THE TEXT LIST
 };
 
 /**
@@ -143,10 +152,12 @@ public:
   std::vector<std::string> GetNames() const;
 
   /**
-   * Convenience method to get the tagged values for an edge
-   * @return   Returns a list (vector) of tagged values.
+   * Convenience method to get the names for an edge
+   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
+   *
+   * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedValues() const;
+  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
@@ -154,8 +165,8 @@ public:
    *
    * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::pair<std::string, bool>>
-  GetNamesAndTypes(bool include_tagged_values = false) const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
+                                                             bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get tags of the edge.
@@ -163,6 +174,13 @@ public:
    * @return   Returns a map of tags
    */
   const std::multimap<TaggedValue, std::string>& GetTags() const;
+
+  /**
+   * Convenience method to get a pronunciation map for an edge.
+   * @return   Returns a unordered_map of type/name pairs with a key that references the name
+   * index from GetNamesAndTypes
+   */
+  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
 
   /**
    * Convenience method to get the types for the names.
@@ -195,6 +213,20 @@ public:
   int8_t layer() const;
 
   /**
+   * Get level of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level
+   * @return layer index of the edge
+   */
+
+  std::string level() const;
+  /**
+   * Get layer:ref of the edge.
+   * @see https://wiki.openstreetmap.org/wiki/Key:level:ref
+   * @return layer index of the edge
+   */
+  std::string level_ref() const;
+
+  /**
    * Returns json representing this object
    * @return json object
    */
@@ -220,8 +252,6 @@ public:
   };
 
 protected:
-  std::vector<std::string> GetTaggedValuesOrNames(bool only_tagged_values) const;
-
   // Fixed size information
   EdgeInfoInner ei_;
 

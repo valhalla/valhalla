@@ -30,6 +30,7 @@ valhalla_tyr_worker
 valhalla_associate_segments
 valhalla_fetch_transit
 valhalla_pack_elevation
+valhalla_add_elevation
 genfiles/
 locales/*.UTF-8
 !locales/merge-en.sh
@@ -60,6 +61,9 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+
+# python
+.venv
 
 # clangd
 .cache/

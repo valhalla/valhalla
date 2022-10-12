@@ -123,15 +123,15 @@ int main(int argc, char** argv) {
       }
     } // request processing error specific error condition
     catch (const valhalla::valhalla_exception_t& ve) {
-      std::cout << valhalla::jsonify_error(ve, request) << std::endl;
+      std::cout << valhalla::serialize_error(ve, request) << std::endl;
       return 1;
     } // it was a regular exception!?
     catch (const std::exception& e) {
-      std::cout << jsonify_error({599, std::string(e.what())}, request) << std::endl;
+      std::cout << serialize_error({599, std::string(e.what())}, request) << std::endl;
       return 1;
     } // anything else
     catch (...) {
-      std::cout << jsonify_error({599, std::string("Unknown exception thrown")}, request)
+      std::cout << serialize_error({599, std::string("Unknown exception thrown")}, request)
                 << std::endl;
       return 1;
     }
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
 
   // configure logging
   boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("tyr.logging");
+      config.get_child_optional("loki.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

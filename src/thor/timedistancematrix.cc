@@ -10,9 +10,9 @@ namespace {
 static bool IsTrivial(const uint64_t& edgeid,
                       const valhalla::Location& origin,
                       const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.path_edges()) {
+  for (const auto& destination_edge : destination.correlation().edges()) {
     if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.path_edges()) {
+      for (const auto& origin_edge : origin.correlation().edges()) {
         if (origin_edge.graph_id() == edgeid &&
             origin_edge.percent_along() <= destination_edge.percent_along()) {
           return true;
@@ -28,7 +28,7 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(TravelMode::kDrive), settled_count_(0), current_cost_threshold_(0) {
+    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -36,14 +36,14 @@ TimeDistanceMatrix::TimeDistanceMatrix()
 float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) const {
   float average_speed_mph;
   switch (mode_) {
-    case TravelMode::kBicycle:
+    case travel_mode_t::kBicycle:
       average_speed_mph = 10.0f;
       break;
-    case TravelMode::kPedestrian:
-    case TravelMode::kPublicTransit:
+    case travel_mode_t::kPedestrian:
+    case travel_mode_t::kPublicTransit:
       average_speed_mph = 2.0f;
       break;
-    case TravelMode::kDrive:
+    case travel_mode_t::kDrive:
     default:
       average_speed_mph = 35.0f;
   }
@@ -54,7 +54,7 @@ float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) cons
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void TimeDistanceMatrix::Clear() {
+void TimeDistanceMatrix::clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -109,7 +109,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     uint8_t flow_sources;
     Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) +
+                   costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) +
                    transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -153,8 +153,9 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
-                              const float max_matrix_distance) {
+                              const travel_mode_t mode,
+                              const float max_matrix_distance,
+                              const uint32_t matrix_locations) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -166,7 +167,6 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
   astarheuristic_.Init({origin.ll().lng(), origin.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
-  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -201,7 +201,8 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred,
+                             matrix_locations)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -271,8 +272,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
 
     // Get cost. Use the opposing edge for EdgeCost.
     uint8_t flow_sources;
-    Cost newcost =
-        pred.cost() + costing_->EdgeCost(opp_edge, t2, kConstrainedFlowSecondOfDay, flow_sources);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
@@ -324,8 +324,9 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                               GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
-                              const TravelMode mode,
-                              const float max_matrix_distance) {
+                              const travel_mode_t mode,
+                              const float max_matrix_distance,
+                              const uint32_t matrix_locations) {
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -337,7 +338,6 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
   astarheuristic_.Init({dest.ll().lng(), dest.ll().lat()}, 0.0f);
   uint32_t bucketsize = costing_->UnitSize();
   adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
-  edgestatus_.clear();
 
   // Initialize the origin and destination locations
   settled_count_ = 0;
@@ -372,7 +372,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, matrix_locations)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -394,7 +394,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
+    const sif::travel_mode_t mode,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
@@ -404,23 +404,34 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode mode,
-    const float max_matrix_distance) {
+    const sif::travel_mode_t mode,
+    const float max_matrix_distance,
+    const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
-  std::vector<TimeDistance> many_to_many;
+  std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
-    for (const auto& origin : source_location_list) {
-      std::vector<TimeDistance> td = OneToMany(origin, target_location_list, graphreader,
-                                               mode_costing, mode, max_matrix_distance);
-      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+    for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
+      const auto& origin = source_location_list[source_index];
+      std::vector<TimeDistance> td =
+          OneToMany(origin, target_location_list, graphreader, mode_costing, mode,
+                    max_matrix_distance, matrix_locations);
+      for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
+        size_t index = source_index * target_location_list.size() + target_index;
+        many_to_many[index] = td[target_index];
+      }
+      clear();
     }
   } else {
-    for (const auto& destination : target_location_list) {
-      std::vector<TimeDistance> td = ManyToOne(destination, source_location_list, graphreader,
-                                               mode_costing, mode, max_matrix_distance);
-      many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+    for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
+      const auto& destination = target_location_list[target_index];
+      std::vector<TimeDistance> td =
+          ManyToOne(destination, source_location_list, graphreader, mode_costing, mode,
+                    max_matrix_distance, matrix_locations);
+      for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
+        size_t index = source_index * target_location_list.size() + target_index;
+        many_to_many[index] = td[source_index];
+      }
+      clear();
     }
   }
   return many_to_many;
@@ -431,13 +442,13 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
                                             const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
@@ -463,7 +474,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time+distance
     // matrix computations. . Get distance along the remainder of this edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(directededge, tile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) *
                 (1.0f - edge.percent_along());
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -488,7 +499,7 @@ void TimeDistanceMatrix::SetOriginOneToMany(GraphReader& graphreader,
 void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
                                             const valhalla::Location& dest) {
   // Iterate through edges and add opposing edges to adjacency list
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
     if (costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
@@ -516,7 +527,7 @@ void TimeDistanceMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Get cost. Use this as sortcost since A* is not used for time
     // distance matrix computations. Get the distance along the edge.
     uint8_t flow_sources;
-    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, kConstrainedFlowSecondOfDay, flow_sources) *
+    Cost cost = costing_->EdgeCost(opp_dir_edge, endtile, TimeInfo::invalid(), flow_sources) *
                 edge.percent_along();
     uint32_t d = static_cast<uint32_t>(directededge->length() * edge.percent_along());
 
@@ -547,7 +558,7 @@ void TimeDistanceMatrix::SetDestinations(
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
       // Disallow any user avoided edges if the avoid location is behind the destination along the
       // edge
       GraphId edgeid(edge.graph_id());
@@ -596,7 +607,7 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
       // Get the opposing directed edge Id - this is the edge marked as the "destination",
       // but the cost is based on the forward path along the initial edge.
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(static_cast<GraphId>(edge.graph_id()));
@@ -634,14 +645,15 @@ void TimeDistanceMatrix::SetDestinationsManyToOne(
 }
 
 // Update any destinations along the edge. Returns true if all destinations
-// have be settled.
+// have be settled or if the specified location count has been met or exceeded.
 bool TimeDistanceMatrix::UpdateDestinations(
     const valhalla::Location& origin,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
-    const EdgeLabel& pred) {
+    const EdgeLabel& pred,
+    const uint32_t matrix_locations) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
@@ -722,7 +734,10 @@ bool TimeDistanceMatrix::UpdateDestinations(
   if (allfound) {
     current_cost_threshold_ = maxcost;
   }
-  return settled_count_ == destinations_.size();
+
+  // Return true if the settled count equals the number of destinations or
+  // exceeds the matrix location count provided.
+  return settled_count_ == destinations_.size() || settled_count_ >= matrix_locations;
 }
 
 // Form the time, distance matrix from the destinations list

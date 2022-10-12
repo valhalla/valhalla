@@ -37,3 +37,12 @@
 [submodule "third_party/cpp-statsd-client"]
 	path = third_party/cpp-statsd-client
 	url = https://github.com/vthiery/cpp-statsd-client
+[submodule "third_party/lz4"]
+	path = third_party/lz4
+	url = https://github.com/lz4/lz4
+[submodule "third_party/cxxopts"]
+	path = third_party/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+[submodule "third_party/just_gtfs"]
+	path = third_party/just_gtfs
+	url = https://github.com/mapsme/just_gtfs.git

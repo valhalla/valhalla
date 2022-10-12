@@ -8,12 +8,6 @@ apt-get update --assume-yes
 apt-get install --assume-yes software-properties-common
 add-apt-repository ppa:valhalla-core/valhalla
 
-# The latest version of boost in bionic has a regression we need to avoid
-boost_version=
-if [ $(grep -Fc bionic /etc/lsb-release) -gt 0 ]; then
-    boost_version="1.62"
-fi
-
 readonly primeserver_version=0.7.0
 
 # Now, go through and install the build dependencies
@@ -32,7 +26,6 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     git \
     jq \
     lcov \
-    libboost${boost_version}-all-dev \
     libcurl4-openssl-dev \
     libgeos++-dev \
     libgeos-dev \
@@ -55,7 +48,12 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     prime-server${primeserver_version}-bin \
     protobuf-compiler \
     python3-all-dev \
+    python3-shapely \
+    python3-pip \
     spatialite-bin \
     unzip \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
+
+# for boost
+python3 -m pip install --upgrade conan requests

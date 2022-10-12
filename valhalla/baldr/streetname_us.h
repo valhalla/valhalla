@@ -1,11 +1,13 @@
 #ifndef VALHALLA_BALDR_STREETNAME_US_H_
 #define VALHALLA_BALDR_STREETNAME_US_H_
 
-#include <valhalla/baldr/streetname.h>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <boost/optional.hpp>
+
+#include <valhalla/baldr/streetname.h>
 
 namespace valhalla {
 namespace baldr {
@@ -16,8 +18,11 @@ public:
    * Constructor.
    * @param  value  Street name string.
    * @param  is_route_number   boolean indicating if street name is a reference route number.
+   * @param  pronunciation  the pronunciation of this street name.
    */
-  StreetNameUs(const std::string& value, const bool is_route_number);
+  StreetNameUs(const std::string& value,
+               const bool is_route_number,
+               const boost::optional<baldr::Pronunciation>& pronunciation = boost::none);
 
   std::string GetPreDir() const override;
 

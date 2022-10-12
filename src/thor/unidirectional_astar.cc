@@ -19,11 +19,10 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 1800000;
 template <const ExpansionType expansion_direction, const bool FORWARD>
 UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     const boost::property_tree::ptree& config)
-    : PathAlgorithm(), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(TravelMode::kDrive), travel_type_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount)),
-      access_mode_{kAutoAccess} {
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+                    config.get<bool>("clear_reserved_memory", false)),
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
+      travel_type_(0), access_mode_{kAutoAccess} {
 }
 
 // Default constructor
@@ -39,8 +38,9 @@ template <const ExpansionType expansion_direction, const bool FORWARD>
 void UnidirectionalAStar<expansion_direction, FORWARD>::Clear() {
   // Clear the edge labels and destination list. Reset the adjacency list
   // and clear edge status.
-  if (edgelabels_.size() > max_reserved_labels_count_) {
-    edgelabels_.resize(max_reserved_labels_count_);
+  auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  if (edgelabels_.size() > reservation) {
+    edgelabels_.resize(reservation);
     edgelabels_.shrink_to_fit();
   }
   edgelabels_.clear();
@@ -236,9 +236,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
 
   // Compute the cost to the end of this edge
   uint8_t flow_sources;
-  auto edge_cost = FORWARD
-                       ? costing_->EdgeCost(meta.edge, tile, time_info.second_of_week, flow_sources)
-                       : costing_->EdgeCost(opp_edge, t2, time_info.second_of_week, flow_sources);
+  auto edge_cost = FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                           : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources);
 
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
@@ -259,7 +258,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
     // Find the destination edge and update cost to include the edge score.
     // Note - with high edge scores the convergence test fails some routes
     // so reduce the edge score.
-    for (const auto& destination_edge : destination.path_edges()) {
+    for (const auto& destination_edge : destination.correlation().edges()) {
       if (destination_edge.graph_id() == meta.edge_id) {
         newcost.cost += destination_edge.distance();
       }
@@ -423,7 +422,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
     valhalla::Location& destination,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode mode,
+    const travel_mode_t mode,
     const Options& /*options*/) {
   // Set the mode and costing
   mode_ = mode;
@@ -433,7 +432,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
 
   if (!FORWARD) {
     // date_time must be set on the destination. Log an error but allow routes for now.
-    if (!destination.has_date_time()) {
+    if (destination.date_time().empty()) {
       LOG_ERROR("TimeDepReverse called without time set on the destination location");
       // return {};
     }
@@ -442,9 +441,10 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Note: because we can correlate to more than one place for a given PathLocation
   // using edges.front here means we are only setting the heuristics to one of them
   // alternate paths using the other correlated points to may be harder to find
-  midgard::PointLL origin_new(origin.path_edges(0).ll().lng(), origin.path_edges(0).ll().lat());
-  midgard::PointLL destination_new(destination.path_edges(0).ll().lng(),
-                                   destination.path_edges(0).ll().lat());
+  midgard::PointLL origin_new(origin.correlation().edges(0).ll().lng(),
+                              origin.correlation().edges(0).ll().lat());
+  midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
+                                   destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
@@ -457,9 +457,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
   uint32_t density = SetDestination(graphreader, endpoint);
-  // Call SetOrigin with kFreeFlowSecondOfDay for now since we don't yet have
-  // a timezone for converting a date_time of "current" to seconds_of_week
-  SetOrigin(graphreader, startpoint, endpoint, time_info.second_of_week);
+  SetOrigin(graphreader, startpoint, endpoint, time_info);
 
   // Update hierarchy limits
   ModifyHierarchyLimits(mindist, density);
@@ -562,14 +560,14 @@ UnidirectionalAStar<ExpansionType::forward>::GetBestPath(valhalla::Location& ori
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
-                                                         const TravelMode mode,
+                                                         const travel_mode_t mode,
                                                          const Options& /*options*/);
 template std::vector<std::vector<PathInfo>>
 UnidirectionalAStar<ExpansionType::reverse>::GetBestPath(valhalla::Location& origin,
                                                          valhalla::Location& destination,
                                                          GraphReader& graphreader,
                                                          const sif::mode_costing_t& mode_costing,
-                                                         const TravelMode mode,
+                                                         const travel_mode_t mode,
                                                          const Options& /*options*/);
 // Set the mode and costing
 // Initialize prior to finding best path
@@ -636,11 +634,11 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
     GraphReader& graphreader,
     const valhalla::Location& origin,
     const valhalla::Location& destination,
-    const uint32_t seconds_of_week) {
+    const TimeInfo& time_info) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || (FORWARD ? !e.end_node() : !e.begin_node());
                 });
 
@@ -675,13 +673,13 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
   // its super trivial if both are node snapped to the same end of the same edge
   // note the check for node snapping is in the if below and not in this lambda
-  auto super_trivial = [this](const valhalla::Location::PathEdge& edge) {
+  auto super_trivial = [this](const valhalla::PathEdge& edge) {
     auto p = destinations_percent_along_.find(edge.graph_id());
     return p != destinations_percent_along_.end() && edge.percent_along() == p->second;
   };
 
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If this is a node snap and we have other candidates that we can skip this unless its the one we
     // need for super trivial route
     if ((FORWARD ? edge.end_node() : edge.begin_node()) && has_other_edges && !super_trivial(edge)) {
@@ -713,7 +711,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (endtile == nullptr) {
         continue;
       }
-      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
+      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
              (1.0f - edge.percent_along());
       dist = astarheuristic_.GetDistance(endtile->get_node_ll(directededge->endnode()));
     } else {
@@ -723,8 +721,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         continue;
       }
       opp_dir_edge = graphreader.GetOpposingEdge(edgeid);
-      cost = costing_->EdgeCost(directededge, tile, seconds_of_week, flow_sources) *
-             edge.percent_along();
+      cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();
       dist = astarheuristic_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
 
@@ -746,18 +743,18 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
           FORWARD ? IsTrivial(edgeid, origin, destination) : IsTrivial(edgeid, destination, origin);
       if (trivial) {
         // Find the destination edge and update cost.
-        for (const auto& dest_path_edge : destination.path_edges()) {
+        for (const auto& dest_path_edge : destination.correlation().edges()) {
           if (dest_path_edge.graph_id() == edgeid) {
             // a trivial route passes along a single edge, meaning that the
             // destination point must be on this edge, and so the distance
             // remaining must be zero.
             GraphId id(dest_path_edge.graph_id());
             const DirectedEdge* dest_edge = tile->directededge(id);
-            Cost remainder_cost =
-                FORWARD ? costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                              (1.0f - dest_path_edge.percent_along())
-                        : costing_->EdgeCost(dest_edge, tile, seconds_of_week, flow_sources) *
-                              (dest_path_edge.percent_along());
+            Cost remainder_cost = FORWARD
+                                      ? costing_->EdgeCost(dest_edge, tile, time_info, flow_sources) *
+                                            (1.0f - dest_path_edge.percent_along())
+                                      : costing_->EdgeCost(dest_edge, tile, time_info, flow_sources) *
+                                            (dest_path_edge.percent_along());
             // Remove the cost of the final "unused" part of the destination edge
             cost -= remainder_cost;
             // Add back in the edge score/penalty to account for destination edges
@@ -818,14 +815,14 @@ UnidirectionalAStar<expansion_direction, FORWARD>::SetDestination(GraphReader& g
                                                                   const valhalla::Location& dest) {
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(dest.path_edges().begin(), dest.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || !(FORWARD ? e.begin_node() : e.end_node());
                 });
 
   // For each edge
   uint32_t density = 0;
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && (FORWARD ? edge.begin_node() : edge.end_node())) {
       continue;

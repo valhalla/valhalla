@@ -3,63 +3,56 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 11.1.0
+      xcode: 13.4.1
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
+      CXXFLAGS: -DGEOS_INLINE
 
 commands:
   install_macos_dependencies:
     steps:
-      - run: brew install protobuf cmake ccache libtool boost libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: pip3 install requests
-      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j4 && make install
-
-jobs:
-  build-docker-images:
-    docker:
-      - image: docker:18.06.3-ce-git
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: /usr/bin/python3 -m pip install --user requests
+      - run: pip3 install shapely conan
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
+  install_linux_dependencies:
     steps:
-      - setup_remote_docker
+      - run: sudo bash ./scripts/install-linux-deps.sh
+
+jobs:    
+  build-docker-images:
+    machine:
+      image: ubuntu-2004:current
+    steps:
       - checkout
       - run:
-          name: Build Valhalla Docker Images
+          name: Build and push Valhalla Docker image
           command: |
-            docker build --pull -f ./docker/Dockerfile-build --tag valhalla/valhalla:build-latest ./docker
             if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
-              docker build -f ./docker/Dockerfile-run --tag valhalla/valhalla:run-latest .
-            fi
-      - run:
-          name: Push Valhalla Docker Images
-          command: |
-            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              BUILD_TAG="${CIRCLE_TAG:-latest}"
               echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker push valhalla/valhalla:build-latest
-              docker push valhalla/valhalla:run-latest
-            elif [[ ! -z "${CIRCLE_TAG}" ]]; then
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker tag valhalla/valhalla:build-latest valhalla/valhalla:build-${CIRCLE_TAG}
-              docker push valhalla/valhalla:build-${CIRCLE_TAG}
-              docker tag valhalla/valhalla:run-latest valhalla/valhalla:run-${CIRCLE_TAG}
-              docker push valhalla/valhalla:run-${CIRCLE_TAG}
+              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
+              docker push valhalla/valhalla:run-${BUILD_TAG}
             fi
 
   lint-build-debug:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
+      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-{{ .Branch }}
-            - ccache-debug-linux-x86_64
+            - ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -67,7 +60,7 @@ jobs:
             && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
                 -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
                 -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
-                -DLOGGING_LEVEL=NONE \
+                -DLOGGING_LEVEL=INFO \
                 -DENABLE_PYTHON_BINDINGS=On
       - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j8
@@ -78,11 +71,12 @@ jobs:
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
-      - run: make -C build install
+      - run: sudo make -C build install
       - run: make -C build package
       - run: |
           # Note: run (compile) tests and make code coverage report.
@@ -90,22 +84,23 @@ jobs:
       - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
-    docker:
-      - image: valhalla/valhalla:build-latest
+    machine:
+      image: ubuntu-2004:current
     resource_class: xlarge
     steps:
       - checkout
+      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-{{ .Branch }}
-            - ccache-release-linux-x86_64
+            - ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -119,14 +114,16 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
-      - run: make -C build install
+            - ~/.conan
+      - run: sudo make -C build install
       - run: make -C build package
 
   build-osx:
     executor: macos
+    resource_class: large
     steps:
       - checkout
       - install_macos_dependencies
@@ -135,24 +132,25 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-macos-{{ .Branch }}
-            - ccache-release-macos
+            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: mkdir -p build
       - run: cd build && cmake ..
-      - run: make -C build -j4
+      - run: make -C build -j8
       - run: make -C build utrecht_tiles
-      - run: make -C build -j2 tests
-      - run: make -C build -j2 check
-      - run: make -C build -j2 benchmarks
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 check
+      - run: make -C build -j8 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
+            - ~/.conan
 
 workflows:
   version: 2

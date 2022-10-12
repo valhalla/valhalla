@@ -1,5 +1,6 @@
 #include "baldr/graphconstants.h"
 #include "gurka.h"
+#include "test.h"
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
 
@@ -81,8 +82,55 @@ TEST_F(TopSpeedTest, ClampMaxSpeed) {
   rapidjson::Document dom;
   rapidjson::SetValueByPointer(dom, "/top_speed", 500);
 
-  options.set_costing(Costing::auto_);
-  sif::ParseSharedCostOptions(*rapidjson::GetValueByPointer(dom, ""), options.add_costing_options());
+  options.set_costing_type(Costing::auto_);
+  auto& co = (*options.mutable_costings())[Costing::auto_];
+  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {});
 
-  ASSERT_EQ(options.costing_options().Get(0).top_speed(), baldr::kMaxAssumedSpeed);
+  ASSERT_EQ(co.options().top_speed(), baldr::kMaxAssumedSpeed);
+}
+
+TEST(TopSpeed, CurrentLayerIsIgnored) {
+  constexpr double gridsize = 10;
+
+  const std::string ascii_map = R"(
+      A---B----------C--D
+          |          |
+          E----------F
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}, {"maxspeed", "20"}}},
+                            {"CD", {{"highway", "residential"}, {"maxspeed", "20"}}},
+                            {"BC", {{"highway", "residential"}, {"maxspeed", "70"}}},
+                            {"BEFC", {{"highway", "residential"}, {"maxspeed", "20"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/topspeed");
+
+  map.config.put("mjolnir.traffic_extract", "test/data/topspeed/traffic.tar");
+
+  // add live traffic
+  test::build_live_traffic_data(map.config);
+  test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
+                                                    valhalla::baldr::TrafficSpeed* traffic_speed) {
+    traffic_speed->overall_encoded_speed = 20 >> 1;
+    traffic_speed->encoded_speed1 = 20 >> 1;
+    traffic_speed->breakpoint1 = 255;
+  });
+
+  valhalla::Api default_route =
+      gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                       {{"/date_time/type", "0"}, {"/date_time/value", "current"}});
+  valhalla::Api capped_route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "auto",
+                                                {{"/costing_options/auto/top_speed", "20"},
+                                                 {"/date_time/type", "0"},
+                                                 {"/date_time/value", "current"}});
+
+  // for default route all edges has the same live speed so the shortest path is expected to be
+  // returned(ABCD)
+  gurka::assert::raw::expect_path(default_route, {"AB", "BC", "CD"});
+  // for capped route, the longest route is expected to be returned because for BC edge:
+  //  top_speed=20kmh
+  //  average_edge_speed=70kmh(current layer is ignored when top_speed option is active)
+  // 70 kmh > 20 kmh so BC edge is penalized
+  gurka::assert::raw::expect_path(capped_route, {"AB", "BEFC", "CD"});
 }

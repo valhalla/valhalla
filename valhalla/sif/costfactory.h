@@ -26,7 +26,7 @@ namespace sif {
  */
 class CostFactory {
 public:
-  using factory_function_t = std::function<cost_ptr_t(const CostingOptions& options)>;
+  using factory_function_t = std::function<cost_ptr_t(const Costing& options)>;
 
   /**
    * Constructor
@@ -53,7 +53,7 @@ public:
    * @param costing    the cost type that the function creates
    * @param function   the function pointer to call to actually create the cost object
    */
-  void Register(const Costing costing, factory_function_t function) {
+  void Register(const Costing::Type costing, factory_function_t function) {
     factory_funcs_.erase(costing);
     factory_funcs_.emplace(costing, function);
   }
@@ -63,14 +63,10 @@ public:
    * @param options  pbf with costing type and costing options
    */
   cost_ptr_t Create(const Options& options) const {
-    // you cant get a costing without a costing type
-    if (!options.has_costing())
-      throw std::runtime_error("No costing provided to cost factory");
-
     // create the cost using the creation function
-    auto costing_index = static_cast<int>(options.costing());
-    if (costing_index < options.costing_options_size()) {
-      return Create(options.costing_options(costing_index));
+    auto found = options.costings().find(options.costing_type());
+    if (found != options.costings().end()) {
+      return Create(found->second);
     } // if we didnt have costing options we need to use some default ones
     else {
       throw std::runtime_error("No costing options provided to cost factory");
@@ -79,12 +75,12 @@ public:
 
   /**
    * Make a default cost from its specified type
-   * @param costing  which costing to create
+   * @param costing_type  which costing to create
    */
-  cost_ptr_t Create(Costing costing) const {
-    CostingOptions default_options;
-    default_options.set_costing(costing);
-    return Create(default_options);
+  cost_ptr_t Create(Costing::Type costing_type) const {
+    Costing default_costing;
+    default_costing.set_type(costing_type);
+    return Create(default_costing);
   }
 
   /**
@@ -92,31 +88,27 @@ public:
    * @param costing  the type of cost to create
    * @param options  pbf with request options
    */
-  cost_ptr_t Create(const CostingOptions& options) const {
-    // you cant get a costing without a costing type
-    if (!options.has_costing())
-      throw std::runtime_error("No costing provided to cost factory");
-
-    auto itr = factory_funcs_.find(options.costing());
+  cost_ptr_t Create(const Costing& costing) const {
+    auto itr = factory_funcs_.find(costing.type());
     if (itr == factory_funcs_.end()) {
-      auto costing_str = Costing_Enum_Name(options.costing());
+      auto costing_str = Costing_Enum_Name(costing.type());
       throw std::runtime_error("No costing method found for '" + costing_str + "'");
     }
     // create the cost using the function pointer
-    return itr->second(options);
+    return itr->second(costing);
   }
 
   mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
     mode_costing_t mode_costing;
     // Set travel mode and construct costing
-    if (options.costing() == Costing::multimodal || options.costing() == Costing::transit ||
-        options.costing() == Costing::bikeshare) {
+    if (options.costing_type() == Costing::multimodal || options.costing_type() == Costing::transit ||
+        options.costing_type() == Costing::bikeshare) {
       // For multi-modal we construct costing for all modes and set the
       // initial mode to pedestrian. (TODO - allow other initial modes)
-      mode_costing[0] = Create(options.costing_options(static_cast<int>(Costing::auto_)));
-      mode_costing[1] = Create(options.costing_options(static_cast<int>(Costing::pedestrian)));
-      mode_costing[2] = Create(options.costing_options(static_cast<int>(Costing::bicycle)));
-      mode_costing[3] = Create(options.costing_options(static_cast<int>(Costing::transit)));
+      mode_costing[0] = Create(options.costings().find(Costing::auto_)->second);
+      mode_costing[1] = Create(options.costings().find(Costing::pedestrian)->second);
+      mode_costing[2] = Create(options.costings().find(Costing::bicycle)->second);
+      mode_costing[3] = Create(options.costings().find(Costing::transit)->second);
       mode = valhalla::sif::TravelMode::kPedestrian;
     } else {
       valhalla::sif::cost_ptr_t cost = Create(options);
@@ -127,7 +119,7 @@ public:
   }
 
 private:
-  std::map<const Costing, factory_function_t> factory_funcs_;
+  std::map<const Costing::Type, factory_function_t> factory_funcs_;
 };
 
 } // namespace sif

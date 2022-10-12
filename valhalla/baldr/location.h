@@ -6,7 +6,7 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/pointll.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 
 namespace valhalla {
 namespace baldr {
@@ -88,14 +88,9 @@ public:
   // address of the location, probably should be its own more broken up structure
   std::string name_;
   std::string street_;
-  std::string city_;
-  std::string state_;
-  std::string zip_;
-  std::string country_;
 
   boost::optional<std::string> date_time_;
   boost::optional<float> heading_;
-  boost::optional<uint64_t> way_id_;
 
   // try to find candidates who are reachable from/to this many or more nodes
   // if a given candidate edge is reachable to/from less than this number of nodes its considered to

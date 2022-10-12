@@ -7,6 +7,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -19,11 +20,13 @@
 #include <valhalla/sif/costfactory.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astar_bss.h>
-#include <valhalla/thor/attributes_controller.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
+#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
+#include <valhalla/thor/timedistancebssmatrix.h>
+#include <valhalla/thor/timedistancematrix.h>
 #include <valhalla/thor/triplegbuilder.h>
 #include <valhalla/thor/unidirectional_astar.h>
 #include <valhalla/tyr/actor.h>
@@ -48,6 +51,8 @@ public:
                                                 const std::function<void()>& interrupt) override;
 #endif
   virtual void cleanup() override;
+
+  static void adjust_scores(valhalla::Options& options);
 
   static std::string offset_date(baldr::GraphReader& reader,
                                  const std::string& in_dt,
@@ -90,11 +95,8 @@ protected:
 
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
-
-  void parse_locations(Api& request);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
-  void parse_filter_attributes(const Api& request, bool is_strict_filter = false);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&
@@ -122,6 +124,11 @@ protected:
   TimeDepForward timedep_forward;
   TimeDepReverse timedep_reverse;
 
+  // Time distance matrix
+  CostMatrix costmatrix_;
+  TimeDistanceMatrix time_distance_matrix_;
+  TimeDistanceBSSMatrix time_distance_bss_matrix_;
+
   Isochrone isochrone_gen;
   std::shared_ptr<meili::MapMatcher> matcher;
   float max_timedep_distance;
@@ -129,7 +136,7 @@ protected:
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
   std::shared_ptr<baldr::GraphReader> reader;
   meili::MapMatcherFactory matcher_factory;
-  AttributesController controller;
+  baldr::AttributesController controller;
   Centroid centroid_gen;
 
 private:

@@ -1,7 +1,7 @@
-syntax = "proto2";
+syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 package valhalla;
-import public "tripcommon.proto";
+import public "common.proto";
 import public "sign.proto";
 import "incidents.proto";
 
@@ -42,6 +42,8 @@ message TripLeg {
     kPedestrianUse = 28;
     kBridlewayUse = 29;
     kPedestrianCrossingUse = 32;
+    kElevatorUse = 33;
+    kEscalatorUse = 34;
 
     //Rest/Service Areas
     kRestAreaUse = 30;
@@ -53,6 +55,8 @@ message TripLeg {
     // Ferry and rail ferry
     kFerryUse = 41;
     kRailFerryUse = 42;
+
+    kConstructionUse = 43;       // Road under construction
 
     // Transit specific uses. Must be last in the list
     kRailUse = 50;               // Rail line
@@ -71,72 +75,6 @@ message TripLeg {
     kGravel = 5;
     kPath = 6;
     kImpassable = 7;
-  }
-
-  enum TravelMode {
-    kDrive = 0;
-    kPedestrian = 1;
-    kBicycle = 2;
-    kTransit = 3;
-  }
-
-  // TODO: review and update as needed
-  enum VehicleType {
-    kCar = 0;
-    kMotorcycle = 1;
-    kAutoBus = 2;
-    kTractorTrailer = 3;
-    kMotorScooter = 4;
-  }
-
-  // TODO: review and update as needed
-  enum PedestrianType {
-    kFoot = 0;
-    kWheelchair = 1;
-    kSegway = 2;
-  }
-
-  enum BicycleType {
-    kRoad = 0;
-    kCross = 1;
-    kHybrid = 2;
-    kMountain = 3;
-  }
-
-  enum TransitType {
-    kTram = 0;
-    kMetro = 1;
-    kRail = 2;
-    kBus = 3;
-    kFerry = 4;
-    kCableCar = 5;
-    kGondola = 6;
-    kFunicular = 7;
-  }
-
-  message TransitRouteInfo {
-    optional string onestop_id = 1;
-    optional uint32 block_id = 2;
-    optional uint32 trip_id = 3;
-    optional string short_name = 4;
-    optional string long_name = 5;
-    optional string headsign = 6;
-    optional uint32 color = 7;
-    optional uint32 text_color = 8;
-    optional string description = 9;
-    optional string operator_onestop_id = 10;
-    optional string operator_name = 11;
-    optional string operator_url = 12;
-  }
-
-  message BikeShareStationInfo {
-    optional string name = 1;
-    optional string ref = 2;
-    optional string capacity = 3;
-    optional string network = 4;
-    optional string operator = 5;
-    optional float rent_cost = 6;
-    optional float return_cost = 7;
   }
 
   enum CycleLane {
@@ -164,108 +102,108 @@ message TripLeg {
   }
 
   message LaneConnectivity {
-    optional uint64 from_way_id = 1;
-    optional string from_lanes = 2;
-    optional string to_lanes = 3;
+    uint64 from_way_id = 1;
+    string from_lanes = 2;
+    string to_lanes = 3;
   }
 
   message TrafficSegment {
-    optional uint64 segment_id = 1;
-    optional float  begin_percent = 2;
-    optional float  end_percent = 3;
-    optional bool   starts_segment = 4;
-    optional bool   ends_segment = 5;
+    uint64 segment_id = 1;
+    float begin_percent = 2;
+    float end_percent = 3;
+    bool starts_segment = 4;
+    bool ends_segment = 5;
   }
 
   message Restriction{
-    optional uint32 type = 1;
+    uint32 type = 1;
   }
 
   message Edge {
     repeated StreetName name = 1;           // street names
-    optional float length_km = 2;           // km
-    optional float speed = 3;               // km/h
-    optional RoadClass road_class = 4;
-    optional uint32 begin_heading = 5;      // 0-359
-    optional uint32 end_heading = 6;        // 0-359
-    optional uint32 begin_shape_index = 7;  // inclusive
-    optional uint32 end_shape_index = 8;    // inclusive
-    optional Traversability traversability = 9;
-    optional Use use = 10;
-    optional bool toll = 11;
-    optional bool unpaved = 12;
-    optional bool tunnel = 13;
-    optional bool bridge = 14;
-    optional bool roundabout = 15;
-    optional bool internal_intersection = 16;
-    optional bool drive_on_right = 17 [default = true];
-    optional Surface surface = 18;
-    optional TripSign sign = 19;
-    optional TravelMode travel_mode = 20;
-    optional VehicleType vehicle_type = 21;
-    optional PedestrianType pedestrian_type = 22;
-    optional BicycleType bicycle_type = 23;
-    optional TransitType transit_type = 24;
-    optional TransitRouteInfo transit_route_info = 25;
-    optional uint64 id = 26;
-    optional uint64 way_id = 27;
-    optional float weighted_grade = 28;
-    optional int32 max_upward_grade = 29;
-    optional int32 max_downward_grade = 30;
-    optional uint32 lane_count = 31;
-    optional CycleLane cycle_lane = 32;
-    optional uint32 bicycle_network = 33;
-    optional Sidewalk sidewalk = 34;
-    optional uint32 density = 35;
-    optional uint32 speed_limit = 36;
-    optional float truck_speed = 37;         // km/h
-    optional bool truck_route = 38;
+    float length_km = 2;           // km
+    float speed = 3;               // km/h
+    RoadClass road_class = 4;
+    uint32 begin_heading = 5;      // 0-359
+    uint32 end_heading = 6;        // 0-359
+    uint32 begin_shape_index = 7;  // inclusive
+    uint32 end_shape_index = 8;    // inclusive
+    Traversability traversability = 9;
+    Use use = 10;
+    bool toll = 11;
+    bool unpaved = 12;
+    bool tunnel = 13;
+    bool bridge = 14;
+    bool roundabout = 15;
+    bool internal_intersection = 16;
+    bool drive_on_left = 17;      // [default = false]
+    Surface surface = 18;
+    TripSign sign = 19;
+    TravelMode travel_mode = 20;
+    VehicleType vehicle_type = 21;
+    PedestrianType pedestrian_type = 22;
+    BicycleType bicycle_type = 23;
+    TransitType transit_type = 24;
+    TransitRouteInfo transit_route_info = 25;
+    uint64 id = 26;
+    uint64 way_id = 27;
+    float weighted_grade = 28;
+    int32 max_upward_grade = 29;    // set to 32768 if no elevation data
+    int32 max_downward_grade = 30;  // set to 32768 if no elevation data
+    uint32 lane_count = 31;
+    CycleLane cycle_lane = 32;
+    bool bicycle_network = 33;      // true if the edge is part of a bike network
+    Sidewalk sidewalk = 34;
+    uint32 density = 35;
+    uint32 speed_limit = 36;        // 0 if unavailable, 255 if unlimited
+    float truck_speed = 37;         // km/h, 0 if unavailable
+    bool truck_route = 38;
     repeated LaneConnectivity lane_connectivity = 39;
-    optional int32 mean_elevation = 40;
+    int32 mean_elevation = 40;        // set to 32768 if no elevation data
     repeated TrafficSegment traffic_segment = 41;
     repeated TurnLane turn_lanes = 42;
-    optional bool has_time_restrictions = 43;
-    optional float default_speed = 44;       // km/h
-    optional Restriction restriction = 45;
-    optional bool destination_only = 46;
-    optional bool is_urban = 47; // uses edge density to decide if edge is in an urban area
+    bool has_time_restrictions = 43;
+    float default_speed = 44;       // km/h
+    Restriction restriction = 45;
+    bool destination_only = 46;
+    bool is_urban = 47; // uses edge density to decide if edge is in an urban area
     repeated TaggedValue tagged_value = 48;
 
     // for the part of the edge that is used in the path we must know where
     // it starts and ends along the length of the edge as a percentage
-    optional float source_along_edge = 49;
-    optional float target_along_edge = 50;
-
-    optional SacScale sac_scale = 51;
-    optional bool shoulder = 52;
+    float source_along_edge = 49;
+    float target_along_edge = 50;
+    SacScale sac_scale = 51;
+    bool shoulder = 52;
+    bool indoor = 53;
   }
 
   message IntersectingEdge {
-    optional uint32 begin_heading = 1;       // 0-359
-    optional bool prev_name_consistency = 2;
-    optional bool curr_name_consistency = 3;
-    optional Traversability driveability = 4;
-    optional Traversability cyclability = 5;
-    optional Traversability walkability = 6;
-    optional Use use = 7;
-    optional RoadClass road_class = 8;
-    optional uint32 lane_count = 9;
-    optional TripSign sign = 10;
+    uint32 begin_heading = 1;       // 0-359
+    bool prev_name_consistency = 2;
+    bool curr_name_consistency = 3;
+    Traversability driveability = 4;
+    Traversability cyclability = 5;
+    Traversability walkability = 6;
+    Use use = 7;
+    RoadClass road_class = 8;
+    uint32 lane_count = 9;
+    TripSign sign = 10;
   }
 
   message Cost {
-    optional double seconds = 1;
-    optional double cost = 2;
+    double seconds = 1;
+    double cost = 2;
   }
 
   message PathCost {
-    optional Cost elapsed_cost = 1;
-    optional Cost transition_cost = 2;
+    Cost elapsed_cost = 1;
+    Cost transition_cost = 2;
   }
 
   message Node {
     enum Type {
-      kStreetIntersection = 0;      // Regular intersection of 2 roads
+      kStreetIntersection = 0;      // Regular intersection of 2+ roads
       kGate = 1;                    // Gate or rising bollard
       kBollard = 2;                 // Bollard (fixed obstruction)
       kTollBooth = 3;               // Toll booth / fare collection
@@ -279,27 +217,28 @@ message TripLeg {
       kBorderControl = 10;          // Border control
       kTollGantry = 11;             // Toll gantry
       kSumpBuster = 12;             // Sump Buster
+      kBuildingEntrance = 13;       // Building Entrance
+      kElevator = 14;               // Elevator
     }
-
-    optional Edge edge = 1;
+    Edge edge = 1;
     repeated IntersectingEdge intersecting_edge = 2;
-    optional uint32 admin_index = 3;         // index into the admin list
-    optional Type type = 4;                  // The type of node
-    optional bool fork = 5;                  // Fork
-    optional TransitPlatformInfo transit_platform_info = 6;
-    optional TransitStationInfo transit_station_info = 7;
-    optional TransitEgressInfo transit_egress_info = 10;
-    optional string time_zone = 11;
-    optional PathCost cost = 12;             // how much cost did it take at this node in the path
-    repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for optional recostings
-    optional BikeShareStationInfo bss_info = 14;
+    uint32 admin_index = 3;         // index into the admin list, 0 if unknown
+    Type type = 4;                  // The type of node
+    bool fork = 5;                  // Fork
+    TransitPlatformInfo transit_platform_info = 6;
+    TransitStationInfo transit_station_info = 7;
+    TransitEgressInfo transit_egress_info = 10;
+    string time_zone = 11;
+    PathCost cost = 12;             // how much cost did it take at this node in the path
+    repeated PathCost recosts = 13;          // how much cost did it take at this node in the path for recostings
+    BikeShareStationInfo bss_info = 14;
  }
 
   message Admin {
-    optional string country_code = 1;
-    optional string country_text = 2;
-    optional string state_code = 3;
-    optional string state_text = 4;
+    string country_code = 1;
+    string country_text = 2;
+    string state_code = 3;
+    string state_text = 4;
   }
 
   message ShapeAttributes {
@@ -313,27 +252,31 @@ message TripLeg {
   // we encapsulate the real incident object here so we can add information
   // about where it is along the route, ie once its referenced to the route
   message Incident {
-    optional valhalla.IncidentsTile.Metadata metadata = 1;
+    valhalla.IncidentsTile.Metadata metadata = 1;
     // Valhalla additions to incident metadata goes here
-    optional uint32 begin_shape_index = 3;
-    optional uint32 end_shape_index = 4;
+    uint32 begin_shape_index = 3;
+    uint32 end_shape_index = 4;
   };
 
   message Closure {
-    optional uint32 begin_shape_index = 1;
-    optional uint32 end_shape_index = 2;
+    oneof has_begin_shape_index {
+      uint32 begin_shape_index = 1;
+    }
+    oneof has_end_shape_index {
+      uint32 end_shape_index = 2;
+    }
   };
 
-  optional uint64 osm_changeset = 1;
-  optional uint64 trip_id = 2;
-  optional uint32 leg_id = 3;
-  optional uint32 leg_count = 4;
+  uint64 osm_changeset = 1;
+  uint64 trip_id = 2;
+  uint32 leg_id = 3;
+  uint32 leg_count = 4;
   repeated Location location = 5;
   repeated Node node = 6;
   repeated Admin admin = 7;
-  optional string shape = 8;
-  optional BoundingBox bbox = 9;
-  optional ShapeAttributes shape_attributes = 10;
+  string shape = 8;
+  BoundingBox bbox = 9;
+  ShapeAttributes shape_attributes = 10;
   repeated Incident incidents = 11;
   repeated string algorithms = 12;
   repeated Closure closures = 13;

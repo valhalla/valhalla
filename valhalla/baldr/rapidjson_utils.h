@@ -135,6 +135,15 @@ template <typename V> inline const rapidjson::Value& get_child(const V& v, const
   return *ptr;
 }
 
+template <typename V>
+inline const rapidjson::Value& get_child(const V& v, const char* source, const rapidjson::Value& t) {
+  const rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(v);
+  if (!ptr) {
+    return t;
+  }
+  return *ptr;
+}
+
 template <typename V> inline rapidjson::Value& get_child(V&& v, const char* source) {
   rapidjson::Value* ptr = rapidjson::Pointer{source}.Get(std::forward<V>(v));
   if (!ptr) {

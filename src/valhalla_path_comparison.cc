@@ -1,8 +1,8 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/optional.hpp>
-#include <boost/program_options.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
+#include <cxxopts.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -30,8 +30,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 using namespace valhalla::thor;
 using namespace valhalla::midgard;
-
-namespace bpo = boost::program_options;
 
 void print_edge(GraphReader& reader,
                 const cost_ptr_t& costing,
@@ -61,8 +59,8 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<TravelMode>(0), 0, {},
-                         kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<sif::TravelMode>(0), 0,
+                         {}, kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -156,58 +154,67 @@ void walk_edges(const std::string& shape,
   std::cout << "\n\n";
 }
 
+// args
+std::string routetype, config;
+std::string json_str = "";
+std::string shape = "";
+
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  bpo::options_description options(
-      "valhalla_path_comparison " VALHALLA_VERSION "\n"
-      "\n"
-      " Usage: valhalla_path_comparison [options]\n"
-      "\n"
-      "valhalla_path_comparison is a simple command line dev tool for comparing the cost between "
-      "two routes. "
-      "\n"
-      "Use the -j option for specifying the locations or the -s option to enter an encoded shape."
-      "\n"
-      "\n");
-
-  std::string routetype, json, shape, config;
-
-  options.add_options()("help,h", "Print this help message.")("version,v",
-                                                              "Print the version of this software.")(
-      "type,t", boost::program_options::value<std::string>(&routetype),
-      "Route Type: auto|bicycle|pedestrian|auto-shorter")("shape,s",
-                                                          boost::program_options::value<std::string>(
-                                                              &shape),
-                                                          "")(
-      "json,j", boost::program_options::value<std::string>(&json),
-      R"(JSON Example: {"paths":[[{"lat":12.47,"lon":15.2},{"lat":12.46,"lon":15.21}],[{"lat":12.36,"lon":15.17},{"lat":12.37,"lon":15.18}]],"costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})")
-      // positional arguments
-      ("config", bpo::value<std::string>(&config), "Valhalla configuration file");
-
-  bpo::positional_options_description pos_options;
-  pos_options.add("config", 1);
-
-  bpo::variables_map vm;
-
   try {
-    bpo::store(bpo::command_line_parser(argc, argv).options(options).positional(pos_options).run(),
-               vm);
-    bpo::notify(vm);
+    // clang-format off
+    cxxopts::Options options(
+      "valhalla_path_comparison",
+      "valhalla_path_comparison " VALHALLA_VERSION "\n\n"
+      "valhalla_path_comparison is a simple command line dev tool for comparing the cost between "
+      "two routes.\n"
+      "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");
 
-  } catch (std::exception& e) {
-    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
-              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    options.add_options()
+      ("h,help", "Print this help message.")
+      ("v,version", "Print the version of this software.")
+      ("t,type", "Route Type: auto|bicycle|pedestrian|truck etc. Default auto.", cxxopts::value<std::string>()->default_value("auto"))
+      ("s,shape", "", cxxopts::value<std::string>())
+      ("j,json", R"(JSON Example: {"paths":"
+        "[[{"lat":12.47,"lon":15.2},{"lat":12.46,"lon":15.21}],[{"lat":12.36,"lon":15.17},{"lat":12.37,"lon":15.18}]],"
+        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>())
+      ("config", "positional argument", cxxopts::value<std::string>());
+    // clang-format on
+
+    options.parse_positional({"config"});
+    options.positional_help("Config file path");
+    auto result = options.parse(argc, argv);
+
+    if (result.count("help")) {
+      std::cout << options.help() << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("version")) {
+      std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
+      return EXIT_SUCCESS;
+    }
+
+    if (result.count("config") &&
+        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
+      config = result["config"].as<std::string>();
+    } else {
+      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
+      return EXIT_FAILURE;
+    }
+
+    if (result.count("json")) {
+      json_str = result["json"].as<std::string>();
+    } else if (result.count("shape")) {
+      shape = result["shape"].as<std::string>();
+    } else {
+      std::cerr << "The json parameter or shape parameter was not supplied but is required.\n\n"
+                << options.help() << std::endl;
+      return EXIT_FAILURE;
+    }
+  } catch (const cxxopts::OptionException& e) {
+    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
     return EXIT_FAILURE;
-  }
-
-  if (vm.count("help")) {
-    std::cout << options << "\n";
-    return EXIT_SUCCESS;
-  }
-
-  if (vm.count("version")) {
-    std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
-    return EXIT_SUCCESS;
   }
 
   // Path Traces
@@ -219,9 +226,9 @@ int main(int argc, char* argv[]) {
   ////////////////////////////////////////////////////////////////////////////
   // Process json input
   bool map_match = true;
-  if (vm.count("json")) {
-    ParseApi(json, valhalla::Options::trace_route, request);
-    std::stringstream stream(json);
+  if (!json_str.empty()) {
+    ParseApi(json_str, valhalla::Options::trace_route, request);
+    std::stringstream stream(json_str);
     rapidjson::read_json(stream, json_ptree);
     try {
       for (const auto& path : json_ptree.get_child("paths")) {
@@ -243,16 +250,11 @@ int main(int argc, char* argv[]) {
 
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
-          loc.city_ = pt.get<std::string>("city", "");
-          loc.state_ = pt.get<std::string>("state", "");
-          loc.zip_ = pt.get<std::string>("postal_code", "");
-          loc.country_ = pt.get<std::string>("country", "");
 
           loc.date_time_ = pt.get_optional<std::string>("date_time");
           loc.heading_ = pt.get_optional<float>("heading");
           loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
-          loc.way_id_ = pt.get_optional<long double>("way_id");
 
           loc.min_outbound_reach_ = loc.min_inbound_reach_ =
               pt.get<unsigned int>("minimum_reachability", 50);
@@ -265,12 +267,8 @@ int main(int argc, char* argv[]) {
     try {
       routetype = json_ptree.get<std::string>("costing");
     } catch (...) { throw std::runtime_error("No edge/node costing provided"); }
-  } else if (vm.count("shape")) {
+  } else if (!shape.empty()) {
     map_match = false;
-  } else {
-    std::cerr << "The json parameter or shape parameter was not supplied but is required.\n\n"
-              << options << std::endl;
-    return EXIT_FAILURE;
   }
 
   // parse the config
@@ -282,13 +280,13 @@ int main(int argc, char* argv[]) {
 
   if (!map_match) {
     rapidjson::Document doc;
-    sif::ParseCostingOptions(doc, "/costing_options", *request.mutable_options());
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
   }
 
   // Construct costing
-  valhalla::Costing costing;
+  valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
-    request.mutable_options()->set_costing(costing);
+    request.mutable_options()->set_costing_type(costing);
   } else {
     throw std::runtime_error("No costing method found");
   }

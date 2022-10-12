@@ -4,8 +4,8 @@
 #include <list>
 #include <string>
 
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/proto/trip.pb.h>
-#include <valhalla/proto/tripcommon.pb.h>
 
 namespace valhalla {
 namespace odin {

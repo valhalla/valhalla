@@ -55,6 +55,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
@@ -62,7 +63,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   auto osmdata =
       PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                 {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
-                                ways_file, way_nodes_file, access_file);
+                                ways_file, way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
@@ -220,13 +221,14 @@ void RemovableBollards(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
@@ -262,13 +264,15 @@ void Exits(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                           {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
-                                           ways_file, way_nodes_file, access_file);
+  auto osmdata =
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"}, ways_file,
+                                way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
@@ -312,13 +316,15 @@ void Baltimore(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
-  auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
-                                           {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"},
-                                           ways_file, way_nodes_file, access_file);
+  auto osmdata =
+      PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
+                                {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"}, ways_file,
+                                way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"},
@@ -438,13 +444,14 @@ void Bike(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"},
@@ -533,13 +540,14 @@ void Bus(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"}, from_restriction_file,
@@ -614,13 +622,14 @@ void BicycleTrafficSignals(const std::string& config_file) {
   std::string ways_file = "test_ways.bin";
   std::string way_nodes_file = "test_way_nodes.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"}, from_restriction_file,
@@ -717,13 +726,14 @@ TEST(GraphParser, TestImportBssNode) {
   std::string nodes_file = "test_nodes.bin";
   std::string edges_file = "test_edges.bin";
   std::string access_file = "test_access.bin";
+  std::string pronunciation_file = "test_pronunciation.bin";
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
-                                           way_nodes_file, access_file);
+                                           way_nodes_file, access_file, pronunciation_file);
 
   PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                  {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"},
@@ -740,9 +750,9 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, pronunciation_file, tiles);
 
-  BssBuilder::Build(conf, bss_nodes_file);
+  BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
   auto local_level = TileHierarchy::levels().back().level;
 
@@ -755,8 +765,8 @@ TEST(GraphParser, TestImportBssNode) {
   EXPECT_EQ(local_tile->node(count - 1)->edge_count(), 4)
       << "The bike share node must have 4 outbound edges";
 
-  auto check_edge_attribute = [](const DirectedEdge* directededge, uint16_t forwardaccess,
-                                 uint16_t reverseaccess) {
+  auto check_edge_attribute = [&local_tile](const DirectedEdge* directededge, uint16_t forwardaccess,
+                                            uint16_t reverseaccess) {
     EXPECT_TRUE(directededge->bss_connection())
         << "The bike share node's edges is not a bss connection";
     EXPECT_TRUE(directededge->forwardaccess() & forwardaccess)
@@ -770,6 +780,19 @@ TEST(GraphParser, TestImportBssNode) {
     EXPECT_EQ(directededge->classification(), RoadClass::kResidential)
         << "The edges' road calss is incorrect";
     EXPECT_EQ(directededge->use(), Use::kRoad) << "The edges' use is incorrect";
+
+    EdgeInfo edgeinfo = local_tile->edgeinfo(directededge);
+    auto taggedValue = edgeinfo.GetTags();
+
+    auto search = taggedValue.equal_range(valhalla::baldr::TaggedValue::kBssInfo);
+    ASSERT_NE(search.first, search.second) << "BSS Tag TaggedValue::kBssInfo not found in EdgeInfo";
+    valhalla::BikeShareStationInfo bss_station_info;
+    bss_station_info.ParseFromString(search.first->second);
+
+    ASSERT_EQ(bss_station_info.ref(), "2");
+    ASSERT_EQ(bss_station_info.network(), "Atac Bikesharing");
+    ASSERT_EQ(bss_station_info.capacity(), 13);
+    ASSERT_EQ(bss_station_info.operator_(), "ATAC");
   };
 
   auto bss_edge_idx = local_tile->node(count - 1)->edge_index();

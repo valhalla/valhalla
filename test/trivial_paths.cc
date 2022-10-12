@@ -40,10 +40,11 @@ void adjust_scores(Options& options) {
     for (auto& location : *locations) {
       // get the minimum score for all the candidates
       auto minScore = std::numeric_limits<float>::max();
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           // completely disable scores for this location
-          if (location.has_rank_candidates() && !location.rank_candidates())
+          if (location.skip_ranking_candidates())
             candidate.set_distance(0);
           // scale the score to favor closer results more
           else
@@ -55,8 +56,9 @@ void adjust_scores(Options& options) {
       }
 
       // subtract off the min score and cap at max so that path algorithm doesnt go too far
-      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing()));
-      for (auto* candidates : {location.mutable_path_edges(), location.mutable_filtered_edges()}) {
+      auto max_score = kMaxDistances.find(Costing_Enum_Name(options.costing_type()));
+      for (auto* candidates : {location.mutable_correlation()->mutable_edges(),
+                               location.mutable_correlation()->mutable_filtered_edges()}) {
         for (auto& candidate : *candidates) {
           candidate.set_distance(candidate.distance() - minScore);
           if (candidate.distance() > max_score->second)
@@ -79,8 +81,8 @@ void try_path(GraphReader& reader,
   adjust_scores(*request.mutable_options());
 
   // For now this just tests auto costing - could extend to other
-  request.mutable_options()->set_costing(Costing::auto_);
-  TravelMode mode;
+  request.mutable_options()->set_costing_type(Costing::auto_);
+  sif::TravelMode mode;
   auto mode_costing = sif::CostFactory{}.CreateModeCosting(*request.mutable_options(), mode);
   cost_ptr_t costing = mode_costing[static_cast<size_t>(mode)];
 

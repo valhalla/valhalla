@@ -110,12 +110,12 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   // add edge info for node 0 to node 1
   bool added = false;
   test.AddEdgeInfo(0, GraphId(0, 2, 0), GraphId(0, 2, 1), 1234, 555, 0, 120,
-                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{0, 0}, {1, 1}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should be exactly two of these in here";
 
   // add edge info for node 1 to node 0
   test.AddEdgeInfo(0, GraphId(0, 2, 1), GraphId(0, 2, 0), 1234, 555, 0, 120,
-                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, 0, added);
+                   std::list<PointLL>{{1, 1}, {0, 0}}, {"einzelweg"}, {"1xyz tunnel"}, {}, 0, added);
   EXPECT_EQ(test.edge_offset_map_.size(), 1) << "There should still be exactly two of these in here";
 
   test.StoreTileData();
@@ -136,25 +136,27 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_EQ(n3.size(), 1);
   EXPECT_EQ(n3.at(0), "1xyz tunnel"); // we always return the tag type in getnames
 
-  auto names_and_types = ei.GetNamesAndTypes(true);
-  EXPECT_EQ(names_and_types.size(), 2);
+  std::vector<uint8_t> types;
+  auto names_and_types = ei.GetNamesAndTypes(types, false);
+  EXPECT_EQ(names_and_types.size(), 1);
+  EXPECT_EQ(types.size(), 1);
 
   auto n4 = names_and_types.at(0);
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  auto n5 = names_and_types.at(1);
-  EXPECT_EQ(n5.first, "xyz tunnel"); // no tag type in GetNamesAndTypes
-  EXPECT_EQ(n5.second, false);
+  auto t = types.at(0);
+  EXPECT_EQ(t, false);
 
-  names_and_types = ei.GetNamesAndTypes(false);
-  EXPECT_EQ(names_and_types.size(), 1);
+  const auto& names_and_types_tagged = ei.GetTags();
+  EXPECT_EQ(names_and_types_tagged.size(), 1);
 
   n4 = names_and_types.at(0);
   EXPECT_EQ(n4.first, "einzelweg");
   EXPECT_EQ(n4.second, false);
 
-  names_and_types = ei.GetNamesAndTypes(); // defaults to false
+  types.clear();
+  names_and_types = ei.GetNamesAndTypes(types); // defaults to false
   EXPECT_EQ(names_and_types.size(), 1);
 
   n4 = names_and_types.at(0);

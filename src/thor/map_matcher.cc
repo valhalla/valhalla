@@ -42,7 +42,7 @@ init_time_info(const std::vector<valhalla::meili::EdgeSegment>& edge_segments,
       if (!tz)
         continue;
       // if its timestamp based we need to convert that to a date time string on the location
-      if (!options.shape(0).has_date_time() && options.shape(0).time() != -1.0) {
+      if (options.shape(0).date_time().empty() && options.shape(0).time() != -1.0) {
         options.mutable_shape(0)->set_date_time(
             DateTime::seconds_to_date(options.shape(0).time(), tz, false));
       }
@@ -254,7 +254,7 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
 
     uint8_t flow_sources;
     // Get time along the edge, handling partial distance along the first and last edge.
-    elapsed += costing->EdgeCost(directededge, tile, offset_time_info.second_of_week, flow_sources) *
+    elapsed += costing->EdgeCost(directededge, tile, offset_time_info, flow_sources) *
                (edge_segment.target - edge_segment.source);
 
     // Use timestamps to update elapsed time. Use the timestamp at the interpolation

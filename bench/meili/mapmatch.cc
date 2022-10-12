@@ -46,8 +46,8 @@ private:
   void InitEngineConfig() {
     rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config_);
     const rapidjson::Document doc;
-    valhalla::sif::ParseCostingOptions(doc, "/costing_options", options_);
-    options_.set_costing(valhalla::Costing::auto_);
+    valhalla::sif::ParseCosting(doc, "/costing_options", options_);
+    options_.set_costing_type(valhalla::Costing::auto_);
   }
 
   void InitMapMatcher() {

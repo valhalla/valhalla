@@ -36,7 +36,7 @@ public:
     valhalla_exception_t e(code);
     if (!e.statsd_key.empty()) {
       Api request;
-      jsonify_error(e, request);
+      serialize_error(e, request);
       service_worker_t::enqueue_statistics(request);
       service_worker_t::cleanup();
     }

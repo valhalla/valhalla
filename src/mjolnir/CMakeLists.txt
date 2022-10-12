@@ -26,11 +26,13 @@ set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   adminbuilder.cc
   complexrestrictionbuilder.cc
+  convert_transit.cc
   countryaccess.cc
   directededgebuilder.cc
   edgeinfobuilder.cc
   ferry_connections.cc
   graphfilter.cc
+  ingest_transit.cc
   linkclassification.cc
   node_expander.cc
   osmdata.cc
@@ -83,11 +85,13 @@ valhalla_module(NAME mjolnir
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
+      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   DEPENDS
     valhalla::proto
     valhalla::baldr
     SpatiaLite::SpatiaLite
     SQLite3::SQLite3
+    Boost::boost
     Lua::Lua
     Threads::Threads
     ZLIB::ZLIB

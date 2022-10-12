@@ -28,7 +28,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
 
   // resample the shape
   bool resampled = false;
-  if (options.has_resample_distance()) {
+  if (options.has_resample_distance_case()) {
     if (options.resample_distance() < min_resample) {
       throw valhalla_exception_t{313, " " + std::to_string(min_resample) + " meters"};
     };
@@ -43,7 +43,7 @@ std::vector<PointLL> loki_worker_t::init_height(Api& request) {
         from_ll(options.mutable_shape()->Add(), p);
       }
       // re-encode it for display if they sent it encoded
-      if (options.has_encoded_polyline()) {
+      if (options.has_encoded_polyline_case()) {
         // Default to 6 digit precision unless polyline5 is specified
         // NOTE: geojson is NOT support yet for height action
         int precision = options.shape_format() == polyline5 ? 1e5 : 1e6;

@@ -37,8 +37,11 @@ jobs:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: 'f4bd6423'
+      VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      VCPKG_REF: '2022.08.15'
       TRIPLET: 'x64'
+      CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
     steps:
       - script: |
@@ -52,16 +55,24 @@ jobs:
           key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
-      
+
       - task: Cache@2
-        displayName: "Cache build"
+        displayName: "Cache conan packages"
         inputs:
-          key: '"msvc-v16.10.0" | build | "$(Build.SourceBranch)"'
-          path: "$(BUILD_DIR)"
-          restoreKeys: |
-            "msvc-v16.10.0" | build | "$(Build.SourceBranch)"
-            "msvc-v16.10.0" | build
+          key: '"msvc-v16.10.0" | conan | .\conanfile.txt | "$(Build.SourceBranch)" | "v2"'
+          path: "$(CONAN_HOME)"
           cacheHitVar: BUILD_CACHE_RESTORED
+      
+      # TODO: cache build never worked, look into it
+      # - task: Cache@2
+      #   displayName: "Cache build"
+      #   inputs:
+      #     key: '"msvc-v16.10.0" | build | "$(Build.SourceBranch)"'
+      #     path: "$(BUILD_DIR)"
+      #     restoreKeys: |
+      #       "msvc-v16.10.0" | build | "$(Build.SourceBranch)"
+      #       "msvc-v16.10.0" | build
+      #     cacheHitVar: BUILD_CACHE_RESTORED
 
       - task: UsePythonVersion@0
         inputs:
@@ -98,9 +109,13 @@ jobs:
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
       - powershell: |
-          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
+          wget https://github.com/ninja-build/ninja/releases/download/v1.11.0/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
           Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
         displayName: 'Download Ninja'
+
+      - script: |
+          pip install conan
+        displayName: Install conan
 
       - script: |
           SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
@@ -110,6 +125,8 @@ jobs:
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
           cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
+        env:
+          CONAN_USER_HOME: $(CONAN_HOME)
         displayName: 'Run CMake to configure build'
 
       - script: |

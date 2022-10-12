@@ -34,6 +34,8 @@ constexpr float kDefaultUseHighways = 0.5f; // Default preference of using a mot
 constexpr float kDefaultUseTolls = 0.5f;    // Default preference of using toll roads 0-1
 constexpr float kDefaultUseTracks = 0.f;    // Default preference of using tracks 0-1
 constexpr float kDefaultUseDistance = 0.f;  // Default preference of using distance vs time 0-1
+constexpr uint32_t kDefaultRestrictionProbability = 100; // Default percentage of allowing probable
+                                                         // restrictions 0% means do not include them
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -66,6 +68,7 @@ constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
+const std::string kDefaultAutoType = "car";
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
@@ -76,6 +79,7 @@ constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseDistanceRange{0, kDefaultUseDistance, 1.0f};
 constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f};
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
+constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 
 // Maximum highway avoidance bias (modulates the highway factors based on road class)
 constexpr float kMaxHighwayBiasFactor = 8.0f;
@@ -134,7 +138,7 @@ public:
    * Construct auto costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  AutoCost(const CostingOptions& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
+  AutoCost(const Costing& costing_options, uint32_t access_mask = (kAutoAccess | kHOVAccess));
 
   virtual ~AutoCost() {
   }
@@ -221,14 +225,14 @@ public:
   /**
    * Get the cost to traverse the specified directed edge. Cost includes
    * the time (seconds) to traverse the edge.
-   * @param   edge    Pointer to a directed edge.
-   * @param   tile    Graph tile.
-   * @param   seconds Time of week in seconds.
+   * @param   edge       Pointer to a directed edge.
+   * @param   tile       Graph tile.
+   * @param   time_info  Time info about edge passing.
    * @return  Returns the cost and time (seconds)
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override;
 
   /**
@@ -342,10 +346,11 @@ public:
 };
 
 // Constructor
-AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
-    : DynamicCost(costing_options, TravelMode::kDrive, access_mask, true),
+AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
+    : DynamicCost(costing, TravelMode::kDrive, access_mask, true),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
+  const auto& costing_options = costing.options();
 
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
@@ -366,7 +371,7 @@ AutoCost::AutoCost(const CostingOptions& costing_options, uint32_t access_mask)
   }
 
   // Get the base transition costs
-  get_base_costs(costing_options);
+  get_base_costs(costing);
 
   // Get alley factor from costing options.
   alley_factor_ = costing_options.alley_factor();
@@ -487,10 +492,11 @@ bool AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) 
 // Get the cost to traverse the edge in seconds
 Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                                   time_info.seconds_from_now);
   auto final_speed = std::min(edge_speed, top_speed_);
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -512,10 +518,9 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
       break;
   }
 
-  // TODO: speed_penality hasn't been extensively tested, might alter this in future
-  float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
   factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] + speed_penalty +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
             edge->toll() * toll_factor_;
 
   switch (edge->use()) {
@@ -682,74 +687,30 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseAutoCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* pbf_costing_options) {
-  pbf_costing_options->set_costing(Costing::auto_);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
-  auto json_costing_options = rapidjson::get_child_optional(doc, costing_options_key.c_str());
+                          Costing* c) {
+  c->set_type(Costing::auto_);
+  c->set_name(Costing_Enum_Name(c->type()));
+  auto* co = c->mutable_options();
 
-  if (json_costing_options) {
-    ParseSharedCostOptions(*json_costing_options, pbf_costing_options);
-    ParseBaseCostOptions(*json_costing_options, pbf_costing_options, kBaseCostOptsConfig);
+  rapidjson::Value dummy;
+  const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-    // If specified, parse json and set pbf values
-
-    // type (transport_type)
-    pbf_costing_options->set_transport_type(
-        rapidjson::get_optional<std::string>(*json_costing_options, "/type").get_value_or("car"));
-
-    // alley_factor
-    pbf_costing_options->set_alley_factor(
-        kAlleyFactorRange(rapidjson::get_optional<float>(*json_costing_options, "/alley_factor")
-                              .get_value_or(kDefaultAlleyFactor)));
-
-    // use_highways
-    pbf_costing_options->set_use_highways(
-        kUseHighwaysRange(rapidjson::get_optional<float>(*json_costing_options, "/use_highways")
-                              .get_value_or(kDefaultUseHighways)));
-
-    // use_tolls
-    pbf_costing_options->set_use_tolls(
-        kUseTollsRange(rapidjson::get_optional<float>(*json_costing_options, "/use_tolls")
-                           .get_value_or(kDefaultUseTolls)));
-
-    // use distance
-    pbf_costing_options->set_use_distance(
-        kUseDistanceRange(rapidjson::get_optional<float>(*json_costing_options, "/use_distance")
-                              .get_value_or(kDefaultUseDistance)));
-
-    // height
-    pbf_costing_options->set_height(
-        kAutoHeightRange(rapidjson::get_optional<float>(*json_costing_options, "/height")
-                             .get_value_or(kDefaultAutoHeight)));
-
-    // width
-    pbf_costing_options->set_width(
-        kAutoWidthRange(rapidjson::get_optional<float>(*json_costing_options, "/width")
-                            .get_value_or(kDefaultAutoWidth)));
-
-    // HOT/HOV-use
-    pbf_costing_options->set_include_hot(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hot").get_value_or(false));
-    pbf_costing_options->set_include_hov2(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov2").get_value_or(false));
-    pbf_costing_options->set_include_hov3(
-        rapidjson::get_optional<bool>(*json_costing_options, "/include_hov3").get_value_or(false));
-  } else {
-    SetDefaultBaseCostOptions(pbf_costing_options, kBaseCostOptsConfig);
-    // Set pbf values to defaults
-    pbf_costing_options->set_transport_type("car");
-    pbf_costing_options->set_alley_factor(kDefaultAlleyFactor);
-    pbf_costing_options->set_use_highways(kDefaultUseHighways);
-    pbf_costing_options->set_use_tolls(kDefaultUseTolls);
-    pbf_costing_options->set_flow_mask(kDefaultFlowMask);
-    pbf_costing_options->set_top_speed(kMaxAssumedSpeed);
-    pbf_costing_options->set_use_distance(kDefaultUseDistance);
-    pbf_costing_options->set_height(kDefaultAutoHeight);
-    pbf_costing_options->set_width(kDefaultAutoWidth);
-  }
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
+  JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
+  JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseDistanceRange, json, "/use_distance", use_distance);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoHeightRange, json, "/height", height);
+  JSON_PBF_RANGED_DEFAULT(co, kAutoWidthRange, json, "/width", width);
+  JSON_PBF_RANGED_DEFAULT(co, kProbabilityRange, json, "/restriction_probability",
+                          restriction_probability);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hot", include_hot);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hov2", include_hov2);
+  JSON_PBF_DEFAULT(co, false, json, "/include_hov3", include_hov3);
 }
 
-cost_ptr_t CreateAutoCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateAutoCost(const Costing& costing_options) {
   return std::make_shared<AutoCost>(costing_options);
 }
 
@@ -763,7 +724,7 @@ public:
    * Pass in configuration using property tree.
    * @param  pt  Property tree with configuration/options.
    */
-  BusCost(const CostingOptions& costing_options) : AutoCost(costing_options, kBusAccess) {
+  BusCost(const Costing& costing_options) : AutoCost(costing_options, kBusAccess) {
     type_ = VehicleType::kBus;
   }
 
@@ -875,13 +836,13 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
                          const std::string& costing_options_key,
-                         CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::bus);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+                         Costing* c) {
+  ParseAutoCostOptions(doc, costing_options_key, c);
+  c->set_type(Costing::bus);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateBusCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateBusCost(const Costing& costing_options) {
   return std::make_shared<BusCost>(costing_options);
 }
 
@@ -896,7 +857,7 @@ public:
    * Pass in costing_options using protocol buffer(pbf).
    * @param  costing_options  pbf with costing_options.
    */
-  TaxiCost(const CostingOptions& costing_options) : AutoCost(costing_options, kTaxiAccess) {
+  TaxiCost(const Costing& costing_options) : AutoCost(costing_options, kTaxiAccess) {
   }
 
   virtual ~TaxiCost() {
@@ -958,14 +919,15 @@ public:
    * (in seconds) to traverse the edge.
    * @param  edge      Pointer to a directed edge.
    * @param  tile      Current tile.
-   * @param  seconds   Time of week in seconds.
+   * @param  time_info Time info about edge passing.
    * @return  Returns the cost to traverse the edge.
    */
   virtual Cost EdgeCost(const baldr::DirectedEdge* edge,
                         const graph_tile_ptr& tile,
-                        const uint32_t seconds,
+                        const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, seconds, false, &flow_sources);
+    auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
+                                     time_info.seconds_from_now);
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);
@@ -975,8 +937,7 @@ public:
     }
 
     float factor = (edge->use() == Use::kFerry) ? ferry_factor_ : density_factor_[edge->density()];
-    float speed_penalty = (edge_speed > top_speed_) ? (edge_speed - top_speed_) * 0.05f : 0.0f;
-    factor += speed_penalty;
+    factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
     if ((edge->forwardaccess() & kTaxiAccess) && !(edge->forwardaccess() & kAutoAccess)) {
       factor *= kTaxiFactor;
     }
@@ -1051,13 +1012,13 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,
                           const std::string& costing_options_key,
-                          CostingOptions* pbf_costing_options) {
-  ParseAutoCostOptions(doc, costing_options_key, pbf_costing_options);
-  pbf_costing_options->set_costing(Costing::taxi);
-  pbf_costing_options->set_name(Costing_Enum_Name(pbf_costing_options->costing()));
+                          Costing* c) {
+  ParseAutoCostOptions(doc, costing_options_key, c);
+  c->set_type(Costing::taxi);
+  c->set_name(Costing_Enum_Name(c->type()));
 }
 
-cost_ptr_t CreateTaxiCost(const CostingOptions& costing_options) {
+cost_ptr_t CreateTaxiCost(const Costing& costing_options) {
   return std::make_shared<TaxiCost>(costing_options);
 }
 
@@ -1075,7 +1036,7 @@ namespace {
 
 class TestAutoCost : public AutoCost {
 public:
-  TestAutoCost(const CostingOptions& costing_options) : AutoCost(costing_options){};
+  TestAutoCost(const Costing& costing_options) : AutoCost(costing_options){};
 
   using AutoCost::alley_penalty_;
   using AutoCost::country_crossing_cost_;
@@ -1099,8 +1060,7 @@ make_autocost_from_json(const std::string& property, T testVal, const std::strin
      << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
-  return std::make_shared<TestAutoCost>(
-      request.options().costing_options(static_cast<int>(Costing::auto_)));
+  return std::make_shared<TestAutoCost>(request.options().costings().find(Costing::auto_)->second);
 }
 
 std::uniform_real_distribution<float>

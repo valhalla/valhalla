@@ -38,6 +38,10 @@ There are several key features that we hope can differentiate the Valhalla proje
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
 - Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
 
+## Demo Server
+
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph on https://valhalla.openstreetmap.de with an [open-source web app](https://github.com/gis-ops/valhalla-app). The HTTP API is accessible on a slightly different subdomain, e.g. https://valhalla1.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+
 ## Platform Compatibility
 
 Valhalla is fully functional on many Linux and Mac OS distributions.
@@ -47,12 +51,6 @@ In Windows all functionality is not yet fully supported. Building the Valhalla l
 - `TOOLS`: utilities to query and benchmark various components
 - `DATA_TOOLS`: utilities to build input data and handle transit
 - `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
-
-Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
-- no/falsy time-dependent routing
-- no border-crossing penalties
-- driving side will be off in LHT countries
-- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
 
 ## Organization
 
@@ -77,38 +75,69 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-### [DEPRECATED] Get Valhalla from Personal Package Archive (PPA)
+### Docker
 
-NOTICE: Since we moved to cmake build systems we haven't updated our debian packaging scripts. Because of that the packages in the PPA are very very old. Once we get time to correct this we'll remove this notice but until then we recommend building from source or using docker.
+Checkout our `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags
 
-If you are running Ubuntu (trusty or xenial) Valhalla can be installed quickly and easily via PPA. Try the following:
+### Build Configuration
+
+Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
+
+Important build options include:
+
+| Option | Behavior |
+|--------|----------|
+| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
+| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
+| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
+| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
+| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
+| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
+| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
+| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
+| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
+| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
+
+For more build options run the interactive GUI or have a look at the root's [`CmakeLists.txt`](./CMakeLists.txt):
 
 ```bash
-# grab all of the valhalla software from ppa
-sudo add-apt-repository -y ppa:valhalla-core/valhalla
-sudo apt-get update
-sudo apt-get install -y valhalla-bin
+cd build
+cmake ..
+ccmake ..
+```
+
+If you're building on Apple Silicon and use the Rosetta terminal (see below), you might need to additionally specify the appropriate options:
+
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
 ```
 
 ### Building from Source - Linux
-
-Valhalla uses CMake as build system. When compiling with gcc (GNU Compiler Collection), version 5 or newer is supported.
 
 To install on a Debian or Ubuntu system you need to install its dependencies with:
 
 ```bash
 sudo add-apt-repository -y ppa:valhalla-core/valhalla
 sudo apt-get update
-sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libboost-all-dev libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
+sudo apt-get install -y cmake make libtool pkg-config g++ gcc curl unzip jq lcov protobuf-compiler vim-common locales libcurl4-openssl-dev zlib1g-dev liblz4-dev libprime-server-dev libprotobuf-dev prime-server-bin
 #if you plan to compile with data building support, see below for more info
-sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin
+sudo apt-get install -y libgeos-dev libgeos++-dev libluajit-5.1-dev libspatialite-dev libsqlite3-dev wget sqlite3 spatialite-bin python3-shapely
 source /etc/lsb-release
 if [[ $(python3 -c "print(int($DISTRIB_RELEASE > 15))") > 0 ]]; then sudo apt-get install -y libsqlite3-mod-spatialite; fi
 #if you plan to compile with python bindings, see below for more info
 sudo apt-get install -y python-all-dev
 ```
 
-### Building from Source - MacOS
+Now you can build and install Valhalla, e.g. 
+
+```bash
+# will build to ./build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+make -C build -j$(nproc)
+sudo make -C build install
+```
+
+### Building from Source - macOS
 
 #### Configuring Rosetta for ARM64 MacBook
 
@@ -131,13 +160,17 @@ echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
 
 You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
 
+**_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
+
+**_NOTE:_** It is possible to build Valhalla natively for Apple Silicon, but some dependencies(e.g. LuaJIT) don't have stable versions supporting Apple Silicon and have to be built and installed manually from source.
+
 #### Installing dependencies
 
 To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
-brew install automake cmake libtool protobuf-c boost-python libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
+brew install automake cmake libtool protobuf-c libspatialite pkg-config sqlite3 jq curl wget czmq lz4 spatialite-tools unzip luajit
 # following packages are needed for running Linux compatible scripts
 brew install bash coreutils binutils
 # Update your PATH env variable to include /usr/local/opt/binutils/bin:/usr/local/opt/coreutils/libexec/gnubin
@@ -151,46 +184,14 @@ git clone --recurse-submodules https://github.com/valhalla/valhalla.git
 
 Then, build [`prime_server`](https://github.com/kevinkreiser/prime_server#build-and-install).
 
-After getting the dependencies install it with:
+After getting the dependencies install it with e.g.:
 
 ```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc) # for macos, use: make -j$(sysctl -n hw.physicalcpu)
-sudo make install
+# will build to ./build
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+make -C build -j$(sysctl -n hw.physicalcpu)
+sudo make -C build install
 ```
-
-In `Rosetta Terminal` use these flags for cmake:
-
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
-```
-
-Important build options include:
-
-| Option | Behavior |
-|--------|----------|
-| `-DENABLE_DATA_TOOLS` (`On`/`Off`) | Build the data preprocessing tools|
-| `-DENABLE_PYTHON_BINDINGS` (`On`/`Off`) | Build the python bindings|
-| `-DENABLE_SERVICES` (`On` / `Off`) | Build the HTTP service|
-| `-DBUILD_SHARED_LIBS` (`On` / `Off`) | Build static or shared libraries|
-| `-DENABLE_COMPILER_WARNINGS` (`ON` / `OFF`) | Build with common compiler warnings (defaults to off)|
-| `-DENABLE_WERROR` (`ON` / `OFF`) | Treat compiler warnings as errors  (defaults to off). Requires `-DENABLE_COMPILER_WARNINGS=ON` to take effect.|
-| `-DENABLE_BENCHMARKS` (`ON` / `OFF`) | Enable microbenchmarking  (defaults to on).|
-| `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
-| `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
-| `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
-
-For more build options run the interactive GUI:
-
-```bash
-cd build
-cmake ..
-ccmake ..
-```
-
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 ### Building from Source - Windows
 
@@ -228,10 +229,15 @@ wget http://download.geofabrik.de/europe/switzerland-latest.osm.pbf http://downl
 #get the config and setup
 mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
+#build timezones.sqlite to support time-dependent routing
+valhalla_build_timezones > valhalla_tiles/timezones.sqlite
 #build routing tiles
 #TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 #tar it up for running the server
+#either run this to build a tile index for faster graph loading times
+valhalla_build_extract -c valhalla.json -v
+#or simply tar up the tiles
 find valhalla_tiles | sort -n | tar cf valhalla_tiles.tar --no-recursion -T -
 
 #grab the demos repo and open up the point and click routing sample
@@ -246,6 +252,8 @@ curl http://localhost:8002/route --data '{"locations":[{"lat":47.365109,"lon":8.
 
 #HAVE FUN!
 ```
+
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
 
 ## Contributing
 

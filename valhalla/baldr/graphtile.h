@@ -348,6 +348,7 @@ public:
   /**
    * Convenience method to get the names for an edge
    * @param  edge  Directed edge
+   *
    * @return  Returns a list (vector) of names.
    */
   std::vector<std::string> GetNames(const DirectedEdge* edge) const;
@@ -390,6 +391,19 @@ public:
    * @return  Returns a list (vector) of signs.
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
+
+  /**
+   * Convenience method to get the signs for an edge given the directed
+   * edge index.
+   * @param  idx  Directed edge or node index. Used to lookup list of signs.
+   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   *                       intersection names.
+   * @return  Returns a list (vector) of signs.
+   */
+  std::vector<SignInfo>
+  GetSigns(const uint32_t idx,
+           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
+           bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
@@ -521,51 +535,67 @@ public:
    *                       week so we modulus the time to day based seconds
    * @param  flow_sources  Which speed sources were used in this speed calculation. Optional pointer,
    *                       if nullptr is passed in flow_sources does nothing.
+   * @param  seconds_from_now   Absolute number of seconds from now till the moment the edge is
+   * passed. Be careful when setting the value in reverse direction algorithms to use proper value. It
+   * affects the percentage of live-traffic usage on the edge. The bigger seconds_from_now is set the
+   * less percentage is taken. Currently this parameter is set to 0 when building a route with reverse
+   * and bidirectional a*.
    * @return Returns the speed for the edge.
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
                            uint32_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
-                           uint8_t* flow_sources = nullptr) const {
+                           uint8_t* flow_sources = nullptr,
+                           const uint64_t seconds_from_now = 0) const {
     // if they dont want source info we bind it to a temp and no one will miss it
     uint8_t temp_sources;
     if (!flow_sources)
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): this needs to consider the time - we should not use live speeds if
-    //               the request is not for "now", or we're some X % along the route
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
+
+    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
+    // route live-traffic gives more information about current congestion situation. But the further
+    // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
+    // Want to have a smooth decrease function.
+    float live_traffic_multiplier = 1. - std::min(seconds_from_now * LIVE_SPEED_FADE, 1.);
     uint32_t partial_live_speed = 0;
     float partial_live_pct = 0;
-    if ((flow_mask & kCurrentFlowMask) && traffic_tile()) {
+    if ((flow_mask & kCurrentFlowMask) && traffic_tile() && live_traffic_multiplier != 0.) {
       auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
       auto volatile& live_speed = traffic_tile.trafficspeed(directed_edge_index);
       // only use current speed if its valid and non zero, a speed of 0 makes costing values crazy
       if (live_speed.speed_valid() && (partial_live_speed = live_speed.get_overall_speed()) > 0) {
         *flow_sources |= kCurrentFlowMask;
-        // Live speed covers entire edge, can return early here
         if (live_speed.breakpoint1 == 255) {
+          partial_live_pct = 1.;
+        } else {
+
+          // Since live speed didn't cover the entire edge, lets calculate the coverage
+          // to facilitate blending with other sources for uncovered part
+          partial_live_pct =
+              (
+                  // First section
+                  (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1
+                                                                          : 0)
+                  // Second section
+                  + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (live_speed.breakpoint2 - live_speed.breakpoint1)
+                         : 0)
+                  // Third section
+                  + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
+                         ? (255 - live_speed.breakpoint2)
+                         : 0)) /
+              255.0;
+        }
+        partial_live_pct *= live_traffic_multiplier;
+        if (partial_live_pct == 1.) {
           return partial_live_speed;
         }
-
-        // Since live speed didn't cover the entire edge, lets calculate the coverage
-        // to facilitate blending with other sources for uncovered part
-        partial_live_pct =
-            (
-                // First section
-                (live_speed.encoded_speed1 != UNKNOWN_TRAFFIC_SPEED_RAW ? live_speed.breakpoint1 : 0)
-                // Second section
-                + (live_speed.encoded_speed2 != UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (live_speed.breakpoint2 - live_speed.breakpoint1)
-                       : 0)
-                // Third section
-                + (live_speed.encoded_speed3 != baldr::UNKNOWN_TRAFFIC_SPEED_RAW
-                       ? (255 - live_speed.breakpoint2)
-                       : 0)) /
-            255.0;
       }
     }
 

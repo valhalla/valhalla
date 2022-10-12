@@ -13,7 +13,7 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/location.h>
 #include <valhalla/midgard/gridded_data.h>
-#include <valhalla/proto/tripcommon.pb.h>
+#include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/dijkstras.h>
@@ -60,6 +60,17 @@ public:
                                                         const sif::mode_costing_t& costings,
                                                         const sif::TravelMode mode);
 
+  /**
+   * Set the child's expansion callback which will be swapped in and out
+   * if the requirements are met.
+   *
+   * @param callback the functor to call back when the Dijkstra makes progress
+   *                             on a given edge
+   */
+  void SetInnerExpansionCallback(const expansion_callback_t callback) {
+    inner_expansion_callback_ = callback;
+  }
+
 protected:
   // when we expand up to a node we color the cells of the grid that the edge that ends at the
   // node touches
@@ -82,6 +93,7 @@ protected:
   float max_seconds_;
   float max_meters_;
   std::shared_ptr<midgard::GriddedData<2>> isotile_;
+  expansion_callback_t inner_expansion_callback_;
 
   /**
    * Constructs the isotile - 2-D gridded data containing the time

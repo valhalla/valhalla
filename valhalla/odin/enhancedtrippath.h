@@ -186,34 +186,34 @@ public:
   }
 
   bool has_vehicle_type() const {
-    return mutable_edge_->has_vehicle_type();
+    return mutable_edge_->travel_mode() == kDrive;
   }
 
-  ::valhalla::TripLeg_VehicleType vehicle_type() const {
+  ::valhalla::VehicleType vehicle_type() const {
     return mutable_edge_->vehicle_type();
   }
 
   bool has_pedestrian_type() const {
-    return mutable_edge_->has_pedestrian_type();
+    return mutable_edge_->travel_mode() == kPedestrian;
   }
 
-  ::valhalla::TripLeg_PedestrianType pedestrian_type() const {
+  ::valhalla::PedestrianType pedestrian_type() const {
     return mutable_edge_->pedestrian_type();
   }
 
   bool has_bicycle_type() const {
-    return mutable_edge_->has_bicycle_type();
+    return mutable_edge_->travel_mode() == kBicycle;
   }
 
-  ::valhalla::TripLeg_BicycleType bicycle_type() const {
+  ::valhalla::BicycleType bicycle_type() const {
     return mutable_edge_->bicycle_type();
   }
 
   bool has_transit_type() const {
-    return mutable_edge_->has_transit_type();
+    return mutable_edge_->travel_mode() == kTransit;
   }
 
-  ::valhalla::TripLeg_TransitType transit_type() const {
+  ::valhalla::TransitType transit_type() const {
     return mutable_edge_->transit_type();
   }
 
@@ -246,7 +246,7 @@ public:
   }
 
   bool drive_on_right() const {
-    return mutable_edge_->drive_on_right();
+    return !mutable_edge_->drive_on_left();
   }
 
   ::valhalla::TripLeg_Surface surface() const {
@@ -261,11 +261,7 @@ public:
     return mutable_edge_->sign();
   }
 
-  bool has_travel_mode() const {
-    return mutable_edge_->has_travel_mode();
-  }
-
-  ::valhalla::TripLeg_TravelMode travel_mode() const {
+  ::valhalla::TravelMode travel_mode() const {
     return mutable_edge_->travel_mode();
   }
 
@@ -273,7 +269,7 @@ public:
     return mutable_edge_->has_transit_route_info();
   }
 
-  const ::valhalla::TripLeg_TransitRouteInfo& transit_route_info() const {
+  const ::valhalla::TransitRouteInfo& transit_route_info() const {
     return mutable_edge_->transit_route_info();
   }
 
@@ -353,12 +349,12 @@ public:
     return mutable_edge_->destination_only();
   }
 
-  bool has_is_urban() const {
-    return mutable_edge_->has_is_urban();
-  }
-
   bool is_urban() const {
     return mutable_edge_->is_urban();
+  }
+
+  bool indoor() const {
+    return mutable_edge_->indoor();
   }
 
   bool IsUnnamed() const;
@@ -378,7 +374,9 @@ public:
   bool IsMountainBikeUse() const;
   bool IsSidewalkUse() const;
   bool IsFootwayUse() const;
+  bool IsElevatorUse() const;
   bool IsStepsUse() const;
+  bool IsEscalatorUse() const;
   bool IsPathUse() const;
   bool IsPedestrianUse() const;
   bool IsBridlewayUse() const;
@@ -393,6 +391,7 @@ public:
   bool IsEgressConnectionUse() const;
   bool IsPlatformConnectionUse() const;
   bool IsTransitConnectionUse() const;
+  bool IsConstructionUse() const;
 
   bool IsTransitConnection() const;
 
@@ -415,6 +414,8 @@ public:
   bool IsStraightest(uint32_t prev2curr_turn_degree, uint32_t straightest_xedge_turn_degree) const;
 
   std::vector<std::pair<std::string, bool>> GetNameList() const;
+
+  std::string GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
 
@@ -487,10 +488,6 @@ public:
     return mutable_intersecting_edge_->walkability();
   }
 
-  bool has_use() const {
-    return mutable_intersecting_edge_->has_use();
-  }
-
   ::valhalla::TripLeg_Use use() const {
     return mutable_intersecting_edge_->use();
   }
@@ -511,17 +508,16 @@ public:
     return mutable_intersecting_edge_->lane_count();
   }
 
-  bool IsTraversable(const TripLeg_TravelMode travel_mode) const;
+  bool IsTraversable(const TravelMode travel_mode) const;
 
-  bool IsTraversableOutbound(const TripLeg_TravelMode travel_mode) const;
+  bool IsTraversableOutbound(const TravelMode travel_mode) const;
 
   bool IsHighway() const;
 
   std::string ToString() const;
 
 protected:
-  ::valhalla::TripLeg_Traversability
-  GetTravelModeTraversability(const TripLeg_TravelMode travel_mode) const;
+  ::valhalla::TripLeg_Traversability GetTravelModeTraversability(const TravelMode travel_mode) const;
 
   TripLeg_IntersectingEdge* mutable_intersecting_edge_;
 };
@@ -607,10 +603,6 @@ public:
     return mutable_node_->cost().elapsed_cost().seconds();
   }
 
-  bool has_admin_index() const {
-    return mutable_node_->has_admin_index();
-  }
-
   uint32_t admin_index() const {
     return mutable_node_->admin_index();
   }
@@ -635,6 +627,10 @@ public:
     return mutable_node_->has_bss_info();
   }
 
+  const BikeShareStationInfo& GetBssInfo() const {
+    return mutable_node_->bss_info();
+  }
+
   bool HasIntersectingEdges() const;
 
   bool HasIntersectingEdgeNameConsistency() const;
@@ -654,64 +650,61 @@ public:
    * as the previous and/or current edges at this node along the route path.
    */
   bool HasNonBackwardTraversableSameNameRampIntersectingEdge(uint32_t from_heading,
-                                                             const TripLeg_TravelMode travel_mode);
+                                                             const TravelMode travel_mode);
 
   std::unique_ptr<EnhancedTripLeg_IntersectingEdge> GetIntersectingEdge(size_t index);
 
   void CalculateRightLeftIntersectingEdgeCounts(uint32_t from_heading,
-                                                const TripLeg_TravelMode travel_mode,
+                                                const TravelMode travel_mode,
                                                 IntersectingEdgeCounts& xedge_counts);
 
   bool HasFowardIntersectingEdge(uint32_t from_heading);
 
-  bool HasForwardTraversableIntersectingEdge(uint32_t from_heading,
-                                             const TripLeg_TravelMode travel_mode);
+  bool HasForwardTraversableIntersectingEdge(uint32_t from_heading, const TravelMode travel_mode);
 
   bool HasRoadForkTraversableIntersectingEdge(uint32_t from_heading,
-                                              const TripLeg_TravelMode travel_mode,
+                                              const TravelMode travel_mode,
                                               bool allow_service_road);
 
   bool HasForwardTraversableSignificantRoadClassXEdge(uint32_t from_heading,
-                                                      const TripLeg_TravelMode travel_mode,
+                                                      const TravelMode travel_mode,
                                                       RoadClass path_road_class);
 
   bool HasForwardTraversableUseXEdge(uint32_t from_heading,
-                                     const TripLeg_TravelMode travel_mode,
+                                     const TravelMode travel_mode,
                                      const TripLeg_Use use);
 
   bool HasSimilarStraightSignificantRoadClassXEdge(uint32_t path_turn_degree,
                                                    uint32_t from_heading,
-                                                   const TripLeg_TravelMode travel_mode,
+                                                   const TravelMode travel_mode,
                                                    RoadClass path_road_class);
 
   bool HasSimilarStraightNonRampOrSameNameRampXEdge(uint32_t path_turn_degree,
                                                     uint32_t from_heading,
-                                                    const TripLeg_TravelMode travel_mode);
+                                                    const TravelMode travel_mode);
 
   bool HasOnlyForwardTraversableRoadClassXEdges(uint32_t from_heading,
-                                                const TripLeg_TravelMode travel_mode,
+                                                const TravelMode travel_mode,
                                                 RoadClass path_road_class);
 
   bool HasWiderForwardTraversableIntersectingEdge(uint32_t from_heading,
-                                                  const TripLeg_TravelMode travel_mode);
+                                                  const TravelMode travel_mode);
 
-  bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading,
-                                              const TripLeg_TravelMode travel_mode);
+  bool HasWiderForwardTraversableHighwayXEdge(uint32_t from_heading, const TravelMode travel_mode);
 
-  bool HasTraversableIntersectingEdge(const TripLeg_TravelMode travel_mode);
+  bool HasTraversableIntersectingEdge(const TravelMode travel_mode);
 
-  bool HasTraversableOutboundIntersectingEdge(const TripLeg_TravelMode travel_mode);
+  bool HasTraversableOutboundIntersectingEdge(const TravelMode travel_mode);
 
-  bool HasTraversableExcludeUseXEdge(const TripLeg_TravelMode travel_mode,
-                                     const TripLeg_Use exclude_use);
+  bool HasTraversableExcludeUseXEdge(const TravelMode travel_mode, const TripLeg_Use exclude_use);
 
   bool HasForwardTraversableExcludeUseXEdge(uint32_t from_heading,
-                                            const TripLeg_TravelMode travel_mode,
+                                            const TravelMode travel_mode,
                                             const TripLeg_Use exclude_use);
 
   bool HasSpecifiedTurnXEdge(const baldr::Turn::Type turn_type,
                              uint32_t from_heading,
-                             const TripLeg_TravelMode travel_mode);
+                             const TravelMode travel_mode);
 
   bool HasSpecifiedRoadClassXEdge(const RoadClass road_class);
 
@@ -719,19 +712,17 @@ public:
 
   uint32_t
   GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
-                                                      const TripLeg_TravelMode travel_mode,
+                                                      const TravelMode travel_mode,
                                                       boost::optional<TripLeg_Use>* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
-                                                        const TripLeg_TravelMode travel_mode);
+                                                        const TravelMode travel_mode);
 
-  uint32_t GetRightMostTurnDegree(uint32_t turn_degree,
-                                  uint32_t from_heading,
-                                  const TripLeg_TravelMode travel_mode);
+  uint32_t
+  GetRightMostTurnDegree(uint32_t turn_degree, uint32_t from_heading, const TravelMode travel_mode);
 
-  uint32_t GetLeftMostTurnDegree(uint32_t turn_degree,
-                                 uint32_t from_heading,
-                                 const TripLeg_TravelMode travel_mode);
+  uint32_t
+  GetLeftMostTurnDegree(uint32_t turn_degree, uint32_t from_heading, const TravelMode travel_mode);
 
   // Type
   bool IsStreetIntersection() const;
@@ -747,6 +738,8 @@ public:
   bool IsBorderControl() const;
   bool IsTollGantry() const;
   bool IsSumpBuster() const;
+  bool IsBuildingEntrance() const;
+  bool IsElevator() const;
 
   std::string ToString() const;
 
@@ -781,12 +774,12 @@ protected:
 };
 
 const std::unordered_map<uint8_t, std::string> TripLeg_TravelMode_Strings{
-    {static_cast<uint8_t>(TripLeg_TravelMode_kDrive), "drive"},
-    {static_cast<uint8_t>(TripLeg_TravelMode_kPedestrian), "pedestrian"},
-    {static_cast<uint8_t>(TripLeg_TravelMode_kBicycle), "bicycle"},
-    {static_cast<uint8_t>(TripLeg_TravelMode_kTransit), "transit"},
+    {static_cast<uint8_t>(TravelMode::kDrive), "drive"},
+    {static_cast<uint8_t>(TravelMode::kPedestrian), "pedestrian"},
+    {static_cast<uint8_t>(TravelMode::kBicycle), "bicycle"},
+    {static_cast<uint8_t>(TravelMode::kTransit), "transit"},
 };
-inline std::string to_string(TripLeg_TravelMode travel_mode) {
+inline std::string to_string(TravelMode travel_mode) {
   auto i = TripLeg_TravelMode_Strings.find(static_cast<uint8_t>(travel_mode));
   if (i == TripLeg_TravelMode_Strings.cend()) {
     return "null";
@@ -795,12 +788,12 @@ inline std::string to_string(TripLeg_TravelMode travel_mode) {
 }
 
 const std::unordered_map<uint8_t, std::string> TripLeg_VehicleType_Strings{
-    {static_cast<uint8_t>(TripLeg_VehicleType_kCar), "car"},
-    {static_cast<uint8_t>(TripLeg_VehicleType_kMotorcycle), "motorcycle"},
-    {static_cast<uint8_t>(TripLeg_VehicleType_kAutoBus), "bus"},
-    {static_cast<uint8_t>(TripLeg_VehicleType_kTractorTrailer), "tractor_trailer"},
+    {static_cast<uint8_t>(VehicleType::kCar), "car"},
+    {static_cast<uint8_t>(VehicleType::kMotorcycle), "motorcycle"},
+    {static_cast<uint8_t>(VehicleType::kAutoBus), "bus"},
+    {static_cast<uint8_t>(VehicleType::kTractorTrailer), "tractor_trailer"},
 };
-inline std::string to_string(TripLeg_VehicleType vehicle_type) {
+inline std::string to_string(VehicleType vehicle_type) {
   auto i = TripLeg_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
   if (i == TripLeg_VehicleType_Strings.cend()) {
     return "null";
@@ -809,11 +802,11 @@ inline std::string to_string(TripLeg_VehicleType vehicle_type) {
 }
 
 const std::unordered_map<uint8_t, std::string> TripLeg_PedestrianType_Strings{
-    {static_cast<uint8_t>(TripLeg_PedestrianType_kFoot), "foot"},
-    {static_cast<uint8_t>(TripLeg_PedestrianType_kWheelchair), "wheelchair"},
-    {static_cast<uint8_t>(TripLeg_PedestrianType_kSegway), "segway"},
+    {static_cast<uint8_t>(PedestrianType::kFoot), "foot"},
+    {static_cast<uint8_t>(PedestrianType::kWheelchair), "wheelchair"},
+    {static_cast<uint8_t>(PedestrianType::kSegway), "segway"},
 };
-inline std::string to_string(TripLeg_PedestrianType pedestrian_type) {
+inline std::string to_string(PedestrianType pedestrian_type) {
   auto i = TripLeg_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));
   if (i == TripLeg_PedestrianType_Strings.cend()) {
     return "null";
@@ -822,12 +815,12 @@ inline std::string to_string(TripLeg_PedestrianType pedestrian_type) {
 }
 
 const std::unordered_map<uint8_t, std::string> TripLeg_BicycleType_Strings{
-    {static_cast<uint8_t>(TripLeg_BicycleType_kRoad), "road"},
-    {static_cast<uint8_t>(TripLeg_BicycleType_kCross), "cross"},
-    {static_cast<uint8_t>(TripLeg_BicycleType_kHybrid), "hybrid"},
-    {static_cast<uint8_t>(TripLeg_BicycleType_kMountain), "mountain"},
+    {static_cast<uint8_t>(BicycleType::kRoad), "road"},
+    {static_cast<uint8_t>(BicycleType::kCross), "cross"},
+    {static_cast<uint8_t>(BicycleType::kHybrid), "hybrid"},
+    {static_cast<uint8_t>(BicycleType::kMountain), "mountain"},
 };
-inline std::string to_string(TripLeg_BicycleType bicycle_type) {
+inline std::string to_string(BicycleType bicycle_type) {
   auto i = TripLeg_BicycleType_Strings.find(static_cast<uint8_t>(bicycle_type));
   if (i == TripLeg_BicycleType_Strings.cend()) {
     return "null";

@@ -83,15 +83,15 @@ void check_best_paths(unsigned int best_paths, unsigned int max_best_paths) {
   }
 }
 
-void check_best_paths_shape(unsigned int best_paths,
+void check_alternates_shape(unsigned int alternates,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
-                            size_t max_best_paths_shape) {
+                            size_t max_alternates_shape) {
 
   // Validate shape is not larger than the configured best paths shape max
-  if ((best_paths > 1) && (shape.size() > max_best_paths_shape)) {
+  if ((alternates > 1) && (shape.size() > max_alternates_shape)) {
     throw valhalla_exception_t{153, "(" + std::to_string(shape.size()) +
                                         "). The best paths shape limit is " +
-                                        std::to_string(max_best_paths_shape)};
+                                        std::to_string(max_alternates_shape)};
   }
 }
 
@@ -136,23 +136,22 @@ void loki_worker_t::init_trace(Api& request) {
   // Validate shape count and distance (for now, just send max_factor for distance)
   check_shape(options.shape(), max_trace_shape);
   float breakage_distance =
-      options.has_breakage_distance() ? options.breakage_distance() : default_breakage_distance;
+      options.has_breakage_distance_case() ? options.breakage_distance() : default_breakage_distance;
   check_distance(options.shape(), max_distance.find("trace")->second, breakage_distance, max_factor);
 
   // Validate best paths and best paths shape for `map_snap` requests
   if (options.shape_match() == ShapeMatch::map_snap) {
-    check_best_paths(options.best_paths(), max_best_paths);
-    check_best_paths_shape(options.best_paths(), options.shape(), max_best_paths_shape);
+    check_alternates_shape(options.alternates() + 1, options.shape(), max_trace_alternates_shape);
   }
 
   // Validate optional trace options
-  if (options.has_gps_accuracy()) {
+  if (options.has_gps_accuracy_case()) {
     check_gps_accuracy(options.gps_accuracy(), max_gps_accuracy);
   }
-  if (options.has_search_radius()) {
+  if (options.has_search_radius_case()) {
     check_search_radius(options.search_radius(), max_search_radius);
   }
-  if (options.has_turn_penalty_factor()) {
+  if (options.has_turn_penalty_factor_case()) {
     check_turn_penalty_factor(options.turn_penalty_factor());
   }
 
@@ -165,7 +164,7 @@ void loki_worker_t::trace(Api& request) {
   auto _ = measure_scope_time(request);
 
   init_trace(request);
-  if (request.options().costing() == Costing::multimodal) {
+  if (request.options().costing_type() == Costing::multimodal) {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(request.options().action())};
   };
 }
@@ -210,7 +209,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       auto orig = options.mutable_locations(0);
       orig->mutable_ll()->set_lng(orig_ll.lng());
       orig->mutable_ll()->set_lat(orig_ll.lat());
-      for (auto& e : *orig->mutable_path_edges()) {
+      for (auto& e : *orig->mutable_correlation()->mutable_edges()) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);
@@ -237,7 +236,7 @@ void loki_worker_t::locations_from_shape(Api& request) {
       auto dest = options.mutable_locations(1);
       dest->mutable_ll()->set_lng(dest_ll.lng());
       dest->mutable_ll()->set_lat(dest_ll.lat());
-      for (auto& e : *dest->mutable_path_edges()) {
+      for (auto& e : *dest->mutable_correlation()->mutable_edges()) {
         GraphId edgeid(e.graph_id());
         graph_tile_ptr tile = reader->GetGraphTile(edgeid);
         const DirectedEdge* de = tile->directededge(edgeid);

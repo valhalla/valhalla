@@ -12,9 +12,9 @@ namespace {
 static bool IsTrivial(const uint64_t& edgeid,
                       const valhalla::Location& origin,
                       const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.path_edges()) {
+  for (const auto& destination_edge : destination.correlation().edges()) {
     if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.path_edges()) {
+      for (const auto& origin_edge : origin.correlation().edges()) {
         if (origin_edge.graph_id() == edgeid &&
             origin_edge.percent_along() <= destination_edge.percent_along()) {
           return true;
@@ -25,10 +25,10 @@ static bool IsTrivial(const uint64_t& edgeid,
   return false;
 }
 
-static TravelMode get_other_travel_mode(const TravelMode current_mode) {
+static travel_mode_t get_other_travel_mode(const travel_mode_t current_mode) {
   static const auto bss_modes =
-      std::vector<TravelMode>{TravelMode::kPedestrian, TravelMode::kBicycle};
-  return bss_modes[static_cast<size_t>(current_mode == TravelMode::kPedestrian)];
+      std::vector<travel_mode_t>{travel_mode_t::kPedestrian, travel_mode_t::kBicycle};
+  return bss_modes[static_cast<size_t>(current_mode == travel_mode_t::kPedestrian)];
 }
 
 } // namespace
@@ -47,7 +47,7 @@ float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) c
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void TimeDistanceBSSMatrix::Clear() {
+void TimeDistanceBSSMatrix::clear() {
   // Clear the edge labels and destination list
   edgelabels_.clear();
   destinations_.clear();
@@ -68,10 +68,10 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
                                           const uint32_t pred_idx,
                                           const bool from_transition,
                                           const bool from_bss,
-                                          const sif::TravelMode mode) {
+                                          const sif::travel_mode_t mode) {
 
   const auto& current_costing =
-      (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -89,7 +89,7 @@ void TimeDistanceBSSMatrix::ExpandForward(GraphReader& graphreader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
 
   EdgeStatusInfo* es =
-      (mode == TravelMode::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
+      (mode == travel_mode_t::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
           .GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
 
@@ -163,11 +163,12 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode /*mode*/,
-    const float max_matrix_distance) {
+    const travel_mode_t /*mode*/,
+    const float max_matrix_distance,
+    const uint32_t matrix_locations) {
 
-  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
-  bicycle_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kBicycle)];
+  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
+  bicycle_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kBicycle)];
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
@@ -207,11 +208,11 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
 
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
-    if (!pred.origin() && pred.mode() == TravelMode::kPedestrian) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kPedestrian) {
       pedestrian_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-    if (!pred.origin() && pred.mode() == TravelMode::kBicycle) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kBicycle) {
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
@@ -222,12 +223,13 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::OneToMany(
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
-    if (destedge != dest_edges_.end() && pred.mode() == TravelMode::kPedestrian) {
+    if (destedge != dest_edges_.end() && pred.mode() == travel_mode_t::kPedestrian) {
       // Update any destinations along this edge. Return if all destinations
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred)) {
+      if (UpdateDestinations(origin, locations, destedge->second, edge, tile, pred,
+                             matrix_locations)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -250,9 +252,9 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
                                           const uint32_t pred_idx,
                                           const bool from_transition,
                                           const bool from_bss,
-                                          const sif::TravelMode mode) {
+                                          const sif::travel_mode_t mode) {
   const auto& current_costing =
-      (mode == TravelMode::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
+      (mode == travel_mode_t::kPedestrian ? pedestrian_costing_ : bicycle_costing_);
 
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
@@ -276,7 +278,7 @@ void TimeDistanceBSSMatrix::ExpandReverse(GraphReader& graphreader,
   // Expand from end node.
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   EdgeStatusInfo* es =
-      (mode == TravelMode::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
+      (mode == travel_mode_t::kPedestrian ? pedestrian_edgestatus_ : bicycle_edgestatus_)
           .GetPtr(edgeid, tile);
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, directededge++, ++edgeid, ++es) {
@@ -357,11 +359,12 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const TravelMode /*mode*/,
-    const float max_matrix_distance) {
+    const travel_mode_t /*mode*/,
+    const float max_matrix_distance,
+    const uint32_t matrix_locations) {
 
-  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kPedestrian)];
-  bicycle_costing_ = mode_costing[static_cast<uint32_t>(TravelMode::kBicycle)];
+  pedestrian_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
+  bicycle_costing_ = mode_costing[static_cast<uint32_t>(travel_mode_t::kBicycle)];
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
@@ -400,22 +403,22 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToOne(
 
     // Mark the edge as permanently labeled. Do not do this for an origin
     // edge (this will allow loops/around the block cases)
-    if (!pred.origin() && pred.mode() == TravelMode::kPedestrian) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kPedestrian) {
       pedestrian_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
-    if (!pred.origin() && pred.mode() == TravelMode::kBicycle) {
+    if (!pred.origin() && pred.mode() == travel_mode_t::kBicycle) {
       bicycle_edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
     }
 
     // Identify any destinations on this edge
     auto destedge = dest_edges_.find(pred.edgeid());
-    if (destedge != dest_edges_.end() && pred.mode() == TravelMode::kPedestrian) {
+    if (destedge != dest_edges_.end() && pred.mode() == travel_mode_t::kPedestrian) {
       // Update any destinations along this edge. Return if all destinations
       // have been settled.
       tile = graphreader.GetGraphTile(pred.edgeid());
       const DirectedEdge* edge = tile->directededge(pred.edgeid());
-      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred)) {
+      if (UpdateDestinations(dest, locations, destedge->second, edge, tile, pred, matrix_locations)) {
         return FormTimeDistanceMatrix();
       }
     }
@@ -437,7 +440,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ManyToMany(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
     GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode _,
+    const sif::travel_mode_t _,
     const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, _, max_matrix_distance);
 }
@@ -447,23 +450,26 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::SourceToTarget(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const sif::TravelMode _,
-    const float max_matrix_distance) {
+    const sif::travel_mode_t _,
+    const float max_matrix_distance,
+    const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many;
   if (source_location_list.size() <= target_location_list.size()) {
     for (const auto& origin : source_location_list) {
       std::vector<TimeDistance> td =
-          OneToMany(origin, target_location_list, graphreader, mode_costing, _, max_matrix_distance);
+          OneToMany(origin, target_location_list, graphreader, mode_costing, _, max_matrix_distance,
+                    matrix_locations);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   } else {
     for (const auto& destination : target_location_list) {
-      std::vector<TimeDistance> td = ManyToOne(destination, source_location_list, graphreader,
-                                               mode_costing, _, max_matrix_distance);
+      std::vector<TimeDistance> td =
+          ManyToOne(destination, source_location_list, graphreader, mode_costing, _,
+                    max_matrix_distance, matrix_locations);
       many_to_many.insert(many_to_many.end(), td.begin(), td.end());
-      Clear();
+      clear();
     }
   }
   return many_to_many;
@@ -474,13 +480,13 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
                                                const valhalla::Location& origin) {
   // Only skip inbound edges if we have other options
   bool has_other_edges = false;
-  std::for_each(origin.path_edges().begin(), origin.path_edges().end(),
-                [&has_other_edges](const valhalla::Location::PathEdge& e) {
+  std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                [&has_other_edges](const valhalla::PathEdge& e) {
                   has_other_edges = has_other_edges || !e.end_node();
                 });
 
   // Iterate through edges and add to adjacency list
-  for (const auto& edge : origin.path_edges()) {
+  for (const auto& edge : origin.correlation().edges()) {
     // If origin is at a node - skip any inbound edge (dist = 1)
     if (has_other_edges && edge.end_node()) {
       continue;
@@ -517,7 +523,7 @@ void TimeDistanceBSSMatrix::SetOriginOneToMany(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         travel_mode_t::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
                          InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
@@ -530,7 +536,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
                                                const valhalla::Location& dest) {
 
   // Iterate through edges and add opposing edges to adjacency list
-  for (const auto& edge : dest.path_edges()) {
+  for (const auto& edge : dest.correlation().edges()) {
     // Disallow any user avoided edges if the avoid location is behind the destination along the edge
     GraphId edgeid(edge.graph_id());
     if (pedestrian_costing_->AvoidAsDestinationEdge(edgeid, edge.percent_along())) {
@@ -569,7 +575,7 @@ void TimeDistanceBSSMatrix::SetOriginManyToOne(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag.
     EdgeLabel edge_label(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                         TravelMode::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
+                         travel_mode_t::kPedestrian, d, {}, baldr::kInvalidRestriction, true, false,
                          InternalTurn::kNoTurn);
     edge_label.set_origin();
     edgelabels_.push_back(std::move(edge_label));
@@ -584,19 +590,19 @@ void TimeDistanceBSSMatrix::SetDestinationsOneToMany(
   // For each destination
   uint32_t idx = 0;
 
-  // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
 
-    std::for_each(loc.path_edges().begin(), loc.path_edges().end(),
-                  [&has_other_edges](const valhalla::Location::PathEdge& e) {
+    // Only skip outbound edges if we have other options
+    bool has_other_edges = false;
+
+    std::for_each(loc.correlation().edges().begin(), loc.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
                     has_other_edges = has_other_edges || !e.begin_node();
                   });
 
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
       // If destination is at a node skip any outbound edges
       if (has_other_edges && edge.begin_node()) {
         continue;
@@ -651,7 +657,7 @@ void TimeDistanceBSSMatrix::SetDestinationsManyToOne(
     // Set up the destination - consider each possible location edge.
     bool added = false;
 
-    for (const auto& edge : loc.path_edges()) {
+    for (const auto& edge : loc.correlation().edges()) {
 
       // Get the opposing directed edge Id - this is the edge marked as the "destination",
       // but the cost is based on the forward path along the initial edge.
@@ -696,7 +702,8 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     std::vector<uint32_t>& destinations,
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
-    const EdgeLabel& pred) {
+    const EdgeLabel& pred,
+    const uint32_t matrix_locations) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
     Destination& dest = destinations_[dest_idx];
@@ -777,7 +784,10 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
   if (allfound) {
     current_cost_threshold_ = maxcost;
   }
-  return settled_count_ == destinations_.size();
+
+  // Return true if the settled count equals the number of destinations or
+  // exceeds the matrix location count provided.
+  return settled_count_ == destinations_.size() || settled_count_ >= matrix_locations;
 }
 
 // Form the time, distance matrix from the destinations list
