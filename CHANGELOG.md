@@ -116,6 +116,7 @@
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
+   * CHANGED: Ported trace_attributes serialization to RapidJSON. [#3333](https://github.com/valhalla/valhalla/pull/3333)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
@@ -166,7 +167,6 @@
    * CHANGED: Update python usage in all scripts to python3 [#3337](https://github.com/valhalla/valhalla/pull/3337)
    * ADDED: Added `exclude_cash_only_tolls` request parameter [#3341](https://github.com/valhalla/valhalla/pull/3341)
    * CHANGED: Update api-reference for street_names [#3342](https://github.com/valhalla/valhalla/pull/3342)
-   * CHANGED: Ported trace_attributes serialization to RapidJSON. [#3333](https://github.com/valhalla/valhalla/pull/3333)
    * ADDED: Disable msse2 flags when building on Apple Silicon chip [#3327](https://github.com/valhalla/valhalla/pull/3327)
 
 ## Release Date: 2021-07-20 Valhalla 3.1.3
