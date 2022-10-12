@@ -118,13 +118,14 @@ void serialize_edges(const AttributesController& controller,
         // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
         if (mean == kNoElevationData) {
-          edge_map->emplace("mean_elevation", nullptr);
+          writer("mean_elevation", static_cast<int64_t>(mean)); // TODO - what to return?
         } else {
-          edge_map->emplace("mean_elevation", static_cast<int64_t>(options.units() == Options::miles
-                                                                       ? mean * kFeetPerMeter
-                                                                       : mean));
+          // Convert to feet if a valid elevation and units are miles
+          if (static_cast<int64_t>(options.units() == Options::miles)) {
+            mean *= kFeetPerMeter;
+          }
+          writer("mean_elevation", static_cast<int64_t>(mean));
         }
-        writer("mean_elevation", static_cast<int64_t>(mean));
       }
       if (controller(kEdgeWayId)) {
         writer("way_id", static_cast<uint64_t>(edge.way_id()));
@@ -148,7 +149,7 @@ void serialize_edges(const AttributesController& controller,
         writer("surface", to_string(static_cast<baldr::Surface>(edge.surface())));
       }
       if (controller(kEdgeDriveOnRight)) {
-        writer("drive_on_right", static_cast<bool>(edge.drive_on_right()));
+        writer("drive_on_right", static_cast<bool>(!edge.drive_on_left()));
       }
       if (controller(kEdgeInternalIntersection)) {
         writer("internal_intersection", static_cast<bool>(edge.internal_intersection()));
