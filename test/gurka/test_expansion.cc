@@ -15,7 +15,7 @@ protected:
     // 5 birectional edges, 1 oneway = 11 directed edges
     const std::string ascii_map = R"(
             B  F--G
-            |  |  |
+            |  |
          E--A--C--H
             |
             D
@@ -44,7 +44,7 @@ protected:
       options.insert({{"/expansion_properties/" + std::to_string(i), props[i]}});
     }
     if (action == "isochrone") {
-      options.insert({{"/contours/0/time", "1"}, {"/contours/1/time", "2"}});
+      options.insert({{"/contours/0/time", "10"}, {"/contours/1/time", "20"}});
     }
 
     // get the response

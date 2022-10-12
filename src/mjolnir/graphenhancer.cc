@@ -25,7 +25,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <sqlite3.h>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -1328,7 +1327,6 @@ void enhance(const boost::property_tree::ptree& pt,
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
-
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
   if (!database && use_admin_db) {
@@ -1336,6 +1334,7 @@ void enhance(const boost::property_tree::ptree& pt,
   } else if (!admin_db_handle && use_admin_db) {
     LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
   }
+  auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   std::unordered_map<std::string, std::vector<int>> country_access =
       GetCountryAccess(admin_db_handle);
@@ -1524,9 +1523,11 @@ void enhance(const boost::property_tree::ptree& pt,
           if (admin_index != 0 && country_iterator != country_access.end() &&
               directededge.use() != Use::kFerry &&
               (directededge.classification() <= RoadClass::kPrimary ||
-               directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
-               directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
-               directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
+               directededge.use() == Use::kBridleway || directededge.use() == Use::kCycleway ||
+               directededge.use() == Use::kFootway || directededge.use() == Use::kPath ||
+               directededge.use() == Use::kPedestrian ||
+               directededge.use() == Use::kPedestrianCrossing ||
+               directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
             std::vector<int> access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
@@ -1805,6 +1806,7 @@ void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
       // TODO: throw further up the chain?
     }
   }
+
   LOG_INFO("Finished with max_density " + std::to_string(stats.max_density));
   LOG_DEBUG("not_thru = " + std::to_string(stats.not_thru));
   LOG_DEBUG("no country found = " + std::to_string(stats.no_country_found));

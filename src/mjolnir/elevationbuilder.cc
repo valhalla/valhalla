@@ -100,7 +100,6 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       }
 
       // Add elevation info to the geo attribute cache. TODO - add mean elevation.
-      float mean_elevation = std::get<3>(forward_grades);
       uint32_t forward_grade = static_cast<uint32_t>(std::get<0>(forward_grades) * .6 + 6.5);
       uint32_t reverse_grade = static_cast<uint32_t>(std::get<0>(reverse_grades) * .6 + 6.5);
       auto inserted =
@@ -111,7 +110,11 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       found = inserted.first;
 
       // Set the mean elevation on EdgeInfo
-      tilebuilder.set_mean_elevation(edge_info_offset, mean_elevation);
+      float mean_elevation = std::get<3>(forward_grades);
+      tilebuilder.set_mean_elevation(edge_info_offset,
+                                     mean_elevation == valhalla::skadi::get_no_data_value()
+                                         ? kNoElevationData
+                                         : mean_elevation);
     }
 
     // Edge elevation information. If the edge is forward (with respect to the shape)

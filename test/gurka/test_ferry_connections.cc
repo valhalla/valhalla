@@ -92,6 +92,42 @@ TEST(Standalone, ShortFerry) {
   EXPECT_EQ(DE_edge->classification(), baldr::RoadClass::kPrimary);
 }
 
+TEST(Standalone, TruckFerryDuration) {
+  // corresponds to 33.3 m/sec (120 km/h) in the below map
+  uint32_t ferry_secs = 9;
+
+  const std::string ascii_map = R"(
+          A--B--C--D
+          |        |
+          E--------F
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "secondary"}}},
+                            {"BC",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"hgv", "yes"},
+                              {"duration", "00:00:0" + std::to_string(ferry_secs)},
+                              {"route", "ferry"},
+                              {"name", "Random ferry"}}},
+                            {"CD", {{"highway", "secondary"}}},
+                            {"AEFD", {{"highway", "secondary"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ferry_duration");
+
+  valhalla::Api fastest = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                                           {{"/costing_options/truck/use_ferry", "1"},
+                                            {"/costing_options/truck/ferry_cost", "0"}});
+
+  // verify we took the ferry edge and the duration tag was respected
+  auto ferry_edge = fastest.trip().routes(0).legs(0).node(1).edge();
+  ASSERT_EQ(ferry_edge.use(), valhalla::TripLeg_Use::TripLeg_Use_kFerryUse);
+  ASSERT_NEAR(ferry_edge.speed(), ferry_edge.length_km() / (ferry_secs * kHourPerSec), 0.1);
+}
+
 TEST(Standalone, ReclassifyFerryConnection) {
   // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
   // high-class road

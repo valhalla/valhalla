@@ -189,7 +189,9 @@ int main(int argc, char* argv[]) {
     // Skip over any service limits that are not for a costing method
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone") {
+        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
+        kv.first == "status") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -227,13 +229,13 @@ int main(int argc, char* argv[]) {
 
   // Timing with CostMatrix
   std::vector<TimeDistance> res;
+  CostMatrix matrix;
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    CostMatrix matrix;
     res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                                 max_distance);
-    matrix.Clear();
+    matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -242,12 +244,12 @@ int main(int argc, char* argv[]) {
   LogResults(optimize, options, res);
 
   // Run with TimeDistanceMatrix
+  TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    TimeDistanceMatrix tdm;
     res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
                              max_distance);
-    tdm.Clear();
+    tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

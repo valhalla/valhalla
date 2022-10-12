@@ -40,6 +40,9 @@ public:
    * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
+   *                               one request. This allows partial results: e.g. find time/distance
+   *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
@@ -48,7 +51,8 @@ public:
             baldr::GraphReader& graphreader,
             const sif::mode_costing_t& mode_costing,
             const sif::TravelMode mode,
-            const float max_matrix_distance);
+            const float max_matrix_distance,
+            const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Many to one time and distance cost matrix. Computes time and distance
@@ -59,6 +63,9 @@ public:
    * @param  mode_costing  Costing methods.
    * @param  mode          Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
+   *                               one request. This allows partial results: e.g. find time/distance
+   *                               to the closest 20 out of 50 locations).
    * @return time/distance to the destination index from all other locations
    */
   std::vector<TimeDistance>
@@ -67,7 +74,8 @@ public:
             baldr::GraphReader& graphreader,
             const sif::mode_costing_t& mode_costing,
             const sif::TravelMode mode,
-            const float max_matrix_distance);
+            const float max_matrix_distance,
+            const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Many to many time and distance cost matrix. Computes time and distance
@@ -95,6 +103,9 @@ public:
    * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
+   *                               one request. This allows partial results: e.g. find time/distance
+   *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
@@ -103,13 +114,14 @@ public:
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode,
-                 const float max_matrix_distance);
+                 const float max_matrix_distance,
+                 const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void Clear();
+  void clear();
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -224,6 +236,10 @@ protected:
    * @param   destinations  Vector of destination indexes along this edge.
    * @param   edge          Directed edge
    * @param   pred          Predecessor information in shortest path.
+   * @param   matrix_locations Count of locations that must be found. When provided it allows
+   *                           a partial result to be returned (e.g. best 20 out of 50 locations).
+   *                           When not supplied in the request this is set to max uint32_t value
+   *                           so that all supplied locations must be settled.
    * @return  Returns true if all destinations have been settled.
    */
   bool UpdateDestinations(const valhalla::Location& origin,
@@ -231,7 +247,8 @@ protected:
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
-                          const sif::EdgeLabel& pred);
+                          const sif::EdgeLabel& pred,
+                          const uint32_t matrix_locations);
 
   /**
    * Form a time/distance matrix from the results.

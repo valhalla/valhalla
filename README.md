@@ -52,12 +52,6 @@ In Windows all functionality is not yet fully supported. Building the Valhalla l
 - `DATA_TOOLS`: utilities to build input data and handle transit
 - `PYTHON_BINDINGS`: use all actions (route, isochrones, matrix etc) via the Valhalla Python library (needs a full (i.e. development) Python distribution in the `PATH`)
 
-Also, be aware that building tiles on Windows works, however, you can't build tiles with support of admin & timezone DBs (see [#3010](https://github.com/valhalla/valhalla/issues/3010)). This mostly affects the following functionalities:
-- no/falsy time-dependent routing
-- no border-crossing penalties
-- driving side will be off in LHT countries
-- currently wrong navigation in roundabouts, see [#2320](https://github.com/valhalla/valhalla/issues/2320)
-
 ## Organization
 
 The Valhalla organization is comprised of several library modules each responsible for a different function. The layout of the various modules is as follows:
@@ -143,7 +137,7 @@ make -C build -j$(nproc)
 sudo make -C build install
 ```
 
-### Building from Source - MacOS
+### Building from Source - macOS
 
 #### Configuring Rosetta for ARM64 MacBook
 
@@ -168,6 +162,7 @@ You will use them to specify the platform when installing a library. Note: use `
 
 **_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
 
+**_NOTE:_** It is possible to build Valhalla natively for Apple Silicon, but some dependencies(e.g. LuaJIT) don't have stable versions supporting Apple Silicon and have to be built and installed manually from source.
 
 #### Installing dependencies
 

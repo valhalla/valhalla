@@ -33,7 +33,7 @@ PointXY<PrecisionT>::ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) c
 
   // Iterate through the pts
   bool beyond_end = true;     // Need to test past the end point?
-  int idx;                    // Index of closest segment so far
+  int idx = 0;                // Index of closest segment so far
   VectorXY<PrecisionT> v1;    // Segment vector (v1)
   VectorXY<PrecisionT> v2;    // Vector from origin to target (v2)
   PointXY<PrecisionT> projpt; // Projected point along v1
@@ -47,8 +47,9 @@ PointXY<PrecisionT>::ClosestPoint(const std::vector<PointXY<PrecisionT>>& pts) c
     const PointXY<PrecisionT>& p1 = pts[index + 1];
 
     // Construct vector v1 - represents the segment.  Skip 0 length segments
+    // that are not at the end of the line.
     v1.Set(p0, p1);
-    if (v1.x() == 0.0f && v1.y() == 0.0f) {
+    if (v1.x() == 0.0f && v1.y() == 0.0f && index < pts.size() - 2) {
       continue;
     }
 
