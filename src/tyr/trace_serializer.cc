@@ -115,11 +115,8 @@ void serialize_edges(const AttributesController& controller,
         writer("weighted_grade", edge.weighted_grade());
       }
       if (controller(kEdgeMeanElevation)) {
-        // Convert to feet if a valid elevation and units are miles
         float mean = edge.mean_elevation();
-        if (mean == kNoElevationData) {
-          writer("mean_elevation", static_cast<int64_t>(mean)); // TODO - what to return?
-        } else {
+        if (mean != kNoElevationData) {
           // Convert to feet if a valid elevation and units are miles
           if (static_cast<int64_t>(options.units() == Options::miles)) {
             mean *= kFeetPerMeter;
