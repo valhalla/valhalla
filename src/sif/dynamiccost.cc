@@ -105,6 +105,8 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
+                                                      baldr::kMaxSpeedKph};
 } // namespace
 
 /*
@@ -147,7 +149,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
-      top_speed_(costing.options().top_speed()),
+      top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
@@ -461,6 +463,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+
+  co->set_fixed_speed(
+      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
 }
 
 void ParseCosting(const rapidjson::Document& doc,
