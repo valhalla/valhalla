@@ -26,7 +26,7 @@ TEST(MatrixTest, MatrixSimple) {
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
 
   const std::vector<double> exp_dists = {3.f, 8.f, 8.f, 3.f};
-  const std::vector<uint32_t> exp_times = {210, 580, 580, 210};
+  const std::vector<uint32_t> exp_times = {308, 823, 823, 308};
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"A", "B"}, {"C", "D"},
                                        "auto", {}, {}, &res);
@@ -37,9 +37,12 @@ TEST(MatrixTest, MatrixSimple) {
 
   size_t i = 0;
   for (const auto& origin_row : res_doc["sources_to_targets"].GetArray()) {
-    for (const auto& v : origin_row.GetArray()) {
-      EXPECT_EQ(v.GetObject()["distance"].GetDouble(), exp_dists[i]);
-      EXPECT_EQ(v.GetObject()["time"].GetUint(), exp_times[i]);
+    auto origin_td = origin_row.GetArray();
+    for (const auto& v : origin_td) {
+      std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
+                        std::to_string(i % origin_td.Size());
+      EXPECT_EQ(v.GetObject()["distance"].GetDouble(), exp_dists[i]) << msg;
+      EXPECT_EQ(v.GetObject()["time"].GetUint(), exp_times[i]) << msg;
       i++;
     }
   }
