@@ -737,9 +737,9 @@ void CostMatrix::SetSources(GraphReader& graphreader,
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
-                [&has_other_edges](const valhalla::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.end_node();
-                });
+                  [&has_other_edges](const valhalla::PathEdge& e) {
+                    has_other_edges = has_other_edges || !e.end_node();
+                  });
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.correlation().edges()) {
@@ -818,9 +818,9 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
-                [&has_other_edges](const valhalla::PathEdge& e) {
-                  has_other_edges = has_other_edges || !e.begin_node();
-                });
+                  [&has_other_edges](const valhalla::PathEdge& e) {
+                    has_other_edges = has_other_edges || !e.begin_node();
+                  });
 
     // Iterate through edges and add to adjacency list
     for (const auto& edge : dest.correlation().edges()) {
