@@ -423,6 +423,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const BDEdgeLabel& pred,
                                          const uint32_t n) {
+
   // Disallow connections that are part of an uturn on an internal edge
   if (pred.internal_turn() != InternalTurn::kNoTurn) {
     return;
