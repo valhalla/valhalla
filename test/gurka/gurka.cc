@@ -55,8 +55,8 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
 /**
  * build a valhalla json request body
  *
- * @param location_types locations or shape, sources, targets
- * @param waypointss     sequence of pointlls representing the locations
+ * @param location_types vector of locations or shape, sources, targets
+ * @param waypoints      all pointll sequences for all location types
  * @param costing        which costing name to use, defaults to auto
  * @param options        overrides parts of the request, supports rapidjson pointer semantics
  * @param stop_type      break, through, via, break_through
