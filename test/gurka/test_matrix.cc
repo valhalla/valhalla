@@ -5,7 +5,7 @@
 using namespace valhalla;
 
 TEST(MatrixTest, MatrixSimple) {
-  constexpr double gridsize = 100;
+  constexpr double gridsize = 1000;
 
   // the grid below is 50 x 100 meters at 36 km/h, i.e. 10 m/s
   const std::string ascii_map = R"(
@@ -16,17 +16,17 @@ TEST(MatrixTest, MatrixSimple) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "residential"}, {"maxspeed", "50"}}},
-      {"AC", {{"highway", "residential"}, {"maxspeed", "50"}}},
-      {"BD", {{"highway", "residential"}, {"maxspeed", "50"}}},
-      {"CD", {{"highway", "residential"}, {"maxspeed", "50"}}},
+      {"AB", {{"highway", "residential"}}},
+      {"AC", {{"highway", "residential"}}},
+      {"BD", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/shortest");
 
-  const std::vector<double> exp_dists = {0.3, 0.8, 0.8, 0.3};
-  const std::vector<uint32_t> exp_times = {21, 58, 58, 21};
+  const std::vector<double> exp_dists = {3.f, 8.f, 8.f, 3.f};
+  const std::vector<uint32_t> exp_times = {210, 580, 580, 210};
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"A", "B"}, {"C", "D"},
                                        "auto", {}, {}, &res);
