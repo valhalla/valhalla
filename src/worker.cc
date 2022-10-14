@@ -141,11 +141,11 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
 // unordered map for warning pairs
 const std::unordered_map<int, std::string> warning_codes = {
   // 1xx is for deprecations
-  {100, "auto_shorter costing is deprecated, use \"shortest\" costing option instead"},
+  {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
   {101,
-    "hov costing is deprecated, use \"include_hov2\" costing option instead"},
-  {102, "auto_data_fix is deprecated, use the \"ignore_*\" costing options instead"},
-  {103, "best_paths has been deprecated, use \"alternates\" instead"}
+    R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
+  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
+  {103, R"(best_paths has been deprecated, use "alternates" instead)"}
 };
 
 // function to add warnings to proto info object

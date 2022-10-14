@@ -159,10 +159,10 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
 
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
   writer.start_array("warnings");
-  for (int i = 0; i < api.info().warnings_size(); i++) {
+  for (const auto& warning : api.info().warnings()) {
     writer.start_object();
-    writer("code", api.info().warnings(i).code());
-    writer("text", api.info().warnings(i).description());
+    writer("code", warning.code());
+    writer("text", warning.description());
     writer.end_object();
   }
   writer.end_array();
@@ -170,9 +170,8 @@ void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& wr
 
 json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
   auto warnings = json::array({});
-  for (int i = 0; i < api.info().warnings_size(); i++) {
-    warnings->emplace_back(json::map(
-        {{"code", api.info().warnings(i).code()}, {"text", api.info().warnings(i).description()}}));
+  for (const auto& warning : api.info().warnings()) {
+    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
   }
   return warnings;
 }
