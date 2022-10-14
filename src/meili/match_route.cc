@@ -75,11 +75,16 @@ EdgeSegment::EdgeSegment(baldr::GraphId the_edgeid,
  * Here we return the vector of edge segments between the source and target states. If its a node to
  * node route (meaning no realy edge is traversed) then we use the target_result to say what edge the
  * segment should use
+ *
+ * TODO: we should modify this function to take the range of MatchResults between the source and
+ *  target. we should then use those to property initialize the segments source/target/indices to
+ *  match those of the MatchResults that lie on them rather than doing it downstream in an otherwise
+ *  superfluous operation
  * @param source         source state to use to find the route
  * @param target         target state which candidate in the next column to fetch the route for
  * @param route          a place to put the edge segments as we create them
  * @param target_result  in case we have a node to node route we have a no-op edge segment to return
- * @return  the vector of segments reprsenting the route between source and target
+ * @return  the vector of segments representing the route between source and target
  */
 bool MergeRoute(const State& source,
                 const State& target,
@@ -129,38 +134,47 @@ bool MergeRoute(const State& source,
 void cut_segments(const std::vector<MatchResult>& match_results,
                   int first_idx,
                   int last_idx,
-                  const std::vector<EdgeSegment>& segments,
+                  std::vector<EdgeSegment>& segments,
                   std::vector<EdgeSegment>& new_segments) {
   auto first_segment = segments.begin();
+  auto search_segment = first_segment;
   int prev_idx = first_idx;
   for (int curr_idx = first_idx + 1; curr_idx <= last_idx; ++curr_idx) {
     const MatchResult& curr_match = match_results[curr_idx];
     const MatchResult& prev_match = match_results[prev_idx];
 
-    // skip if we do not need to cut
-    if (!curr_match.is_break_point && curr_idx != last_idx) {
-      continue;
-    }
-
-    // Allow for some fp-fuzz in this gt comparison
+    // does the previous match point look further along its edge than the current
     bool prev_gt_curr = prev_match.distance_along > curr_match.distance_along + 1e-3;
 
-    // we want to handle to loop by locating the correct target edge by comparing the distance alone
+    // if they are on the same edge and previous comes after then its a loop
     bool loop = (prev_match.edgeid == curr_match.edgeid) && prev_gt_curr;
 
     // if it is a loop, we start the search after the first edge
-    auto last_segment = std::find_if(first_segment + static_cast<size_t>(loop), segments.end(),
-                                     [&curr_match](const EdgeSegment& segment) {
-                                       return (segment.edgeid == curr_match.edgeid);
-                                     });
+    for (search_segment += static_cast<size_t>(loop); search_segment != segments.end();
+         ++search_segment) {
+      if (search_segment->edgeid == curr_match.edgeid)
+        break;
+    }
 
-    if (last_segment == segments.cend()) {
+    if (search_segment == segments.cend()) {
       throw std::logic_error("In meili::cutsegments(), unexpectedly unable to locate target edge.");
+    }
+
+    // if its not a break point nor the last segment, then we dont need to split it into two
+    if (!curr_match.is_break_point && curr_idx != last_idx) {
+      // but if it isnt a breakpoint and its not the last stateful match point then its interpolated
+      // and we still need to mark the segments in such a way that we which match points lie on them
+      if (search_segment->first_match_idx < 0)
+        search_segment->first_match_idx = curr_idx;
+      if (search_segment->last_match_idx < 0)
+        search_segment->last_match_idx = curr_idx;
+      // we are done marking it no need to split this one
+      continue;
     }
 
     // we need to close the previous edge
     size_t old_size = new_segments.size();
-    new_segments.insert(new_segments.cend(), first_segment, last_segment + 1);
+    new_segments.insert(new_segments.cend(), first_segment, search_segment + 1);
     new_segments[old_size].first_match_idx = prev_idx;
     // when the points got interpolated, we want to use the match results' distance along
     // otherwise, we use the segment's source or target because if it is a node snap, the
@@ -169,9 +183,9 @@ void cut_segments(const std::vector<MatchResult>& match_results,
         prev_match.HasState() ? first_segment->source : prev_match.distance_along;
     new_segments.back().last_match_idx = curr_idx;
     new_segments.back().target =
-        curr_match.HasState() ? last_segment->target : curr_match.distance_along;
+        curr_match.HasState() ? search_segment->target : curr_match.distance_along;
 
-    first_segment = last_segment;
+    first_segment = search_segment;
     prev_idx = curr_idx;
   }
 }
@@ -201,6 +215,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   for (int curr_idx = 0, n = static_cast<int>(match_results.size()); curr_idx < n; ++curr_idx) {
     const MatchResult& match = match_results[curr_idx];
 
+    // unmatched or interpolated
     if (!match.edgeid.Is_Valid() || !match.HasState()) {
       continue;
     }
@@ -214,7 +229,7 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       // minimum number of segments. in this case we could at minimum end up with 1 segment
       segments.clear();
       if (!MergeRoute(prev_state, state, segments, match)) {
-        // we are only discontinuous but only if this isnt the beginning of the route
+        // we are only discontinuous if this isnt the beginning of the route
         if (!route.empty())
           route.back().discontinuity = true;
         // next pair

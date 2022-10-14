@@ -255,6 +255,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "timezone": "%%/tz_world.sqlite",
         "traffic_extract": "%%/traffic.tar",
         "transit_dir": "%%/transit",
+        "transit_feeds_dir": "%%/transit_feeds",
         "use_lru_mem_cache": false
       },
       "odin": {
@@ -528,7 +529,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       return MTAR_ESUCCESS;
     };
     tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
-    tar.close = [](mtar_t * /*tar*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t* /*tar*/) -> int { return MTAR_ESUCCESS; };
 
     // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
     // 10km/h)

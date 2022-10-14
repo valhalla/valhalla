@@ -99,8 +99,6 @@ constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
-  cfg.disable_ferry_ = true;
-  cfg.disable_rail_ferry_ = true;
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_tracks_.def = kDefaultUseTracks;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
@@ -466,19 +464,35 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                          const graph_tile_ptr& tile,
                          const baldr::TimeInfo& time_info,
                          uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, true, &flow_sources,
-                                   time_info.seconds_from_now);
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, true,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
+
   auto final_speed = std::min(edge_speed, top_speed_);
+
   float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
     return Cost(edge->length(), sec);
   }
 
-  float factor = density_factor_[edge->density()] +
-                 highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-                 kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-                 SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+  float factor = 1.f;
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor = ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor = rail_ferry_factor_;
+      break;
+    default:
+      factor = density_factor_[edge->density()] +
+               highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+               kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+               SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+      break;
+  }
+
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
   }
@@ -807,7 +821,13 @@ TEST(TruckCost, testTruckCostParams) {
                                     defaults.country_crossing_cost_.def));
   }
 
-  // Ferry transition cost and ferry use not yet supported
+  // ferry_transition_cost_ (Cost.secs)
+  distributor.reset(make_distributor_from_range(defaults.ferry_cost_));
+  for (unsigned i = 0; i < testIterations; ++i) {
+    ctorTester.reset(make_truckcost_from_json("ferry_cost", (*distributor)(generator)));
+    EXPECT_THAT(ctorTester->ferry_transition_cost_.secs,
+                test::IsBetween(defaults.ferry_cost_.min, defaults.ferry_cost_.max));
+  }
 
   // low_class_penalty_
   distributor.reset(make_distributor_from_range(kLowClassPenaltyRange));

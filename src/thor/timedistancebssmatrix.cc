@@ -590,12 +590,12 @@ void TimeDistanceBSSMatrix::SetDestinationsOneToMany(
   // For each destination
   uint32_t idx = 0;
 
-  // Only skip outbound edges if we have other options
-  bool has_other_edges = false;
-
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool added = false;
+
+    // Only skip outbound edges if we have other options
+    bool has_other_edges = false;
 
     std::for_each(loc.correlation().edges().begin(), loc.correlation().edges().end(),
                   [&has_other_edges](const valhalla::PathEdge& e) {
