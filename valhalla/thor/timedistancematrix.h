@@ -52,6 +52,7 @@ public:
             const sif::mode_costing_t& mode_costing,
             const sif::TravelMode mode,
             const float max_matrix_distance,
+            baldr::TimeInfo& time_info,
             const uint32_t matrix_locations = kAllLocations);
 
   /**
@@ -75,6 +76,7 @@ public:
             const sif::mode_costing_t& mode_costing,
             const sif::TravelMode mode,
             const float max_matrix_distance,
+            baldr::TimeInfo& time_info,
             const uint32_t matrix_locations = kAllLocations);
 
   /**
@@ -88,7 +90,7 @@ public:
    * @return time/distance between all pairs of locations
    */
   std::vector<TimeDistance>
-  ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+  ManyToMany(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
              baldr::GraphReader& graphreader,
              const sif::mode_costing_t& mode_costing,
              const sif::TravelMode mode,
@@ -109,8 +111,8 @@ public:
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode,
@@ -154,6 +156,9 @@ protected:
 
   sif::TravelMode mode_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
@@ -170,7 +175,8 @@ protected:
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     baldr::TimeInfo& time_info);
 
   /**
    * Expand from the node along the reverse search path. Immediately expands
@@ -188,7 +194,8 @@ protected:
                      const baldr::GraphId& node,
                      const sif::EdgeLabel& pred,
                      const uint32_t pred_idx,
-                     const bool from_transition);
+                     const bool from_transition,
+                     baldr::TimeInfo& time_info);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -249,6 +256,18 @@ protected:
                           const graph_tile_ptr& tile,
                           const sif::EdgeLabel& pred,
                           const uint32_t matrix_locations);
+
+  /**
+   * Sets the start time for forward expansion or end time for reverse expansion based on the
+   * locations date time string and the edge candidates timezone
+   *
+   * @param location           which location to use for the date time information
+   * @param reader             the reader for looking up timezone information
+   * @returns                  time info for each location
+   */
+  std::vector<baldr::TimeInfo>
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+          baldr::GraphReader& reader);
 
   /**
    * Form a time/distance matrix from the results.

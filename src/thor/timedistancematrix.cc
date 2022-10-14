@@ -67,12 +67,27 @@ void TimeDistanceMatrix::clear() {
   edgestatus_.clear();
 }
 
+// Initializes the time of the expansion if there is one
+std::vector<TimeInfo>
+TimeDistanceMatrix::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                            GraphReader& reader) {
+  // loop over all locations setting the date time with timezone
+  std::vector<TimeInfo> infos;
+  for (auto& location : locations) {
+    infos.emplace_back(TimeInfo::make(location, reader, &tz_cache_));
+  }
+
+  // Hand back the time information
+  return infos;
+}
+
 // Expand from a node in the forward direction
 void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
                                        const GraphId& node,
                                        const EdgeLabel& pred,
                                        const uint32_t pred_idx,
-                                       const bool from_transition) {
+                                       const bool from_transition,
+                                       baldr::TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -83,6 +98,8 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
   if (!costing_->Allowed(nodeinfo)) {
     return;
   }
+
+  auto offset_time = time_info.forward(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Expand from end node.
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
@@ -100,16 +117,17 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
     uint8_t restriction_idx = -1;
     const bool is_dest = dest_edges_.find(edgeid) != dest_edges_.cend();
     if (es->set() == EdgeSet::kPermanent ||
-        !costing_->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
-        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true)) {
+        !costing_->Allowed(directededge, is_dest, pred, tile, edgeid, offset_time.local_time,
+                           nodeinfo->timezone(), restriction_idx) ||
+        costing_->Restricted(directededge, pred, edgelabels_, tile, edgeid, true, nullptr,
+                             offset_time.local_time, nodeinfo->timezone())) {
       continue;
     }
 
     // Get cost and update distance
     auto transition_cost = costing_->TransitionCost(directededge, nodeinfo, pred);
     uint8_t flow_sources;
-    Cost newcost = pred.cost() +
-                   costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources) +
+    Cost newcost = pred.cost() + costing_->EdgeCost(directededge, tile, offset_time, flow_sources) +
                    transition_cost;
     uint32_t distance = pred.path_distance() + directededge->length();
 
@@ -141,7 +159,7 @@ void TimeDistanceMatrix::ExpandForward(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true);
+      ExpandForward(graphreader, trans->endnode(), pred, pred_idx, true, offset_time);
     }
   }
 }
@@ -155,6 +173,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
                               const sif::mode_costing_t& mode_costing,
                               const travel_mode_t mode,
                               const float max_matrix_distance,
+                              baldr::TimeInfo& time_info,
                               const uint32_t matrix_locations) {
   // Set the mode and costing
   mode_ = mode;
@@ -213,7 +232,7 @@ TimeDistanceMatrix::OneToMany(const valhalla::Location& origin,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandForward(graphreader, pred.endnode(), pred, predindex, false);
+    ExpandForward(graphreader, pred.endnode(), pred, predindex, false, time_info);
   }
   return {}; // Should never get here
 }
@@ -223,7 +242,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
                                        const GraphId& node,
                                        const EdgeLabel& pred,
                                        const uint32_t pred_idx,
-                                       const bool from_transition) {
+                                       const bool from_transition,
+                                       baldr::TimeInfo& time_info) {
   // Get the tile and the node info. Skip if tile is null (can happen
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
@@ -234,6 +254,8 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
   if (!costing_->Allowed(nodeinfo)) {
     return;
   }
+
+  auto offset_time = time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   // Get the opposing predecessor directed edge
   const DirectedEdge* opp_pred_edge = tile->directededge(nodeinfo->edge_index());
@@ -266,13 +288,14 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
     const DirectedEdge* opp_edge = t2->directededge(oppedge);
     uint8_t restriction_idx = -1;
     if (opp_edge == nullptr ||
-        !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, 0, 0, restriction_idx)) {
+        !costing_->AllowedReverse(directededge, pred, opp_edge, t2, oppedge, offset_time.local_time,
+                                  nodeinfo->timezone(), restriction_idx)) {
       continue;
     }
 
     // Get cost. Use the opposing edge for EdgeCost.
     uint8_t flow_sources;
-    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
+    Cost newcost = pred.cost() + costing_->EdgeCost(opp_edge, t2, offset_time, flow_sources);
 
     auto transition_cost =
         costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
@@ -312,7 +335,7 @@ void TimeDistanceMatrix::ExpandReverse(GraphReader& graphreader,
   if (!from_transition && nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
-      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, true);
+      ExpandReverse(graphreader, trans->endnode(), pred, pred_idx, true, offset_time);
     }
   }
 }
@@ -326,6 +349,7 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
                               const sif::mode_costing_t& mode_costing,
                               const travel_mode_t mode,
                               const float max_matrix_distance,
+                              baldr::TimeInfo& time_info,
                               const uint32_t matrix_locations) {
   // Set the mode and costing
   mode_ = mode;
@@ -383,25 +407,25 @@ TimeDistanceMatrix::ManyToOne(const valhalla::Location& dest,
     }
 
     // Expand forward from the end node of the predecessor edge.
-    ExpandReverse(graphreader, pred.endnode(), pred, predindex, false);
+    ExpandReverse(graphreader, pred.endnode(), pred, predindex, false, time_info);
   }
   return {}; // Should never get here
 }
 
 // Many to one time and distance cost matrix. Computes time and distance
 // from many locations to many locations.
-std::vector<TimeDistance> TimeDistanceMatrix::ManyToMany(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-    GraphReader& graphreader,
-    const sif::mode_costing_t& mode_costing,
-    const sif::travel_mode_t mode,
-    const float max_matrix_distance) {
+std::vector<TimeDistance>
+TimeDistanceMatrix::ManyToMany(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                               GraphReader& graphreader,
+                               const sif::mode_costing_t& mode_costing,
+                               const sif::travel_mode_t mode,
+                               const float max_matrix_distance) {
   return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
     baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
     const sif::travel_mode_t mode,
@@ -410,11 +434,13 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
+    // Get the time information for the origin location
+    auto time_infos = SetTime(source_location_list, graphreader);
     for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
       const auto& origin = source_location_list[source_index];
       std::vector<TimeDistance> td =
           OneToMany(origin, target_location_list, graphreader, mode_costing, mode,
-                    max_matrix_distance, matrix_locations);
+                    max_matrix_distance, time_infos[source_index], matrix_locations);
       for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
         size_t index = source_index * target_location_list.size() + target_index;
         many_to_many[index] = td[target_index];
@@ -422,11 +448,12 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
       clear();
     }
   } else {
+    auto time_infos = SetTime(target_location_list, graphreader);
     for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
       const auto& destination = target_location_list[target_index];
       std::vector<TimeDistance> td =
           ManyToOne(destination, source_location_list, graphreader, mode_costing, mode,
-                    max_matrix_distance, matrix_locations);
+                    max_matrix_distance, time_infos[target_index], matrix_locations);
       for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
         size_t index = source_index * target_location_list.size() + target_index;
         many_to_many[index] = td[source_index];

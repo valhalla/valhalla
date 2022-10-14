@@ -28,9 +28,9 @@ std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  adjust_scores(*request.mutable_options());
+  auto& options = *request.mutable_options();
+  adjust_scores(options);
   auto costing = parse_costing(request);
-  const auto& options = request.options();
 
   // Distance scaling (miles or km)
   double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
@@ -42,9 +42,9 @@ std::string thor_worker_t::matrix(Api& request) {
                                       mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
-                                                mode_costing, mode,
-                                                max_matrix_distance.find(costing)->second,
+    return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
+                                                *options.mutable_targets(), *reader, mode_costing,
+                                                mode, max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations());
   };
 
