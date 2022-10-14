@@ -145,7 +145,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {101,
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
-  {103, R"(best_paths has been deprecated, use "alternates" instead"}
+  {103, R"(best_paths has been deprecated, use "alternates" instead)"}
 };
 
 // function to add warnings to proto info object
