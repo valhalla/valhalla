@@ -1068,12 +1068,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
-  // deprecated best_paths for map matching top k
-  auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
   // add warning for deprecated best_paths
-  if (rapidjson::get_optional<std::string>(doc, "/best_paths")) {
+  if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
     add_warning(api, 103);
   }
+  // deprecated best_paths for map matching top k
+  auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
 
   // how many alternates are desired, default to none and if its multi point its also none
   options.set_alternates(rapidjson::get<uint32_t>(doc, "/alternates",
