@@ -657,7 +657,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kAxleCountRange, json, "/axle_count", axle_count);
+  co->set_fixed_speed(
+      kAxleCountRange(rapidjson::get<uint32_t>(json, "/axle_count", co->axle_count())));
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {
