@@ -1,7 +1,6 @@
 #ifndef __VALHALLA_SERVICE_H__
 #define __VALHALLA_SERVICE_H__
 #include <string>
-#include <unordered_map>
 
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/rapidjson_utils.h>
