@@ -212,11 +212,8 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   std::vector<EdgeSegment> new_segments;
   const MatchResult* prev_match{nullptr};
   int prev_idx = -1;
-<<<<<<< Updated upstream
-=======
   int first_match_prev_seg = 0;
   double source_prev_seg = 0.f;
->>>>>>> Stashed changes
   for (int curr_idx = 0, n = static_cast<int>(match_results.size()); curr_idx < n; ++curr_idx) {
     const MatchResult& match = match_results[curr_idx];
 
@@ -247,7 +244,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
       new_segments.clear();
       cut_segments(match_results, prev_idx, curr_idx, segments, new_segments);
 
-<<<<<<< Updated upstream
       // have to merge route's last segment and segments' first segment together if its not a
       // discontinuity or a break
       if (!prev_match->is_break_point && !route.empty() && !route.back().discontinuity &&
@@ -262,80 +258,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
         if (new_segments.front().last_match_idx == -1)
           new_segments.front().last_match_idx = route.back().last_match_idx;
         route.pop_back();
-=======
-      bool do_continue = false;
-      if (new_segments.size() == 1) {
-        if (!match_results[cut_begin_idx].is_break_point &&
-            !match_results[cut_end_idx].is_break_point && !route.back().discontinuity) {
-          // if we don't change segments and there's no breakpoint/discontinuity, continue
-          cut_begin_idx = cut_end_idx;
-          continue;
-        }
-        if (match_results[cut_begin_idx].is_break_point) {
-          new_segments.back().first_match_idx = cut_begin_idx;
-          new_segments.back().last_match_idx = cut_end_idx;
-          route.push_back(new_segments[0]);
-          do_continue = true;
-        }
-        if (match_results[cut_end_idx].is_break_point) {
-          // update the segment before a breakpoint but don't add it
-
-          if (route.back().edgeid != new_segments[0].edgeid) {
-            route.push_back(new_segments[0]);
-            do_continue = true;
-          }
-
-          route.back().last_match_idx = cut_end_idx;
-          route.back().target = match_results[cut_end_idx].distance_along;
-        }
-        if (do_continue) {
-          cut_begin_idx = cut_end_idx;
-          continue;
-        }
-      } else if (new_segments.size() >= 2) {
-        // if we now have 2 (or more) segments the two matched points are on
-        // different segments. it might be many more than 2 but we only care
-        // to update the first and the last as the ones in between don't have
-        // a matched point on them
-        new_segments.front().first_match_idx = first_match_prev_seg;
-        new_segments.front().last_match_idx = cut_begin_idx;
-        new_segments.back().first_match_idx = cut_end_idx;
-
-        // we don't actually know yet the last segment's last_match_idx,
-        // unless this is the last matched point we'll replace it further up
-        new_segments.back().last_match_idx = cut_end_idx;
-
-        if (route.size()) {
-          new_segments.front().source = route.back().source;
-          route.pop_back();
-        }
-
-        first_match_prev_seg = cut_end_idx;
-        source_prev_seg = match_results[cut_end_idx].distance_along;
-      }
-
-      // // replace the last segment in the route with the first new segment
-      // if (!match_results[cut_begin_idx].is_break_point && !route.empty() &&
-      //     !route.back().discontinuity && route.back().edgeid == new_segments.front().edgeid) {
-      //   new_segments.front().source = route.back().source;
-      //   // Prefer first_match_idx from previous segments but do not replace valid value with
-      //   // invalid.
-      //   if (route.back().first_match_idx != -1)
-      //     new_segments.front().first_match_idx = route.back().first_match_idx;
-      //   // Prefer last_match_idx from new segments but do not replace valid value with invalid.
-      //   if (new_segments.front().last_match_idx == -1)
-      //     new_segments.front().last_match_idx = route.back().last_match_idx;
-      //   route.pop_back();
-      // }
-
-      // debug builds check that the route is valid
-      assert(ValidateRoute(mapmatcher.graphreader(), new_segments.begin(), new_segments.end(), tile));
-
-      // after we figured out whether or not we need to merge the last one we keep the rest
-      route.insert(route.end(), new_segments.cbegin(), new_segments.cend());
-
-      cut_begin_idx = cut_end_idx;
->>>>>>> Stashed changes
       }
 
       // debug builds check that the route is valid
