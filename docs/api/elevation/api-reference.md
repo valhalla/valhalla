@@ -107,6 +107,8 @@ The profile results are returned with the form of shape (shape points or encoded
 | `x coordinate` | The range or distance along the input locations. It is the cumulative distance along the previous latitiude, longitude coordinates up to the current coordinate. The x-value for the first coordinate in the shape will always be 0. |
 | `y coordinate` | The height or elevation of the associated latitude, longitude pair. The height is returned as `null` if no height data exists for a given location. |
 | `height` | An array of height for the associated latitude, longitude coordinates. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+
 
 ## Data sources
 

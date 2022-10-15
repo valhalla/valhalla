@@ -538,6 +538,11 @@ std::string serialize(const Api& api) {
     // summary time/distance and other stats
     summary(api, i, writer);
 
+    // get serialized warnings
+    if (api.info().warnings_size() >= 1) {
+      valhalla::tyr::serializeWarnings(api, writer);
+    }
+
     writer.end_object(); // trip
 
     // leave space for alternates by closing this one outside the loop

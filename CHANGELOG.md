@@ -122,6 +122,7 @@
    * ADDED: Add helpers for DirectedEdgeExt and save them to file in GraphTileBuilder [#3562](https://github.com/valhalla/valhalla/pull/3562)
    * ADDED: Fixed Speed costing option [#3576](https://github.com/valhalla/valhalla/pull/3576)
    * ADDED: Matrix action for gurka [#3793](https://github.com/valhalla/valhalla/pull/3793)
+   * ADDED: Add warnings array to response. [#3588](https://github.com/valhalla/valhalla/pull/3588)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
