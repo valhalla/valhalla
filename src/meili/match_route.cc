@@ -212,8 +212,6 @@ std::vector<EdgeSegment> ConstructRoute(const MapMatcher& mapmatcher,
   std::vector<EdgeSegment> new_segments;
   const MatchResult* prev_match{nullptr};
   int prev_idx = -1;
-  int first_match_prev_seg = 0;
-  double source_prev_seg = 0.f;
   for (int curr_idx = 0, n = static_cast<int>(match_results.size()); curr_idx < n; ++curr_idx) {
     const MatchResult& match = match_results[curr_idx];
 
