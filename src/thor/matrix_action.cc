@@ -19,12 +19,12 @@ namespace {
 // return true if any location had a time set
 bool has_time(const Options& options) {
   for (const auto& loc : options.sources()) {
-    if (loc.date_time().empty()) {
+    if (!loc.date_time().empty()) {
       return true;
     }
   }
   for (const auto& loc : options.targets()) {
-    if (loc.date_time().empty()) {
+    if (!loc.date_time().empty()) {
       return true;
     }
   }
