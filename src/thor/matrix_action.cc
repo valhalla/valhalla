@@ -16,8 +16,24 @@ using namespace valhalla::thor;
 
 namespace {
 
-constexpr double kMilePerMeter = 0.000621371;
+// return true if any location had a time set
+bool has_time(const Options& options) {
+  for (const auto& loc : options.sources()) {
+    if (loc.date_time().empty()) {
+      return true;
+    }
+  }
+  for (const auto& loc : options.targets()) {
+    if (loc.date_time().empty()) {
+      return true;
+    }
+  }
+
+  return false;
 }
+
+constexpr double kMilePerMeter = 0.000621371;
+} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -45,7 +61,7 @@ std::string thor_worker_t::matrix(Api& request) {
     return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
                                                 *options.mutable_targets(), *reader, mode_costing,
                                                 mode, max_matrix_distance.find(costing)->second,
-                                                options.matrix_locations());
+                                                max_timedep_dist_matrix, options.matrix_locations());
   };
 
   if (costing == "bikeshare") {
@@ -75,7 +91,12 @@ std::string thor_worker_t::matrix(Api& request) {
           time_distances = timedistancematrix();
           break;
         default:
-          time_distances = costmatrix();
+          // force timedistance if traffic is desired and allowed
+          if (has_time(options) && max_timedep_dist_matrix) {
+            time_distances = timedistancematrix();
+          } else {
+            time_distances = costmatrix();
+          }
       }
       break;
     case COST_MATRIX:

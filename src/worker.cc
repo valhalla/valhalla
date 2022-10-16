@@ -175,8 +175,8 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 
 void add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  // otherwise we do what the person was asking for
-  if (options.has_date_time_case() && !locations.empty()) {
+  // /route needs special treatment
+  if (options.action() == Options::route && options.has_date_time_case() && !locations.empty()) {
     switch (options.date_time_type()) {
       case Options::current:
         locations.Mutable(0)->set_date_time("current");
@@ -193,6 +193,9 @@ void add_date_to_locations(Options& options,
       default:
         break;
     }
+  } else if (!options.date_time().empty() && !locations.empty()) {
+    for (auto& loc : locations)
+      loc.set_date_time(options.date_time());
   }
 }
 

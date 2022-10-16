@@ -68,13 +68,31 @@ void TimeDistanceMatrix::clear() {
 }
 
 // Initializes the time of the expansion if there is one
-std::vector<TimeInfo>
-TimeDistanceMatrix::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                            GraphReader& reader) {
+std::vector<TimeInfo> TimeDistanceMatrix::SetTime(
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
+    GraphReader& reader,
+    float max_timedep_dist) {
   // loop over all locations setting the date time with timezone
   std::vector<TimeInfo> infos;
-  for (auto& location : locations) {
-    infos.emplace_back(TimeInfo::make(location, reader, &tz_cache_));
+  for (auto& origin : origins) {
+    // invalid time infos if the service doesn't allow it anyways
+    if (!max_timedep_dist || origin.date_time().empty()) {
+      infos.emplace_back(TimeInfo::invalid());
+      continue;
+    }
+    // only check distance to all destinations if a valid time object is set and the service allows it
+    PointLL origin_ll{origin.ll().lng(), origin.ll().lat()};
+    bool time_allowed = true;
+    for (const auto& destination : destinations) {
+      time_allowed = max_timedep_dist >
+                     origin_ll.Distance(PointLL(destination.ll().lng(), destination.ll().lat()));
+      if (!time_allowed) {
+        break;
+      }
+    }
+    infos.emplace_back(time_allowed ? TimeInfo::make(origin, reader, &tz_cache_)
+                                    : TimeInfo::invalid());
   }
 
   // Hand back the time information
@@ -420,7 +438,8 @@ TimeDistanceMatrix::ManyToMany(google::protobuf::RepeatedPtrField<valhalla::Loca
                                const sif::mode_costing_t& mode_costing,
                                const sif::travel_mode_t mode,
                                const float max_matrix_distance) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance,
+                        0);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
@@ -430,12 +449,14 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const sif::mode_costing_t& mode_costing,
     const sif::travel_mode_t mode,
     const float max_matrix_distance,
+    const float max_timedep_dist,
     const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
     // Get the time information for the origin location
-    auto time_infos = SetTime(source_location_list, graphreader);
+    auto time_infos =
+        SetTime(source_location_list, target_location_list, graphreader, max_timedep_dist);
     for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
       const auto& origin = source_location_list[source_index];
       std::vector<TimeDistance> td =
@@ -448,7 +469,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
       clear();
     }
   } else {
-    auto time_infos = SetTime(target_location_list, graphreader);
+    auto time_infos =
+        SetTime(target_location_list, source_location_list, graphreader, max_timedep_dist);
     for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
       const auto& destination = target_location_list[target_index];
       std::vector<TimeDistance> td =

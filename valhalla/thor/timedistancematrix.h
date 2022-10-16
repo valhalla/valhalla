@@ -105,6 +105,7 @@ public:
    * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  max_timedep_dist      the maximum distance for time-dependent computations
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
@@ -117,6 +118,7 @@ public:
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode,
                  const float max_matrix_distance,
+                 const float max_timedep_dist,
                  const uint32_t matrix_locations = kAllLocations);
 
   /**
@@ -258,16 +260,20 @@ protected:
                           const uint32_t matrix_locations);
 
   /**
-   * Sets the start time for forward expansion or end time for reverse expansion based on the
-   * locations date time string and the edge candidates timezone
+   * Sets the date_time on the origin locations, if the distance to the furthest destination
+   * is less than max_timedep_dist.
    *
-   * @param location           which location to use for the date time information
+   * @param origins            the origins (sources or targets)
+   * @param destinations       the destinations (sources or targets)
    * @param reader             the reader for looking up timezone information
+   * @param max_timedep_dist   the maximum distance for time-dependent computations
    * @returns                  time info for each location
    */
   std::vector<baldr::TimeInfo>
-  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-          baldr::GraphReader& reader);
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+          const google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
+          baldr::GraphReader& reader,
+          float max_timedep_dist);
 
   /**
    * Form a time/distance matrix from the results.
