@@ -118,8 +118,8 @@ public:
                  const sif::mode_costing_t& mode_costing,
                  const sif::TravelMode mode,
                  const float max_matrix_distance,
-                 const float max_timedep_dist,
-                 const uint32_t matrix_locations = kAllLocations);
+                 const uint32_t matrix_locations = kAllLocations,
+                 const float max_timedep_dist = 0.0f);
 
   /**
    * Clear the temporary information generated during time+distance

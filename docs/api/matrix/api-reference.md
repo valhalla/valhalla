@@ -31,9 +31,6 @@ For example, while at your office, you want to know the times and distances to w
 {"sources":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713},{"lat":40.752522,"lon":-73.985015},{"lat":40.750117,"lon":-73.983704},{"lat":40.750552,"lon":-73.993519}],"targets":[{"lat":40.744014,"lon":-73.990508},{"lat":40.739735,"lon":-73.979713},{"lat":40.752522,"lon":-73.985015},{"lat":40.750117,"lon":-73.983704},{"lat":40.750552,"lon":-73.993519}],"costing":"pedestrian"}&id=ManyToMany_NYC_work_dinner
 ```
 
-For one-to-many or many-to-one requests there is an option to specify the minimum number of locations that satisfy the request. The `matrix_locations` parameters defaults to all locations. However, when specified, this option allows a partial result to be returned. This is basically equivalent to "find the closest/best `matrix_locations` locations out of the full location set".
-There is an option to name your matrix request.  You can do this by appending the following to your request `&id=`.  The `id` is returned with the response so a user could match to the corresponding request.
-
 ### Source and target parameters
 
 When using the `sources_to_targets` action, you specify sources and targets as ordered lists of one or more locations within a JSON array, depending on the type of matrix result you are expecting.
@@ -45,7 +42,11 @@ A source and target must include a latitude and longitude in decimal degrees. Th
 | `lat` | Latitude of the source/target in degrees. |
 | `lon` | Longitude of the source/target in degrees. |
 
-You can refer to the [route location documentation](/docs/api/turn-by-turn/api-reference.md#locations) for more information on specifying locations.  NOTE: Using `type` in addition to the `lat` and `lon` within the location parameter has no meaning for matrices.
+You can refer to the [route location documentation](/docs/api/turn-by-turn/api-reference.md#locations) for more information on specifying locations.  
+
+**Note**: `date_time` strings behave differently for `sources_to_targets` than for `route`. If set on the `sources` **and** there's more `targets` than `sources`, it'll behave like a "Specified departure time" on the `sources`. If set on the `targets` **and** there's less `targets` than `sources`, it'll behave like a "Specified arrival time" on the `targets`.
+
+Also, using `type` in addition to the `lat` and `lon` within the location parameter has no meaning for matrices.
 
 ### Costing parameters
 
@@ -56,6 +57,9 @@ The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `b
 | Options | Description |
 | :------------------ | :----------- |
 | `id` | Name your matrix request. If `id` is specified, the naming will be sent thru to the response. |
+| `matrix_locations` | For one-to-many or many-to-one requests this specifies the minimum number of locations that satisfy the request. However, when specified, this option allows a partial result to be returned. This is basically equivalent to "find the closest/best `matrix_locations` locations out of the full location set". |
+| `date_time` | The local date and time at the location. <li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> **Note**, `type` is not relevant for matrix.|
+
 
 ## Outputs of the matrix service
 

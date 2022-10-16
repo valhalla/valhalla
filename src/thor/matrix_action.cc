@@ -61,7 +61,7 @@ std::string thor_worker_t::matrix(Api& request) {
     return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
                                                 *options.mutable_targets(), *reader, mode_costing,
                                                 mode, max_matrix_distance.find(costing)->second,
-                                                max_timedep_dist_matrix, options.matrix_locations());
+                                                options.matrix_locations(), max_timedep_dist_matrix);
   };
 
   if (costing == "bikeshare") {

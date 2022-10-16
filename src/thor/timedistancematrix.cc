@@ -438,8 +438,7 @@ TimeDistanceMatrix::ManyToMany(google::protobuf::RepeatedPtrField<valhalla::Loca
                                const sif::mode_costing_t& mode_costing,
                                const sif::travel_mode_t mode,
                                const float max_matrix_distance) {
-  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance,
-                        0);
+  return SourceToTarget(locations, locations, graphreader, mode_costing, mode, max_matrix_distance);
 }
 
 std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
@@ -449,8 +448,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
     const sif::mode_costing_t& mode_costing,
     const sif::travel_mode_t mode,
     const float max_matrix_distance,
-    const float max_timedep_dist,
-    const uint32_t matrix_locations) {
+    const uint32_t matrix_locations,
+    const float max_timedep_dist) {
   // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
