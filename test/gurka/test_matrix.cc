@@ -24,14 +24,17 @@ TEST(Matrix, MatrixSimple) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_simple");
 
-  const std::vector<float> exp_dists = {0.f,  1.2f, 0.3f, 0.9f, 1.1f, 0.6f, 0.f,  0.9f, 0.3f,
-                                        0.5f, 0.3f, 0.9f, 0.f,  1.2f, 1.f,  0.9f, 0.3f, 0.6f,
-                                        0.f,  0.4f, 1.1f, 0.5f, 1.4f, 0.8f, 0.f};
+  // clang-format off
+  const std::vector<float> exp_dists = {0.0f, 0.6f, 0.3f, 0.9f, 1.1f,
+                                        0.6f, 0.f,  0.9f, 0.3f, 0.5f,
+                                        0.3f, 0.9f, 0.0f, 0.6f, 1.0f,
+                                        0.9f, 0.3f, 0.6f, 0.0f, 0.4f,
+                                        1.1f, 0.5f, 1.0f, 0.4f, 0.0f};
+  // clang-format on
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"A", "B", "C", "D", "E"},
-                                       {"A", "B", "C", "D", "E"}, "auto", {}, {}, &res);
+                                       {"A", "B", "C", "D", "E"}, "bicycle", {}, {}, &res);
 
-  // get the MultiLineString feature
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
@@ -42,7 +45,6 @@ TEST(Matrix, MatrixSimple) {
       std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
                         std::to_string(i % origin_td.Size());
       EXPECT_EQ(v.GetObject()["distance"].GetFloat(), exp_dists[i]) << msg;
-      // EXPECT_EQ(v.GetObject()["time"].GetUint(), exp_times[i]) << msg;
       i++;
     }
   }
