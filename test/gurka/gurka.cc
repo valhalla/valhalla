@@ -684,7 +684,7 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
             << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
             << " with locations ";
   for (const auto& waypoint : waypoints) {
-    if (waypoint != waypoints.front())
+    if (&waypoint != &waypoints.front())
       std::cerr << ", ";
     std::cerr << waypoint;
   };

@@ -31,7 +31,7 @@ Because the locate service is designed to work in tandem with the route service 
 
 If a request has been named using the optional `id` key, then this `id` key and value will be echoed in the JSON response object.
 
-The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections includding mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned.
+The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections includding mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 Here are some sample results with `verbose` set to `false`:
 
@@ -61,6 +61,9 @@ Here are some sample results with `verbose` set to `false`:
         "percent_along": 1,
         "correlated_lon": -76.494987
       }
+    ],
+    "warnings": [
+      "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"
     ]
   }
 ]
@@ -322,6 +325,9 @@ Here are some sample results with `verbose` set to `true`:
         "side_of_street": "neither",
         "correlated_lat": 40.313206
       }
+    ],
+    "warnings": [
+      "hov costing is deprecated and will be turned into auto costing with hov2=true costing option"
     ]
   }
 ]
