@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
 
   Api request;
   ParseApi(json_str, valhalla::Options::sources_to_targets, request);
-  const auto& options = request.options();
+  auto& options = *request.mutable_options();
 
   // parse the config
   boost::property_tree::ptree pt;
@@ -185,6 +185,7 @@ int main(int argc, char* argv[]) {
 
   // Get the max matrix distances for construction of the CostMatrix and TimeDistanceMatrix classes
   std::unordered_map<std::string, float> max_matrix_distance;
+  float max_time_dep_distance;
   for (const auto& kv : pt.get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
@@ -192,6 +193,9 @@ int main(int argc, char* argv[]) {
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
         kv.first == "status") {
+      continue;
+    } else if (kv.first == "max_timedep_distance_matrix") {
+      max_time_dep_distance = pt.get<float>("service_limits.max_timedep_distance_matrix");
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -247,8 +251,8 @@ int main(int argc, char* argv[]) {
   TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                             max_distance);
+    res = tdm.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
+                             mode_costing, mode, max_distance, max_time_dep_distance);
     tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
