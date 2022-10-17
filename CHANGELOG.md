@@ -56,6 +56,7 @@
    * FIXED: Fix TimeDistanceMatrix results sequence [#3738](https://github.com/valhalla/valhalla/pull/3738)
    * FIXED: Fix status endpoint not reporting that the service is shutting down [#3785](https://github.com/valhalla/valhalla/pull/3785)
    * FIXED: Fix TimdDistanceMatrix SetSources and SetTargets [#3792](https://github.com/valhalla/valhalla/pull/3792)
+   * FIXED: Added highway and surface factor in truckcost [#3590](https://github.com/valhalla/valhalla/pull/3590)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -122,6 +123,8 @@
    * ADDED: Add helpers for DirectedEdgeExt and save them to file in GraphTileBuilder [#3562](https://github.com/valhalla/valhalla/pull/3562)
    * ADDED: Fixed Speed costing option [#3576](https://github.com/valhalla/valhalla/pull/3576)
    * ADDED: axle_count costing option for hgv [#3648](https://github.com/valhalla/valhalla/pull/3648)
+   * ADDED: Matrix action for gurka [#3793](https://github.com/valhalla/valhalla/pull/3793)
+   * ADDED: Add warnings array to response. [#3588](https://github.com/valhalla/valhalla/pull/3588)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

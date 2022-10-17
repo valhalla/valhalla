@@ -544,6 +544,12 @@ std::string serializeTraceAttributes(
     ++route;
   }
   writer.end_array();
+
+  // add warnings to json response
+  if (request.info().warnings_size() >= 1) {
+    valhalla::tyr::serializeWarnings(request, writer);
+  }
+
   writer.end_object();
   return writer.get_buffer();
 }
