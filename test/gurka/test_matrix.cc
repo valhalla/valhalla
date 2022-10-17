@@ -6,6 +6,7 @@
 
 using namespace valhalla;
 
+namespace {
 void update_traffic_on_edges(baldr::GraphReader& reader,
                              baldr::TrafficTile& tile,
                              uint32_t index,
@@ -24,6 +25,20 @@ void update_traffic_on_edges(baldr::GraphReader& reader,
     }
   }
 }
+
+void check_dist(const rapidjson::Document& result, const std::vector<float>& exp_dists) {
+  size_t i = 0;
+  for (const auto& origin_row : result["sources_to_targets"].GetArray()) {
+    auto origin_td = origin_row.GetArray();
+    for (const auto& v : origin_td) {
+      std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
+                        std::to_string(i % origin_td.Size());
+      EXPECT_EQ(v.GetObject()["distance"].GetFloat(), exp_dists[i]) << msg;
+      i++;
+    }
+  }
+}
+} // namespace
 
 class MatrixTest : public ::testing::Test {
 protected:
@@ -61,8 +76,6 @@ protected:
 gurka::map MatrixTest::map = {};
 
 TEST_F(MatrixTest, MatrixNoTraffic) {
-  // we expect to take the motorways, residential path is 1.6f
-  const std::vector<float> exp_dists = {0.0f, 2.0f, 2.0f, 0.0f};
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E", "H"},
                                        "auto", {}, {}, &res);
@@ -70,16 +83,8 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  size_t i = 0;
-  for (const auto& origin_row : res_doc["sources_to_targets"].GetArray()) {
-    auto origin_td = origin_row.GetArray();
-    for (const auto& v : origin_td) {
-      std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
-                        std::to_string(i % origin_td.Size());
-      EXPECT_EQ(v.GetObject()["distance"].GetFloat(), exp_dists[i]) << msg;
-      i++;
-    }
-  }
+  // we expect to take the motorways, residential path is 1.6f
+  check_dist(res_doc, {0.0f, 2.0f, 2.0f, 0.0f});
 }
 
 TEST_F(MatrixTest, MatrixWithLiveTraffic) {
@@ -99,7 +104,6 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   };
   test::customize_live_traffic_data(map.config, edges_with_traffic);
 
-  // we expect to take the shorter lower path on residential
   const std::vector<float> exp_dists = {0.0f, 1.6f, 1.6f, 0.0f};
   const std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"}};
   std::string res;
@@ -109,14 +113,6 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
 
-  size_t i = 0;
-  for (const auto& origin_row : res_doc["sources_to_targets"].GetArray()) {
-    auto origin_td = origin_row.GetArray();
-    for (const auto& v : origin_td) {
-      std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
-                        std::to_string(i % origin_td.Size());
-      EXPECT_EQ(v.GetObject()["distance"].GetFloat(), exp_dists[i]) << msg;
-      i++;
-    }
-  }
+  // we expect to take the shorter lower path on residential
+  check_dist(res_doc, {0.0f, 1.6f, 1.6f, 0.0f});
 }
