@@ -244,6 +244,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
+  max_timedep_dist_matrix = config.get<float>("service_limits.max_timedep_distance_matrix", 0.0);
 
   // signal that the worker started successfully
   started();
