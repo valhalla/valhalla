@@ -19,13 +19,14 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                    const google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+void check_distance(google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                    google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
                     float matrix_max_distance,
-                    float& max_location_distance) {
+                    float& max_location_distance,
+                    float max_timedep_distance) {
   // see if any locations pairs are unreachable or too far apart
-  for (const auto& source : sources) {
-    for (const auto& target : targets) {
+  for (auto& source : sources) {
+    for (auto& target : targets) {
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(source).Distance(to_ll(target));
 
@@ -37,6 +38,12 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154};
       };
+
+      // unset the date_time if beyond the limit
+      if (path_distance > max_timedep_distance) {
+        source.set_date_time("");
+        target.set_date_time("");
+      }
     }
   }
 }
@@ -104,8 +111,9 @@ void loki_worker_t::matrix(Api& request) {
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(options.sources(), options.targets(), max_matrix_distance.find(costing_name)->second,
-                 max_location_distance);
+  check_distance(*options.mutable_sources(), *options.mutable_targets(),
+                 max_matrix_distance.find(costing_name)->second, max_location_distance,
+                 max_timedep_dist_matrix);
 
   // correlate the various locations to the underlying graph
   auto sources_targets = PathLocation::fromPBF(options.sources());

@@ -61,7 +61,7 @@ std::string thor_worker_t::matrix(Api& request) {
     return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
                                                 *options.mutable_targets(), *reader, mode_costing,
                                                 mode, max_matrix_distance.find(costing)->second,
-                                                options.matrix_locations(), max_timedep_dist_matrix);
+                                                options.matrix_locations());
   };
 
   if (costing == "bikeshare") {
@@ -92,7 +92,7 @@ std::string thor_worker_t::matrix(Api& request) {
           break;
         default:
           // force timedistance if traffic is desired and allowed
-          if (has_time(options) && max_timedep_dist_matrix) {
+          if (has_time(options)) {
             time_distances = timedistancematrix();
           } else {
             time_distances = costmatrix();
