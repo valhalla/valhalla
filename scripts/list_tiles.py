@@ -72,8 +72,9 @@ class Tiles(object):
 
     def Digits(self, number):
         digits = 1 if (number < 0) else 0
+        number = number
         while number:
-            number /= 10
+            number = int(number / 10)
             digits += 1
         return digits
 
@@ -167,7 +168,7 @@ if __name__ == "__main__":
                     j = mincol
                     while j <= tiles.Col(b_box.maxx):
                         file_name = tiles.GetFile(tile_id, level)
-                        print(file_name)
+                        print(file_name, end=" ")
                         tile_id += 1
                         j += 1
                     i += 1
