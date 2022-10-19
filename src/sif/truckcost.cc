@@ -53,6 +53,7 @@ constexpr float kDefaultTruckAxleLoad = 9.07f; // Metric Tons (20,000 lbs)
 constexpr float kDefaultTruckHeight = 4.11f;   // Meters (13 feet 6 inches)
 constexpr float kDefaultTruckWidth = 2.6f;     // Meters (102.36 inches)
 constexpr float kDefaultTruckLength = 21.64f;  // Meters (71 feet)
+constexpr uint8_t kDefaultAxleCount = 5;       // 5 axles for above truck config
 
 // Turn costs based on side of street driving
 constexpr float kRightSideTurnCosts[] = {kTCStraight,       kTCSlight,  kTCFavorable,
@@ -94,6 +95,7 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<uint8_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
@@ -298,6 +300,7 @@ public:
   float width_;          // Vehicle width in meters
   float length_;         // Vehicle length in meters
   float highway_factor_; // Factor applied when road is a motorway or trunk
+  uint8_t axle_count_;   // Vehicle axle count
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -324,6 +327,7 @@ TruckCost::TruckCost(const Costing& costing)
   height_ = costing_options.height();
   width_ = costing_options.width();
   length_ = costing_options.length();
+  axle_count_ = costing_options.axle_count();
 
   // Create speed cost table
   speedfactor_.resize(kMaxSpeedKph + 1, 0);
@@ -383,6 +387,11 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
       break;
     case AccessType::kMaxAxleLoad:
       if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
+        return false;
+      }
+      break;
+    case AccessType::kMaxAxles:
+      if (axle_count_ > static_cast<uint8_t>(restriction.value())) {
         return false;
       }
       break;
@@ -689,6 +698,8 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
+  co->set_axle_count(
+      kAxleCountRange(rapidjson::get<uint32_t>(json, "/axle_count", co->axle_count())));
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {

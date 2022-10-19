@@ -46,6 +46,7 @@ struct HGVRestrictionTypes {
   bool length;
   bool weight;
   bool width;
+  bool axles;
 };
 
 bool IsLoopTerminal(const graph_tile_ptr& tile,
@@ -434,6 +435,9 @@ void build(const boost::property_tree::ptree& pt,
                     break;
                   case AccessType::kMaxAxleLoad:
                     hgv.axle_load = true;
+                    break;
+                  case AccessType::kMaxAxles:
+                    hgv.axles = true;
                     break;
                   case AccessType::kMaxHeight:
                     hgv.height = true;
