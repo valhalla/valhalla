@@ -17,19 +17,38 @@ using namespace valhalla::thor;
 namespace {
 
 // return true if any location had a time set
-bool has_time(const Options& options) {
+// also disable time if it doesn't make sense computationally
+bool has_time(Api& request) {
+  auto& options = request.options();
+  bool more_targets = options.targets().size() > options.sources().size();
+  bool had_valid_time = false;
   for (const auto& loc : options.sources()) {
     if (!loc.date_time().empty()) {
-      return true;
+      if (!more_targets) {
+        add_warning(request, 400);
+        return false;
+      }
+      had_valid_time = true;
+      break;
     }
   }
   for (const auto& loc : options.targets()) {
     if (!loc.date_time().empty()) {
-      return true;
+      if (more_targets) {
+        add_warning(request, 401);
+        return false;
+      }
+      // don't accept times set on sources & targets
+      if (had_valid_time) {
+        add_warning(request, 402);
+        return false;
+      }
+      had_valid_time = true;
+      break;
     }
   }
 
-  return false;
+  return had_valid_time;
 }
 
 constexpr double kMilePerMeter = 0.000621371;
@@ -92,7 +111,7 @@ std::string thor_worker_t::matrix(Api& request) {
           break;
         default:
           // force timedistance if traffic is desired and allowed
-          if (has_time(options)) {
+          if (has_time(request)) {
             time_distances = timedistancematrix();
           } else {
             time_distances = costmatrix();

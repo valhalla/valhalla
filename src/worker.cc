@@ -145,19 +145,10 @@ const std::unordered_map<int, std::string> warning_codes = {
   {101,
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
-  {103, R"(best_paths has been deprecated, use "alternates" instead)"}
+  {103, R"(best_paths has been deprecated, use "alternates" instead)"},
+  {400, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
+  {401, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"}
 };
-
-// function to add warnings to proto info object
-void add_warning(valhalla::Api& api, int code) {
-  auto message = warning_codes.find(code);
-  if (message != warning_codes.end()) {
-    auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
-    warning->set_code(message->first);
-  }
-}
-
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
@@ -174,17 +165,42 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
 }
 
 void add_date_to_locations(Options& options,
-                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  // /(trace_)route needs special treatment
+                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                           const std::string& node) {
+  // matrix wants to shortcut setting date_time's as well
   if (options.has_date_time_case() && !locations.empty()) {
     switch (options.date_time_type()) {
       case Options::current:
-        for (auto& loc : locations)
-          loc.set_date_time("current");
+        if (node == "sources") {
+          for (auto& loc : locations) {
+            loc.set_date_time("current");
+          }
+        } else {
+          locations.Mutable(0)->set_date_time("current");
+        }
         break;
-      default:
+      case Options::depart_at:
+        if (node == "sources") {
+          for (auto& loc : locations) {
+            loc.set_date_time("current");
+          }
+        } else {
+          locations.Mutable(0)->set_date_time(options.date_time());
+        }
+        break;
+      case Options::arrive_by:
+        if (node == "targets") {
+          for (auto& loc : locations) {
+            loc.set_date_time("current");
+          }
+        } else {
+          locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
+        }
+        break;
+      case Options::invariant:
         for (auto& loc : locations)
           loc.set_date_time(options.date_time());
+      default:
         break;
     }
   }
@@ -464,7 +480,7 @@ void parse_locations(const rapidjson::Document& doc,
 
     // push the date time information down into the locations
     if (!had_date_time) {
-      add_date_to_locations(options, *locations);
+      add_date_to_locations(options, *locations, node);
     }
 
     // If any of the locations had search_filter.exclude_closures set to false,
@@ -798,7 +814,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
     // add the date time
-    add_date_to_locations(options, *options.mutable_shape());
+    add_date_to_locations(options, *options.mutable_shape(), "shape");
   } // fall back from encoded polyline to array of locations
   else {
     parse_locations(doc, options, "shape", 134, ignore_closures);
@@ -1105,6 +1121,16 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
   }
   if (!extra.empty())
     message += ":" + extra;
+}
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, int code) {
+  auto message = warning_codes.find(code);
+  if (message != warning_codes.end()) {
+    auto* warning = api.mutable_info()->mutable_warnings()->Add();
+    warning->set_description(message->second);
+    warning->set_code(message->first);
+  }
 }
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {
