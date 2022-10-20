@@ -26,7 +26,7 @@ TEST(TimeTracking, make) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   // this is what the default should be, with constrained second of day
-  baldr::TimeInfo basic_ti{false, 0, 0, baldr::kConstrainedFlowSecondOfDay};
+  baldr::TimeInfo basic_ti{false, 0, 0, baldr::kInvalidSecondsOfWeek};
 
   // once without tz cache and once with
   for (auto* cache : std::vector<baldr::DateTime::tz_sys_info_cache_t*>{
