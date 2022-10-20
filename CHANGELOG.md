@@ -57,6 +57,7 @@
    * FIXED: Fix status endpoint not reporting that the service is shutting down [#3785](https://github.com/valhalla/valhalla/pull/3785)
    * FIXED: Fix TimdDistanceMatrix SetSources and SetTargets [#3792](https://github.com/valhalla/valhalla/pull/3792)
    * FIXED: Added highway and surface factor in truckcost [#3590](https://github.com/valhalla/valhalla/pull/3590)
+   * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
