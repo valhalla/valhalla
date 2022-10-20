@@ -147,7 +147,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   {400, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
-  {401, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"}
+  {401, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
+  {401, R"(both "sources" and "targets" have date_time set, ignoring date_time)"}
 };
 // clang-format on
 
