@@ -121,8 +121,8 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 2.6 for truck. |
-| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 4.11 for truck. |
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
 | `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
 | `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
@@ -136,6 +136,7 @@ The following options are available for `truck` costing.
 | `length` | The length of the truck (in meters). Default 21.64. |
 | `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
