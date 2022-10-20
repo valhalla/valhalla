@@ -52,15 +52,19 @@ public:
                  const sif::travel_mode_t mode,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations) {
+    // Set the mode and costing
+    mode_ = mode;
+    costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {
       return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, mode_costing, mode,
-                                                   max_matrix_distance, matrix_locations);
+                                                   graphreader, max_matrix_distance,
+                                                   matrix_locations);
     } else {
       return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                   graphreader, mode_costing, mode,
-                                                   max_matrix_distance, matrix_locations);
+                                                   graphreader, max_matrix_distance,
+                                                   matrix_locations);
     }
   };
 
@@ -109,8 +113,6 @@ protected:
   ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                 baldr::GraphReader& graphreader,
-                const sif::mode_costing_t& mode_costing,
-                const sif::travel_mode_t mode,
                 const float max_matrix_distance,
                 const uint32_t matrix_locations = kAllLocations);
 
