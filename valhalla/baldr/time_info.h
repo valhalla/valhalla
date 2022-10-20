@@ -46,7 +46,7 @@ struct TimeInfo {
    * @return    TimeInfo structure
    */
   static inline TimeInfo invalid() {
-    return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
+    return {false, 0, 0, kInvalidSecondsOfWeek, 0, false, nullptr};
   }
 
   /**

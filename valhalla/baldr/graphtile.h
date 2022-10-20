@@ -700,6 +700,7 @@ public:
 
     // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
     // if the edge has constrained speed
+    // kInvalidSecondsOfWeek %= midgard::kSecondsPerDay = 12.1
     seconds %= midgard::kSecondsPerDay;
     auto is_daytime = (25200 < seconds && seconds < 68400);
     if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&
