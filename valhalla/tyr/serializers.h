@@ -117,6 +117,13 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
  */
 std::string serializePbf(Api& request);
 
+/**
+ * @brief Turns warnings into json
+ * @param request The protobuf warnings object
+ * @return json string
+ */
+void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
+baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
 } // namespace tyr
 } // namespace valhalla
 
