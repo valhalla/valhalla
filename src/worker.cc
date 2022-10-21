@@ -422,12 +422,22 @@ void parse_location(valhalla::Location* location,
   }
 }
 
+/**
+ * Parses the locations and sets some defaults
+ *
+ * @param doc                       The JSON body
+ * @param options                   The request options to be filled in
+ * @param node                      The type of locations passed
+ * @param location_parse_error_code The code raised if this method throws
+ * @param ignore_closures           Whether to ignore closures
+ * @param had_date_time             Gets set to true if any location had a date_time string
+ */
 void parse_locations(const rapidjson::Document& doc,
                      Options& options,
                      const std::string& node,
                      unsigned location_parse_error_code,
                      const boost::optional<bool>& ignore_closures,
-                     bool* had_date_time = nullptr) {
+                     bool& had_date_time) {
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
   if (node == "locations") {
@@ -456,7 +466,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto* loc = locations->Add();
         loc->mutable_correlation()->set_original_index(locations->size() - 1);
         parse_location(loc, r_loc, options, ignore_closures);
-        *had_date_time = had_date_time || !loc->date_time().empty();
+        had_date_time = had_date_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
       }
@@ -466,7 +476,7 @@ void parse_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         loc.mutable_correlation()->set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
-        *had_date_time = had_date_time || !loc.date_time().empty();
+        had_date_time = had_date_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
       }
@@ -783,6 +793,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // if any of the locations params have a date_time object in their locations, we'll remember
+  // only /sources_to_targets will parse more than one location collection and there it's fine
+  bool had_date_time = false;
+
   // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
   if (encoded_polyline) {
@@ -818,11 +832,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     add_date_to_locations(options, *options.mutable_shape(), "shape");
   } // fall back from encoded polyline to array of locations
   else {
-    parse_locations(doc, options, "shape", 134, ignore_closures);
+    parse_locations(doc, options, "shape", 134, ignore_closures, had_date_time);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_locations(doc, options, "trace", 135, ignore_closures);
+      parse_locations(doc, options, "trace", 135, ignore_closures, had_date_time);
     }
   }
 
@@ -905,16 +919,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     // TODO: throw if not all names are unique?
   }
 
-  // if any of the following have a date_time object in their locations, we'll remember
-  bool had_date_time = false;
   // get the locations in there
-  parse_locations(doc, options, "locations", 130, ignore_closures, &had_date_time);
+  parse_locations(doc, options, "locations", 130, ignore_closures, had_date_time);
 
   // get the sources in there
-  parse_locations(doc, options, "sources", 131, ignore_closures, &had_date_time);
+  parse_locations(doc, options, "sources", 131, ignore_closures, had_date_time);
 
   // get the targets in there
-  parse_locations(doc, options, "targets", 132, ignore_closures, &had_date_time);
+  parse_locations(doc, options, "targets", 132, ignore_closures, had_date_time);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (options.date_time_type() == Options::no_time && !had_date_time &&
@@ -929,9 +941,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // get the avoids in there
   // TODO: remove "avoid_locations/polygons" after some while
   if (doc.HasMember("avoid_locations"))
-    parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+    parse_locations(doc, options, "avoid_locations", 133, ignore_closures, had_date_time);
   else
-    parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
+    parse_locations(doc, options, "exclude_locations", 133, ignore_closures, had_date_time);
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
