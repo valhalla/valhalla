@@ -268,7 +268,6 @@ protected:
    */
   std::vector<baldr::TimeInfo>
   SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-          const google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
           baldr::GraphReader& reader);
 
   /**

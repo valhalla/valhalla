@@ -68,10 +68,9 @@ void TimeDistanceMatrix::clear() {
 }
 
 // Initializes the time of the expansion if there is one
-std::vector<TimeInfo> TimeDistanceMatrix::SetTime(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    GraphReader& reader) {
+std::vector<TimeInfo>
+TimeDistanceMatrix::SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+                            GraphReader& reader) {
   // loop over all locations setting the date time with timezone
   std::vector<TimeInfo> infos;
   for (auto& origin : origins) {
@@ -436,7 +435,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
   std::vector<TimeDistance> many_to_many(source_location_list.size() * target_location_list.size());
   if (source_location_list.size() <= target_location_list.size()) {
     // Get the time information for the origin location
-    auto time_infos = SetTime(source_location_list, target_location_list, graphreader);
+    auto time_infos = SetTime(source_location_list, graphreader);
     for (size_t source_index = 0; source_index < source_location_list.size(); ++source_index) {
       const auto& origin = source_location_list[source_index];
       std::vector<TimeDistance> td =
@@ -449,7 +448,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::SourceToTarget(
       clear();
     }
   } else {
-    auto time_infos = SetTime(target_location_list, source_location_list, graphreader);
+    auto time_infos = SetTime(target_location_list, graphreader);
     for (size_t target_index = 0; target_index < target_location_list.size(); ++target_index) {
       const auto& destination = target_location_list[target_index];
       std::vector<TimeDistance> td =
