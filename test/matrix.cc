@@ -315,11 +315,7 @@ TEST(Matrix, test_date_time) {
     "targets":[
       {"lat":52.106126,"lon":5.101497}
     ],
-    "costing":"auto",
-    "date_time": {
-      "type": 0,
-      "value": "2016-07-03T08:06"
-    }
+    "costing":"auto"
   })";
 
   Api request;
@@ -341,7 +337,7 @@ TEST(Matrix, test_date_time) {
 
   // expected results are the same as `matrix_answers`, but without the last column
   std::vector<TimeDistance> expected_results = {
-      {28, 28},     {2027, 1837}, {2403, 2213}, {1519, 1398}, {1808, 1638}, {2061, 1951},
+      {28, 28},     {1518, 1398}, {2403, 2213}, {1519, 1398}, {1808, 1638}, {2061, 1951},
       {2311, 2111}, {701, 641},   {0, 0},       {5562, 5177}, {3952, 3707}, {4367, 4107},
   };
 
