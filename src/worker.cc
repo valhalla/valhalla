@@ -197,12 +197,14 @@ void add_date_to_locations(Options& options,
                                                                              : options.date_time());
             }
           }
+          break;
         case Options::arrive_by:
           if (node == "targets") {
             for (auto& loc : locations) {
               loc.set_date_time(options.date_time());
             }
           }
+          break;
         default:
           break;
       }
