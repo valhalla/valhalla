@@ -170,39 +170,42 @@ void add_date_to_locations(Options& options,
                            const std::string& node) {
   // matrix wants to shortcut setting date_time's as well
   if (options.has_date_time_case() && !locations.empty()) {
-    switch (options.date_time_type()) {
-      case Options::current:
-        if (node == "sources") {
-          for (auto& loc : locations) {
-            loc.set_date_time("current");
-          }
-        } else {
+    if (options.action() != Options::sources_to_targets) {
+      switch (options.date_time_type()) {
+        case Options::current:
           locations.Mutable(0)->set_date_time("current");
-        }
-        break;
-      case Options::depart_at:
-        if (node == "sources") {
-          for (auto& loc : locations) {
-            loc.set_date_time("current");
-          }
-        } else {
+          break;
+        case Options::depart_at:
           locations.Mutable(0)->set_date_time(options.date_time());
-        }
-        break;
-      case Options::arrive_by:
-        if (node == "targets") {
-          for (auto& loc : locations) {
-            loc.set_date_time("current");
-          }
-        } else {
+          break;
+        case Options::arrive_by:
           locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
-        }
-        break;
-      case Options::invariant:
-        for (auto& loc : locations)
-          loc.set_date_time(options.date_time());
-      default:
-        break;
+          break;
+        case Options::invariant:
+          for (auto& loc : locations)
+            loc.set_date_time(options.date_time());
+        default:
+          break;
+      }
+    } else {
+      switch (options.date_time_type()) {
+        case Options::current:
+        case Options::depart_at:
+          if (node == "sources") {
+            for (auto& loc : locations) {
+              loc.set_date_time(options.date_time_type() == Options::current ? "current"
+                                                                             : options.date_time());
+            }
+          }
+        case Options::arrive_by:
+          if (node == "targets") {
+            for (auto& loc : locations) {
+              loc.set_date_time(options.date_time());
+            }
+          }
+        default:
+          break;
+      }
     }
   }
 }
