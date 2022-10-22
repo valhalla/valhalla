@@ -74,8 +74,7 @@ TimeDistanceMatrix::SetTime(google::protobuf::RepeatedPtrField<valhalla::Locatio
   // loop over all locations setting the date time with timezone
   std::vector<TimeInfo> infos;
   for (auto& origin : origins) {
-    infos.emplace_back(origin.date_time().empty() ? TimeInfo::invalid()
-                                                  : TimeInfo::make(origin, reader, &tz_cache_));
+    infos.emplace_back(TimeInfo::make(origin, reader, &tz_cache_));
   }
 
   return infos;

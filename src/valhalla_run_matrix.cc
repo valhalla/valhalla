@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status") {
+        kv.first == "status" || kv.first == "max_timedep_distance_matrix") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -204,7 +204,7 @@ int main(int argc, char* argv[]) {
   auto m = max_matrix_distance.find(routetype);
   float max_distance;
   if (m == max_matrix_distance.end()) {
-    LOG_ERROR("Could not find max_matrix_distance for " + routetype);
+    LOG_ERROR("Could not find max_matrix_distance for " + routetype + ". Using 4000 km.");
     max_distance = 4000000.0f;
   } else {
     max_distance = m->second;
