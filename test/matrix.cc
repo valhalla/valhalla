@@ -315,7 +315,11 @@ TEST(Matrix, test_date_time) {
     "targets":[
       {"lat":52.106126,"lon":5.101497}
     ],
-    "costing":"auto"
+    "costing":"auto",
+    "date_time": {
+      "type": 2,
+      "value": "2016-07-03T08:06"
+    }
   })";
 
   Api request;
