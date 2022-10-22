@@ -19,14 +19,15 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
   return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
-void check_distance(google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                    google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+void check_distance(Api& request,
                     float matrix_max_distance,
                     float& max_location_distance,
                     float max_timedep_distance) {
+  auto& options = *request.mutable_options();
+  size_t count = 0;
   // see if any locations pairs are unreachable or too far apart
-  for (auto& source : sources) {
-    for (auto& target : targets) {
+  for (auto& source : *options.mutable_sources()) {
+    for (auto& target : *options.mutable_targets()) {
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(source).Distance(to_ll(target));
 
@@ -43,6 +44,10 @@ void check_distance(google::protobuf::RepeatedPtrField<valhalla::Location>& sour
       if (path_distance > max_timedep_distance) {
         source.set_date_time("");
         target.set_date_time("");
+        if (count == 0) {
+          add_warning(request, 400);
+        }
+        count++;
       }
     }
   }
@@ -111,8 +116,7 @@ void loki_worker_t::matrix(Api& request) {
 
   // check the distances
   auto max_location_distance = std::numeric_limits<float>::min();
-  check_distance(*options.mutable_sources(), *options.mutable_targets(),
-                 max_matrix_distance.find(costing_name)->second, max_location_distance,
+  check_distance(request, max_matrix_distance.find(costing_name)->second, max_location_distance,
                  max_timedep_dist_matrix);
 
   // correlate the various locations to the underlying graph

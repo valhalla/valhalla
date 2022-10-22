@@ -20,12 +20,12 @@ namespace {
 // also disable time if it doesn't make sense computationally
 bool has_time(Api& request) {
   auto& options = request.options();
-  bool more_targets = options.targets().size() > options.sources().size();
+  bool less_sources = options.sources().size() <= options.targets().size();
   bool had_valid_time = false;
   for (const auto& loc : options.sources()) {
     if (!loc.date_time().empty()) {
-      if (more_targets) {
-        add_warning(request, 400);
+      if (!less_sources) {
+        add_warning(request, 401);
         return false;
       }
       had_valid_time = true;
@@ -34,12 +34,7 @@ bool has_time(Api& request) {
   }
   for (const auto& loc : options.targets()) {
     if (!loc.date_time().empty()) {
-      if (!more_targets) {
-        add_warning(request, 401);
-        return false;
-      }
-      // don't accept times set on sources & targets
-      if (had_valid_time) {
+      if (less_sources) {
         add_warning(request, 402);
         return false;
       }

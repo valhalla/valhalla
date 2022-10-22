@@ -146,9 +146,9 @@ const std::unordered_map<int, std::string> warning_codes = {
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
-  {400, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
-  {401, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
-  {401, R"(both "sources" and "targets" have date_time set, ignoring date_time)"}
+  {400, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
+  {401, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
+  {402, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"}
 };
 // clang-format on
 
@@ -165,10 +165,9 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
-void add_date_to_locations(Options& options,
+bool add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                            const std::string& node) {
-  // matrix wants to shortcut setting date_time's as well
   if (options.has_date_time_case() && !locations.empty()) {
     if (options.action() != Options::sources_to_targets) {
       switch (options.date_time_type()) {
@@ -210,6 +209,10 @@ void add_date_to_locations(Options& options,
       }
     }
   }
+
+  return std::find_if(locations.begin(), locations.end(), [](valhalla::Location loc) {
+           return !loc.date_time().empty();
+         }) != locations.end();
 }
 
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
@@ -462,6 +465,7 @@ void parse_locations(const rapidjson::Document& doc,
   }
 
   bool filter_closures = true;
+  bool loc_had_time = false;
   try {
     // should we parse json?
     auto request_locations =
@@ -471,7 +475,7 @@ void parse_locations(const rapidjson::Document& doc,
         auto* loc = locations->Add();
         loc->mutable_correlation()->set_original_index(locations->size() - 1);
         parse_location(loc, r_loc, options, ignore_closures);
-        had_date_time = had_date_time || !loc->date_time().empty();
+        loc_had_time = loc_had_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
       }
@@ -481,7 +485,7 @@ void parse_locations(const rapidjson::Document& doc,
       for (auto& loc : *locations) {
         loc.mutable_correlation()->set_original_index(i++);
         parse_location(&loc, {}, options, ignore_closures);
-        had_date_time = had_date_time || !loc.date_time().empty();
+        loc_had_time = loc_had_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
       }
@@ -495,9 +499,10 @@ void parse_locations(const rapidjson::Document& doc,
     locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
 
     // push the date time information down into the locations
-    if (!had_date_time) {
-      add_date_to_locations(options, *locations, node);
+    if (!loc_had_time) {
+      had_date_time = add_date_to_locations(options, *locations, node) || had_date_time;
     }
+    had_date_time = loc_had_time || had_date_time;
 
     // If any of the locations had search_filter.exclude_closures set to false,
     // we tell the costing to let all closed roads through, so that we can do
