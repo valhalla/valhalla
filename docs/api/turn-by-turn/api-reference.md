@@ -113,6 +113,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
+| `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`.
 ###### Other costing options
@@ -120,8 +121,8 @@ The following options are available for `auto`, `bus`, `taxi`, and `truck` costi
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 2.6 for truck. |
-| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 4.11 for truck. |
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
 | `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
 | `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
@@ -135,6 +136,7 @@ The following options are available for `truck` costing.
 | `length` | The length of the truck (in meters). Default 21.64. |
 | `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
@@ -329,6 +331,7 @@ Basic trip information includes:
 | `units` | The specified units of length are returned, either kilometers or miles. |
 | `language` | The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language. |
 | `locations` | Location information is returned in the same form as it is entered with additional fields to indicate the side of the street. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 The summary JSON object includes:
 
@@ -340,6 +343,7 @@ The summary JSON object includes:
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
+
 
 ### Trip legs and maneuvers
 

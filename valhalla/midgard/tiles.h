@@ -289,9 +289,9 @@ public:
    * @return  Returns the tile Id of the tile to the right/east.
    */
   int32_t RightNeighbor(const int32_t tileid) const {
-    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1)
-               ? tileid + 1
-               : wrapx_ ? tileid - ncolumns_ + 1 : tileid;
+    return (tileid - ((tileid / ncolumns_) * ncolumns_) < ncolumns_ - 1) ? tileid + 1
+           : wrapx_                                                      ? tileid - ncolumns_ + 1
+                                                                         : tileid;
   }
 
   /**
@@ -301,7 +301,8 @@ public:
    */
   int32_t LeftNeighbor(const int32_t tileid) const {
     return tileid - ((tileid / ncolumns_) * ncolumns_) > 0 ? tileid - 1
-                                                           : wrapx_ ? tileid + ncolumns_ - 1 : tileid;
+           : wrapx_                                        ? tileid + ncolumns_ - 1
+                                                           : tileid;
   }
 
   /**
