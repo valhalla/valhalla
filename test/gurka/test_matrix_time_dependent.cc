@@ -92,7 +92,7 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
 }
 
 TEST_F(MatrixTest, MatrixWithLiveTraffic) {
-  allowed_map.config.put("mjolnir.traffic_extract", "test/data/matrix_traffic/traffic.tar");
+  allowed_map.config.put("mjolnir.traffic_extract", "test/data/matrix_traffic_allowed/traffic.tar");
 
   test::build_live_traffic_data(allowed_map.config);
   std::shared_ptr<valhalla::baldr::GraphReader> reader =

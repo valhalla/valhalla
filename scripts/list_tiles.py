@@ -168,7 +168,7 @@ if __name__ == "__main__":
                     j = mincol
                     while j <= tiles.Col(b_box.maxx):
                         file_name = tiles.GetFile(tile_id, level)
-                        print(file_name, end=" ")
+                        print(file_name)
                         tile_id += 1
                         j += 1
                     i += 1

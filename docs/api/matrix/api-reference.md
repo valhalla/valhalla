@@ -41,6 +41,7 @@ A source and target must include a latitude and longitude in decimal degrees. Th
 | :--------- | :----------- |
 | `lat` | Latitude of the source/target in degrees. |
 | `lon` | Longitude of the source/target in degrees. |
+| `date_time` | Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. `date_time` as location input offers more granularity over setting time than the global `date_time` object (see below). 
 
 You can refer to the [route location documentation](/docs/api/turn-by-turn/api-reference.md#locations) for more information on specifying locations.  
 
@@ -58,8 +59,15 @@ The Time-Distance Matrix service uses the `auto`, `bicycle`, `pedestrian` and `b
 | :------------------ | :----------- |
 | `id` | Name your matrix request. If `id` is specified, the naming will be sent thru to the response. |
 | `matrix_locations` | For one-to-many or many-to-one requests this specifies the minimum number of locations that satisfy the request. However, when specified, this option allows a partial result to be returned. This is basically equivalent to "find the closest/best `matrix_locations` locations out of the full location set". |
-| `date_time` | The local date and time at the location. <li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> **Note**, `type` is not relevant for matrix.|
+| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br>|
 
+### Time-dependent matrices
+
+Most control can be achieved when setting a `date_time` string on each source or target. When setting the global `date_time` object as a shortcut instead, Valhalla will translate that to setting the `date_time.value` on all source locations when `date_time.type = 0/1` and on all target locations when `date_time.type = 2`.
+
+However, there are important limitations of the `/sources_to_targets` service's time awareness. Due to algorithmic complexity, we disallow time-dependence for certain combinations of `date_time` on locations, if
+- `date_time.type = 0/1` or `date_time` on any source, when there's more sources than targets
+- `date_time.type = 2` or `date_time` on any target, when there's more or equal amount of targets than/as sources
 
 ## Outputs of the matrix service
 
