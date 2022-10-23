@@ -624,7 +624,7 @@ public:
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
-                           uint32_t seconds = kInvalidSecondsOfWeek,
+                           uint64_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
                            const uint64_t seconds_from_now = 0) const {

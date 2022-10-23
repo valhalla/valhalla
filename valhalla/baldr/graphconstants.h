@@ -652,7 +652,8 @@ constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint32_t kInvalidSecondsOfWeek = -1;
+constexpr uint64_t kInvalidSecondsOfWeek =
+    1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };
