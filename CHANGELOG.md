@@ -125,6 +125,8 @@
    * ADDED: axle_count costing option for hgv [#3648](https://github.com/valhalla/valhalla/pull/3648)
    * ADDED: Matrix action for gurka [#3793](https://github.com/valhalla/valhalla/pull/3793)
    * ADDED: Add warnings array to response. [#3588](https://github.com/valhalla/valhalla/pull/3588)
+   * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
+   * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
    * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
