@@ -22,7 +22,7 @@ midgard::PointLL to_ll(const valhalla::Location& l) {
 void check_distance(Api& request,
                     float matrix_max_distance,
                     float& max_location_distance,
-                    float max_timedep_distance) {
+                    size_t max_timedep_distance) {
   auto& options = *request.mutable_options();
   size_t count = 0;
   // see if any locations pairs are unreachable or too far apart
@@ -41,7 +41,7 @@ void check_distance(Api& request,
       };
 
       // unset the date_time if beyond the limit
-      if (path_distance > max_timedep_distance) {
+      if (static_cast<size_t>(path_distance) > max_timedep_distance) {
         source.set_date_time("");
         target.set_date_time("");
         if (count == 0) {

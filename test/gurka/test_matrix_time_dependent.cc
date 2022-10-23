@@ -121,7 +121,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   check_dist(res_doc, exp_dists);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // forward tree, date_time on the locations
+  // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},
              {"/sources/1/date_time", "2016-07-03T08:06"},
              {"/costing_options/auto/speed_types/0", "current"}};
@@ -161,7 +161,8 @@ TEST_F(MatrixTest, DisallowedRequest) {
 }
 
 TEST_F(MatrixTest, Sources) {
-  // more sources than targets are allowed, but since this is "current" it won't have an effect
+  // more sources than targets are allowed, but since we only have live traffic it won't have an
+  // effect
   rapidjson::Document res_doc;
   std::string res;
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "2"},
@@ -172,7 +173,7 @@ TEST_F(MatrixTest, Sources) {
   check_dist(res_doc, {0.0f, 2.0f});
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // more sources than targets with date_time.type = 2 are disallowed
+  // more targets than sources with date_time.type = 2 are disallowed
   options = {{"/date_time/type", "2"}, {"/date_time/value", "2016-07-03T08:06"}};
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, allowed_map, {"E"}, {"E", "H"}, "auto",
@@ -194,7 +195,8 @@ TEST_F(MatrixTest, Sources) {
 }
 
 TEST_F(MatrixTest, Targets) {
-  // more targets than sources are allowed, but since this is "current" it won't have an effect
+  // more targets than sources are allowed, but since we only have live traffic it won't have an
+  // effect
   rapidjson::Document res_doc;
   std::string res;
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "1"},
@@ -205,7 +207,7 @@ TEST_F(MatrixTest, Targets) {
   check_dist(res_doc, {0.0f, 2.0f});
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // more targets than sources with date_time.type = 1 are disallowed
+  // more sources than targets with date_time.type = 1 are disallowed
   options = {{"/date_time/type", "1"}, {"/date_time/value", "2016-07-03T08:06"}};
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, allowed_map, {"E", "H"}, {"E"}, "auto",
