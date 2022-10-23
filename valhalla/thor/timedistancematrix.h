@@ -120,6 +120,19 @@ protected:
                 const uint32_t matrix_locations = kAllLocations);
 
   /**
+   * Computes the matrix after SourceToTarget decided which direction
+   * the algorithm should traverse.
+   */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  std::vector<TimeDistance>
+  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                baldr::GraphReader& graphreader,
+                const float max_matrix_distance,
+                const uint32_t matrix_locations = kAllLocations);
+
+  /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
    * to the adjacency list or EdgeLabel list). Does not expand transition
