@@ -157,6 +157,25 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
   writer.end_array();
 }
 
+void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
+  writer.start_array("warnings");
+  for (const auto& warning : api.info().warnings()) {
+    writer.start_object();
+    writer("code", warning.code());
+    writer("text", warning.description());
+    writer.end_object();
+  }
+  writer.end_array();
+}
+
+json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
+  auto warnings = json::array({});
+  for (const auto& warning : api.info().warnings()) {
+    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
+  }
+  return warnings;
+}
+
 std::string serializePbf(Api& request) {
   // if they dont want to select the parts just pick the obvious thing they would want based on action
   PbfFieldSelector selection = request.options().pbf_field_selector();

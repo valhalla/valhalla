@@ -55,35 +55,40 @@ std::vector<midgard::PointLL> to_lls(const nodelayout& nodes,
 /**
  * build a valhalla json request body
  *
- * @param location_type  locations or shape
- * @param waypoints      sequence of pointlls representing the locations
+ * @param location_types vector of locations or shape, sources, targets
+ * @param waypoints      all pointll sequences for all location types
  * @param costing        which costing name to use, defaults to auto
  * @param options        overrides parts of the request, supports rapidjson pointer semantics
  * @param stop_type      break, through, via, break_through
  * @return json string
  */
-std::string build_valhalla_request(const std::string& location_type,
-                                   const std::vector<midgard::PointLL>& waypoints,
+std::string build_valhalla_request(const std::vector<std::string>& location_types,
+                                   const std::vector<std::vector<midgard::PointLL>>& waypoints,
                                    const std::string& costing = "auto",
                                    const std::unordered_map<std::string, std::string>& options = {},
                                    const std::string& stop_type = "break") {
+  assert(location_types.size() == waypoints.size());
 
   rapidjson::Document doc;
   doc.SetObject();
   auto& allocator = doc.GetAllocator();
 
-  rapidjson::Value locations(rapidjson::kArrayType);
-  for (const auto& waypoint : waypoints) {
-    rapidjson::Value p(rapidjson::kObjectType);
-    p.AddMember("lon", waypoint.lng(), allocator);
-    p.AddMember("lat", waypoint.lat(), allocator);
-    if (!stop_type.empty()) {
-      p.AddMember("type", stop_type, allocator);
+  // add one location per locations object, will be usually size 1, other than matrix (so far)
+  for (uint32_t i = 0; i < waypoints.size(); i++) {
+    rapidjson::Value locations(rapidjson::kArrayType);
+
+    for (const auto& waypoint : waypoints[i]) {
+      rapidjson::Value p(rapidjson::kObjectType);
+      p.AddMember("lon", waypoint.lng(), allocator);
+      p.AddMember("lat", waypoint.lat(), allocator);
+      if (!stop_type.empty()) {
+        p.AddMember("type", stop_type, allocator);
+      }
+      locations.PushBack(p, allocator);
     }
-    locations.PushBack(p, allocator);
+    doc.AddMember(rapidjson::Value(location_types[i], allocator), locations, allocator);
   }
 
-  doc.AddMember(rapidjson::Value(location_type, allocator), locations, allocator);
   doc.AddMember("costing", costing, allocator);
 
   // check if we are overriding speed types etc
@@ -678,12 +683,10 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
   std::cerr << "[          ] " << Options_Action_Enum_Name(action)
             << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
             << " with locations ";
-  bool first = true;
   for (const auto& waypoint : waypoints) {
-    if (!first)
-      std::cerr << ",";
+    if (&waypoint != &waypoints.front())
+      std::cerr << ", ";
     std::cerr << waypoint;
-    first = false;
   };
   std::cerr << " with costing " << costing << std::endl;
   auto lls = detail::to_lls(map.nodes, waypoints);
@@ -695,7 +698,48 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
   if (!request_json) {
     request_json = &dummy_request_json;
   }
-  *request_json = detail::build_valhalla_request(location_type, lls, costing, options, stop_type);
+  *request_json = detail::build_valhalla_request({location_type}, {lls}, costing, options, stop_type);
+  return do_action(action, map, *request_json, reader, response);
+}
+
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options,
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader,
+                        std::string* response,
+                        std::string* request_json) {
+  if (!reader)
+    reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
+
+  std::cerr << "[          ] " << Options_Action_Enum_Name(action)
+            << " with mjolnir.tile_dir = " << map.config.get<std::string>("mjolnir.tile_dir")
+            << " with sources ";
+  std::map<std::string, std::vector<std::string>> loc_types = {{"sources", sources},
+                                                               {"targets", targets}};
+  for (const auto& loc_type : loc_types) {
+    if (loc_type.first != loc_types.begin()->first) {
+      std::cerr << " and " << loc_type.first << " ";
+    }
+    for (const auto& waypoint : loc_type.second) {
+      std::cerr << waypoint;
+      if (waypoint != loc_type.second.back())
+        std::cerr << ", ";
+    }
+  };
+  std::cerr << " with costing " << costing << std::endl;
+
+  auto sources_lls = detail::to_lls(map.nodes, sources);
+  auto targets_lls = detail::to_lls(map.nodes, targets);
+  std::string dummy_request_json;
+  if (!request_json) {
+    request_json = &dummy_request_json;
+  }
+  *request_json = detail::build_valhalla_request({"sources", "targets"}, {sources_lls, targets_lls},
+                                                 costing, options);
   return do_action(action, map, *request_json, reader, response);
 }
 
