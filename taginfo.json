@@ -3370,6 +3370,13 @@
       "description": "Maxaxleload for hgv."
     },
     {
+      "key": "maxaxles",
+      "object_types": [
+        "way"
+      ],
+      "description": "Maxaxles for hgv."
+    },
+    {
       "key": "maxheight",
       "object_types": [
         "way"
