@@ -1263,8 +1263,8 @@ get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   // TODO: in the future we may switch to use both
   return ((maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter)
               ? maneuver.roundabout_exit_street_names()
-              : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
-                                                        : maneuver.street_name());
+          : (maneuver.begin_street_name_size() > 0) ? maneuver.begin_street_name()
+                                                    : maneuver.street_name());
 }
 
 // Get the names and ref names
@@ -1725,6 +1725,11 @@ std::string serialize(valhalla::Api& api) {
   // Routes are called matchings in osrm map matching mode
   json->emplace(options.action() == valhalla::Options::trace_route ? "matchings" : "routes",
                 std::move(routes));
+
+  // get serialized warnings
+  if (api.info().warnings_size() >= 1) {
+    json->emplace("warnings", serializeWarnings(api));
+  }
 
   std::stringstream ss;
   ss << *json;

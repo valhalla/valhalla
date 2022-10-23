@@ -20,8 +20,9 @@ namespace {
 
 std::vector<std::string> GetTagTokens(const std::string& tag_value, const char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value, [delim](const char c) { return c == delim; },
-                          boost::algorithm::token_compress_on);
+  boost::algorithm::split(
+      tokens, tag_value, [delim](const char c) { return c == delim; },
+      boost::algorithm::token_compress_on);
   return tokens;
 }
 
