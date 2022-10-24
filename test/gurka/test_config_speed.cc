@@ -490,6 +490,7 @@ TEST(Standalone, AdminFallback) {
     ASSERT_EQ(edge.speed(), 11);
   }
 }
+
 TEST(Standalone, Malformed) {
   {
     std::ofstream speed_config("test/data/speed_config.json");
@@ -622,4 +623,33 @@ TEST(Standalone, Malformed) {
     testable_assigner assigner("test/data/speed_config.json");
     ASSERT_TRUE(assigner.tables.empty());
   }
+}
+
+TEST(Standalone, HandleNulls) {
+  DirectedEdge edge{};
+  edge.set_all_forward_access();
+
+  std::ofstream speed_config("test/data/speed_config.json");
+  speed_config << R"(
+    [{
+      "urban": {
+        "way": [null,null,null,null,null,null,null,null], "link_exiting": [null,null,null,null,null], "link_turning": [null,null,null,null,null],
+        "roundabout": [null,null,null,null,null,null,null,null], "driveway": null, "alley": null, "parking_aisle": null, "drive-through": null
+      },
+      "suburban": {
+        "way": [null,null,null,null,null,null,null,null], "link_exiting": [null,null,null,null,null], "link_turning": [null,null,null,null,null],
+        "roundabout": [null,null,null,null,null,null,null,null], "driveway": null, "alley": null, "parking_aisle": null, "drive-through": null
+      },
+      "rural": {
+        "way": [11,11,11,11,11,11,11,11], "link_exiting": [11,11,11,11,11], "link_turning": [11,11,11,11,11],
+        "roundabout": [11,11,11,11,11,11,11,11], "driveway": 11, "alley": 11, "parking_aisle": 11, "drive-through": 11
+      }
+    }]
+  )";
+  speed_config.close();
+  testable_assigner assigner("test/data/speed_config.json");
+  ASSERT_FALSE(assigner.tables.empty());
+  ASSERT_FALSE(assigner.UpdateSpeed(edge, 6, true, "foo", "bar"));
+  ASSERT_TRUE(assigner.UpdateSpeed(edge, 1, true, "foo", "bar"));
+  ASSERT_EQ(edge.speed(), 11);
 }

@@ -422,8 +422,10 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string
-GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, bool is_file_path) {
+std::string GraphTile::FileSuffix(const GraphId& graphid,
+                                  const std::string& fname_suffix,
+                                  bool is_file_path,
+                                  const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -433,16 +435,18 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   */
 
   // figure the largest id for this level
-  if (graphid.level() >= TileHierarchy::levels().size() &&
-      graphid.level() != TileHierarchy::GetTransitLevel().level) {
+  if ((tiles && tiles->level != graphid.level()) ||
+      (!tiles && graphid.level() >= TileHierarchy::levels().size() &&
+       graphid.level() != TileHierarchy::GetTransitLevel().level)) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid level: " +
                              std::to_string(graphid));
   }
 
   // get the level info
-  const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level
-                          ? TileHierarchy::GetTransitLevel()
-                          : TileHierarchy::levels()[graphid.level()];
+  const auto& level = tiles ? *tiles
+                            : (graphid.level() == TileHierarchy::GetTransitLevel().level
+                                   ? TileHierarchy::GetTransitLevel()
+                                   : TileHierarchy::levels()[graphid.level()]);
 
   // figure out how many digits in tile-id
   const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
@@ -468,11 +472,11 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
     tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
     if ((tile_id_strlen - ind) % 4 == 0) {
-      tile_id_str[ind--] = separator;
+      ind--; // skip an additional character to leave space for separators
     }
   }
-  // add missing separators
-  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+  // add separators
+  for (size_t sep_ind = 0; sep_ind < tile_id_strlen; sep_ind += 4) {
     tile_id_str[sep_ind] = separator;
   }
 
@@ -626,6 +630,41 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
   return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* node) const {
+  if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
+  }
+  const auto* edge_ext = ext_directededges_ + node->edge_index();
+  return iterable_t<const DirectedEdgeExt>{edge_ext, node->edge_count()};
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
+  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::to_string(node.level()) + "," + std::to_string(node.id()) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto* nodeinfo = nodes_ + node.id();
+  return GetDirectedEdgeExts(nodeinfo);
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t idx) const {
+  if (idx >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto& nodeinfo = nodes_[idx];
+  const auto* edge_ext = ext_directededge(nodeinfo.edge_index());
+  return iterable_t<const DirectedEdgeExt>{edge_ext, nodeinfo.edge_count()};
+}
+
 EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
   return EdgeInfo(edgeinfo_ + edge->edgeinfo_offset(), textlist_, textlist_size_);
 }
@@ -665,6 +704,16 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();
   return directededge(nodeinfo->edge_index());
+}
+
+// Get the directed edge extensions outbound from the specified node index.
+const DirectedEdgeExt* GraphTile::GetDirectedEdgeExts(const uint32_t node_index,
+                                                      uint32_t& count,
+                                                      uint32_t& edge_index) const {
+  const NodeInfo* nodeinfo = node(node_index);
+  count = nodeinfo->edge_count();
+  edge_index = nodeinfo->edge_index();
+  return ext_directededge(nodeinfo->edge_index());
 }
 
 // Convenience method to get the names for an edge

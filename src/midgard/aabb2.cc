@@ -107,54 +107,6 @@ template <class coord_t> bool AABB2<coord_t>::Intersects(const coord_t& c, float
          c.DistanceSquared(coord_t{vertical, maxy_}) <= r;     // intersects the top side
 }
 
-// Intersects the segment formed by u,v with the bounding box
-template <class coord_t> bool AABB2<coord_t>::Intersect(coord_t& u, coord_t& v) const {
-  // which do we need to move
-  bool need_u = u.first < minx_ || u.first > maxx_ || u.second < miny_ || u.second > maxy_;
-  bool need_v = v.first < minx_ || v.first > maxx_ || v.second < miny_ || v.second > maxy_;
-  if (!(need_u || need_v)) {
-    return true;
-  }
-  // find intercepts with each box edge
-  std::list<coord_t> intersections;
-  x_t x;
-  y_t y;
-  // intersect with each edge keeping it if its on this box and on the segment uv
-  if (!std::isnan(x = y_intercept(u, v, miny_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first)) {
-    intersections.emplace_back(x, miny_);
-  }
-  if (!std::isnan(x = y_intercept(u, v, maxy_)) && x >= minx_ && x <= maxx_ &&
-      between(x, u.first, v.first)) {
-    intersections.emplace_back(x, maxy_);
-  }
-  if (!std::isnan(y = x_intercept(u, v, maxx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second)) {
-    intersections.emplace_back(maxx_, y);
-  }
-  if (!std::isnan(y = x_intercept(u, v, minx_)) && y >= miny_ && y <= maxy_ &&
-      between(y, u.second, v.second)) {
-    intersections.emplace_back(minx_, y);
-  }
-  // pick the best one for each that needs it
-  auto u_dist = std::numeric_limits<typename coord_t::value_type>::infinity();
-  auto v_dist = std::numeric_limits<typename coord_t::value_type>::infinity();
-  typename coord_t::value_type d;
-
-  for (const auto& intersection : intersections) {
-    if (need_u && (d = u.DistanceSquared(intersection)) < u_dist) {
-      u = intersection;
-      u_dist = d;
-    }
-    if (need_v && (d = v.DistanceSquared(intersection)) < v_dist) {
-      v = intersection;
-      v_dist = d;
-    }
-  }
-  // are we inside now?
-  return intersections.size();
-}
-
 // Clips the input set of vertices to the specified boundary.  Uses a
 // method where the shape is clipped against each edge in succession.
 template <class coord_t>

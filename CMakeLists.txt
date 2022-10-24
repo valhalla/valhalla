@@ -296,7 +296,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
-  valhalla_convert_transit valhalla_fetch_transit valhalla_query_transit valhalla_add_predicted_traffic
+  valhalla_convert_transit valhalla_fetch_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
   valhalla_assign_speeds valhalla_add_elevation)
 
 ## Valhalla services
@@ -325,8 +325,8 @@ if(ENABLE_DATA_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla)
-    if (LUAJIT_FOUND AND APPLE)
-      # Using LuaJIT on macOS requires a couple of extra linker flags
+    if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+      # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
     if(MSVC)

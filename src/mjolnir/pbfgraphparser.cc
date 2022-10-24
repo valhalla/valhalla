@@ -749,6 +749,14 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxaxles"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxAxles);
+      restriction.set_value(std::stoul(tag_.second));
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["hov_type"] = [this]() {
       // If this tag is set then the way is either HOV-2 or HOV-3.
       // There are no other real-world hov levels.
@@ -1484,12 +1492,10 @@ public:
     // for then it must be in another pbf file. so we need to move on to the next waynode that could
     // possibly actually be in this pbf file
     if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
-      current_way_node_index_ =
-          way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                    [](const OSMWayNode& a, const OSMWayNode& b) {
-                                      return a.node.osmid_ <= b.node.osmid_;
-                                    },
-                                    current_way_node_index_);
+      current_way_node_index_ = way_nodes_->find_first_of(
+          OSMWayNode{{osmid}},
+          [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ <= b.node.osmid_; },
+          current_way_node_index_);
     }
 
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
@@ -1812,20 +1818,20 @@ public:
 
       }
       // motor_vehicle:conditional=no @ (16:30-07:00)
-      else if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
-               tag_.first.substr(0, 25) == "motor_vehicle:conditional" ||
-               tag_.first.substr(0, 19) == "bicycle:conditional" ||
-               tag_.first.substr(0, 22) == "motorcycle:conditional" ||
-               tag_.first.substr(0, 16) == "foot:conditional" ||
-               tag_.first.substr(0, 22) == "pedestrian:conditional" ||
-               tag_.first.substr(0, 15) == "hgv:conditional" ||
-               tag_.first.substr(0, 17) == "moped:conditional" ||
-               tag_.first.substr(0, 16) == "mofa:conditional" ||
-               tag_.first.substr(0, 15) == "psv:conditional" ||
-               tag_.first.substr(0, 16) == "taxi:conditional" ||
-               tag_.first.substr(0, 15) == "bus:conditional" ||
-               tag_.first.substr(0, 15) == "hov:conditional" ||
-               tag_.first.substr(0, 21) == "emergency:conditional") {
+      else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "bicycle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "motorcycle:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "pedestrian:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "hgv:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "mofa:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "psv:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "taxi:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "bus:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "hov:conditional") ||
+               boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
 
         std::vector<std::string> tokens = GetTagTokens(tag_.second, '@');
         std::string tmp = tokens.at(0);
@@ -1843,31 +1849,31 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (tag_.first.substr(0, 20) == "motorcar:conditional" ||
-              tag_.first.substr(0, 25) == "motor_vehicle:conditional") {
+          if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
+              boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
-          } else if (tag_.first.substr(0, 19) == "bicycle:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
-          } else if (tag_.first.substr(0, 16) == "foot:conditional" ||
-                     tag_.first.substr(0, 22) == "pedestrian:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
+                     boost::algorithm::starts_with(tag_.first, "pedestrian:conditional")) {
             mode = (kPedestrianAccess | kWheelchairAccess);
-          } else if (tag_.first.substr(0, 15) == "hgv:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "hgv:conditional")) {
             mode = kTruckAccess;
-          } else if (tag_.first.substr(0, 17) == "moped:conditional" ||
-                     tag_.first.substr(0, 16) == "mofa:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "moped:conditional") ||
+                     boost::algorithm::starts_with(tag_.first, "mofa:conditional")) {
             mode = kMopedAccess;
-          } else if (tag_.first.substr(0, 22) == "motorcycle:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
             mode = kMotorcycleAccess;
-          } else if (tag_.first.substr(0, 15) == "psv:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
-          } else if (tag_.first.substr(0, 16) == "taxi:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
             mode = kTaxiAccess;
-          } else if (tag_.first.substr(0, 15) == "bus:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "bus:conditional")) {
             mode = kBusAccess;
-          } else if (tag_.first.substr(0, 15) == "hov:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "hov:conditional")) {
             mode = kHOVAccess;
-          } else if (tag_.first.substr(0, 21) == "emergency:conditional") {
+          } else if (boost::algorithm::starts_with(tag_.first, "emergency:conditional")) {
             mode = kEmergencyAccess;
           }
           std::string tmp = tokens.at(1);

@@ -1,23 +1,32 @@
 ####################################################################
-# base image contains all the dependencies we need to build the code
-FROM valhalla/valhalla:build-3.1.5 as builder
+FROM ubuntu:20.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
-# get the code into the right place and prepare to build it
+ARG CONCURRENCY
+
+# set paths
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+
+# install deps
 WORKDIR /usr/local/src/valhalla
+COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-linux-deps.sh
+RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
+
+# get the code into the right place and prepare to build it
 ADD . /usr/local/src/valhalla
 RUN ls
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
-# upgrade Conan:
+# upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
 RUN pip install --upgrade conan
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
 RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
-RUN make all -j$(nproc)
+RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
 # we wont leave the source around but we'll drop the commit hash we'll also keep the locales
@@ -53,7 +62,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
       curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \
     cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    \
+    # python smoke test
+    python3 -c "import valhalla,sys; print (sys.version, valhalla)"
 
 # build the config to /etc/valhalla and point the directories to /data/valhalla
 WORKDIR /data/valhalla
@@ -62,9 +74,4 @@ RUN mkdir /etc/valhalla && \
       --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
       --mjolnir-traffic-extract ${PWD}/traffic.tar \
       --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
-      --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > /etc/valhalla/valhalla.json && \
-    \
-    # python smoke test
-    python3 -c "import valhalla,sys; print (sys.version, valhalla)"
-
-EXPOSE 8002
+      --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > /etc/valhalla/valhalla.json
