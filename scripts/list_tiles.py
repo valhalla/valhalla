@@ -72,7 +72,6 @@ class Tiles(object):
 
     def Digits(self, number):
         digits = 1 if (number < 0) else 0
-        number = number
         while number:
             number = int(number / 10)
             digits += 1

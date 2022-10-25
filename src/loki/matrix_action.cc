@@ -24,7 +24,7 @@ void check_distance(Api& request,
                     float& max_location_distance,
                     size_t max_timedep_distance) {
   auto& options = *request.mutable_options();
-  size_t count = 0;
+  bool added_warning = false;
   // see if any locations pairs are unreachable or too far apart
   for (auto& source : *options.mutable_sources()) {
     for (auto& target : *options.mutable_targets()) {
@@ -44,10 +44,10 @@ void check_distance(Api& request,
       if (static_cast<size_t>(path_distance) > max_timedep_distance) {
         source.set_date_time("");
         target.set_date_time("");
-        if (count == 0) {
+        if (!added_warning) {
           add_warning(request, 400);
+          added_warning = true;
         }
-        count++;
       }
     }
   }

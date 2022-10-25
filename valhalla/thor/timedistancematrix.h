@@ -62,7 +62,7 @@ public:
                                                    graphreader, max_matrix_distance,
                                                    matrix_locations);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
+      return ComputeMatrix<ExpansionType::reverse>(target_location_list, source_location_list,
                                                    graphreader, max_matrix_distance,
                                                    matrix_locations);
     }
@@ -113,8 +113,8 @@ protected:
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
   std::vector<TimeDistance>
-  ComputeMatrix(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  ComputeMatrix(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+                google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
                 baldr::GraphReader& graphreader,
                 const float max_matrix_distance,
                 const uint32_t matrix_locations = kAllLocations);

@@ -198,18 +198,15 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
 std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
     baldr::GraphReader& graphreader,
     const float max_matrix_distance,
     const uint32_t matrix_locations) {
-  // Run a series of one to many calls and concatenate the results.
-  auto& origins = FORWARD ? source_location_list : target_location_list;
-  auto& destinations = FORWARD ? target_location_list : source_location_list;
-
   uint32_t bucketsize = costing_->UnitSize();
   auto time_infos = SetTime(origins, graphreader);
 
+  // Run a series of one to many calls and concatenate the results.
   std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
     const auto& origin = origins.Get(origin_index);
@@ -292,14 +289,14 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
 }
 
 template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
     baldr::GraphReader& graphreader,
     const float max_matrix_distance,
     const uint32_t matrix_locations);
 template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
     baldr::GraphReader& graphreader,
     const float max_matrix_distance,
     const uint32_t matrix_locations);
