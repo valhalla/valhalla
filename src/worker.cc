@@ -1108,7 +1108,7 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     *this = code_itr->second;
   }
   if (!extra.empty())
-    message += ":" + extra;
+    message += ": " + extra;
 }
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {

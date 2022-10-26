@@ -35,7 +35,8 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
       }
 
       if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
+        throw valhalla_exception_t{154, std::to_string(static_cast<size_t>(matrix_max_distance)) +
+                                            " meters"};
       };
     }
   }

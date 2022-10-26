@@ -57,6 +57,8 @@
    * FIXED: Fix status endpoint not reporting that the service is shutting down [#3785](https://github.com/valhalla/valhalla/pull/3785)
    * FIXED: Fix TimdDistanceMatrix SetSources and SetTargets [#3792](https://github.com/valhalla/valhalla/pull/3792)
    * FIXED: Added highway and surface factor in truckcost [#3590](https://github.com/valhalla/valhalla/pull/3590)
+   * FIXED: Potential integer underflow in file suffix generation [#3783](https://github.com/valhalla/valhalla/pull/3783)
+   * FIXED: Building Valhalla as a submodule [#3781](https://github.com/valhalla/valhalla/issues/3781)
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
 
 * **Enhancement**
@@ -126,6 +128,9 @@
    * ADDED: axle_count costing option for hgv [#3648](https://github.com/valhalla/valhalla/pull/3648)
    * ADDED: Matrix action for gurka [#3793](https://github.com/valhalla/valhalla/pull/3793)
    * ADDED: Add warnings array to response. [#3588](https://github.com/valhalla/valhalla/pull/3588)
+   * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
+   * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
+   * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

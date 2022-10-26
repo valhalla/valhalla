@@ -422,8 +422,10 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string
-GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, bool is_file_path) {
+std::string GraphTile::FileSuffix(const GraphId& graphid,
+                                  const std::string& fname_suffix,
+                                  bool is_file_path,
+                                  const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -433,16 +435,18 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   */
 
   // figure the largest id for this level
-  if (graphid.level() >= TileHierarchy::levels().size() &&
-      graphid.level() != TileHierarchy::GetTransitLevel().level) {
+  if ((tiles && tiles->level != graphid.level()) ||
+      (!tiles && graphid.level() >= TileHierarchy::levels().size() &&
+       graphid.level() != TileHierarchy::GetTransitLevel().level)) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid level: " +
                              std::to_string(graphid));
   }
 
   // get the level info
-  const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level
-                          ? TileHierarchy::GetTransitLevel()
-                          : TileHierarchy::levels()[graphid.level()];
+  const auto& level = tiles ? *tiles
+                            : (graphid.level() == TileHierarchy::GetTransitLevel().level
+                                   ? TileHierarchy::GetTransitLevel()
+                                   : TileHierarchy::levels()[graphid.level()]);
 
   // figure out how many digits in tile-id
   const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
@@ -468,11 +472,11 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
     tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
     if ((tile_id_strlen - ind) % 4 == 0) {
-      tile_id_str[ind--] = separator;
+      ind--; // skip an additional character to leave space for separators
     }
   }
-  // add missing separators
-  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+  // add separators
+  for (size_t sep_ind = 0; sep_ind < tile_id_strlen; sep_ind += 4) {
     tile_id_str[sep_ind] = separator;
   }
 
