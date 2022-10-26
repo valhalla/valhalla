@@ -58,12 +58,13 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
 
     if (crow_distance > max_distance) {
-      throw valhalla_exception_t{154};
+      throw valhalla_exception_t{154, std::to_string(static_cast<size_t>(max_distance)) + " meters"};
     }
   }
 
   if (!can_be_matched) {
-    throw valhalla_exception_t{172, " " + std::to_string(max_breakage_distance) + " meters"};
+    throw valhalla_exception_t{172, std::to_string(static_cast<size_t>(max_breakage_distance)) +
+                                        " meters"};
   }
 }
 
