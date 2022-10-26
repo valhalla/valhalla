@@ -31,14 +31,14 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 
   // To define an administrative boundary, the nodes must form a closed polygon.
   const gurka::ways ways = {{"ABCDEFA", {}},
-                            {"GH", {{"highway", "footway"}}},
-                            {"IJ", {{"highway", "footway"}, {"footway", "sidewalk"}}}};
+                            {"GH", {{"highway", "bridleway"}, {"bridge", "yes"}}},
+                            {"IJ", {{"highway", "bridleway"}, {"foot", "yes"}, {"bridge", "yes"}}}};
 
   const gurka::relations relations = {{{{{gurka::way_member, "ABCDEFA", "outer"}}},
                                        {{"type", "boundary"},
                                         {"boundary", "administrative"},
-                                        {"admin_level", "2"},
-                                        {"name", "Belarus"}}}};
+                                        {"admin_level", "4"},
+                                        {"name", "England"}}}};
 
   constexpr double gridsize = 10;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -141,7 +141,9 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   std::set<std::string> countries, states;
   GetAdminData(dbname, countries, states);
 
-  std::set<std::string> exp_countries = {"Belarus"};
+  // United Kingdom is toss and Alba / Scotland, Cymru / Wales, England, and Northern Ireland is
+  // bumped up to admin_level 2
+  std::set<std::string> exp_countries = {"England"};
   EXPECT_EQ(countries, exp_countries);
 
   std::set<std::string> exp_states = {};
@@ -168,7 +170,7 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   EXPECT_NE(GH_edge, nullptr);
   EXPECT_NE(HG_edge, nullptr);
 
-  // footway only
+  // GH uses country specific access for England
   EXPECT_EQ(GH_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
   EXPECT_EQ(GH_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
 
@@ -187,10 +189,10 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   EXPECT_NE(IJ_edge, nullptr);
   EXPECT_NE(JI_edge, nullptr);
 
-  // sidewalk
-  EXPECT_EQ(IJ_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
-  EXPECT_EQ(IJ_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+  // User access specific mode detected.  Will not use country specific access for England
+  EXPECT_EQ(IJ_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess));
+  EXPECT_EQ(IJ_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess));
 
-  EXPECT_EQ(JI_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
-  EXPECT_EQ(JI_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess | kBicycleAccess));
+  EXPECT_EQ(JI_edge->forwardaccess(), (kPedestrianAccess | kWheelchairAccess));
+  EXPECT_EQ(JI_edge->reverseaccess(), (kPedestrianAccess | kWheelchairAccess));
 }

@@ -64,7 +64,7 @@ drive_on_right = {
 ["South Africa"] = "false",
 ["Sri Lanka"] = "false",
 ["Suriname"] = "false",
-["Scotland"] = "false",
+["Alba / Scotland"] = "false",
 ["Swatini"] = "false",
 ["Tanzania"] = "false",
 ["Thailand"] = "false",
@@ -77,7 +77,7 @@ drive_on_right = {
 ["Uganda"] = "false",
 ["United States Virgin Islands"] = "false",
 ["Viti"] = "false",
-["Wales"] = "false",
+["Cymru / Wales"] = "false",
 ["Zambia"] = "false",
 ["Zimbabwe"] = "false"
 }
@@ -191,7 +191,7 @@ function rels_proc (kv, nokeys)
            end
          end
        end
-       if kv["name"] == "England" or kv["name"] == "Scotland" or kv["name"] == "Wales" or kv["name"] == "Northern Ireland" then
+       if kv["name"] == "England" or kv["name"] == "Alba / Scotland" or kv["name"] == "Cymru / Wales" or kv["name"] == "Northern Ireland" then
          kv["admin_level"] = 2
        end
      end

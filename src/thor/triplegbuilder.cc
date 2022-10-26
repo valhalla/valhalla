@@ -569,7 +569,9 @@ void AddSignInfo(const AttributesController& controller,
           }
           break;
         }
-        default: { break; }
+        default: {
+          break;
+        }
       }
       ++sign_index;
     }
