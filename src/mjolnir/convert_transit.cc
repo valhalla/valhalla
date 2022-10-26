@@ -115,8 +115,8 @@ std::vector<uint64_t> project(const GraphTile& local_tile, const Transit& transi
   auto scoped_finally = make_finally([&t1, size = transit_tile.nodes_size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
     uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    LOG_INFO("Projection Finished - Projection of " + std::to_string(size) + " bike station  took " +
-             std::to_string(secs) + " secs");
+    LOG_INFO("Projection Finished - Projection of " + std::to_string(size) +
+             " transit station  took " + std::to_string(secs) + " secs");
   });
 
   // auto local_level = TileHierarchy::levels().back().level;
@@ -125,9 +125,9 @@ std::vector<uint64_t> project(const GraphTile& local_tile, const Transit& transi
 
   for (const auto& egress : transit_tile.nodes()) {
     uint64_t best_wayid = std::numeric_limits<uint64_t>::max();
-    // In this loop, we try to find the way on which to project the bss node by iterating all nodes in
-    // its corresponding tile... Not a good idea in term of performance... any better idea???
-    auto bss_ll = PointLL{egress.lon(), egress.lat()};
+    // In this loop, we try to find the way on which to project the station node by iterating all
+    // nodes in its corresponding tile... Not a good idea in term of performance... any better idea???
+    auto station_ll = PointLL{egress.lon(), egress.lat()};
 
     float mindist_ped = std::numeric_limits<float>::max();
 
@@ -151,7 +151,7 @@ std::vector<uint64_t> project(const GraphTile& local_tile, const Transit& transi
         if (!directededge->forward()) {
           std::reverse(this_shape.begin(), this_shape.end());
         }
-        auto this_closest = bss_ll.Project(this_shape);
+        auto this_closest = station_ll.Project(this_shape);
 
         if (directededge->forwardaccess() & kPedestrianAccess) {
           if (std::get<1>(this_closest) < mindist_ped) {
@@ -611,7 +611,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
   GraphId local_tile_id(tileid.tileid(), TileHierarchy::levels().back().level, 0);
   graph_tile_ptr local_tile = reader.GetGraphTile(local_tile_id);
-  //  GraphTileBuilder tilebuilder_local(reader.tile_dir(), local_tile_id, true);
 
   std::vector<uint64_t> best_wayids;
   if (local_tile) {
@@ -765,7 +764,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
           egress_node.set_connecting_wayid(best_wayids[index]);
           LOG_INFO("Stop Index " + std::to_string(index) + " was given way_id " +
                    std::to_string(best_wayids[index]));
+        } else {
+          LOG_WARN("Stop Index " + std::to_string(index) + " could not be connected to OSM way");
         }
+
         // add the egress connection
         // Make sure length is non-zero
         double length = std::max(1.0, egress_ll.Distance(station_ll));
@@ -1154,8 +1156,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     tilebuilder_transit.AddTileCreationDate(tile_creation_date);
 
     // Set the tile base LL
-    PointLL base_ll =
-        TileHierarchy::get_tiling(TileHierarchy::levels().back().level).Base(tile_id.tileid());
+    PointLL base_ll = TileHierarchy::GetTransitLevel().tiles.Base(tile_id.tileid());
     tilebuilder_transit.header_builder().set_base_ll(base_ll);
 
     lock.unlock();
@@ -1224,8 +1225,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
       }
 
       GraphId platform_pbf_graphid = GraphId(platform.graphid());
-      LOG_INFO(std::to_string(platform_pbf_graphid) + " " +
-               std::to_string(departures.begin()->second.orig_pbf_graphid));
       StopEdges stopedges;
       stopedges.origin_pbf_graphid = platform_pbf_graphid;
 
@@ -1329,7 +1328,6 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
       std::to_string(TileHierarchy::GetTransitLevel().level));
-  // it looks like Tile Hierarchy has level 2 as a maximum
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {

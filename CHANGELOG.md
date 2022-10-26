@@ -115,7 +115,6 @@
    * CHANGED: Precise definition of types of edges on which BSS could be projected [#3658](https://github.com/valhalla/valhalla/pull/3663)
    * CHANGED: Remove duplicate implementation of `adjust_scores` [#3673](https://github.com/valhalla/valhalla/pull/3673)
    * ADDED: convert GTFS data into protobuf tiles [#3629](https://github.com/valhalla/valhalla/issues/3629)
-   * ADDED: convert GTFS protobufs into Transit Tiles [#3700](https://github.com/valhalla/valhalla/pull/3700)
    * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
    * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
@@ -131,6 +130,7 @@
    * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
    * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
    * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
+   * ADDED: convert GTFS protobufs into Transit Tiles [#3700](https://github.com/valhalla/valhalla/pull/3700)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**

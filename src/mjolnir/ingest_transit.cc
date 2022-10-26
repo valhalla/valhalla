@@ -364,6 +364,14 @@ bool write_stop_pairs(Transit& tile,
   feedCache tripFeeds;
   bool dangles = false;
 
+  // converts service start/end dates of the form (yyyymmdd) into epoch seconds
+  auto to_local_epoch_sec = [](const std::string& dt) -> uint32_t {
+    date::local_seconds tp;
+    std::istringstream in{dt};
+    in >> date::parse("%Y%m%d", tp);
+    return static_cast<uint32_t>(tp.time_since_epoch().count());
+  };
+
   for (const feedObject& feed_trip : tile_tripIds) {
     const auto& tile_tripId = feed_trip.id;
     const std::string currFeedPath = feed_trip.feed;
@@ -372,7 +380,7 @@ bool write_stop_pairs(Transit& tile,
     auto currTrip = feed.get_trip(tile_tripId);
 
     // already sorted by stop_sequence
-    const auto& tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
+    const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
     for (int stop_sequence = 0; stop_sequence < static_cast<int>(tile_stopTimes.size()) - 1;
          stop_sequence++) {
@@ -420,7 +428,7 @@ bool write_stop_pairs(Transit& tile,
                               : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
         stop_pair->set_destination_onestop_id(dest_onestop_id);
         if (origin_is_in_tile) {
-          stop_pair->set_origin_departure_time(stoi(origin_stopTime.departure_time.get_raw_time()));
+          stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
           stop_pair->set_origin_graphid(origin_graphid_it->second +
                                         static_cast<uint64_t>(origin_is_generated));
 
@@ -430,7 +438,7 @@ bool write_stop_pairs(Transit& tile,
         }
 
         if (dest_is_in_tile) {
-          stop_pair->set_destination_arrival_time(stoi(dest_stopTime.arrival_time.get_raw_time()));
+          stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
           stop_pair->set_destination_graphid(dest_graphid_it->second +
                                              static_cast<uint64_t>(dest_is_generated));
           // call function to set shape
@@ -444,18 +452,19 @@ bool write_stop_pairs(Transit& tile,
         // add information from calendar_dates.txt
         const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
         for (const auto& cal_date_item : trip_calDates) {
-          auto d = (cal_date_item.date).get_raw_date();
+          auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
           if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
-            stop_pair->add_service_added_dates(stoi(d));
+            stop_pair->add_service_added_dates(d);
           else
-            stop_pair->add_service_except_dates(stoi(d));
+            stop_pair->add_service_except_dates(d);
         }
 
         // check that a valid calendar exists for the service id
         auto trip_calendar = feed.get_calendar(currTrip->service_id);
         if (trip_calendar) {
-          stop_pair->set_service_start_date(stoi(trip_calendar->start_date.get_raw_date()));
-          stop_pair->set_service_end_date(stoi(trip_calendar->end_date.get_raw_date()));
+          stop_pair->set_service_start_date(
+              to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
+          stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
         }
 
         // grab the headsign
@@ -472,9 +481,16 @@ bool write_stop_pairs(Transit& tile,
         // get frequency info
         if (!feed.get_frequencies(currTrip->trip_id).empty()) {
           const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
+          if (currFrequencies.size() > 1) {
+            LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
+          }
+
           auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
-          auto freq_end_time = (currFrequencies[0].start_time.get_raw_time());
+          auto freq_end_time = (currFrequencies[0].end_time.get_raw_time());
           auto freq_time = freq_start_time + freq_end_time;
+
+          // TODO: check which type of frequency it is, could be exact (meaning headway sections
+          //  between trips) or schedule based (same headway all the time)
 
           if (currFrequencies.size() > 0) {
             stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
