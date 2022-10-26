@@ -1143,7 +1143,7 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     *this = code_itr->second;
   }
   if (!extra.empty())
-    message += ":" + extra;
+    message += ": " + extra;
 }
 
 // function to add warnings to proto info object

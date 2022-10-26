@@ -37,7 +37,8 @@ void check_distance(Api& request,
       }
 
       if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
+        throw valhalla_exception_t{154, std::to_string(static_cast<size_t>(matrix_max_distance)) +
+                                            " meters"};
       };
 
       // unset the date_time if beyond the limit

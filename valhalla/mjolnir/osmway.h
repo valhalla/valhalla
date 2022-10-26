@@ -1788,7 +1788,6 @@ struct OSMWay {
   uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
   uint32_t wheelchair_ : 1;
   uint32_t wheelchair_tag_ : 1;
-  uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t has_pronunciation_tags_ : 1;
   uint32_t internal_ : 1;
