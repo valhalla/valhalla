@@ -274,6 +274,12 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       if (maneuver.portions_toll()) {
         writer("toll", maneuver.portions_toll());
       }
+      if (maneuver.portions_highway()) {
+        writer("highway", maneuver.portions_highway());
+      }
+      if (maneuver.portions_ferry()) {
+        writer("ferry", maneuver.portions_ferry());
+      }
       if (maneuver.portions_unpaved()) {
         writer("rough", maneuver.portions_unpaved());
       }

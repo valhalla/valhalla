@@ -176,6 +176,8 @@ message TripLeg {
     SacScale sac_scale = 51;
     bool shoulder = 52;
     bool indoor = 53;
+    bool highway = 54;
+    bool ferry = 55;
   }
 
   message IntersectingEdge {

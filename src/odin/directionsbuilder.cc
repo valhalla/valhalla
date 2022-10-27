@@ -145,6 +145,12 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
     }
+    if (maneuver.portions_highway()) {
+      trip_maneuver->set_portions_highway(maneuver.portions_highway());
+    }
+    if (maneuver.ferry()) {
+      trip_maneuver->set_portions_ferry(maneuver.ferry());
+    }
 
     trip_maneuver->set_has_time_restrictions(maneuver.has_time_restrictions());
 
