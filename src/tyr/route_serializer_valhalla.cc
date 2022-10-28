@@ -285,15 +285,15 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       // Portions toll, highway, ferry and rough
       if (maneuver.portions_toll()) {
         writer("toll", maneuver.portions_toll());
-        has_toll = true ;
+        has_toll = true;
       }
       if (maneuver.portions_highway()) {
         writer("highway", maneuver.portions_highway());
-        has_highway = true ;
+        has_highway = true;
       }
       if (maneuver.portions_ferry()) {
         writer("ferry", maneuver.portions_ferry());
-        has_ferry = true ;
+        has_ferry = true;
       }
       if (maneuver.portions_unpaved()) {
         writer("rough", maneuver.portions_unpaved());

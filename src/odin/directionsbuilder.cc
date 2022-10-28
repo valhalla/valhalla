@@ -95,9 +95,9 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
                                               EnhancedTripLeg* etp,
                                               std::list<Maneuver>& maneuvers,
                                               DirectionsLeg& trip_directions) {
-  bool has_toll = false ;
-  bool has_highway = false ;
-  bool has_ferry = false ;
+  bool has_toll = false;
+  bool has_highway = false;
+  bool has_ferry = false;
   // Populate trip and leg IDs
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
@@ -147,15 +147,15 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
     if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
-      has_toll = true ;
+      has_toll = true;
     }
     if (maneuver.portions_highway()) {
       trip_maneuver->set_portions_highway(maneuver.portions_highway());
-      has_highway = true ;
+      has_highway = true;
     }
     if (maneuver.ferry()) {
       trip_maneuver->set_portions_ferry(maneuver.ferry());
-      has_ferry = true ;
+      has_ferry = true;
     }
 
     trip_maneuver->set_has_time_restrictions(maneuver.has_time_restrictions());
