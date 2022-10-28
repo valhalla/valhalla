@@ -11,6 +11,9 @@ message DirectionsLeg {
     double time = 2;           // seconds
     BoundingBox bbox = 3;      // Bounding box of the shape
     bool has_time_restrictions = 4; // Does the route contain any time restrictions?
+    bool has_toll = 5;
+    bool has_ferry = 6;
+    bool has_highway = 7;
   }
 
   message GuidanceView {
