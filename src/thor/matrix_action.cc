@@ -45,8 +45,6 @@ bool has_time(Api& request) {
 
   return had_valid_time;
 }
-
-constexpr double kMilePerMeter = 0.000621371;
 } // namespace
 
 namespace valhalla {
@@ -75,7 +73,8 @@ std::string thor_worker_t::matrix(Api& request) {
     return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
                                                 *options.mutable_targets(), *reader, mode_costing,
                                                 mode, max_matrix_distance.find(costing)->second,
-                                                options.matrix_locations());
+                                                options.matrix_locations(),
+                                                options.date_time_type() == Options::invariant);
   };
 
   if (costing == "bikeshare") {

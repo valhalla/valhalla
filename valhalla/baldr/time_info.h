@@ -29,8 +29,6 @@ struct TimeInfo {
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
-  // this defaults to mondays at noon if no time is provided (for constrained flow lookup)
-  // why here not default to kInvalidSecondsOfWeek? Would prevent EdgeCost to actually use it.
   uint64_t second_of_week : 20;
 
   // the distance in seconds from now
