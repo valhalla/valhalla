@@ -27,9 +27,11 @@ std::string GetDateTime(const std::string& origin_dt,
                         const uint64_t& origin_tz,
                         const GraphId& pred_id,
                         GraphReader& reader,
-                        const float& offset) {
+                        const uint64_t& offset) {
   if (origin_dt.empty()) {
     return "";
+  } else if (!offset) {
+    return origin_dt;
   }
   graph_tile_ptr tile = nullptr;
   // get the timezone of the output location
@@ -43,11 +45,8 @@ std::string GetDateTime(const std::string& origin_dt,
   auto in_epoch =
       DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
   uint64_t out_epoch = in_epoch + offset;
-  // TODO: how can it be that node.time_info() is 0?
-  // Also for the same origin/destination, the response date_time is origin.date_time() - 1 minute?!
-  dest_tz = dest_tz || origin_tz;
-  std::string out_dt = DateTime::seconds_to_date(static_cast<uint64_t>(out_epoch),
-                                                 DateTime::get_tz_db().from_index(dest_tz), false);
+  std::string out_dt =
+      DateTime::seconds_to_date(out_epoch, DateTime::get_tz_db().from_index(dest_tz), false);
 
   return out_dt;
 }
@@ -292,7 +291,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
-                               time_info_origin.timezone_index, time_info_tracked.timezone_index,
                                matrix_locations)) {
           one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
                                                time_info_origin.timezone_index, pred.edgeid());
@@ -586,7 +584,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader
                                                                      const GraphId& pred_id) {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
-    auto date_time = GetDateTime(origin_dt, origin_tz, pred_id, reader, dest.best_cost.secs);
+    auto date_time = GetDateTime(origin_dt, origin_tz, pred_id, reader,
+                                 static_cast<uint64_t>(dest.best_cost.secs + .5f));
     td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
   }
   return td;
