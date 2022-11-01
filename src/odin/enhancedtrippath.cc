@@ -76,6 +76,7 @@ const std::string& TripLeg_Use_Name(int v) {
       {8, "kDriveThruUse"},
       {9, "kCuldesacUse"},
       {10, "kLivingStreetUse"},
+      {11, "kServiceRoadUse"},
       {20, "kCyclewayUse"},
       {21, "kMountainBikeUse"},
       {24, "kSidewalkUse"},

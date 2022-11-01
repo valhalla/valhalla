@@ -132,7 +132,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      -1, -1, -1, -1, -1,
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
                    {"Russia", {-1, -1, -1, -1, -1, -1, (kMopedAccess | kBicycleAccess), -1, -1}},
-                   {"Scotland",
+                   {"Alba / Scotland",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}},
                    {"Slovakia",
@@ -156,7 +156,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kAutoAccess | kTruckAccess | kBusAccess | kHOVAccess | kTaxiAccess |
                       kMotorcycleAccess),
                      -1, -1, -1, -1, (kBicycleAccess | kMopedAccess), -1, -1}},
-                   {"Turkey",
+                   {"Türkiye",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess), -1, -1, -1}},
                    // Ukraine - no overrides
                    {"United States",
@@ -164,7 +164,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess | kMopedAccess), -1}},
-                   {"Wales",
+                   {"Cymru / Wales",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}}};
 } // namespace mjolnir

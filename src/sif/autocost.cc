@@ -81,9 +81,6 @@ constexpr ranged_default_t<float> kAutoHeightRange{0, kDefaultAutoHeight, 10.0f}
 constexpr ranged_default_t<float> kAutoWidthRange{0, kDefaultAutoWidth, 10.0f};
 constexpr ranged_default_t<uint32_t> kProbabilityRange{0, kDefaultRestrictionProbability, 100};
 
-// Maximum highway avoidance bias (modulates the highway factors based on road class)
-constexpr float kMaxHighwayBiasFactor = 8.0f;
-
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
     0.5f, // Trunk
@@ -495,9 +492,13 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const {
   // either the computed edge speed or optional top_speed
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                   time_info.seconds_from_now);
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
+
   auto final_speed = std::min(edge_speed, top_speed_);
+
   float sec = edge->length() * speedfactor_[final_speed];
 
   if (shortest_) {
@@ -926,8 +927,10 @@ public:
                         const graph_tile_ptr& tile,
                         const baldr::TimeInfo& time_info,
                         uint8_t& flow_sources) const override {
-    auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                     time_info.seconds_from_now);
+    auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                          ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                           &flow_sources, time_info.seconds_from_now)
+                          : fixed_speed_;
     auto final_speed = std::min(edge_speed, top_speed_);
 
     float sec = (edge->length() * speedfactor_[final_speed]);

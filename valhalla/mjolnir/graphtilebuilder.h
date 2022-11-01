@@ -88,6 +88,12 @@ public:
   std::vector<DirectedEdge>& directededges();
 
   /**
+   * Gets the current list of directed edge extension (builders).
+   * @return  Returns the directed edge extension builders.
+   */
+  std::vector<DirectedEdgeExt>& directededges_ext();
+
+  /**
    * Gets the current list of node transition (builders).
    * @return  Returns a reference to node transition builders.
    */
@@ -334,6 +340,13 @@ public:
   DirectedEdge& directededge(const size_t idx);
 
   /**
+   * Gets a directed edge extension from existing tile data.
+   * @param  idx  Index of the directed edge extension within the tile.
+   * @return  Returns a reference to the directed edge extension.
+   */
+  DirectedEdgeExt& directededge_ext(const size_t idx);
+
+  /**
    * Gets a pointer to directed edges within the list being built.
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a pointer to the directed edge builder (allows
@@ -342,14 +355,26 @@ public:
   const DirectedEdge* directededges(const size_t idx) const;
 
   /**
+   * Gets a pointer to directed edge extensions within the list being built.
+   * @param  idx  Index of the directed edge within the tile.
+   * @return  Returns a pointer to the directed edge extension builder (allows
+   *          accessing all directed edge extensions from a node).
+   */
+  const DirectedEdgeExt* directededges_ext(const size_t idx) const;
+
+  /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdge& directededge_builder(const size_t idx);
 
-  // TODO - add access method to directededge_ext_builder if extended directed edge
-  // attributes are needed.
+  /**
+   * Get the directed edge extension builder at the specified index.
+   * @param  idx  Index of the directed edge extension builder.
+   * @return  Returns a reference to the directed edge extension builder.
+   */
+  DirectedEdgeExt& directededge_ext_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.

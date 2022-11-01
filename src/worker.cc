@@ -138,6 +138,26 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
 };
 
+// unordered map for warning pairs
+const std::unordered_map<int, std::string> warning_codes = {
+  // 1xx is for deprecations
+  {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
+  {101,
+    R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
+  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
+  {103, R"(best_paths has been deprecated, use "alternates" instead)"}
+};
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, int code) {
+  auto message = warning_codes.find(code);
+  if (message != warning_codes.end()) {
+    auto* warning = api.mutable_info()->mutable_warnings()->Add();
+    warning->set_description(message->second);
+    warning->set_code(message->first);
+  }
+}
+
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
@@ -616,6 +636,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
+
+    add_warning(api, 100);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
@@ -628,6 +651,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // hov costing is deprecated and will be turned into auto costing with
   // include_hov2=true costing option.
   if (costing_str == "hov") {
+
+    // add warning for hov costing
+    add_warning(api, 101);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/hov");
@@ -640,6 +667,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_data_fix is deprecated and will be turned into
   // ignore all the things costing option. maybe remove in v4?
   if (costing_str == "auto_data_fix") {
+
+    // warning for auto data fix
+    add_warning(api, 102);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
@@ -1037,6 +1068,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // add warning for deprecated best_paths
+  if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
+    add_warning(api, 103);
+  }
   // deprecated best_paths for map matching top k
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
 
@@ -1073,7 +1108,7 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     *this = code_itr->second;
   }
   if (!extra.empty())
-    message += ":" + extra;
+    message += ": " + extra;
 }
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {

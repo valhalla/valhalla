@@ -20,6 +20,8 @@
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
 
+constexpr uint64_t kInitialEdgeLabelCount = 500000;
+
 namespace valhalla {
 namespace thor {
 
@@ -31,72 +33,6 @@ public:
    * the constructor mainly just sets some internals to a default empty value.
    */
   TimeDistanceBSSMatrix();
-
-  /**
-   * One to many time and distance cost matrix. Computes time and distance
-   * matrix from one origin location to many other locations.
-   * @param  origin        Location of the origin.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
-   * the travel mode must be pedestrian and bicycle
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance from origin index to all other locations
-   */
-  std::vector<TimeDistance>
-  OneToMany(const valhalla::Location& origin,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode /*mode*/,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to one time and distance cost matrix. Computes time and distance
-   * matrix from many locations to one destination location.
-   * @param  dest          Location of the destination.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
-   * the travel mode must be pedestrian and bicycle
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance to the destination index from all other locations
-   */
-  std::vector<TimeDistance>
-  ManyToOne(const valhalla::Location& dest,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode /*mode*/,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to many time and distance cost matrix. Computes time and distance
-   * matrix from many locations to many locations.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use. Actually It doesn't make sense in matrix_bss, because
-   * the travel mode must be pedestrian and bicycle
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @return time/distance between all pairs of locations
-   */
-  std::vector<TimeDistance>
-  ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-             baldr::GraphReader& graphreader,
-             const sif::mode_costing_t& mode_costing,
-             const sif::TravelMode /*mode*/,
-             const float max_matrix_distance);
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -113,14 +49,30 @@ public:
    *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance>
+  inline std::vector<TimeDistance>
   SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode /*mode*/,
+                 const sif::travel_mode_t /*mode*/,
                  const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations);
+                 const uint32_t matrix_locations = kAllLocations) {
+    // Set the costings
+    pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
+    bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
+    edgelabels_.reserve(kInitialEdgeLabelCount);
+
+    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    if (forward_search) {
+      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
+                                                   graphreader, max_matrix_distance,
+                                                   matrix_locations);
+    } else {
+      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
+                                                   graphreader, max_matrix_distance,
+                                                   matrix_locations);
+    }
+  };
 
   /**
    * Clear the temporary information generated during time+distance
@@ -162,6 +114,19 @@ protected:
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   /**
+   * Computes the matrix after SourceToTarget decided which direction
+   * the algorithm should traverse.
+   */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  std::vector<TimeDistance>
+  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                baldr::GraphReader& graphreader,
+                const float max_matrix_distance,
+                const uint32_t matrix_locations = kAllLocations);
+
+  /**
    * Expand from the node along the forward search path. Immediately expands
    * from the end node of any transition edge (so no transition edges are added
    * to the adjacency list or EdgeLabel list). Does not expand transition
@@ -175,35 +140,15 @@ protected:
    * @param  from_bss     Is this Expansion done from a bike share station?
    * @param  mode         the current travel mode
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition,
-                     const bool from_bss,
-                     const sif::TravelMode mode);
-
-  /**
-   * Expand from the node along the reverse search path. Immediately expands
-   * from the end node of any transition edge (so no transition edges are added
-   * to the adjacency list or EdgeLabel list). Does not expand transition
-   * edges if from_transition is false.
-   * @param  graphreader  Graph tile reader.
-   * @param  node         Graph Id of the node being expanded.
-   * @param  pred         Predecessor edge label (for costing).
-   * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
-   * @param  from_bss     Is this Expansion done from a bike share station?
-   * @param  mode         the current travel mode
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition,
-                     const bool from_bss,
-                     const sif::TravelMode mode);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void Expand(baldr::GraphReader& graphreader,
+              const baldr::GraphId& node,
+              const sif::EdgeLabel& pred,
+              const uint32_t pred_idx,
+              const bool from_transition,
+              const bool from_bss,
+              const sif::TravelMode mode);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -217,32 +162,19 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  void SetOriginOneToMany(baldr::GraphReader& graphreader, const valhalla::Location& origin);
-
-  /**
-   * Sets the origin for a many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  dest          Destination
-   */
-  void SetOriginManyToOne(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
    * Add destinations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
-  void
-  SetDestinationsOneToMany(baldr::GraphReader& graphreader,
-                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
-
-  /**
-   * Set destinations for the many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  locations     List of locations.
-   */
-  void
-  SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void SetDestinations(baldr::GraphReader& graphreader,
+                       const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path

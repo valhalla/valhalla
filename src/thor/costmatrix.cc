@@ -635,7 +635,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // we can properly recover elapsed time on the reverse path.
       uint8_t flow_sources;
       Cost newcost =
-          pred.cost() + costing_->EdgeCost(opp_edge, tile, TimeInfo::invalid(), flow_sources);
+          pred.cost() + costing_->EdgeCost(opp_edge, t2, TimeInfo::invalid(), flow_sources);
 
       Cost tc = costing_->TransitionCostReverse(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                 opp_pred_edge,
@@ -734,10 +734,17 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                                                                   &source_edgelabel_[index]));
     source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
+    // Only skip inbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
+                    has_other_edges = has_other_edges || !e.end_node();
+                  });
+
     // Iterate through edges and add to adjacency list
     for (const auto& edge : origin.correlation().edges()) {
       // If origin is at a node - skip any inbound edge (dist = 1)
-      if (edge.end_node()) {
+      if (has_other_edges && edge.end_node()) {
         continue;
       }
 
@@ -808,11 +815,18 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                                                                   &target_edgelabel_[index]));
     target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
 
+    // Only skip outbound edges if we have other options
+    bool has_other_edges = false;
+    std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
+                  [&has_other_edges](const valhalla::PathEdge& e) {
+                    has_other_edges = has_other_edges || !e.begin_node();
+                  });
+
     // Iterate through edges and add to adjacency list
     for (const auto& edge : dest.correlation().edges()) {
       // If the destination is at a node, skip any outbound edges (so any
       // opposing inbound edges are not considered)
-      if (edge.begin_node()) {
+      if (has_other_edges && edge.begin_node()) {
         continue;
       }
 

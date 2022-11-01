@@ -16,7 +16,7 @@ function setup_mason {
   if [ ! -f mason/mason ] ; then
       echo "Installing mason"
       mkdir -p ./mason
-      curl -sSfL https://github.com/mapbox/mason/archive/88f931cf8a327e3ab4802272e47a4d192f846fda.tar.gz \
+      curl -sSfL https://github.com/mapbox/mason/archive/6e12456fd85e842eda63e87e5b706a7e961e522d.tar.gz \
         | tar \
           --gunzip \
             --extract \
@@ -29,15 +29,17 @@ function setup_mason {
 }
 
 function setup_pre_commit {
-  echo "INFO: Installing pre-commit"
-  if [[ $(command -v python3) != "" ]]; then 
-    python3 -m pip install pre-commit
+  local python_bin=""
+  if [[ $(command -v python3) != "" ]]; then
+    python_bin="python3"
   elif [[ $(command -v python) != "" ]]; then
-    python -m pip install pre-commit
+    python_bin="python"
   else
     echo "WARNING: install python3 to set up pre-commit hooks."
     return
   fi
+  echo "INFO: Installing pre-commit"
+  ${python_bin} -m pip install --user --upgrade pre-commit
   echo "INFO: Setting up pre-commit hooks"
-  pre-commit install
+  ${python_bin} -m pre_commit install
 }
