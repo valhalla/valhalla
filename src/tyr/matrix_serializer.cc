@@ -104,15 +104,14 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
                        {"time", static_cast<uint64_t>(tds[i].time)},
                        {"distance", json::fixed_t{tds[i].dist * distance_scale, 3}}});
-      // optionally add date_time component if not empty
       if (!tds[i].date_time.empty()) {
         map->emplace("date_time", tds[i].date_time);
       }
     } else {
-      row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
-                                   {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                                   {"time", static_cast<std::nullptr_t>(nullptr)},
-                                   {"distance", static_cast<std::nullptr_t>(nullptr)}}));
+      map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
+                       {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+                       {"time", static_cast<std::nullptr_t>(nullptr)},
+                       {"distance", static_cast<std::nullptr_t>(nullptr)}});
     }
     row->emplace_back(map);
   }
