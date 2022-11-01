@@ -192,8 +192,6 @@ protected:
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
                           const sif::EdgeLabel& pred,
-                          const uint64_t origin_tz,
-                          const uint64_t dest_tz,
                           const uint32_t matrix_locations);
 
   /**
@@ -223,8 +221,8 @@ protected:
    * @return  Returns a time distance matrix among locations.
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix(baldr::GraphReader& reader,
-                                                   const std::string origin_dt,
-                                                   const uint64_t origin_tz,
+                                                   const std::string& origin_dt,
+                                                   const uint64_t& origin_tz,
                                                    const baldr::GraphId& pred_id);
 };
 

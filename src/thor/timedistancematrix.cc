@@ -23,11 +23,11 @@ static bool IsTrivial(const uint64_t& edgeid,
   return false;
 }
 
-std::string GetDateTime(const std::string origin_dt,
-                        const uint64_t origin_tz,
+std::string GetDateTime(const std::string& origin_dt,
+                        const uint64_t& origin_tz,
                         const GraphId& pred_id,
                         GraphReader& reader,
-                        const float offset) {
+                        const float& offset) {
   if (origin_dt.empty()) {
     return "";
   }
@@ -492,9 +492,6 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
     const EdgeLabel& pred,
-    const uint64_t origin_tz,
-    // todo: dest_tz is bullshit.. all kinds of dests here, take it from the pred/edge
-    const uint64_t dest_tz,
     const uint32_t matrix_locations) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
@@ -584,8 +581,8 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
 // Form the time, distance matrix from the destinations list
 std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader& reader,
-                                                                     const std::string origin_dt,
-                                                                     const uint64_t origin_tz,
+                                                                     const std::string& origin_dt,
+                                                                     const uint64_t& origin_tz,
                                                                      const GraphId& pred_id) {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
