@@ -189,7 +189,9 @@ int main(int argc, char* argv[]) {
     // Skip over any service limits that are not for a costing method
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
-        kv.first == "trace" || kv.first == "isochrone") {
+        kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
+        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
+        kv.first == "status") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,

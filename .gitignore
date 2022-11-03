@@ -62,6 +62,9 @@ CMakeLists.txt.user
 .idea
 /.tidytmp
 
+# python
+.venv
+
 # clangd
 .cache/
 

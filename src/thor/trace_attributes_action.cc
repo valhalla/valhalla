@@ -46,7 +46,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
   auto _ = measure_scope_time(request);
 
   // Parse request
-  parse_locations(request);
+  adjust_scores(*request.mutable_options());
   parse_costing(request);
   parse_measurements(request);
   const auto& options = request.options();
