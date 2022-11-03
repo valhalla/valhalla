@@ -136,6 +136,7 @@ public:
   }
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
 #ifdef __ANDROID__
+    std::string tmp = custom_directive; // to prevent -Wunused-parameter
     __android_log_print(ANDROID_LOG_INFO, "valhalla", "%s", message.c_str());
 #else
     std::string output;
@@ -165,6 +166,7 @@ class StdErrLogger : public StdOutLogger {
   using StdOutLogger::StdOutLogger;
   virtual void Log(const std::string& message, const std::string& custom_directive = " [TRACE] ") {
 #ifdef __ANDROID__
+    std::string tmp = custom_directive; // to prevent -Wunused-parameter
     __android_log_print(ANDROID_LOG_ERROR, "valhalla", "%s", message.c_str());
 #else
     std::string output;

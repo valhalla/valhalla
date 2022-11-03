@@ -199,43 +199,6 @@ TEST(AABB2, TestIntersectsCircle) {
 TEST(AABB2, TestIntersect) {
   // Test if bounding boxes intersect
   AABB2<Point2> box(-1, -1, 1, 1);
-  Point2 a, b;
-
-  EXPECT_TRUE(box.Intersect((a = {0, 0}), (b = {1, 1})));
-  EXPECT_EQ(a, Point2(0, 0));
-  EXPECT_EQ(b, Point2(1, 1));
-
-  EXPECT_TRUE(box.Intersect((a = {-2, 0}), (b = {2, 0})));
-  EXPECT_EQ(a, Point2(-1, 0));
-  EXPECT_EQ(b, Point2(1, 0));
-
-  EXPECT_TRUE(box.Intersect((a = {-2, -2}), (b = {2, 2})));
-  EXPECT_EQ(a, Point2(-1, -1));
-  EXPECT_EQ(b, Point2(1, 1));
-
-  EXPECT_TRUE(box.Intersect((a = {-2, -2}), (b = {0, 0})));
-  EXPECT_EQ(a, Point2(-1, -1));
-  EXPECT_EQ(b, Point2(0, 0));
-
-  EXPECT_TRUE(box.Intersect((a = {0, 0}), (b = {2, 2})));
-  EXPECT_EQ(a, Point2(0, 0));
-  EXPECT_EQ(b, Point2(1, 1));
-
-  EXPECT_TRUE(box.Intersect((a = {-1, 1}), (b = {1, -1})));
-  EXPECT_EQ(a, Point2(-1, 1));
-  EXPECT_EQ(b, Point2(1, -1));
-
-  EXPECT_TRUE(box.Intersect((a = {0, 2}), (b = {2, 0})));
-  EXPECT_EQ(a, Point2(1, 1));
-  EXPECT_EQ(b, Point2(1, 1));
-
-  LineSegment2<Point2> ab(a, b);
-  EXPECT_TRUE(box.Intersects(ab)) << "LineSegment intersects test failed";
-
-  EXPECT_FALSE(box.Intersect((a = {-2, -2}), (b = {-1, -1.001})));
-  EXPECT_FALSE(box.Intersect((a = {0, 2.1}), (b = {2.1, 0})));
-  EXPECT_FALSE(box.Intersect((a = {0, 1.1}), (b = {1, 1.1})));
-  EXPECT_FALSE(box.Intersect((a = {1.1, 0}), (b = {1, 1.1})));
 
   // Test intersection of bounding boxes
   // Case 1 - no intersection

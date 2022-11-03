@@ -40,5 +40,6 @@ These are the results of a request to the Transit Availability service.
 | `transit_available` | Returns a boolean value for if transit is available, along with the input a list of locations and radius used for the check.|
 | `istransit` | A boolean value for whether or not transit exists for a particular location and radius.
 | `locations` | The specified array of lat/lngs from the input request.  Locations may also contain an optional radius. |
+| `warnings`  | A warnings array. This array may contain descriptive text about notices of deprecated request parameters, clamped values etc. |  
 
 See the [HTTP return codes](/turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
