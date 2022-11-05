@@ -43,10 +43,12 @@ protected:
         gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing, options);
 
     gurka::assert::raw::expect_path(default_route, {"ABCD"});
+    gurka::assert::raw::expect_feature(default_route, "highway", true);
     // initially use_highway = 0.5f
     // so highway_factor_ becomes 0 for both and shorter route taken
 
     gurka::assert::raw::expect_path(capped_route, {"AEGFD"});
+    gurka::assert::raw::expect_feature(capped_route, "highway", false);
     // when use_highways = 0 then highway_factor_ = 8
     //
     // Residential : contribution in overall factor is still 0 (kHighwayFactor 0.0f)

@@ -1162,6 +1162,54 @@ void expect_path(const valhalla::Api& result,
   EXPECT_EQ(actual_names, expected_names) << "Actual path didn't match expected path. " << message;
 }
 
+/**
+ * Test if a found path has the expected feature, with the expected value
+ *
+ * @param raw_result the result of a /route or /match request
+ * @param feature expected feature
+ * @param expected_value the expected value that the expected_value should be
+ */
+void expect_feature(valhalla::Api& raw_result, const std::string feature, const bool expected_value) {
+  // std::string json = tyr::serializeDirections(raw_result);
+  // std::cout << json.c_str() << std::endl;
+  rapidjson::Document result = gurka::convert_to_json(raw_result, valhalla::Options_Format_json);
+  if (result.HasParseError()) {
+    FAIL() << "Error converting route response to JSON";
+  }
+  EXPECT_TRUE(result.HasMember("trip"));
+  EXPECT_TRUE(result["trip"].IsObject());
+  {
+    EXPECT_TRUE(result["trip"].HasMember("legs"));
+    EXPECT_TRUE(result["trip"]["legs"].IsArray());
+
+    EXPECT_TRUE(result["trip"]["legs"][0].HasMember("maneuvers"));
+    EXPECT_TRUE(result["trip"]["legs"][0]["maneuvers"].IsArray());
+    if (expected_value) {
+      EXPECT_TRUE(result["trip"]["legs"][0]["maneuvers"][0].HasMember(feature));
+      EXPECT_TRUE(result["trip"]["legs"][0]["maneuvers"][0][feature].IsBool());
+      const auto actual_value = result["trip"]["legs"][0]["maneuvers"][0][feature].GetBool();
+      EXPECT_EQ(actual_value, expected_value);
+    } else {
+      EXPECT_FALSE(result["trip"]["legs"][0]["maneuvers"][0].HasMember(feature));
+    }
+
+    EXPECT_TRUE(result["trip"]["legs"][0].HasMember("summary"));
+    EXPECT_TRUE(result["trip"]["legs"][0]["summary"].IsObject());
+    EXPECT_TRUE(result["trip"]["legs"][0]["summary"].HasMember("has_" + feature));
+    EXPECT_TRUE(result["trip"]["legs"][0]["summary"]["has_" + feature].IsBool());
+    const auto actual_value = result["trip"]["legs"][0]["summary"]["has_" + feature].GetBool();
+    EXPECT_EQ(actual_value, expected_value);
+  }
+  {
+    EXPECT_TRUE(result["trip"].HasMember("summary"));
+    EXPECT_TRUE(result["trip"]["summary"].IsObject());
+    EXPECT_TRUE(result["trip"]["summary"].HasMember("has_" + feature));
+    EXPECT_TRUE(result["trip"]["summary"]["has_" + feature].IsBool());
+    const auto actual_value = result["trip"]["summary"]["has_" + feature].GetBool();
+    EXPECT_EQ(actual_value, expected_value);
+  }
+}
+
 } // namespace raw
 } // namespace assert
 
