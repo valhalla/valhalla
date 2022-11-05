@@ -316,7 +316,6 @@ public:
 public:
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
-  float ferry_factor_;       // Weighting to apply to ferry edges
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
