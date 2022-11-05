@@ -1169,7 +1169,9 @@ void expect_path(const valhalla::Api& result,
  * @param feature expected feature
  * @param expected_value the expected value that the expected_value should be
  */
-void expect_feature(valhalla::Api& raw_result, const std::string feature, const bool expected_value) {
+void expect_feature(valhalla::Api& raw_result,
+                    const std::string& feature,
+                    const bool expected_value) {
   // std::string json = tyr::serializeDirections(raw_result);
   // std::cout << json.c_str() << std::endl;
   rapidjson::Document result = gurka::convert_to_json(raw_result, valhalla::Options_Format_json);

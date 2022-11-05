@@ -326,7 +326,7 @@ void expect_path(const valhalla::Api& result,
  * @param feature expected feature
  * @param expected_value the expected value that the expected_value should be
  */
-void expect_feature(valhalla::Api& raw_result, const std::string feature, const bool expected_value);
+void expect_feature(valhalla::Api& raw_result, const std::string& feature, const bool expected_value);
 } // namespace raw
 } // namespace assert
 
