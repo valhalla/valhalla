@@ -341,6 +341,9 @@ The summary JSON object includes:
 | :---- | :----------- |
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
+| `as_toll`| Flag indicating if the the path uses one or more toll segments. |
+| `has_highway`| Flag indicating if the the path uses one or more highway segments. |
+| `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
@@ -369,6 +372,7 @@ Each maneuver includes:
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |
 | `end_shape_index` | Index into the list of shape points for the end of the maneuver. |
 | `toll` | True if the maneuver has any toll, or portions of the maneuver are subject to a toll. |
+| `highway` | True if a highway is encountered on this maneuver. |
 | `rough` | True if the maneuver is unpaved or rough pavement, or has any portions that have rough pavement. |
 | `gate` | True if a gate is encountered on this maneuver. |
 | `ferry` | True if a ferry is encountered on this maneuver. |
