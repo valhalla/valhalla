@@ -341,7 +341,7 @@ The summary JSON object includes:
 | :---- | :----------- |
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
-| `as_toll`| Flag indicating if the the path uses one or more toll segments. |
+| `has_toll`| Flag indicating if the the path uses one or more toll segments. |
 | `has_highway`| Flag indicating if the the path uses one or more highway segments. |
 | `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
