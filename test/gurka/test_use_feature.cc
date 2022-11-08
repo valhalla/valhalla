@@ -116,7 +116,7 @@ public:
   void check_result(const std::string& use_parameter_value,
                     const std::vector<std::string>& waypoints,
                     const std::vector<std::string>& expected_names,
-                    gurka::map map,
+                    const gurka::map& map,
                     const std::tuple<std::string, std::string>& props = {}) {
 
     const std::string& costing = std::get<0>(props);
