@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
 * **Enhancement**
+   * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
@@ -135,7 +136,6 @@
    * ADDED: axle_count costing option for hgv [#3648](https://github.com/valhalla/valhalla/pull/3648)
    * ADDED: Matrix action for gurka [#3793](https://github.com/valhalla/valhalla/pull/3793)
    * ADDED: Add warnings array to response. [#3588](https://github.com/valhalla/valhalla/pull/3588)
-   * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
    * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
    * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
    * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
