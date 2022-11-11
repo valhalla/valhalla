@@ -143,7 +143,7 @@ protected:
               const sif::EdgeLabel& pred,
               const uint32_t pred_idx,
               const bool from_transition,
-              baldr::TimeInfo& time_info_tracked,
+              const baldr::TimeInfo& time_info,
               const bool invariant = false);
 
   /**
@@ -160,7 +160,9 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 const valhalla::Location& origin,
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Add destinations.
@@ -195,8 +197,7 @@ protected:
                           const uint32_t matrix_locations);
 
   /**
-   * Sets the date_time on the origin locations, if the distance to the furthest destination
-   * is less than max_timedep_dist.
+   * Sets the date_time on the origin locations.
    *
    * @param origins            the origins (sources or targets)
    * @param destinations       the destinations (sources or targets)

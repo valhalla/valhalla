@@ -26,7 +26,9 @@ void update_traffic_on_edges(baldr::GraphReader& reader,
   }
 }
 
-void check_dist(const rapidjson::Document& result, const std::vector<float>& exp_dists) {
+void check_dist(const rapidjson::Document& result,
+                const std::vector<float>& exp_dists,
+                bool valid_traffic = false) {
   size_t i = 0;
   for (const auto& origin_row : result["sources_to_targets"].GetArray()) {
     auto origin_td = origin_row.GetArray();
@@ -34,6 +36,9 @@ void check_dist(const rapidjson::Document& result, const std::vector<float>& exp
       std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
+      if (valid_traffic && v.GetObject().HasMember("date_time")) {
+        EXPECT_FALSE(v.GetObject()["date_time"].GetString() == "");
+      }
       i++;
     }
   }
@@ -48,6 +53,7 @@ protected:
     constexpr double gridsize = 100;
 
     // upper ways are motorways, lower are residential
+    // unless traffic is enabled, matrix should prefer the longer motorways
     const std::string ascii_map = R"(
         A-----B
         2     |
@@ -123,7 +129,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
-  check_dist(res_doc, {0.0f, 1.6f, 2.0f, 0.0f});
+  check_dist(res_doc, {0.0f, 1.6f, 2.0f, 0.0f}, true);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // reverse tree, CostMatrix
@@ -132,7 +138,8 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // without time, we'd expect to take the longer, faster route
-  // TODO: be aware that it's actually 2.0f, but CostMatrix has a bug here
+  // TODO: be aware that it's actually 2.0f, but CostMatrix has a bug here, see
+  // https://github.com/valhalla/valhalla/issues/3803
   check_dist(res_doc, {1.6f, 0.0f});
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 401);
@@ -223,7 +230,7 @@ TEST_F(MatrixTest, Targets) {
   ASSERT_EQ(result.info().warnings().Get(0).code(), 401);
   ASSERT_EQ(result.info().warnings().size(), 1);
 
-  // date_time on the targets, disallowed reverse
+  // date_time on the targets, disallowed forward
   options = {{"/targets/0/date_time", "current"}, {"/targets/1/date_time", "2016-07-03T08:06"}};
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E"}, {"E", "H"}, "auto", options,
