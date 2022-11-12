@@ -35,8 +35,6 @@ void check_dist(const rapidjson::Document& result,
       std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
-      // TODO: can't enable this check for now because of:
-      // https://github.com/valhalla/valhalla/issues/3825
       if (valid_traffic) {
         EXPECT_TRUE(v.GetObject().HasMember("date_time"));
       }
