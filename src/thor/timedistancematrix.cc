@@ -23,6 +23,7 @@ static bool IsTrivial(const uint64_t& edgeid,
   return false;
 }
 
+// Will return a destination's date_time string
 std::string GetDateTime(const std::string& origin_dt,
                         const uint64_t& origin_tz,
                         const GraphId& pred_id,

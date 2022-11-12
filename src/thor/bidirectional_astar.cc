@@ -257,8 +257,6 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     // We can set is_dest incorrectly in the second case, but it is the rare case.
     // The result path will be correct, because there are cosing.Allowed calls inside recost_forward
     // function in second time.
-    // TODO(nils): Should we really check the time restrictions for invariant type? The time is most
-    // likely vastly outdated at this point when not tracking it with invariant
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, localtime,
                            time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels_forward_, tile, meta.edge_id, true,

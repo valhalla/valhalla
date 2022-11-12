@@ -1,7 +1,6 @@
 #include "gurka.h"
 #include "test.h"
 
-#include <boost/format.hpp>
 #include <gtest/gtest.h>
 
 using namespace valhalla;
@@ -36,8 +35,10 @@ void check_dist(const rapidjson::Document& result,
       std::string msg = "Problem at source " + std::to_string(i / origin_td.Size()) + " and target " +
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
-      if (valid_traffic && v.GetObject().HasMember("date_time")) {
-        EXPECT_FALSE(v.GetObject()["date_time"].GetString() == "");
+      // TODO: can't enable this check for now because of:
+      // https://github.com/valhalla/valhalla/issues/3825
+      if (valid_traffic) {
+        EXPECT_TRUE(v.GetObject().HasMember("date_time"));
       }
       i++;
     }
@@ -77,7 +78,8 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_traffic_allowed",
                             {{"service_limits.max_timedep_distance_matrix", "50000"},
                              {"mjolnir.traffic_extract",
-                              "test/data/matrix_traffic_allowed/traffic.tar"}});
+                              "test/data/matrix_traffic_allowed/traffic.tar"},
+                             {"mjolnir.timezone", "test/data/tz.sqlite"}});
 
     test::build_live_traffic_data(map.config);
     test::LiveTrafficCustomize edges_with_traffic = [](baldr::GraphReader& reader,
@@ -117,7 +119,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
   // we expect to take the shorter lower path on residential
-  check_dist(res_doc, {0.0f, 1.6f, 1.6f, 0.0f});
+  check_dist(res_doc, {0.0f, 1.6f, 1.6f, 0.0f}, true);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
@@ -129,7 +131,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
-  check_dist(res_doc, {0.0f, 1.6f, 2.0f, 0.0f}, true);
+  check_dist(res_doc, {0.0f, 1.6f, 2.0f, 0.0f});
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // reverse tree, CostMatrix
@@ -150,7 +152,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"1"}, {"1", "2"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_dist(res_doc, {0.0f, 0.2f});
+  check_dist(res_doc, {0.0f, 0.2f}, true);
   ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
