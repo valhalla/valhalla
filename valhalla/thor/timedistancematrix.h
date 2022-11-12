@@ -200,7 +200,6 @@ protected:
    * Sets the date_time on the origin locations.
    *
    * @param origins            the origins (sources or targets)
-   * @param destinations       the destinations (sources or targets)
    * @param reader             the reader for looking up timezone information
    * @returns                  time info for each location
    */
@@ -219,6 +218,11 @@ protected:
 
   /**
    * Form a time/distance matrix from the results.
+   * @param reader    GraphReader instance
+   * @param origin_dt The origin's date_time string
+   * @param origin_tz The origin's timezone index
+   * @param pred_id   The destination edge's GraphId
+   *
    * @return  Returns a time distance matrix among locations.
    */
   std::vector<TimeDistance> FormTimeDistanceMatrix(baldr::GraphReader& reader,
