@@ -82,6 +82,7 @@ These are the results of a request to the Time-Distance Matrix service.
 | `time` | The computed time between each set of points. Time will always be 0 for the first element of the time-distance array for `one_to_many`, the last element in a `many_to_one`, and the first and last elements of a `many_to_many`.  |
 | `to_index` | The destination index into the locations array. |
 | `from_index` | The origin index into the locations array. |
+| `date_time`  | (optional) If the date_time was valid for an origin, `date_time` will return the local time at the destination. |
 | `locations` | The specified array of lat/lngs from the input request.
 | `units` | Distance units for output. Allowable unit types are mi (miles) and km (kilometers). If no unit type is specified, the units default to kilometers. |
 | `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
