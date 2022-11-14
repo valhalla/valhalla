@@ -78,7 +78,11 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  void clear() {
+    reset();
+    destinations_.clear();
+    dest_edges_.clear();
+  };
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -112,6 +116,11 @@ protected:
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
+
+  /**
+   * Reset all origin-specific information
+   */
+  void reset();
 
   /**
    * Computes the matrix after SourceToTarget decided which direction
@@ -167,14 +176,26 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
-   * Add destinations.
+   * Initalize destinations for all origins.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void SetDestinations(baldr::GraphReader& graphreader,
-                       const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  void InitDestinations(baldr::GraphReader& graphreader,
+                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+
+  /**
+   * Set the available destination edges for each origin.
+   * @param locations List of destination locations.
+   */
+  void SetDestinations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+    for (int i = 0; i < locations.size(); i++) {
+      for (const auto& edge : locations.Get(i).correlation().edges()) {
+        destinations_[i].dest_edges_available.emplace(edge.graph_id());
+      }
+    }
+  };
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
