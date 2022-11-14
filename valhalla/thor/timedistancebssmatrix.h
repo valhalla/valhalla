@@ -78,7 +78,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear() {
+  inline void clear() {
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -120,7 +120,20 @@ protected:
   /**
    * Reset all origin-specific information
    */
-  void reset();
+  inline void reset() {
+    edgelabels_.clear();
+    // Clear the per-origin information
+    for (auto& dest : destinations_) {
+      dest.reset();
+    }
+
+    // Clear elements from the adjacency list
+    adjacencylist_.clear();
+
+    // Clear the edge status flags
+    pedestrian_edgestatus_.clear();
+    bicycle_edgestatus_.clear();
+  };
 
   /**
    * Computes the matrix after SourceToTarget decided which direction
@@ -189,7 +202,8 @@ protected:
    * Set the available destination edges for each origin.
    * @param locations List of destination locations.
    */
-  void SetDestinations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  inline void
+  SetDestinations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
     for (int i = 0; i < locations.size(); i++) {
       for (const auto& edge : locations.Get(i).correlation().edges()) {
         destinations_[i].dest_edges_available.emplace(edge.graph_id());

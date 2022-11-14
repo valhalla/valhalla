@@ -43,23 +43,6 @@ float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) c
   return max_matrix_distance / (2.0f * kMPHtoMetersPerSec);
 }
 
-// Clear the temporary information generated during time + distance matrix
-// construction.
-void TimeDistanceBSSMatrix::reset() {
-  edgelabels_.clear();
-  // Clear the per-origin information
-  for (auto& dest : destinations_) {
-    dest.reset();
-  }
-
-  // Clear elements from the adjacency list
-  adjacencylist_.clear();
-
-  // Clear the edge status flags
-  pedestrian_edgestatus_.clear();
-  bicycle_edgestatus_.clear();
-}
-
 // Expand from a node in the forward direction
 template <const ExpansionType expansion_direction, const bool FORWARD>
 void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,

@@ -72,7 +72,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear() {
+  inline void clear() {
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -110,7 +110,20 @@ protected:
   /**
    * Reset all origin-specific information
    */
-  void reset();
+  inline void reset() {
+    // Clear the edge labels and destination list
+    edgelabels_.clear();
+    // Clear the per-origin information
+    for (auto& dest : destinations_) {
+      dest.reset();
+    }
+
+    // Clear elements from the adjacency list
+    adjacencylist_.clear();
+
+    // Clear the edge status flags
+    edgestatus_.clear();
+  };
 
   /**
    * Computes the matrix after SourceToTarget decided which direction

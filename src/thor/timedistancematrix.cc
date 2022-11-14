@@ -53,23 +53,6 @@ float TimeDistanceMatrix::GetCostThreshold(const float max_matrix_distance) cons
   return max_matrix_distance / (average_speed_mph * kMPHtoMetersPerSec);
 }
 
-// Clear the temporary information generated during time + distance matrix
-// construction.
-void TimeDistanceMatrix::reset() {
-  // Clear the edge labels and destination list
-  edgelabels_.clear();
-  // Clear the per-origin information
-  for (auto& dest : destinations_) {
-    dest.reset();
-  }
-
-  // Clear elements from the adjacency list
-  adjacencylist_.clear();
-
-  // Clear the edge status flags
-  edgestatus_.clear();
-}
-
 // Expand from a node in the forward direction
 template <const ExpansionType expansion_direction, const bool FORWARD>
 void TimeDistanceMatrix::Expand(GraphReader& graphreader,
