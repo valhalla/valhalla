@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * FIXED: only set most destination information once for all origins in timedistancematrix [#3827](https://github.com/valhalla/valhalla/pull/3827)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
