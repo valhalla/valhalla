@@ -187,7 +187,6 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
   // Run a series of one to many calls and concatenate the results.
   const auto& origins = FORWARD ? source_location_list : target_location_list;
   const auto& destinations = FORWARD ? target_location_list : source_location_list;
-  destinations_.reserve(destinations.size());
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost.
