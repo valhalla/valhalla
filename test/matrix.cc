@@ -380,7 +380,6 @@ TEST(Matrix, partial_matrix) {
                                      request.options().matrix_locations());
   uint32_t found = 0;
   for (uint32_t i = 0; i < results.size(); ++i) {
-    std::cerr << results[i].dist << ", " << results[i].time << std::endl;
     if (results[i].dist > 0) {
       ++found;
     }
