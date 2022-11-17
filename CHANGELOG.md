@@ -1,6 +1,7 @@
 ## Release Date: 2022-??-?? Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
+   * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
 * **Enhancement**
    * FIXED: only set most destination information once for all origins in timedistancematrix [#3827](https://github.com/valhalla/valhalla/pull/3827)
 
