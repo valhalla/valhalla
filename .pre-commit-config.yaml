@@ -10,7 +10,7 @@ repos:
 
   # Python formatter
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.10.0
     hooks:
       - id: black
         language_version: python3
@@ -18,7 +18,7 @@ repos:
         files: ^(src/bindings/python/|scripts/)
 
   # Python linter
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
     hooks:
       - id: flake8
