@@ -567,6 +567,11 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Prune path if predecessor is not a through edge
+  // NOTE(nils): this will also be forward-compatible
+  // this is currently a problem when edges in not_thru
+  // areas are not marked, as expansion will just stop in this direction
+  // and continue in the other direction even though it wouldn't be able to
+  // find this tree inside the not_thru region
   if (pred.not_thru() && pred.not_thru_pruning()) {
     return;
   }
@@ -777,6 +782,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
+      // NOTE(nils): shouldn't not_thru_pruning be set to the opposite of the edge's not_thru flag?
+      // current code should also be compatible with new data
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
                              true, static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, -1);

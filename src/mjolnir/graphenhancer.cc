@@ -1668,6 +1668,9 @@ void enhance(const boost::property_tree::ptree& pt,
         // Check for not_thru edge (only on low importance edges). Exclude
         // transit edges
         if (directededge.classification() > RoadClass::kTertiary) {
+          // (nils): if we want to update all edges in a not_thru region, we'd have to
+          // go through more tiles than just this one.. we could record the entire set of
+          // not_thru edges for all tiles and rip through them again after this big loop?
           if (IsNotThruEdge(reader, lock, startnode, directededge)) {
             directededge.set_not_thru(true);
             stats.not_thru++;

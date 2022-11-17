@@ -319,6 +319,10 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                           : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
+  // NOTE(nils): not_thru_pruning() will be false for the correlated (i.e. "first") edges as pred. if
+  // the current edge is also not_thru we won't prune in the next round. if the current edge is not a
+  // not_thru we will start pruning next round. that ensures that we can start on a not_thru edge and
+  // continue on other not_thru edges before pruning.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
@@ -604,6 +608,10 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         // on later, causing us to needlessly expand when we could have aborted sooner. However, it
         // ensures that most impossible route will fail fast provided one of the locations didn't
         // start from a not_thru/closed edge
+        // TODO(nils):
+        //   1. extended_search doesn't seem to do what it's documented to do; it will force both
+        //      both directions to be eventually exhausted, no matter if the other direction
+        //      started on a closure/not_thru
         if (!extended_search_ || !pruning_disabled_at_destination_) {
           return {};
         }
