@@ -207,7 +207,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
     // Initialize the origin and set the available destination edges
     settled_count_ = 0;
     SetOrigin<expansion_direction>(graphreader, origin);
-    SetDestinations(destinations);
+    SetDestinationEdges();
 
     // Find shortest path
     graph_tile_ptr tile;

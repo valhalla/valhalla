@@ -202,11 +202,11 @@ protected:
    * Set the available destination edges for each origin.
    * @param locations List of destination locations.
    */
-  inline void
-  SetDestinations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-    for (int i = 0; i < locations.size(); i++) {
-      for (const auto& edge : locations.Get(i).correlation().edges()) {
-        destinations_[i].dest_edges_available.emplace(edge.graph_id());
+  void SetDestinationEdges() {
+    // the percent_along is set once at the beginning
+    for (auto& dest : destinations_) {
+      for (const auto& idx : dest.dest_edges_percent_along) {
+        dest.dest_edges_available.emplace(idx.first);
       }
     }
   };

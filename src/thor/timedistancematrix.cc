@@ -182,7 +182,6 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
   // Run a series of one to many calls and concatenate the results.
   const auto& origins = FORWARD ? source_location_list : target_location_list;
   const auto& destinations = FORWARD ? target_location_list : source_location_list;
-  destinations_.reserve(destinations.size());
 
   uint32_t bucketsize = costing_->UnitSize();
 
@@ -203,7 +202,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
     // Initialize the origin and set the available destination edges
     settled_count_ = 0;
     SetOrigin<expansion_direction>(graphreader, origin);
-    SetDestinations(destinations);
+    SetDestinationEdges();
 
     // Find shortest path
     graph_tile_ptr tile;
@@ -231,7 +230,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       auto destedge = dest_edges_.find(pred.edgeid());
       if (destedge != dest_edges_.end()) {
         // Update any destinations along this edge. Return if all destinations
-        // have been settled.
+        // have been settled or the requested amount of destinations has been found
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
@@ -457,7 +456,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     // See if this edge is part of the destination
     // If the edge isn't there but the path is trivial, then that means the edge
     // was removed towards the beginning which is not an error.
-    if ((dest.dest_edges_available.find(pred.edgeid())) == dest.dest_edges_available.end()) {
+    if (dest.dest_edges_available.find(pred.edgeid()) == dest.dest_edges_available.end()) {
       if (!IsTrivial(pred.edgeid(), origin, locations.Get(dest_idx))) {
         LOG_ERROR("Could not find the destination edge");
       }
@@ -483,7 +482,6 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
     // Erase this edge from further consideration. Mark this destination as
     // settled if all edges have been found
-    dest.dest_edges_available.erase(pred.edgeid());
     if (dest.dest_edges_available.empty()) {
       dest.settled = true;
       settled_count_++;
@@ -497,6 +495,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
   // been found.
   bool allfound = true;
   float maxcost = 0.0f;
+
   for (auto& d : destinations_) {
     // Skip any settled destinations
     if (d.settled) {
