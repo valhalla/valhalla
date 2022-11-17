@@ -6,6 +6,7 @@
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
 #include "tyr/serializers.h"
+#include <valhalla/worker.h>
 
 using namespace valhalla;
 using namespace valhalla::tyr;
@@ -119,6 +120,10 @@ std::string thor_worker_t::matrix(Api& request) {
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
     return tyr::serializeMatrix(request);
+  }
+
+  if (options.matrix_locations() == std::numeric_limits<uint32_t>::max()) {
+    add_warning(request, 203);
   }
 
   // for costmatrix try a second pass if the first didn't work out

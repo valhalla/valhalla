@@ -149,6 +149,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
+<<<<<<< HEAD
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
@@ -163,6 +164,23 @@ const std::unordered_map<int, std::string> warning_codes = {
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
+=======
+  {203, R"(many:many matrix is using CostMatrix algorithm, ignoring "matrix_locations")"},
+  {}
+};
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, int code, const std::string& extra = "") {
+  auto message = warning_codes.find(code);
+  if (message == warning_codes.end()) {
+    return;
+  }
+  auto* warning = api.mutable_info()->mutable_warnings()->Add();
+  warning->set_description(message->second + extra);
+  warning->set_code(message->first);
+}
+
+>>>>>>> dab83f82e (warn on ineffective matrix_locations parameter when using costmatrix algo)
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
@@ -1018,6 +1036,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   else
     parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
 
+<<<<<<< HEAD
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
   // TODO(nils): Why is that? IMO this makes a lot of sense for a many:many call
@@ -1028,6 +1047,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
+=======
+  // Get the matrix_loctions option
+  options.set_matrix_locations(
+      rapidjson::get<int>(doc, "/matrix_locations", std::numeric_limits<uint32_t>::max()));
+>>>>>>> dab83f82e (warn on ineffective matrix_locations parameter when using costmatrix algo)
 
   // get the avoid polygons in there
   auto rings_req =
