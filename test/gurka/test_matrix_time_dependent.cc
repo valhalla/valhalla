@@ -142,7 +142,7 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   // https://github.com/valhalla/valhalla/issues/3803
   check_dist(res_doc, {1.6f, 0.0f});
   ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 401);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
 
   // forward tree, source & target within a single edge
   options = {{"/sources/0/date_time", "current"}, {"/costing_options/auto/speed_types/0", "current"}};
@@ -161,7 +161,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
       gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E", "H"}, "auto", options);
 
   ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 400);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 200);
   for (auto& loc : result.options().sources()) {
     ASSERT_TRUE(loc.date_time().empty());
   }
@@ -193,7 +193,7 @@ TEST_F(MatrixTest, Sources) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 402);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
   ASSERT_EQ(result.info().warnings().size(), 1);
 
   // date_time on the sources, disallowed reverse
@@ -203,7 +203,7 @@ TEST_F(MatrixTest, Sources) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 401);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
   ASSERT_EQ(result.info().warnings().size(), 1);
 }
 
@@ -227,7 +227,7 @@ TEST_F(MatrixTest, Targets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 401);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
   ASSERT_EQ(result.info().warnings().size(), 1);
 
   // date_time on the targets, disallowed forward
@@ -237,6 +237,6 @@ TEST_F(MatrixTest, Targets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 402);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
   ASSERT_EQ(result.info().warnings().size(), 1);
 }

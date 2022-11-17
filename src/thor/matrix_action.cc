@@ -25,7 +25,7 @@ bool has_time(Api& request) {
   for (const auto& loc : options.sources()) {
     if (!loc.date_time().empty()) {
       if (!less_sources) {
-        add_warning(request, 401);
+        add_warning(request, 201);
         return false;
       }
       had_valid_time = true;
@@ -35,7 +35,7 @@ bool has_time(Api& request) {
   for (const auto& loc : options.targets()) {
     if (!loc.date_time().empty()) {
       if (less_sources) {
-        add_warning(request, 402);
+        add_warning(request, 202);
         return false;
       }
       had_valid_time = true;

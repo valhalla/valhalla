@@ -46,7 +46,7 @@ void check_distance(Api& request,
         source.set_date_time("");
         target.set_date_time("");
         if (!added_warning) {
-          add_warning(request, 400);
+          add_warning(request, 200);
           added_warning = true;
         }
       }
