@@ -34,12 +34,13 @@ struct Destination {
   // Set of still available correlated edges;
   std::unordered_set<uint64_t> dest_edges_available;
 
-  // global information which only needs to be set once
+  // global information which only needs to be set once or is reset for every origin in the algorithm
   uint32_t distance; // Path distance for the best cost path
   float threshold;   // Threshold above current best cost where no longer
                      // need to search for this destination.
   // partial distance of correlated edges
   std::unordered_map<uint64_t, float> dest_edges_percent_along;
+  std::string date_time;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.

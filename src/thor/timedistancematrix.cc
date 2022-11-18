@@ -241,7 +241,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
 
     // Initialize the origin and set the available destination edges
     settled_count_ = 0;
-    SetOrigin<expansion_direction>(graphreader, origin);
+    SetOrigin<expansion_direction>(graphreader, origin, time_info);
     SetDestinationEdges();
 
     // Find shortest path
