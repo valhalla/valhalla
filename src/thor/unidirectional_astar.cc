@@ -219,7 +219,6 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
 
-
   auto endpoint = endtile->get_node_ll(meta.edge->endnode());
 
   auto add_label = [&](const valhalla::PathEdge* dest_path_edge) {
