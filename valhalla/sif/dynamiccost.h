@@ -34,7 +34,7 @@
  * @param costing_options  pointer to protobuf costing options object
  * @param range            ranged_default_t object which will check any provided values are in range
  * @param json             rapidjson value object which should contain user provided costing options
- * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param json_key         the json key to use to pull a user provided value out of the json
  * @param option_name      the name of the option will be set on the costing options object
  */
 
@@ -44,7 +44,8 @@
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->has_##option_name##_case()        \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              json_key));                                                                            \
   }
 
 /**
