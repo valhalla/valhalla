@@ -16,8 +16,36 @@ using namespace valhalla::thor;
 
 namespace {
 
-constexpr double kMilePerMeter = 0.000621371;
+// return true if any location had a time set
+// also disable time if it doesn't make sense computationally
+bool has_time(Api& request) {
+  auto& options = request.options();
+  bool less_sources = options.sources().size() <= options.targets().size();
+  bool had_valid_time = false;
+  for (const auto& loc : options.sources()) {
+    if (!loc.date_time().empty()) {
+      if (!less_sources) {
+        add_warning(request, 201);
+        return false;
+      }
+      had_valid_time = true;
+      break;
+    }
+  }
+  for (const auto& loc : options.targets()) {
+    if (!loc.date_time().empty()) {
+      if (less_sources) {
+        add_warning(request, 202);
+        return false;
+      }
+      had_valid_time = true;
+      break;
+    }
+  }
+
+  return had_valid_time;
 }
+} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -28,9 +56,9 @@ std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
 
-  adjust_scores(*request.mutable_options());
+  auto& options = *request.mutable_options();
+  adjust_scores(options);
   auto costing = parse_costing(request);
-  const auto& options = request.options();
 
   // Distance scaling (miles or km)
   double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
@@ -42,10 +70,11 @@ std::string thor_worker_t::matrix(Api& request) {
                                       mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    return time_distance_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
-                                                mode_costing, mode,
-                                                max_matrix_distance.find(costing)->second,
-                                                options.matrix_locations());
+    return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
+                                                *options.mutable_targets(), *reader, mode_costing,
+                                                mode, max_matrix_distance.find(costing)->second,
+                                                options.matrix_locations(),
+                                                options.date_time_type() == Options::invariant);
   };
 
   if (costing == "bikeshare") {
@@ -75,7 +104,12 @@ std::string thor_worker_t::matrix(Api& request) {
           time_distances = timedistancematrix();
           break;
         default:
-          time_distances = costmatrix();
+          // force timedistance if traffic is desired and allowed
+          if (has_time(request)) {
+            time_distances = timedistancematrix();
+          } else {
+            time_distances = costmatrix();
+          }
       }
       break;
     case COST_MATRIX:

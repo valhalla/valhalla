@@ -42,16 +42,19 @@ public:
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
-   * @return time/distance from origin index to all other locations
+   * @param  invariant             Whether invariant time was requested.
+   *
+   * @return time/distance from all sources to all targets
    */
   inline std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
                  const sif::travel_mode_t mode,
                  const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations) {
+                 const uint32_t matrix_locations = kAllLocations,
+                 const bool invariant = false) {
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -59,12 +62,12 @@ public:
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {
       return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
-                                                   matrix_locations);
+                                                   graphreader, max_matrix_distance, matrix_locations,
+                                                   invariant);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
-                                                   matrix_locations);
+      return ComputeMatrix<ExpansionType::reverse>(target_location_list, source_location_list,
+                                                   graphreader, max_matrix_distance, matrix_locations,
+                                                   invariant);
     }
   };
 
@@ -103,6 +106,9 @@ protected:
 
   sif::TravelMode mode_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Computes the matrix after SourceToTarget decided which direction
    * the algorithm should traverse.
@@ -110,11 +116,12 @@ protected:
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
   std::vector<TimeDistance>
-  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  ComputeMatrix(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                 baldr::GraphReader& graphreader,
                 const float max_matrix_distance,
-                const uint32_t matrix_locations = kAllLocations);
+                const uint32_t matrix_locations = kAllLocations,
+                const bool invariant = false);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -127,6 +134,7 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
+   * @param  invariant    Whether invariant time was requested.
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
@@ -134,7 +142,9 @@ protected:
               const baldr::GraphId& node,
               const sif::EdgeLabel& pred,
               const uint32_t pred_idx,
-              const bool from_transition);
+              const bool from_transition,
+              const baldr::TimeInfo& time_info,
+              const bool invariant = false);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -150,7 +160,9 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 const valhalla::Location& origin,
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Add destinations.
@@ -185,10 +197,38 @@ protected:
                           const uint32_t matrix_locations);
 
   /**
+   * Sets the date_time on the origin locations.
+   *
+   * @param origins            the origins (sources or targets)
+   * @param reader             the reader for looking up timezone information
+   * @returns                  time info for each location
+   */
+  std::vector<baldr::TimeInfo>
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+          baldr::GraphReader& reader) {
+    // loop over all locations setting the date time with timezone
+    std::vector<baldr::TimeInfo> infos;
+    infos.reserve(origins.size());
+    for (auto& origin : origins) {
+      infos.emplace_back(baldr::TimeInfo::make(origin, reader, &tz_cache_));
+    }
+
+    return infos;
+  };
+
+  /**
    * Form a time/distance matrix from the results.
+   * @param reader    GraphReader instance
+   * @param origin_dt The origin's date_time string
+   * @param origin_tz The origin's timezone index
+   * @param pred_id   The destination edge's GraphId
+   *
    * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  std::vector<TimeDistance> FormTimeDistanceMatrix(baldr::GraphReader& reader,
+                                                   const std::string& origin_dt,
+                                                   const uint64_t& origin_tz,
+                                                   const baldr::GraphId& pred_id);
 };
 
 } // namespace thor

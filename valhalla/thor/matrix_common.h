@@ -36,10 +36,13 @@ struct Destination {
 
   // Potential edges for this destination (and their partial distance)
   std::unordered_map<uint64_t, float> dest_edges;
+  // date_time
+  std::string date_time;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
-  Destination() : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f) {
+  Destination()
+      : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f), date_time("") {
   }
 };
 
