@@ -1,8 +1,8 @@
 ## Release Date: 2022-??-?? Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
-   * FIXED: Strange detoures with multi-origin/destination unidirectional A* [#3585](https://github.com/valhalla/valhalla/pull/3585)
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
+   * FIXED: Strange detoures with multi-origin/destination unidirectional A* [#3585](https://github.com/valhalla/valhalla/pull/3585)
 * **Enhancement**
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
 
