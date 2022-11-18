@@ -375,19 +375,7 @@ void TimeDistanceMatrix::InitDestinations(
   for (const auto& loc : locations) {
     // Set up the destination - consider each possible location edge.
     bool first_edge = true;
-
-    // Only skip outbound edges if we have other options
-    bool has_other_edges = false;
-    std::for_each(loc.correlation().edges().begin(), loc.correlation().edges().end(),
-                  [&has_other_edges](const valhalla::PathEdge& e) {
-                    has_other_edges = has_other_edges || (FORWARD ? !e.begin_node() : !e.end_node());
-                  });
     for (const auto& edge : loc.correlation().edges()) {
-      // If destination is at a node skip any outbound edges
-      if (has_other_edges && (FORWARD ? edge.begin_node() : edge.end_node())) {
-        continue;
-      }
-
       // Disallow any user avoided edges if the avoid location is behind the destination along the
       // edge or before the destination for REVERSE
       GraphId edgeid(edge.graph_id());
@@ -482,6 +470,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
     // Erase this edge from further consideration. Mark this destination as
     // settled if all edges have been found
+    dest.dest_edges_available.erase(pred.edgeid());
     if (dest.dest_edges_available.empty()) {
       dest.settled = true;
       settled_count_++;
