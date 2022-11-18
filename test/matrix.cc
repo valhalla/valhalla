@@ -168,7 +168,7 @@ const auto test_request_osrm = R"({
       {"lat":52.094273,"lon":5.075254}
     ],
     "costing":"auto"
-  }&format=osrm)";
+  })";
 
 std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
                                             {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
@@ -236,8 +236,9 @@ TEST(Matrix, test_matrix) {
   EXPECT_EQ(found, 10) << " not the number of results as expected";
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  results = timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
+                                           *request.mutable_options()->mutable_targets(), reader,
+                                           mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
@@ -281,7 +282,8 @@ TEST(Matrix, test_timedistancematrix_results_sequence) {
 
   TimeDistanceMatrix timedist_matrix;
   std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
+                                     *request.mutable_options()->mutable_targets(), reader,
                                      mode_costing, sif::TravelMode::kDrive, 400000.0);
 
   // expected results are the same as `matrix_answers`, but without the last column
@@ -332,8 +334,9 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   }
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  results = timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
+                                           *request.mutable_options()->mutable_sources(), reader,
+                                           mode_costing, sif::TravelMode::kDrive, 400000.0);
   for (uint32_t i = 0; i < results.size(); ++i) {
     EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
         << "result " + std::to_string(i) +
@@ -375,7 +378,8 @@ TEST(Matrix, partial_matrix) {
 
   TimeDistanceMatrix timedist_matrix;
   std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
+      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
+                                     *request.mutable_options()->mutable_targets(), reader,
                                      mode_costing, sif::TravelMode::kDrive, 400000.0,
                                      request.options().matrix_locations());
   uint32_t found = 0;

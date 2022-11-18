@@ -43,7 +43,8 @@ struct Destination {
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
-  Destination() : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f) {
+  Destination()
+      : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f), date_time("") {
   }
 
   // clears the per-origin information
