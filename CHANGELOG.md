@@ -67,6 +67,7 @@
    * FIXED: Building Valhalla as a submodule [#3781](https://github.com/valhalla/valhalla/issues/3781)
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
+   * FIXED: Added a ferry tag if manoeuver uses a ferry. It's supposed to be there according to the docs. [#3815](https://github.com/valhalla/valhalla/issues/3815)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
@@ -138,6 +139,8 @@
    * CHANGED: Templatized TimeDistanceMatrix for forward/reverse search [#3773](https://github.com/valhalla/valhalla/pull/3773)
    * CHANGED: Templatized TimeDistanceBSSMatrix for forward/reverse search [#3778](https://github.com/valhalla/valhalla/pull/3778)
    * CHANGED: error code 154 shows distance limit in error message [#3779](https://github.com/valhalla/valhalla/pull/3779)
+   * ADDED: Added a higway tag if manoeuver uses a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
+   * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route. [#3815](https://github.com/valhalla/valhalla/issues/3815)
 
 ## Release Date: 2021-10-07 Valhalla 3.1.4
 * **Removed**
