@@ -40,12 +40,10 @@ struct Destination {
                      // need to search for this destination.
   // partial distance of correlated edges
   std::unordered_map<uint64_t, float> dest_edges_percent_along;
-  std::string date_time;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
-  Destination()
-      : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f), date_time("") {
+  Destination() : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f) {
   }
 
   // clears the per-origin information
