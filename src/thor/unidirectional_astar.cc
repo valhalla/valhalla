@@ -316,33 +316,36 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   // less cost the predecessor is updated and the sort cost is decremented
   // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
-    uint8_t restriction_idx = kInvalidRestriction;
-    if (FORWARD) {
-      if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
-                             nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
-        return false;
+    auto update_label = [&]() {
+      uint8_t restriction_idx = kInvalidRestriction;
+      if (FORWARD) {
+        if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
+                               nodeinfo->timezone(), restriction_idx) ||
+            costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, true, &edgestatus_,
+                                 time_info.local_time, nodeinfo->timezone())) {
+          return false;
+        }
+      } else {
+        if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
+                                      time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
+            costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false,
+                                 &edgestatus_, time_info.local_time, nodeinfo->timezone())) {
+          return false;
+        }
       }
-    } else {
-      if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, endtile, opp_edge_id,
-                                    time_info.local_time, nodeinfo->timezone(), restriction_idx) ||
-          costing_->Restricted(meta.edge, pred, edgelabels_, tile, meta.edge_id, false, &edgestatus_,
-                               time_info.local_time, nodeinfo->timezone())) {
-        return false;
+
+      // TODO(danpat): can we slices down to EdgeLabel here safely?
+      auto& lab = edgelabels_[meta.edge_status->index()];
+      auto newcost = pred.cost() + transition_cost + edge_cost;
+
+      if (newcost.cost < lab.cost().cost) {
+        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+        adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
+        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
       }
-    }
-
-    // TODO(danpat): can we slices down to EdgeLabel here safely?
-    auto& lab = edgelabels_[meta.edge_status->index()];
-    auto newcost = pred.cost() + transition_cost + edge_cost;
-
-    if (newcost.cost < lab.cost().cost) {
-      float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-      adjacencylist_.decrease(meta.edge_status->index(), newsortcost);
-      lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
-    }
-    added = true;
+      return true;
+    };
+    added = update_label();
   } else {
     // add as normal edge, fixes #3585
     added = add_label(nullptr);
@@ -514,8 +517,11 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
       return {FormPath(predindex)};
     }
 
-    // Mark the edge as permanently labeled.
-    edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
+    // Mark the edge as permanently labeled. Do not do this for an origin
+    // edge (this will allow loops/around the block cases)
+    if (!pred.origin()) {
+      edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent);
+    }
 
     // Check that distance is converging towards the destination. Return route
     // failure if no convergence for TODO iterations. NOTE: due to somewhat high
@@ -787,10 +793,6 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       }
 
       adjacencylist_.add(idx);
-      if (!dest_path_edge) {
-        // only non-destination labels get an edge status!!!!!!
-        *edgestatus_.GetPtr(edgeid, tile) = {EdgeSet::kTemporary, idx};
-      }
     };
 
     // add as normal edge, fixes #3585
