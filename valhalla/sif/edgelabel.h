@@ -281,7 +281,7 @@ public:
   }
 
   /**
-   * Sets this edge as an origin.
+   * Sets this edge as a destination.
    */
   void set_destination() {
     destination_ = true;
