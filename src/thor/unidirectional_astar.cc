@@ -215,8 +215,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
   sif::Cost transition_cost =
       FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
               : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                opp_pred_edge,
-                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                                opp_pred_edge, 0 != (flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
 
   auto endpoint = endtile->get_node_ll(meta.edge->endnode());
@@ -276,7 +275,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                restriction_idx);
     } else {
@@ -284,7 +283,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask),
+                               0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
                                restriction_idx);
@@ -763,14 +762,14 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
                                  mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 sif::InternalTurn::kNoTurn, kInvalidRestriction);
+                                 0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
+                                 kInvalidRestriction);
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
                                  !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 sif::InternalTurn::kNoTurn, kInvalidRestriction);
+                                 0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
+                                 kInvalidRestriction);
       }
 
       auto& edge_label = edgelabels_.back();
