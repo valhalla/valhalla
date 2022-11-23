@@ -460,7 +460,8 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
     // See if this edge is part of the destination
     // If the edge isn't there but the path is trivial, then that means the edge
     // was removed towards the beginning which is not an error.
-    if ((dest.dest_edges_available.find(pred.edgeid())) == dest.dest_edges_available.end()) {
+    auto dest_available = dest.dest_edges_available.find(pred.edgeid());
+    if (dest_available == dest.dest_edges_available.end()) {
       if (!IsTrivial(pred.edgeid(), origin, locations.Get(dest_idx))) {
         LOG_ERROR("Could not find the destination edge");
       }
@@ -486,7 +487,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 
     // Erase this edge from further consideration. Mark this destination as
     // settled if all edges have been found
-    dest.dest_edges_available.erase(pred.edgeid());
+    dest.dest_edges_available.erase(dest_available);
     if (dest.dest_edges_available.empty()) {
       dest.settled = true;
       settled_count_++;
