@@ -4,6 +4,7 @@
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
 * **Enhancement**
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
+   * ADDED: "available_actions" to the /status response [#3836](https://github.com/valhalla/valhalla/pull/3836)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
