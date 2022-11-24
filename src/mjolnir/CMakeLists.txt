@@ -24,16 +24,24 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
+  admin.cc
   adminbuilder.cc
+  bssbuilder.cc
   complexrestrictionbuilder.cc
   convert_transit.cc
   countryaccess.cc
+  dataquality.cc
   directededgebuilder.cc
   edgeinfobuilder.cc
+  elevationbuilder.cc
   ferry_connections.cc
   graphfilter.cc
+  graphtilebuilder.cc
+  graphvalidator.cc
+  hierarchybuilder.cc
   ingest_transit.cc
   linkclassification.cc
+  luatagtransform.cc
   node_expander.cc
   osmdata.cc
   osmpbfparser.cc
@@ -43,25 +51,17 @@ set(sources
   pbfadminparser.cc
   restrictionbuilder.cc
   servicedays.cc
+  shortcutbuilder.cc
   speed_assigner.h
   timeparsing.cc
-  util.cc)
+  transitbuilder.cc
+  util.cc
+  validatetransit.cc)
 
 set (sources_with_warnings
-  admin.cc
-  bssbuilder.cc
-  dataquality.cc
-  elevationbuilder.cc
   graphbuilder.cc
   graphenhancer.cc
-  graphtilebuilder.cc
-  graphvalidator.cc
-  hierarchybuilder.cc
-  luatagtransform.cc
-  pbfgraphparser.cc
-  shortcutbuilder.cc
-  transitbuilder.cc
-  validatetransit.cc)
+  pbfgraphparser.cc)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
