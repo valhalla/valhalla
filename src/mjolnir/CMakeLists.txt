@@ -49,6 +49,7 @@ set(sources
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
+  pbfgraphparser.cc
   restrictionbuilder.cc
   servicedays.cc
   shortcutbuilder.cc
@@ -60,8 +61,7 @@ set(sources
 
 set (sources_with_warnings
   graphbuilder.cc
-  graphenhancer.cc
-  pbfgraphparser.cc)
+  graphenhancer.cc)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
