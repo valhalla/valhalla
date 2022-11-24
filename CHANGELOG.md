@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
    * FIXED: Handle hexlifying strings with unsigned chars [#3842](https://github.com/valhalla/valhalla/pull/3842)
+   * FIXED: Valhalla does not build on macOS with clang 14.0.0 [#3846](https://github.com/valhalla/valhalla/issues/3846)
 * **Enhancement**
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
    * ADDED: "available_actions" to the /status response [#3836](https://github.com/valhalla/valhalla/pull/3836)
