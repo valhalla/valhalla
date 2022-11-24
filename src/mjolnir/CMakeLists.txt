@@ -35,6 +35,7 @@ set(sources
   edgeinfobuilder.cc
   elevationbuilder.cc
   ferry_connections.cc
+  graphbuilder.cc
   graphfilter.cc
   graphtilebuilder.cc
   graphvalidator.cc
@@ -60,7 +61,6 @@ set(sources
   validatetransit.cc)
 
 set (sources_with_warnings
-  graphbuilder.cc
   graphenhancer.cc)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
