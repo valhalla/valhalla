@@ -36,6 +36,7 @@ set(sources
   elevationbuilder.cc
   ferry_connections.cc
   graphbuilder.cc
+  graphenhancer.cc
   graphfilter.cc
   graphtilebuilder.cc
   graphvalidator.cc
@@ -60,9 +61,6 @@ set(sources
   util.cc
   validatetransit.cc)
 
-set (sources_with_warnings
-  graphenhancer.cc)
-
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
@@ -72,7 +70,7 @@ if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
 endif ()
 
 valhalla_module(NAME mjolnir
-  SOURCES ${sources} ${sources_with_warnings}
+  SOURCES ${sources}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
