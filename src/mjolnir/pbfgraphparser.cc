@@ -2727,6 +2727,8 @@ public:
           ref_pronunciation = int_ref_pronunciation_jeita_;
           direction_pronunciation = int_direction_pronunciation_jeita_;
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2745,6 +2747,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           ref_pronunciation = ref_pronunciation_jeita_;
           direction_pronunciation = direction_pronunciation_jeita_;
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2793,6 +2797,8 @@ public:
           osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2811,6 +2817,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           osm_pronunciation_.set_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2850,6 +2858,8 @@ public:
               (index
                    ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_jeita_index())
                    : "");
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
 
@@ -2905,6 +2915,8 @@ public:
             }
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_jeita_index(0);
+            break;
+          case PronunciationAlphabet::kNone:
             break;
         }
       }
