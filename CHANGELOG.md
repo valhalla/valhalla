@@ -4,6 +4,7 @@
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
    * FIXED: Added missing ferry tag if manoeuver uses a ferry. It's supposed to be there according to the docs. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * FIXED: Handle hexlifying strings with unsigned chars [#3842](https://github.com/valhalla/valhalla/pull/3842)
+   * FIXED: Valhalla does not build on macOS with clang 14.0.0 [#3846](https://github.com/valhalla/valhalla/issues/3846)
    * FIXED: only set most destination information once for all origins in timedistancematrix [#3830](https://github.com/valhalla/valhalla/pull/3830)
 * **Enhancement**
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
