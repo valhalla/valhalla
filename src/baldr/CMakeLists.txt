@@ -40,6 +40,7 @@ set(sources
     attributes_controller.cc
     compression_utils.cc
     connectivity_map.cc
+    curler.cc
     datetime.cc
     directededge.cc
     edgeinfo.cc
@@ -70,7 +71,6 @@ set(sources
     verbal_text_formatter_factory.cc)
 
 set (sources_with_warnings
-    curler.cc
     graphreader.cc
     graphtile.cc
     graphtileheader.cc
