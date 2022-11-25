@@ -36,21 +36,15 @@ set(includes
 
 set(sources
     accessrestriction.cc
-    admin.cc
     attributes_controller.cc
     compression_utils.cc
     connectivity_map.cc
-    curler.cc
     datetime.cc
     directededge.cc
     edgeinfo.cc
     graphid.cc
-    graphreader.cc
-    graphtile.cc
-    graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
-    merge.cc
     nodeinfo.cc
     location.cc
     pathlocation.cc
@@ -74,6 +68,14 @@ set(sources
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
 
+set (sources_with_warnings
+    admin.cc
+    curler.cc
+    graphreader.cc
+    graphtile.cc
+    graphtileheader.cc
+    merge.cc)
+
 list(APPEND sources
     #basic timezone stuff
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
@@ -88,13 +90,17 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
+
+list(APPEND sources_with_warnings
     tz_alt.cpp)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
   # Enables stricter compiler checks on a file-by-file basis
   # which allows us to migrate piecemeal
-  set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Werror")
+  set_source_files_properties(
+          ${sources}
+          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-unused-parameter")
 endif()
 
 #ios we have more work to make use of system tzdb
@@ -106,6 +112,7 @@ endif()
 valhalla_module(NAME baldr
   SOURCES
     ${sources}
+    ${sources_with_warnings}
 
   HEADERS
     ${headers}
