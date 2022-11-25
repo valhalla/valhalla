@@ -36,6 +36,7 @@ set(includes
 
 set(sources
     accessrestriction.cc
+    admin.cc
     attributes_controller.cc
     compression_utils.cc
     connectivity_map.cc
@@ -69,7 +70,6 @@ set(sources
     verbal_text_formatter_factory.cc)
 
 set (sources_with_warnings
-    admin.cc
     curler.cc
     graphreader.cc
     graphtile.cc
