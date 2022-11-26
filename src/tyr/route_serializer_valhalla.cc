@@ -193,6 +193,10 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("date_time", location->date_time());
       }
 
+      if (location->waiting_secs()) {
+        writer("waiting", static_cast<uint64_t>(location->waiting_secs()));
+      }
+
       if (location->side_of_street() != valhalla::Location::kNone) {
         writer("side_of_street", Location_SideOfStreet_Enum_Name(location->side_of_street()));
       }

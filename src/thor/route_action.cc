@@ -388,6 +388,14 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         origin->set_date_time(origin_dt);
       }
 
+      // add waiting_secs again from the final destination's datetime, so we output the departing time
+      // at intermediate locations, not the arrival time
+      if (destination->waiting_secs() && !destination->date_time().empty()) {
+        auto dest_dt =
+            offset_date(*reader, destination->date_time(), {}, destination->waiting_secs(), {});
+        destination->set_date_time(dest_dt);
+      }
+
       first_edge = temp_path.front().edgeid;
       temp_path.swap(path); // so we can append to path instead of prepend
 
@@ -446,6 +454,14 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         TripLegBuilder::Build(options, controller, *reader, mode_costing, path.begin(), path.end(),
                               *origin, *destination, leg, algorithms, interrupt, edge_trimming,
                               intermediates);
+
+        // advance the time for the next destination (i.e. algo origin) by the waiting_secs
+        // of this origin (i.e. algo destination)
+        if (origin->waiting_secs()) {
+          // no need for timezones, we'll wait at this location
+          auto origin_dt = offset_date(*reader, origin->date_time(), {}, -origin->waiting_secs(), {});
+          origin->set_date_time(origin_dt);
+        }
         path.clear();
         edge_trimming.clear();
       }
@@ -465,6 +481,11 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto origin = ++correlated.rbegin();
   while (origin != correlated.rend()) {
     auto destination = std::prev(origin);
+
+    std::cerr << "Processing origin/destination " +
+                     std::to_string(std::distance(correlated.rend(), origin)) + " / " +
+                     std::to_string(std::distance(correlated.rend(), destination));
+
     if (!route_two_locations(origin, destination)) {
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)
@@ -540,7 +561,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       if (!origin->date_time().empty() && options.date_time_type() != valhalla::Options::invariant) {
         auto destination_dt =
             offset_date(*reader, origin->date_time(), temp_path.front().edgeid,
-                        temp_path.back().elapsed_cost.secs, temp_path.back().edgeid);
+                        temp_path.back().elapsed_cost.secs + destination->waiting_secs(),
+                        temp_path.back().edgeid);
         destination->set_date_time(destination_dt);
       }
 
@@ -649,7 +671,8 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
 }
 
 /**
- * offset a time in one timezone by some number of seconds to a time in another timezone
+ * Offset a time by some number of seconds, optionally taking into account timezones at the origin &
+ * destination.
  *
  * @param reader   graphreader for tile/edge/node access
  * @param in_dt    the input date time string
@@ -663,22 +686,24 @@ std::string thor_worker_t::offset_date(GraphReader& reader,
                                        const GraphId& in_edge,
                                        float offset,
                                        const GraphId& out_edge) {
-  // get the timezone of the input location
-  graph_tile_ptr tile = nullptr;
-  auto in_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
   uint32_t in_tz = 0;
-  if (const auto* node = reader.nodeinfo(in_nodes.first, tile))
-    in_tz = node->timezone();
-  else if (const auto* node = reader.nodeinfo(in_nodes.second, tile))
-    in_tz = node->timezone();
-
-  // get the timezone of the output location
-  auto out_nodes = reader.GetDirectedEdgeNodes(out_edge, tile);
   uint32_t out_tz = 0;
-  if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-    out_tz = node->timezone();
-  else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-    out_tz = node->timezone();
+  if (in_edge.Is_Valid() && out_edge.Is_Valid()) {
+    // get the timezone of the input location
+    graph_tile_ptr tile = nullptr;
+    auto in_nodes = reader.GetDirectedEdgeNodes(in_edge, tile);
+    if (const auto* node = reader.nodeinfo(in_nodes.first, tile))
+      in_tz = node->timezone();
+    else if (const auto* node = reader.nodeinfo(in_nodes.second, tile))
+      in_tz = node->timezone();
+
+    // get the timezone of the output location
+    auto out_nodes = reader.GetDirectedEdgeNodes(out_edge, tile);
+    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
+      out_tz = node->timezone();
+    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
+      out_tz = node->timezone();
+  }
 
   // offset the time
   uint64_t in_epoch = DateTime::seconds_since_epoch(in_dt, DateTime::get_tz_db().from_index(in_tz));

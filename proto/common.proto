@@ -123,6 +123,7 @@ message Location {
   oneof has_preferred_layer {
     int32 preferred_layer = 28;
   }
+  float waiting_secs = 29;                   // waiting period before a new leg starts, e.g. for servicing/loading goods
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
