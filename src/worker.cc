@@ -982,6 +982,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
+  // TODO(nils): Why is that? IMO this makes a lot of sense for a many:many call
+  // of timedistancematrix as well no?
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
