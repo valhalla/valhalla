@@ -481,11 +481,6 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto origin = ++correlated.rbegin();
   while (origin != correlated.rend()) {
     auto destination = std::prev(origin);
-
-    std::cerr << "Processing origin/destination " +
-                     std::to_string(std::distance(correlated.rend(), origin)) + " / " +
-                     std::to_string(std::distance(correlated.rend(), destination));
-
     if (!route_two_locations(origin, destination)) {
       // if routing failed because an intermediate waypoint was snapped to the low reachability road
       // (such road lies in a small connectivity component that is not connected to other locations)

@@ -187,12 +187,12 @@ TEST(TimeTracking, routes) {
       {"GH", {{"highway", "primary"}}},     {"DI", {{"highway", "residential"}}},
       {"IJ", {{"highway", "primary"}}},     {"JE", {{"highway", "primary"}}},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make",
-                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
+                               {{"mjlonir.timezone", "test/data/tz.sqlite"}});
 
-  const std::vector<double> expected = {0,       51.4286, 102.857, 154.286, 195.446, 0,
-                                        148.927, 169.104, 215.799, 239.817, 263.817, 287.817};
+  const std::vector<double> expected = {0,       31.5771, 63.1543, 94.7314, 120.052, 0,
+                                        91.6466, 105.024, 144.325, 159.079, 173.815, 188.551};
 
   auto test_result = [&expected](const std::vector<double>& actual_times, const Api& request) {
     ASSERT_THAT(actual_times, testing::Pointwise(testing::DoubleNear(0.001), expected));
