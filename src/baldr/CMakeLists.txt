@@ -49,6 +49,7 @@ set(sources
     edgetracker.cc
     nodeinfo.cc
     location.cc
+    merge.cc
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
@@ -73,8 +74,7 @@ set(sources
 set (sources_with_warnings
     graphreader.cc
     graphtile.cc
-    graphtileheader.cc
-    merge.cc)
+    graphtileheader.cc)
 
 list(APPEND sources
     #basic timezone stuff
