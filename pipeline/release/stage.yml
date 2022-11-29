@@ -29,7 +29,7 @@ stages:
         displayName: ${{ parameters.region }}.${{ parameters.environment }}.release
         environment: ${{ parameters.environment }}
         pool:
-          vmImage: ubuntu-18.04
+          vmImage: ubuntu-20.04
         strategy:
           runOnce:
             deploy:
