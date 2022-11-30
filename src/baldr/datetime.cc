@@ -126,13 +126,10 @@ std::string iso_date_time(const date::time_zone* time_zone) {
 
 // Get the seconds since epoch time is already adjusted based on TZ
 uint64_t seconds_since_epoch(const std::string& date_time, const date::time_zone* time_zone) {
-  if (date_time.empty()) {
+  if (date_time.empty() || !time_zone) {
     return 0;
   }
   const auto d = get_formatted_date(date_time);
-  if (!time_zone) {
-    return static_cast<uint64_t>(d.time_since_epoch().count());
-  }
   const auto utc = date::to_utc_time(get_ldt(d, time_zone).get_sys_time()); // supports leap sec.
   return static_cast<uint64_t>(utc.time_since_epoch().count());
 }
@@ -165,22 +162,19 @@ std::string
 seconds_to_date(const uint64_t seconds, const date::time_zone* time_zone, bool tz_format) {
 
   std::string iso_date;
-  if (seconds == 0) {
+  if (seconds == 0 || !time_zone) {
     return iso_date;
   }
 
-  std::ostringstream iso_date_time;
-  const char* format = tz_format ? "%FT%R%z" : "%FT%R";
   std::chrono::seconds dur(seconds);
   std::chrono::time_point<std::chrono::system_clock> tp(dur);
+  const auto date = date::make_zoned(time_zone, tp);
 
-  if (time_zone) {
-    const auto date = date::make_zoned(time_zone, tp);
-    iso_date_time << date::format(format, date);
-  } else {
-    iso_date_time << date::format(format, tp);
-  }
-
+  std::ostringstream iso_date_time;
+  if (tz_format)
+    iso_date_time << date::format("%FT%R%z", date);
+  else
+    iso_date_time << date::format("%FT%R", date);
   iso_date = iso_date_time.str();
   if (tz_format)
     iso_date.insert(19, 1, ':');
