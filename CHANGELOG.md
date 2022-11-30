@@ -11,6 +11,7 @@
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
    * ADDED: "available_actions" to the /status response [#3836](https://github.com/valhalla/valhalla/pull/3836)
+   * ADDED: "waiting" field on input/output intermediate break(_through) locations to respect services times [#3849](https://github.com/valhalla/valhalla/pull/3849)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**

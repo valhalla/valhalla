@@ -149,7 +149,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
-  {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"}
+  {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
+  {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
 };
 // clang-format on
 
@@ -258,8 +259,9 @@ void parse_ring(ring_pbf_t* ring, const rapidjson::Value& coord_array) {
 
 void parse_location(valhalla::Location* location,
                     const rapidjson::Value& r_loc,
-                    Options& options,
-                    const boost::optional<bool>& ignore_closures) {
+                    Api& request,
+                    const boost::optional<bool>& ignore_closures,
+                    bool is_last_loc) {
   auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
   if (location->has_ll() && location->ll().has_lat_case()) {
     lat = location->ll().lat();
@@ -286,7 +288,7 @@ void parse_location(valhalla::Location* location,
 
   // trace attributes does not support legs or breaks at discontinuities
   auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-  if (options.action() == Options::trace_attributes) {
+  if (request.options().action() == Options::trace_attributes) {
     location->set_type(valhalla::Location::kVia);
   } // other actions let you specify whatever type of stop you want
   else if (stop_type_json) {
@@ -294,7 +296,7 @@ void parse_location(valhalla::Location* location,
     Location_Type_Enum_Parse(*stop_type_json, &type);
     location->set_type(type);
   } // and if you didnt set it it defaulted to break which is not the default for trace_route
-  else if (options.action() == Options::trace_route && !location->has_time_case()) {
+  else if (request.options().action() == Options::trace_route && !location->has_time_case()) {
     location->set_type(valhalla::Location::kVia);
   }
 
@@ -429,6 +431,23 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_max_road_class_case()) {
     location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
   }
+
+  float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
+  switch (location->type()) {
+    case Location_Type_kBreak:
+    case Location_Type_kBreakThrough:
+      // set waiting_time to 0 on origin/destination
+      {
+        auto loc_idx = location->correlation().original_index();
+        // TODO: waiting time can be less than 0
+        location->set_waiting_secs(loc_idx == 0 || is_last_loc || waiting_secs < 0.f ? 0.f
+                                                                                     : waiting_secs);
+        break;
+      }
+    default:
+      if (waiting_secs)
+        add_warning(request, 203);
+  }
 }
 
 /**
@@ -442,11 +461,12 @@ void parse_location(valhalla::Location* location,
  * @param had_date_time             Gets set to true if any location had a date_time string
  */
 void parse_locations(const rapidjson::Document& doc,
-                     Options& options,
+                     Api& request,
                      const std::string& node,
                      unsigned location_parse_error_code,
                      const boost::optional<bool>& ignore_closures,
                      bool& had_date_time) {
+  auto& options = *request.mutable_options();
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
   if (node == "locations") {
@@ -472,10 +492,12 @@ void parse_locations(const rapidjson::Document& doc,
     auto request_locations =
         rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
     if (request_locations) {
+      uint32_t last_loc_idx = request_locations->Size() - 1;
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
-        loc->mutable_correlation()->set_original_index(locations->size() - 1);
-        parse_location(loc, r_loc, options, ignore_closures);
+        auto loc_idx = locations->size() - 1;
+        loc->mutable_correlation()->set_original_index(loc_idx);
+        parse_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx);
         loc_had_time = loc_had_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
@@ -483,9 +505,11 @@ void parse_locations(const rapidjson::Document& doc,
     } // maybe its deserialized pbf
     else if (!locations->empty()) {
       int i = 0;
+      uint32_t locs_amount = locations->size() - 1;
       for (auto& loc : *locations) {
+        bool is_last_edge = i == locs_amount;
         loc.mutable_correlation()->set_original_index(i++);
-        parse_location(&loc, {}, options, ignore_closures);
+        parse_location(&loc, {}, request, ignore_closures, is_last_edge);
         loc_had_time = loc_had_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
@@ -843,11 +867,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     add_date_to_locations(options, *options.mutable_shape(), "shape");
   } // fall back from encoded polyline to array of locations
   else {
-    parse_locations(doc, options, "shape", 134, ignore_closures, had_date_time);
+    parse_locations(doc, api, "shape", 134, ignore_closures, had_date_time);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_locations(doc, options, "trace", 135, ignore_closures, had_date_time);
+      parse_locations(doc, api, "trace", 135, ignore_closures, had_date_time);
     }
   }
 
@@ -931,13 +955,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // get the locations in there
-  parse_locations(doc, options, "locations", 130, ignore_closures, had_date_time);
+  parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
 
   // get the sources in there
-  parse_locations(doc, options, "sources", 131, ignore_closures, had_date_time);
+  parse_locations(doc, api, "sources", 131, ignore_closures, had_date_time);
 
   // get the targets in there
-  parse_locations(doc, options, "targets", 132, ignore_closures, had_date_time);
+  parse_locations(doc, api, "targets", 132, ignore_closures, had_date_time);
 
   // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
   if (options.date_time_type() == Options::no_time && !had_date_time &&
@@ -952,9 +976,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // get the avoids in there
   // TODO: remove "avoid_locations/polygons" after some while
   if (doc.HasMember("avoid_locations"))
-    parse_locations(doc, options, "avoid_locations", 133, ignore_closures, had_date_time);
+    parse_locations(doc, api, "avoid_locations", 133, ignore_closures, had_date_time);
   else
-    parse_locations(doc, options, "exclude_locations", 133, ignore_closures, had_date_time);
+    parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
