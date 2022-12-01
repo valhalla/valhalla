@@ -101,14 +101,17 @@ def tile_intersects_bbox(tile_path: str, in_bounds: Bbox) -> bool:
         tile_base_y + tile_size,
     )
 
-    result = [
-        tile_bbox.min_x < in_bounds.min_x and tile_bbox.max_x < in_bounds.min_x,  # bbox1 left of bbox2
-        tile_bbox.min_y < in_bounds.min_y and tile_bbox.max_y < in_bounds.min_y,  # bbox1 below bbox2
-        tile_bbox.min_x > in_bounds.max_x and tile_bbox.max_x > in_bounds.max_x,  # bbox1 right of bbox2
-        tile_bbox.min_y > in_bounds.max_y and tile_bbox.max_y > in_bounds.max_y,  # bbox1 above bbox2
-    ]
-
-    return not any(result)
+    # check if tile_bbox is outside of in_bounds
+    return not any(
+        [
+            tile_bbox.min_x < in_bounds.min_x
+            and tile_bbox.max_x < in_bounds.min_x,  # bbox1 left of bbox2
+            tile_bbox.min_y < in_bounds.min_y and tile_bbox.max_y < in_bounds.min_y,  # bbox1 below bbox2
+            tile_bbox.min_x > in_bounds.max_x
+            and tile_bbox.max_x > in_bounds.max_x,  # bbox1 right of bbox2
+            tile_bbox.min_y > in_bounds.max_y and tile_bbox.max_y > in_bounds.max_y,  # bbox1 above bbox2
+        ]
+    )
 
 
 def get_tile_count(in_path: Path) -> int:
@@ -197,6 +200,7 @@ def create_extracts(config_: dict, do_traffic: bool, bbox: Bbox):
             # only include the tiles falling inside the bbox
             rel_path = t.relative_to(tiles_fp)
             if not tile_intersects_bbox(rel_path, bbox):
+                LOGGER.debug(f"Tile {rel_path} is outside {tuple(bbox)}.")
                 continue
             LOGGER.debug(f"Adding tile {rel_path} to the path")
             tar.add(str(t.resolve()), arcname=str(rel_path))
