@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+from collections import namedtuple
 import ctypes
 from io import BytesIO
 import json
+from math import floor
 import logging
 import os
 from pathlib import Path
@@ -23,6 +25,9 @@ INDEX_FILE = "index.bin"
 GRAPHTILE_SKIP_BYTES = struct.calcsize('<Q2f16cQ')
 TRAFFIC_HEADER_SIZE = struct.calcsize('<2Q4I')
 TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
+
+Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
+TILE_SIZES = {0: 4, 1: 1, 2: 0.25}
 
 
 class TileHeader(ctypes.Structure):
@@ -55,6 +60,13 @@ parser.add_argument(
     "-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False
 )
 parser.add_argument(
+    "-b",
+    "--bbox",
+    help="If specified, will only archive tiles which are intersecting this bbox. In 'minx,miny,maxx,maxy' format.",
+    type=str,
+    default="",
+)
+parser.add_argument(
     "-v",
     "--verbosity",
     help="Accumulative verbosity flags; -v: INFO, -vv: DEBUG",
@@ -69,6 +81,36 @@ handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"
 LOGGER.addHandler(handler)
 
 
+def tile_intersects_bbox(tile_path: str, in_bounds: Bbox) -> bool:
+    """Check if a tile intersects the bbox"""
+    if not in_bounds:
+        return True
+
+    level, tile_idx = [int(x.replace("/", "")) for x in get_tile_level_id(tile_path)]
+
+    tile_size = TILE_SIZES[level]
+    row = floor(tile_idx / (360 / tile_size))
+    col = tile_idx % (360 / tile_size)
+
+    tile_base_y = (row * tile_size) - 90
+    tile_base_x = (col * tile_size) - 180
+    tile_bbox = Bbox(
+        tile_base_x,
+        tile_base_y,
+        tile_base_x + tile_size,
+        tile_base_y + tile_size,
+    )
+
+    result = [
+        tile_bbox.min_x < in_bounds.min_x and tile_bbox.max_x < in_bounds.min_x,  # bbox1 left of bbox2
+        tile_bbox.min_y < in_bounds.min_y and tile_bbox.max_y < in_bounds.min_y,  # bbox1 below bbox2
+        tile_bbox.min_x > in_bounds.max_x and tile_bbox.max_x > in_bounds.max_x,  # bbox1 right of bbox2
+        tile_bbox.min_y > in_bounds.max_y and tile_bbox.max_y > in_bounds.max_y,  # bbox1 above bbox2
+    ]
+
+    return not any(result)
+
+
 def get_tile_count(in_path: Path) -> int:
     """Iterates over the full tree and returns the count of all tiles it found."""
     count = 0
@@ -78,9 +120,14 @@ def get_tile_count(in_path: Path) -> int:
     return count
 
 
+def get_tile_level_id(path: str) -> Tuple[int, int]:
+    """Returns both level and tile ID"""
+    return path[:-4].split('/', 1)
+
+
 def get_tile_id(path: str) -> int:
-    """Turns a tile path into a numeric GraphId"""
-    level, idx = path[:-4].split('/', 1)
+    """Turns a tile path into a numeric GraphId, including the level"""
+    level, idx = get_tile_level_id(path)
 
     return int(level) | (int(idx.replace('/', '')) << 3)
 
@@ -116,7 +163,7 @@ def write_index_to_tar(tar_fp_: Path):
             tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
 
 
-def create_extracts(config_: dict, do_traffic: bool):
+def create_extracts(config_: dict, do_traffic: bool, bbox: Bbox):
     """Actually creates the tar ball. Break out of main function for testability."""
     tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", '/dev/null'))
     extract_fp: Path = Path(
@@ -147,7 +194,12 @@ def create_extracts(config_: dict, do_traffic: bool):
     with tarfile.open(extract_fp, 'w') as tar:
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
         for t in sorted(tiles_fp.rglob('*.gph')):
-            tar.add(str(t.resolve()), arcname=str(t.relative_to(tiles_fp)))
+            # only include the tiles falling inside the bbox
+            rel_path = t.relative_to(tiles_fp)
+            if not tile_intersects_bbox(rel_path, bbox):
+                continue
+            LOGGER.debug(f"Adding tile {rel_path} to the path")
+            tar.add(str(t.resolve()), arcname=str(rel_path))
 
     write_index_to_tar(extract_fp)
 
@@ -212,6 +264,22 @@ if __name__ == '__main__':
     # override with inline-config
     config.update(**json.loads(args.inline_config))
 
+    # see if there's a bbox to limit the tiles archived
+    bbox = []
+    if args.bbox:
+        try:
+            bbox = Bbox(*[float(x) for x in args.bbox.split(",")])
+        except ValueError:
+            LOGGER.critical(f"BBOX {args.bbox} is not a comma-separated string of coordinates.")
+            sys.exit(1)
+
+        # validate bbox
+        if (bbox.min_x >= bbox.max_x or bbox.min_x < -180 or bbox.max_x > 180) or (
+            bbox.min_y >= bbox.max_y or bbox.min_y < -90 or bbox.max_y > 90
+        ):
+            LOGGER.critical(f"Bbox invalid: {list(bbox)}")
+            sys.exit(1)
+
     # set the right logger level
     if args.verbosity == 0:
         LOGGER.setLevel(logging.CRITICAL)
@@ -220,4 +288,4 @@ if __name__ == '__main__':
     elif args.verbosity >= 2:
         LOGGER.setLevel(logging.DEBUG)
 
-    create_extracts(config, args.with_traffic)
+    create_extracts(config, args.with_traffic, bbox)
