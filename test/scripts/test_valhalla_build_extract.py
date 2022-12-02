@@ -25,7 +25,7 @@ def tile_base_to_path(base_x: int, base_y: int, level: int) -> str:
     tile_size = TILE_SIZES[level]
 
     # assert we got no bogus tile base..
-    assert (base_x + 180) % tile_size == 0 and (base_y + 90) % tile_size == 0
+    assert (base_x + 180) % tile_size == 0 and (base_y + 90) % tile_size == 0, f"{base_x}, {base_y} failed"
 
     row = floor((base_y + 90) / tile_size)
     col = floor((base_x + 180) / tile_size)
@@ -60,11 +60,10 @@ class TestBuildExtract(unittest.TestCase):
             self.assertTrue(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tile {input_tuple} is failing.")
 
         # don't find the ones not intersecting
-        bbox = Bbox(0, 10, 2, 12)
+        bbox = Bbox(0, 10, 4, 14)
         for input_tuple in (
-            (2, 12, 0),   # base at the upper right corner
-            (-1, 9, 1),  # contained in bbox
-            (-0.25, 9.75, 2),  # barely intersecting in the upper right
+            (8, 14, 0),
+            (-0.50, 9.75, 2)
         ):
             tile_path = tile_base_to_path(*input_tuple)
             self.assertFalse(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tile {input_tuple} shouldn't be found.")
