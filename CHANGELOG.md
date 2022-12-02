@@ -7,6 +7,7 @@
    * FIXED: Newer clang warns on `sprintf` which becomes a compilation error (due to `Werror`) so we use `snprintf` instead [#3846](https://github.com/valhalla/valhalla/issues/3846)
    * FIXED: Build all of Mjolnir with -Werror [#3845](https://github.com/valhalla/valhalla/pull/3845)
    * FIXED: Only set most destination information once for all origins in timedistancematrix [#3830](https://github.com/valhalla/valhalla/pull/3830)
+   * FIXED: Integers to expansion JSON output were cast wrongly [#3857](https://github.com/valhalla/valhalla/pull/3857)
 * **Enhancement**
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
