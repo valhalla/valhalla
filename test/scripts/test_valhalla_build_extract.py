@@ -48,7 +48,7 @@ class TestBuildExtract(unittest.TestCase):
             (20, 59, 2),  # barely intersecting in the upper right
         ):
             tile_path = tile_base_to_path(*input_tuple)
-            self.assertTrue(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tuple {input_tuple} is failing.")
+            self.assertTrue(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tile {input_tuple} is failing.")
 
         bbox = Bbox(-20, -59.2, -10.2, -53.9)
         for input_tuple in (
@@ -57,14 +57,24 @@ class TestBuildExtract(unittest.TestCase):
             (-12, -62, 0),
         ):
             tile_path = tile_base_to_path(*input_tuple)
-            self.assertTrue(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tuple {input_tuple} is failing.")
+            self.assertTrue(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tile {input_tuple} is failing.")
+
+        # don't find the ones not intersecting
+        bbox = Bbox(0, 10, 2, 12)
+        for input_tuple in (
+            (2, 12, 0),   # base at the upper right corner
+            (-1, 9, 1),  # contained in bbox
+            (-0.25, 9.75, 2),  # barely intersecting in the upper right
+        ):
+            tile_path = tile_base_to_path(*input_tuple)
+            self.assertFalse(valhalla_build_extract.tile_intersects_bbox(tile_path, bbox), f"Tile {input_tuple} shouldn't be found.")
 
 
     def test_create_extracts(self):
         config = {"mjolnir": {"tile_dir": str(TILE_PATH), "tile_extract": str(EXTRACT_PATH), "traffic_extract": str(TRAFFIC_PATH)}}
 
         # it will open the tars in write mode, so other test output can't interfere
-        valhalla_build_extract.create_extracts(config, True, "")
+        valhalla_build_extract.create_extracts(config, True)
         tile_count = valhalla_build_extract.get_tile_count(TILE_PATH)
 
         # test that the index has the right offsets/sizes

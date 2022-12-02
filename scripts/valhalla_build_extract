@@ -14,7 +14,7 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
@@ -81,7 +81,7 @@ handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"
 LOGGER.addHandler(handler)
 
 
-def tile_intersects_bbox(tile_path: str, in_bounds: Bbox) -> bool:
+def tile_intersects_bbox(tile_path: str, in_bounds: Optional[Bbox]) -> bool:
     """Check if a tile intersects the bbox"""
     if not in_bounds:
         return True
@@ -166,7 +166,7 @@ def write_index_to_tar(tar_fp_: Path):
             tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
 
 
-def create_extracts(config_: dict, do_traffic: bool, bbox: Bbox):
+def create_extracts(config_: dict, do_traffic: bool, bbox: Optional[Bbox] = None):
     """Actually creates the tar ball. Break out of main function for testability."""
     tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", '/dev/null'))
     extract_fp: Path = Path(
@@ -269,7 +269,7 @@ if __name__ == '__main__':
     config.update(**json.loads(args.inline_config))
 
     # see if there's a bbox to limit the tiles archived
-    bbox = []
+    bbox = None
     if args.bbox:
         try:
             bbox = Bbox(*[float(x) for x in args.bbox.split(",")])
