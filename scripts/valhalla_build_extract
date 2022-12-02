@@ -198,12 +198,12 @@ def create_extracts(config_: dict, do_traffic: bool, bbox: Bbox):
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
         for t in sorted(tiles_fp.rglob('*.gph')):
             # only include the tiles falling inside the bbox
-            rel_path = t.relative_to(tiles_fp)
+            rel_path = str(t.relative_to(tiles_fp))
             if not tile_intersects_bbox(rel_path, bbox):
                 LOGGER.debug(f"Tile {rel_path} is outside {tuple(bbox)}.")
                 continue
             LOGGER.debug(f"Adding tile {rel_path} to the path")
-            tar.add(str(t.resolve()), arcname=str(rel_path))
+            tar.add(str(t.resolve()), arcname=rel_path)
 
     write_index_to_tar(extract_fp)
 
