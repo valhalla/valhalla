@@ -27,22 +27,30 @@ constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
 
 // Structure to hold information about each destination.
 struct Destination {
+  // per-origin information
   bool settled;        // Has the best time/distance to this destination
                        // been found?
   sif::Cost best_cost; // Current best cost to this destination
-  uint32_t distance;   // Path distance for the best cost path
-  float threshold;     // Threshold above current best cost where no longer
-                       // need to search for this destination.
+  // Set of still available correlated edges;
+  std::unordered_set<uint64_t> dest_edges_available;
 
-  // Potential edges for this destination (and their partial distance)
-  std::unordered_map<uint64_t, float> dest_edges;
-  // date_time
-  std::string date_time;
+  // global information which only needs to be set once or is reset for every origin in the algorithm
+  uint32_t distance; // Path distance for the best cost path
+  float threshold;   // Threshold above current best cost where no longer
+                     // need to search for this destination.
+  // partial distance of correlated edges
+  std::unordered_map<uint64_t, float> dest_edges_percent_along;
 
   // Constructor - set best_cost to an absurdly high value so any new cost
   // will be lower.
-  Destination()
-      : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f), date_time("") {
+  Destination() : settled(false), best_cost{kMaxCost, kMaxCost}, distance(0), threshold(0.0f) {
+  }
+
+  // clears the per-origin information
+  void reset() {
+    settled = false;
+    best_cost = {kMaxCost, kMaxCost};
+    dest_edges_available.clear();
   }
 };
 

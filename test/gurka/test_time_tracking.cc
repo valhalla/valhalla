@@ -174,86 +174,82 @@ TEST(TimeTracking, reverse) {
 }
 
 TEST(TimeTracking, routes) {
-
   // build a very simple graph
-  const std::string ascii_map = R"(A----B----C----D
-                                                  |
-                                                  |
-                                                  |
-                                   H----G----F----E)";
+  const std::string ascii_map = R"(A----B----C----D---I
+                                                  |   |
+                                                  1   |
+                                                  |   |
+                                   H----G----F----E---J)";
   const gurka::ways ways = {
-      {"AB", {{"highway", "motorway"}}}, {"BC", {{"highway", "motorway"}}},
-      {"CD", {{"highway", "motorway"}}}, {"DE", {{"highway", "motorway_link"}}},
-      {"EF", {{"highway", "primary"}}},  {"FG", {{"highway", "primary"}}},
-      {"GH", {{"highway", "primary"}}},
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "primary"}}},     {"FG", {{"highway", "primary"}}},
+      {"GH", {{"highway", "primary"}}},     {"DI", {{"highway", "residential"}}},
+      {"IJ", {{"highway", "primary"}}},     {"JE", {{"highway", "primary"}}},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {5.1079374, 52.0887174});
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_time_tracking_make",
-                               {{"mjlonir.timezone", "/path/to/timezone.sqlite"}});
+                               {{"mjlonir.timezone", "test/data/tz.sqlite"}});
 
-  // pick out a start and end ll by finding the appropriate edges in the graph
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  auto start = map.nodes["A"];
-  auto end = map.nodes["H"];
+  const std::vector<double> expected = {0,       31.5771, 63.1543, 94.7314, 120.052, 0,
+                                        91.6466, 105.024, 144.325, 159.079, 173.815, 188.551};
 
-  // route between them with a current time
-  auto req =
-      boost::format(
-          R"({"costing":"auto","date_time":{"type":0},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
-      start.first % start.second % end.first % end.second;
-  valhalla::Api api;
-  tyr::actor_t actor(map.config, reader);
-  actor.route(req.str(), nullptr, &api);
+  auto test_result = [&expected](const std::vector<double>& actual_times, const Api& request) {
+    ASSERT_THAT(actual_times, testing::Pointwise(testing::DoubleNear(0.001), expected));
+    // first location has a waiting_time, second not since it was "through"
+    EXPECT_EQ(request.options().locations(1).waiting_secs(), 600.f);
+    EXPECT_EQ(request.options().locations(2).waiting_secs(), 0.f);
+    EXPECT_EQ(request.info().warnings(0).code(), 203);
+  };
 
-  // check the timings
   std::vector<double> times;
-  for (const auto& route : api.trip().routes()) {
+  auto result = gurka::do_action(Options::route, map, {"A", "I", "1", "H"}, "auto",
+                                 {{"/date_time/type", "0"},
+                                  {"/locations/1/waiting", "600"},
+                                  {"/locations/2/type", "through"},
+                                  {"/locations/2/waiting", "600"}});
+  for (const auto& route : result.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
         times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }
-  const std::vector<double> expected = {0,        17.1429,  34.2857,  51.4286,
-                                        193.9319, 245.4273, 269.4273, 293.4273};
-  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
+  test_result(times, result);
 
   // route between them with a depart_at
-  req =
-      boost::format(
-          R"({"costing":"auto","date_time":{"type":1,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
-      start.first % start.second % end.first % end.second;
-  actor.route(req.str(), nullptr, &api);
-
-  // check the timings
+  result = gurka::do_action(Options::route, map, {"A", "I", "1", "H"}, "auto",
+                            {{"/date_time/type", "1"},
+                             {"/date_time/value", "1982-12-08T17:17"},
+                             {"/locations/1/waiting", "600"},
+                             {"/locations/2/type", "through"},
+                             {"/locations/2/waiting", "600"}});
   times.clear();
-  for (const auto& route : api.trip().routes()) {
+  for (const auto& route : result.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
         times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }
-  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
+  test_result(times, result);
 
   // route between them with a arrive_by
-  req =
-      boost::format(
-          R"({"costing":"auto","date_time":{"type":2,"value":"1982-12-08T17:17"},"locations":[{"lon":%1%,"lat":%2%},{"lon":%3%,"lat":%4%}]})") %
-      start.first % start.second % end.first % end.second;
-  actor.route(req.str(), nullptr, &api);
-
-  // check the timings
+  result = gurka::do_action(Options::route, map, {"A", "I", "1", "H"}, "auto",
+                            {{"/date_time/type", "2"},
+                             {"/date_time/value", "1982-12-08T17:17"},
+                             {"/locations/1/waiting", "600"},
+                             {"/locations/2/type", "through"},
+                             {"/locations/2/waiting", "600"}});
   times.clear();
-  for (const auto& route : api.trip().routes()) {
+  for (const auto& route : result.trip().routes()) {
     for (const auto& leg : route.legs()) {
       for (const auto& node : leg.node()) {
         times.push_back(node.cost().elapsed_cost().seconds());
       }
     }
   }
-
-  ASSERT_THAT(times, testing::Pointwise(testing::DoubleNear(0.0001), expected));
+  test_result(times, result);
 }
 
 TEST(TimeTracking, dst) {

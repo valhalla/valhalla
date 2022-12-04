@@ -596,7 +596,6 @@ void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
     bool minor = (nodeinfo->transition_index() & kMinor);
     bool stop = (nodeinfo->transition_index() & kStopSign);
     bool yield = (nodeinfo->transition_index() & kYieldSign);
-    bool inbound = false;
     RoadClass rc = directededge.classification();
 
     if (stop || yield) {

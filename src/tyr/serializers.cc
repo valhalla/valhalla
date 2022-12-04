@@ -102,6 +102,12 @@ std::string serializeStatus(Api& request) {
   status_doc.AddMember("tileset_last_modified",
                        rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
 
+  rapidjson::Value actions_list(rapidjson::kArrayType);
+  for (const auto& action : request.status().available_actions()) {
+    actions_list.GetArray().PushBack(rapidjson::Value{}.SetString(action.c_str(), alloc), alloc);
+  }
+  status_doc.AddMember("available_actions", actions_list, alloc);
+
   if (request.status().has_has_tiles_case())
     status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
                          alloc);
