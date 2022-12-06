@@ -265,7 +265,6 @@ public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
-  float ferry_factor_;       // Weighting to apply to ferry edges
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk

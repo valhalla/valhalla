@@ -56,8 +56,9 @@ Optionally, you can include the following location information without impacting
 * `country` = Country name.
 * `phone` = Telephone number.
 * `url` = URL for the place or location.
+* `waiting`: The waiting time in seconds at this location. E.g. when the route describes a pizza delivery tour, each location has a service time, which can be respected by setting `waiting` on the location, then the departure will be delayed by this amount in seconds. Only works for `break` or `break_through` types.
 * `side_of_street` = (response only) The side of street of a `break` `location` that is determined based on the actual route when the `location` is offset from the street. The possible values are `left` and `right`.
-* `date_time` = (response only) Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2015-12-29T08:00".
+* `date_time` = (response only for `/route`) Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2015-12-29T08:00". If `waiting` was set on this location in the request, and it's an intermediate location, the `date_time` will describe the departure time at this location.
 
 Future development work includes adding location options and information related to time at each location. This will allow routes to specify a start time or an arrive by time at each location. There is also ongoing work to improve support for `through` locations.
 
@@ -310,7 +311,7 @@ Directions options should be specified at the top level of the JSON object.
 | :------------------ | :----------- |
 | `exclude_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
 | `exclude_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `exclude_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
-| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><ul><b>NOTE: This option is not supported for Valhalla's matrix service.</b><ul> |
+| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br> |
 | `out_format` | Output format. If no `out_format` is specified, JSON is returned. Future work includes PBF (protocol buffer) support. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
 | `linear_references` | When present and `true`, the successful `route` response will include a key `linear_references`. Its value is an array of base64-encoded [OpenLR location references][openlr], one for each graph edge of the road network matched by the input trace. |
@@ -341,6 +342,9 @@ The summary JSON object includes:
 | :---- | :----------- |
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
+| `has_toll`| Flag indicating if the the path uses one or more toll segments. |
+| `has_highway`| Flag indicating if the the path uses one or more highway segments. |
+| `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
@@ -369,6 +373,7 @@ Each maneuver includes:
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |
 | `end_shape_index` | Index into the list of shape points for the end of the maneuver. |
 | `toll` | True if the maneuver has any toll, or portions of the maneuver are subject to a toll. |
+| `highway` | True if a highway is encountered on this maneuver. |
 | `rough` | True if the maneuver is unpaved or rough pavement, or has any portions that have rough pavement. |
 | `gate` | True if a gate is encountered on this maneuver. |
 | `ferry` | True if a ferry is encountered on this maneuver. |
