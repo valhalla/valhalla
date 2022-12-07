@@ -97,12 +97,13 @@ struct Edge {
       e.attributes.driveableforward = false;
       e.attributes.driveablereverse = false;
     } else {
-      e.attributes.driveableforward = way.auto_forward();
-      e.attributes.driveablereverse = way.auto_backward();
+      e.attributes.driveableforward = way.auto_forward() || way.truck_forward();
+      e.attributes.driveablereverse = way.auto_backward() || way.truck_backward();
     }
     e.attributes.link = way.link();
     e.attributes.driveable_ferry =
-        (way.ferry() || way.rail()) && (way.auto_forward() || way.auto_backward());
+        (way.ferry() || way.rail()) &&
+        (way.auto_forward() || way.auto_backward() || way.truck_forward() || way.truck_backward());
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
     e.attributes.has_names =
