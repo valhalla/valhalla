@@ -14,6 +14,7 @@
    * ADDED: "available_actions" to the /status response [#3836](https://github.com/valhalla/valhalla/pull/3836)
    * ADDED: "waiting" field on input/output intermediate break(_through) locations to respect services times [#3849](https://github.com/valhalla/valhalla/pull/3849)
    * ADDED: --bbox & --geojson-dir options to valhalla_build_extract to only archive a subset of tiles [#3856](https://github.com/valhalla/valhalla/pull/3856)
+   * CHANGED: Replace unstable c++ geos API with a mix of geos' c api and boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
@@ -138,7 +139,6 @@
    * CHANGED: Use `starts_with()` instead of `substr(0, N)` getting and comparing to prefix [#3702](https://github.com/valhalla/valhalla/pull/3702)
    * ADDED: Ferry support for HGV [#3710](https://github.com/valhalla/valhalla/issues/3710)
    * ADDED: Linting & formatting checks for Python code [#3713](https://github.com/valhalla/valhalla/pull/3713)
-   * CHANGED: Replace unstable geos API with boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * CHANGED: rename Turkey admin to Türkiye [#3720](https://github.com/valhalla/valhalla/pull/3713)
    * CHANGED: bumped vcpkg version to "2022.08.15" [#3754](https://github.com/valhalla/valhalla/pull/3754)
    * CHANGED: chore: Updates to clang-format 11.0.0 [#3533](https://github.com/valhalla/valhalla/pull/3533)
