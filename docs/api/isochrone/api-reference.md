@@ -6,7 +6,7 @@ Isodistances follow the same concept, but instead of time one specifies distance
 
 Isochrone maps share some of the same concepts and terminology with familiar topographic maps, which depict contour lines for points of equal elevation. For this reason other terms common in topography apply, such as contours or isolines.
 
-This is an example of isochrones showing the travel times by driving from a location in Melbourne, as depicted in Mobility Explorer.
+This is an example of 15, 30, 45 and 60 minute bicycle isochrones centered in Lancaster, PA.
 
 ![Isochrones for travel times by walking in Lancaster, PA](../images/isochrone.png)
 
@@ -53,7 +53,7 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 
 In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications.
 
-The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour.
+The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 

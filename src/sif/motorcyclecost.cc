@@ -55,9 +55,6 @@ constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 
-// Maximum highway avoidance bias (modulates the highway factors based on road class)
-constexpr float kMaxHighwayBiasFactor = 8.0f;
-
 constexpr float kHighwayFactor[] = {
     1.0f, // Motorway
     0.5f, // Trunk
@@ -268,7 +265,6 @@ public:
   VehicleType type_; // Vehicle type: car (default), motorcycle, etc
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
-  float ferry_factor_;       // Weighting to apply to ferry edges
   float toll_factor_;        // Factor applied when road has a toll
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
@@ -398,8 +394,11 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr& tile,
                               const baldr::TimeInfo& time_info,
                               uint8_t& flow_sources) const {
-  auto edge_speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources,
-                                   time_info.seconds_from_now);
+  auto edge_speed = fixed_speed_ == baldr::kDisableFixedSpeed
+                        ? tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false,
+                                         &flow_sources, time_info.seconds_from_now)
+                        : fixed_speed_;
+
   auto final_speed = std::min(edge_speed, top_speed_);
 
   float sec = (edge->length() * speedfactor_[final_speed]);

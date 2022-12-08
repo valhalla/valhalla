@@ -56,8 +56,9 @@ Optionally, you can include the following location information without impacting
 * `country` = Country name.
 * `phone` = Telephone number.
 * `url` = URL for the place or location.
+* `waiting`: The waiting time in seconds at this location. E.g. when the route describes a pizza delivery tour, each location has a service time, which can be respected by setting `waiting` on the location, then the departure will be delayed by this amount in seconds. Only works for `break` or `break_through` types.
 * `side_of_street` = (response only) The side of street of a `break` `location` that is determined based on the actual route when the `location` is offset from the street. The possible values are `left` and `right`.
-* `date_time` = (response only) Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2015-12-29T08:00".
+* `date_time` = (response only for `/route`) Expected date/time for the user to be at the location using the ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2015-12-29T08:00". If `waiting` was set on this location in the request, and it's an intermediate location, the `date_time` will describe the departure time at this location.
 
 Future development work includes adding location options and information related to time at each location. This will allow routes to specify a start time or an arrive by time at each location. There is also ongoing work to improve support for `through` locations.
 
@@ -113,15 +114,17 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
+| `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
-| `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`.
+| `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. |
+
 ###### Other costing options
 The following options are available for `auto`, `bus`, `taxi`, and `truck` costing methods.
 
 | Vehicle Options | Description |
 | :-------------------------- | :----------- |
-| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 2.6 for truck. |
-| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 4.11 for truck. |
+| `height` | The height of the vehicle (in meters). Default 1.9 for car, bus, taxi and 4.11 for truck. |
+| `width` | The width of the vehicle (in meters). Default 1.6 for car, bus, taxi and 2.6 for truck. |
 | `exclude_unpaved` | This value indicates whether or not the path may include unpaved roads. If `exclude_unpaved` is set to 1 it is allowed to start and end with unpaved roads, but is not allowed to have them in the middle of the route path, otherwise they are allowed. Default false. |
 | `exclude_cash_only_tolls` | A boolean value which indicates the desire to avoid routes with cash-only tolls. Default false. |
 | `include_hov2` | A boolean value which indicates the desire to include HOV roads with a 2-occupant requirement in the route when advantageous. Default false. |
@@ -135,6 +138,7 @@ The following options are available for `truck` costing.
 | `length` | The length of the truck (in meters). Default 21.64. |
 | `weight` | The weight of the truck (in metric tons). Default 21.77. |
 | `axle_load` | The axle load of the truck (in metric tons). Default 9.07. |
+| `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 
 ##### Bicycle costing options
@@ -208,6 +212,7 @@ These options are available for pedestrian costing methods.
 |`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duation. The default value is 120 seconds.|
 |`bss_rent_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. This value won't be displayed and used only inside of the algorithm.|
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+
 ##### Transit costing options
 
 These options are available for transit costing when the multimodal costing model is used.
@@ -306,7 +311,7 @@ Directions options should be specified at the top level of the JSON object.
 | :------------------ | :----------- |
 | `exclude_locations` |  A set of locations to exclude or avoid within a route can be specified using a JSON array of avoid_locations. The avoid_locations have the same format as the locations list. At a minimum each avoid location must include latitude and longitude. The avoid_locations are mapped to the closest road or roads and these roads are excluded from the route path computation.|
 | `exclude_polygons` |  One or multiple exterior rings of polygons in the form of nested JSON arrays, e.g. `[[[lon1, lat1], [lon2,lat2]],[[lon1,lat1],[lon2,lat2]]]`. Roads intersecting these rings will be avoided during path finding. If you only need to avoid a few specific roads, it's **much** more efficient to use `exclude_locations`. Valhalla will close open rings (i.e. copy the first coordingate to the last position).|
-| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><ul><b>NOTE: This option is not supported for Valhalla's matrix service.</b><ul> |
+| `date_time` | This is the local date and time at the location.<ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time</li><li>2 - Specified arrival time. Not yet implemented for multimodal costing method.</li></li>3 - Invariant specified time. Time does not vary over the course of the path. Not implemented for multimodal or bike share routing</li></ul></li><li>`value` - the date and time is specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival.  For example "2016-07-03T08:06"</li></ul><br> |
 | `out_format` | Output format. If no `out_format` is specified, JSON is returned. Future work includes PBF (protocol buffer) support. |
 | `id` | Name your route request. If `id` is specified, the naming will be sent thru to the response. |
 | `linear_references` | When present and `true`, the successful `route` response will include a key `linear_references`. Its value is an array of base64-encoded [OpenLR location references][openlr], one for each graph edge of the road network matched by the input trace. |
@@ -329,6 +334,7 @@ Basic trip information includes:
 | `units` | The specified units of length are returned, either kilometers or miles. |
 | `language` | The language of the narration instructions. If the user specified a language in the directions options and the specified language was supported - this returned value will be equal to the specified value. Otherwise, this value will be the default (en-US) language. |
 | `locations` | Location information is returned in the same form as it is entered with additional fields to indicate the side of the street. |
+| `warnings` (optional) | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 The summary JSON object includes:
 
@@ -336,10 +342,14 @@ The summary JSON object includes:
 | :---- | :----------- |
 | `time` | Estimated elapsed time to complete the trip. |
 | `length` | Distance traveled for the entire trip. Units are either miles or kilometers based on the input units specified. |
+| `has_toll`| Flag indicating if the the path uses one or more toll segments. |
+| `has_highway`| Flag indicating if the the path uses one or more highway segments. |
+| `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |
 | `max_lon` | Maximum longitude of a bounding box containing the route. |
+
 
 ### Trip legs and maneuvers
 
@@ -363,6 +373,7 @@ Each maneuver includes:
 | `begin_shape_index` | Index into the list of shape points for the start of the maneuver. |
 | `end_shape_index` | Index into the list of shape points for the end of the maneuver. |
 | `toll` | True if the maneuver has any toll, or portions of the maneuver are subject to a toll. |
+| `highway` | True if a highway is encountered on this maneuver. |
 | `rough` | True if the maneuver is unpaved or rough pavement, or has any portions that have rough pavement. |
 | `gate` | True if a gate is encountered on this maneuver. |
 | `ferry` | True if a ferry is encountered on this maneuver. |

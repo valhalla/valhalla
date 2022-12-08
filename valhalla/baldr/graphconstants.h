@@ -103,6 +103,11 @@ constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
 
+// Default Fixed Speed. This is the default fixed speed that is assumed.
+// Unless otherwised specified no fixed speed will be assumed and speed will be
+// calculated from costing algorithm.
+constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
+
 inline bool valid_speed(float speed) {
   return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
 }
@@ -582,7 +587,8 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8
+  kDestinationAllowed = 8,
+  kMaxAxles = 9
 };
 
 // Minimum meters offset from start/end of shape for finding heading
@@ -646,7 +652,8 @@ constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+constexpr uint64_t kInvalidSecondsOfWeek =
+    1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };

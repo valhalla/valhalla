@@ -17,3 +17,4 @@ If `"verbose": true` is passed as a parameter, the service will output the follo
 | `has_timezones`    | bool    | Whether the current tileset was built using the timezone database. |
 | `has_live_traffic` | bool    | Whether live traffic tiles are currently available. |
 | `bbox`             | object  | GeoJSON of the tileset extent. |
+| `warnings` (optional) | array | This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 

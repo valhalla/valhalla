@@ -189,6 +189,17 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         const std::string& stop_type = "break",
                         std::string* request_json = nullptr);
 
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
+                        std::string* request_json = nullptr);
+
 /* Returns the raw_result formatted as a JSON document in the given format.
  *
  * @param raw_result the result of a /route or /match request

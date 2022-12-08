@@ -749,6 +749,14 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxaxles"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxAxles);
+      restriction.set_value(std::stoul(tag_.second));
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["hov_type"] = [this]() {
       // If this tag is set then the way is either HOV-2 or HOV-3.
       // There are no other real-world hov levels.
@@ -1484,12 +1492,10 @@ public:
     // for then it must be in another pbf file. so we need to move on to the next waynode that could
     // possibly actually be in this pbf file
     if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
-      current_way_node_index_ =
-          way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                    [](const OSMWayNode& a, const OSMWayNode& b) {
-                                      return a.node.osmid_ <= b.node.osmid_;
-                                    },
-                                    current_way_node_index_);
+      current_way_node_index_ = way_nodes_->find_first_of(
+          OSMWayNode{{osmid}},
+          [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ <= b.node.osmid_; },
+          current_way_node_index_);
     }
 
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
@@ -2721,6 +2727,8 @@ public:
           ref_pronunciation = int_ref_pronunciation_jeita_;
           direction_pronunciation = int_direction_pronunciation_jeita_;
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2739,6 +2747,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           ref_pronunciation = ref_pronunciation_jeita_;
           direction_pronunciation = direction_pronunciation_jeita_;
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2787,6 +2797,8 @@ public:
           osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2805,6 +2817,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           osm_pronunciation_.set_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2844,6 +2858,8 @@ public:
               (index
                    ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_jeita_index())
                    : "");
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
 
@@ -2899,6 +2915,8 @@ public:
             }
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_jeita_index(0);
+            break;
+          case PronunciationAlphabet::kNone:
             break;
         }
       }

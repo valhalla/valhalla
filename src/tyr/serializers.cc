@@ -102,6 +102,12 @@ std::string serializeStatus(Api& request) {
   status_doc.AddMember("tileset_last_modified",
                        rapidjson::Value().SetInt(request.status().tileset_last_modified()), alloc);
 
+  rapidjson::Value actions_list(rapidjson::kArrayType);
+  for (const auto& action : request.status().available_actions()) {
+    actions_list.GetArray().PushBack(rapidjson::Value{}.SetString(action.c_str(), alloc), alloc);
+  }
+  status_doc.AddMember("available_actions", actions_list, alloc);
+
   if (request.status().has_has_tiles_case())
     status_doc.AddMember("has_tiles", rapidjson::Value().SetBool(request.status().has_tiles()),
                          alloc);
@@ -155,6 +161,25 @@ void openlr(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper
     }
   }
   writer.end_array();
+}
+
+void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer) {
+  writer.start_array("warnings");
+  for (const auto& warning : api.info().warnings()) {
+    writer.start_object();
+    writer("code", warning.code());
+    writer("text", warning.description());
+    writer.end_object();
+  }
+  writer.end_array();
+}
+
+json::ArrayPtr serializeWarnings(const valhalla::Api& api) {
+  auto warnings = json::array({});
+  for (const auto& warning : api.info().warnings()) {
+    warnings->emplace_back(json::map({{"code", warning.code()}, {"text", warning.description()}}));
+  }
+  return warnings;
 }
 
 std::string serializePbf(Api& request) {

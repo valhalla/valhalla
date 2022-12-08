@@ -8,7 +8,7 @@ set -o errexit -o pipefail -o nounset
 #  - 0 everything looks fine
 
 
-readonly CLANG_FORMAT_VERSION=7.0.0
+readonly CLANG_FORMAT_VERSION=11.0.0
 
 source scripts/bash_utils.sh
 setup_mason

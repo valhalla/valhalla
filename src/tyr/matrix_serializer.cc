@@ -98,17 +98,22 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance & time in matrix
     // result
+    json::MapPtr map;
     if (tds[i].time != kMaxCost) {
-      row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
-                                   {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                                   {"time", static_cast<uint64_t>(tds[i].time)},
-                                   {"distance", json::fixed_t{tds[i].dist * distance_scale, 3}}}));
+      map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
+                       {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+                       {"time", static_cast<uint64_t>(tds[i].time)},
+                       {"distance", json::fixed_t{tds[i].dist * distance_scale, 3}}});
+      if (!tds[i].date_time.empty()) {
+        map->emplace("date_time", tds[i].date_time);
+      }
     } else {
-      row->emplace_back(json::map({{"from_index", static_cast<uint64_t>(source_index)},
-                                   {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                                   {"time", static_cast<std::nullptr_t>(nullptr)},
-                                   {"distance", static_cast<std::nullptr_t>(nullptr)}}));
+      map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
+                       {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
+                       {"time", static_cast<std::nullptr_t>(nullptr)},
+                       {"distance", static_cast<std::nullptr_t>(nullptr)}});
     }
+    row->emplace_back(map);
   }
   return row;
 }
@@ -132,6 +137,12 @@ json::MapPtr serialize(const Api& request,
   if (options.has_id_case()) {
     json->emplace("id", options.id());
   }
+
+  // add warnings to json response
+  if (request.info().warnings_size() >= 1) {
+    json->emplace("warnings", valhalla::tyr::serializeWarnings(request));
+  }
+
   return json;
 }
 } // namespace valhalla_serializers
