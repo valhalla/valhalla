@@ -10,60 +10,23 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/geometries.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <geos_c.h>
 
-BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
-                                 double,
-                                 boost::geometry::cs::geographic<boost::geometry::degree>,
-                                 first,
-                                 second);
-using ring_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
-using polygon_t = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
-using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
+using geometry_t = std::unique_ptr<GEOSGeometry, decltype(&GEOSGeom_destroy)>;
 
-// For OSM pbf reader
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 namespace {
 
-/**
- * a simple singleton to wrap geos setup and tear down as well as conversion to and from boost types
- */
+// a simple singleton to wrap geos setup and tear down
 struct geos_helper_t {
   static const geos_helper_t& get() {
     static geos_helper_t singleton;
     return singleton;
-  }
-  template <typename striped_container_t>
-  static GEOSGeometry* from_striped_container(const striped_container_t& coords) {
-    // sadly we dont layout the memory in parallel arrays so we have to copy to geos
-    GEOSCoordSequence* geos_coords = GEOSCoordSeq_create(coords.size(), 2);
-    for (unsigned int i = 0; i < static_cast<unsigned int>(coords.size()); ++i) {
-      GEOSCoordSeq_setX(geos_coords, i, coords[i].first);
-      GEOSCoordSeq_setY(geos_coords, i, coords[i].second);
-    }
-    return GEOSGeom_createLinearRing(geos_coords);
-  }
-  template <typename striped_container_t>
-  static striped_container_t to_striped_container(const GEOSGeometry* geometry) {
-    // sadly we dont layout the memory in parallel arrays so we have to copy from geos
-    auto* coords = GEOSGeom_getCoordSeq(geometry);
-    unsigned int coords_size;
-    GEOSCoordSeq_getSize(coords, &coords_size);
-    striped_container_t container;
-    container.resize(coords_size);
-    for (unsigned int i = 0; i < coords_size; ++i) {
-      GEOSCoordSeq_getX(coords, i, &container[i].first);
-      GEOSCoordSeq_getY(coords, i, &container[i].second);
-    }
-    return container;
   }
 
 protected:
@@ -170,23 +133,22 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
 }
 
 /**
- * Build a look up of ring segments for a given admin either for outers or inners
- * The look up can then be used to merge the segments together into connected rings
- * If a given admin is incomplete (in that its missing members) the function will throw
+ * Create line segments from the way members of a given admin either for outers or inners
+ * If a given admin is incomplete (eg. missing members) no segments are returned
  * @param admin_data   used to look up ways shape (nodes)
  * @param admin        the admin for which we are building the lookup
  * @param name         the name of the admin handy for error reporting
  * @param outer        whether or not we should build a lookup for outers or inners
- * @param lines        ring segments that are built as output to be later connected together
- * @param line_lookup  a look up to find ring segments to help in connecting them together
- * @return true if all the members of the relation had corresponding geometry
+ * @returns            the line segments contained in the admins ways
  */
-bool to_segments(const OSMAdminData& admin_data,
-                 const OSMAdmin& admin,
-                 const std::string& name,
-                 bool outer,
-                 std::vector<ring_t>& lines,
-                 std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup) {
+geometry_t to_multilinestring(const OSMAdminData& admin_data,
+                              const OSMAdmin& admin,
+                              const std::string& name,
+                              bool outer) {
+  std::vector<GEOSGeometry*> segments;
+  segments.reserve(admin.ways.size());
+  unsigned int coord_count = 0;
+
   // get all the individual members of the admin relation merged into one ring
   auto role_itr = admin.roles.begin();
   for (const auto memberid : admin.ways) {
@@ -200,89 +162,40 @@ bool to_segments(const OSMAdminData& admin_data,
     if (w_itr == admin_data.way_map.end()) {
       LOG_WARN(name + " (" + std::to_string(admin.id) + ") is missing way member " +
                std::to_string(memberid));
-      return false;
+      // since no one owns these we have to deallocate them manually
+      std::for_each(segments.begin(), segments.end(), GEOSGeom_destroy);
+      return {nullptr, nullptr};
     }
 
     // build the line geom
-    ring_t coords;
+    unsigned int i = 0;
+    GEOSCoordSequence* sequence = GEOSCoordSeq_create(w_itr->second.size(), 2);
     for (const auto node_id : w_itr->second) {
       // although unlikely, we could have the way but not all the nodes
       auto n_itr = admin_data.shape_map.find(node_id);
       if (n_itr == admin_data.shape_map.end()) {
         LOG_WARN(name + " (" + std::to_string(admin.id) + ") with way member " +
                  std::to_string(memberid) + " is missing node " + std::to_string(node_id));
-        return false;
+        // since no one owns these we have to deallocate them manually
+        std::for_each(segments.begin(), segments.end(), GEOSGeom_destroy);
+        return {nullptr, nullptr};
       }
-      coords.push_back(n_itr->second);
+      GEOSCoordSeq_setX(sequence, i, n_itr->second.first);
+      GEOSCoordSeq_setY(sequence, i, n_itr->second.second);
+      ++coord_count;
     }
-
-    // remember how to find this line
-    if (!coords.empty()) {
-      line_lookup.insert({coords.front(), lines.size()});
-      line_lookup.insert({coords.back(), lines.size()});
-      lines.push_back(std::move(coords));
-    }
+    segments.emplace_back(GEOSGeom_createLineString(sequence));
   }
-  return true;
-}
 
-/**
- * Converts a series of a linestrings into one or more polygons (rings) by connecting contiguous
- * ones until a ring is formed
- * @param admin_info  a simple pair that has the admins name and relation id, useful for logging
- * @param lines       the line segments we need to merge into rings
- * @param line_lookup a multi map that lets one easily find a line segment by its first or last point
- * @param rings       a place to put the finally formed rings
- * @param inners      a place to put any inners that occur from self intersection corrections
- * @return zero or more rings
- */
-void to_rings(const std::pair<std::string, uint64_t>& admin_info,
-              std::vector<ring_t>& lines,
-              std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup,
-              std::vector<ring_t>& rings,
-              std::vector<ring_t>& inners) {
-
-  // keep going while we have threads to pull
-  while (!line_lookup.empty()) {
-    // start connecting the first line we have to adjacent ones
-    ring_t ring;
-    for (auto line_itr = line_lookup.begin(); line_itr != line_lookup.end();
-         line_itr = line_lookup.find(ring.back())) {
-      // grab the line segment to add
-      auto line_index = line_itr->second;
-      auto& line = lines[line_index];
-      // we can add this line in the forward direction
-      if ((ring.empty() && line_itr->first == line.front()) ||
-          (!ring.empty() && ring.back() == line.front())) {
-        ring.insert(ring.end(), std::make_move_iterator(line.begin() + !ring.empty()),
-                    std::make_move_iterator(line.end()));
-      } // have to add this segment backwards
-      else {
-        ring.insert(ring.end(), std::make_move_iterator(line.rbegin() + !ring.empty()),
-                    std::make_move_iterator(line.rend()));
-      }
-
-      // done with this segment and its other end
-      line_lookup.erase(line_itr);
-      line_itr = line_lookup.find(ring.back());
-      while (line_itr != line_lookup.end() && line_itr->second != line_index)
-        ++line_itr;
-      assert(line_itr != line_lookup.end());
-      line_lookup.erase(line_itr);
-    }
-
-    // degenerate rings are ignored, unconnected rings or missing relation members cause this
-    if (ring.size() < 4 || ring.front() != ring.back()) {
-      LOG_WARN("Degenerate ring for " + admin_info.first + " (" + std::to_string(admin_info.second) +
-               ") " + " near lat,lon " + std::to_string(ring.back().y()) + "," +
-               std::to_string(ring.back().x()));
-      continue;
-    }
-
-    // otherwise we try to make sure the ring is not self intersecting etc and correct it if it is
-    multipolygon_t buffered;
-    buffer_ring(ring, rings, inners);
+  // this shouldnt happen
+  if (coord_count == 0) {
+    LOG_WARN(name + " (" + std::to_string(admin.id) + ") with no usable ways");
+    return {nullptr, nullptr};
   }
+
+  // this collection takes ownership of all the unowned geoms we created above
+  return {GEOSGeom_createCollection(GEOS_MULTILINESTRING, &segments[0], coord_count),
+          GEOSGeom_destroy};
 }
 
 struct polygon_data {
@@ -301,9 +214,9 @@ struct polygon_data {
  * @param inners      inner rings of polygons
  * @return the multipolygon of the combined outer and inner rings
  */
-multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
-                               std::vector<ring_t>& outers,
-                               std::vector<ring_t>& inners) {
+geometry_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
+                           geometry_t& outers,
+                           geometry_t& inners) {
   // Associate an area with each outer so we can
   std::vector<polygon_data> polys;
   for (auto& outer : outers) {
@@ -520,28 +433,28 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     // do inners and outers separately
     bool complete = true;
-    std::array<std::vector<ring_t>, 2> outers_inners;
-    for (bool outer : {true, false}) {
+    geometry_t outers{nullptr, GEOSGeom_destroy};
+    geometry_t inners{nullptr, GEOSGeom_destroy};
+    for (auto oi : {std::make_pair(true, &outers), std::make_pair(false, &inners)}) {
       // grab the ring segments and a lookup to find them when connecting them
-      std::vector<ring_t> lines;
-      std::unordered_multimap<valhalla::midgard::PointLL, size_t> line_lookup;
-      if (!to_segments(admin_data, admin, admin_info.first, outer, lines, line_lookup)) {
+      auto multilinestring = to_multilinestring(admin_data, admin, admin_info.first, oi.first);
+      if (!multilinestring) {
         complete = false;
         break;
       }
       // connect them into a series of one or more rings
-      to_rings(admin_info, lines, line_lookup, outers_inners[!outer], outers_inners[1]);
+      oi.second->reset(GEOSLineMerge(multilinestring.get()));
     }
 
     // if we didn't have a complete relation (ie some members were missing) we bail
-    if (!complete || outers_inners.front().empty()) {
+    if (!complete || !outers) {
       LOG_WARN(admin_info.first + " (" + std::to_string(admin_info.second) +
                ") is degenerate and will be skipped");
       continue;
     }
 
     // convert the rings into multipolygons
-    auto multipolygon = to_multipolygon(admin_info, outers_inners.front(), outers_inners.back());
+    auto multipolygon = to_multipolygon(admin_info, outers, inners);
 
     // convert that into wkt format so we can put it into sqlite
     std::stringstream ss;
