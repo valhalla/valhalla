@@ -545,7 +545,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
     // convert that into wkt format so we can put it into sqlite
     std::stringstream ss;
-    ss << boost::geometry::wkt(multipolygon);
+    ss << std::setprecision(7) << boost::geometry::wkt(multipolygon);
     auto wkt = ss.str();
     if (wkt.empty())
       continue;
