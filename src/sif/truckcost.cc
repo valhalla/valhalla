@@ -381,7 +381,7 @@ bool TruckCost::AllowMultiPass() const {
 bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
   switch (restriction.type()) {
     case AccessType::kHazmat:
-      if (hazmat_ != restriction.value()) {
+      if (hazmat_ && !restriction.value()) {
         return false;
       }
       break;
