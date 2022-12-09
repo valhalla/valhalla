@@ -450,6 +450,8 @@ TEST(GtfsExample, DISABLED_testRouting) {
 
   auto layout = create_layout();
 
-  valhalla::Api result0 = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal");
+  valhalla::Api result0 =
+      gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
+                       {{"/date_time/type", "1"}, {"/date_time/value", "2022-02-17T05:45"}});
   EXPECT_EQ(result0.trip().routes_size(), 1);
 }
