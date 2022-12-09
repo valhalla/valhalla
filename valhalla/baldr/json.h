@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_JSON_H_
 
 #include <boost/variant.hpp>
+#include <cctype>
 #include <cinttypes>
 #include <cmath>
 #include <cstddef>
@@ -110,7 +111,7 @@ public:
           ostream_ << "\\t";
           break;
         default:
-          if (c >= 0 && c < 32) {
+          if (iscntrl(c)) {
             // format changes for json hex
             ostream_.setf(std::ios::hex, std::ios::basefield);
             ostream_.setf(std::ios::uppercase);

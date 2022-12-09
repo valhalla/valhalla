@@ -24,4 +24,5 @@ message Status {
   oneof has_tileset_last_modified {
     uint32 tileset_last_modified = 7;
   }
+  repeated string available_actions = 8;
 }

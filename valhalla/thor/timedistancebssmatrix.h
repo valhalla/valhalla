@@ -78,7 +78,11 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  inline void clear() {
+    reset();
+    destinations_.clear();
+    dest_edges_.clear();
+  };
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -112,6 +116,24 @@ protected:
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
+
+  /**
+   * Reset all origin-specific information
+   */
+  inline void reset() {
+    edgelabels_.clear();
+    // Clear the per-origin information
+    for (auto& dest : destinations_) {
+      dest.reset();
+    }
+
+    // Clear elements from the adjacency list
+    adjacencylist_.clear();
+
+    // Clear the edge status flags
+    pedestrian_edgestatus_.clear();
+    bicycle_edgestatus_.clear();
+  };
 
   /**
    * Computes the matrix after SourceToTarget decided which direction
@@ -167,14 +189,27 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
-   * Add destinations.
+   * Initalize destinations for all origins.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void SetDestinations(baldr::GraphReader& graphreader,
-                       const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  void InitDestinations(baldr::GraphReader& graphreader,
+                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+
+  /**
+   * Set the available destination edges for each origin.
+   * @param locations List of destination locations.
+   */
+  void SetDestinationEdges() {
+    // the percent_along is set once at the beginning
+    for (auto& dest : destinations_) {
+      for (const auto& idx : dest.dest_edges_percent_along) {
+        dest.dest_edges_available.emplace(idx.first);
+      }
+    }
+  };
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path

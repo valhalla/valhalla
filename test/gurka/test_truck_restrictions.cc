@@ -23,7 +23,7 @@ protected:
           {"maxheight", "5"},
           {"maxlength", "25"},
           {"maxwidth", "3"},
-          {"hazmat", "no"},
+          {"hazmat", "destination"},
           {"maxaxles", "8"},
           {"maxaxleload", "10"}}},
         {"CD", {{"highway", "residential"}}},

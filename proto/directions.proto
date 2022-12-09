@@ -11,6 +11,9 @@ message DirectionsLeg {
     double time = 2;           // seconds
     BoundingBox bbox = 3;      // Bounding box of the shape
     bool has_time_restrictions = 4; // Does the route contain any time restrictions?
+    bool has_toll = 5;
+    bool has_ferry = 6;
+    bool has_highway = 7;
   }
 
   message GuidanceView {
@@ -135,6 +138,8 @@ message DirectionsLeg {
     BssManeuverType bss_maneuver_type = 36;
     string verbal_succinct_transition_instruction = 37;   // verbal succinct transition instruction
     BikeShareStationInfo bss_info = 38;                   // Bike Share Station Info
+    bool portions_highway = 39;                           // has portions highway
+    bool portions_ferry = 40;                             // has portions ferry
   }
 
   uint64 trip_id = 1;

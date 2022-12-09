@@ -346,6 +346,9 @@ uint32_t CreateSimpleTurnRestriction(const uint64_t wayid,
           }
         }
         break;
+      case RestrictionType::kOnlyProbable:
+      case RestrictionType::kNoProbable:
+        break;
     }
   }
 
