@@ -10,6 +10,8 @@
 using namespace gtfs;
 using namespace valhalla;
 
+using timept = std::chrono::system_clock::time_point;
+
 const std::string ascii_map = R"(
       A-1-B--2--C--D
                 3  E
@@ -256,10 +258,11 @@ TEST(GtfsExample, MakeProto) {
   const std::string stopThreeID = "19";
   const std::string shapeOneID = "5";
   const std::string serviceOneID = "9";
-  const int serviceStartDate = 20220131;
-  const int serviceEndDate = 20230131;
-  const int addedDate = 20220202;
-  const int removedDate = 20220203;
+  auto serviceStartDate =
+      baldr::DateTime::get_formatted_date("2022-01-31").time_since_epoch().count();
+  auto serviceEndDate = baldr::DateTime::get_formatted_date("2023-01-31").time_since_epoch().count();
+  auto addedDate = baldr::DateTime::get_formatted_date("2022-02-02").time_since_epoch().count();
+  auto removedDate = baldr::DateTime::get_formatted_date("2022-02-03").time_since_epoch().count();
   const int headwaySec = 1800;
 
   // spawn threads to download all the tiles returning a list of
