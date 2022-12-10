@@ -1109,7 +1109,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
   stats.dep_count = 0;
   stats.midnight_dep_count = 0;
 
-  GraphReader reader_transit_level(pt);
+  GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
   sqlite3* tz_db_handle = GetDBHandle(*database);
@@ -1122,14 +1122,13 @@ void build_tiles(const boost::property_tree::ptree& pt,
   // Iterate through the tiles in the queue and find any that include stops
   for (; tile_start != tile_end; ++tile_start) {
     // Get the next tile Id from the queue and get a tile builder
-    if (reader_transit_level.OverCommitted()) {
-      reader_transit_level.Trim();
+    if (reader.OverCommitted()) {
+      reader.Trim();
     }
     GraphId tile_id = tile_start->Tile_Base();
 
     // Get transit pbf tile
     const std::string transit_dir = pt.get<std::string>("transit_dir");
-    GraphReader reader(pt);
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
@@ -1147,8 +1146,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     lock.lock();
 
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level(), tile_id.id());
-    graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
-    GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, false);
+    graph_tile_ptr transit_tile = reader.GetGraphTile(transit_tile_id);
+    GraphTileBuilder tilebuilder_transit(transit_dir, transit_tile_id, false);
 
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
     uint32_t tile_creation_date =
@@ -1366,7 +1365,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   std::list<std::promise<builder_stats>> results;
 
   // Start the threads, divvy up the work
-  LOG_INFO("Adding " + std::to_string(all_tiles.size()) + " transit tiles to the transit graph...");
+  LOG_INFO("Creating " + std::to_string(all_tiles.size()) + " transit graph tiles...");
   size_t floor = all_tiles.size() / threads.size();
   size_t at_ceiling = all_tiles.size() - (threads.size() * floor);
   std::unordered_set<GraphId>::const_iterator tile_start, tile_end = all_tiles.begin();

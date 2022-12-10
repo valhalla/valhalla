@@ -435,17 +435,6 @@ std::vector<std::vector<std::string>> get_paths(const valhalla::Api& result) {
 /**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
  * and builds a set of Valhalla tiles for it.
- *
- * @param layout the locations of all the nodes
- * @param ways the way definitions (which nodes are connected, and their properties
- * @param nodes properties on any of the defined nodes
- * @param relations OSM relations that related nodes and ways together
- * @param workdir where to build the PBF and the tiles
- * @param config_options optional key value pairs where the key is ptree style dom traversal and
- *        the value is the value to put into the config. You can do things like add timezones database
- *        path
- * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
- *         (for converting node names to coordinates)
  */
 map buildtiles(const nodelayout& layout,
                const ways& ways,
@@ -453,10 +442,18 @@ map buildtiles(const nodelayout& layout,
                const relations& relations,
                const std::string& workdir,
                const std::unordered_map<std::string, std::string>& config_options) {
+  auto config = test::make_config(workdir, config_options);
+  return buildtiles(layout, ways, nodes, relations, config);
+}
 
-  map result;
-  result.config = test::make_config(workdir, config_options);
-  result.nodes = layout;
+map buildtiles(const nodelayout& layout,
+               const ways& ways,
+               const nodes& nodes,
+               const relations& relations,
+               const boost::property_tree::ptree& config) {
+
+  map result{config, layout};
+  auto workdir = config.get<std::string>("mjolnir.tile_dir");
 
   // Sanity check so that we don't blow away / by mistake
   if (workdir == "/") {

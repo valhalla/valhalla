@@ -27,7 +27,7 @@ boost::property_tree::ptree get_config() {
                            {{"mjolnir.transit_feeds_dir",
                              VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
                             {"mjolnir.transit_dir",
-                             VALHALLA_BUILD_DIR "test/data/transit_tests/transit_protos"},
+                             VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             {"mjolnir.tile_dir",
                              VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"}});
@@ -43,13 +43,14 @@ gurka::map map;
 
 // test to write gtfs files
 TEST(GtfsExample, WriteGtfs) {
-  filesystem::remove_all(VALHALLA_BUILD_DIR "test/data/transit_tests");
-  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests");
-  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds");
-  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/transit_protos");
-  filesystem::create_directories(VALHALLA_BUILD_DIR "test/data/transit_tests/tiles");
-
   auto pt = get_config();
+  filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
+  filesystem::remove_all(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+  filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
+  filesystem::create_directories(pt.get<std::string>("mjolnir.tile_dir"));
+  filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+  filesystem::create_directories(pt.get<std::string>("mjolnir.transit_dir"));
+
   auto layout = create_layout();
   auto station_one_ll = layout.find("1");
   auto station_two_ll = layout.find("2");
@@ -271,10 +272,9 @@ TEST(GtfsExample, MakeProto) {
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
   valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
-  // call the two functions, in main valhalla_ingest-transit
-  // it's gonna write protobufs
-  filesystem::recursive_directory_iterator transit_file_itr(VALHALLA_BUILD_DIR
-                                                            "test/data/transit_tests/transit_protos");
+  // call the two functions, in main valhalla_ingest-transit it's gonna write protobufs
+  filesystem::recursive_directory_iterator transit_file_itr(
+      pt.get<std::string>("mjolnir.transit_dir"));
   filesystem::recursive_directory_iterator end_file_itr;
 
   std::unordered_set<std::string> stops;
@@ -353,25 +353,25 @@ TEST(GtfsExample, MakeTile) {
   auto station_two_ll = layout.find("2");
   auto station_three_ll = layout.find("3");
 
-  auto path_directory = pt.get<std::string>("mjolnir.tile_dir");
-  map = gurka::buildtiles(layout, ways, {}, {}, path_directory);
-  GraphReader reader(pt.get_child("mjolnir"));
+  // we build the graph so we can find edges (way ids) where we can connect the transit subgraph
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
 
+  // this creates routable transit tiles but doesnt connect them to the rest of the graph
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
+  // now we have to build the tiles again to get the transit tiles connected to the regular graph
+  map = gurka::buildtiles(layout, ways, {}, {}, pt);
+
   // files are already going to be written from
-  filesystem::recursive_directory_iterator transit_file_itr(path_directory);
+  filesystem::recursive_directory_iterator transit_file_itr(tile_dir);
   filesystem::recursive_directory_iterator end_file_itr;
 
-  const std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  LOG_INFO(transit_dir);
-
-  // TODO: ENSURE THAT THE TRANSIT EDGES ARE CREATED AND CONNECTED TO THE GRAPH
-  //  FOR NOW, THE TEST IS DISABLED AS IT HAS NOT BEEN IMPLEMENTED YET.
-
+  GraphReader reader(pt.get_child("mjolnir"));
   auto graphids = reader.GetTileSet();
   int totalNodes = 0;
   for (auto graphid : graphids) {
+    LOG_INFO("Working on : " + std::to_string(graphid));
     graph_tile_ptr tile = reader.GetGraphTile(graphid);
 
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
@@ -381,11 +381,12 @@ TEST(GtfsExample, MakeTile) {
           foundTransitConnect =
               foundTransitConnect || edge.use() == valhalla::baldr::Use::kTransitConnection;
         }
+        // TODO: this is the failing test and the next step that we have to fix
         // EXPECT_TRUE(foundTransitConnect);
       }
       continue;
     }
-    LOG_INFO("Working on : " + std::to_string(graphid));
+
     if (tile->GetStopOneStops().empty()) {
       LOG_ERROR("NO one stops found");
     }
@@ -406,13 +407,13 @@ TEST(GtfsExample, MakeTile) {
       // to round when testing?
       auto currNode_type = node_types.find(node.type());
       EXPECT_NE(node_types.end(), currNode_type);
+      auto node_ll = node.latlng(tile->header()->base_ll());
       // TODO: check which tile, match station coords accordingly
       uint64_t node_way_id = node.connecting_wayid();
       LOG_INFO("Current Way Id: " + std::to_string(node_way_id));
       bool coordinates_found = false;
       for (const auto& station_coord : station_coords) {
-        coordinates_found = coordinates_found ||
-                            node.latlng(tile->header()->base_ll()).ApproximatelyEqual(station_coord);
+        coordinates_found = coordinates_found || node_ll.ApproximatelyEqual(station_coord);
       }
       EXPECT_TRUE(coordinates_found);
     }
