@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/midgard/sequence.h>
 #include <valhalla/mjolnir/osmnode.h>
@@ -70,6 +71,10 @@ struct Edge {
   // index of the target (end) node of the edge
   uint32_t targetnode_;
 
+  // to record the access of an edge
+  uint16_t fwd_access;
+  uint16_t rev_access;
+
   /**
    * For now you cant be valid if you dont have any shape
    * @return true if the edge has at least 1 shape point
@@ -89,21 +94,27 @@ struct Edge {
                         const uint32_t llindex,
                         const OSMWay& way,
                         const bool infer_turn_channels) {
+    // TODO(nils): include a "motorvehicle_fwd/rev" in lua/OSMWay?
+    bool drive_fwd = way.auto_forward() || way.truck_forward() || way.bus_forward() ||
+                     way.moped_forward() || way.motorcycle_forward() || way.emergency_forward() ||
+                     way.hov_forward() || way.taxi_forward();
+    bool drive_rev = way.auto_backward() || way.truck_backward() || way.bus_backward() ||
+                     way.moped_backward() || way.motorcycle_backward() || way.emergency_backward() ||
+                     way.hov_backward() || way.taxi_backward();
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
     if (way.use() == baldr::Use::kEmergencyAccess) {
+      // TODO(nils):
       // Temporary until all access values are set
       e.attributes.driveableforward = false;
       e.attributes.driveablereverse = false;
     } else {
-      e.attributes.driveableforward = way.auto_forward() || way.truck_forward();
-      e.attributes.driveablereverse = way.auto_backward() || way.truck_backward();
+      e.attributes.driveableforward = drive_fwd;
+      e.attributes.driveablereverse = drive_rev;
     }
     e.attributes.link = way.link();
-    e.attributes.driveable_ferry =
-        (way.ferry() || way.rail()) &&
-        (way.auto_forward() || way.auto_backward() || way.truck_forward() || way.truck_backward());
+    e.attributes.driveable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
     e.attributes.has_names =
@@ -117,6 +128,60 @@ struct Edge {
       e.attributes.turn_channel = true;
     else
       e.attributes.turn_channel = false;
+
+    // set the access masks
+    e.fwd_access = 0;
+    e.rev_access = 0;
+
+    if (way.auto_forward()) {
+      e.fwd_access |= baldr::kAutoAccess;
+    }
+    if (way.auto_backward()) {
+      e.rev_access |= baldr::kAutoAccess;
+    }
+    if (way.truck_forward()) {
+      e.fwd_access |= baldr::kTruckAccess;
+    }
+    if (way.truck_backward()) {
+      e.rev_access |= baldr::kTruckAccess;
+    }
+    if (way.bus_forward()) {
+      e.fwd_access |= baldr::kBusAccess;
+    }
+    if (way.bus_backward()) {
+      e.rev_access |= baldr::kBusAccess;
+    }
+    if (way.moped_forward()) {
+      e.fwd_access |= baldr::kMopedAccess;
+    }
+    if (way.moped_backward()) {
+      e.rev_access |= baldr::kMopedAccess;
+    }
+    if (way.motorcycle_forward()) {
+      e.fwd_access |= baldr::kMotorcycleAccess;
+    }
+    if (way.motorcycle_backward()) {
+      e.rev_access |= baldr::kMotorcycleAccess;
+    }
+    if (way.emergency_forward()) {
+      e.fwd_access |= baldr::kEmergencyAccess;
+    }
+    if (way.emergency_backward()) {
+      e.rev_access |= baldr::kEmergencyAccess;
+    }
+    if (way.hov_forward()) {
+      e.fwd_access |= baldr::kHOVAccess;
+    }
+    if (way.hov_backward()) {
+      e.rev_access |= baldr::kHOVAccess;
+    }
+    if (way.taxi_forward()) {
+      e.fwd_access |= baldr::kTaxiAccess;
+    }
+    if (way.taxi_backward()) {
+      e.rev_access |= baldr::kTaxiAccess;
+    }
+
     return e;
   }
 

@@ -72,7 +72,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
                       sequence<Edge>& edges,
                       sequence<Node>& nodes,
                       const bool inbound,
-                      const uint32_t rc);
+                      const uint32_t rc,
+                      uint32_t& total_count);
 
 /**
  * Check if the ferry included in this node bundle is short. Must be
