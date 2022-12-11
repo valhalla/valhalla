@@ -3,53 +3,76 @@
 
 using namespace valhalla;
 
-std::pair<baldr::RoadClass, baldr::RoadClass>
-ReclassifyFerryConnectionEdge(std::map<std::string, std::string> const& way_description) {
+
+class FerryTest : public ::testing::TestWithParam<std::string> {
+protected:
+static gurka::map ferry_map;
+
+public:
+bool
+edges_were_reclassified(const std::map<std::string, std::string>& way_description, const std::string& allowed = "motorcar") {
   constexpr double gridsize_metres = 1000;
 
   const std::string ascii_map = R"(
-          A--B--b--C----D--E
-          F--G--g--H----I--J
+          A--B--b--C-----D--E
+          F--G--g--H-----I--J
     )";
 
-  const gurka::ways ways = {{"AB", {{"highway", "trunk"}, {"name", ""}}},
-                            {"Bb", way_description},
-                            {"bC", way_description},
+  // only allow the passed profile on the roads
+  std::map<std::string, std::string> way_props = {
+    {"motorcar", "no"},
+    {"motorcycle", "no"},
+    {"moped", "no"},
+    {"hgv", "no"},
+    {"taxi", "no"},
+    {"bus", "no"}
+  };
+  way_props[allowed] = "yes";
+  way_props.insert(way_description.begin(), way_description.end());  
+
+  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                            {"Bb", way_props},
+                            {"bC", way_props},
                             {"CD",
-                             {{"motor_vehicle", "yes"},
-                              {"motorcar", "yes"},
-                              {"bicycle", "yes"},
-                              {"foot", "yes"},
-                              {"horse", "no"},
-                              {"duration", "01:25"},
-                              {"route", "ferry"},
-                              {"operator", "Cape May-Lewes Ferry"},
-                              {"name", "Cape May-Lewes Ferry"},
-                              {"destination:forward", "Cape May"},
-                              {"destination:backward", "Lewes"}}},
-                            {"DE", {{"highway", "trunk"}, {"name", ""}}},
-                            {"FG", {{"highway", "trunk"}, {"name", ""}}},
-                            {"Gg", way_description},
-                            {"gH", way_description},
+                             {{"motorcar", "yes"},
+                              {"motorcycle", "yes"},
+                              {"moped", "yes"},
+                              {"hgv", "yes"},
+                              {"taxi", "yes"},
+                              {"bus", "yes"},
+                              {"route", "ferry"}}},
+                            {"DE", way_props},
+                            {"FG", {{"highway", "trunk"}}},
+                            {"Gg", way_props},
+                            {"gH", way_props},
                             {"HI",
-                             {{"motor_vehicle", "yes"},
-                              {"motorcar", "yes"},
-                              {"bicycle", "yes"},
-                              {"foot", "no"},
-                              {"duration", "35"},
-                              {"route", "shuttle_train"},
-                              {"name", "Eurotunnel Shuttle"}}},
-                            {"IJ", {{"highway", "trunk"}, {"name", ""}}}};
+                             {{"motorcar", "yes"},
+                              {"motorcycle", "yes"},
+                              {"moped", "yes"},
+                              {"hgv", "yes"},
+                              {"taxi", "yes"},
+                              {"bus", "yes"},
+                              {"route", "shuttle_train"}}},
+                            {"IJ", way_props}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
 
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
   baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  auto Bb_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "B", "b"));
-  auto Gg_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "G", "g"));
-  return {Bb_edge->classification(), Gg_edge->classification()};
+  std::vector<std::vector<std::string>> node_pairs = {{"B", "b"}, {"G", "g"}, {"D", "E"}, {"I", "J"}};
+  for (const auto node_pair : node_pairs) {
+    auto edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
+    if (edge->classification() > valhalla::baldr::RoadClass::kPrimary) {
+      return false;
+    }
+  }
+  
+  return true;
 }
+};
+
+gurka::map FerryTest::ferry_map = {};
 
 TEST(Standalone, ShortFerry) {
   const std::string ascii_map = R"(
@@ -128,31 +151,12 @@ TEST(Standalone, TruckFerryDuration) {
   ASSERT_NEAR(ferry_edge.speed(), ferry_edge.length_km() / (ferry_secs * kHourPerSec), 0.1);
 }
 
-TEST(Standalone, ReclassifyFerryConnection) {
-  // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
-  // high-class road
-  const std::vector<std::string> reclassifiable_ways = {"secondary",      "tertiary",
-                                                        "unclassified",   "service",
-                                                        "secondary_link", "tertiary_link"};
-  for (const auto& cls : reclassifiable_ways) {
-    std::map<std::string, std::string> desc = {{"highway", cls}, {"name", ""}};
-    baldr::RoadClass bclass, gclass;
-    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_EQ(bclass, baldr::RoadClass::kPrimary);
-    EXPECT_EQ(gclass, baldr::RoadClass::kPrimary);
-  }
-}
-
-TEST(Standalone, DoNotReclassifyFerryConnection) {
+TEST_F(FerryTest, DoNotReclassifyFerryConnection) {
   // roads with these values of 'highway' tag do not participate in search for ferry connection so
   // edge class remains low
   const std::vector<std::string> not_reclassifiable_ways = {"track", "living_street"};
   for (const auto& cls : not_reclassifiable_ways) {
-    std::map<std::string, std::string> desc = {{"highway", cls}, {"name", ""}};
-    baldr::RoadClass bclass, gclass;
-    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GT(bclass, baldr::RoadClass::kPrimary);
-    EXPECT_GT(gclass, baldr::RoadClass::kPrimary);
+    EXPECT_FALSE(edges_were_reclassified({{"highway", cls}}));
   }
 
   // roads with these values of 'service' tag do not participate in search for ferry connection so
@@ -160,12 +164,30 @@ TEST(Standalone, DoNotReclassifyFerryConnection) {
   const std::vector<std::string> not_reclassifiable_use = {"parking_aisle", "driveway", "alley",
                                                            "emergency_access", "drive-through"};
   for (const auto& use : not_reclassifiable_use) {
-    std::map<std::string, std::string> desc = {{"highway", "tertiary"},
-                                               {"service", use},
-                                               {"name", ""}};
-    baldr::RoadClass bclass, gclass;
-    std::tie(bclass, gclass) = ReclassifyFerryConnectionEdge(desc);
-    EXPECT_GT(bclass, baldr::RoadClass::kPrimary);
-    EXPECT_GT(gclass, baldr::RoadClass::kPrimary);
+    std::map<std::string, std::string> desc = {{"highway", "service"},
+                                               {"service", use}};
+    EXPECT_FALSE(edges_were_reclassified(desc));
   }
 }
+
+TEST_P(FerryTest, ReclassifyFerryConnection) {
+  // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
+  // high-class road
+  const std::vector<std::string> reclassifiable_ways = {"secondary",      "tertiary",
+                                                        "unclassified",   "service",
+                                                        "secondary_link", "tertiary_link"};
+  for (const auto& cls : reclassifiable_ways) {
+    for (const auto& mode : {"motorcar", "hgv", "motorcycle", "taxi", "moped"}) {
+      EXPECT_TRUE(edges_were_reclassified({{"highway", cls}}, GetParam()));
+    }
+  }
+}
+
+INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
+                         FerryTest,
+                         ::testing::Values("motorcar",
+                                           "hgv",
+                                           "moped",
+                                           "motorcycle",
+                                           "taxi",
+                                           "bus"));
