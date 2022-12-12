@@ -3,7 +3,6 @@
 #include <bitset>
 #include <queue>
 #include <unordered_map>
-#include <bitset>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
@@ -44,8 +43,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
                       sequence<Edge>& edges,
                       sequence<Node>& nodes,
                       const bool inbound,
-                      const uint32_t rc,
-                      uint32_t& mode_count) {
+                      const uint32_t rc) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
@@ -66,8 +64,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // will be checked during expansion, start off with all access and set to missing modes after first
   // iteration
   uint32_t overall_access = 0;
-  while (overall_access != baldr::kVehicularAccess || mode_count < vehicle_modes) {
-    mode_count += 1;
+  uint32_t expansion_count = 0;
+  while (overall_access != baldr::kVehicularAccess || expansion_count < vehicle_modes) {
+    expansion_count += 1;
 
     // which modes do we still have to find a path for?
     uint32_t access_filter = baldr::kVehicularAccess ^ overall_access;
@@ -312,7 +311,6 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   // regular (non-ferry) edge. Skip short ferry edges (river crossing?)
   uint32_t ferry_endpoint_count = 0;
   uint32_t total_count = 0;
-  uint32_t mode_count = 0;
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -341,16 +339,16 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           // Driveable in both directions - get an inbound path and an
           // outbound path.
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, true, rc, mode_count);
+                                      nodes, true, rc);
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, false, rc, mode_count);
+                                      nodes, false, rc);
         } else {
           // Check if oneway inbound to the ferry
           bool inbound = (edge.first.sourcenode_ == node_itr.position())
                              ? edge.first.attributes.driveablereverse  // it's inbound if the edge's source node is the current node, but can't it happen that it's not driveable in reverse?
                              : edge.first.attributes.driveableforward;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, inbound, rc, mode_count);
+                                      nodes, inbound, rc);
         }
         ferry_endpoint_count++;
 
@@ -369,7 +367,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   }
   LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
            std::to_string(ferry_endpoint_count) + ", " + std::to_string(total_count) +
-           " edges reclassified with " + std::to_string(mode_count) + " expansions.");
+           " edges reclassified.");
 }
 
 } // namespace mjolnir
