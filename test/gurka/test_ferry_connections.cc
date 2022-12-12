@@ -8,7 +8,7 @@ protected:
   static gurka::map ferry_map;
 
 public:
-  bool edges_were_reclassified(const std::map<std::string, std::string>& way_description,
+  bool edges_were_reclassified(const std::map<std::string, std::string>& custom_tags,
                                const std::string& allowed = "motorcar") {
     constexpr double gridsize_metres = 1000;
 
@@ -22,7 +22,7 @@ public:
                                                     {"moped", "no"},    {"hgv", "no"},
                                                     {"taxi", "no"},     {"bus", "no"}};
     way_props[allowed] = "yes";
-    way_props.insert(way_description.begin(), way_description.end());
+    way_props.insert(custom_tags.begin(), custom_tags.end());
 
     const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
                               {"Bb", way_props},
@@ -175,9 +175,7 @@ TEST_P(FerryTest, ReclassifyFerryConnection) {
                                                         "unclassified",   "service",
                                                         "secondary_link", "tertiary_link"};
   for (const auto& cls : reclassifiable_ways) {
-    for (const auto& mode : {"motorcar", "hgv", "motorcycle", "taxi", "moped"}) {
-      EXPECT_TRUE(edges_were_reclassified({{"highway", cls}}, GetParam()));
-    }
+    EXPECT_TRUE(edges_were_reclassified({{"highway", cls}}, GetParam()));
   }
 }
 

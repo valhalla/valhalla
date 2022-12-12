@@ -345,7 +345,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         } else {
           // Check if oneway inbound to the ferry
           bool inbound = (edge.first.sourcenode_ == node_itr.position())
-                             ? edge.first.attributes.driveablereverse  // it's inbound if the edge's source node is the current node, but can't it happen that it's not driveable in reverse?
+                             ? edge.first.attributes.driveablereverse
                              : edge.first.attributes.driveableforward;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, inbound, rc);
