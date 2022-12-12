@@ -197,7 +197,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
-    uint32_t path_access = 0;
+    uint32_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge between this node and the predecessor
       uint32_t idx = node_labels[label_idx].node_index;
@@ -210,9 +210,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           sequence<Edge>::iterator element = edges[edge.second];
           auto update_edge = *element;
           if ((forward && inbound) || (!forward && !inbound)) {
-            path_access |= update_edge.rev_access;
+            path_access &= update_edge.rev_access;
           } else if ((forward && !inbound) || (!forward && inbound)) {
-            path_access |= update_edge.fwd_access;
+            path_access &= update_edge.fwd_access;
           }
           if (update_edge.attributes.importance > rc) {
             update_edge.attributes.importance = rc;
