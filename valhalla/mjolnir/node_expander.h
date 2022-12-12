@@ -105,7 +105,6 @@ struct Edge {
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
     if (way.use() == baldr::Use::kEmergencyAccess) {
-      // TODO(nils):
       // Temporary until all access values are set
       e.attributes.driveableforward = false;
       e.attributes.driveablereverse = false;
