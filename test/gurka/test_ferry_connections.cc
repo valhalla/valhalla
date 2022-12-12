@@ -3,73 +3,72 @@
 
 using namespace valhalla;
 
-
 class FerryTest : public ::testing::TestWithParam<std::string> {
 protected:
-static gurka::map ferry_map;
+  static gurka::map ferry_map;
 
 public:
-bool
-edges_were_reclassified(const std::map<std::string, std::string>& way_description, const std::string& allowed = "motorcar") {
-  constexpr double gridsize_metres = 1000;
+  bool edges_were_reclassified(const std::map<std::string, std::string>& way_description,
+                               const std::string& allowed = "motorcar") {
+    constexpr double gridsize_metres = 1000;
 
-  const std::string ascii_map = R"(
+    const std::string ascii_map = R"(
           A--B--b--C-----D--E
           F--G--g--H-----I--J
     )";
 
-  // only allow the passed profile on the roads
-  std::map<std::string, std::string> way_props = {
-    {"motorcar", "no"},
-    {"motorcycle", "no"},
-    {"moped", "no"},
-    {"hgv", "no"},
-    {"taxi", "no"},
-    {"bus", "no"}
-  };
-  way_props[allowed] = "yes";
-  way_props.insert(way_description.begin(), way_description.end());  
+    // only allow the passed profile on the roads
+    std::map<std::string, std::string> way_props = {{"motorcar", "no"}, {"motorcycle", "no"},
+                                                    {"moped", "no"},    {"hgv", "no"},
+                                                    {"taxi", "no"},     {"bus", "no"}};
+    way_props[allowed] = "yes";
+    way_props.insert(way_description.begin(), way_description.end());
 
-  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
-                            {"Bb", way_props},
-                            {"bC", way_props},
-                            {"CD",
-                             {{"motorcar", "yes"},
-                              {"motorcycle", "yes"},
-                              {"moped", "yes"},
-                              {"hgv", "yes"},
-                              {"taxi", "yes"},
-                              {"bus", "yes"},
-                              {"route", "ferry"}}},
-                            {"DE", way_props},
-                            {"FG", {{"highway", "trunk"}}},
-                            {"Gg", way_props},
-                            {"gH", way_props},
-                            {"HI",
-                             {{"motorcar", "yes"},
-                              {"motorcycle", "yes"},
-                              {"moped", "yes"},
-                              {"hgv", "yes"},
-                              {"taxi", "yes"},
-                              {"bus", "yes"},
-                              {"route", "shuttle_train"}}},
-                            {"IJ", way_props}};
+    const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                              {"Bb", way_props},
+                              {"bC", way_props},
+                              {"CD",
+                               {{"motorcar", "yes"},
+                                {"motorcycle", "yes"},
+                                {"moped", "yes"},
+                                {"hgv", "yes"},
+                                {"taxi", "yes"},
+                                {"bus", "yes"},
+                                {"route", "ferry"}}},
+                              {"DE", way_props},
+                              {"FG", {{"highway", "trunk"}}},
+                              {"Gg", way_props},
+                              {"gH", way_props},
+                              {"HI",
+                               {{"motorcar", "yes"},
+                                {"motorcycle", "yes"},
+                                {"moped", "yes"},
+                                {"hgv", "yes"},
+                                {"taxi", "yes"},
+                                {"bus", "yes"},
+                                {"route", "shuttle_train"}}},
+                              {"IJ", way_props}};
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
 
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
-  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+    auto map =
+        gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
+    baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
 
-  std::vector<std::vector<std::string>> node_pairs = {{"B", "b"}, {"G", "g"}, {"D", "E"}, {"I", "J"}};
-  for (const auto node_pair : node_pairs) {
-    auto edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
-    if (edge->classification() > valhalla::baldr::RoadClass::kPrimary) {
-      return false;
+    std::vector<std::vector<std::string>> node_pairs = {{"B", "b"},
+                                                        {"G", "g"},
+                                                        {"D", "E"},
+                                                        {"I", "J"}};
+    for (const auto node_pair : node_pairs) {
+      auto edge =
+          std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
+      if (edge->classification() > valhalla::baldr::RoadClass::kPrimary) {
+        return false;
+      }
     }
+
+    return true;
   }
-  
-  return true;
-}
 };
 
 gurka::map FerryTest::ferry_map = {};
@@ -164,8 +163,7 @@ TEST_F(FerryTest, DoNotReclassifyFerryConnection) {
   const std::vector<std::string> not_reclassifiable_use = {"parking_aisle", "driveway", "alley",
                                                            "emergency_access", "drive-through"};
   for (const auto& use : not_reclassifiable_use) {
-    std::map<std::string, std::string> desc = {{"highway", "service"},
-                                               {"service", use}};
+    std::map<std::string, std::string> desc = {{"highway", "service"}, {"service", use}};
     EXPECT_FALSE(edges_were_reclassified(desc));
   }
 }
@@ -185,9 +183,4 @@ TEST_P(FerryTest, ReclassifyFerryConnection) {
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
                          FerryTest,
-                         ::testing::Values("motorcar",
-                                           "hgv",
-                                           "moped",
-                                           "motorcycle",
-                                           "taxi",
-                                           "bus"));
+                         ::testing::Values("motorcar", "hgv", "moped", "motorcycle", "taxi", "bus"));

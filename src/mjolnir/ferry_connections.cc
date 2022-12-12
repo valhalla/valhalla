@@ -1,5 +1,6 @@
 #include "mjolnir/ferry_connections.h"
 
+#include <bitset>
 #include <queue>
 #include <unordered_map>
 #include <bitset>
@@ -58,13 +59,15 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // total edge count for all reclassified paths
   // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
   uint32_t edge_count = 0;
-  std::bitset<sizeof(baldr::kVehicularAccess)> mode_bits(baldr::kVehicularAccess);
   uint8_t mode_count = 0;
+  static size_t vehicle_modes =
+      std::bitset<sizeof(valhalla::baldr::kVehicularAccess)>(baldr::kVehicularAccess).count();
 
-  // will be checked during expansion, start off with all access and set to missing modes after first iteration
+  // will be checked during expansion, start off with all access and set to missing modes after first
+  // iteration
   uint32_t overall_access = 0;
   uint32_t check_access = baldr::kVehicularAccess ^ overall_access;
-  while (overall_access != baldr::kVehicularAccess || mode_count < mode_bits.count()) {
+  while (overall_access != baldr::kVehicularAccess || mode_count < vehicle_modes) {
     mode_count += 1;
 
     // Map to store the status and index of nodes that have been encountered.
@@ -333,17 +336,17 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         if (edge.first.attributes.driveableforward == edge.first.attributes.driveablereverse) {
           // Driveable in both directions - get an inbound path and an
           // outbound path.
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
-                                     true, rc, total_count);
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
-                                     false, rc, total_count);
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+                                      nodes, true, rc, total_count);
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+                                      nodes, false, rc, total_count);
         } else {
           // Check if oneway inbound to the ferry
           bool inbound = (edge.first.sourcenode_ == node_itr.position())
                              ? edge.first.attributes.driveablereverse
                              : edge.first.attributes.driveableforward;
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
-                                     inbound, rc, total_count);
+          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+                                      nodes, inbound, rc, total_count);
         }
         ferry_endpoint_count++;
 
