@@ -58,14 +58,15 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // total edge count for all reclassified paths
   // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
   uint32_t edge_count = 0;
-  static size_t vehicle_modes =
-      std::bitset<sizeof(valhalla::baldr::kVehicularAccess)>(baldr::kVehicularAccess).count();
+  // TODO(nils): how to count the flipped bits (i.e. set to 1)? This seems to give a count of 2.
+  // static size_t vehicle_modes =
+  // 8    std::bitset<sizeof(valhalla::baldr::kVehicularAccess)>(baldr::kVehicularAccess).count();
 
   // will be checked during expansion, start off with all access and set to missing modes after first
   // iteration
   uint32_t overall_access = 0;
   uint32_t expansion_count = 0;
-  while (overall_access != baldr::kVehicularAccess || expansion_count < vehicle_modes) {
+  while (overall_access != baldr::kVehicularAccess || expansion_count < 8) {
     expansion_count += 1;
 
     // which modes do we still have to find a path for?
