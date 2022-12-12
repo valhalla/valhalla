@@ -313,7 +313,7 @@ enum class Use : uint8_t {
   kRestArea = 30,
   kServiceArea = 31,
 
-  // Other...
+  // Other... currently, either BSS Connection or unspecified service road
   kOther = 40,
 
   // Ferry and rail ferry

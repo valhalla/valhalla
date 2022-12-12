@@ -14,8 +14,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
   for (; itr != nodes.end() && (node = *itr).node.osmid_ == bundle.node.osmid_; ++itr) {
     ++bundle.node_count;
     if (node.is_start()) {
-      auto edge_itr = edges[node.start_of];
-      auto edge = *edge_itr;
+      auto edge = *edges[node.start_of];
       // Set driveforward - this edge is traversed in forward direction
       edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
@@ -38,8 +37,7 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
       }
     }
     if (node.is_end()) {
-      auto edge_itr = edges[node.end_of];
-      auto edge = *edge_itr;
+      auto edge = *edges[node.end_of];
       // Set driveforward - this edge is traversed in reverse direction
       edge.attributes.driveforward = edge.attributes.driveablereverse;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));

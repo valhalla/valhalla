@@ -171,8 +171,9 @@ bool add_date_to_locations(Options& options,
                            google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                            const std::string& node) {
   if (options.has_date_time_case() && !locations.empty()) {
+    auto dt = options.date_time_type();
     if (options.action() != Options::sources_to_targets) {
-      switch (options.date_time_type()) {
+      switch (dt) {
         case Options::current:
           locations.Mutable(0)->set_date_time("current");
           break;
@@ -189,25 +190,10 @@ bool add_date_to_locations(Options& options,
           break;
       }
     } else {
-      switch (options.date_time_type()) {
-        case Options::current:
-        case Options::depart_at:
-          if (node == "sources") {
-            for (auto& loc : locations) {
-              loc.set_date_time(options.date_time_type() == Options::current ? "current"
-                                                                             : options.date_time());
-            }
-          }
-          break;
-        case Options::arrive_by:
-          if (node == "targets") {
-            for (auto& loc : locations) {
-              loc.set_date_time(options.date_time());
-            }
-          }
-          break;
-        default:
-          break;
+      if (node == (dt == Options::arrive_by ? "targets" : "sources")) {
+        for (auto& loc : locations) {
+          loc.set_date_time(dt == Options::current ? "current" : options.date_time());
+        }
       }
     }
   }
