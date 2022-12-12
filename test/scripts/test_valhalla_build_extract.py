@@ -93,7 +93,7 @@ class TestBuildExtract(unittest.TestCase):
             ]
         }
         gj_dir = TILE_PATH.joinpath("test_build_extract")
-        gj_dir.mkdir()
+        gj_dir.mkdir(exist_ok=True)
         gj_fp = gj_dir.joinpath('test_build_extract.geojson')
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
@@ -134,10 +134,10 @@ class TestBuildExtract(unittest.TestCase):
         tile_count = len(tile_paths)
 
         # test that the index has the right offsets/sizes
-        exp_tuples = ((2560, 25568, 291912), (296448, 410441, 662496), (960512, 6549282, 6059792))
+        exp_tuples = ((2560, 25568, 291000), (295424, 410441, 663632), (961024, 6549282, 6059792))
         self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
         # same for traffic.tar
-        exp_tuples = ((1536, 25568, 26416), (28672, 410441, 65552), (95232, 6549282, 604608))
+        exp_tuples = ((1536, 25568, 26320), (28672, 410441, 65648), (95232, 6549282, 604608))
         self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
