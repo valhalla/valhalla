@@ -141,7 +141,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           continue;
         }
 
-        // Skip non-driveable edges and ones which are not accessible for the current access_filter (based on inbound flag)
+        // Skip non-driveable edges and ones which are not accessible for the current access_filter
+        // (based on inbound flag)
         bool forward = (edge.sourcenode_ == expand_node_idx);
         if (forward) {
           if ((inbound && !edge.attributes.driveablereverse) ||
