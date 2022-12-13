@@ -59,7 +59,7 @@ public:
                                                         {"G", "g"},
                                                         {"D", "E"},
                                                         {"I", "J"}};
-    for (const auto node_pair : node_pairs) {
+    for (const auto& node_pair : node_pairs) {
       auto edge =
           std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, node_pair[0], node_pair[1]));
       if (edge->classification() > valhalla::baldr::RoadClass::kPrimary) {
