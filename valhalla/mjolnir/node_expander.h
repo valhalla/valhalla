@@ -35,8 +35,6 @@ struct Edge {
   struct EdgeAttributes {
     uint64_t llcount : 16;
     uint64_t importance : 3;
-    uint64_t driveableforward_auto : 1;
-    uint64_t driveablereverse_auto : 1;
     uint64_t traffic_signal : 1;
     uint64_t forward_signal : 1;
     uint64_t backward_signal : 1;
@@ -50,20 +48,18 @@ struct Edge {
     uint64_t link : 1;
     uint64_t reclass_link : 1;
     uint64_t has_names : 1;
-    uint64_t driveforward_auto : 1; // For sorting in collect_node_edges
-                                    //  - set based on source node
-    uint64_t shortlink : 1;         // true if this is a link edge and is
-                                    //   short enough it may be internal to
-                                    //   an intersection
+    uint64_t driveforward : 1; // For sorting in collect_node_edges
+                               //  - set based on source node
+    uint64_t shortlink : 1;    // true if this is a link edge and is
+                               //   short enough it may be internal to
+                               //   an intersection
     uint64_t driveable_ferry : 1;
-    uint64_t reclass_ferry : 1;        // Has edge been reclassified due to
-                                       // ferry connection
-    uint64_t turn_channel : 1;         // Link edge should be a turn channel
-    uint64_t way_begin : 1;            // True if first edge of way
-    uint64_t way_end : 1;              // True if last edge of way
-    uint64_t driveableforward_all : 1; // to reclassify ferries for all vehicular modes
-    uint64_t driveablereverse_all : 1; // to reclassify ferries for all vehicular modes
-    uint64_t spare : 21;
+    uint64_t reclass_ferry : 1; // Has edge been reclassified due to
+                                // ferry connection
+    uint64_t turn_channel : 1;  // Link edge should be a turn channel
+    uint64_t way_begin : 1;     // True if first edge of way
+    uint64_t way_end : 1;       // True if last edge of way
+    uint64_t spare : 25;
   };
   EdgeAttributes attributes;
 
@@ -106,18 +102,6 @@ struct Edge {
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
-    if (way.use() == baldr::Use::kEmergencyAccess) {
-      // Temporary until all access values are set
-      e.attributes.driveableforward_auto = false;
-      e.attributes.driveablereverse_auto = false;
-      e.attributes.driveableforward_all = false;
-      e.attributes.driveablereverse_all = false;
-    } else {
-      e.attributes.driveableforward_auto = way.auto_forward();
-      e.attributes.driveablereverse_auto = way.auto_backward();
-      e.attributes.driveableforward_all = drive_fwd;
-      e.attributes.driveablereverse_all = drive_rev;
-    }
     e.attributes.link = way.link();
     e.attributes.driveable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;
@@ -137,6 +121,11 @@ struct Edge {
     // set the access masks
     e.fwd_access = 0;
     e.rev_access = 0;
+
+    // don't set access for emergency uses
+    if (way.use() == baldr::Use::kEmergencyAccess) {
+      return e;
+    }
 
     if (way.auto_forward()) {
       e.fwd_access |= baldr::kAutoAccess;
@@ -168,12 +157,6 @@ struct Edge {
     if (way.motorcycle_backward()) {
       e.rev_access |= baldr::kMotorcycleAccess;
     }
-    if (way.emergency_forward()) {
-      e.fwd_access |= baldr::kEmergencyAccess;
-    }
-    if (way.emergency_backward()) {
-      e.rev_access |= baldr::kEmergencyAccess;
-    }
     if (way.hov_forward()) {
       e.fwd_access |= baldr::kHOVAccess;
     }
@@ -203,8 +186,8 @@ struct Edge {
     }
 
     // Sort by driveability (forward, importance, has_names)
-    bool d = attributes.driveforward_auto;
-    bool od = other.attributes.driveforward_auto;
+    bool d = attributes.driveforward;
+    bool od = other.attributes.driveforward;
     if (d == od) {
       if (attributes.importance == other.attributes.importance) {
         // Equal importance - check presence of names

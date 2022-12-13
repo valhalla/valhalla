@@ -15,9 +15,10 @@ namespace mjolnir {
 uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
+    uint16_t fwd_access = edge.first.fwd_access & baldr::kVehicularAccess;
+    uint16_t rev_access = edge.first.rev_access & baldr::kVehicularAccess;
     if (!edge.first.attributes.driveable_ferry && !edge.first.attributes.link &&
-        !edge.first.attributes.reclass_ferry &&
-        (edge.first.attributes.driveableforward_all || edge.first.attributes.driveablereverse_all)) {
+        !edge.first.attributes.reclass_ferry && (fwd_access || rev_access)) {
       if (edge.first.attributes.importance < bestrc) {
         bestrc = edge.first.attributes.importance;
       }
@@ -58,18 +59,15 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // total edge count for all reclassified paths
   // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
   uint32_t edge_count = 0;
-  // TODO(nils): how to count the flipped bits (i.e. set to 1)? This seems to give a count of 2.
-  static size_t vehicle_modes = std::bitset<32>(baldr::kVehicularAccess).count();
 
-  // will be checked during expansion, start off with all access and set to missing modes after first
-  // iteration
-  uint32_t overall_access = 0;
-  uint32_t expansion_count = 0;
-  while (overall_access != baldr::kVehicularAccess || expansion_count < vehicle_modes) {
-    expansion_count += 1;
+  uint16_t overall_access_before = baldr::kVehicularAccess;
+  uint16_t overall_access_after = 0;
+  // find accessible paths for as many modes as we can but stop if we can't find any more
+  while (overall_access_before != overall_access_after) {
+    overall_access_before = overall_access_after;
 
     // which modes do we still have to find a path for?
-    uint32_t access_filter = baldr::kVehicularAccess ^ overall_access;
+    uint32_t access_filter = baldr::kVehicularAccess ^ overall_access_before;
 
     // Map to store the status and index of nodes that have been encountered.
     // Any unreached nodes are not added to the map.
@@ -141,21 +139,20 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           continue;
         }
 
+        uint16_t edge_fwd_access = edge.fwd_access & baldr::kVehicularAccess;
+        uint16_t edge_rev_access = edge.rev_access & baldr::kVehicularAccess;
+
         // Skip non-driveable edges and ones which are not accessible for the current access_filter
         // (based on inbound flag)
         bool forward = (edge.sourcenode_ == expand_node_idx);
         if (forward) {
-          if ((inbound && !edge.attributes.driveablereverse_all) ||
-              (inbound && !(access_filter & edge.rev_access)) ||
-              (!inbound && !edge.attributes.driveableforward_all) ||
-              (!inbound && !(access_filter & edge.fwd_access))) {
+          if ((inbound && !edge_rev_access) || (inbound && !(access_filter & edge.rev_access)) ||
+              (!inbound && !edge_fwd_access) || (!inbound && !(access_filter & edge.fwd_access))) {
             continue;
           }
         } else {
-          if ((inbound && !edge.attributes.driveableforward_all) ||
-              (inbound && !(access_filter & edge.fwd_access)) ||
-              (!inbound && !edge.attributes.driveablereverse_all) ||
-              (!inbound && !(access_filter & edge.rev_access))) {
+          if ((inbound && !edge_fwd_access) || (inbound && !(access_filter & edge.fwd_access)) ||
+              (!inbound && !edge_rev_access) || (!inbound && !(access_filter & edge.rev_access))) {
             continue;
           }
         }
@@ -198,7 +195,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
-    uint32_t path_access = baldr::kVehicularAccess;
+    uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge between this node and the predecessor
       uint32_t idx = node_labels[label_idx].node_index;
@@ -231,7 +228,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       label_idx = node_status[pred_node].index;
     }
     // update the overall mode access with the previous path
-    overall_access |= path_access;
+    overall_access_after |= path_access;
   }
 
   return edge_count;
@@ -321,9 +318,11 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
       for (const auto& edge : bundle.node_edges) {
+        uint16_t edge_fwd_access = edge.first.fwd_access & baldr::kVehicularAccess;
+        uint16_t edge_rev_access = edge.first.rev_access & baldr::kVehicularAccess;
+
         // Skip ferry edges and non-driveable edges
-        if (edge.first.attributes.driveable_ferry || (!edge.first.attributes.driveablereverse_all &&
-                                                      !edge.first.attributes.driveableforward_all)) {
+        if (edge.first.attributes.driveable_ferry || (!edge_fwd_access && !edge_rev_access)) {
           continue;
         }
 
@@ -336,8 +335,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         // ferry. If edge is drivable both ways we need to expand it twice-
         // once with a driveable path towards the ferry and once with a
         // driveable path away from the ferry
-        if (edge.first.attributes.driveableforward_all ==
-            edge.first.attributes.driveablereverse_all) {
+        if (edge_fwd_access == edge_rev_access) {
           // Driveable in both directions - get an inbound path and an
           // outbound path.
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
@@ -346,9 +344,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                       nodes, false, rc);
         } else {
           // Check if oneway inbound to the ferry
-          bool inbound = (edge.first.sourcenode_ == node_itr.position())
-                             ? edge.first.attributes.driveablereverse_all
-                             : edge.first.attributes.driveableforward_all;
+          bool inbound =
+              (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, inbound, rc);
         }

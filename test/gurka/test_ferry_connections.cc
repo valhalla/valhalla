@@ -13,8 +13,8 @@ public:
     constexpr double gridsize_metres = 1000;
 
     const std::string ascii_map = R"(
-          A--B--b--C-----D--E
-          F--G--g--H-----I--J
+          A--B--b--C-----D--E--e
+          F--G--g--H-----I--J--j
     )";
 
     // only allow the passed profile on the roads
@@ -47,9 +47,13 @@ public:
                                 {"taxi", "yes"},
                                 {"bus", "yes"},
                                 {"route", "shuttle_train"}}},
-                              {"IJ", way_props}};
+                              {"IJ", way_props},
+                              {"Ee", {{"highway", "trunk"}}},
+                              {"Jj", {{"highway", "trunk"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
+
+    std::cerr << "Model " + allowed << std::endl;
 
     auto map =
         gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
@@ -168,12 +172,55 @@ TEST_F(FerryTest, DoNotReclassifyFerryConnection) {
   }
 }
 
-TEST_P(FerryTest, ReclassifyFerryConnection) {
+TEST(Standalone, ReclassifyFerryConnectionRouteModes) {
+  const std::string ascii_map = R"(
+    A--B--C--D------E--G--H--I
+  )";
+
+  std::map<std::string, std::string> no_hgv_car = {{"highway", "secondary"},
+                                                   {"moped", "no"},
+                                                   {"hgv", "no"}};
+
+  const gurka::ways ways = {{"AB", {{"highway", "trunk"}}},
+                            {"BC", no_hgv_car},
+                            {"CD", no_hgv_car},
+                            {"DE",
+                             {{"motor_vehicle", "yes"},
+                              {"motorcar", "yes"},
+                              {"bicycle", "yes"},
+                              {"moped", "yes"},
+                              {"bus", "yes"},
+                              {"hov", "yes"},
+                              {"taxi", "yes"},
+                              {"motorcycle", "yes"},
+                              {"route", "ferry"}}},
+                            {"EG", no_hgv_car},
+                            {"GH", no_hgv_car},
+                            {"HI", no_hgv_car}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_ferry_connections");
+
+  // working modes
+  for (const auto& mode : {"auto", "motorcycle", "taxi", "bus", "hov"}) {
+    gurka::do_action(valhalla::Options::route, map, {"A", "I"}, mode);
+  }
+
+  // non-working modes
+  for (const auto& mode : {"motor_scooter", "truck"}) {
+    try {
+      gurka::do_action(Options::route, map, {"A", "I"}, mode);
+    } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+      FAIL() << "Expected valhalla_exception_t." << std::endl;
+    };
+  }
+}
+
+TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
   // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
   // high-class road
-  const std::vector<std::string> reclassifiable_ways = {"secondary",      "tertiary",
-                                                        "unclassified",   "service",
-                                                        "secondary_link", "tertiary_link"};
+  const std::vector<std::string> reclassifiable_ways = {"secondary", "unclassified", "service",
+                                                        "secondary_link"};
   for (const auto& cls : reclassifiable_ways) {
     EXPECT_TRUE(edges_were_reclassified({{"highway", cls}}, GetParam()));
   }
