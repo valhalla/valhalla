@@ -10,12 +10,16 @@
 using namespace gtfs;
 using namespace valhalla;
 
-using timept = std::chrono::system_clock::time_point;
-
+// the transit shape uses * as separators rather than -/\|
 const std::string ascii_map = R"(
-      A-1-B--2--C--D
-                3  E
-                F-/
+        a****b
+        *    *
+     A--1-B--2---C--D
+             *   |  |
+             *   |  |
+             c***3  E
+                 | /
+                 F
     )";
 const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                           {"BC", {{"highway", "primary"}}},
@@ -191,12 +195,12 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_calendar_dates(path_directory);
 
   // write shapes.txt
-  for (size_t i = 0; i < 4; i++) {
-    struct ShapePoint shapePointTest {
-      .shape_id = shapeOneID, .shape_pt_lat = i + 0.2, .shape_pt_lon = i + 0.2,
-      .shape_pt_sequence = (i + 1),
-    };
-    feed.add_shape(shapePointTest);
+  for (const auto& shape_ll :
+       {layout["1"], layout["a"], layout["b"], layout["2"], layout["c"], layout["3"]}) {
+    feed.add_shape({.shape_id = shapeOneID,
+                    .shape_pt_lat = shape_ll.second,
+                    .shape_pt_lon = shape_ll.first,
+                    .shape_pt_sequence = feed.get_shapes().size()});
   }
   feed.write_shapes(path_directory);
 
@@ -228,7 +232,7 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(stops[0].stop_id, stopOneID);
 
   const auto& shapes = feed_reader.get_shapes();
-  EXPECT_EQ(shapes.size(), 4);
+  EXPECT_EQ(shapes.size(), 6);
   EXPECT_EQ(shapes[0].shape_id, shapeOneID);
 
   const auto& calendarGTFS = feed_reader.get_calendar();
@@ -382,7 +386,7 @@ TEST(GtfsExample, MakeTile) {
               foundTransitConnect || edge.use() == valhalla::baldr::Use::kTransitConnection;
         }
         // TODO: this is the failing test and the next step that we have to fix
-        // EXPECT_TRUE(foundTransitConnect);
+        EXPECT_TRUE(foundTransitConnect);
       }
       continue;
     }
