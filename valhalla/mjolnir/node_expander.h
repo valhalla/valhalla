@@ -35,8 +35,8 @@ struct Edge {
   struct EdgeAttributes {
     uint64_t llcount : 16;
     uint64_t importance : 3;
-    uint64_t driveableforward : 1;
-    uint64_t driveablereverse : 1;
+    uint64_t driveableforward_auto : 1;
+    uint64_t driveablereverse_auto : 1;
     uint64_t traffic_signal : 1;
     uint64_t forward_signal : 1;
     uint64_t backward_signal : 1;
@@ -50,18 +50,20 @@ struct Edge {
     uint64_t link : 1;
     uint64_t reclass_link : 1;
     uint64_t has_names : 1;
-    uint64_t driveforward : 1; // For sorting in collect_node_edges
-                               //  - set based on source node
-    uint64_t shortlink : 1;    // true if this is a link edge and is
-                               //   short enough it may be internal to
-                               //   an intersection
+    uint64_t driveforward_auto : 1; // For sorting in collect_node_edges
+                                    //  - set based on source node
+    uint64_t shortlink : 1;         // true if this is a link edge and is
+                                    //   short enough it may be internal to
+                                    //   an intersection
     uint64_t driveable_ferry : 1;
-    uint64_t reclass_ferry : 1; // Has edge been reclassified due to
-                                // ferry connection
-    uint64_t turn_channel : 1;  // Link edge should be a turn channel
-    uint64_t way_begin : 1;     // True if first edge of way
-    uint64_t way_end : 1;       // True if last edge of way
-    uint64_t spare : 23;
+    uint64_t reclass_ferry : 1;        // Has edge been reclassified due to
+                                       // ferry connection
+    uint64_t turn_channel : 1;         // Link edge should be a turn channel
+    uint64_t way_begin : 1;            // True if first edge of way
+    uint64_t way_end : 1;              // True if last edge of way
+    uint64_t driveableforward_all : 1; // to reclassify ferries for all vehicular modes
+    uint64_t driveablereverse_all : 1; // to reclassify ferries for all vehicular modes
+    uint64_t spare : 21;
   };
   EdgeAttributes attributes;
 
@@ -106,11 +108,15 @@ struct Edge {
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
     if (way.use() == baldr::Use::kEmergencyAccess) {
       // Temporary until all access values are set
-      e.attributes.driveableforward = false;
-      e.attributes.driveablereverse = false;
+      e.attributes.driveableforward_auto = false;
+      e.attributes.driveablereverse_auto = false;
+      e.attributes.driveableforward_all = false;
+      e.attributes.driveablereverse_all = false;
     } else {
-      e.attributes.driveableforward = drive_fwd;
-      e.attributes.driveablereverse = drive_rev;
+      e.attributes.driveableforward_auto = way.auto_forward();
+      e.attributes.driveablereverse_auto = way.auto_backward();
+      e.attributes.driveableforward_all = drive_fwd;
+      e.attributes.driveablereverse_all = drive_rev;
     }
     e.attributes.link = way.link();
     e.attributes.driveable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
@@ -197,8 +203,8 @@ struct Edge {
     }
 
     // Sort by driveability (forward, importance, has_names)
-    bool d = attributes.driveforward;
-    bool od = other.attributes.driveforward;
+    bool d = attributes.driveforward_auto;
+    bool od = other.attributes.driveforward_auto;
     if (d == od) {
       if (attributes.importance == other.attributes.importance) {
         // Equal importance - check presence of names

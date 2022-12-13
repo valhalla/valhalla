@@ -17,7 +17,7 @@ uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
   for (const auto& edge : edges) {
     if (!edge.first.attributes.driveable_ferry && !edge.first.attributes.link &&
         !edge.first.attributes.reclass_ferry &&
-        (edge.first.attributes.driveableforward || edge.first.attributes.driveablereverse)) {
+        (edge.first.attributes.driveableforward_all || edge.first.attributes.driveablereverse_all)) {
       if (edge.first.attributes.importance < bestrc) {
         bestrc = edge.first.attributes.importance;
       }
@@ -146,16 +146,16 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
         // (based on inbound flag)
         bool forward = (edge.sourcenode_ == expand_node_idx);
         if (forward) {
-          if ((inbound && !edge.attributes.driveablereverse) ||
+          if ((inbound && !edge.attributes.driveablereverse_all) ||
               (inbound && !(access_filter & edge.rev_access)) ||
-              (!inbound && !edge.attributes.driveableforward) ||
+              (!inbound && !edge.attributes.driveableforward_all) ||
               (!inbound && !(access_filter & edge.fwd_access))) {
             continue;
           }
         } else {
-          if ((inbound && !edge.attributes.driveableforward) ||
+          if ((inbound && !edge.attributes.driveableforward_all) ||
               (inbound && !(access_filter & edge.fwd_access)) ||
-              (!inbound && !edge.attributes.driveablereverse) ||
+              (!inbound && !edge.attributes.driveablereverse_all) ||
               (!inbound && !(access_filter & edge.rev_access))) {
             continue;
           }
@@ -323,8 +323,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       // track until the specified RC is reached
       for (const auto& edge : bundle.node_edges) {
         // Skip ferry edges and non-driveable edges
-        if (edge.first.attributes.driveable_ferry ||
-            (!edge.first.attributes.driveablereverse && !edge.first.attributes.driveableforward)) {
+        if (edge.first.attributes.driveable_ferry || (!edge.first.attributes.driveablereverse_all &&
+                                                      !edge.first.attributes.driveableforward_all)) {
           continue;
         }
 
@@ -337,7 +337,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         // ferry. If edge is drivable both ways we need to expand it twice-
         // once with a driveable path towards the ferry and once with a
         // driveable path away from the ferry
-        if (edge.first.attributes.driveableforward == edge.first.attributes.driveablereverse) {
+        if (edge.first.attributes.driveableforward_all ==
+            edge.first.attributes.driveablereverse_all) {
           // Driveable in both directions - get an inbound path and an
           // outbound path.
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
@@ -347,8 +348,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         } else {
           // Check if oneway inbound to the ferry
           bool inbound = (edge.first.sourcenode_ == node_itr.position())
-                             ? edge.first.attributes.driveablereverse
-                             : edge.first.attributes.driveableforward;
+                             ? edge.first.attributes.driveablereverse_all
+                             : edge.first.attributes.driveableforward_all;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, inbound, rc);
         }

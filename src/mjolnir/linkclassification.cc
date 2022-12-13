@@ -48,12 +48,12 @@ struct LinkGraphNode {
 
 inline bool IsDriveableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
-         (edge.attributes.driveableforward || edge.attributes.driveablereverse) &&
+         (edge.attributes.driveableforward_auto || edge.attributes.driveablereverse_auto) &&
          edge.attributes.importance != kServiceClass;
 }
 
 inline bool IsDriveForwardLink(const Edge& edge) {
-  return edge.attributes.link && edge.attributes.driveforward;
+  return edge.attributes.link && edge.attributes.driveforward_auto;
 }
 
 // Get the best classification for any driveable non-link edges from a node.
@@ -116,7 +116,7 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
       // Check if this node has a link edge that is driveable from the node
       for (const auto& edge : bundle.node_edges) {
-        if (edge.first.attributes.link && edge.first.attributes.driveforward) {
+        if (edge.first.attributes.link && edge.first.attributes.driveforward_auto) {
           // Get the highest classification of non-link edges at this node.
           // Add to the exit node list if a valid classification...if no
           // connecting edge is driveable the node will be skipped.
@@ -521,11 +521,11 @@ private:
 bool IsEdgeDriveableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
   bool right_direction = true;
   if (forward) {
-    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveableforward) ||
-                      (edge.targetnode_ == from_node && edge.attributes.driveablereverse);
+    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveableforward_auto) ||
+                      (edge.targetnode_ == from_node && edge.attributes.driveablereverse_auto);
   } else {
-    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveablereverse) ||
-                      (edge.targetnode_ == from_node && edge.attributes.driveableforward);
+    right_direction = (edge.sourcenode_ == from_node && edge.attributes.driveablereverse_auto) ||
+                      (edge.targetnode_ == from_node && edge.attributes.driveableforward_auto);
   }
   return right_direction;
 }
@@ -692,13 +692,13 @@ SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edg
   // link_edges store link sequence in reverse order
   // so first link edge is actually the last in the list
   Edge first_link_edge = *data.edges[link_edges.back()];
-  res.first_node = first_link_edge.attributes.driveableforward ? first_link_edge.sourcenode_
-                                                               : first_link_edge.targetnode_;
+  res.first_node = first_link_edge.attributes.driveableforward_auto ? first_link_edge.sourcenode_
+                                                                    : first_link_edge.targetnode_;
   res.fork_edge = find_closest_neighbour_edge(res.first_node, first_link_edge, true);
 
   Edge last_link_edge = *data.edges[link_edges.front()];
-  res.last_node = last_link_edge.attributes.driveableforward ? last_link_edge.targetnode_
-                                                             : last_link_edge.sourcenode_;
+  res.last_node = last_link_edge.attributes.driveableforward_auto ? last_link_edge.targetnode_
+                                                                  : last_link_edge.sourcenode_;
   res.merge_edge = find_closest_neighbour_edge(res.last_node, last_link_edge, false);
   return res;
 }
