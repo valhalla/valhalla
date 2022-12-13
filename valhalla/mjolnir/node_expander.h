@@ -98,11 +98,11 @@ struct Edge {
                         const bool infer_turn_channels) {
     // TODO(nils): include a "motorvehicle_fwd/rev" in lua/OSMWay?
     bool drive_fwd = way.auto_forward() || way.truck_forward() || way.bus_forward() ||
-                     way.moped_forward() || way.motorcycle_forward() || way.emergency_forward() ||
-                     way.hov_forward() || way.taxi_forward();
+                     way.moped_forward() || way.motorcycle_forward() || way.hov_forward() ||
+                     way.taxi_forward();
     bool drive_rev = way.auto_backward() || way.truck_backward() || way.bus_backward() ||
-                     way.moped_backward() || way.motorcycle_backward() || way.emergency_backward() ||
-                     way.hov_backward() || way.taxi_backward();
+                     way.moped_backward() || way.motorcycle_backward() || way.hov_backward() ||
+                     way.taxi_backward();
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
