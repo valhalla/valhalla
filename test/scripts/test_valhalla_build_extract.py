@@ -34,8 +34,6 @@ def tile_base_to_path(base_x: int, base_y: int, level: int) -> str:
 
     tile_id = int((row * 360 / tile_size) + col)
 
-    print("row/col: ", row, ", ", col)
-
     level_tile_id = level | (tile_id << 3)
     path = str(level) + "{:,}".format(int(pow(10, TAR_PATH_LENGTHS[level])) + tile_id).replace(",", os.sep)[1:]
 
@@ -108,7 +106,6 @@ class TestBuildExtract(unittest.TestCase):
             (0.75, 3.25, 2)
         )])
         out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir)
-        print(input_paths, out_paths)
         self.assertSetEqual(input_paths, out_paths)
 
         # don't find the ones not intersecting
@@ -134,10 +131,10 @@ class TestBuildExtract(unittest.TestCase):
         tile_count = len(tile_paths)
 
         # test that the index has the right offsets/sizes
-        exp_tuples = ((2560, 25568, 291000), (295424, 410441, 663632), (961024, 6549282, 6059792))
+        exp_tuples = ((2560, 25568, 291912), (296448, 410441, 662496), (960512, 6549282, 6059792))
         self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
         # same for traffic.tar
-        exp_tuples = ((1536, 25568, 26320), (28672, 410441, 65648), (95232, 6549282, 604608))
+        exp_tuples = ((1536, 25568, 26416), (28672, 410441, 65552), (95232, 6549282, 604608))
         self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
