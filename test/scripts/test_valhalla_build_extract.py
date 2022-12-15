@@ -34,8 +34,6 @@ def tile_base_to_path(base_x: int, base_y: int, level: int) -> str:
 
     tile_id = int((row * 360 / tile_size) + col)
 
-    print("row/col: ", row, ", ", col)
-
     level_tile_id = level | (tile_id << 3)
     path = str(level) + "{:,}".format(int(pow(10, TAR_PATH_LENGTHS[level])) + tile_id).replace(",", os.sep)[1:]
 
@@ -93,7 +91,7 @@ class TestBuildExtract(unittest.TestCase):
             ]
         }
         gj_dir = TILE_PATH.joinpath("test_build_extract")
-        gj_dir.mkdir()
+        gj_dir.mkdir(exist_ok=True)
         gj_fp = gj_dir.joinpath('test_build_extract.geojson')
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
@@ -108,7 +106,6 @@ class TestBuildExtract(unittest.TestCase):
             (0.75, 3.25, 2)
         )])
         out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir)
-        print(input_paths, out_paths)
         self.assertSetEqual(input_paths, out_paths)
 
         # don't find the ones not intersecting

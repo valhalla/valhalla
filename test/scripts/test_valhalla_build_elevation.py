@@ -42,7 +42,7 @@ class TestBuildElevation(unittest.TestCase):
             ]
         }
         gj_dir = TILE_DIR.joinpath("test_build_elevation")
-        gj_dir.mkdir()
+        gj_dir.mkdir(exist_ok=True)
         gj_fp = gj_dir.joinpath('test_build_elevation.geojson')
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
