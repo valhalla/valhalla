@@ -21,7 +21,7 @@ TRAFFIC_PATH = TILE_PATH.joinpath('traffic.tar')
 TAR_PATH_LENGTHS = [6, 6, 9]  # how many leading 0's do we need as tar file name?
 
 
-def tile_base_to_path(base_x: int, base_y: int, level: int) -> str:
+def tile_base_to_path(base_x: int, base_y: int, level: int, fake_dir: Path) -> Path:
     """Convert a tile's base lat/lon to a relative tile path."""
     tile_size = TILE_SIZES[level]
 
@@ -37,37 +37,40 @@ def tile_base_to_path(base_x: int, base_y: int, level: int) -> str:
     level_tile_id = level | (tile_id << 3)
     path = str(level) + "{:,}".format(int(pow(10, TAR_PATH_LENGTHS[level])) + tile_id).replace(",", os.sep)[1:]
 
-    return path + ".gph"
+    return fake_dir.joinpath(path + ".gph")
 
 
 class TestBuildExtract(unittest.TestCase):
     def test_tile_intersects_bbox(self):
+        # bogus tile dir
+        tile_dir = Path("/home/")
+        
         # bbox with which to filter the tile paths
         bbox = "10.2,53.9,20,59.2"
-        input_paths = set([tile_base_to_path(*input_tuple) for input_tuple in (
+        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (8, 50, 0),  # barely intersecting in the lower left
             (12, 54, 1),  # contained in bbox
             (20, 59, 2),  # barely intersecting in the upper right
         )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox)
+        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
         self.assertSetEqual(input_paths, out_paths)
 
         bbox = "-20,-59.2,-10.2,-53.9"
-        input_paths = set([tile_base_to_path(*input_tuple) for input_tuple in (
+        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (-20, -59, 2),  # barely intersecting in the lower left
             (-12, -54, 1),  # contained in bbox
             (-12, -62, 0),
         )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox)
+        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
         self.assertSetEqual(input_paths, out_paths)
 
         # don't find the ones not intersecting
         bbox = "0,10,4,14"
-        input_paths = set([tile_base_to_path(*input_tuple) for input_tuple in (
+        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (8, 14, 0),
             (-0.50, 9.75, 2)
         )])
-        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox)
+        out_paths = valhalla_build_extract.get_tiles_with_bbox(input_paths, bbox, tile_dir)
         self.assertSetEqual(out_paths, set())
 
     def test_tile_intersects_geojson(self):
@@ -75,6 +78,9 @@ class TestBuildExtract(unittest.TestCase):
         #  __
         # | |__
         # |___|
+
+        # bogus tile dir
+        tile_dir = Path("/home/")
 
         gj = {
             "type": "FeatureCollection",
@@ -96,7 +102,7 @@ class TestBuildExtract(unittest.TestCase):
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
 
-        input_paths = set([tile_base_to_path(*input_tuple) for input_tuple in (
+        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (0, 2, 0),
             (0, 2, 1),
             (0, 3, 1),
@@ -105,17 +111,17 @@ class TestBuildExtract(unittest.TestCase):
             (1.75, 2.75, 2),
             (0.75, 3.25, 2)
         )])
-        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir)
+        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir, tile_dir)
         self.assertSetEqual(input_paths, out_paths)
 
         # don't find the ones not intersecting
-        input_paths = set([tile_base_to_path(*input_tuple) for input_tuple in (
+        input_paths = set([tile_base_to_path(*input_tuple, tile_dir) for input_tuple in (
             (4, 2, 0),
             (1, 3, 1),
             (1, 4.75, 2),
             (1, 3, 2),
         )])
-        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir)
+        out_paths = valhalla_build_extract.get_tiles_with_geojson(input_paths, gj_dir, tile_dir)
         self.assertSetEqual(out_paths, set())
 
         gj_fp.unlink()
