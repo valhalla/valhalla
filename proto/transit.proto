@@ -7,7 +7,7 @@ message Transit {
   message Node { // stations
     optional float lon = 1;
     optional float lat = 2;
-    optional uint32 type = 3;
+    optional uint32 type = 3; // comes from baldr::NodeType
     optional uint64 graphid = 4;
     optional uint64 prev_type_graphid = 5;
     optional string name = 6;

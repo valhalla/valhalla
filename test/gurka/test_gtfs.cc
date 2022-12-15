@@ -12,18 +12,24 @@ using namespace valhalla;
 
 // the transit shape uses * as separators rather than -/\|
 const std::string ascii_map = R"(
-        a****b
-        *    *
-     A--1-B--2---C--D
-             *   |  |
-             *   |  |
-             c***3  E
-                 | /
-                 F
+        a**************b
+        *              *
+     A--1-----------B--2---C
+                       *   |
+                       *   |
+                       *   |
+                       *   |
+                       *   |
+                       *   |
+                       *   |
+                       *   |
+                       c***3
+                           |
+                           F
     )";
 const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                           {"BC", {{"highway", "primary"}}},
-                          {"CDEF", {{"highway", "primary"}}}};
+                          {"CF", {{"highway", "primary"}}}};
 
 boost::property_tree::ptree get_config() {
 
@@ -38,7 +44,7 @@ boost::property_tree::ptree get_config() {
 }
 
 valhalla::gurka::nodelayout create_layout() {
-  int gridsize_metres = 1000;
+  int gridsize_metres = 100;
   auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-0.000001, -0.000001});
 
   return layout;

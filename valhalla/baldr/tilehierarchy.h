@@ -95,6 +95,14 @@ public:
    * @return Returns a const reference to the tiling system for this level.
    */
   static const midgard::Tiles<midgard::PointLL>& get_tiling(const uint8_t level);
+
+  /**
+   * Returns the parent (containing tile with lower tile level) of a given tile id
+   * @param child_tile_id the child tiles graph id
+   * @return the tile id of the parent tile for the given child tiles id or invalid if already at the
+   * lowest level
+   */
+  static GraphId parent(const GraphId& child_tile_id);
 };
 
 } // namespace baldr
