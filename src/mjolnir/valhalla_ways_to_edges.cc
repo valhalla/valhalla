@@ -94,6 +94,8 @@ int main(int argc, char** argv) {
     // If tile exists add it to the queue
     if (!reader.DoesTileExist(edge_id)) {
       continue;
+    } else if (reader.OverCommitted()) {
+      reader.Trim();
     }
 
     graph_tile_ptr tile = reader.GetGraphTile(edge_id);
