@@ -94,7 +94,8 @@ int main(int argc, char** argv) {
     // If tile exists add it to the queue
     if (!reader.DoesTileExist(edge_id)) {
       continue;
-    } else if (reader.OverCommitted()) {
+    }
+    if (reader.OverCommitted()) {
       reader.Trim();
     }
 
