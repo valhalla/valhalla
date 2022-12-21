@@ -18,6 +18,7 @@
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
+#include "midgard/logging.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -131,6 +132,8 @@ int main(int argc, char** argv) {
     ways_file << std::endl;
   }
   ways_file.close();
+
+  LOG_INFO("Finished with " + std::to_string(ways_edges.size()) + " ways.");
 
   return EXIT_SUCCESS;
 }
