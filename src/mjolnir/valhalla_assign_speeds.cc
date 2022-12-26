@@ -119,8 +119,7 @@ int main(int argc, char** argv) {
   config.get_child("mjolnir").erase("tile_extract");
   config.get_child("mjolnir").erase("tile_url");
   config.get_child("mjolnir").erase("traffic_extract");
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("mjolnir.logging");
+  auto logging_subtree = config.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

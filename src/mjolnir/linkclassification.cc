@@ -641,7 +641,7 @@ bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
       GoTowardsIntersection(input.last_node, input.merge_edge, false, traverse_threshold, data);
 
   // check if two directions intersect
-  boost::optional<uint32_t> intersection_node;
+  std::optional<uint32_t> intersection_node;
   for (auto node : reverse_nodes) {
     if (std::find(forward_nodes.begin(), forward_nodes.end(), node) != forward_nodes.end()) {
       intersection_node = node;

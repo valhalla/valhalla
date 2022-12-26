@@ -788,7 +788,7 @@ void fetch_tiles(const ptree& pt,
     std::unordered_map<std::string, uint64_t> nodes;
     // just the platforms
     std::unordered_map<std::string, uint64_t> platforms;
-    boost::optional<std::string> request =
+    std::optional<std::string> request =
         url((boost::format("/api/v1/stop_stations?total=false&per_page=1000&bbox=%1%,%2%,%3%,%4%") %
              bbox.minx() % bbox.miny() % bbox.maxx() % bbox.maxy())
                 .str(),

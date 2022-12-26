@@ -1,31 +1,30 @@
-#include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/util.h"
-
-#include "graph_lua_proc.h"
-#include "mjolnir/luatagtransform.h"
-#include "mjolnir/osmaccess.h"
-#include "mjolnir/osmpronunciation.h"
+#include <future>
+#include <optional>
+#include <thread>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
-#include <future>
-#include <thread>
-#include <utility>
 
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
+#include "graph_lua_proc.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
+#include "mjolnir/luatagtransform.h"
+#include "mjolnir/osmaccess.h"
+#include "mjolnir/osmpbfparser.h"
+#include "mjolnir/osmpronunciation.h"
+#include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/timeparsing.h"
+#include "mjolnir/util.h"
 #include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
@@ -1435,7 +1434,7 @@ public:
     last_node_ = osmid;
 
     // Handle bike share stations separately
-    boost::optional<Tags> results = boost::none;
+    std::optional<Tags> results = std::nullopt;
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
       if (tags.size() > 0) {

@@ -1,7 +1,6 @@
 #include <iostream>
+#include <optional>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 #include "baldr/streetname.h"
 #include "baldr/streetnames.h"
@@ -24,10 +23,10 @@ StreetNames::StreetNames(const std::vector<std::pair<std::string, bool>>& names)
 
 StreetNames::StreetNames(const google::protobuf::RepeatedPtrField<valhalla::StreetName>& names) {
   for (auto& name : names) {
-    boost::optional<baldr::Pronunciation> pronunciation =
-        boost::make_optional(name.has_pronunciation(),
-                             baldr::Pronunciation{name.pronunciation().alphabet(),
-                                                  name.pronunciation().value()});
+    std::optional<baldr::Pronunciation> pronunciation =
+        std::make_optional(name.has_pronunciation(),
+                           baldr::Pronunciation{name.pronunciation().alphabet(),
+                                                name.pronunciation().value()});
     this->emplace_back(
         std::make_unique<StreetName>(name.value(), name.is_route_number(), pronunciation));
   }
