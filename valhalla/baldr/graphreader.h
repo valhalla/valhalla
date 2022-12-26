@@ -439,9 +439,12 @@ public:
    * @param pt  Property tree listing the configuration for the tile storage
    * @param tile_getter Object responsible for getting tiles by url. If nullptr default implementation
    * is in use.
+   * @param traffic_readonly Flag to indicate if memory-mapped traffic extract should be writeable or
+   * read-only (default).
    */
   explicit GraphReader(const boost::property_tree::ptree& pt,
-                       std::unique_ptr<tile_getter_t>&& tile_getter = nullptr);
+                       std::unique_ptr<tile_getter_t>&& tile_getter = nullptr,
+                       bool traffic_readonly = true);
 
   virtual ~GraphReader() = default;
 
@@ -940,7 +943,7 @@ public:
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used
   struct tile_extract_t {
-    tile_extract_t(const boost::property_tree::ptree& pt);
+    tile_extract_t(const boost::property_tree::ptree& pt, bool traffic_readonly = true);
     // TODO: dont remove constness, and actually make graphtile read only?
     std::unordered_map<uint64_t, std::pair<char*, size_t>> tiles;
     std::unordered_map<uint64_t, std::pair<char*, size_t>> traffic_tiles;

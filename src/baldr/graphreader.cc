@@ -41,7 +41,8 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
                          std::to_string(edgeid.Tile_Base())) {
 }
 
-GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt,
+                                            bool traffic_readonly) {
   // A lambda for loading the contents of a graph tile tar from an index file
   bool traffic_from_index = false;
   auto index_loader = [this, &traffic_from_index](const std::string& filename,
@@ -82,7 +83,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -124,8 +125,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(
-          new midgard::tar(pt.get<std::string>("traffic_extract"), true, index_loader));
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
+                                             true, index_loader));
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -473,8 +474,9 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt,
-                         std::unique_ptr<tile_getter_t>&& tile_getter)
-    : tile_extract_(new tile_extract_t(pt)),
+                         std::unique_ptr<tile_getter_t>&& tile_getter,
+                         bool traffic_readonly)
+    : tile_extract_(new tile_extract_t(pt, traffic_readonly)),
       tile_dir_(tile_extract_->tiles.empty() ? pt.get<std::string>("tile_dir", "") : ""),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),

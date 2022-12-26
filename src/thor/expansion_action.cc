@@ -103,19 +103,19 @@ std::string thor_worker_t::expansion(Api& request) {
       Pointer(kPropPaths[Options_ExpansionProperties_durations])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(static_cast<uint64_t>(duration)), a);
+          .PushBack(Value{}.SetUint(static_cast<uint32_t>(duration)), a);
     }
     if (exp_props.count(Options_ExpansionProperties_distances)) {
       Pointer(kPropPaths[Options_ExpansionProperties_distances])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(distance), a);
+          .PushBack(Value{}.SetUint(distance), a);
     }
     if (exp_props.count(Options_ExpansionProperties_costs)) {
       Pointer(kPropPaths[Options_ExpansionProperties_costs])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(static_cast<uint64_t>(cost)), a);
+          .PushBack(Value{}.SetUint(static_cast<uint32_t>(cost)), a);
     }
     if (exp_props.count(Options_ExpansionProperties_statuses))
       Pointer(kPropPaths[Options_ExpansionProperties_statuses])
@@ -126,7 +126,7 @@ std::string thor_worker_t::expansion(Api& request) {
       Pointer(kPropPaths[Options_ExpansionProperties_edge_ids])
           .Get(dom)
           ->GetArray()
-          .PushBack(Value{}.SetInt(static_cast<uint64_t>(edgeid)), a);
+          .PushBack(Value{}.SetUint64(static_cast<uint64_t>(edgeid)), a);
   };
 
   // tell all the algorithms how to track expansion
