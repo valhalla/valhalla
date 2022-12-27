@@ -40,12 +40,16 @@ void loki_worker_t::status(Api& request) const {
   }
 #endif
 
+  // info that's always returned
   auto* status = request.mutable_status();
   status->set_version(VALHALLA_VERSION);
   status->set_tileset_last_modified(get_tileset_last_modified(reader));
+  for (const auto& action : actions) {
+    auto* action_pbf = status->mutable_available_actions()->Add();
+    *action_pbf = Options_Action_Enum_Name(action);
+  }
 
   // only return more info if explicitly asked for (can be very expensive)
-  // bail if we wont be getting extra info
   if (!request.options().verbose() || !allow_verbose)
     return;
 

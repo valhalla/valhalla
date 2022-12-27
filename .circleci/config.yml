@@ -160,6 +160,8 @@ workflows:
           filters:
             tags:
               only: /.*/
+            branches:
+              only: master
       - lint-build-debug:
           filters:
             tags:

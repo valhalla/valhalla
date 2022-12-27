@@ -281,8 +281,8 @@ hazmat = {
 ["designated"] = "true",
 ["yes"] = "true",
 ["no"] = "false",
-["destination"] = "true",
-["delivery"] = "true"
+["destination"] = "false",
+["delivery"] = "false"
 }
 
 shoulder = {

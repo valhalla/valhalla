@@ -244,7 +244,8 @@ inline void build_pbf(const nodelayout& node_locations,
                       const nodes& nodes,
                       const relations& relations,
                       const std::string& filename,
-                      const uint64_t initial_osm_id) {
+                      const uint64_t initial_osm_id,
+                      const bool strict) {
 
   const size_t initial_buffer_size = 10000;
   osmium::memory::Buffer buffer{initial_buffer_size, osmium::memory::Buffer::auto_grow::yes};
@@ -269,7 +270,7 @@ inline void build_pbf(const nodelayout& node_locations,
   }
 
   for (auto& used_node : used_nodes) {
-    if (node_locations.count(used_node) == 0) {
+    if (node_locations.count(used_node) == 0 && strict) {
       throw std::runtime_error("Node " + used_node + " was referred to but was not in the ASCII map");
     }
   }
@@ -344,7 +345,7 @@ inline void build_pbf(const nodelayout& node_locations,
         members.push_back({osmium::item_type::node, static_cast<int64_t>(node_osm_id_map[member.ref]),
                            member.role.c_str()});
       } else {
-        if (way_osm_id_map.count(member.ref) == 0) {
+        if (way_osm_id_map.count(member.ref) == 0 && strict) {
           throw std::runtime_error("Relation member refers to an undefined way " + member.ref);
         }
         members.push_back({osmium::item_type::way, static_cast<int64_t>(way_osm_id_map[member.ref]),
@@ -513,7 +514,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
       const auto* forward_directed_edge = tile->directededge(i);
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
-      auto de_endnode_coordinates = tile->get_node_ll(de_endnode);
+      graph_tile_ptr reverse_tile = tile;
+      auto de_endnode_coordinates =
+          reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
@@ -522,7 +525,6 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (name == way_name) {
             auto forward_edge_id = tile_id;
             forward_edge_id.set_id(i);
-            graph_tile_ptr reverse_tile = nullptr;
             GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
             auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
             return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,

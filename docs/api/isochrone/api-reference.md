@@ -6,7 +6,7 @@ Isodistances follow the same concept, but instead of time one specifies distance
 
 Isochrone maps share some of the same concepts and terminology with familiar topographic maps, which depict contour lines for points of equal elevation. For this reason other terms common in topography apply, such as contours or isolines.
 
-This is an example of isochrones showing the travel times by driving from a location in Melbourne, as depicted in Mobility Explorer.
+This is an example of 15, 30, 45 and 60 minute bicycle isochrones centered in Lancaster, PA.
 
 ![Isochrones for travel times by walking in Lancaster, PA](../images/isochrone.png)
 

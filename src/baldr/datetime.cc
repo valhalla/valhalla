@@ -151,16 +151,8 @@ int timezone_diff(const uint64_t seconds,
   const auto dest = date::make_zoned(dest_tz, tp);
 
   // if we have a cache use it
-  if (cache) {
-    const auto& origin_info = from_cache(origin, origin_tz, *cache);
-    const auto& dest_info = from_cache(dest, dest_tz, *cache);
-    return static_cast<int>(
-        std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
-            .count());
-  }
-
-  const auto& origin_info = origin.get_info();
-  const auto& dest_info = dest.get_info();
+  const auto& origin_info = cache ? from_cache(origin, origin_tz, *cache) : origin.get_info();
+  const auto& dest_info = cache ? from_cache(dest, dest_tz, *cache) : dest.get_info();
   return static_cast<int>(
       std::chrono::duration_cast<std::chrono::seconds>(dest_info.offset - origin_info.offset)
           .count());
