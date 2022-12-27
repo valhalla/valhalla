@@ -309,7 +309,7 @@ class RoutePathIterator {
 public:
   using iterator_category = std::forward_iterator_tag;
   using value_type = const Label;
-  using difference_type = const std::ptrdiff_t;
+  using difference_type = std::ptrdiff_t;
   using pointer = const Label*;
   using reference = const Label&;
 
