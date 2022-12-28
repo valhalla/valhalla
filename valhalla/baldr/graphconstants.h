@@ -44,7 +44,7 @@ constexpr uint16_t kMotorcycleAccess = 1024;
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
-constexpr uint32_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
+constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;
 
 // Maximum number of transit records per tile and other max. transit
@@ -313,7 +313,7 @@ enum class Use : uint8_t {
   kRestArea = 30,
   kServiceArea = 31,
 
-  // Other...
+  // Other... currently, either BSS Connection or unspecified service road
   kOther = 40,
 
   // Ferry and rail ferry
@@ -652,7 +652,8 @@ constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+constexpr uint64_t kInvalidSecondsOfWeek =
+    1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };

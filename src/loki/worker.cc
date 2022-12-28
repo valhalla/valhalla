@@ -184,8 +184,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
+        kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -244,6 +244,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
+  max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
 
   // signal that the worker started successfully
   started();

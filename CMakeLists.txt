@@ -76,7 +76,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 elseif(CMAKE_BUILD_TYPE STREQUAL Release)
   message(STATUS "Configuring in release mode")
 elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)
-  message(STATUS "Configuring in release mode with debug flags")
+  message(STATUS "Configuring in release mode with debug symbols")
 elseif(CMAKE_BUILD_TYPE STREQUAL MinRelSize)
   message(STATUS "Configuring in release mode with minimized size")
 elseif(CMAKE_BUILD_TYPE STREQUAL None)
@@ -187,33 +187,6 @@ message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
 message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
 if(TARGET protobuf::libprotobuf-lite)
   message(STATUS "Using pbf-lite")
-endif()
-
-# TODO: remove after switching to CMake >= 3.9
-if(CMAKE_VERSION VERSION_LESS 3.9)
-  if(NOT TARGET protobuf::libprotobuf-lite)
-    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      FOLDER "Dependencies"
-      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-
-    if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-    endif()
-  endif()
 endif()
 
 # Allow linking against full or lite version of Protobuf library

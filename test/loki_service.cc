@@ -95,10 +95,12 @@ const std::vector<http_request_t> valhalla_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
-    {200, R"({"version":")" VALHALLA_VERSION R"(","tileset_last_modified":0})"},
     {200,
      R"({"version":")" VALHALLA_VERSION
-     R"(","tileset_last_modified":0,"has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"}})"},
+     R"(","tileset_last_modified":0,"available_actions":["status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
+    {200,
+     R"({"version":")" VALHALLA_VERSION
+     R"(","tileset_last_modified":0,"has_tiles":false,"has_admins":false,"has_timezones":false,"has_live_traffic":false,"bbox":{"features":[],"type":"FeatureCollection"},"available_actions":["status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {405,
@@ -112,9 +114,9 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {405,
      R"({"error_code":101,"error":"Try a POST or GET request instead","status_code":405,"status":"Method Not Allowed"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of: '\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
     {404,
-     R"({"error_code":106,"error":"Try any of:'\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
+     R"({"error_code":106,"error":"Try any of: '\/locate' '\/route' '\/height' '\/sources_to_targets' '\/optimized_route' '\/isochrone' '\/trace_route' '\/trace_attributes' '\/transit_available' '\/expansion' '\/centroid' '\/status' ","status_code":404,"status":"Not Found"})"},
     {400,
      R"({"error_code":100,"error":"Failed to parse json request","status_code":400,"status":"Bad Request"})"},
     {400,
@@ -144,17 +146,17 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {400,
      R"({"error_code":124,"error":"No edge\/node costing provided","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":154,"error":"Path distance exceeds the max distance limit","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":154,"error":"Path distance exceeds the max distance limit: 250000 meters","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":154,"error":"Path distance exceeds the max distance limit","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":154,"error":"Path distance exceeds the max distance limit: 250000 meters","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":125,"error":"No costing method found:'yak'","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":125,"error":"No costing method found: 'yak'","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":125,"error":"No costing method found:'yak'","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":125,"error":"No costing method found: 'yak'","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":150,"error":"Exceeded max locations:20","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":150,"error":"Exceeded max locations: 20","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":150,"error":"Exceeded max locations:20","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":150,"error":"Exceeded max locations: 20","status_code":400,"status":"Bad Request"})"},
     {400,
      R"({"error_code":120,"error":"Insufficient number of locations provided","status_code":400,"status":"Bad Request"})"},
     {400,
@@ -172,9 +174,10 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
     {400,
      R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":157,"error":"Exceeded max avoid locations:0","status_code":400,"status":"Bad Request"})"},
+     R"({"error_code":157,"error":"Exceeded max avoid locations: 0","status_code":400,"status":"Bad Request"})"},
     {400,
-     R"({"error_code":153,"error":"Too many shape points:(102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"}};
+     R"({"error_code":153,"error":"Too many shape points: (102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"},
+};
 
 const std::vector<http_request_t> osrm_requests{
     http_request_t(GET, R"(/status?json={"format":"osrm"})"),
@@ -270,7 +273,9 @@ const std::vector<http_request_t> osrm_requests{
 };
 
 const std::vector<std::pair<uint16_t, std::string>> osrm_responses{
-    {200, R"({"version":")" VALHALLA_VERSION R"(","tileset_last_modified":0})"},
+    {200,
+     R"({"version":")" VALHALLA_VERSION
+     R"(","tileset_last_modified":0,"available_actions":["status","centroid","expansion","transit_available","trace_attributes","trace_route","isochrone","optimized_route","sources_to_targets","height","route","locate"]})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
     {400, R"({"code":"InvalidOptions","message":"Options are invalid."})"},
@@ -379,10 +384,8 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
     throw std::runtime_error("Couldnt make directory to run from");
 
   auto config = test::make_config(run_dir,
-                                  {
-                                      {"service_limits.skadi.max_shape", "100"},
-                                      {"service_limits.max_exclude_locations", "0"},
-                                  },
+                                  {{"service_limits.skadi.max_shape", "100"},
+                                   {"service_limits.max_exclude_locations", "0"}},
                                   {"loki.actions", "mjolnir.tile_extract", "mjolnir.tile_dir"});
 
   boost::property_tree::ptree actions;
