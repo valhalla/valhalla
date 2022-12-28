@@ -31,33 +31,22 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+constexpr float SNAP_DISTANCE_CUTOFF = 500.f;
+
+const static auto VALID_EDGE_USES = std::unordered_set<Use>{
+    Use::kRoad, Use::kLivingStreet, Use::kCycleway, Use::kSidewalk,    Use::kFootway,
+    Use::kPath, Use::kPedestrian,   Use::kAlley,    Use::kServiceRoad,
+};
+
 struct OSMConnectionEdge {
   GraphId osm_node;
   GraphId stop_node;
   double length;
   uint64_t wayid;
   std::vector<std::string> names;
+  std::list<PointLL> shape;
   std::vector<std::string> tagged_values;
   std::vector<std::string> pronunciations;
-  std::list<PointLL> shape;
-
-  OSMConnectionEdge(const GraphId& f,
-                    const GraphId& t,
-                    const double l,
-                    const uint64_t w,
-                    const std::vector<std::string>& n,
-                    const std::list<PointLL>& s)
-      : osm_node(f), stop_node(t), length(l), wayid(w), names(n), shape(s) {
-  }
-
-  // operator < for sorting
-  bool operator<(const OSMConnectionEdge& other) const {
-    if (osm_node.tileid() == other.osm_node.tileid()) {
-      return osm_node.id() < other.osm_node.id();
-    } else {
-      return osm_node.tileid() < other.osm_node.tileid();
-    }
-  }
 };
 
 // Struct to hold stats information during each threads work
@@ -368,202 +357,112 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
            " ms");
 }
 
-// Fallback to find connection edges from the transit stop to an OSM edge.
-void FindOSMConnection(const PointLL& stop_ll,
-                       GraphReader& reader_local_level,
-                       std::mutex& lock,
-                       std::vector<std::string>& names,
-                       uint64_t& wayid,
-                       GraphId& startnode,
-                       GraphId& endnode,
-                       std::vector<PointLL>& closest_shape,
-                       std::tuple<PointLL, PointLL::first_type, int>& closest) {
-  // Let's try a fallback.  Use approximator to find the closest edge.
-  // We do this because the associated way could have been deleted from the
-  // OSM data, but we may have not updated the stops yet in TransitLand.
-  double mindist = 10000000.0;
-  double rm = kMetersPerKm; // one km
-  double mr2 = rm * rm;
+std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
+                                               graph_tile_ptr transit_tile) {
+  assert(local_tile && transit_tile->header()->nodecount());
+  std::vector<OSMConnectionEdge> connections;
+  connections.reserve(transit_tile->header()->nodecount() * 2 / 3);
 
-  const auto& tiles = TileHierarchy::levels().back().tiles;
-  const auto kTransitLatDeg = kMetersPerKm / kMetersPerDegreeLat; // one km radius
+  // for each transit egress
+  for (uint32_t i = 0; i < transit_tile->header()->nodecount(); ++i) {
+    // we only connect egress/ingress
+    const auto* egress = transit_tile->node(i);
+    if (egress->type() != NodeType::kTransitEgress)
+      continue;
+    auto egress_ll = egress->latlng(transit_tile->header()->base_ll());
 
-  // Get a list of tiles required for a node search within this radius
-  double lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(stop_ll.lat()));
-  AABB2<PointLL> bbox(Point2d(stop_ll.lng() - lngdeg, stop_ll.lat() - kTransitLatDeg),
-                      Point2d(stop_ll.lng() + lngdeg, stop_ll.lat() + kTransitLatDeg));
-  std::vector<int32_t> tilelist = tiles.TileList(bbox);
+    // we have two options for helping find better connections to the road network
+    // 1. you can provide a way id, this is coarse because it doesnt tell exactly where along the way
+    //    you should connect the station, the code just picks the closest point
+    // 2. the other option is encoding a lat lon in the way id field which lets you pick the best spot
+    //    in space to connect to the road network regardless of which way, the idea being that its
+    //    very very close to the actual osm geometry where it should connect
+    uint64_t way_id = egress->connecting_wayid();
+    PointLL connecting_ll = egress->connecting_point();
+    if (connecting_ll.IsValid())
+      egress_ll = connecting_ll;
 
-  const auto& local_level = TileHierarchy::levels().back().level;
-  for (auto t : tilelist) {
-    // Check all the nodes within the tile. Skip if tile has no nodes
-    lock.lock();
-    auto newtile = reader_local_level.GetGraphTile(GraphId(t, local_level, 0));
-    lock.unlock();
-    if (!newtile || newtile->header()->nodecount() == 0) {
+    // Loop over all nodes in the tile to find the nearest edge
+    const DirectedEdge* closest_edge = nullptr;
+    boost::optional<EdgeInfo> closest_edgeinfo;
+    std::tuple<PointLL, decltype(PointLL::first), int> closest_point;
+    // We assume we dont find a matching way id to start, but once we do all better results must have
+    // a matching way id. This allows us to only use the way id when it makes sense and still get a
+    // good match when the way id doesnt make sense
+    bool should_match_way_id = false;
+    for (const auto& directededge : local_tile->GetDirectedEdges()) {
+      // there will be a more convenient opposing edge to use for this one so lets wait for it
+      if (!directededge.forward() && !directededge.leaves_tile() &&
+          (directededge.reverseaccess() & kPedestrianAccess)) {
+        continue;
+      }
+
+      // bail if its an invalid use
+      if (VALID_EDGE_USES.count(directededge.use()) == 0) {
+        continue;
+      }
+
+      // bail if pedestrians cant use it
+      if ((!(directededge.forwardaccess() & kPedestrianAccess)) || directededge.is_shortcut()) {
+        continue;
+      }
+
+      // project onto the shape
+      auto ei = local_tile->edgeinfo(&directededge);
+      auto point = egress_ll.Project(ei.shape());
+      auto distance = std::get<1>(point);
+
+      // must be close by AND (is the first thing we found
+      //                      OR (is closer than the closest AND way ids match if provided/found))
+      bool does_match_way_id = way_id == ei.wayid();
+      if (distance < SNAP_DISTANCE_CUTOFF &&
+          (!closest_edge ||
+           (distance < std::get<1>(closest_point) && should_match_way_id == does_match_way_id))) {
+        closest_edge = &directededge;
+        closest_point = point;
+        closest_edgeinfo = std::move(ei);
+        should_match_way_id = does_match_way_id;
+      }
+    }
+
+    // so long as we found something we should store info about where to connect it
+    // we make new edges that follow the existing edge from its end and begin nodes up to the snap
+    // point and then make a straight line from there to the in/egress
+    if (!closest_edge) {
+      LOG_WARN("Could not find connection point for in/egress near: " + std::to_string(egress_ll));
+    }
+
+    // flip the shape if we have to
+    std::vector<PointLL> edge_shape = closest_edgeinfo->shape();
+    if (closest_edge->forward()) {
+      std::reverse(edge_shape.begin(), edge_shape.end());
+      std::get<2>(closest_point) = edge_shape.size() - std::get<2>(closest_point) - 1;
+    }
+
+    // by definition this edge will be in the tile (starting at the begin node of the snapped edge
+    std::vector<PointLL> shape(edge_shape.begin(), edge_shape.begin() + std::get<2>(closest_point));
+    shape.push_back(std::get<0>(closest_point));
+    shape.push_back(egress_ll);
+    auto length = std::max(1.0, valhalla::midgard::length(shape));
+    connections.emplace_back(startnode, egress, length, closest_edgeinfo->wayid(),
+                             closest_edgeinfo->GetNames(), shape);
+
+    // the end node is in another tile
+    if (closest_edge->leaves_tile()) {
+      // TODO: store this connection for use outside of this thread
       continue;
     }
 
-    // Use distance approximator for all distance checks
-    PointLL base_ll = newtile->header()->base_ll();
-    DistanceApproximator<PointLL> approximator(stop_ll);
-    for (uint32_t i = 0; i < newtile->header()->nodecount(); i++) {
-      const NodeInfo* node = newtile->node(i);
-      // Check if within radius
-      if (approximator.DistanceSquared(node->latlng(base_ll)) < mr2) {
-        for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
-          const DirectedEdge* directededge = newtile->directededge(node->edge_index() + j);
-          auto edgeinfo = newtile->edgeinfo(directededge);
-
-          // Get shape and find closest point
-          auto this_shape = edgeinfo.shape();
-
-          // Reverse the shape if directed edge is not the forward direction
-          // along the shape
-          if (!directededge->forward()) {
-            std::reverse(this_shape.begin(), this_shape.end());
-          }
-
-          auto this_closest = stop_ll.ClosestPoint(this_shape);
-          // Get names
-          names = edgeinfo.GetNames();
-
-          if (std::get<1>(this_closest) < mindist) {
-            // use the new wayid
-
-            wayid = edgeinfo.wayid();
-            startnode = {newtile->header()->graphid().tileid(), newtile->header()->graphid().level(),
-                         i};
-            endnode = directededge->endnode();
-            mindist = std::get<1>(this_closest);
-            closest = this_closest;
-            closest_shape = this_shape;
-          }
-        }
-      }
-    }
-  }
-}
-
-// Add connection edges from the transit stop to an OSM edge
-void AddOSMConnection(const GraphId& transit_stop_node,
-                      const NodeInfo* transit_node,
-                      const std::string& stop_name,
-                      const graph_tile_ptr& tile,
-                      GraphReader& reader_local_level,
-                      std::mutex& lock,
-                      std::vector<OSMConnectionEdge>& connection_edges) {
-  assert(tile);
-  const PointLL& stop_ll = transit_node->latlng(tile->header()->base_ll());
-  uint64_t wayid = transit_node->connecting_wayid();
-
-  double mindist = 10000000.0;
-  uint32_t edgelength = 0;
-  GraphId startnode, endnode;
-  std::vector<PointLL> closest_shape;
-  std::tuple<PointLL, PointLL::first_type, int> closest;
-  std::vector<std::string> names;
-  for (uint32_t i = 0; i < tile->header()->nodecount(); i++) {
-    const NodeInfo* node = tile->node(i);
-    for (uint32_t j = 0, n = node->edge_count(); j < n; j++) {
-      const DirectedEdge* directededge = tile->directededge(node->edge_index() + j);
-      auto edgeinfo = tile->edgeinfo(directededge);
-
-      if (edgeinfo.wayid() == wayid) {
-
-        // Get shape and find closest point
-        auto this_shape = edgeinfo.shape();
-
-        if (!directededge->forward()) {
-          std::reverse(this_shape.begin(), this_shape.end());
-        }
-        auto this_closest = stop_ll.ClosestPoint(this_shape);
-        // Get names
-        names = edgeinfo.GetNames();
-
-        if (std::get<1>(this_closest) < mindist) {
-          startnode = {tile->header()->graphid().tileid(), tile->header()->graphid().level(), i};
-          endnode = directededge->endnode();
-          mindist = std::get<1>(this_closest);
-          closest = this_closest;
-          closest_shape = this_shape;
-          edgelength = directededge->length();
-        }
-      }
-    }
-  }
-
-  // Check for invalid tile Ids
-  if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-    FindOSMConnection(stop_ll, reader_local_level, lock, names, wayid, startnode, endnode,
-                      closest_shape, closest);
-
-    // Check for invalid tile Ids...are we still no good?
-    if (!startnode.Is_Valid() && !endnode.Is_Valid()) {
-      const AABB2<PointLL>& aabb = tile->BoundingBox();
-
-      LOG_ERROR("No closest edge found for this stop: " + stop_name +
-                " way Id = " + std::to_string(wayid) + " LL= " + std::to_string(stop_ll.lat()) + "," +
-                std::to_string(stop_ll.lng()) + " tile " + std::to_string(aabb.minx()) + ", " +
-                std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ", " +
-                std::to_string(aabb.maxy()));
-      return;
-    }
-  }
-
-  LOG_DEBUG("edge found for this stop: " + stop_name + " way Id = " + std::to_string(wayid));
-
-  // Check if stop is in same tile as the start node
-  uint32_t conn_count = 0;
-  double length = 0.0;
-  if (transit_stop_node.Tile_Base() == startnode.Tile_Base()) {
-    // Add shape from node along the edge until the closest point, then add
-    // the closest point and a straight line to the stop lat,lng
-    std::list<PointLL> shape;
-    for (int i = 0; i <= std::get<2>(closest); i++) {
-      shape.push_back(closest_shape[i]);
-    }
-    shape.push_back(std::get<0>(closest));
-    shape.push_back(stop_ll);
+    // the end node is in this tile too so we can keep this connection as well
+    std::vector<PointLL> opp_shape(edge_shape.rbegin(),
+                                   edge_shape.rbegin() + std::get<2>(closest_point));
+    shape.push_back(std::get<0>(closest_point));
+    shape.push_back(egress_ll);
     length = std::max(1.0, valhalla::midgard::length(shape));
-
-    // Add connection to start node
-    connection_edges.push_back({startnode, transit_stop_node, length, wayid, names, shape});
-    conn_count++;
+    connections.emplace_back(closest_edge->endnode(), egress, length, closest_edgeinfo->wayid(),
+                             closest_edgeinfo->GetNames(), shape);
   }
-
-  // Check if stop is in same tile as end node
-  double length2 = 0.0;
-  if (transit_stop_node.Tile_Base() == endnode.Tile_Base()) {
-    // Add connection to end node
-    if (startnode.tileid() == endnode.tileid()) {
-      // Add shape from the end to closest point on edge
-      std::list<PointLL> shape2;
-      for (int32_t i = closest_shape.size() - 1; i > std::get<2>(closest); i--) {
-        shape2.push_back(closest_shape[i]);
-      }
-      shape2.push_back(std::get<0>(closest));
-      shape2.push_back(stop_ll);
-      length2 = std::max(1.0, valhalla::midgard::length(shape2));
-
-      // Add connection to the end node
-      connection_edges.push_back({endnode, transit_stop_node, length2, wayid, names, shape2});
-      conn_count++;
-    }
-  }
-
-  // Check for errors
-  if (length != 0.0f && length2 != 0.0 && (length + length2) < edgelength - 1) {
-    LOG_ERROR("EdgeLength= " + std::to_string(edgelength) +
-              " < connection lengths: " + std::to_string(length) + "," + std::to_string(length2) +
-              " when connecting to stop " + stop_name);
-  }
-  if (conn_count == 0) {
-    LOG_ERROR("Stop " + stop_name + " has no connections to OSM!" +
-              " Start Node Tile: " + std::to_string(startnode.tileid()) +
-              " End Node Tile: " + std::to_string(endnode.tileid()));
-  }
-  UNUSED(stop_name);
+  return connections;
 }
 
 // We make sure to lock on reading and writing since tiles are now being
@@ -596,38 +495,19 @@ void build(const boost::property_tree::ptree& pt,
     lock.lock();
     graph_tile_ptr local_tile = reader_local_level.GetGraphTile(tile_id);
     GraphTileBuilder tilebuilder_local(reader_local_level.tile_dir(), tile_id, true);
-
     GraphId transit_tile_id = GraphId(tile_id.tileid(), tile_id.level() + 1, tile_id.id());
     graph_tile_ptr transit_tile = reader_transit_level.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
-
     lock.unlock();
 
-    // Iterate through all the transit tiles and form connections from
-    // Iterate through stops and form connections to OSM network. Each
-    // stop connects to 1 or 2 OSM nodes along the closest OSM way.
-    // TODO - future - how to handle connections that reach nodes
-    // outside the tile - may have to move this outside the tile
-    // iteration...?
-    // TODO - handle a list of connections/egrees points
+    // Iterate through all transit tile nodes and form connections to the OSM network for those stops
+    // which are in/egresses. Each in/egress connects to 2 OSM nodes along the closest edge optionally
+    // matching the OSM way id
+    // TODO - how to handle connections that reach nodes outside the tile - would have to do this
+    //  after the main tile iteration
     // TODO - what if we split the edge and insert a node?
     GraphId transit_stop_node(tile_id.tileid(), tile_id.level(), 0);
-    std::vector<OSMConnectionEdge> connection_edges;
-    std::unordered_map<GraphId, Traversability> egress_traversability;
-    for (uint32_t i = 0; i < transit_tile->header()->nodecount(); i++, ++transit_stop_node) {
-      const NodeInfo* transit_stop = transit_tile->node(i);
-
-      if (transit_stop->type() == NodeType::kTransitEgress) {
-        auto ts = transit_tile->GetTransitStop(transit_stop->stop_index());
-        std::string stop_name = transit_tile->GetName(ts->name_offset());
-        egress_traversability[transit_stop_node] = ts->traversability();
-
-        // Form connections to the stop
-        // TODO - deal with station hierarchy (only connect egress locations)
-        AddOSMConnection(transit_stop_node, transit_stop, stop_name, local_tile, reader_local_level,
-                         lock, connection_edges);
-      }
-    }
+    std::vector<OSMConnectionEdge> connection_edges = MakeConnections(local_tile, transit_tile);
 
     // this happens when you are running against small extracts...no work to be done.
     if (connection_edges.size() == 0) {
@@ -635,7 +515,10 @@ void build(const boost::property_tree::ptree& pt,
     }
 
     // Sort the connection edges
-    std::sort(connection_edges.begin(), connection_edges.end());
+    std::sort(connection_edges.begin(), connection_edges.end(), [](const auto& a, const auto& b) {
+      return a.osm_node.tileid() == b.osm_node.tileid() ? a.osm_node.id() < b.osm_node.id()
+                                                        : a.osm_node.tileid() < b.osm_node.tileid();
+    });
 
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, tilebuilder_transit, local_tile, reader_transit_level, lock,

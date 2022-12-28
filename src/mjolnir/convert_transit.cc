@@ -45,9 +45,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-constexpr uint64_t INVALID_WAY_ID = std::numeric_limits<uint64_t>::max();
-constexpr float SNAP_DISTANCE_CUTOFF = 500.f;
-
 // Struct to hold stats information during each threads work
 struct builder_stats {
   uint32_t no_dir_edge_count;
@@ -103,59 +100,6 @@ struct StopEdges {
   std::vector<TransitLine> lines;                     // Set of unique route/stop pairs
 };
 
-const static auto VALID_EDGE_USES = std::unordered_set<Use>{
-    Use::kRoad, Use::kLivingStreet, Use::kCycleway, Use::kSidewalk,    Use::kFootway,
-    Use::kPath, Use::kPedestrian,   Use::kAlley,    Use::kServiceRoad,
-
-};
-
-void project(graph_tile_ptr local_tile,
-             const Transit& transit_tile,
-             std::vector<std::pair<float, uint64_t>>& best_ways) {
-
-  if (!local_tile || transit_tile.nodes_size() == 0) {
-    return;
-  }
-  auto t1 = std::chrono::high_resolution_clock::now();
-  auto scoped_finally = make_finally([&t1, size = transit_tile.nodes_size()]() {
-    auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
-    LOG_INFO("Projection Finished - Projection of " + std::to_string(size) +
-             " transit station  took " + std::to_string(secs) + " secs");
-  });
-
-  // for each transit egress
-  for (int i = 0; i < transit_tile.nodes_size(); ++i) {
-    // we only connect egress/ingress
-    const auto& egress = transit_tile.nodes(i);
-    if (egress.type() != static_cast<uint32_t>(NodeType::kTransitEgress))
-      continue;
-    auto egress_ll = PointLL{egress.lon(), egress.lat()};
-
-    // Loop over all nodes in the tile to find the nearest edge
-    for (const auto& directededge : local_tile->GetDirectedEdges()) {
-      // bail if its an invalid use
-      if (VALID_EDGE_USES.count(directededge.use()) == 0) {
-        continue;
-      }
-
-      // bail if pedestrians cant use it
-      if ((!(directededge.forwardaccess() & kPedestrianAccess)) || directededge.is_shortcut()) {
-        continue;
-      }
-
-      // project onto the shape
-      auto edgeinfo = local_tile->edgeinfo(&directededge);
-      auto closest = egress_ll.Project(edgeinfo.shape());
-      auto distance = std::get<1>(closest);
-
-      // better than before and also smaller than our max threshold
-      if (distance < best_ways[i].first && distance < SNAP_DISTANCE_CUTOFF) {
-        best_ways[i] = std::make_pair(distance, edgeinfo.wayid());
-      }
-    }
-  }
-}
 // Get scheduled departures for a stop
 std::unordered_multimap<GraphId, Departure>
 ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
@@ -599,17 +543,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // Get Transit PBF data for this tile
   Transit transit = read_pbf(tile, lock);
 
-  // Try to find a suitable place to connect
-  // TODO: use loki as it is the most robust edge finding algorithm, this is not ideal as it finds the
-  //  absolute single closest connection point that would work. other filters could improve results
-  std::vector<std::pair<float, uint64_t>>
-      best_wayids(transit.nodes_size(),
-                  std::make_pair(std::numeric_limits<float>::max(), INVALID_WAY_ID));
-  for (auto local_tile_id = tileid; local_tile_id.level() != 0;
-       local_tile_id = TileHierarchy::parent(local_tile_id)) {
-    project(reader.GetGraphTile(local_tile_id), transit, best_wayids);
-  }
-
   std::set<uint64_t> added_stations;
   std::set<uint64_t> added_egress;
 
@@ -702,11 +635,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       GraphId eg = GraphId(station.prev_type_graphid());
       uint32_t index = eg.id();
 
-      if (best_wayids[index].second != INVALID_WAY_ID) {
-        station_node.set_connecting_wayid(best_wayids[index].second);
-        LOG_INFO("Stop Index " + std::to_string(index) + " was given way_id " +
-                 std::to_string(best_wayids[index].second));
-      }
       while (true) {
         const Transit_Node& egress = transit.nodes(index);
         if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress) {
@@ -750,14 +678,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
-
-        if (best_wayids[index].second != INVALID_WAY_ID) {
-          egress_node.set_connecting_wayid(best_wayids[index].second);
-          LOG_INFO("Stop Index " + std::to_string(index) + " was given way_id " +
-                   std::to_string(best_wayids[index].second));
-        } else {
-          LOG_WARN("Stop Index " + std::to_string(index) + " could not be connected to OSM way");
-        }
 
         // add the egress connection
         // Make sure length is non-zero

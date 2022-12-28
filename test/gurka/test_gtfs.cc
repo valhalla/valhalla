@@ -28,8 +28,8 @@ const std::string ascii_map = R"(
                            F
     )";
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
-const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
-                          {"BC", {{"highway", "residential"}}},
+const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                          {"BC", {{"highway", "tertiary"}}},
                           {"CF", {{"highway", "residential"}}}};
 
 boost::property_tree::ptree get_config() {
