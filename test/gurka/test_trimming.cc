@@ -73,9 +73,10 @@ TEST(Trimming, routes) {
 
   // fake a costing
   const rapidjson::Document doc;
-  valhalla::Options options;
+  Api api;
+  Options& options = *api.mutable_options();
   options.set_costing_type(Costing::auto_);
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
   sif::TravelMode mode;
   sif::CostFactory factory;
   auto mode_costings = factory.CreateModeCosting(options, mode);

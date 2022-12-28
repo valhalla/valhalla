@@ -20,7 +20,8 @@ namespace sif {
  */
 void ParseNoCostOptions(const rapidjson::Document& doc,
                         const std::string& costing_options_key,
-                        Costing* pbf_costing);
+                        Costing* pbf_costing,
+                        google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Create an route cost method. This is generally shortest time but uses

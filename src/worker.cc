@@ -989,7 +989,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // Parse all of the costing options in their specified order
-  sif::ParseCosting(doc, "/costing_options", options);
+  sif::ParseCosting(doc, "/costing_options", options, );
 
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
@@ -1000,7 +1000,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
+      sif::ParseCosting(doc, key, options.add_recostings(), *api.mutable_info()->mutable_warnings());
       if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
       } else if (!names.insert(options.recostings().rbegin()->name()).second) {

@@ -1222,17 +1222,20 @@ struct BaseCostingOptionsConfig {
  */
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* co,
-                          const BaseCostingOptionsConfig& cfg);
+                          const BaseCostingOptionsConfig& cfg,
+                          google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses all the costing options for all supported costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing
+ * @param warnings              the warnings array to update
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
-                  Options& options);
+                  Options& options,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Parses the costing options for the costing specified within the json object. If the
@@ -1241,11 +1244,13 @@ void ParseCosting(const rapidjson::Document& doc,
  * @param doc                   json document
  * @param key                   the key in the json document where the options are located
  * @param costing_options       where to store the parsed options
+ * @param warnings              the warnings array to update
  * @param costing               specify the costing you want to parse or let it check the json
  */
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& key,
                   Costing* costing,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings,
                   Costing::Type costing_type = static_cast<Costing::Type>(Costing::Type_ARRAYSIZE));
 
 } // namespace sif

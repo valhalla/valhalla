@@ -269,7 +269,8 @@ int main(int argc, char* argv[]) {
 
   if (!map_match) {
     rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options(),
+                      *request.mutable_info()->mutable_warnings());
   }
 
   // Construct costing

@@ -488,7 +488,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
-                  Options& options) {
+                  Options& options,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   // if specified, get the costing options in there
   for (auto i = Costing::Type_MIN; i <= Costing::Type_MAX; i = Costing::Type(i + 1)) {
     // Create the costing options key
@@ -498,13 +499,14 @@ void ParseCosting(const rapidjson::Document& doc,
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
     auto& costing = (*options.mutable_costings())[i];
-    ParseCosting(doc, key, &costing, i);
+    ParseCosting(doc, key, &costing, warnings, i);
   }
 }
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& key,
                   Costing* costing,
+                  google::protobuf::RepeatedPtrField<CodedDescription>& warnings,
                   Costing::Type costing_type) {
   // if the costing wasnt specified we have to find it nested in the json object
   if (costing_type == Costing::Type_ARRAYSIZE) {
@@ -526,23 +528,23 @@ void ParseCosting(const rapidjson::Document& doc,
   // finally we can parse the costing
   switch (costing_type) {
     case Costing::auto_: {
-      sif::ParseAutoCostOptions(doc, key, costing);
+      sif::ParseAutoCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bicycle: {
-      sif::ParseBicycleCostOptions(doc, key, costing);
+      sif::ParseBicycleCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bus: {
-      sif::ParseBusCostOptions(doc, key, costing);
+      sif::ParseBusCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::taxi: {
-      sif::ParseTaxiCostOptions(doc, key, costing);
+      sif::ParseTaxiCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::motor_scooter: {
-      sif::ParseMotorScooterCostOptions(doc, key, costing);
+      sif::ParseMotorScooterCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::multimodal: {
@@ -550,7 +552,7 @@ void ParseCosting(const rapidjson::Document& doc,
       break;
     }
     case Costing::pedestrian: {
-      sif::ParsePedestrianCostOptions(doc, key, costing);
+      sif::ParsePedestrianCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::bikeshare: {
@@ -558,19 +560,19 @@ void ParseCosting(const rapidjson::Document& doc,
       break;
     }
     case Costing::transit: {
-      sif::ParseTransitCostOptions(doc, key, costing);
+      sif::ParseTransitCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::truck: {
-      sif::ParseTruckCostOptions(doc, key, costing);
+      sif::ParseTruckCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::motorcycle: {
-      sif::ParseMotorcycleCostOptions(doc, key, costing);
+      sif::ParseMotorcycleCostOptions(doc, key, costing, warnings);
       break;
     }
     case Costing::none_: {
-      sif::ParseNoCostOptions(doc, key, costing);
+      sif::ParseNoCostOptions(doc, key, costing, warnings);
       break;
     }
     default: {

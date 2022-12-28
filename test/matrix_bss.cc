@@ -46,10 +46,11 @@ const uint32_t kTimeThreshold = 2;
 class MatrixBssTest : public ::testing::Test {
 public:
   MatrixBssTest() {
-    Options options;
+    Api api;
+    Options& options = *api.mutable_options();
     options.set_costing_type(Costing::bikeshare);
     rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", options);
+    sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
     sif::TravelMode mode;
     mode_costing = sif::CostFactory().CreateModeCosting(options, mode);
   }
