@@ -1,8 +1,6 @@
 {
   "posix_locale": "en_GB.UTF-8",
-  "aliases": [
-    "engb"
-  ],
+  "aliases": [],
   "instructions": {
     "arrive": {
       "phrases": {

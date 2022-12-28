@@ -1,7 +1,7 @@
 {
   "posix_locale": "en_US.UTF-8",
   "aliases": [
-    "pirate"
+    "en-x-pirate"
   ],
   "instructions": {
     "arrive": {
