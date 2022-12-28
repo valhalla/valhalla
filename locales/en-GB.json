@@ -1,6 +1,8 @@
 {
   "posix_locale": "en_GB.UTF-8",
-  "aliases": [],
+  "aliases": [
+    "engb"
+  ],
   "instructions": {
     "arrive": {
       "phrases": {
@@ -2173,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Take the lift.",
+        "1": "Take the lift to <LEVEL>."
       },
       "example_phrases": {
         "0": [

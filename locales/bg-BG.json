@@ -1120,7 +1120,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Присъединете се."
+          "Merge."
         ],
         "1": [
           "Merge left."
@@ -1149,8 +1149,8 @@
       },
       "example_phrases": {
         "0": [
-          "Пътувайте за 1 спирка.",
-          "Пътувайте за 3 спирки."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2006,7 +2006,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Завийте на ляво."
+          "Turn left."
         ],
         "1": [
           "Turn right onto Flatbush Avenue."
@@ -2221,9 +2221,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "пешеходата пътека",
+        "вело алеята",
+        "пътя за планински велосипеди",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2241,9 +2241,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "пешеходата пътека",
+        "вело алеята",
+        "пътя за планински велосипеди",
         "the crosswalk"
       ],
       "example_phrases": {
