@@ -39,7 +39,8 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 ## Releasing a version
 
-1. Check out the appropriate release branch `x.y`.
+1. Update the translations from Transifex, see [README](../locales/README.md#pulling-translation-updates-from-transifex).
+2. Check out the appropriate release branch `x.y`.
 2. Make sure `CHANGELOG.md` is up to date.
 3. Make sure all tests are passing (e.g. Circle CI gives you a :green_apple:).
 4. Make sure the [`valhalla/valhalla.h`](../valhalla/valhalla.h) has been updated.
