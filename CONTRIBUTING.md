@@ -6,12 +6,6 @@ There are many ways to make meaningful contributions to the project:
 - contribute feature implementations, for your own sake **only after opening an issue asking for feedback**
 - improve translations on [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/)
 
-## Community Values
-
-We ask that you are respectful when contributing to Valhalla or engaging with our community. As a community, we appreciate the fact that contributors might be approaching the project from a different perspective and background. We hope that beginners as well as advanced users will be able to use and contribute back to Valhalla. We want to encourage contributions and feedback from all over the world, which means that English might not be a contributor's native language, and sometimes we may encounter cultural differences. Contructive disagreements can be essential to moving a project forward, but disrespectful language or behavior will not be tolerated.
-
-Above all, be patient, be respectful, and be kind!
-
 ## Code contributions
 
 We appreciate the community to pick up and fix bugs or even implement new features. There are a few things to follow/be aware of when developing Valhalla:
@@ -69,6 +63,6 @@ This will mostly be performed by the maintainers before we merge PRs which could
 
 ## Tranlation contributions
 
-Valhalla currently has support almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
+Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
 
 You can find more information in the [dedicated README](locales/README.md).
