@@ -98,7 +98,7 @@ Important build options include:
 | `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
 | `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
 
-For more build options run the interactive GUI or have a look at the root's [`CmakeLists.txt`](./CMakeLists.txt):
+For more build options run the interactive GUI or have a look at the root's [`CmakeLists.txt`](https://github.com/valhalla/valhalla/blob/master/CMakeLists.txt):
 
 ```bash
 cd build
@@ -220,7 +220,7 @@ cmake -B build .
 
 ## Running
 
-The following bash should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](docs/elevation.md)).
+The following bash should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](https://github.com/valhalla/valhalla/blob/master/docs/elevation.md)).
 
 ```bash
 #download some data and make tiles out of it
@@ -282,7 +282,7 @@ We highly encourage running and updating the tests to make sure no regressions h
 
 To run an individual test, `make run-<test name>` from the build directory or `./test/<testname>`
 
-You may check some notes on [unit tests](docs/testing.md)
+You may check some notes on [unit tests](https://github.com/valhalla/valhalla/blob/master/docs/testing.md)
 
 Coverage reports are automatically generated using codecov for each pull request, but you can also build them locally by passing `-DENABLE_COVERAGE=On` and running `make coverage`.
 
@@ -313,4 +313,4 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 ### Batch Script Tool
 
-- [Batch Run_Route](./run_route_scripts/README.md)
+- [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)

@@ -3,7 +3,7 @@ name: Deploy Docs
 on:
   push:
     branches:
-      - master
+      - nn-move-to-github-pages
 
 jobs:
   build-deploy:
@@ -22,9 +22,9 @@ jobs:
         working-directory: docs
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements
+          python -m pip install -r requirements.txt
 
       - name: Build and deploy to GitHub Pages 🏗️ 🚀
         working-directory: docs
         run: |
-          mkdocs gh-deploy --strict --force
+          mkdocs gh-deploy --force --strict
