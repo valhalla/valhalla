@@ -3,7 +3,7 @@ name: Deploy Docs
 on:
   push:
     branches:
-      - nn-move-to-github-pages
+      - master
 
 jobs:
   build-deploy:
