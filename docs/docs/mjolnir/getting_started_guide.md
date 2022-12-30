@@ -14,7 +14,7 @@ For more information on what tags and values we use from OSM please consult our 
 
 Build valhalla and its various tools:
 
-```
+```bash
 mkdir build
 cd build
 cmake ..

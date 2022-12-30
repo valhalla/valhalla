@@ -71,7 +71,7 @@ The Valhalla organization is comprised of several library modules each responsib
 
 ## Documentation
 
-Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.readthedocs.io](https://valhalla.readthedocs.io/).
+Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.github.io/valhalla](https://valhalla.github.io/valhalla).
 
 ## Installation
 

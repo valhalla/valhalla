@@ -297,7 +297,7 @@ You can use certain parameters to tune the response. Unless otherwise noted, eac
 * Set the `gps_accuracy` to indicate the accuracy in meters.
 * Apply a `search_radius` to specify the search radius (in meters) within which to search road candidates for each measurement. The maximum search radius is 100 meters. Note that performance may decrease with a higher search radius value.
 * Add a `time` component to your GPS data to inform the map matching algorithm about when the point was measured. Providing a `time` attribute is not available for `encoded_polyline` data and can only be specified with GPS data provided by the `shape` attribute. `time` is specified in seconds and can be a UNIX epoch time or any increasing sequence:
-```
+```json
 {"shape":[{"lat":39.983841,"lon":-76.735741,"time":0},{"lat":39.983704,"lon":-76.735298,"time":2},{"lat":39.983578,"lon":-76.734848,"time":6},...]}
 ```
 
@@ -310,19 +310,19 @@ The following are example JSON payloads for POST requests for the `trace_routes`
 
 *`trace_route` with shape parameter*
 
-```
+```json
 {"shape":[{"lat":39.983841,"lon":-76.735741,"type":"break"},{"lat":39.983704,"lon":-76.735298,"type":"via"},{"lat":39.983578,"lon":-76.734848,"type":"via"},{"lat":39.983551,"lon":-76.734253,"type":"break"},{"lat":39.983555,"lon":-76.734116,"type":"via"},{"lat":39.983589,"lon":-76.733315,"type":"via"},{"lat":39.983719,"lon":-76.732445,"type":"via"},{"lat":39.983818,"lon":-76.731712,"type":"via"},{"lat":39.983776,"lon":-76.731506,"type":"via"},{"lat":39.983696,"lon":-76.731369,"type":"break"}],"costing":"auto","shape_match":"map_snap"}}
 ```
 
 *`trace_route` with encoded polyline parameter*
 
-```
+```json
 {"encoded_polyline":"_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA","shape_match":"map_snap","costing":"pedestrian","directions_options":{"units":"miles"}}
 ```
 
 *`trace_route` with additional trace options*
 
-```
+```json
 {"encoded_polyline":"{gmagAp~_nhF[_AZqAjAaB`AkB\\cAZeAPcAHiAKiCQaAUeAe@cA]qAQsACqAF}AIsAg@{@s@i@sAw@i@uANyAPsAv@cAZ_ALqA_@cA_Ai@q@w@[uAm@}AaAqAs@s@m@u@c@oA]mAMiAIkAYqBRyATsANsBKyBAiA?iAFsALuAPsAXaBGgCg@oBKiBf@iBGiBg@oBHqA?{Ai@cA@oAbAgAj@g@j@k@n@q@p@e@n@k@d@}@\\cAFgAIoBg@m@y@[_ASu@K{AHgBP{@@w@Jy@L}@JsAMoAe@kAq@kAk@gAg@y@a@m@g@q@mAo@e@gAc@sAA_AI_BFu@LiALaALaAHoAFiAF{A@yABkAKmAKcAMiBU}AYu@MaBUqBu@{As@iAaAaA_Ao@aAi@s@q@{@{@a@sAi@oAGeAD}@[YiAmA[u@BgBXaBHgAQ}@]s@S]x@_BbC}@lAw@dAs@dAk@dAm@z@s@n@y@p@{@`Ao@z@_@z@u@jA_Af@aANiAAcBPsAl@s@X}@T{@PoAPeAl@{@t@_AbAgAjBk@r@e@~AY~@U~@YhAi@lAo@t@kBb@u@NyAX{@k@MoAi@{@eAx@aArAmBt@_ALgAPiAXkAf@w@j@u@p@_A^aA\\aA`@eAt@eATcAGcAG}@AeAX_Aj@q@r@aAp@wAt@sARk@xA?pBAvAu@Ps@_Bk@i@y@\\s@f@o@j@u@f@{@RwAb@mAZaARkATqANyAImAK}@C_AFqADiAC_AUs@[}Ao@eBm@q@_@_Bg@iAm@kAaAc@s@c@w@y@{AWcAc@{Am@c@yBF{@AkAYmA_@uBD{@B{@Gu@ScBIu@NaB^_B`@sAC{Ac@}A]yAg@aBHuAJ_BAaAEgAA_AAy@@eBX_AFw@JcB^s@VuA`AuAl@kBl@_AFeAJcAB{ABwAj@o@l@q@b@u@Z{AXmAaAm@o@oAwAsAcAsAu@u@cAe@iAy@eAk@iAc@gAOgAWgBe@wAo@}Ai@sBY{@u@s@y@Y{@[aA]s@oB\\eCPoARwAXgBV{Ab@sAf@oAb@kAFsA?kACeADeA^aABeAO_Be@gB]}@eAaB_AoAw@aAm@o@q@cBp@eBz@a@fAi@|@o@LiBAyAIoAu@qBkAuAiAa@gAa@cB_@eAQm@c@o@{ANaBf@{@h@_BV}@XcBz@?{@s@o@y@u@}@mAaBw@qCm@mG}@uJLoBVkBVaBh@iB`@gBXgBZ_BZaBNgACwASyAUqAGuBGsBTcBRiB^eCTmBTaBNoAVaB@kAMiBZcAd@eAf@q@z@mAVgB[gAq@aAk@s@UkAG{B_@sAW}ASoBMwBSuB]gBq@eBs@eBaAuAaAeAo@{@i@}@e@{@g@{@m@m@y@_@y@[aBk@a@cBFsB[iAaAGoA`@IcC^yA`@}AVkBNwBBmBR_Cr@{CrAyD|@mCf@kBXeB\\eBl@aCf@cBc@sBg@qAUkBe@sBw@eBi@uA{@gAyAc@qAk@[wB@gARqANgAPiAJsAAeAa@mBKmB@uBBwB@oBZoBJkCJkANaCY}Ac@aBa@iBc@iBu@qBu@sBu@sB_AiBcA}AiAqAaAqAeAaA}@]iANgAj@}@dAcAhAeAfAyAfAo@`@k@f@o@f@s@d@o@f@k@h@o@`@s@V_Br@wAv@{An@uAt@qAj@wAl@iAv@gA~@qAbA{A`AcBz@o@^{A`AmAhAo@b@sAxA_@z@]x@a@t@qAxAk@j@qAfAm@b@m@b@kAfAuA~@eAhAcAbAiAr@qA|@gAdAcA`A{@bA_AhAgA|@mAr@qA|@mAlA","shape_match":"map_snap","costing":"pedestrian","trace_options":{"turn_penalty_factor":500},"directions_options":{"units":"miles"}}
 ```
 
@@ -332,28 +332,28 @@ The following are example JSON payloads for POST requests for the `trace_attribu
 
 *`trace_attributes` with shape parameter*
 
-```
+```json
 {"shape":[{"lat":39.983841,"lon":-76.735741},{"lat":39.983704,"lon":-76.735298},{"lat":39.983578,"lon":-76.734848},{"lat":39.983551,"lon":-76.734253},{"lat":39.983555,"lon":-76.734116},{"lat":39.983589,"lon":-76.733315},{"lat":39.983719,"lon":-76.732445},{"lat":39.983818,"lon":-76.731712},{"lat":39.983776,"lon":-76.731506},{"lat":39.983696,"lon":-76.731369}],"costing":"auto","shape_match":"walk_or_snap","filters":{"attributes":["edge.names","edge.id", "edge.weighted_grade","edge.speed"],"action":"include"}}
 ```
 
 *`trace_attributes` with encoded polyline parameter*
 
-```
+```json
 {"encoded_polyline":"_grbgAh~{nhF?lBAzBFvBHxBEtBKdB?fB@dBZdBb@hBh@jBb@x@\\|@x@pB\\x@v@hBl@nBPbCXtBn@|@z@ZbAEbAa@~@q@z@QhA]pAUpAVhAPlAWtASpAAdA[dASdAQhAIlARjANnAZhAf@n@`A?lB^nCRbA\\xB`@vBf@tBTbCFbARzBZvBThBRnBNrBP`CHbCF`CNdCb@vBX`ARlAJfADhA@dAFdAP`AR`Ah@hBd@bBl@rBV|B?vB]tBCvBBhAF`CFnBXtAVxAVpAVtAb@|AZ`Bd@~BJfA@fAHdADhADhABjAGzAInAAjAB|BNbCR|BTjBZtB`@lBh@lB\\|Bl@rBXtBN`Al@g@t@?nAA~AKvACvAAlAMdAU`Ac@hAShAI`AJ`AIdAi@bAu@|@k@p@]p@a@bAc@z@g@~@Ot@Bz@f@X`BFtBXdCLbAf@zBh@fBb@xAb@nATjAKjAW`BI|AEpAHjAPdAAfAGdAFjAv@p@XlAVnA?~A?jAInAPtAVxAXnAf@tBDpBJpBXhBJfBDpAZ|Ax@pAz@h@~@lA|@bAnAd@hAj@tAR~AKxAc@xAShA]hAIdAAjA]~A[v@BhB?dBSv@Ct@CvAI~@Oz@Pv@dAz@lAj@~A^`B^|AXvAVpAXdBh@~Ap@fCh@hB\\zBN`Aj@xBFdA@jALbAPbAJdAHdAJbAHbAHfAJhALbA\\lBTvBAdC@bC@jCKjASbC?`CM`CDpB\\xAj@tB\\fA\\bAVfAJdAJbAXz@L|BO`AOdCDdA@~B\\z@l@v@l@v@l@r@j@t@b@x@b@r@z@jBVfCJdAJdANbCPfCF|BRhBS~BS`AYbAe@~BQdA","shape_match":"map_snap","costing":"pedestrian","directions_options":{"units":"miles"}}
 ```
 
 *`trace_attributes` with `include` attribute filter*
 
-```
+```json
 {"shape":[{"lat":39.983841,"lon":-76.735741},{"lat":39.983704,"lon":-76.735298},{"lat":39.983578,"lon":-76.734848},{"lat":39.983551,"lon":-76.734253},{"lat":39.983555,"lon":-76.734116},{"lat":39.983589,"lon":-76.733315},{"lat":39.983719,"lon":-76.732445},{"lat":39.983818,"lon":-76.731712},{"lat":39.983776,"lon":-76.731506},{"lat":39.983696,"lon":-76.731369}],"costing":"auto","shape_match":"walk_or_snap","filters":{"attributes":["edge.names","edge.id", "edge.weighted_grade","edge.speed"],"action":"include"}}
 ```
 
 *`trace_attributes` with `exclude` attribute filter*
 
-```
+```json
 {"shape":[{"lat":39.983841,"lon":-76.735741},{"lat":39.983704,"lon":-76.735298},{"lat":39.983578,"lon":-76.734848},{"lat":39.983551,"lon":-76.734253},{"lat":39.983555,"lon":-76.734116},{"lat":39.983589,"lon":-76.733315},{"lat":39.983719,"lon":-76.732445},{"lat":39.983818,"lon":-76.731712},{"lat":39.983776,"lon":-76.731506},{"lat":39.983696,"lon":-76.731369}],"costing":"auto","shape_match":"walk_or_snap","filters":{"attributes":["edge.names","edge.begin_shape_index","edge.end_shape_index","shape"],"action":"exclude"}}
 ```
 *If you would like to visualize the map matched points that correlate to specified input locations - use the following filter*
-```
+```json
 "filters":{"attributes":["edge.id","matched.point","matched.type","matched.edge_index","matched.begin_route_discontinuity","matched.end_route_discontinuity","matched.distance_along_edge"],"action":"include"}
 ```

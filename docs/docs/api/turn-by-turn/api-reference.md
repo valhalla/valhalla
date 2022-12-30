@@ -10,7 +10,7 @@ The default logic for the OpenStreetMap tags, keys, and values used when routing
 
 The route request run locally takes the form of `localhost:8002/route?json={}`, where the JSON inputs inside the `{}` include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:
 
-```
+```json
 {"locations":[{"lat":42.358528,"lon":-83.271400,"street":"Appleton"},{"lat":42.996613,"lon":-78.749855,"street":"Ranch Trail"}],"costing":"auto","costing_options":{"auto":{"country_crossing_penalty":2000.0}},"units":"miles","id":"my_work_route"}
 ```
 
@@ -238,25 +238,25 @@ When using `filters`, you need to include a [Onestop ID](https://transit.land/do
 
 A multimodal request at the current date and time:
 
-```
+```json
 {"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","units":"miles"}
 ```
 
 A multimodal request departing on 2016-03-29 at 08:00:
 
-```
+```json
 {"locations":[{"lat":40.749706,"lon":-73.991562,"type":"break","street":"Penn Plaza"},{"lat":40.73093,"lon":-73.991379,"type":"break","street":"Wanamaker Place"}],"costing":"multimodal","date_time":{"type":1,"value":"2016-03-29T08:00"}}
 ```
 
 A multimodal request for a route favoring buses and a person walking at a set speed of 4.1 km/h:
 
-```
+```json
 {"locations":[{"lat":40.749706,"lon":-73.991562,"type":"break","street":"Penn Plaza"},{"lat":40.73093,"lon":-73.991379,"type":"break","street":"Wanamaker Place"}],"costing":"multimodal","costing_options":{"transit":{"use_bus":"1.0","use_rail":"0.0","use_transfers":"0.3"},"pedestrian":{"walking_speed":"4.1"}}}
 ```
 
 A multimodal request with a filter for certain Onestop IDs:
 
-```
+```json
 {"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"stops":{"ids":["s-dr5rsq8pqg-8st~nyu&#60;r21n","s-dr5rsr9wyg-14st&#126;unionsq&#60;r20n"],"action":"exclude"},"routes":{"ids":["r-dr5r-r"],"action":"exclude"},"operators":{"ids":["o-dr5r-path"],"action":"include"}}}},"units":"miles"}
 ```
 
@@ -391,7 +391,7 @@ Each maneuver includes:
 
 For the maneuver `type`, the following are available:
 
-```
+```json
 kNone = 0;
 kStart = 1;
 kStartRight = 2;

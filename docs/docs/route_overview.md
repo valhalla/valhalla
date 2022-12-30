@@ -16,7 +16,7 @@ This document provides a brief overview of Valhalla route computation.
   - *MultiModal* - This is a forward direction A\* algorithm with transit schedule lookup included as well as logic to switch modes between pedestrian and transit. This algorithm is time-dependent due to the nature of transit schedules.
 
 
-  All of Valhalla’s path algorithms use dynamic, run-time costing. Costing logic is held within the *sif* directory. A base class (*DynamicCost*) defines the interface that each costing model implements.  A brief overview of the costing design is located [here](https://github.com/valhalla/valhalla/blob/master/docs/sif/dynamic-costing.md). 
+  All of Valhalla’s path algorithms use dynamic, run-time costing. Costing logic is held within the *sif* directory. A base class (*DynamicCost*) defines the interface that each costing model implements.  A brief overview of the costing design is located [here](sif/dynamic-costing.md). 
 
 **Forming the Trip Path**
 [TripPathBuilder](https://github.com/valhalla/valhalla/blob/master/src/thor/trippathbuilder.cc#L516) creates the Trip Path for Valhalla.  Code for this step is within the thor directory. This Trip path is a sequence of nodes and edges that will form a path.  The path is created in a forward direction from `Node 0` to `Node 1` to...`Node N`.  Edge and node attributes are added to the path which will then be passed to Odin to create Trip Directions.  Moreover, TripPathBuilder will add intersecting edge attributes at each node within the path to assist Odin with maneuver generation. 
@@ -32,7 +32,7 @@ The route narrative/guidance generating code is located in the *odin* directory.
   - *Odin* inspects the trip path nodes and edges in reverse order to form an initial list of maneuvers or steps
   - *Odin* collapses the initial maneuver list to form a concise list of maneuvers
   - *Odin* adds text and verbal instructions to form trip directions
-  - *Odin* supports these [languages](https://github.com/valhalla/valhalla-docs/blob/master/turn-by-turn/api-reference.md#supported-language-tags) for narration instructions
+  - *Odin* supports these [languages](api/turn-by-turn/api-reference.md#supported-language-tags) for narration instructions
 ![](images/GeneratingGuidanceProcess.png)
 
 
@@ -48,5 +48,5 @@ The route narrative/guidance generating code is located in the *odin* directory.
     - **jsonToProtoRoute**(json_route, proto_route) → used by navigator
       - Transfers the JSON route information returned from a route request into the Route pbf object passed in by reference.
   - To summarize, Valhalla builds a JSON “trip” object which contains the locations, route summary with basic info about the trip, a list of legs of the trip, status, units and language.
-  - A more in depth description of the results can be found [here](https://github.com/valhalla/valhalla-docs/blob/master/turn-by-turn/api-reference.md#outputs-of-a-route).
+  - A more in depth description of the results can be found [here](api/turn-by-turn/api-reference.md#outputs-of-a-route).
 

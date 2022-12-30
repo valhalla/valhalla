@@ -10,7 +10,7 @@ The default logic for the OpenStreetMap tags, keys, and values used when routing
 
 The locate request run locally takes the form of `localhost:8002/locate?json={}`, where the JSON inputs inside the `{}` include location information, name and options for the costing model, and output options. Here is the JSON payload for an example request:
 
-```
+```json
 {"verbose":true,"locations":[{"lat":42.358528,"lon":-83.271400},{"lat":42.996613,"lon":-78.749855}],"costing":"bicycle","costing_options":{"bicycle":{"bicycle_type":"road"}},"directions_options":{"units":"miles"},"id":"12abc3afe23984fe"}
 ```
 

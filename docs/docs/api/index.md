@@ -12,8 +12,6 @@ The **map-matching** service matches coordinates to known roads so you can turn 
 
 Use the **elevation** service to find the elevation along a path or at specified locations. See the [api documentation](./elevation/api-reference.md).
 
-Use the **transit available** service to check the availability of transit for at least 1 location. See the [api documentation](./transit-available/api-reference.md).
-
 You can use the **expansion** service to return a geojson representation of a graph traversal at a given location. See the [api documentation](./expansion/api-reference.md).
 
 The **locate** service allows you to get detailed metadata about the nodes and edges in the graph. See the [api documentation](./locate/api-reference.md).

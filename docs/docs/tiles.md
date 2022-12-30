@@ -29,7 +29,7 @@ Image generated using http://geojson.io
 
 # Sample Tile Code
 Below are some sample functions to help you obtain latitude and longitude coordinates, levels, tile ids, and list of tiles that intersect a bounding box.
-```
+```bash
 #!/usr/bin/env python
 
 valhalla_tiles = [{'level': 2, 'size': 0.25}, {'level': 1, 'size': 1.0}, {'level': 0, 'size': 4.0}]
