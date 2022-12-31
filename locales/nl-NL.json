@@ -1202,7 +1202,7 @@
         "7": "Sla <RELATIVE_DIRECTION>af om de op-/afrit te nemen richting <TOWARD_SIGN>.",
         "8": "Sla <RELATIVE_DIRECTION>af om de op-/afrit <BRANCH_SIGN> te nemen richting <TOWARD_SIGN>.",
         "9": "Sla <RELATIVE_DIRECTION>af om de op-/afrit <NAME_SIGN> te nemen.",
-        "10": "Neem de op-/afrit.",
+        "10": "Op-/afrit nemen.",
         "11": "Neem de op-/afrit <BRANCH_SIGN>.",
         "12": "Neem de op-/afrit richting <TOWARD_SIGN>.",
         "13": "Neem de op-/afrit <BRANCH_SIGN> richting <TOWARD_SIGN>.",
@@ -2175,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Neem de lift.",
+        "1": "Neem de lift naar <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2189,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Neem de trap.",
+        "1": "Neem de trap naar <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2203,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Neem de roltrap.",
+        "1": "Neem de roltrap naar <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,13 +2217,13 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Ga het gebouw in.",
+        "1": "Ga het gebouw in en ga verder op <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2237,13 +2237,13 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Ga het gebouw uit.",
+        "1": "Ga het gebouw uit en ga verder op <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "het voetpad",
+        "het fietspad",
+        "het mountainbikepad",
         "the crosswalk"
       ],
       "example_phrases": {
