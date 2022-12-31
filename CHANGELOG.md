@@ -12,6 +12,7 @@
    * FIXED: Make sure there is at least one path which is accessible for all vehicular modes when reclassifying ferry edges [#3860](https://github.com/valhalla/valhalla/pull/3860)
    * FIXED: valhalla_build_extract was failing to determine the tile ID to include in the extract [#3864](https://github.com/valhalla/valhalla/pull/3864)
    * FIXED: valhalla_ways_to_edges missed trimming the cache when overcommitted [#3872](https://github.com/valhalla/valhalla/pull/3864)
+   * FIXED: Strange detours with multi-origin/destination unidirectional A* [#3585](https://github.com/valhalla/valhalla/pull/3585)
 * **Enhancement**
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
