@@ -19,13 +19,20 @@ protected:
    * graphreader passed in is null nothing is cached and revoery will happen on the fly
    * @param reader
    */
-  shortcut_recovery_t(valhalla::baldr::GraphReader* reader) {
-    // do nothing if the reader is no good
-    if (!reader) {
+  shortcut_recovery_t(valhalla::baldr::GraphReader* reader,
+                      bool shortcut_to_edge_cache,
+                      bool edge_to_shortcut_cache)
+      : shortcut_to_edge_cache_enabled(shortcut_to_edge_cache),
+        edge_to_shortcut_cache_enabled(edge_to_shortcut_cache) {
+    // do nothing if the reader is no good or both directions are disabled
+    if (!reader || (!shortcut_to_edge_cache && !edge_to_shortcut_cache)) {
       LOG_INFO("Shortcut recovery cache disabled");
       return;
     }
-    LOG_INFO("Shortcut recovery cache enabled");
+    if (shortcut_to_edge_cache)
+      LOG_INFO("Shortcut to edge recovery cache enabled");
+    if (edge_to_shortcut_cache)
+      LOG_INFO("Edge to shortcut recovery cache enabled");
 
     // completely skip the levels that dont have shortcuts
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
@@ -59,7 +66,14 @@ protected:
           unrecovered += failed;
           superseded += failed ? 0 : recovered.size();
           // cache it even if it failed (no point in trying the same thing twice)
-          shortcuts.emplace(shortcut_id, std::move(recovered));
+          if (edge_to_shortcut_cache) {
+            for (auto recovered_edge : recovered) {
+              superseded_edges.emplace(recovered_edge, shortcut_id);
+            }
+          }
+          if (shortcut_to_edge_cache) {
+            shortcuts.emplace(shortcut_id, std::move(recovered));
+          }
 
           // its cheaper to get the opposing without crawling the graph
           auto opp_tile = tile;
@@ -79,7 +93,14 @@ protected:
           unrecovered += failed;
           superseded += failed ? 0 : opp_recovered.size();
           // cache it even if it failed (no point in trying the same thing twice)
-          shortcuts.emplace(opp_id, std::move(opp_recovered));
+          if (edge_to_shortcut_cache) {
+            for (auto recovered_edge : opp_recovered) {
+              superseded_edges.emplace(recovered_edge, opp_id);
+            }
+          }
+          if (shortcut_to_edge_cache) {
+            shortcuts.emplace(opp_id, std::move(opp_recovered));
+          }
         }
       }
     }
@@ -91,9 +112,9 @@ protected:
 
   /**
    * Recovers the edges comprising a shortcut edge.
-   * @param reader       The graphreader for graph data ccess
-   * @param  shortcutid  Graph Id of the shortcut edge.
-   * @return Returns the edgeids of the directed edges this shortcut represents.
+   * @param reader       The GraphReader for graph data access
+   * @param  shortcutid  GraphId of the shortcut edge.
+   * @return Returns the GraphIds of the directed edges this shortcut represents.
    */
   std::vector<valhalla::baldr::GraphId>
   recover_shortcut(valhalla::baldr::GraphReader& reader,
@@ -194,11 +215,96 @@ protected:
     return edges;
   }
 
+  /**
+   * Finds the shortcut that supersedes the given edge.
+   * @param reader   The GraphReader for graph data access
+   * @param id       GraphId of the edge.
+   * @return Returns the GraphId of the shortcut that supersedes the edge
+   *         or an invalid GraphId if the edge is not part of any shortcut.
+   */
+  valhalla::baldr::GraphId find_shortcut(valhalla::baldr::GraphReader& reader,
+                                         const valhalla::baldr::GraphId& id) const {
+    using namespace valhalla::baldr;
+    // Lambda to get continuing edge at a node. Skips the specified edge Id
+    // transition edges, shortcut edges, and transit connections. Returns
+    // nullptr if more than one edge remains or no continuing edge is found.
+    auto continuing_edge = [](const graph_tile_ptr& tile, const GraphId& edgeid,
+                              const NodeInfo* nodeinfo) {
+      uint32_t idx = nodeinfo->edge_index();
+      const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
+      const DirectedEdge* directededge = tile->directededge(idx);
+      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
+        if (idx == edgeid.id() || directededge->is_shortcut() ||
+            directededge->use() == Use::kTransitConnection ||
+            directededge->use() == Use::kEgressConnection ||
+            directededge->use() == Use::kPlatformConnection) {
+          continue;
+        }
+        if (continuing_edge != nullptr) {
+          return static_cast<const DirectedEdge*>(nullptr);
+        }
+        continuing_edge = directededge;
+      }
+      return continuing_edge;
+    };
+
+    // No shortcuts on the local level or transit level.
+    if (id.level() >= TileHierarchy::levels().back().level) {
+      return {};
+    }
+
+    // If this edge is a shortcut return this edge Id
+    graph_tile_ptr tile = reader.GetGraphTile(id);
+    const DirectedEdge* directededge = tile->directededge(id);
+    if (directededge->is_shortcut()) {
+      return id;
+    }
+
+    // Walk backwards along the opposing directed edge until a shortcut
+    // beginning is found or to get the continuing edge until a node that starts
+    // the shortcut is found or there are 2 or more other regular edges at the
+    // node.
+    GraphId edgeid = id;
+    const NodeInfo* node = nullptr;
+    const DirectedEdge* cont_de = nullptr;
+    while (true) {
+      // Get the continuing directed edge. Initial case is to use the opposing
+      // directed edge.
+      cont_de = (node == nullptr) ? reader.GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
+      if (cont_de == nullptr) {
+        return {};
+      }
+
+      // Get the end node and end node tile
+      GraphId endnode = cont_de->endnode();
+      if (cont_de->leaves_tile()) {
+        tile = reader.GetGraphTile(endnode.Tile_Base());
+      }
+      node = tile->node(endnode);
+
+      // Get the opposing edge Id and its directed edge
+      uint32_t idx = node->edge_index() + cont_de->opp_index();
+      edgeid = {endnode.tileid(), endnode.level(), idx};
+      directededge = tile->directededge(edgeid);
+      if (directededge->superseded()) {
+        // Get the shortcut edge Id that supersedes this edge
+        uint32_t idx = node->edge_index() + (directededge->superseded() - 1);
+        return GraphId(endnode.tileid(), endnode.level(), idx);
+      }
+    }
+    return {};
+  }
+
   // a place to cache the recovered shortcuts
-  std::unordered_map<uint64_t, std::vector<valhalla::baldr::GraphId>> shortcuts;
+  std::unordered_map<valhalla::baldr::GraphId, std::vector<valhalla::baldr::GraphId>> shortcuts;
+  // a place to cache the shortcut membership
+  std::unordered_map<valhalla::baldr::GraphId, valhalla::baldr::GraphId> superseded_edges;
   // a place to keep some stats about the recovery
   size_t unrecovered;
   size_t superseded;
+
+  bool shortcut_to_edge_cache_enabled;
+  bool edge_to_shortcut_cache_enabled;
 
 public:
   /**
@@ -208,8 +314,10 @@ public:
    * @param reader       the reader used to initialize the cache the first time
    * @return a filled cache mapping shortcuts to superceeded edges
    */
-  static shortcut_recovery_t& get_instance(valhalla::baldr::GraphReader* reader = nullptr) {
-    static shortcut_recovery_t cache{reader};
+  static shortcut_recovery_t& get_instance(valhalla::baldr::GraphReader* reader = nullptr,
+                                           bool shortcut_to_edge_cache = true,
+                                           bool edge_to_shortcut_cache = true) {
+    static shortcut_recovery_t cache{reader, shortcut_to_edge_cache, edge_to_shortcut_cache};
     return cache;
   }
 
@@ -223,11 +331,35 @@ public:
   std::vector<valhalla::baldr::GraphId> get(const valhalla::baldr::GraphId& shortcut_id,
                                             valhalla::baldr::GraphReader& reader) const {
     // in the case that we didnt fill the cache we fallback to recovering on the fly
-    auto itr = shortcuts.find(shortcut_id);
-    if (itr == shortcuts.cend())
+    if (!shortcut_to_edge_cache_enabled) {
       return recover_shortcut(reader, shortcut_id);
-    // it was in cache
-    return itr->second;
+    }
+
+    auto itr = shortcuts.find(shortcut_id);
+    if (itr != shortcuts.cend())
+      return itr->second;
+
+    return {};
+  }
+
+  /**
+   * returns the graphid of the shortcut that supersedes the provided edge.
+   *
+   * @param shortcut_id   the shortcuts edge id
+   * @return the list of superceded edges
+   */
+  valhalla::baldr::GraphId get_shortcut(const valhalla::baldr::GraphId& edge_id,
+                                        valhalla::baldr::GraphReader& reader) const {
+    // in the case that we didnt fill the cache we fallback to recovering on the fly
+    if (!edge_to_shortcut_cache_enabled) {
+      return find_shortcut(reader, edge_id);
+    }
+
+    auto itr = superseded_edges.find(edge_id);
+    if (itr != superseded_edges.cend())
+      return itr->second;
+
+    return {};
   }
 };
 

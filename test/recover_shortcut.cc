@@ -26,7 +26,7 @@ const auto conf = test::make_config("test/data/utrecht_tiles");
 
 // expose the constructor
 struct testable_recovery : public shortcut_recovery_t {
-  testable_recovery(GraphReader* reader) : shortcut_recovery_t(reader) {
+  testable_recovery(GraphReader* reader) : shortcut_recovery_t(reader, true, false) {
   }
 };
 
