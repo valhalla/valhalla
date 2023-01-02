@@ -149,7 +149,6 @@ const std::unordered_map<int, std::string> warning_codes = {
   {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
-<<<<<<< HEAD
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
@@ -158,29 +157,26 @@ const std::unordered_map<int, std::string> warning_codes = {
   {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  {208, R"(many:many matrix is using CostMatrix algorithm, ignoring "matrix_locations")"},
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   // 4xx is used when we do sneaky important things the user should be aware of
-  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
-};
-=======
-  {203, R"(many:many matrix is using CostMatrix algorithm, ignoring "matrix_locations")"},
-  {}
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  // 500 is for clamped values: can't distinguish with a code
+  {500, R"(Value was clamped to: )"},
 };
 
 // function to add warnings to proto info object
-void add_warning(valhalla::Api& api, int code, const std::string& extra = "") {
+void add_warning(google::protobuf::RepeatedPtrField<CodedDescription>& warnings, int code, const std::string& extra = "") {
   auto message = warning_codes.find(code);
   if (message == warning_codes.end()) {
     return;
   }
-  auto* warning = api.mutable_info()->mutable_warnings()->Add();
+  auto* warning = warnings.Add();
   warning->set_description(message->second + extra);
   warning->set_code(message->first);
 }
-
->>>>>>> dab83f82e (warn on ineffective matrix_locations parameter when using costmatrix algo)
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
@@ -714,11 +710,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get<std::string>(doc, "/costing",
                                   pbf ? Costing_Enum_Name(options.costing_type()) : "none");
 
+  auto& warnings = *api.mutable_info()->mutable_warnings();
+
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
 
-    add_warning(api, 100);
+    add_warning(warnings, 100);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -734,7 +732,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "hov") {
 
     // add warning for hov costing
-    add_warning(api, 101);
+    add_warning(warnings, 101);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -750,7 +748,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (costing_str == "auto_data_fix") {
 
     // warning for auto data fix
-    add_warning(api, 102);
+    add_warning(warnings, 102);
 
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
@@ -989,7 +987,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // Parse all of the costing options in their specified order
-  sif::ParseCosting(doc, "/costing_options", options, );
+  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
 
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
@@ -1036,22 +1034,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   else
     parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
 
-<<<<<<< HEAD
-  // Get the matrix_loctions option and set if sources or targets size is one
-  // (option is only supported with one to many or many to one matrix requests)
-  // TODO(nils): Why is that? IMO this makes a lot of sense for a many:many call
-  // of timedistancematrix as well no?
-  auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
-  if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
-    options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
-    options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
-  }
-=======
   // Get the matrix_loctions option
   options.set_matrix_locations(
       rapidjson::get<int>(doc, "/matrix_locations", std::numeric_limits<uint32_t>::max()));
->>>>>>> dab83f82e (warn on ineffective matrix_locations parameter when using costmatrix algo)
 
   // get the avoid polygons in there
   auto rings_req =
@@ -1201,7 +1186,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // add warning for deprecated best_paths
   if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
-    add_warning(api, 103);
+    add_warning(warnings, 103);
   }
   // deprecated best_paths for map matching top k
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));

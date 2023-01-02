@@ -75,7 +75,6 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
 
-<<<<<<< HEAD
 /**
  * Adds a warning to the request PBF object.
  *
@@ -83,9 +82,6 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& options)
  * @param code  the warning code
  * @param extra an optional string to append to the hard-coded warning message
  */
-=======
-// function to add warnings to proto info object
->>>>>>> dab83f82e (warn on ineffective matrix_locations parameter when using costmatrix algo)
 void add_warning(valhalla::Api& api, unsigned code, const std::string& extra = "");
 
 #ifdef ENABLE_SERVICES
