@@ -21,10 +21,10 @@
    * ADDED: --bbox & --geojson-dir options to valhalla_build_extract to only archive a subset of tiles [#3856](https://github.com/valhalla/valhalla/pull/3856)
    * CHANGED: Replace unstable c++ geos API with a mix of geos' c api and boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * ADDED: optional write-access to traffic extract from GraphReader [#3876](https://github.com/valhalla/valhalla/pull/3876)
-   * CHANGED: move documentation hosting to Github Pages from readthedocs.io [#3884](https://github.com/valhalla/valhalla/pull/3884)
    * UPDATED: locales from Transifex [#3879](https://github.com/valhalla/valhalla/pull/3879)
    * CHANGED: Build most of Baldr with -Werror [#3885](https://github.com/valhalla/valhalla/pull/3885)
    * UPDATED: some documentation overhaul to slim down root's README [#3881](https://github.com/valhalla/valhalla/pull/3881)
+   * CHANGED: move documentation hosting to Github Pages from readthedocs.io [#3884](https://github.com/valhalla/valhalla/pull/3884)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
