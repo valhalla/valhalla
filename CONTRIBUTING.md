@@ -3,17 +3,17 @@ We welcome contributions to Valhalla. If you would like to report an issue, or e
 There are many ways to make meaningful contributions to the project:
 - file issues & bugs with **clear and easily reproducible instructions**
 - contribute bug fixes
-- contribute feature implementations, for your own sake **only after opening an issue asking for feedback**
+- contribute feature implementations, for larger features/changes its best to **open an issue asking for feedback before starting implementation**
 - improve translations on [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/)
 
 ## Code contributions
 
-We appreciate the community to pick up and fix bugs or even implement new features. There are a few things to follow/be aware of when developing Valhalla:
-- we currently use the C++11 standard
+We appreciate the community picking up and fixing bugs or even implementing new features. There are a few things to follow/be aware of when working on Valhalla:
+- we currently use the C++14 standard
 - we use `pre-commit` to make sure commits are formatted & linted: run `./scripts/format.sh` once and it'll be installed
 - `clang-format`/`clang-tidy` is used to format/lint the C++ code, `black` & `flake8` format/lint Python code
 - [`ASan`](https://clang.llvm.org/docs/AddressSanitizer.html) is run in CI, but without its integrated leak sanitizer due to platform issues
-- we ask for tests to prove the bug fix or feature implementation, please feel free to ask us for directions in the PR
+- we ask for unit tests to demonstrate a working bug fix or feature implementation, please feel free to ask us for instructions in the PR
 
 Before opening a PR we'd ask you to format & lint the code:
 ```
@@ -34,7 +34,7 @@ export ASAN_OPTIONS=detect_leaks=0
 
 ### Unit/integration Tests
 
-We highly encourage running and updating the tests to make sure no regressions have been made. We use the Google test suite and also created our own test framework called "gurka" (the Norsk pendant to OSRM's "cucumber"), to easily test custom-built maps. Check out more information in the [test docs](test/gurka/README.md).
+We highly encourage running and updating the tests to make sure no regressions have been made. We use the Google test suite and also created our own test framework called "gurka" (the Norsk counterpart to OSRM's "cucumber"), to easily test custom-built maps. Check out more information in the [test docs](test/gurka/README.md).
 
 To build and run all tests:
 
