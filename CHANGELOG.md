@@ -23,6 +23,7 @@
    * ADDED: optional write-access to traffic extract from GraphReader [#3876](https://github.com/valhalla/valhalla/pull/3876)
    * UPDATED: locales from Transifex [#3879](https://github.com/valhalla/valhalla/pull/3879)
    * CHANGED: Build most of Baldr with -Werror [#3885](https://github.com/valhalla/valhalla/pull/3885)
+   * UPDATED: some documentation overhaul to slim down root's README [#3881](https://github.com/valhalla/valhalla/pull/3881)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**

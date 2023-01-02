@@ -7,7 +7,9 @@ Valhalla routing tiles are created from several different open data sets. We owe
 
 [OpenStreetMap](https://www.openstreetmap.org/) is a community-driven, editable map of the world. It prioritizes local knowledge and individual contributions over bulk imports, which often means it has excellent coverage even in remote areas where no large-scale mapping efforts have been attempted. OpenStreetMap contains information on landmarks, buildings, roads, and natural features. Valhalla primarily uses the road information from OSM to create its routing network. Valhalla also uses the relations information to provide extra attribution to roads and to create restrictions. The higher-level administrative polygon information is also used to identify country and state/province information for roads.
 
-All OpenStreetMap data is licensed under the [ODbL](http://opendatacommons.org/licenses/odbl/), a [share-alike](https://en.wikipedia.org/wiki/Share-alike) license, which also requires attribution.
+All OpenStreetMap data is licensed under the [ODbL](http://opendatacommons.org/licenses/odbl/), a [share-alike](https://en.wikipedia.org/wiki/Share-alike) license, which also requires [attribution](https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines).
+
+Please consider donating to the OSM Foundation to help cover the administration and server costs.
 
 ## Transitland
 
