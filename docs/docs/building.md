@@ -1,4 +1,4 @@
-We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](../CONTRIBUTING.md).
+We aim to make Valhalla installable on every half-modern hardware, platform and architecture. If the below instructions are not working for you, we'd be happy if you [file an issue or open a PR with a fix](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md).
 
 ### Build Configuration (all platforms)
 
@@ -143,7 +143,7 @@ The artifacts will be built to `./build/Release`.
 
 ## Running Valhalla server on Unix
 
-The following script should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](docs/elevation.md)).
+The following script should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](./elevation.md)).
 
 ```bash
 # download some data and make tiles out of it
