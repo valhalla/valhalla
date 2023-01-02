@@ -27,7 +27,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/). 
 
-OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [data_sources.md](https://github.com/valhalla/valhalla/blob/master/docs/mjolnir/data_sources.md).
+OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [the docs](https://valhalla.github.io/valhalla/mjolnir/data_sources/).
 
 ## Overview
 
@@ -79,7 +79,7 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 To run Valhalla locally or your own server, we recommend using our Docker image. Checkout the `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
 
-If you want to build Valhalla from source, follow the [documentation](https://github.com/valhalla/valhalla/blob/master/docs/docs/building.md).
+If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
 For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
 
