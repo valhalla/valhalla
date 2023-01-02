@@ -39,11 +39,12 @@ We may introduce forward-compatible changes: query parameters and response prope
 
 ## Releasing a version
 
-1. Check out the appropriate release branch `x.y`.
-2. Make sure `CHANGELOG.md` is up to date.
-3. Make sure all tests are passing (e.g. Circle CI gives you a :green_apple:).
-4. Make sure the [`valhalla/valhalla.h`](https://github.com/valhalla/valhalla/blob/master/valhalla/valhalla.h) has been updated.
-5. Use an annotated tag to mark the release: `git tag x.y.z -a`. The body of the tag description
+1. Update the translations from Transifex, see [README](https://github.com/valhalla/valhalla/blob/master/README.md).
+2. Check out the appropriate release branch `x.y`.
+3. Make sure `CHANGELOG.md` is up to date.
+4. Make sure all tests are passing (e.g. Circle CI gives you a :green_apple:).
+5. Make sure the [`valhalla/valhalla.h`](https://github.com/valhalla/valhalla/blob/master/valhalla/valhalla.h) has been updated.
+6. Use an annotated tag to mark the release: `git tag x.y.z -a`. The body of the tag description
    should be the changelog entries.
 6. Push tags and commits: `git push; git push --tags`
 7. On https://github.com/valhalla/valhalla/releases press `Draft a new release`, write the release

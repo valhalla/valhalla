@@ -1,7 +1,7 @@
 [main]
 host = https://www.transifex.com
 
-[valhalla-phrases.locales-en-us-json--transifex]
+[o:valhalla:p:valhalla-phrases:r:locales-en-us-json--transifex]
 file_filter = locales/<lang>.json
 minimum_perc = 0
 source_file = locales/en-US.json
