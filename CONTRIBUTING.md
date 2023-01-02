@@ -61,7 +61,7 @@ This will mostly be performed by the maintainers before we merge PRs which could
 4. E.g. `./run_route_scripts/run_with_server.py --test-file auto.txt --url http://localhost:8002/route --concurrency 20 --format csv`
 
 
-## Tranlation contributions
+## Translation contributions
 
 Valhalla currently supports almost 30 languages with > 95% translation coverage. If you find that Valhalla's output instructions are not supported or not optimal in your favorite language, it'd be great if you took the time to contribute improvements. We're using [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) to manage translations and try to download all improvements before each release.
 
