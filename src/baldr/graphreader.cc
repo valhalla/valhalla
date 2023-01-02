@@ -11,7 +11,6 @@
 #include "incident_singleton.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
-#include "shortcut_recovery.h"
 
 using namespace valhalla::midgard;
 
@@ -508,8 +507,9 @@ GraphReader::GraphReader(const boost::property_tree::ptree& pt,
   }
 
   // Fill shortcut recovery cache if requested or by default in memmap mode
-  shortcut_recovery_t::get_instance(this, pt.get<bool>("shortcut_to_edge_cache", false),
-                                    pt.get<bool>("edge_to_shortcut_cache", false));
+  shortcut_recovery_ =
+      std::make_shared<shortcut_recovery_t>(this, pt.get<bool>("shortcut_to_edge_cache", false),
+                                            pt.get<bool>("edge_to_shortcut_cache", false));
 }
 
 // Method to test if tile exists
@@ -741,12 +741,12 @@ bool GraphReader::AreEdgesConnectedForward(const GraphId& edge1,
 
 // Get the shortcut edge that includes this edge.
 GraphId GraphReader::GetShortcut(const GraphId& id) {
-  return shortcut_recovery_t::get_instance().get_shortcut(id, *this);
+  return shortcut_recovery_->get_shortcut(id, *this);
 }
 
 // Unpack edges for a given shortcut edge
 std::vector<GraphId> GraphReader::RecoverShortcut(const GraphId& shortcut_id) {
-  return shortcut_recovery_t::get_instance().get(shortcut_id, *this);
+  return shortcut_recovery_->get(shortcut_id, *this);
 }
 
 // Convenience method to get the relative edge density (from the

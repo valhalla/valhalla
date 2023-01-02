@@ -54,7 +54,6 @@ set(sources
     predictedspeeds.cc
     tilehierarchy.cc
     turn.cc
-    shortcut_recovery.h
     streetname.cc
     streetnames.cc
     streetnames_factory.cc
