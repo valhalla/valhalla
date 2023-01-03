@@ -1,7 +1,13 @@
-## Release Date: 2022-??-?? Valhalla 3.3.0
+## Release Date: 2022-??-?? Valhalla 3.3.1
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+
+## Release Date: 2022-01-03 Valhalla 3.3.0
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+  * CHANGED: Upgraded from C++14 to C++17. [#3878](https://github.com/valhalla/valhalla/pull/3878)
 
 ## Release Date: 2022-01-03 Valhalla 3.2.1
 * **Removed**
