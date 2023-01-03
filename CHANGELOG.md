@@ -1,6 +1,11 @@
 ## Release Date: 2022-??-?? Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2022-01-03 Valhalla 3.2.1
+* **Removed**
+* **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
    * FIXED: Added missing ferry tag if manoeuver uses a ferry. It's supposed to be there according to the docs. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * FIXED: Handle hexlifying strings with unsigned chars [#3842](https://github.com/valhalla/valhalla/pull/3842)
