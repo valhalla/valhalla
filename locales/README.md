@@ -55,6 +55,8 @@ Czech `aliases` entry example:
 
 #### Adding new instruction strings
 
+TODO(nils): I don't think that's how it's supposed to work (anymore?). If I understand correctly, we'd upload a new `en_US.json` to Transifex and that'll take care of copying the new stuff to existing translation files.
+
 1. First add the new strings in en-US.json. The JSON keys are used by narrative_builder to select the instruction template string.
 
 2. Sync the new strings to each new narrative language file by running `./merge-en.sh`. This will copy the new English strings to each new language.
@@ -92,7 +94,13 @@ To learn more about the Config command, visit https://docs.transifex.com/client/
 
 ### Pulling translation updates from Transifex
 
-Use this command to pull all changes from Transifex into the Valhalla repo.
+Pull acceptable translation files with 16 threads:
+
+```
+tx pull --minimum-perc 95 --workers 16
+```
+
+Use this command to pull all changes from Transifex into the Valhalla repo (will contain the ones not > 95%).
 
 ```
 tx pull --all

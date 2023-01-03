@@ -185,8 +185,9 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  // Destinations, id and percent used along the edge
-  std::unordered_map<uint64_t, float> destinations_percent_along_;
+  // Mark if edge is a destination
+  std::unordered_multimap<valhalla::baldr::GraphId, std::reference_wrapper<const valhalla::PathEdge>>
+      destinations_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;

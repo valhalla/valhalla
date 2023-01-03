@@ -140,14 +140,15 @@ std::pair<GraphId, GraphId> edge_collapser::nodes_reachable_from(GraphId node_id
 }
 
 GraphId edge_collapser::next_node_id(GraphId last_node_id, GraphId node_id) {
-  //
-  //        -->--     -->--
-  //   \   /  e4 \   /  e1 \   /
-  //   -(p)       (c)       (n)-
-  //   /   \ e3  /   \ e2  /   \
-  //        --<--     --<--
-  //
-  // given p (last_node_id) and c (node_id), return n if there is such a node.
+  /*
+   *        -->--     -->--
+   *   \   /  e4 \   /  e1 \   /
+   *   -(p)       (c)       (n)-
+   *   /   \ e3  /   \ e2  /   \
+   *        --<--     --<--
+   *
+   * given p (last_node_id) and c (node_id), return n if there is such a node.
+   */
   auto nodes = nodes_reachable_from(node_id);
   if (!nodes.first || !nodes.second) {
     return GraphId();
