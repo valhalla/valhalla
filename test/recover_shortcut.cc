@@ -22,7 +22,7 @@ std::string to_string(const midgard::PointLL& p) {
 }
 } // namespace std
 
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config("data/utrecht_tiles");
 
 // expose the constructor
 struct testable_recovery : public shortcut_recovery_t {
@@ -129,6 +129,92 @@ TEST(RecoverShortcut, test_recover_shortcut_edges_no_cache) {
 
 TEST(RecoverShortcut, test_recover_shortcut_edges_cache) {
   recover(true);
+}
+
+std::unordered_set<valhalla::baldr::GraphId> get_all_shortcuts(boost::property_tree::ptree conf) {
+  auto reader = test::make_clean_graphreader(conf.get_child("mjolnir"));
+
+  int total_shortcut_count = 0;
+  std::unordered_set<valhalla::baldr::GraphId> found_shortcut_ids, all_shortcut_ids;
+
+  auto tile_set = reader->GetTileSet();
+  for (const valhalla::baldr::GraphId& tile_id : tile_set) {
+    auto tile = reader->GetGraphTile(tile_id);
+
+    valhalla::baldr::GraphId edge_id{tile_id};
+    for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+      auto directed_edge = tile->directededge(i);
+      if (directed_edge->is_shortcut()) {
+        all_shortcut_ids.emplace(edge_id);
+        continue;
+      }
+
+      auto shortcut_id = reader->GetShortcut(edge_id);
+      if (shortcut_id.Is_Valid()) {
+        found_shortcut_ids.emplace(shortcut_id);
+      }
+    }
+  }
+
+  // We should have found all shortcuts in the graph at this point
+  EXPECT_EQ(all_shortcut_ids.size(), found_shortcut_ids.size());
+  EXPECT_EQ(all_shortcut_ids, found_shortcut_ids);
+
+  for (const auto& shortcut_id : all_shortcut_ids) {
+    auto found = found_shortcut_ids.find(shortcut_id);
+    if (found == found_shortcut_ids.end())
+      LOG_WARN("Shortcut that wasn't resolved properly: " + std::to_string(shortcut_id));
+  }
+
+  for (const auto& shortcut_id : found_shortcut_ids) {
+    auto found = all_shortcut_ids.find(shortcut_id);
+    if (found == all_shortcut_ids.end())
+      LOG_WARN("Edge that was found but is not a shortcut: " + std::to_string(shortcut_id));
+  }
+
+  return found_shortcut_ids;
+}
+
+TEST(GetShortcut, find_get_shortcut_errors) {
+  GraphReader reader(conf.get_child("mjolnir"));
+
+  auto tile_set = reader.GetTileSet();
+  for (const valhalla::baldr::GraphId& tile_id : tile_set) {
+    auto tile = reader.GetGraphTile(tile_id);
+
+    valhalla::baldr::GraphId edge_id{tile_id};
+    for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+      auto directed_edge = tile->directededge(i);
+      if (directed_edge->is_shortcut()) {
+        // Edge is shortcut, let's resolve its edges
+        auto edges_of_shortcut = reader.RecoverShortcut(edge_id);
+
+        for (const auto& edge_of_shortcut : edges_of_shortcut) {
+          // Recover the shortcut that the edge belongs to, should always be the same
+          auto shortcut_id = reader.GetShortcut(edge_of_shortcut);
+          EXPECT_TRUE(shortcut_id.Is_Valid());
+          if (shortcut_id.Is_Valid()) {
+            auto shortcut_directed_edge = reader.GetGraphTile(shortcut_id)->directededge(shortcut_id);
+            EXPECT_TRUE(shortcut_directed_edge->is_shortcut());
+            EXPECT_EQ(shortcut_id, edge_id);
+            if (shortcut_id != edge_id) {
+              LOG_INFO("Edge ID: " + std::to_string(edge_of_shortcut));
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+TEST(GetShortcut, test_get_shortcut_of_edge) {
+  GraphId edge_id(51305, 1, 7482);
+  GraphId expected(51305, 1, 33);
+
+  GraphReader reader(conf.get_child("mjolnir"));
+  auto actual = reader.GetShortcut(edge_id);
+
+  ASSERT_EQ(expected, actual);
 }
 
 int main(int argc, char* argv[]) {
