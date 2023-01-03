@@ -27,7 +27,7 @@ Valhalla is an open source routing engine and accompanying libraries for use wit
 
 Valhalla, and all of the projects under the Valhalla organization, use the [MIT License](COPYING).  Avatar/logo by [Jordan](https://www.instagram.com/jaykaydraws/). 
 
-OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [data_sources.md](https://github.com/valhalla/valhalla/blob/master/docs/mjolnir/data_sources.md).
+OpenStreetMap data in the `./test/data` is licensed under [ODbL](https://opendatacommons.org/licenses/odbl/) and [copyrighted](https://www.openstreetmap.org/copyright) by OSM contributors. Additional information on licenses and other requirements concerning the data sources most frequently used by Valhalla can be found in [the docs](https://valhalla.github.io/valhalla/mjolnir/data_sources/).
 
 ## Overview
 
@@ -73,21 +73,21 @@ The Valhalla organization is comprised of several library modules each responsib
 
 ## Documentation
 
-Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.readthedocs.io](https://valhalla.readthedocs.io/).
+Documentation is stored in the `docs/` folder in this GitHub repository. It can be viewed at [valhalla.github.io/valhalla](https://valhalla.github.io/valhalla).
 
 ## Installation
 
 To run Valhalla locally or your own server, we recommend using our Docker image. Checkout the `run-*` docker containers here: https://hub.docker.com/r/valhalla/valhalla/tags. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
 
-If you want to build Valhalla from source, follow the [documentation](docs/building.md).
+If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
-For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](docs).
+For more information on binaries, see [Command Line Tools](#command-line-tools) section below and the [docs](https://valhalla.github.io/valhalla).
 
 ## Contributing
 
 We :heart: contributions to Valhalla. They could be non-technical, e.g. translations into other languages via [Transifex](https://www.transifex.com/valhalla/valhalla-phrases/locales-en-us-json--transifex/) or documentation improvements, or technical ones like bug fixes or feature implementations. It's important to open an issue before setting out to work on a PR.
 
-Ideally, get familiar with our [Contribution guidelines](./CONTRIBUTING.md) first.
+Ideally, get familiar with our [Contribution guidelines](https://github.com/valhalla/valhalla/blob/master/CONTRIBUTING.md) first.
 
 ## Benchmarks
 
@@ -116,7 +116,7 @@ It's important to note that all Valhalla logs for one-shot mode are piped to `st
 
 ### Batch Script Tool
 
-- [Batch Run_Route](./run_route_scripts/README.md)
+- [Batch Run_Route](https://github.com/valhalla/valhalla/blob/master/run_route_scripts/README.md)
 
 ## Related projects
 
