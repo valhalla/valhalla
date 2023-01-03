@@ -24,6 +24,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
 filesystem::path config_file_path;
+boost::property_tree::ptree pt;
 
 // Structure holding an edge Id and forward flag
 struct EdgeAndDirection {
@@ -44,6 +45,7 @@ bool ParseArguments(int argc, char* argv[]) {
 
     options.add_options()
       ("h,help", "Print this help message.")
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
     // clang-format on
@@ -60,12 +62,18 @@ bool ParseArguments(int argc, char* argv[]) {
       exit(0);
     }
 
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
+    // Read the config file
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, pt);
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(
+                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+      rapidjson::read_json(config_file_path.string(), pt);
     } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
+      std::cerr << "Configuration is required\n" << options.help() << std::endl;
+      return EXIT_FAILURE;
     }
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
@@ -81,10 +89,6 @@ int main(int argc, char** argv) {
   if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
   }
-
-  // Get the config to see which coverage we are using
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
 
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
