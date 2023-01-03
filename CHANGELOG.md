@@ -1,4 +1,9 @@
-## Release Date: 2022-??-?? Valhalla 3.2.1
+## Release Date: 2022-??-?? Valhalla 3.3.0
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2022-01-03 Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
