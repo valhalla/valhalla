@@ -2221,9 +2221,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "gångvägen",
+        "cykelbanan",
+        "terrängcykelbanan",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2241,9 +2241,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "gångvägen",
+        "cykelbanan",
+        "terrängcykelbanan",
         "the crosswalk"
       ],
       "example_phrases": {
