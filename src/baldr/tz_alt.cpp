@@ -357,6 +357,7 @@ CONSTDATA auto max_day = date::December/31;
 
 #if USE_OS_TZDB
 
+// TODO: still the right macro?
 CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 
 #endif  // USE_OS_TZDB
