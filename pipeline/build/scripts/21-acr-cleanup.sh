@@ -24,7 +24,7 @@ az acr task create --name PurgeTask \
   --schedule "0 1 * * Sun" \
   --registry ${APP_REGISTRY_USERNAME} \
   --context /dev/null \
-  --subscription ${AZURE_SUBSCRIPTION_ID} \
+  --subscription ${SHARE_SUBSCRIPTION_ID} \
 || exit 2
 
 az logout
