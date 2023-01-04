@@ -21,7 +21,7 @@ az login \
 || exit 1
 
 APP_STORAGE_NAME=${APP_STAGE//-}
-APP_STORAGE_RESOURCE_GROUP=${APP_STAGE}-terraform-rg
+APP_STORAGE_RESOURCE_GROUP=${APP_STAGE}-terraform-statefile-rg
 if [[ ${REGION} == "china" ]]
 then
   APP_STORAGE_ENVIRONMENT=china
