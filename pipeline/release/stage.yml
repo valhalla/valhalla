@@ -38,6 +38,15 @@ stages:
                   clean: true
                   persistCredentials: true
 
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '3.x'
+                  displayName: 'Use Python 3.x'
+
+                - script: |
+                    python -m pip install --upgrade conan
+                  displayName: 'Install dependencies'
+
                 - bash: |
                     echo "##vso[task.setvariable variable=app.version]${BUILD_BUILDNUMBER}"
                   name: version
