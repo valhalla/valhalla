@@ -5,6 +5,7 @@ parameters:
 stages:
   - stage: ${{ parameters.name }}
     displayName: ${{ parameters.name }}
+    condition: eq(variables['run.deploy'], 'True')
     variables:
       - ${{ each group in parameters.variables }}:
           - group: ${{ group }}

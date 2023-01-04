@@ -13,11 +13,6 @@ parameters:
   - name: deploy
     type: boolean
     default: true
-    displayName: Deploy to Cluster
-  - name: deploy_all
-    type: boolean
-    default: false
-    displayName: Deploy to all Stages (Override Branch Filters, Subject to Approvals)
   - name: trivy
     type: boolean
     default: false
