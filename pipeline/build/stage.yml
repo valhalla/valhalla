@@ -18,6 +18,15 @@ stages:
           - checkout: self
             clean: true
             persistCredentials: true
+
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: '3.x'
+            displayName: 'Use Python 3.x'
+
+          - script: |
+              python -m pip install --upgrade conan
+            displayName: 'Install dependencies'
           
           #- task: DownloadSecureFile@1
           #  name: sonarcert
