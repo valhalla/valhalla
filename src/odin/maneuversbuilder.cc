@@ -1321,9 +1321,10 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     // Exit number
     for (const auto& exit_number : prev_edge->sign().exit_numbers()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(exit_number.has_pronunciation(),
-                             baldr::Pronunciation{exit_number.pronunciation().alphabet(),
-                                                  exit_number.pronunciation().value()});
+          exit_number.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_number.pronunciation().alphabet(),
+                                                        exit_number.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_number_list()
           ->emplace_back(exit_number.text(), exit_number.is_route_number(), pronunciation);
@@ -1332,9 +1333,10 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     // Exit branch
     for (const auto& exit_onto_street : prev_edge->sign().exit_onto_streets()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(exit_onto_street.has_pronunciation(),
-                             baldr::Pronunciation{exit_onto_street.pronunciation().alphabet(),
-                                                  exit_onto_street.pronunciation().value()});
+          exit_onto_street.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_onto_street.pronunciation().alphabet(),
+                                                        exit_onto_street.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_branch_list()
           ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number(), pronunciation);
@@ -1343,9 +1345,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     // Exit toward
     for (const auto& exit_toward_location : prev_edge->sign().exit_toward_locations()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(exit_toward_location.has_pronunciation(),
-                             baldr::Pronunciation{exit_toward_location.pronunciation().alphabet(),
-                                                  exit_toward_location.pronunciation().value()});
+          exit_toward_location.has_pronunciation()
+              ? std::make_optional(
+                    baldr::Pronunciation{exit_toward_location.pronunciation().alphabet(),
+                                         exit_toward_location.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_toward_list()
           ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number(),
@@ -1355,9 +1359,10 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
     // Exit name
     for (const auto& exit_name : prev_edge->sign().exit_names()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(exit_name.has_pronunciation(),
-                             baldr::Pronunciation{exit_name.pronunciation().alphabet(),
-                                                  exit_name.pronunciation().value()});
+          exit_name.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_name.pronunciation().alphabet(),
+                                                        exit_name.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(exit_name.text(),
                                                                        exit_name.is_route_number(),
                                                                        pronunciation);
@@ -1503,9 +1508,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     // Guide branch
     for (const auto& guide_onto_street : curr_edge->sign().guide_onto_streets()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(guide_onto_street.has_pronunciation(),
-                             baldr::Pronunciation{guide_onto_street.pronunciation().alphabet(),
-                                                  guide_onto_street.pronunciation().value()});
+          guide_onto_street.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{guide_onto_street.pronunciation().alphabet(),
+                                                        guide_onto_street.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_guide_branch_list()
           ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number(),
@@ -1515,9 +1521,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     // Guide toward
     for (const auto& guide_toward_location : curr_edge->sign().guide_toward_locations()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(guide_toward_location.has_pronunciation(),
-                             baldr::Pronunciation{guide_toward_location.pronunciation().alphabet(),
-                                                  guide_toward_location.pronunciation().value()});
+          guide_toward_location.has_pronunciation()
+              ? std::make_optional(
+                    baldr::Pronunciation{guide_toward_location.pronunciation().alphabet(),
+                                         guide_toward_location.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_guide_toward_list()
           ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number(),
@@ -1527,9 +1535,10 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
     // Junction name
     for (const auto& junction_name : curr_edge->sign().junction_names()) {
       std::optional<baldr::Pronunciation> pronunciation =
-          std::make_optional(junction_name.has_pronunciation(),
-                             baldr::Pronunciation{junction_name.pronunciation().alphabet(),
-                                                  junction_name.pronunciation().value()});
+          junction_name.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{junction_name.pronunciation().alphabet(),
+                                                        junction_name.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_junction_name_list()
           ->emplace_back(junction_name.text(), junction_name.is_route_number(), pronunciation);

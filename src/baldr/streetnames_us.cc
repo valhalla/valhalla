@@ -15,7 +15,7 @@ StreetNamesUs::StreetNamesUs() : StreetNames() {
 
 StreetNamesUs::StreetNamesUs(const std::vector<std::pair<std::string, bool>>& names) {
   for (auto& name : names) {
-    this->emplace_back(std::make_unique<StreetNameUs>(name.first, name.second, boost::none));
+    this->emplace_back(std::make_unique<StreetNameUs>(name.first, name.second, std::nullopt));
   }
 }
 

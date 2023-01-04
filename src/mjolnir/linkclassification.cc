@@ -1,7 +1,5 @@
-#include "mjolnir/ferry_connections.h"
-#include "mjolnir/node_expander.h"
-
 #include <list>
+#include <optional>
 #include <queue>
 #include <unordered_set>
 #include <vector>
@@ -9,7 +7,8 @@
 #include "baldr/graphid.h"
 #include "baldr/json.h"
 #include "midgard/util.h"
-
+#include "mjolnir/ferry_connections.h"
+#include "mjolnir/node_expander.h"
 #include "mjolnir/util.h"
 
 using namespace valhalla::baldr;
@@ -656,7 +655,7 @@ bool IsSlipLane(Data& data, SlipLaneInput input, double traverse_threshold) {
                                            *intersection_node));
   }
 
-  return intersection_node.is_initialized();
+  return intersection_node != std::nullopt;
 }
 
 SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edges) {

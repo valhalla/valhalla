@@ -20,7 +20,7 @@ public:
    */
   Sign(const std::string& text,
        const bool is_route_number,
-       const std::optional<baldr::Pronunciation>& pronunciation = boost::none);
+       const std::optional<baldr::Pronunciation>& pronunciation = std::nullopt);
 
   /**
    * Returns the sign text.

@@ -182,7 +182,7 @@ public:
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
     }
-    return boost::none;
+    return std::nullopt;
   }
 };
 

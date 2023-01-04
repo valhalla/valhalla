@@ -76,9 +76,12 @@ std::optional<std::string> MarkupFormatter::FormatPhonemeElement(const Sign& sig
       std::string phoneme_markup_string = FormatPhonemeElement(sign.text(), sign.pronunciation());
 
       // If the markup string exists then return the sign with the phoneme
-      return std::make_optional(!phoneme_markup_string.empty(), phoneme_markup_string);
+      if (!phoneme_markup_string.empty()) {
+        return std::make_optional(phoneme_markup_string);
+      }
     }
   }
+
   return std::nullopt;
 }
 

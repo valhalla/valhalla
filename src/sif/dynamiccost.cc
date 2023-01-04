@@ -1,4 +1,4 @@
-#include <boost::optional>
+#include <boost/optional.hpp>
 #include <utility>
 
 #include "baldr/graphconstants.h"

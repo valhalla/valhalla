@@ -26,7 +26,7 @@ TEST(recosting, forward_vs_reverse) {
     if (e.classification() == baldr::RoadClass::kResidential) {
       e.set_constrained_flow_speed(40);
     }
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -133,7 +133,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options

@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_LOCATION_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include <valhalla/baldr/rapidjson_utils.h>

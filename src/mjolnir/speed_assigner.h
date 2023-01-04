@@ -191,7 +191,7 @@ protected:
   }
 
 public:
-  SpeedAssigner(const std::optional<std::string>& config_file) {
+  SpeedAssigner(const boost::optional<std::string>& config_file) {
     if (!config_file) {
       LOG_INFO("Disabled default speeds assignment from config");
       return;

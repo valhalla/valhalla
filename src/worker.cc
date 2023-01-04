@@ -17,6 +17,7 @@
 #include "thor/worker.h"
 #include "worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
@@ -246,7 +247,7 @@ void parse_ring(ring_pbf_t* ring, const rapidjson::Value& coord_array) {
 void parse_location(valhalla::Location* location,
                     const rapidjson::Value& r_loc,
                     Api& request,
-                    const std::optional<bool>& ignore_closures,
+                    const boost::optional<bool>& ignore_closures,
                     bool is_last_loc) {
   auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
   if (location->has_ll() && location->ll().has_lat_case()) {
@@ -363,7 +364,7 @@ void parse_location(valhalla::Location* location,
     location->set_street_side_max_distance(*street_side_max_distance);
   }
 
-  std::optional<bool> exclude_closures;
+  boost::optional<bool> exclude_closures;
   // is it json?
   auto search_filter = rapidjson::get_child_optional(r_loc, "/search_filter");
   if (search_filter) {
@@ -450,7 +451,7 @@ void parse_locations(const rapidjson::Document& doc,
                      Api& request,
                      const std::string& node,
                      unsigned location_parse_error_code,
-                     const boost::std<bool>& ignore_closures,
+                     const boost::optional<bool>& ignore_closures,
                      bool& had_date_time) {
   auto& options = *request.mutable_options();
 
