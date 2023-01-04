@@ -33,6 +33,15 @@ parameters:
     type: boolean
     default: false
     displayName: Build in Debug Mode with Assertions
+  - name: EMEA_DEV
+    type: boolean
+    default: false
+  - name: EMEA_NONPROD
+    type: boolean
+    default: false
+  - name: EMEA_PROD
+    type: boolean
+    default: false
 
 variables:
   - name: app.key
@@ -68,6 +77,7 @@ stages:
   - template: pipeline/release/stage.yml
     parameters:
       name: emea_dev
+      enabled: eq('${{ parameters.EMEA_DEV }}', true )
       region: emea
       environment: dev
       namespace: $(app.name)
@@ -81,10 +91,10 @@ stages:
   - template: pipeline/release/stage.yml
     parameters:
       name: emea_nonprod
+      enabled: or( eq('${{ parameters.EMEA_NONPROD }}', true ) , eq('${{ parameters.EMEA_PROD }}', true ) )
       region: emea
       environment: nonprod
       namespace: $(app.name)
-      branchFilter: or(${{ parameters.deploy_all }}, contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
         - way.emea.shared
         - datadog
@@ -95,10 +105,10 @@ stages:
   - template: pipeline/release/stage.yml
     parameters:
       name: emea_prod
+      enabled: eq('${{ parameters.EMEA_PROD }}', true )
       region: emea
       environment: prod
       namespace: $(app.name)
-      branchFilter: or(${{ parameters.deploy_all }}, startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))
       variables:
         - way.emea.shared
         - datadog
