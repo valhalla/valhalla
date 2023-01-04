@@ -28,7 +28,7 @@ then
   bash -s - \
     --blackduck.url=${BLACKDUCK_URL} \
     --blackduck.api.token=${BLACKDUCK_API_TOKEN} \
-    --detect.project.name=${APP_NAME} \
+    --detect.project.name=MICWAY \
     --detect.project.version.name=${APP_VERSION} \
     --detect.project.codelocation.unmap=true \
     --detect.timeout=36000

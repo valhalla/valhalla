@@ -38,15 +38,15 @@ stages:
             name: version
             displayName: Version
 
-          #- bash: |
-          #    source pipeline/build/scripts/20-scan.sh
-          #  name: scan
-          #  displayName: Scanners
-          #  env:
+          - bash: |
+              source pipeline/build/scripts/20-scan.sh
+            name: scan
+            displayName: Scanners
+            env:
           #    SONAR_TOKEN: $(sonar.token)
           #    SONAR_CERT_PATH: $(sonarcert.secureFilePath)
           #    SONAR_CERT_PASS: $(sonar.cert.passphrase)
-          #    BLACKDUCK_API_TOKEN: $(blackduck.api.token)
+              BLACKDUCK_API_TOKEN: $(blackduck.api.token)
 
           - bash: |
               source pipeline/build/scripts/21-acr-cleanup.sh

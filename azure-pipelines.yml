@@ -9,7 +9,7 @@ trigger:
 parameters:
   - name: provision
     type: boolean
-    default: true
+    default: false
   - name: deploy
     type: boolean
     default: true
@@ -67,7 +67,7 @@ stages:
       variables:
         - way.emea.shared
         #- sonarqube
-        #- blackduck
+        - blackduck
 
   # RELEASE TO DEV
   - template: pipeline/release/stage.yml

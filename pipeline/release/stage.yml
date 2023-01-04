@@ -50,8 +50,8 @@ stages:
                   env:
                     APP_REGISTRY_PASSWORD: $(app.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    #DATADOG_APP_KEY: $(datadog.app.key)
-                    #DATADOG_API_KEY: $(datadog.api.key)
+                    DATADOG_APP_KEY: $(datadog.app.key)
+                    DATADOG_API_KEY: $(datadog.api.key)
 
                 - bash: |
                     source pipeline/release/scripts/20-provision.sh
