@@ -119,3 +119,13 @@ if [[ -z "${GRAPH_SHARE_NAME}" ]]
 then
   echo "ERROR GRAPH_SHARE_NAME variable not defined." && exit 1
 fi
+
+if [[ -z "${DATADOG_API_KEY}" ]]
+then
+  echo "ERROR DATADOG_API_KEY variable not defined." && exit 1
+fi
+
+if [[ -z "${DATADOG_APP_KEY}" ]]
+then
+  echo "ERROR DATADOG_APP_KEY variable not defined." && exit 1
+fi
