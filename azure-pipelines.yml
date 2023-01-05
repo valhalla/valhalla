@@ -52,7 +52,7 @@ variables:
   - name: app.name
     value: valhalla
   - name: run.build
-    value: ${{ parameters.deploy }}
+    value: ${{ parameters.build }}
   - name: run.provision
     value: ${{ parameters.provision }}
   - name: run.deploy
