@@ -11,7 +11,7 @@ stages:
   - stage: ${{ parameters.name }}
     displayName: ${{ parameters.region }}.${{ parameters.environment }}
     dependsOn: ${{ parameters.dependencies }}
-    condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true))
+    condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true), in(stageDependencies.build.result, 'Succeeded', 'Skipped'))
     variables:
       - name: APP_VERSION
         value: $[ stageDependencies.build.build.outputs['version.app.version'] ]
