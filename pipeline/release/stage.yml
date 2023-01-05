@@ -14,7 +14,7 @@ stages:
     condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true))
     variables:
       - name: APP_VERSION
-        value: $[ dependencies.build.outputs['version.app.version'] ]
+        value: $[ stageDependencies.build.build.outputs['version.app.version'] ]
       - name: region
         value: ${{ parameters.region }}
       - name: environment
