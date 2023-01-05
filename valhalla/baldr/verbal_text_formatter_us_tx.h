@@ -5,8 +5,6 @@
 #include <string>
 #include <utility>
 
-#include <boost/optional.hpp>
-
 #include <valhalla/baldr/verbal_text_formatter_us.h>
 
 namespace valhalla {

@@ -6,12 +6,12 @@
 #include <future>
 #include <limits>
 #include <list>
+#include <optional>
 #include <regex>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
 
-#include <boost/optional.hpp>
 #include <lz4frame.h>
 #include <sys/stat.h>
 
@@ -158,7 +158,7 @@ public:
     return true;
   }
 
-  static boost::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
+  static std::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
     std::smatch m;
     std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.(gz|lz4))?$");
     if (std::regex_search(name, m, e)) {
@@ -182,7 +182,7 @@ public:
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
     }
-    return boost::none;
+    return std::nullopt;
   }
 };
 

@@ -1,24 +1,22 @@
+#include <ostream>
 #include <string>
 #include <vector>
 
-#include "baldr/graphid.h"
-#include "config.h"
-#include "filesystem.h"
-#include "mjolnir/graphbuilder.h"
-#include "mjolnir/validatetransit.h"
-
-using namespace valhalla::mjolnir;
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <ostream>
 
+#include "baldr/graphid.h"
+#include "baldr/rapidjson_utils.h"
+#include "config.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/point2.h"
 #include "midgard/polyline2.h"
+#include "mjolnir/graphbuilder.h"
+#include "mjolnir/validatetransit.h"
+
+using namespace valhalla::mjolnir;
 
 filesystem::path config_file_path;
 
@@ -77,8 +75,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
