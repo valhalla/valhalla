@@ -1683,6 +1683,24 @@ struct OSMWay {
   }
 
   /**
+   * Sets the lit state
+   *
+   * @param lit whether the way is lit.
+   */
+  void set_lit(const bool lit) {
+    lit_ = lit;
+  }
+
+  /**
+   * Get the lit state.
+   *
+   * @return bool
+   */
+  bool lit() const {
+    return lit_;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1847,6 +1865,9 @@ struct OSMWay {
 
   // layer index(Z-level) of the way relatively to other levels
   int8_t layer_;
+
+  // whether or not the street is lit
+  bool lit_;
 };
 
 } // namespace mjolnir

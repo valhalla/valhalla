@@ -778,7 +778,7 @@ void BuildTileSet(const std::string& ways_file,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
-                                 bike_network, edge.attributes.reclass_ferry);
+                                 bike_network, edge.attributes.reclass_ferry, w.lit());
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
