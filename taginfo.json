@@ -3101,7 +3101,7 @@
       "key": "indoor",
       "object_types": [
         "node",
-        "ways"
+        "way"
       ],
       "description": "Used for indoor elements."
     },
