@@ -7,6 +7,9 @@ trigger:
 
 # Parameters that can be specified when running the pipeline
 parameters:
+  - name: build
+    type: boolean
+    default: true
   - name: provision
     type: boolean
     default: false
@@ -48,6 +51,8 @@ variables:
     value: way
   - name: app.name
     value: valhalla
+  - name: run.build
+    value: ${{ parameters.deploy }}
   - name: run.provision
     value: ${{ parameters.provision }}
   - name: run.deploy
