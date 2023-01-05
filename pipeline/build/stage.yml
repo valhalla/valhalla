@@ -67,9 +67,9 @@ stages:
             env:
               SHARE_CLIENT_SECRET: $(share.client.secret)
 
-#          - bash: |
-#              source pipeline/build/scripts/30-package.sh
-#            name: package
-#            displayName: Package
-#            env:
-#              APP_REGISTRY_PASSWORD: $(app.registry.password)
+          - bash: |
+              source pipeline/build/scripts/30-package.sh
+            name: package
+            displayName: Package
+            env:
+              APP_REGISTRY_PASSWORD: $(app.registry.password)
