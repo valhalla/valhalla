@@ -4,6 +4,11 @@ theme:
   name: material
   logo: images/valhalla.png
   favicon: images/valhalla.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - toc.follow
   palette:
     - scheme: default
       toggle:
