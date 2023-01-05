@@ -27,5 +27,3 @@ echo "##vso[build.updatebuildnumber]${VERSION}"
 echo "##vso[task.setvariable variable=app.version]${VERSION}"
 echo "##vso[task.setvariable variable=app.version;isoutput=true]${VERSION}"
 echo "##vso[task.setvariable variable=app.version.latest]${LATEST}"
-
-exit 1
