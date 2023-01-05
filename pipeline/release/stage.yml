@@ -11,7 +11,7 @@ stages:
   - stage: ${{ parameters.name }}
     displayName: ${{ parameters.region }}.${{ parameters.environment }}
     dependsOn: ${{ parameters.dependencies }}
-    condition: or(and( succeeded(), ne(variables['Build.Reason'], 'PullRequest'), eq( ${{ parameters.enabled }} , true)), and(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'False'), eq( ${{ parameters.enabled }} , true)))
+    condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true))
     variables:
       - name: region
         value: ${{ parameters.region }}
