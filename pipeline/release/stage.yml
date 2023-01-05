@@ -13,6 +13,8 @@ stages:
     dependsOn: ${{ parameters.dependencies }}
     condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true))
     variables:
+      - name: APP_VERSION
+        value: $[ dependencies.build.outputs['version.app.version'] ]
       - name: region
         value: ${{ parameters.region }}
       - name: environment
@@ -39,7 +41,7 @@ stages:
                   persistCredentials: true
 
                 - bash: |
-                    echo "##vso[task.setvariable variable=app.version]${BUILD_BUILDNUMBER}"
+                    source pipeline/release/scripts/01-version.sh
                   name: version
                   displayName: Version
 
