@@ -47,7 +47,6 @@ jobs:
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - run: scripts/clang-tidy-only-diff.sh 4
       - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
@@ -76,6 +75,7 @@ jobs:
           paths:
             - ~/.ccache
             - ~/.conan
+      - run: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
       - run: |
