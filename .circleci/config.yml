@@ -41,13 +41,14 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - run: scripts/clang-tidy-only-diff.sh 4
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -75,7 +76,6 @@ jobs:
           paths:
             - ~/.ccache
             - ~/.conan
-      - run: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
       - run: |
@@ -89,13 +89,13 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -126,13 +126,13 @@ jobs:
     resource_class: large
     steps:
       - checkout
-      - install_macos_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_macos_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
