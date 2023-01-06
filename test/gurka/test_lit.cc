@@ -34,7 +34,7 @@ TEST_P(LitTest, tagged_lit) {
     ways["AB"]["lit"] = lit_value;
   }
 
-  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/tagged_lit");
+  const gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/tagged_lit");
   std::shared_ptr<baldr::GraphReader> reader =
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
   const auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
