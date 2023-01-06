@@ -24,7 +24,7 @@ gurka::nodelayout LitTest::layout = {};
 //=======================================================================================
 TEST_P(LitTest, tagged_lit) {
 
-  const std::string lit_value = std::get<0>(GetParam());
+  const std::string& lit_value = std::get<0>(GetParam());
 
   gurka::ways ways = {
       {"AB", {{"highway", "residential"}}},
@@ -34,12 +34,12 @@ TEST_P(LitTest, tagged_lit) {
     ways["AB"]["lit"] = lit_value;
   }
 
-  const gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/tagged_lit");
+  const gurka::map& map = gurka::buildtiles(layout, ways, {}, {}, "test/data/tagged_lit");
   std::shared_ptr<baldr::GraphReader> reader =
       test::make_clean_graphreader(map.config.get_child("mjolnir"));
-  const auto edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
+  const auto& edge_tuple = gurka::findEdgeByNodes(*reader, layout, "A", "B");
   const baldr::DirectedEdge* edge = std::get<1>(edge_tuple);
-  const bool evaluates_to = std::get<1>(GetParam());
+  const bool& evaluates_to = std::get<1>(GetParam());
   ASSERT_EQ(edge->lit(), evaluates_to);
 }
 
