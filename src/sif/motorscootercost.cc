@@ -450,13 +450,13 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= service_factor_;
   }
 
-  if (edge->destonly()) {
-    factor += kDestinationOnlyFactor;
-  }
-
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
+  }
+
+  if (edge->destonly()) {
+    factor += kDestinationOnlyFactor;
   }
 
   factor += (density_factor_[edge->density()] - 0.85f) +
