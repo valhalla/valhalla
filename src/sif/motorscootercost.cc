@@ -420,10 +420,14 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
                                     time_info.seconds_from_now)
                    : fixed_speed_;
 
-  if (edge->use() == Use::kFerry) {
+  // TODO: we should not return here when we want to include the distance_factor_ here as well
+  if (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry) {
     assert(speed < speedfactor_.size());
     float sec = (edge->length() * speedfactor_[speed]);
-    return {sec * ferry_factor_, sec};
+    if (shortest_) {
+      return {edge->length(), sec};
+    }
+    return {sec * (edge->use() == Use::kFerry ? ferry_factor_ : rail_ferry_factor_), sec};
   }
 
   uint32_t scooter_speed =
@@ -437,15 +441,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  float factor = 1.0f + (density_factor_[edge->density()] - 0.85f) +
-                 (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
-                 grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
-                 SpeedPenalty(edge, tile, time_info, flow_sources, speed);
-
-  if (edge->destonly()) {
-    factor += kDestinationOnlyFactor;
-  }
-
+  float factor = 1.0f;
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
@@ -453,10 +449,20 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kServiceRoad) {
     factor *= service_factor_;
   }
+
+  if (edge->destonly()) {
+    factor += kDestinationOnlyFactor;
+  }
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
+  factor += (density_factor_[edge->density()] - 0.85f) +
+            (road_factor_ * kRoadClassFactor[static_cast<uint32_t>(edge->classification())]) +
+            grade_penalty_[static_cast<uint32_t>(edge->weighted_grade())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, speed);
 
   return {sec * factor, sec};
 }

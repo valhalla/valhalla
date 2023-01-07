@@ -508,23 +508,6 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
   // base factor is either ferry, rail ferry or density based
   float factor = 1;
   switch (edge->use()) {
-    case Use::kFerry:
-      factor = ferry_factor_;
-      break;
-    case Use::kRailFerry:
-      factor = rail_ferry_factor_;
-      break;
-    default:
-      factor = density_factor_[edge->density()];
-      break;
-  }
-
-  factor += highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
-            edge->toll() * toll_factor_;
-
-  switch (edge->use()) {
     case Use::kAlley:
       factor *= alley_factor_;
       break;
@@ -551,6 +534,23 @@ Cost AutoCost::EdgeCost(const baldr::DirectedEdge* edge,
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor += ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor += rail_ferry_factor_;
+      break;
+    default:
+      factor += density_factor_[edge->density()] +
+                highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+                surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+                SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
+                edge->toll() * toll_factor_;
+      break;
+  }
+
   // base cost before the factor is a linear combination of time vs distance, depending on which
   // one the user thinks is more important to them
   return Cost((sec * inv_distance_factor_ + edge->length() * distance_factor_) * factor, sec);

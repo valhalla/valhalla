@@ -685,10 +685,12 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
                               uint8_t& flow_sources) const {
 
   // Ferries are a special case - they use the ferry speed (stored on the edge)
-  if (edge->use() == Use::kFerry) {
+  if (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry) {
     auto speed = tile->GetSpeed(edge, flow_mask_, time_info.second_of_week, false, &flow_sources);
     float sec = edge->length() * (kSecPerHour * 0.001f) / static_cast<float>(speed);
-    return {sec * ferry_factor_, sec};
+    return {sec * (shortest_ ? 1.0f
+                             : (edge->use() == Use::kFerry ? ferry_factor_ : rail_ferry_factor_)),
+            sec};
   }
 
   float sec = edge->length() * speedfactor_ *
@@ -700,8 +702,7 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // TODO - consider using an array of "use factors" to avoid this conditional
-  float factor = 1.0f + kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] +
-                 grade_penalty[edge->weighted_grade()];
+  float factor = 1.0f;
   if (edge->use() == Use::kFootway || edge->use() == Use::kSidewalk) {
     factor *= walkway_factor_;
   } else if (edge->use() == Use::kAlley) {
@@ -719,6 +720,9 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
   }
+
+  factor += kSacScaleCostFactor[static_cast<uint8_t>(edge->sac_scale())] +
+            grade_penalty[edge->weighted_grade()];
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};

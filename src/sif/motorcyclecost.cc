@@ -408,19 +408,13 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // Special case for travel on a ferry
-  if (edge->use() == Use::kFerry) {
+  // TODO: we should not return here when we want to include the distance_factor_ here as well
+  if (edge->use() == Use::kFerry || edge->use() == Use::kRailFerry) {
     // Use the edge speed (should be the speed of the ferry)
-    return {sec * ferry_factor_, sec};
+    return {sec * (edge->use() == Use::kFerry ? ferry_factor_ : rail_ferry_factor_), sec};
   }
 
-  float factor = density_factor_[edge->density()] +
-                 highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-                 surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())];
-  factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
-  if (edge->toll()) {
-    factor += toll_factor_;
-  }
-
+  float factor = 1;
   if (edge->use() == Use::kTrack) {
     factor *= track_factor_;
   } else if (edge->use() == Use::kLivingStreet) {
@@ -428,10 +422,17 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->use() == Use::kServiceRoad) {
     factor *= service_factor_;
   }
+
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
   }
+
+  factor += density_factor_[edge->density()] +
+            highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+            surface_factor_ * kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+            SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed) +
+            edge->toll() * toll_factor_;
 
   return {sec * factor, sec};
 }

@@ -487,27 +487,8 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   float factor = 1.f;
-  switch (edge->use()) {
-    case Use::kFerry:
-      factor = ferry_factor_;
-      break;
-    case Use::kRailFerry:
-      factor = rail_ferry_factor_;
-      break;
-    default:
-      factor = density_factor_[edge->density()] +
-               highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
-               kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
-               SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
-      break;
-  }
-
   if (edge->truck_route() > 0) {
     factor *= kTruckRouteFactor;
-  }
-
-  if (edge->toll()) {
-    factor += toll_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -521,6 +502,25 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (IsClosed(edge, tile)) {
     // Add a penalty for traversing a closed edge
     factor *= closure_factor_;
+  }
+
+  if (edge->toll()) {
+    factor += toll_factor_;
+  }
+
+  switch (edge->use()) {
+    case Use::kFerry:
+      factor += ferry_factor_;
+      break;
+    case Use::kRailFerry:
+      factor += rail_ferry_factor_;
+      break;
+    default:
+      factor += density_factor_[edge->density()] +
+                highway_factor_ * kHighwayFactor[static_cast<uint32_t>(edge->classification())] +
+                kSurfaceFactor[static_cast<uint32_t>(edge->surface())] +
+                SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
+      break;
   }
 
   return {sec * factor, sec};

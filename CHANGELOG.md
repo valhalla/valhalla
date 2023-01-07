@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
+   * CHANGED: re-ordered the factors in EdgeCost of most costing models so that we first multiply than add factors [#3896](https://github.com/valhalla/valhalla/pull/3896)
 
 ## Release Date: 2022-01-03 Valhalla 3.3.0
 * **Removed**
