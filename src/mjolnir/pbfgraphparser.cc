@@ -1408,6 +1408,7 @@ public:
     tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
       way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["lit"] = [this]() { way_.set_lit(tag_.second == "true" ? true : false); };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {

@@ -408,6 +408,17 @@ toll = {
 ["snowmobile"] = "true"
 }
 
+lit = {
+  ["yes"] = "true",
+  ["no"] = "false",
+  ["24/7"] = "true",
+  ["automatic"] = "true",
+  ["limited"] = "false",
+  ["disused"] = "false",
+  ["dusk-dawn"] = "true",
+  ["sunset-sunrise"] = "true"
+}
+
 --node proc needs the same info as above but in the form of a mask so duplicate..
 motor_vehicle_node = {
 ["yes"] = 1,
@@ -1429,6 +1440,8 @@ function filter_tags_generic(kv)
   if kv["service"] == "driveway" then
      kv["default_speed"] = math.floor(tonumber(kv["default_speed"]) * 0.5)
   end
+
+  kv["lit"] = lit[kv["lit"]]
 
   local use = use[kv["service"]]
 

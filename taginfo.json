@@ -7288,6 +7288,70 @@
         "way"
       ],
       "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
-    }
+    },
+    {
+      "key": "lit",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "automatic",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "24/7",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "disused",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "limited",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "sunset-sunrise",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "dusk-dawn",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
   ]
 }
