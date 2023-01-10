@@ -1843,7 +1843,8 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare2_ : 4;
+  bool lit_ : 1;
+  uint16_t spare2_ : 3;
 
   uint16_t nodecount_;
 
@@ -1865,9 +1866,6 @@ struct OSMWay {
 
   // layer index(Z-level) of the way relatively to other levels
   int8_t layer_;
-
-  // whether or not the street is lit
-  bool lit_;
 };
 
 } // namespace mjolnir
