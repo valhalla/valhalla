@@ -3,6 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
+   * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
 
 ## Release Date: 2022-01-03 Valhalla 3.3.0
 * **Removed**
