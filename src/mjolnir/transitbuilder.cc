@@ -151,6 +151,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       // Get the transit node Graph Id
       GraphId endnode = GetGraphId(conn.stop_node, tiles);
       if (!endnode.Is_Valid()) {
+        LOG_WARN("TODO: need to be able to connect to tiles not directly under this tile");
         continue;
       }
 
