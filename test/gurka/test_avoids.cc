@@ -182,6 +182,18 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   };
 }
 
+TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
+  // https://github.com/valhalla/valhalla/issues/3905
+  std::string req_str =
+      R"({"locations":[{"lat":52.114622,"lon":5.131816},{"lat":52.048267,"lon":5.074825}],"costing":"auto", "exclude_polygons": [[]]})";
+  Api request;
+  ParseApi(req_str, Options::route, request);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+
+  // loki would previously segfault on exclude_polygons=[[]]
+  gurka::do_action(Options::route, avoid_map, req_str);
+}
+
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   valhalla::Options options;
   options.set_costing_type(valhalla::Costing::truck);
