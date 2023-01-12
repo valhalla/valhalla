@@ -35,8 +35,6 @@ static std::shared_ptr<CURL> init_curl() {
   return std::shared_ptr<CURL>(curl_easy_init(), [](CURL* c) { curl_easy_cleanup(c); });
 }
 
-char ALL_ENCODINGS[] = "";
-
 size_t write_callback(char* in, size_t block_size, size_t blocks, std::vector<char>* out) {
   if (!out) {
     return static_cast<size_t>(0);
@@ -185,8 +183,8 @@ namespace valhalla {
 namespace baldr {
 curler_t::curler_t(const std::string& user_agent) {
 }
-std::vector<char> curler_t::
-operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
+std::vector<char>
+curler_t::operator()(const std::string&, long&, bool gzipped, const curler_t::interrupt_t*) const {
   LOG_ERROR("This version of libvalhalla was not built with CURL support");
   throw std::runtime_error("This version of libvalhalla was not built with CURL support");
 }

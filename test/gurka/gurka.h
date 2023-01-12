@@ -89,7 +89,8 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0);
+               const uint64_t initial_osm_id = 0,
+               const bool strict = true);
 
 /**
  * Extract list of edge names from route result.
@@ -186,6 +187,17 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
                         std::string* json = nullptr,
                         const std::string& stop_type = "break",
+                        std::string* request_json = nullptr);
+
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
                         std::string* request_json = nullptr);
 
 /* Returns the raw_result formatted as a JSON document in the given format.

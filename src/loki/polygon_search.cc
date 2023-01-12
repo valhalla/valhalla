@@ -124,9 +124,9 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
   }
   if (rings_length > max_length) {
     if (strategy == SearchStrategy::AVOID) {
-      throw valhalla_exception_t(167, std::to_string(max_length));
+      throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
     } else if (strategy == SearchStrategy::CHINESE) {
-      throw valhalla_exception_t(173, std::to_string(max_length));
+      throw valhalla_exception_t(173, std::to_string(static_cast<size_t>(max_length)) + " meters");
     } else {
       throw valhalla_exception_t(107);
     }

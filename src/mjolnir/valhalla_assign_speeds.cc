@@ -77,7 +77,8 @@ void assign(const boost::property_tree::ptree& config,
 
 int main(int argc, char** argv) {
   // args
-  std::string config_file_path;
+  filesystem::path config_file_path;
+  bpt::ptree config;
 
   try {
     // clang-format off
@@ -89,7 +90,8 @@ int main(int argc, char** argv) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>(config_file_path));
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -104,6 +106,20 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
     }
 
+    // Read the config file
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, config);
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(
+                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+      rapidjson::read_json(config_file_path.string(), config);
+    } else {
+      std::cerr << "Configuration is required\n" << options.help() << std::endl;
+      return EXIT_FAILURE;
+    }
+
     if (!result.count("config")) {
       std::cout << "You must provide a config for loading and modifying tiles.\n";
       return EXIT_FAILURE;
@@ -114,13 +130,11 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  bpt::ptree config;
-  rapidjson::read_json(config_file_path, config);
+  rapidjson::read_json(config_file_path.string(), config);
   config.get_child("mjolnir").erase("tile_extract");
   config.get_child("mjolnir").erase("tile_url");
   config.get_child("mjolnir").erase("traffic_extract");
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("mjolnir.logging");
+  auto logging_subtree = config.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

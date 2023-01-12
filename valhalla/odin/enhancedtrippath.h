@@ -4,12 +4,11 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <boost/optional.hpp>
 
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
@@ -713,7 +712,7 @@ public:
   uint32_t
   GetStraightestTraversableIntersectingEdgeTurnDegree(uint32_t from_heading,
                                                       const TravelMode travel_mode,
-                                                      boost::optional<TripLeg_Use>* use = nullptr);
+                                                      std::optional<TripLeg_Use>* use = nullptr);
 
   bool IsStraightestTraversableIntersectingEdgeReversed(uint32_t from_heading,
                                                         const TravelMode travel_mode);

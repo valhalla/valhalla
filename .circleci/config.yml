@@ -41,18 +41,18 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-debug-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -71,7 +71,7 @@ jobs:
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
             - ~/.conan
@@ -89,18 +89,18 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -114,7 +114,7 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
             - ~/.conan
@@ -126,13 +126,13 @@ jobs:
     resource_class: large
     steps:
       - checkout
-      - install_macos_dependencies
       - run: |
             if ! ./scripts/needs_ci_run; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_macos_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -160,6 +160,8 @@ workflows:
           filters:
             tags:
               only: /.*/
+            branches:
+              only: master
       - lint-build-debug:
           filters:
             tags:

@@ -13,7 +13,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
@@ -32,69 +31,6 @@ public:
   TimeDistanceMatrix();
 
   /**
-   * One to many time and distance cost matrix. Computes time and distance
-   * matrix from one origin location to many other locations.
-   * @param  origin        Location of the origin.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance from origin index to all other locations
-   */
-  std::vector<TimeDistance>
-  OneToMany(const valhalla::Location& origin,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to one time and distance cost matrix. Computes time and distance
-   * matrix from many locations to one destination location.
-   * @param  dest          Location of the destination.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
-   *                               one request. This allows partial results: e.g. find time/distance
-   *                               to the closest 20 out of 50 locations).
-   * @return time/distance to the destination index from all other locations
-   */
-  std::vector<TimeDistance>
-  ManyToOne(const valhalla::Location& dest,
-            const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-            baldr::GraphReader& graphreader,
-            const sif::mode_costing_t& mode_costing,
-            const sif::TravelMode mode,
-            const float max_matrix_distance,
-            const uint32_t matrix_locations = kAllLocations);
-
-  /**
-   * Many to many time and distance cost matrix. Computes time and distance
-   * matrix from many locations to many locations.
-   * @param  locations     List of locations.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  mode_costing  Costing methods.
-   * @param  mode          Travel mode to use.
-   * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @return time/distance between all pairs of locations
-   */
-  std::vector<TimeDistance>
-  ManyToMany(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-             baldr::GraphReader& graphreader,
-             const sif::mode_costing_t& mode_costing,
-             const sif::TravelMode mode,
-             const float max_matrix_distance);
-
-  /**
    * Forms a time distance matrix from the set of source locations
    * to the set of target locations.
    * @param  source_location_list  List of source/origin locations.
@@ -106,22 +42,44 @@ public:
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
-   * @return time/distance from origin index to all other locations
+   * @param  invariant             Whether invariant time was requested.
+   *
+   * @return time/distance from all sources to all targets
    */
-  std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  inline std::vector<TimeDistance>
+  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode mode,
+                 const sif::travel_mode_t mode,
                  const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations);
+                 const uint32_t matrix_locations = kAllLocations,
+                 const bool invariant = false) {
+    // Set the mode and costing
+    mode_ = mode;
+    costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+
+    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    if (forward_search) {
+      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
+                                                   graphreader, max_matrix_distance, matrix_locations,
+                                                   invariant);
+    } else {
+      return ComputeMatrix<ExpansionType::reverse>(target_location_list, source_location_list,
+                                                   graphreader, max_matrix_distance, matrix_locations,
+                                                   invariant);
+    }
+  };
 
   /**
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  inline void clear() {
+    reset();
+    destinations_.clear();
+    dest_edges_.clear();
+  };
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -150,9 +108,42 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  AStarHeuristic astarheuristic_;
-
   sif::TravelMode mode_;
+
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
+  /**
+   * Reset all origin-specific information
+   */
+  inline void reset() {
+    // Clear the edge labels and destination list
+    edgelabels_.clear();
+    // Clear the per-origin information
+    for (auto& dest : destinations_) {
+      dest.reset();
+    }
+
+    // Clear elements from the adjacency list
+    adjacencylist_.clear();
+
+    // Clear the edge status flags
+    edgestatus_.clear();
+  };
+
+  /**
+   * Computes the matrix after SourceToTarget decided which direction
+   * the algorithm should traverse.
+   */
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  std::vector<TimeDistance>
+  ComputeMatrix(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                baldr::GraphReader& graphreader,
+                const float max_matrix_distance,
+                const uint32_t matrix_locations = kAllLocations,
+                const bool invariant = false);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -165,30 +156,17 @@ protected:
    * @param  pred_idx     Predecessor index into the EdgeLabel list.
    * @param  from_transition True if this method is called from a transition
    *                         edge.
+   * @param  invariant    Whether invariant time was requested.
    */
-  void ExpandForward(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition);
-
-  /**
-   * Expand from the node along the reverse search path. Immediately expands
-   * from the end node of any transition edge (so no transition edges are added
-   * to the adjacency list or EdgeLabel list). Does not expand transition
-   * edges if from_transition is false.
-   * @param  graphreader  Graph tile reader.
-   * @param  node         Graph Id of the node being expanded.
-   * @param  pred         Predecessor edge label (for costing).
-   * @param  pred_idx     Predecessor index into the EdgeLabel list.
-   * @param  from_transition True if this method is called from a transition
-   *                         edge.
-   */
-  void ExpandReverse(baldr::GraphReader& graphreader,
-                     const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
-                     const uint32_t pred_idx,
-                     const bool from_transition);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void Expand(baldr::GraphReader& graphreader,
+              const baldr::GraphId& node,
+              const sif::EdgeLabel& pred,
+              const uint32_t pred_idx,
+              const bool from_transition,
+              const baldr::TimeInfo& time_info,
+              const bool invariant = false);
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -202,31 +180,34 @@ protected:
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  origin        Origin location information.
    */
-  void SetOriginOneToMany(baldr::GraphReader& graphreader, const valhalla::Location& origin);
-
-  /**
-   * Sets the origin for a many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  dest          Destination
-   */
-  void SetOriginManyToOne(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void SetOrigin(baldr::GraphReader& graphreader,
+                 const valhalla::Location& origin,
+                 const baldr::TimeInfo& time_info);
 
   /**
    * Add destinations.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
-  void SetDestinations(baldr::GraphReader& graphreader,
-                       const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  template <const ExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == ExpansionType::forward>
+  void InitDestinations(baldr::GraphReader& graphreader,
+                        const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   /**
-   * Set destinations for the many to one time+distance matrix computation.
-   * @param  graphreader   Graph reader for accessing routing graph.
-   * @param  locations     List of locations.
+   * Set the available destination edges for each origin.
+   * @param locations List of destination locations.
    */
-  void
-  SetDestinationsManyToOne(baldr::GraphReader& graphreader,
-                           const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  void SetDestinationEdges() {
+    // the percent_along is set once at the beginning
+    for (auto& dest : destinations_) {
+      for (const auto& idx : dest.dest_edges_percent_along) {
+        dest.dest_edges_available.emplace(idx.first);
+      }
+    }
+  };
 
   /**
    * Update destinations along an edge that has been settled (lowest cost path
@@ -251,10 +232,38 @@ protected:
                           const uint32_t matrix_locations);
 
   /**
+   * Sets the date_time on the origin locations.
+   *
+   * @param origins            the origins (sources or targets)
+   * @param reader             the reader for looking up timezone information
+   * @returns                  time info for each location
+   */
+  std::vector<baldr::TimeInfo>
+  SetTime(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+          baldr::GraphReader& reader) {
+    // loop over all locations setting the date time with timezone
+    std::vector<baldr::TimeInfo> infos;
+    infos.reserve(origins.size());
+    for (auto& origin : origins) {
+      infos.emplace_back(baldr::TimeInfo::make(origin, reader, &tz_cache_));
+    }
+
+    return infos;
+  };
+
+  /**
    * Form a time/distance matrix from the results.
+   * @param reader    GraphReader instance
+   * @param origin_dt The origin's date_time string
+   * @param origin_tz The origin's timezone index
+   * @param pred_id   The destination edge's GraphId
+   *
    * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  std::vector<TimeDistance> FormTimeDistanceMatrix(baldr::GraphReader& reader,
+                                                   const std::string& origin_dt,
+                                                   const uint64_t& origin_tz,
+                                                   const baldr::GraphId& pred_id);
 };
 
 } // namespace thor

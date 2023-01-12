@@ -26,7 +26,7 @@ TEST(recosting, forward_vs_reverse) {
     if (e.classification() == baldr::RoadClass::kResidential) {
       e.set_constrained_flow_speed(40);
     }
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -133,7 +133,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -196,7 +196,7 @@ TEST(recosting, same_historical) {
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -280,7 +280,7 @@ TEST(recosting, same_historical) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(),
                   kCostThreshold);
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -442,12 +442,13 @@ TEST(recosting, throwing) {
   EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);
 
   // this edge id is valid but doesnt exist
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{123456789}; },
-                                   label_cb),
+  EXPECT_THROW(sif::recost_forward(
+                   *reader, *costing, []() { return baldr::GraphId{123456789}; }, label_cb),
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(
+      *reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access

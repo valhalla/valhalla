@@ -1,19 +1,43 @@
-#ifndef VALHALLA_MJOLNIR_OSMADMINDATA_H
-#define VALHALLA_MJOLNIR_OSMADMINDATA_H
+#pragma once
 
 #include <cstdint>
 #include <map>
 #include <string>
 #include <vector>
 
-#include <valhalla/mjolnir/osmadmin.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
 namespace mjolnir {
 
-using OSMWayMap = std::unordered_map<uint64_t, std::list<uint64_t>>;
-using OSMShapeMap = std::unordered_map<uint64_t, PointLL>;
+// OSM Admin
+struct OSMAdmin {
+  // The relations id
+  uint64_t id;
+
+  // List of ways/member ids
+  std::vector<uint64_t> ways;
+
+  // Parallel list of way roles (outer==true or inner==false)
+  std::vector<bool> roles;
+
+  // Names of country or state/prov
+  uint32_t name_index;
+  uint32_t name_en_index;
+
+  // ISO code
+  uint32_t iso_code_index;
+
+  // Admin level.  2 = country; 4 = state.
+  uint8_t admin_level;
+
+  // drive on right side of the road in this country?
+  bool drive_on_right;
+
+  // do we call out intersection names at intersections?
+  bool allow_intersection_names;
+};
 
 /**
  * Simple container for OSM data used by admin processing.
@@ -28,17 +52,15 @@ struct OSMAdminData {
   // Unique names used by admin areas
   UniqueNames name_offset_map;
 
-  // Map used in admins to store the shape of the nodes.
-  OSMShapeMap shape_map;
+  // Map of member way id to node id
+  std::unordered_map<uint64_t, std::vector<uint64_t>> way_map;
 
-  // Map used in admins to store the ways.
-  OSMWayMap way_map;
+  // Map of node id to shape point
+  std::unordered_map<uint64_t, midgard::PointLL> shape_map;
 
   // Vector of admins.
-  std::vector<OSMAdmin> admins_;
+  std::vector<OSMAdmin> admins;
 };
 
 } // namespace mjolnir
 } // namespace valhalla
-
-#endif // VALHALLA_MJOLNIR_OSMADMINDATA_H

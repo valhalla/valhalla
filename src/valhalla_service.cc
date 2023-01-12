@@ -168,8 +168,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("loki.logging");
+  auto logging_subtree = config.get_child_optional("loki.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

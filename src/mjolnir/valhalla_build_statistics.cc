@@ -46,6 +46,7 @@ struct HGVRestrictionTypes {
   bool length;
   bool weight;
   bool width;
+  bool axles;
 };
 
 bool IsLoopTerminal(const graph_tile_ptr& tile,
@@ -435,6 +436,9 @@ void build(const boost::property_tree::ptree& pt,
                   case AccessType::kMaxAxleLoad:
                     hgv.axle_load = true;
                     break;
+                  case AccessType::kMaxAxles:
+                    hgv.axles = true;
+                    break;
                   case AccessType::kMaxHeight:
                     hgv.height = true;
                     break;
@@ -616,8 +620,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto loggin_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

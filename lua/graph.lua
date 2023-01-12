@@ -281,8 +281,8 @@ hazmat = {
 ["designated"] = "true",
 ["yes"] = "true",
 ["no"] = "false",
-["destination"] = "true",
-["delivery"] = "true"
+["destination"] = "false",
+["delivery"] = "false"
 }
 
 shoulder = {
@@ -406,6 +406,17 @@ toll = {
 ["1"] = "true",
 ["interval"] = "true",
 ["snowmobile"] = "true"
+}
+
+lit = {
+  ["yes"] = "true",
+  ["no"] = "false",
+  ["24/7"] = "true",
+  ["automatic"] = "true",
+  ["limited"] = "false",
+  ["disused"] = "false",
+  ["dusk-dawn"] = "true",
+  ["sunset-sunrise"] = "true"
 }
 
 --node proc needs the same info as above but in the form of a mask so duplicate..
@@ -1430,6 +1441,8 @@ function filter_tags_generic(kv)
      kv["default_speed"] = math.floor(tonumber(kv["default_speed"]) * 0.5)
   end
 
+  kv["lit"] = lit[kv["lit"]]
+
   local use = use[kv["service"]]
 
   if kv["highway"] then
@@ -1768,6 +1781,7 @@ function filter_tags_generic(kv)
 
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
+  kv["maxaxles"] = tonumber(kv["maxaxles"])
 
   --TODO: hazmat really should have subcategories
   kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or

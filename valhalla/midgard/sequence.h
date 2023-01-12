@@ -669,6 +669,7 @@ struct tar {
   size_t corrupt_blocks;
 
   tar(const std::string& tar_file,
+      bool readonly = true,
       bool regular_files_only = true,
       const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
           from_index = nullptr)
@@ -684,7 +685,7 @@ struct tar {
     }
 
     // map the file
-    mm.map_readonly(tar_file, s.st_size);
+    mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
 
     // determine opposite of preferred path separator (needed to update OS-specific path separator)
     const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';

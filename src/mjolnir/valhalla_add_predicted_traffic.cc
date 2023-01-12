@@ -1,3 +1,21 @@
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <deque>
+#include <future>
+#include <mutex>
+#include <optional>
+#include <queue>
+#include <string>
+#include <thread>
+
+#include <boost/archive/iterators/base64_from_binary.hpp>
+#include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/archive/iterators/transform_width.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/tokenizer.hpp>
+#include <cxxopts.hpp>
+
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
@@ -6,25 +24,6 @@
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
-
-#include <cmath>
-#include <cstdint>
-#include <cxxopts.hpp>
-
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/tokenizer.hpp>
-
-#include <algorithm>
-#include <deque>
-#include <future>
-#include <mutex>
-#include <queue>
-#include <string>
-#include <thread>
 
 #include "config.h"
 
@@ -63,7 +62,7 @@ struct stats {
 struct TrafficSpeeds {
   uint8_t constrained_flow_speed;
   uint8_t free_flow_speed;
-  boost::optional<std::array<int16_t, kCoefficientCount>> coefficients;
+  std::optional<std::array<int16_t, kCoefficientCount>> coefficients;
 };
 
 /**
@@ -310,8 +309,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("mjolnir.logging");
+  auto logging_subtree = config.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

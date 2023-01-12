@@ -439,7 +439,7 @@ void CopyLocations(TripLeg& trip_path,
   trip_path.add_location()->CopyFrom(origin);
   RemovePathEdges(&*trip_path.mutable_location()->rbegin(), path_begin->edgeid);
   // intermediates
-  boost::optional<uint32_t> last_shape_index = boost::make_optional(false, uint32_t());
+  std::optional<uint32_t> last_shape_index = std::nullopt;
   for (const auto& intermediate : intermediates) {
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
@@ -569,7 +569,9 @@ void AddSignInfo(const AttributesController& controller,
           }
           break;
         }
-        default: { break; }
+        default: {
+          break;
+        }
       }
       ++sign_index;
     }

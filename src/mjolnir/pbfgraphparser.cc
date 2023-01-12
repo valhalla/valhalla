@@ -1,31 +1,30 @@
-#include "mjolnir/pbfgraphparser.h"
-#include "mjolnir/osmpbfparser.h"
-#include "mjolnir/util.h"
-
-#include "graph_lua_proc.h"
-#include "mjolnir/luatagtransform.h"
-#include "mjolnir/osmaccess.h"
-#include "mjolnir/osmpronunciation.h"
+#include <future>
+#include <optional>
+#include <thread>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/optional.hpp>
 #include <boost/range/algorithm/remove_if.hpp>
-#include <future>
-#include <thread>
-#include <utility>
 
 #include "baldr/complexrestriction.h"
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
 #include "baldr/tilehierarchy.h"
+#include "graph_lua_proc.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
+#include "mjolnir/luatagtransform.h"
+#include "mjolnir/osmaccess.h"
+#include "mjolnir/osmpbfparser.h"
+#include "mjolnir/osmpronunciation.h"
+#include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/timeparsing.h"
+#include "mjolnir/util.h"
 #include "proto/common.pb.h"
 
 using namespace valhalla::midgard;
@@ -749,6 +748,14 @@ public:
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
+    tag_handlers_["maxaxles"] = [this]() {
+      OSMAccessRestriction restriction;
+      restriction.set_type(AccessType::kMaxAxles);
+      restriction.set_value(std::stoul(tag_.second));
+      restriction.set_modes(kTruckAccess);
+      osmdata_.access_restrictions.insert(
+          AccessRestrictionsMultiMap::value_type(osmid_, restriction));
+    };
     tag_handlers_["hov_type"] = [this]() {
       // If this tag is set then the way is either HOV-2 or HOV-3.
       // There are no other real-world hov levels.
@@ -1401,6 +1408,7 @@ public:
     tag_handlers_["guidance_view:signboard:base:backward"] = [this]() {
       way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
     };
+    tag_handlers_["lit"] = [this]() { way_.set_lit(tag_.second == "true" ? true : false); };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {
@@ -1427,7 +1435,7 @@ public:
     last_node_ = osmid;
 
     // Handle bike share stations separately
-    boost::optional<Tags> results = boost::none;
+    std::optional<Tags> results = std::nullopt;
     if (bss_nodes_) {
       // Get tags - do't bother with Lua callout if the taglist is empty
       if (tags.size() > 0) {
@@ -1484,12 +1492,10 @@ public:
     // for then it must be in another pbf file. so we need to move on to the next waynode that could
     // possibly actually be in this pbf file
     if (osmid > (*(*way_nodes_)[current_way_node_index_]).node.osmid_) {
-      current_way_node_index_ =
-          way_nodes_->find_first_of(OSMWayNode{{osmid}},
-                                    [](const OSMWayNode& a, const OSMWayNode& b) {
-                                      return a.node.osmid_ <= b.node.osmid_;
-                                    },
-                                    current_way_node_index_);
+      current_way_node_index_ = way_nodes_->find_first_of(
+          OSMWayNode{{osmid}},
+          [](const OSMWayNode& a, const OSMWayNode& b) { return a.node.osmid_ <= b.node.osmid_; },
+          current_way_node_index_);
     }
 
     // if this nodes id is less than the waynode we are looking for then we know its a node we can
@@ -2721,6 +2727,8 @@ public:
           ref_pronunciation = int_ref_pronunciation_jeita_;
           direction_pronunciation = int_direction_pronunciation_jeita_;
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2739,6 +2747,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           ref_pronunciation = ref_pronunciation_jeita_;
           direction_pronunciation = direction_pronunciation_jeita_;
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2787,6 +2797,8 @@ public:
           osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
           break;
+        case PronunciationAlphabet::kNone:
+          break;
       }
     } else {
       switch (type) {
@@ -2805,6 +2817,8 @@ public:
         case PronunciationAlphabet::kXJeita:
           osm_pronunciation_.set_ref_pronunciation_jeita_index(
               osmdata_.name_offset_map.index(ref_pronunciation));
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
     }
@@ -2844,6 +2858,8 @@ public:
               (index
                    ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_jeita_index())
                    : "");
+          break;
+        case PronunciationAlphabet::kNone:
           break;
       }
 
@@ -2899,6 +2915,8 @@ public:
             }
             // no matter what, clear out the int_ref.
             osm_pronunciation_.set_int_ref_pronunciation_jeita_index(0);
+            break;
+          case PronunciationAlphabet::kNone:
             break;
         }
       }
