@@ -305,8 +305,14 @@ find_shortest_path(baldr::GraphReader& reader,
                    const float max_time);
 
 // Route path iterator. Methods to assist recovering route paths from Labels.
-class RoutePathIterator : public std::iterator<std::forward_iterator_tag, const Label> {
+class RoutePathIterator {
 public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = const Label;
+  using difference_type = std::ptrdiff_t;
+  using pointer = const Label*;
+  using reference = const Label&;
+
   // Construct a route path iterator.
   RoutePathIterator(const LabelSet* labelset, const uint32_t label_idx)
       : labelset_(labelset), label_idx_(label_idx) {

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <memory>
 
-#include <boost/optional.hpp>
-
 #include "baldr/verbal_text_formatter.h"
 #include "baldr/verbal_text_formatter_us.h"
 #include "midgard/util.h"

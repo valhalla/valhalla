@@ -45,7 +45,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -85,7 +85,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -143,7 +143,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -229,7 +229,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -366,7 +366,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -395,7 +395,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "ferry_label": "Fähre",
       "example_phrases": {
@@ -448,7 +448,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -545,7 +545,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -725,7 +725,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -753,7 +753,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -902,7 +902,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "Links",
@@ -949,7 +949,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -984,7 +984,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -1023,7 +1023,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "Links",
@@ -1076,7 +1076,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -1116,7 +1116,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -1163,7 +1163,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -1399,7 +1399,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -1439,7 +1439,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -1495,7 +1495,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -1583,7 +1583,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "metric_lengths": [
         "<KILOMETERS> Kilometer",
@@ -1958,7 +1958,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "Links",
@@ -1998,7 +1998,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "Links",
@@ -2040,7 +2040,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -2088,7 +2088,7 @@
         "Fußweg",
         "Radweg",
         "Mountainbike Strecke",
-        "the crosswalk"
+        "Fußgängerübergang"
       ],
       "relative_directions": [
         "links",
@@ -2175,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Den Aufzug nehmen.",
+        "1": "Aufzug nehmen nach <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2189,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Die Treppen nehmen.",
+        "1": "Die Treppen nehmen nach <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2203,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Die Rolltreppe nehmen.",
+        "1": "Die Rolltreppe nehmen nach <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,14 +2217,14 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "In das Gebäude eintreten.",
+        "1": "In das Gebäude eintreten und weitergehen auf <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "Fußweg",
+        "Radweg",
+        "Mountainbike Strecke",
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [
@@ -2237,14 +2237,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Das Gebäude verlassen.",
+        "1": "Das Gebäude verlassen und weitergehen auf <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "Fußweg",
+        "Radweg",
+        "Mountainbike Strecke",
+        "Fußgängerübergang"
       ],
       "example_phrases": {
         "0": [

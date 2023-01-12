@@ -17,6 +17,7 @@
 #include "thor/worker.h"
 #include "worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 

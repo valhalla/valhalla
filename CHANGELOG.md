@@ -1,4 +1,17 @@
-## Release Date: 2022-??-?? Valhalla 3.2.1
+## Release Date: 2022-??-?? Valhalla 3.3.1
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+   * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
+   * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
+
+## Release Date: 2022-01-03 Valhalla 3.3.0
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+  * CHANGED: Upgraded from C++14 to C++17. [#3878](https://github.com/valhalla/valhalla/pull/3878)
+
+## Release Date: 2022-01-03 Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
@@ -21,6 +34,11 @@
    * ADDED: --bbox & --geojson-dir options to valhalla_build_extract to only archive a subset of tiles [#3856](https://github.com/valhalla/valhalla/pull/3856)
    * CHANGED: Replace unstable c++ geos API with a mix of geos' c api and boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * ADDED: optional write-access to traffic extract from GraphReader [#3876](https://github.com/valhalla/valhalla/pull/3876)
+   * UPDATED: locales from Transifex [#3879](https://github.com/valhalla/valhalla/pull/3879)
+   * CHANGED: Build most of Baldr with -Werror [#3885](https://github.com/valhalla/valhalla/pull/3885)
+   * UPDATED: some documentation overhaul to slim down root's README [#3881](https://github.com/valhalla/valhalla/pull/3881)
+   * CHANGED: move documentation hosting to Github Pages from readthedocs.io [#3884](https://github.com/valhalla/valhalla/pull/3884)
+   * ADDED: inline config arguments to some more executables [#3873](https://github.com/valhalla/valhalla/pull/3873)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**
