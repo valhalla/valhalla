@@ -35,14 +35,14 @@ def last_build_successful():
     token = environ.get('CIRCLE_API_TOKEN')
 
     if not branch:
-        print('CIRCLE_BRANCH env not set! Unable to do CI skip check')
-        sys.exit(0)
+        print('CIRCLE_BRANCH env not set! Unable to do CI skip check', file=sys.stderr)
+        print('needs CI')
     if not current_workflow_id:
-        print('CIRCLE_WORKFLOW_ID env not set! Unable to do CI skip check')
-        sys.exit(0)
+        print('CIRCLE_WORKFLOW_ID env not set! Unable to do CI skip check', file=sys.stderr)
+        print('needs CI')
     if not token:
-        print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check')
-        sys.exit(0)
+        print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check', file=sys.stderr)
+        print('needs CI')
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run
@@ -52,12 +52,12 @@ def last_build_successful():
     resp.raise_for_status()
 
     builds = resp.json()
-    # print(builds)
+    # print(builds, file=sys.stderr)
 
     # this should never happen. since this script is run from within a CI run
     # there should be at least 1 entry (i.e this run)
     if not builds:
-        print('ERROR! No previous builds found! Not skipping build')
+        print('ERROR! No previous builds found! Not skipping build', file=sys.stderr)
         return False, None
 
     # build a dict of {job_name: (job_status, gitsha)}
@@ -70,7 +70,10 @@ def last_build_successful():
         job_status[build['workflows']['job_name']] = (build['status'], build['vcs_revision'])
 
     if sorted(job_status.keys()) != sorted(JOBS):
-        print(f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}')
+        print(
+            f'Unexpected job name fetched ({sorted(job_status)}). Expected {sorted(JOBS)}',
+            file=sys.stderr,
+        )
         return False, None
 
     # Return False if any of the jobs were not in 'success' state
@@ -85,22 +88,22 @@ CI_IGNORE_FILE = '.circleci/ciignore'
 
 if not path.isfile(CI_IGNORE_FILE):
     # no CI ignore rules configured, run CI
-    sys.exit(0)
+    print('needs CI')
 
 # Check if a previous build of this branch was successful or not
 status, last_pr_gitsha = last_build_successful()
-print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}')
+print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}', file=sys.stderr)
 
 # if last build was not successfull, dont skip
 if not status:
-    sys.exit(0)
+    print('needs CI')
 
 # if commit does not exist anymore, dont skip
 if (
     subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'], capture_output=True, text=True).stdout
     != 'commit'
 ):
-    sys.exit(0)
+    print('needs CI')
 
 
 # Get all changes since the last succesful CI run
@@ -119,12 +122,12 @@ for changed_file in changed_files:
         if fnmatch.fnmatch(changed_file, ignore_rule):
             ignored_files.append(changed_file)
 
-print(f"changed files: {changed_files}")
-print(f"ignored files: {ignored_files}")
+print(f"changed files: {changed_files}", file=sys.stderr)
+print(f"ignored files: {ignored_files}", file=sys.stderr)
 
 if sorted(ignored_files) == sorted(changed_files):
     # everything was ignored, skip CI
-    sys.exit(1)
+    print('skip CI')
 
 # Not everything was ignored, run CI
-sys.exit(0)
+print('needs CI')
