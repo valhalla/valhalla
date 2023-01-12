@@ -175,8 +175,7 @@ const std::vector<std::pair<uint16_t, std::string>> valhalla_responses{
      R"({"error_code":132,"error":"Failed to parse target","status_code":400,"status":"Bad Request"})"},
     {400,
      R"({"error_code":157,"error":"Exceeded max avoid locations: 0","status_code":400,"status":"Bad Request"})"},
-    {400,
-     R"({"error_code":153,"error":"Too many shape points: (102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"},
+    {400, R"({"error_code":153,"error":"Too many shape points: (102). The best paths shape limit is 100","status_code":400,"status":"Bad Request"})"},
 };
 
 const std::vector<http_request_t> osrm_requests{
