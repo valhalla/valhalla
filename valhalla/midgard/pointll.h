@@ -45,9 +45,9 @@ public:
    */
   explicit GeoPoint(uint64_t encoded)
       : PointXY<PrecisionT>(static_cast<PrecisionT>(
-                                (int64_t((encoded >> 31) & ((1 << 32) - 1)) - 180 * 1e7) * 1e-7),
-                            static_cast<PrecisionT>((int64_t(encoded & ((1 << 31) - 1)) - 90 * 1e7) *
-                                                    1e-7)) {
+                                (int64_t((encoded >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7),
+                            static_cast<PrecisionT>(
+                                (int64_t(encoded & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7)) {
   }
   /**
    * Parent constructor. Forwards to parent.
@@ -68,8 +68,8 @@ public:
    * @return
    */
   explicit operator uint64_t() const {
-    return (((uint64_t(first * 1e7) + uint64_t(180 * 1e7)) & ((1 << 32) - 1)) << 31) |
-           ((uint64_t(second * 1e7) + uint64_t(90 * 1e7)) & ((1 << 31) - 1));
+    return (((uint64_t(first * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
+           ((uint64_t(second * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
   }
 
   /**

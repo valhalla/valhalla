@@ -44,7 +44,7 @@ struct OSMConnectionEdge {
   double length;
   uint64_t wayid;
   std::vector<std::string> names;
-  std::list<PointLL> shape;
+  std::vector<PointLL> shape;
   std::vector<std::string> tagged_values;
   std::vector<std::string> pronunciations;
 };
@@ -75,8 +75,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     GraphReader& reader_transit_level,
                     std::mutex& lock,
                     const std::unordered_set<GraphId>& tiles,
-                    const std::vector<OSMConnectionEdge>& connection_edges,
-                    const std::unordered_map<GraphId, Traversability>& egress_traversability) {
+                    const std::vector<OSMConnectionEdge>& connection_edges) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Move existing nodes and directed edge builder vectors and clear the lists
@@ -99,7 +98,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   uint32_t nextresidx = (tilebuilder_local.header()->access_restriction_count() > 0)
                             ? tilebuilder_local.accessrestriction(0).edgeindex()
                             : currentedges.size() + 1;
-  ;
   uint32_t rescount = tilebuilder_local.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
@@ -171,16 +169,16 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       directededge.set_classification(RoadClass::kServiceOther);
       directededge.set_localedgeidx(tilebuilder_local.directededges().size() - edge_index);
 
-      auto e_traversability = egress_traversability.find(conn.stop_node);
-      if (e_traversability != egress_traversability.end()) {
-        if (e_traversability->second == Traversability::kBoth) {
-          directededge.set_forwardaccess(tc_access);
-          directededge.set_reverseaccess(tc_access);
-        } else if (e_traversability->second == Traversability::kForward) {
-          directededge.set_forwardaccess(tc_access);
-        } else if (e_traversability->second == Traversability::kBackward) {
-          directededge.set_reverseaccess(tc_access);
-        }
+      const auto& transit_stop = tilebuilder_transit.nodes()[conn.stop_node.id()];
+      auto e_traversability =
+          tilebuilder_transit.GetTransitStop(transit_stop.stop_index())->traversability();
+      if (e_traversability == Traversability::kBoth) {
+        directededge.set_forwardaccess(tc_access);
+        directededge.set_reverseaccess(tc_access);
+      } else if (e_traversability == Traversability::kForward) {
+        directededge.set_forwardaccess(tc_access);
+      } else if (e_traversability == Traversability::kBackward) {
+        directededge.set_reverseaccess(tc_access);
       }
       directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
 
@@ -233,7 +231,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   nextresidx = (tilebuilder_transit.header()->access_restriction_count() > 0)
                    ? tilebuilder_transit.accessrestriction(0).edgeindex()
                    : currentedges.size() + 1;
-  ;
   rescount = tilebuilder_transit.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
@@ -280,26 +277,27 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         directededge.set_classification(RoadClass::kServiceOther);
         directededge.set_localedgeidx(tilebuilder_transit.directededges().size() - edge_index);
 
-        auto e_traversability = egress_traversability.find(conn.stop_node);
-        if (e_traversability != egress_traversability.end()) {
-          if (e_traversability->second == Traversability::kBoth) {
-            directededge.set_forwardaccess(tc_access);
-            directededge.set_reverseaccess(tc_access);
-            // exit only.  if backward is true then set forward access as we are going from
-            // the egress to the osm node.
-          } else if (e_traversability->second == Traversability::kBackward) {
-            directededge.set_forwardaccess(tc_access);
-            // enter only.  if forward is true then set backward access as we are going from
-            // the egress to the osm node.
-          } else if (e_traversability->second == Traversability::kForward) {
-            directededge.set_reverseaccess(tc_access);
-          }
+        // we have to go back to the copy of the transit nodes
+        const auto& transit_stop = currentnodes[conn.stop_node.id()];
+        auto e_traversability =
+            tilebuilder_transit.GetTransitStop(transit_stop.stop_index())->traversability();
+        if (e_traversability == Traversability::kBoth) {
+          directededge.set_forwardaccess(tc_access);
+          directededge.set_reverseaccess(tc_access);
+          // exit only.  if backward is true then set forward access as we are going from
+          // the egress to the osm node.
+        } else if (e_traversability == Traversability::kBackward) {
+          directededge.set_forwardaccess(tc_access);
+          // enter only.  if forward is true then set backward access as we are going from
+          // the egress to the osm node.
+        } else if (e_traversability == Traversability::kForward) {
+          directededge.set_reverseaccess(tc_access);
         }
         directededge.set_named(conn.names.size() > 0 || conn.tagged_values.size() > 0);
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::list<PointLL> r_shape = conn.shape;
+        auto r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
@@ -364,9 +362,10 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
   connections.reserve(transit_tile->header()->nodecount() * 2 / 3);
 
   // for each transit egress
-  for (uint32_t i = 0; i < transit_tile->header()->nodecount(); ++i) {
+  for (auto egress_id = transit_tile->header()->graphid();
+       egress_id.id() < transit_tile->header()->nodecount(); ++egress_id) {
     // we only connect egress/ingress
-    const auto* egress = transit_tile->node(i);
+    const auto* egress = transit_tile->node(egress_id);
     if (egress->type() != NodeType::kTransitEgress)
       continue;
     auto egress_ll = egress->latlng(transit_tile->header()->base_ll());
@@ -382,33 +381,47 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     if (connecting_ll.IsValid())
       egress_ll = connecting_ll;
 
-    // Loop over all nodes in the tile to find the nearest edge
-    const DirectedEdge* closest_edge = nullptr;
-    boost::optional<EdgeInfo> closest_edgeinfo;
-    std::tuple<PointLL, decltype(PointLL::first), int> closest_point;
     // We assume we dont find a matching way id to start, but once we do all better results must have
     // a matching way id. This allows us to only use the way id when it makes sense and still get a
     // good match when the way id doesnt make sense
     bool should_match_way_id = false;
-    for (const auto& directededge : local_tile->GetDirectedEdges()) {
+
+    // keep this info about the closest point to an edge shape
+    const DirectedEdge* closest_edge = nullptr;
+    boost::optional<EdgeInfo> closest_edgeinfo;
+    std::tuple<PointLL, decltype(PointLL::first), int> closest_point;
+
+    // Loop over all the graph that is in this tile
+    auto startnode_id = local_tile->header()->graphid();
+    const auto* startnode = local_tile->node(startnode_id);
+    auto directededge_id = local_tile->header()->graphid();
+    const auto* directededge = local_tile->directededge(directededge_id);
+    for (; directededge_id.id() < local_tile->header()->directededgecount();
+         ++directededge_id, ++directededge) {
+      // next node
+      if (startnode->edge_index() + startnode->edge_count() == directededge_id.id()) {
+        ++startnode_id;
+        ++startnode;
+      }
+
       // there will be a more convenient opposing edge to use for this one so lets wait for it
-      if (!directededge.forward() && !directededge.leaves_tile() &&
-          (directededge.reverseaccess() & kPedestrianAccess)) {
+      if (!directededge->forward() && !directededge->leaves_tile() &&
+          (directededge->reverseaccess() & kPedestrianAccess)) {
         continue;
       }
 
       // bail if its an invalid use
-      if (VALID_EDGE_USES.count(directededge.use()) == 0) {
+      if (VALID_EDGE_USES.count(directededge->use()) == 0) {
         continue;
       }
 
       // bail if pedestrians cant use it
-      if ((!(directededge.forwardaccess() & kPedestrianAccess)) || directededge.is_shortcut()) {
+      if ((!(directededge->forwardaccess() & kPedestrianAccess)) || directededge->is_shortcut()) {
         continue;
       }
 
       // project onto the shape
-      auto ei = local_tile->edgeinfo(&directededge);
+      auto ei = local_tile->edgeinfo(directededge);
       auto point = egress_ll.Project(ei.shape());
       auto distance = std::get<1>(point);
 
@@ -418,7 +431,7 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
       if (distance < SNAP_DISTANCE_CUTOFF &&
           (!closest_edge ||
            (distance < std::get<1>(closest_point) && should_match_way_id == does_match_way_id))) {
-        closest_edge = &directededge;
+        closest_edge = directededge;
         closest_point = point;
         closest_edgeinfo = std::move(ei);
         should_match_way_id = does_match_way_id;
@@ -429,12 +442,13 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     // we make new edges that follow the existing edge from its end and begin nodes up to the snap
     // point and then make a straight line from there to the in/egress
     if (!closest_edge) {
-      LOG_WARN("Could not find connection point for in/egress near: " + std::to_string(egress_ll));
+      LOG_WARN("Could not find connection point for in/egress near: " +
+               std::to_string(egress_ll.second) + "," + std::to_string(egress_ll.first));
     }
 
     // flip the shape if we have to
     std::vector<PointLL> edge_shape = closest_edgeinfo->shape();
-    if (closest_edge->forward()) {
+    if (!closest_edge->forward()) {
       std::reverse(edge_shape.begin(), edge_shape.end());
       std::get<2>(closest_point) = edge_shape.size() - std::get<2>(closest_point) - 1;
     }
@@ -444,8 +458,9 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     shape.push_back(std::get<0>(closest_point));
     shape.push_back(egress_ll);
     auto length = std::max(1.0, valhalla::midgard::length(shape));
-    connections.emplace_back(startnode, egress, length, closest_edgeinfo->wayid(),
-                             closest_edgeinfo->GetNames(), shape);
+    connections.emplace_back(OSMConnectionEdge{startnode_id, egress_id, length,
+                                               closest_edgeinfo->wayid(),
+                                               closest_edgeinfo->GetNames(), shape});
 
     // the end node is in another tile
     if (closest_edge->leaves_tile()) {
@@ -459,8 +474,9 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     shape.push_back(std::get<0>(closest_point));
     shape.push_back(egress_ll);
     length = std::max(1.0, valhalla::midgard::length(shape));
-    connections.emplace_back(closest_edge->endnode(), egress, length, closest_edgeinfo->wayid(),
-                             closest_edgeinfo->GetNames(), shape);
+    connections.emplace_back(OSMConnectionEdge{closest_edge->endnode(), egress_id, length,
+                                               closest_edgeinfo->wayid(),
+                                               closest_edgeinfo->GetNames(), shape});
   }
   return connections;
 }
@@ -522,7 +538,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, tilebuilder_transit, local_tile, reader_transit_level, lock,
-                   tiles, connection_edges, egress_traversability);
+                   tiles, connection_edges);
 
     // Write the new file
     lock.lock();

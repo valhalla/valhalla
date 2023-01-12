@@ -257,7 +257,7 @@ void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
 void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
   if (!p.InRange())
     throw std::logic_error("Invalid coordinates are not allowed for transit connections");
-  headings_ = static_cast<uint64_t>(p) | (1 << 63);
+  headings_ = static_cast<uint64_t>(p) | (1ull << 63);
 }
 
 json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
