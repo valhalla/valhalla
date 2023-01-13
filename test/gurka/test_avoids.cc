@@ -184,8 +184,20 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
 
 TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   // https://github.com/valhalla/valhalla/issues/3905
+  std::string req =
+      R"({
+          "locations": [
+            {"lat": %s, "lon": %s},
+            {"lat": %s, "lon": %s}
+          ],
+          "costing":"auto",
+          "exclude_polygons": [[]]
+        })";
   std::string req_str =
-      R"({"locations":[{"lat":52.114622,"lon":5.131816},{"lat":52.048267,"lon":5.074825}],"costing":"auto", "exclude_polygons": [[]]})";
+      (boost::format(req) % std::to_string(avoid_map.nodes.at("A").lat()) %
+       std::to_string(avoid_map.nodes.at("A").lng()) % std::to_string(avoid_map.nodes.at("D").lat()) %
+       std::to_string(avoid_map.nodes.at("D").lng()))
+          .str();
   Api request;
   ParseApi(req_str, Options::route, request);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
