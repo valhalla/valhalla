@@ -39,7 +39,7 @@ jobs:
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: '2022.08.15'
+      VCPKG_REF: '2023.01.09'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 

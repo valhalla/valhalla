@@ -229,6 +229,7 @@ protected:
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
                           const sif::EdgeLabel& pred,
+                          const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);
 
   /**
