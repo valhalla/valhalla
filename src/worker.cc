@@ -986,7 +986,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     auto* rings_pbf = options.mutable_exclude_polygons();
     try {
       for (const auto& req_poly : rings_req->GetArray()) {
-        if (!req_poly.GetArray().Size()) {
+        if (req_poly.GetArray().Empty()) {
           continue;
         }
         auto* ring = rings_pbf->Add();
