@@ -414,7 +414,9 @@ struct LinkGraphBuilder {
 
     // Make sure that number of children does not exceed the threshold
     if (graph_[from].children.size() >= kMaxLinkEdges) {
-      throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks");
+      auto ll = graph_[from].bundle.node.latlng();
+      throw std::runtime_error("Exceeding kMaxLinkEdges in ReclassifyLinks at location " +
+                               std::to_string(ll.lng()) + "," + std::to_string(ll.lat()));
     }
 
     graph_[to].parents.push_back(from);
