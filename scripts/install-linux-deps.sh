@@ -46,6 +46,18 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     unzip \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
+  
+# build prime_server from source
+readonly primeserver_version=0.7.0
+readonly primeserver_dir=/usr/local/src/prime_server
+git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
+pushd $primeserver_dir
+git checkout $primeserver_version && \
+cmake -B build . && \
+cmake --build build -- -j${CONCURRENCY:-$(nproc)} && \
+make -C build install && \
+popd && \
+rm -r $primeserver_dir
 
 # for boost
 python3 -m pip install --upgrade conan requests
