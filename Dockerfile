@@ -1,8 +1,9 @@
 ####################################################################
-FROM ubuntu:20.04 as builder 
+FROM ubuntu:22.04 as builder 
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
+ARG PRIME_SERVER_VERSION="0.7.0"
 
 # set paths
 ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
@@ -12,6 +13,16 @@ ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-g
 WORKDIR /usr/local/src/valhalla
 COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-linux-deps.sh
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
+
+# build prime_server from source
+RUN git clone --recurse-submodules https://github.com/kevinkreiser/prime_server /usr/local/src/prime_server && \
+  cd /usr/local/src/prime_server && \
+  git checkout $PRIME_SERVER_VERSION && \
+  cmake -B build . && \
+  cmake --build build -- -j${CONCURRENCY:-$(nproc)} && \
+  make -C build install && \
+  cd /usr/local/src/valhalla && \
+  rm -r /usr/local/src/prime_server
 
 # get the code into the right place and prepare to build it
 ADD . /usr/local/src/valhalla
@@ -58,7 +69,7 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libcurl4 libczmq4 libluajit-5.1-2 \
-      libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
       curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \
     cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
