@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import fnmatch
 from os import path, environ
 import requests
