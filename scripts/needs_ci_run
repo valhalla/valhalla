@@ -84,7 +84,7 @@ def last_build_successful():
         if status != 'success':
             return False, gitsha
 
-    return True, gitsha
+    return True, job_status[JOBS[0]][1]
 
 
 CI_IGNORE_FILE = '.circleci/ciignore'
