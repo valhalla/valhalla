@@ -12,14 +12,10 @@ then
     -v "${BUILD_SOURCEDIRECTORY}:/src" \
     -v "${SONAR_CERT_PATH}:${SONAR_CERT_PATH}" \
     sonarsource/sonar-scanner-cli \
-    -Dsonar.projectKey=${APP_KEY} \
+    -Dsonar.projectKey=WAYVALHAL \
     -Dsonar.projectName=${APP_NAME} \
     -Dsonar.projectVersion=${APP_VERSION} \
     -Dsonar.branchName=${BUILD_SOURCEBRANCHNAME} \
-    -Dsonar.sources=. \
-    -Dsonar.exclusions=**/*_test.go \
-    -Dsonar.tests=. \
-    -Dsonar.test.inclusions=**/*_test.go
 fi
 
 if [[ "${BLACKDUCK_ENABLED}" == true ]]

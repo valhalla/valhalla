@@ -29,11 +29,11 @@ stages:
               python -m pip install --upgrade conan
             displayName: 'Install dependencies'
           
-          #- task: DownloadSecureFile@1
-          #  name: sonarcert
-          #  displayName: Sonar Certificate
-          #  inputs:
-          #    secureFile: gsep-sonar.pfx
+          - task: DownloadSecureFile@1
+            name: sonarcert
+            displayName: Sonar Certificate
+            inputs:
+              secureFile: gsep.pfx
 
           - bash: |
               source pipeline/build/scripts/10-validate.sh
@@ -53,9 +53,10 @@ stages:
             name: scan
             displayName: Scanners
             env:
-          #    SONAR_TOKEN: $(sonar.token)
-          #    SONAR_CERT_PATH: $(sonarcert.secureFilePath)
-          #    SONAR_CERT_PASS: $(sonar.cert.passphrase)
+              SONAR_TOKEN: $(sonar.token)
+              SONAR_URL: 'https://gsep.daimler.com/sonar'
+              SONAR_CERT_PATH: $(sonarcert.secureFilePath)
+              SONAR_CERT_PASSPHRASE: $(sonar.cert.passphrase)
               BLACKDUCK_API_TOKEN: $(blackduck.api.token)
 
           - bash: |
