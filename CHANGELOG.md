@@ -6,6 +6,7 @@
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
    * ADDED: log lat/lon of node where children link edges exceed the configured maximum [#3911](https://github.com/valhalla/valhalla/pull/3911)
+   * ADDED: log matrix algorithm which was used [#3916](https://github.com/valhalla/valhalla/pull/3916)
 
 ## Release Date: 2022-01-03 Valhalla 3.3.0
 * **Removed**
