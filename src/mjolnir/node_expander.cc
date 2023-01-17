@@ -14,18 +14,21 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
   for (; itr != nodes.end() && (node = *itr).node.osmid_ == bundle.node.osmid_; ++itr) {
     ++bundle.node_count;
     if (node.is_start()) {
-      auto edge_itr = edges[node.start_of];
-      auto edge = *edge_itr;
+      auto edge = *edges[node.start_of];
+      edge.attributes.driveforward = edge.fwd_access & baldr::kAutoAccess;
       // Set driveforward - this edge is traversed in forward direction
-      edge.attributes.driveforward = edge.attributes.driveableforward;
       bundle.node_edges.emplace(std::make_pair(edge, node.start_of));
       bundle.node.link_edge_ = bundle.node.link_edge_ || edge.attributes.link;
       bundle.node.ferry_edge_ = bundle.node.ferry_edge_ || edge.attributes.driveable_ferry;
       bundle.node.shortlink_ |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a
-      // non-link edge or non-ferry edge
-      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+      // non-link edge
+      if (edge.attributes.driveforward || (edge.rev_access & baldr::kAutoAccess)) {
         bundle.node.non_link_edge_ = bundle.node.non_link_edge_ || !edge.attributes.link;
+      }
+      // Non-ferry edges need access to _some_ vehicular mode
+      if ((edge.fwd_access & baldr::kVehicularAccess) ||
+          (edge.rev_access & baldr::kVehicularAccess)) {
         bundle.node.non_ferry_edge_ = bundle.node.non_ferry_edge_ || !edge.attributes.driveable_ferry;
       }
       if (edge.attributes.link) {
@@ -38,17 +41,20 @@ node_bundle collect_node_edges(const sequence<Node>::iterator& node_itr,
       }
     }
     if (node.is_end()) {
-      auto edge_itr = edges[node.end_of];
-      auto edge = *edge_itr;
+      auto edge = *edges[node.end_of];
       // Set driveforward - this edge is traversed in reverse direction
-      edge.attributes.driveforward = edge.attributes.driveablereverse;
+      edge.attributes.driveforward = edge.rev_access & baldr::kAutoAccess;
       bundle.node_edges.emplace(std::make_pair(edge, node.end_of));
       bundle.node.link_edge_ = bundle.node.link_edge_ || edge.attributes.link;
       bundle.node.ferry_edge_ = bundle.node.ferry_edge_ || edge.attributes.driveable_ferry;
       bundle.node.shortlink_ |= edge.attributes.shortlink;
       // Do not count non-driveable (e.g. emergency service roads) as a non-link edge
-      if (edge.attributes.driveableforward || edge.attributes.driveablereverse) {
+      if ((edge.fwd_access & baldr::kAutoAccess) || edge.attributes.driveforward) {
         bundle.node.non_link_edge_ = bundle.node.non_link_edge_ || !edge.attributes.link;
+      }
+      // Non-ferry edges need access to _some_ vehicular mode
+      if ((edge.fwd_access & baldr::kVehicularAccess) ||
+          (edge.rev_access & baldr::kVehicularAccess)) {
         bundle.node.non_ferry_edge_ = bundle.node.non_ferry_edge_ || !edge.attributes.driveable_ferry;
       }
       if (edge.attributes.link) {

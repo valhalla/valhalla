@@ -1,20 +1,18 @@
+#include <iostream>
 #include <string>
 #include <vector>
 
-#include "config.h"
-#include "mjolnir/util.h"
-
-using namespace valhalla::mjolnir;
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <iostream>
 
+#include "baldr/rapidjson_utils.h"
+#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
+#include "mjolnir/util.h"
+
+using namespace valhalla::mjolnir;
 
 // List the build stages
 void list_stages() {
@@ -83,8 +81,7 @@ int main(int argc, char** argv) {
     }
 
     // configure logging
-    boost::optional<boost::property_tree::ptree&> logging_subtree =
-        pt.get_child_optional("mjolnir.logging");
+    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
       auto subtree = logging_subtree.get();
       auto logging_config =

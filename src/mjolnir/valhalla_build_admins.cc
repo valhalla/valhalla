@@ -10,6 +10,7 @@
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
+boost::property_tree::ptree pt;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -26,6 +27,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
@@ -47,6 +49,19 @@ bool ParseArguments(int argc, char* argv[]) {
     if (!result.count("input_files")) {
       std::cerr << "Input file is required\n" << std::endl;
       return false;
+    }
+
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, pt);
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(
+                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+      rapidjson::read_json(config_file_path.string(), pt);
+    } else {
+      std::cerr << "Configuration is required\n" << options.help() << std::endl;
+      return EXIT_FAILURE;
     }
 
     if (result.count("config") &&
@@ -71,12 +86,10 @@ int main(int argc, char** argv) {
   }
 
   // check what type of input we are getting
-  boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

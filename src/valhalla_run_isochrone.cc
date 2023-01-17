@@ -1,5 +1,3 @@
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cxxopts.hpp>
@@ -7,6 +5,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
@@ -78,8 +78,7 @@ int main(int argc, char* argv[]) {
     rapidjson::read_json(config.c_str(), pt);
 
     // configure logging
-    boost::optional<boost::property_tree::ptree&> logging_subtree =
-        pt.get_child_optional("thor.logging");
+    auto logging_subtree = pt.get_child_optional("thor.logging");
     if (logging_subtree) {
       auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                      std::unordered_map<std::string, std::string>>(

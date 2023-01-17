@@ -3,7 +3,6 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>
 #include <boost/noncopyable.hpp>
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <sstream>
 #include <string>
@@ -24,8 +23,7 @@ const boost::property_tree::ptree configure(const std::string& config) {
     // parse the config and configure logging
     rapidjson::read_json(config, pt);
 
-    boost::optional<boost::property_tree::ptree&> logging_subtree =
-        pt.get_child_optional("mjolnir.logging");
+    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
       auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                      std::unordered_map<std::string, std::string>>(

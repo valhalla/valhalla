@@ -97,9 +97,13 @@ handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)5s: %(message)s"
 LOGGER.addHandler(handler)
 
 
-def get_tile_bbox(tile_path: Path) -> Tuple[float, float, float, float]:
+def get_tile_bbox(tile_path_id: str) -> Tuple[float, float, float, float]:
     """Returns a tile's bounding box in minx,miny,maxx,maxy format"""
-    level, tile_idx = [int(x.replace("/", "")) for x in get_tile_level_id(str(tile_path))]
+    try:
+        level, tile_idx = [int(x.replace("/", "")) for x in get_tile_level_id(tile_path_id)]
+    except ValueError:
+        LOGGER.critical(f"Couldn't get level and tile ID for tile {tile_path_id}")
+        sys.exit(1)
 
     tile_size = TILE_SIZES[level]
     row = floor(tile_idx / (360 / tile_size))
@@ -111,7 +115,7 @@ def get_tile_bbox(tile_path: Path) -> Tuple[float, float, float, float]:
     return tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size
 
 
-def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path) -> Set[Path]:
+def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path, tiles_dir_: Path) -> Set[Path]:
     """Returns all tile paths intersecting with the GeoJSON (multi)polygons"""
     try:
         from shapely.geometry import Polygon, box
@@ -143,7 +147,8 @@ def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path) -> Set
     tile_paths_ = set()
     geojson_polys = get_outer_rings(geojson_dir)
     for tile_path in all_tile_paths:
-        tile_bbox = box(*get_tile_bbox(tile_path))
+        tile_path_id = str(tile_path.relative_to(tiles_dir_))
+        tile_bbox = box(*get_tile_bbox(tile_path_id))
         for poly in geojson_polys:
             if poly.intersects(tile_bbox):
                 tile_paths_.add(tile_path)
@@ -151,7 +156,7 @@ def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path) -> Set
     return tile_paths_
 
 
-def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str) -> Set[Path]:
+def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str, tiles_dir_: Path) -> Set[Path]:
     """Returns all tile paths intersecting with the bbox"""
     try:
         bbox = Bbox(*[float(x) for x in bbox_str.split(",")])
@@ -168,7 +173,8 @@ def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str) -> Set[Path]:
 
     tile_paths_ = set()
     for tile_path in all_tile_paths:
-        tile_bbox = Bbox(*get_tile_bbox(tile_path))
+        tile_path_id = str(tile_path.relative_to(tiles_dir_))
+        tile_bbox = Bbox(*get_tile_bbox(tile_path_id))
         # check if tile_bbox is outside of bbox
         if not any(
             [
@@ -329,9 +335,9 @@ if __name__ == '__main__':
     # get the tile paths which intersect with the geom, if any
     tile_paths: Union[Set[Path], List[Path]] = sorted(tiles_dir.rglob('*.gph'))
     if args.bbox:
-        tile_paths = get_tiles_with_bbox(tile_paths, args.bbox)
+        tile_paths = get_tiles_with_bbox(tile_paths, args.bbox, tiles_dir)
     elif args.geojson_dir:
-        tile_paths = get_tiles_with_geojson(tile_paths, args.geojson_dir)
+        tile_paths = get_tiles_with_geojson(tile_paths, args.geojson_dir, tiles_dir)
 
     # set the right logger level
     if args.verbosity == 0:
