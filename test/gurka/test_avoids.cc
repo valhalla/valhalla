@@ -191,19 +191,44 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
             {"lat": %s, "lon": %s}
           ],
           "costing":"auto",
-          "exclude_polygons": [[]]
-        })";
-  std::string req_str =
+        )";
+  std::string req_base =
       (boost::format(req) % std::to_string(avoid_map.nodes.at("A").lat()) %
        std::to_string(avoid_map.nodes.at("A").lng()) % std::to_string(avoid_map.nodes.at("D").lat()) %
        std::to_string(avoid_map.nodes.at("D").lng()))
           .str();
   Api request;
-  ParseApi(req_str, Options::route, request);
-  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
 
+  // empty polygon
+  auto req_str = req_base + R"("avoid_polygons": [[]]})";
+  std::cerr << req_str << std::endl;
+  ParseApi(req_str, Options::route, request);
   // loki would previously segfault on exclude_polygons=[[]]
   gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+
+  // an object!
+  req_str = req_base + R"("avoid_polygons": {}})";
+  std::cerr << req_str << std::endl;
+  ParseApi(req_str, Options::route, request);
+  auto res = gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+  EXPECT_EQ(res.info().warnings().size(), 1);
+  EXPECT_EQ(res.info().warnings().Get(0).code(), 204);
+
+  // array of empty array and empty object
+  req_str = req_base + R"("avoid_polygons": [[]]})";
+  ParseApi(req_str, Options::route, request);
+  gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
+
+  // a valid polygon and an empty object!
+  req_str =
+      req_base +
+      R"("avoid_polygons": [[[1.0, 1.0], [1.00001, 1.00001], [1.00002, 1.00002], [1.0, 1.0]], {}]})";
+  ParseApi(req_str, Options::route, request);
+  res = gurka::do_action(Options::route, avoid_map, req_str);
+  EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
 }
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {

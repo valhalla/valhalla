@@ -991,7 +991,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       try {
         for (const auto& req_poly : rings_req->GetArray()) {
           if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
-            add_warning(api, 204);
             continue;
           }
           auto* ring = rings_pbf->Add();
