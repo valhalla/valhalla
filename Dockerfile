@@ -25,7 +25,7 @@ RUN pip install --upgrade conan
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
+RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc -DENABLE_THREAD_SAFE_TILE_REF_COUNT=On
 RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
