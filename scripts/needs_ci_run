@@ -135,7 +135,10 @@ print(f"ignored files: {ignored_files}", file=sys.stderr)
 
 if sorted(ignored_files) == sorted(changed_files):
     # everything was ignored, skip CI
-    print('skipping CI because the changed stuff and the stuff we want to ignore is the same', file=sys.stderr)
+    print(
+        'skipping CI because the changed stuff and the stuff we want to ignore is the same',
+        file=sys.stderr,
+    )
     print('skip CI')
 
 # Not everything was ignored, run CI
