@@ -96,6 +96,7 @@ SKIP_CI = "True"
 if not path.isfile(CI_IGNORE_FILE):
     # no CI ignore rules configured, run CI
     print('needs CI: no ciignore file', file=sys.stderr)
+    sys.exit(0)
 
 # Check if a previous build of this branch was successful or not
 status, last_pr_gitsha = last_build_successful()
@@ -105,6 +106,7 @@ print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}', file=sys.st
 # TODO: even on first build we shouldn't run CI for irrelevant files..
 if not status:
     print('needs CI: last build was not successful', file=sys.stderr)
+    sys.exit(0)
 
 # if commit does not exist anymore, dont skip
 if (
@@ -112,6 +114,7 @@ if (
     != 'commit'
 ):
     print('needs CI: last commit doesnt exist anymore', file=sys.stderr)
+    sys.exit(0)
 
 
 # Get all changes since the last succesful CI run
