@@ -577,6 +577,10 @@ void DirectedEdge::set_bss_connection(const bool bss_connection) {
   bss_connection_ = bss_connection;
 }
 
+void DirectedEdge::set_lit(const bool lit) {
+  lit_ = lit;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   json::MapPtr map = json::map({

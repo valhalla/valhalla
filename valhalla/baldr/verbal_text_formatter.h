@@ -4,8 +4,6 @@
 #include <regex>
 #include <string>
 
-#include <boost/optional.hpp>
-
 #include <valhalla/odin/markup_formatter.h>
 #include <valhalla/odin/sign.h>
 

@@ -2,9 +2,8 @@
 #define VALHALLA_ODIN_SIGN_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
-
-#include <boost/optional.hpp>
 
 #include <valhalla/baldr/streetname.h>
 
@@ -21,7 +20,7 @@ public:
    */
   Sign(const std::string& text,
        const bool is_route_number,
-       const boost::optional<baldr::Pronunciation>& pronunciation = boost::none);
+       const std::optional<baldr::Pronunciation>& pronunciation = std::nullopt);
 
   /**
    * Returns the sign text.
@@ -51,7 +50,7 @@ public:
    * Returns the pronunciation of this sign.
    * @return the pronunciation of this sign.
    */
-  const boost::optional<baldr::Pronunciation>& pronunciation() const;
+  const std::optional<baldr::Pronunciation>& pronunciation() const;
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToParameterString() const;
@@ -63,7 +62,7 @@ protected:
   std::string text_;
   bool is_route_number_;
   uint32_t consecutive_count_;
-  boost::optional<baldr::Pronunciation> pronunciation_;
+  std::optional<baldr::Pronunciation> pronunciation_;
 };
 
 } // namespace odin

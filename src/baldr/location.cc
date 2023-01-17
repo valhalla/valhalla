@@ -28,7 +28,7 @@ Location::Location(const midgard::PointLL& latlng,
                    unsigned long radius,
                    const PreferredSide& side,
                    const SearchFilter& search_filter,
-                   boost::optional<int8_t> preferred_layer)
+                   std::optional<int8_t> preferred_layer)
     : latlng_(latlng), stoptype_(stoptype), min_outbound_reach_(min_outbound_reach),
       min_inbound_reach_(min_inbound_reach), radius_(radius), preferred_side_(side),
       node_snap_tolerance_(5), heading_tolerance_(60), search_cutoff_(35000),

@@ -1,5 +1,4 @@
 #include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
 #include <cxxopts.hpp>
@@ -251,8 +250,10 @@ int main(int argc, char* argv[]) {
           loc.name_ = pt.get<std::string>("name", "");
           loc.street_ = pt.get<std::string>("street", "");
 
-          loc.date_time_ = pt.get_optional<std::string>("date_time");
-          loc.heading_ = pt.get_optional<float>("heading");
+          auto date_time = pt.get_optional<std::string>("date_time");
+          loc.date_time_ = date_time ? std::make_optional<std::string>(*date_time) : std::nullopt;
+          auto heading = pt.get_optional<float>("heading");
+          loc.heading_ = heading ? std::make_optional<float>(*heading) : std::nullopt;
           loc.heading_tolerance_ = pt.get<float>("heading_tolerance", loc.heading_tolerance_);
           loc.node_snap_tolerance_ = pt.get<float>("node_snap_tolerance", loc.node_snap_tolerance_);
 

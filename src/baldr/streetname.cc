@@ -1,7 +1,7 @@
 #include <iostream>
+#include <optional>
 
 #include <boost/algorithm/string/predicate.hpp>
-#include <boost/optional.hpp>
 
 #include "baldr/streetname.h"
 
@@ -11,7 +11,7 @@ namespace baldr {
 // Constructor
 StreetName::StreetName(const std::string& value,
                        const bool is_route_number,
-                       const boost::optional<baldr::Pronunciation>& pronunciation)
+                       const std::optional<baldr::Pronunciation>& pronunciation)
     : value_(value), is_route_number_(is_route_number), pronunciation_(pronunciation) {
 }
 
@@ -26,7 +26,7 @@ bool StreetName::is_route_number() const {
   return is_route_number_;
 }
 
-const boost::optional<baldr::Pronunciation>& StreetName::pronunciation() const {
+const std::optional<baldr::Pronunciation>& StreetName::pronunciation() const {
   return pronunciation_;
 }
 
