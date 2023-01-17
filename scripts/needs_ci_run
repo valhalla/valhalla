@@ -32,15 +32,12 @@ def last_build_successful():
 
     if not branch:
         print('CIRCLE_BRANCH env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
         return False, None
     if not current_workflow_id:
         print('CIRCLE_WORKFLOW_ID env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
         return False, None
     if not token:
         print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
         return False, None
 
     # If master, we run 4 jobs, if PR, we run 3 (no docker workflow)
