@@ -29,12 +29,12 @@ pr:
   drafts: false
 
 jobs:
-  - job: VS2019
-    displayName: 'Windows 2019 | VS2019'
+  - job: VS2022
+    displayName: 'Windows 2022 | VS2022'
     timeoutInMinutes: 120
 
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
 
     variables:
       BUILD_CFG: 'Release'
