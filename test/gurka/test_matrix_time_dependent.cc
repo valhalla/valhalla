@@ -36,7 +36,7 @@ void check_dist(const rapidjson::Document& result,
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
       if (valid_traffic) {
-        EXPECT_TRUE(v.GetObject().HasMember("date_time"));
+        EXPECT_TRUE(v.GetObject().HasMember("date_time")) << msg;
       }
       i++;
     }
