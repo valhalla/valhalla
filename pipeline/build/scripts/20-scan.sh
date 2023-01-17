@@ -15,7 +15,8 @@ then
     -Dsonar.projectKey=WAYVALHAL \
     -Dsonar.projectName=${APP_NAME} \
     -Dsonar.projectVersion=${APP_VERSION} \
-    -Dsonar.branchName=${BUILD_SOURCEBRANCHNAME}
+    -Dsonar.branchName=${BUILD_SOURCEBRANCHNAME} \
+    -Dsonar.cfamily.compile-commands=compile_commands.json
 fi
 
 if [[ "${BLACKDUCK_ENABLED}" == true ]]
