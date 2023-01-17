@@ -1,19 +1,22 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/meili/*.h)
 
 set(sources
-  viterbi_search.cc
   topk_search.cc
   routing.cc
-  candidate_search.cc
   geometry_helpers.cc
-  transition_cost_model.cc
-  map_matcher.cc
   map_matcher_factory.cc
-  match_route.cc
   config.cc)
+
+set(sources_with_warnings
+  candidate_search.cc
+  map_matcher.cc
+  match_route.cc
+  transition_cost_model.cc
+  viterbi_search.cc)
 
 valhalla_module(NAME meili
   SOURCES ${sources}
+  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
