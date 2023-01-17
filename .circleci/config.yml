@@ -42,6 +42,7 @@ jobs:
     steps:
       - checkout
       - run: |
+            pip3 install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
@@ -90,6 +91,7 @@ jobs:
     steps:
       - checkout
       - run: |
+            pip3 install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
