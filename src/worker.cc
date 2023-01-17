@@ -152,6 +152,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"}
 };
 // clang-format on
 
@@ -983,16 +984,21 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_exclude_polygons();
-    try {
-      for (const auto& req_poly : rings_req->GetArray()) {
-        if (req_poly.GetArray().Empty()) {
-          continue;
+    if (!rings_req->IsArray()) {
+      add_warning(api, 204);
+    } else {
+      auto* rings_pbf = options.mutable_exclude_polygons();
+      try {
+        for (const auto& req_poly : rings_req->GetArray()) {
+          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+            add_warning(api, 204);
+            continue;
+          }
+          auto* ring = rings_pbf->Add();
+          parse_ring(ring, req_poly);
         }
-        auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly);
-      }
-    } catch (...) { throw valhalla_exception_t{137}; }
+      } catch (...) { throw valhalla_exception_t{137}; }
+    }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
