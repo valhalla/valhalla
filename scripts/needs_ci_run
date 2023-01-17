@@ -1,13 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import fnmatch
 from os import path, environ
 import requests
 import sys
 import subprocess
-
-
-# jobs defined in .circleci/config.yml
-JOBS = ['build-docker-images', 'lint-build-debug', 'build-release', 'build-osx']
 
 CIRCLE_JOB_STATUS_SUCCESS = 'success'
 
@@ -36,13 +32,20 @@ def last_build_successful():
 
     if not branch:
         print('CIRCLE_BRANCH env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
+        return False, None
     if not current_workflow_id:
         print('CIRCLE_WORKFLOW_ID env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
+        return False, None
     if not token:
         print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check', file=sys.stderr)
-        print('needs CI')
+        return False, None
+
+    # If master, we run 4 jobs, if PR, we run 3 (no docker workflow)
+    # jobs defined in .circleci/config.yml
+    if branch == "master":
+        JOBS = ['build-docker-images', 'lint-build-debug', 'build-release', 'build-osx']
+    else:
+        JOBS = ['lint-build-debug', 'build-release', 'build-osx']
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run
@@ -81,29 +84,34 @@ def last_build_successful():
         if status != 'success':
             return False, gitsha
 
-    return True, job_status[JOBS[0]][1]
+    return True, gitsha
 
 
 CI_IGNORE_FILE = '.circleci/ciignore'
+SKIP_CI = "True"
 
 if not path.isfile(CI_IGNORE_FILE):
     # no CI ignore rules configured, run CI
-    print('needs CI')
+    print('needs CI: no ciignore file', file=sys.stderr)
+    sys.exit(0)
 
 # Check if a previous build of this branch was successful or not
 status, last_pr_gitsha = last_build_successful()
 print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}', file=sys.stderr)
 
 # if last build was not successfull, dont skip
+# TODO: even on first build we shouldn't run CI for irrelevant files..
 if not status:
-    print('needs CI')
+    print('needs CI: last build was not successful', file=sys.stderr)
+    sys.exit(0)
 
 # if commit does not exist anymore, dont skip
 if (
     subprocess.run(['git', 'cat-file', '-t', f'{last_pr_gitsha}'], capture_output=True, text=True).stdout
     != 'commit'
 ):
-    print('needs CI')
+    print('needs CI: last commit doesnt exist anymore', file=sys.stderr)
+    sys.exit(0)
 
 
 # Get all changes since the last succesful CI run
@@ -127,7 +135,8 @@ print(f"ignored files: {ignored_files}", file=sys.stderr)
 
 if sorted(ignored_files) == sorted(changed_files):
     # everything was ignored, skip CI
+    print('skipping CI because the changed stuff and the stuff we want to ignore is the same', file=sys.stderr)
     print('skip CI')
 
 # Not everything was ignored, run CI
-print('needs CI')
+print('needs CI', file=sys.stderr)
