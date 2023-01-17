@@ -95,14 +95,6 @@ list(APPEND sources
 list(APPEND sources_with_warnings
     tz_alt.cpp)
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-          ${sources}
-          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-unused-parameter")
-endif()
-
 #ios we have more work to make use of system tzdb
 if(APPLE)
   list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
@@ -112,6 +104,7 @@ endif()
 valhalla_module(NAME baldr
   SOURCES
     ${sources}
+  SOURCES_WITH_WARNINGS
     ${sources_with_warnings}
 
   HEADERS
