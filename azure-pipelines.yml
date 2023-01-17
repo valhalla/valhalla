@@ -75,7 +75,7 @@ stages:
       name: build
       variables:
         - way.emea.shared
-        #- sonarqube
+        - sonarqube
         - blackduck
 
   # RELEASE TO DEV
