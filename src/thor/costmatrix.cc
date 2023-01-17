@@ -114,6 +114,9 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     const sif::mode_costing_t& mode_costing,
     const travel_mode_t mode,
     const float max_matrix_distance) {
+
+  LOG_INFO("matrix::CostMatrix");
+
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
