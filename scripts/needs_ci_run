@@ -82,7 +82,6 @@ def last_build_successful():
     # Return False if any of the jobs were not in 'success' state
     for status, gitsha in job_status.values():
         if status != 'success':
-            continue
             return False, gitsha
 
     return True, job_status[JOBS[0]][1]
@@ -107,11 +106,10 @@ if not status:
     sys.exit(0)
 
 # if commit does not exist anymore, dont skip
-out_test = subprocess.run(
+git_type = subprocess.run(
     ['git', 'cat-file', '-t', f'{last_pr_gitsha}'], capture_output=True, text=True
 ).stdout
-print(f"Output from git cat-file on commit {last_pr_gitsha}: {out_test}", file=sys.stderr)
-if 'commit' not in out_test:
+if 'commit' not in git_type:
     print('needs CI: last commit doesnt exist anymore', file=sys.stderr)
     sys.exit(0)
 
