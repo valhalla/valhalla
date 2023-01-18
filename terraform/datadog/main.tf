@@ -222,24 +222,6 @@ module "k8s-crashloopbackoff-monitor" {
 }
 
 # disabled by default for SCP, enable if you manage your own cluster
-module "nginx-upstream-monitor" {
-  source = "git::https://dev.azure.com/daimler-mic/apmtools/_git/datadog-monitor-tf-modules//nginx-upstream-monitor?ref=v0.9.6"
-  app_name = "tools-public-nginx"
-  teamname = "mic-team-way"
-  #ToDo: add your recipients here e.g. {warn="@webhook-mattermost-mic-team-<<code>>" alert="@opsgenie-mic-team-<<code>> @webhook-mattermost-mic-team-<<code>>"}
-  notifications = {
-    warn     = ""
-    alert    = ""
-    recovery = ""
-    default  = ""
-  }
-  env      = var.mic_stage
-  geo      = var.app_geo
-  aks_clustername = var.aks_clustername
-  priority = 3
-}
-
-# disabled by default for SCP, enable if you manage your own cluster
 module "k8s-requests-cpu-monitor" {
   source = "git::https://dev.azure.com/daimler-mic/apmtools/_git/datadog-monitor-tf-modules//k8s-requests-cpu-monitor?ref=v0.9.6"
   thresholds = {
