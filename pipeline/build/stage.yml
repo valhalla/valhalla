@@ -53,10 +53,6 @@ stages:
             name: scan
             displayName: Scanners
             env:
-              SONAR_TOKEN: $(sonar.token)
-              SONAR_URL: 'https://gsep.daimler.com/sonar'
-              SONAR_CERT_PATH: $(sonarcert.secureFilePath)
-              SONAR_CERT_PASSPHRASE: $(sonar.cert.passphrase)
               BLACKDUCK_API_TOKEN: $(blackduck.api.token)
 
           - bash: |
