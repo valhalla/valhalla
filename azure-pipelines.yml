@@ -78,7 +78,7 @@ stages:
       enabled: eq('${{ parameters.EMEA_DEV }}', true )
       region: emea
       environment: dev
-      namespace: $(app.name)
+      namespace: asgard
       variables:
         - way.emea.shared
         - datadog
@@ -92,7 +92,7 @@ stages:
       enabled: or( eq('${{ parameters.EMEA_NONPROD }}', true ) , eq('${{ parameters.EMEA_PROD }}', true ) )
       region: emea
       environment: nonprod
-      namespace: $(app.name)
+      namespace: asgard
       variables:
         - way.emea.shared
         - datadog
@@ -106,7 +106,7 @@ stages:
       enabled: eq('${{ parameters.EMEA_PROD }}', true )
       region: emea
       environment: prod
-      namespace: $(app.name)
+      namespace: asgard
       variables:
         - way.emea.shared
         - datadog
