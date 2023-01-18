@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-azuredisk
+spec:
+  capacity:
+    storage: 16Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: managed-csi
+  csi:
+    driver: disk.csi.azure.com
+    readOnly: false
+    volumeHandle: /subscriptions/d8af6284-e391-4acd-8b75-a0be6bb54d01/resourceGroups/ece-devweub-way-k8s-rg/providers/Microsoft.Compute/disks/GraphStorage
+    volumeAttributes:
+      fsType: ext4
