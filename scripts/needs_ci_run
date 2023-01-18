@@ -140,6 +140,6 @@ if sorted(ignored_files) == sorted(changed_files):
         file=sys.stderr,
     )
     print('skip CI')
-
-# Not everything was ignored, run CI
-print('needs CI', file=sys.stderr)
+else:
+    # Not everything was ignored, run CI
+    print('needs CI', file=sys.stderr)
