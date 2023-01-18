@@ -17,7 +17,7 @@ then
     -Dsonar.projectName=${APP_NAME} \
     -Dsonar.projectVersion=${APP_VERSION} \
     -Dsonar.branch.name=${BUILD_SOURCEBRANCHNAME} \
-    -Dsonar.sources=. \
+    -Dsonar.sources=.
 fi
 
 if [[ "${BLACKDUCK_ENABLED}" == true ]]
