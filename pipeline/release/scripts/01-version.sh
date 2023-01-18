@@ -2,8 +2,8 @@
 
 if [ -z "$APP_VERSION" ]
 then
-  echo "Current build version already set to: latest"
-  echo "##vso[task.setvariable variable=app.version;]latest"
+  echo "Current build version empty, setting to latest."
+  APP_VERSION="latest"
 else
-  echo "Current build version: ${APP_VERSION}"
+  echo "Current build version already set to: ${APP_VERSION}"
 fi
