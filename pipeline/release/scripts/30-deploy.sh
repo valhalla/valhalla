@@ -86,8 +86,8 @@ helm upgrade valhalla helm/app \
 --set image.repository=${APP_NAME} \
 --set image.tag=${APP_VERSION} \
 --set graph.share.name=${GRAPH_SHARE_NAME} \
---set share.storage.name=${GRAPH_STORAGE_NAME} \
---set share.storage.key=${GRAPH_STORAGE_KEY} \
+--set share.storage.name=${SHARE_STORAGE_NAME} \
+--set share.storage.key=${SHARE_STORAGE_KEY} \
 || exit 5
 
 az logout
