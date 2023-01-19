@@ -28,6 +28,11 @@ spec:
     spec:
       imagePullSecrets:
         - name: {{ .Chart.Name }}-registry
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+
       affinity:
         podAntiAffinity:      # Makes sure only one osrm-routing pod is scheduled on each valhalla node
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -44,9 +49,6 @@ spec:
             secretName: {{ .Chart.Name }}-storage
             shareName: {{ .Values.graph.share.name }}
             readOnly: true
-        - name: azure
-          persistentVolumeClaim:
-            claimName: pvc-azuredisk
       containers:
         - name: valhalla
           image: {{ include "image" . }}
@@ -59,6 +61,8 @@ spec:
               memory: {{ .Values.container.valhalla.resourceRequests.memory }} # All the memory used by the routing service is shared, it requires almost nothing
               cpu: {{ .Values.container.valhalla.resourceRequests.cpu }}       # Routing can be parallelized, so we reserve all the CPU we can get
           securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
             allowPrivilegeEscalation: false
             capabilities:
               drop:
@@ -66,16 +70,14 @@ spec:
               add:
                 - NET_BIND_SERVICE
           command: ["valhalla_service"]
-          args: 
+          args:
             - "/etc/valhalla/valhalla.json"
             - "{{ .Values.valhalla.numberOfThreads }}"
           ports:
             - containerPort: {{ .Values.container.valhalla.port }}
           volumeMounts:
-            - mountPath: /data/valhalla-files
+            - mountPath: /data/valhalla
               name: graph-storage
-            - name: azure
-              mountPath: /data/valhalla
           env:
             - name: DD_AGENT_HOST
               valueFrom:
