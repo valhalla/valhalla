@@ -101,7 +101,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
                float max_length) {
   // protect for bogus input
   if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
-      !rings_pbf.Get(0).coords()[0].has_lat()) {
+      !rings_pbf.Get(0).coords()[0].has_lat_case() || !rings_pbf.Get(0).coords()[0].has_lng_case()) {
     return {};
   }
 
