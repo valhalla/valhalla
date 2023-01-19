@@ -99,6 +99,11 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length) {
+  // protect for bogus input
+  if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
+      !rings_pbf.Get(0).coords()[0].has_lat()) {
+    return {};
+  }
 
   // convert to bg object and check length restriction
   double rings_length = 0;

@@ -18,6 +18,12 @@ namespace bg = boost::geometry;
 namespace vm = valhalla::midgard;
 namespace vl = valhalla::loki;
 
+class LokiWorkerTest : public vl::loki_worker_t {
+public:
+  using vl::loki_worker_t::loki_worker_t;
+  using vl::loki_worker_t::parse_costing;
+};
+
 namespace {
 // register a few boost.geometry types
 using ring_bg_t = std::vector<vm::PointLL>;
@@ -229,6 +235,16 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   ParseApi(req_str, Options::route, request);
   res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 1);
+
+  // protect the public API too
+  baldr::GraphReader reader(avoid_map.config.get_child("mjolnir"));
+  LokiWorkerTest loki_worker(avoid_map.config);
+  valhalla::Api vanilla_request;
+  vanilla_request.mutable_options()->set_costing_type(valhalla::Costing_Type_auto_);
+  vanilla_request.mutable_options()->mutable_exclude_polygons()->Add();
+  (*vanilla_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
+
+  loki_worker.parse_costing(vanilla_request);
 }
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
