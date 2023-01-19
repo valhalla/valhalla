@@ -44,9 +44,9 @@ spec:
                       - {{ .Chart.Name }}
               topologyKey: "kubernetes.io/hostname"   # Applies this rule to each node (i.e. each unique host name in the cluster)
       volumes:
-        - name: graph-storage
+        - name: share-storage
           azureFile:
-            secretName: {{ .Chart.Name }}-storage
+            secretName: share-storage
             shareName: {{ .Values.graph.share.name }}
             readOnly: true
       containers:
@@ -77,7 +77,7 @@ spec:
             - containerPort: {{ .Values.container.valhalla.port }}
           volumeMounts:
             - mountPath: /data/valhalla
-              name: graph-storage
+              name: share-storage
           env:
             - name: DD_AGENT_HOST
               valueFrom:

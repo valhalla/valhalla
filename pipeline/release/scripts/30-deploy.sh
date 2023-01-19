@@ -29,6 +29,18 @@ GRAPH_STORAGE_KEY=$(az keyvault secret show \
 --subscription ${APP_SUBSCRIPTION_ID} \
 --query value \
 --output tsv)
+SHARE_STORAGE_NAME=$(az keyvault secret show \
+--name share-storage-name \
+--vault-name ${KEYVAULT_NAME} \
+--subscription ${APP_SUBSCRIPTION_ID} \
+--query value \
+--output tsv)
+SHARE_STORAGE_KEY=$(az keyvault secret show \
+--name share-storage-key \
+--vault-name ${KEYVAULT_NAME} \
+--subscription ${APP_SUBSCRIPTION_ID} \
+--query value \
+--output tsv)
 if [[ $? -ne 0 ]]
 then
   echo "ERROR Failed to read secrets from key vault ${APP_STAGE}-keyvault. Make sure the key vault exists."
@@ -74,8 +86,8 @@ helm upgrade valhalla helm/app \
 --set image.repository=${APP_NAME} \
 --set image.tag=${APP_VERSION} \
 --set graph.share.name=${GRAPH_SHARE_NAME} \
---set graph.storage.name=${GRAPH_STORAGE_NAME} \
---set graph.storage.key=${GRAPH_STORAGE_KEY} \
+--set share.storage.name=${GRAPH_STORAGE_NAME} \
+--set share.storage.key=${GRAPH_STORAGE_KEY} \
 || exit 5
 
 az logout
