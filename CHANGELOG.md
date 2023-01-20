@@ -1,4 +1,4 @@
-## Release Date: 2022-??-?? Valhalla 3.3.1
+## Release Date: 2023-??-?? Valhalla 3.3.1
 * **Removed**
 * **Bug Fix**
    * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
@@ -9,15 +9,15 @@
    * ADDED: log lat/lon of node where children link edges exceed the configured maximum [#3911](https://github.com/valhalla/valhalla/pull/3911)
    * ADDED: log matrix algorithm which was used [#3916](https://github.com/valhalla/valhalla/pull/3916)
    * UPDATED: docker base image to Ubuntu 22.04 [#3912](https://github.com/valhalla/valhalla/pull/3912)
-   * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)  
+   * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)
 
-## Release Date: 2022-01-03 Valhalla 3.3.0
+## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
   * CHANGED: Upgraded from C++14 to C++17. [#3878](https://github.com/valhalla/valhalla/pull/3878)
 
-## Release Date: 2022-01-03 Valhalla 3.2.1
+## Release Date: 2023-01-03 Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
