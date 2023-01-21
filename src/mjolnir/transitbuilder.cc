@@ -473,12 +473,12 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     std::get<2>(closest_point) = (edge_shape.size() - 2) - std::get<2>(closest_point);
     std::vector<PointLL> opp_shape(edge_shape.rbegin(),
                                    edge_shape.rbegin() + std::get<2>(closest_point) + 1);
-    shape.push_back(std::get<0>(closest_point));
-    shape.push_back(egress_ll);
-    length = std::max(1.0, valhalla::midgard::length(shape));
+    opp_shape.push_back(std::get<0>(closest_point));
+    opp_shape.push_back(egress_ll);
+    length = std::max(1.0, valhalla::midgard::length(opp_shape));
     connections.emplace_back(OSMConnectionEdge{closest_edge->endnode(), egress_id, length,
                                                closest_edgeinfo->wayid(),
-                                               closest_edgeinfo->GetNames(), shape});
+                                               closest_edgeinfo->GetNames(), opp_shape});
   }
   return connections;
 }
