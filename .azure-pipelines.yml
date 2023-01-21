@@ -7,7 +7,10 @@
 
 # No wildcards allowed for file patterns...
 # skip draft PR's, skip all commits except for PRs to master
-trigger: none
+trigger:
+  branches:
+    include:
+      - master
 pr:
   branches:
     include:
@@ -26,12 +29,12 @@ pr:
   drafts: false
 
 jobs:
-  - job: VS2019
-    displayName: 'Windows 2019 | VS2019'
+  - job: VS2022
+    displayName: 'Windows 2022 | VS2022'
     timeoutInMinutes: 120
 
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
 
     variables:
       BUILD_CFG: 'Release'
@@ -39,7 +42,8 @@ jobs:
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: '2023.01.09'
+      # points to recent commit in master after a bug fix in vcpkg
+      VCPKG_REF: '51e10eb'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 

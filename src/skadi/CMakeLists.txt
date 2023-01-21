@@ -1,7 +1,7 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/skadi/*.h)
 
 valhalla_module(NAME skadi
-  SOURCES
+  SOURCES_WITH_WARNINGS
     sample.cc
     util.cc
     ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c

@@ -55,6 +55,9 @@ public:
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations,
                  const bool invariant = false) {
+
+    LOG_INFO("matrix::TimeDistanceMatrix");
+
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
