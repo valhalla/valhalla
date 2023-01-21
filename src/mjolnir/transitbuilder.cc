@@ -465,7 +465,10 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
 
     // the end node is in another tile
     if (closest_edge->leaves_tile()) {
-      LOG_WARN("Could not create opposing connection edge because existing edge crosses tiles");
+      // TODO: its a big pain in the butt, but we can fix this to do so we need to split up the jobs
+      //  of finding the connection points and modifying the tiles, which means we need to keep all
+      //  the connections in memory (this is fine even globally)
+      LOG_WARN("Could not create transit connect edge from end node because its in another tile");
       continue;
     }
 
