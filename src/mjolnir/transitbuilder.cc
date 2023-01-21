@@ -390,13 +390,13 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     // keep this info about the closest point to an edge shape
     const DirectedEdge* closest_edge = nullptr;
     boost::optional<EdgeInfo> closest_edgeinfo;
-    std::tuple<PointLL, decltype(PointLL::first), int> closest_point;
+    std::tuple<PointLL, decltype(PointLL::first), int> closest_point({}, SNAP_DISTANCE_CUTOFF, 0);
 
     // Loop over all the graph that is in this tile
     auto startnode_id = local_tile->header()->graphid();
-    const auto* startnode = local_tile->node(startnode_id);
+    const auto* startnode = local_tile->node(0);
     auto directededge_id = local_tile->header()->graphid();
-    const auto* directededge = local_tile->directededge(directededge_id);
+    const auto* directededge = local_tile->directededge(0);
     for (; directededge_id.id() < local_tile->header()->directededgecount();
          ++directededge_id, ++directededge) {
       // next node
@@ -426,12 +426,9 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
       auto point = egress_ll.Project(ei.shape());
       auto distance = std::get<1>(point);
 
-      // must be close by AND (is the first thing we found
-      //                      OR (is closer than the closest AND way ids match if provided/found))
+      // must be closer than the closest (or limit) AND way ids match if provided/found
       bool does_match_way_id = way_id == ei.wayid();
-      if (distance < SNAP_DISTANCE_CUTOFF &&
-          (!closest_edge ||
-           (distance < std::get<1>(closest_point) && should_match_way_id == does_match_way_id))) {
+      if (distance < std::get<1>(closest_point) && should_match_way_id == does_match_way_id) {
         closest_edge = directededge;
         closest_point = point;
         closest_edgeinfo = std::move(ei);
@@ -451,11 +448,14 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     std::vector<PointLL> edge_shape = closest_edgeinfo->shape();
     if (!closest_edge->forward()) {
       std::reverse(edge_shape.begin(), edge_shape.end());
-      std::get<2>(closest_point) = edge_shape.size() - std::get<2>(closest_point) - 1;
+      // size - 1 because we are dealing with indices not counts, but we take another off because its
+      // the index of the segment in the line not the point (1 fewer segments than points)
+      std::get<2>(closest_point) = (edge_shape.size() - 2) - std::get<2>(closest_point);
     }
 
     // by definition this edge will be in the tile (starting at the begin node of the snapped edge
-    std::vector<PointLL> shape(edge_shape.begin(), edge_shape.begin() + std::get<2>(closest_point));
+    std::vector<PointLL> shape(edge_shape.begin(),
+                               edge_shape.begin() + std::get<2>(closest_point) + 1);
     shape.push_back(std::get<0>(closest_point));
     shape.push_back(egress_ll);
     auto length = std::max(1.0, valhalla::midgard::length(shape));
@@ -465,13 +465,14 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
 
     // the end node is in another tile
     if (closest_edge->leaves_tile()) {
-      // TODO: store this connection for use outside of this thread
+      LOG_WARN("Could not create opposing connection edge because existing edge crosses tiles");
       continue;
     }
 
     // the end node is in this tile too so we can keep this connection as well
+    std::get<2>(closest_point) = (edge_shape.size() - 2) - std::get<2>(closest_point);
     std::vector<PointLL> opp_shape(edge_shape.rbegin(),
-                                   edge_shape.rbegin() + std::get<2>(closest_point));
+                                   edge_shape.rbegin() + std::get<2>(closest_point) + 1);
     shape.push_back(std::get<0>(closest_point));
     shape.push_back(egress_ll);
     length = std::max(1.0, valhalla::midgard::length(shape));
