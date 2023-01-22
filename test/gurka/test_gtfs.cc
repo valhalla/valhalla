@@ -10,6 +10,18 @@
 using namespace gtfs;
 using namespace valhalla;
 
+// static ids of different feed items, shared amongst tests, we could do more
+const std::string tripOneID = "trip_one";
+const std::string tripTwoID = "trip_two";
+const std::string stopOneID = "stop_one";
+const std::string stopTwoID = "stop_two";
+const std::string stopThreeID = "stop_three";
+const std::string shapeOneID = "shape_one";
+const std::string serviceOneID = "service_one";
+const std::string routeID = "route_one";
+const std::string blockID = "block_one";
+const int headwaySec = 1800;
+
 // the transit shape uses * as separators rather than -/\|
 const std::string ascii_map = R"(
         a**************b
@@ -67,14 +79,6 @@ TEST(GtfsExample, WriteGtfs) {
   auto station_two_ll = layout.find("2");
   auto station_three_ll = layout.find("3");
 
-  const std::string tripOneID = "10";
-  const std::string tripTwoID = "11";
-  const std::string stopOneID = "7";
-  const std::string stopTwoID = "8";
-  const std::string stopThreeID = "19";
-  const std::string shapeOneID = "5";
-  const std::string serviceOneID = "9";
-  const int headwaySec = 1800;
   Feed feed;
 
   std::string path_directory = pt.get<std::string>("mjolnir.transit_feeds_dir") +
@@ -134,7 +138,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write routes.txt
   struct Route lineOne {
-    .route_id = "2", .route_type = RouteType::Subway, .route_short_name = "ba",
+    .route_id = routeID, .route_type = RouteType::Subway, .route_short_name = "ba",
     .route_long_name = "bababa", .route_desc = "this is the first route", .route_color = "ff0000",
     .route_text_color = "00ff00",
   };
@@ -144,15 +148,15 @@ TEST(GtfsExample, WriteGtfs) {
 
   // write trips.txt
   struct gtfs::Trip tripOne {
-    .route_id = "2", .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "hello",
-    .block_id = "3", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .route_id = routeID, .service_id = serviceOneID, .trip_id = tripOneID, .trip_headsign = "hello",
+    .block_id = blockID, .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripOne);
 
   struct gtfs::Trip tripTwo {
-    .route_id = "2", .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
-    .block_id = "3", .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .route_id = routeID, .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
+    .block_id = blockID, .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripTwo);
@@ -263,13 +267,6 @@ TEST(GtfsExample, MakeProto) {
   auto pt = get_config();
 
   // constants written in the last function
-  const std::string tripOneID = "10";
-  const std::string tripTwoID = "11";
-  const std::string stopOneID = "7";
-  const std::string stopTwoID = "8";
-  const std::string stopThreeID = "19";
-  const std::string shapeOneID = "5";
-  const std::string serviceOneID = "9";
   auto serviceStartDate =
       baldr::DateTime::get_formatted_date("2022-01-31").time_since_epoch().count();
   auto serviceEndDate = baldr::DateTime::get_formatted_date("2023-01-31").time_since_epoch().count();
@@ -309,7 +306,7 @@ TEST(GtfsExample, MakeProto) {
 
       // routes info
       EXPECT_EQ(transit.routes_size(), 1);
-      EXPECT_EQ(transit.routes(0).onestop_id(), "2");
+      EXPECT_EQ(transit.routes(0).onestop_id(), routeID);
 
       // stop_pair info
       for (int i = 0; i < transit.stop_pairs_size(); i++) {
@@ -339,24 +336,15 @@ TEST(GtfsExample, MakeProto) {
                                   stopThreeID + "_" + to_string(NodeType::kMultiUseTransitPlatform)};
 
   for (const auto& stopID : stopIds) {
-    EXPECT_EQ(*stops.find((stopID)), stopID);
+    EXPECT_EQ(*stops.find(stopID), stopID);
   }
   for (const auto& stop_pair_id : stop_pair_ids) {
-    EXPECT_EQ(*stops.find((stop_pair_id)), stop_pair_id);
+    EXPECT_EQ(*stops.find(stop_pair_id), stop_pair_id);
   }
   // TODO: MAKE SURE ALL THE GENEREATED STOPS ARE ALSO TESTED FOR
 }
 
 TEST(GtfsExample, MakeTile) {
-  const std::string tripOneID = "10";
-  const std::string tripTwoID = "11";
-  const std::string stopOneID = "7";
-  const std::string stopTwoID = "8";
-  const std::string stopThreeID = "19";
-  const std::string shapeOneID = "5";
-  const std::string serviceOneID = "9";
-  const std::string routeID = "2";
-
   boost::property_tree::ptree pt = get_config();
 
   auto layout = create_layout();

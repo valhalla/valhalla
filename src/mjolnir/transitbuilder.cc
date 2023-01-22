@@ -6,8 +6,6 @@
 #include <iostream>
 #include <list>
 #include <mutex>
-#include <queue>
-#include <set>
 #include <thread>
 #include <tuple>
 #include <unordered_map>
@@ -80,7 +78,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder_local.nodes()));
-  uint32_t nodecount = currentnodes.size();
   tilebuilder_local.nodes().clear();
   std::vector<DirectedEdge> currentedges(std::move(tilebuilder_local.directededges()));
   tilebuilder_local.directededges().clear();
@@ -149,12 +146,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       const OSMConnectionEdge& conn = connection_edges[added_edges];
 
       // Get the transit node Graph Id
-      GraphId endnode = GetGraphId(conn.stop_node, tiles);
-      if (!endnode.Is_Valid()) {
-        LOG_WARN("TODO: need to be able to connect to tiles not directly under this tile");
-        continue;
-      }
-
+      GraphId endnode = conn.stop_node;
       if (!end_tile || (end_tile->id().Tile_Base() != endnode.Tile_Base())) {
         lock.lock();
         end_tile = reader_transit_level.GetGraphTile(endnode);
@@ -215,7 +207,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Move existing nodes and directed edge builder vectors and clear the lists
   currentnodes = tilebuilder_transit.nodes();
-  nodecount = currentnodes.size();
   tilebuilder_transit.nodes().clear();
   currentedges = tilebuilder_transit.directededges();
   tilebuilder_transit.directededges().clear();
@@ -350,8 +341,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
   LOG_INFO("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid()) + ": added " +
-           std::to_string(connedges) + " connection edges, " + std::to_string(nodecount) +
-           " nodes. time = " +
+           std::to_string(connedges) + " connection edges. time = " +
            std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) +
            " ms");
 }
@@ -406,7 +396,7 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
       }
 
       // there will be a more convenient opposing edge to use for this one so lets wait for it
-      if (!directededge->forward() && !directededge->leaves_tile() &&
+      if (!directededge->forward() && (directededge->endnode().Tile_Base() == local_tile->id()) &&
           (directededge->reverseaccess() & kPedestrianAccess)) {
         continue;
       }
@@ -444,6 +434,11 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
                std::to_string(egress_ll.second) + "," + std::to_string(egress_ll.first));
     }
 
+    // TODO: if the point we found is further away than the tile edge then there could be a better
+    //  match in an adjacent tile. For now we should detect this and log, to get a feeling of
+    //  prevalence. In the future we should look at other tiles (once we fix the below issue this will
+    //  be easy)
+
     // flip the shape if we have to
     std::vector<PointLL> edge_shape = closest_edgeinfo->shape();
     if (!closest_edge->forward()) {
@@ -464,10 +459,10 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
                                                closest_edgeinfo->GetNames(), shape});
 
     // the end node is in another tile
-    if (closest_edge->leaves_tile()) {
-      // TODO: its a big pain in the butt, but we can fix this to do so we need to split up the jobs
+    if (closest_edge->endnode().Tile_Base() != local_tile->id()) {
+      // TODO: its a big pain in the butt, but we can fix this. to do so we need to split up the jobs
       //  of finding the connection points and modifying the tiles, which means we need to keep all
-      //  the connections in memory (this is fine even globally)
+      //  the connections in memory (its small), organize them by tile and then update the tiles
       LOG_WARN("Could not create transit connect edge from end node because its in another tile");
       continue;
     }
@@ -521,13 +516,15 @@ void build(const boost::property_tree::ptree& pt,
     GraphTileBuilder tilebuilder_transit(reader_transit_level.tile_dir(), transit_tile_id, true);
     lock.unlock();
 
+    // TODO - how to handle connections that reach nodes outside the tile? Need to break up the calls
+    //  to MakeConnections and ConnectToGraph below. First we have threads find all the connections
+    //  even accross tile boundaries, we keep those in ram and then we run another pass where we add
+    //  those to the tiles when we rewrite them in ConnectToGraph. So two separate threaded steps
+    //  rather than cramming both of them into the single build function
+
     // Iterate through all transit tile nodes and form connections to the OSM network for those stops
     // which are in/egresses. Each in/egress connects to 2 OSM nodes along the closest edge optionally
     // matching the OSM way id
-    // TODO - how to handle connections that reach nodes outside the tile - would have to do this
-    //  after the main tile iteration
-    // TODO - what if we split the edge and insert a node?
-    GraphId transit_stop_node(tile_id.tileid(), tile_id.level(), 0);
     std::vector<OSMConnectionEdge> connection_edges = MakeConnections(local_tile, transit_tile);
 
     // this happens when you are running against small extracts...no work to be done.
@@ -584,24 +581,27 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     filesystem::recursive_directory_iterator transit_file_itr(
         *transit_dir + std::to_string(local_level + 1) + filesystem::path::preferred_separator),
         end_file_itr;
+    // look at each file in the transit dir
     for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+      // check if its a graph tile
       if (filesystem::is_regular_file(transit_file_itr->path()) &&
           transit_file_itr->path().string().find(".gph") ==
               (transit_file_itr->path().string().size() - 4)) {
+        // turn the id from the level 3 transit tile into the level 2 tile under it
         auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
         GraphId local_graph_id(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
+        // if the level 2 tile exists
         if (reader.DoesTileExist(local_graph_id)) {
-          graph_tile_ptr tile = reader.GetGraphTile(local_graph_id);
+          // remember the id for the level 2 tile
           tiles.emplace(local_graph_id);
+          // figure out the path in the new tileset for the transit tile
           const std::string destination_path = pt.get<std::string>("mjolnir.tile_dir") +
                                                filesystem::path::preferred_separator +
                                                GraphTile::FileSuffix(graph_id);
           filesystem::path root = destination_path;
           root.replace_filename("");
-          // Make sure the directory exists on the system and copy to the tile_dir
-          if (!filesystem::exists(root)) {
-            filesystem::create_directories(root);
-          }
+          filesystem::create_directories(root);
+          // and copy over the the transit into the tileset we are building
           std::ifstream in(transit_file_itr->path().string(),
                            std::ios_base::in | std::ios_base::binary);
           std::ofstream out(destination_path,
