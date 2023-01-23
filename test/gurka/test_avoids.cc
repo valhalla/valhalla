@@ -244,7 +244,9 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   vanilla_request.mutable_options()->mutable_exclude_polygons()->Add();
   (*vanilla_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
 
+  // adding an empty polygon was previously causing a segfault
   loki_worker.parse_costing(vanilla_request);
+  EXPECT_TRUE(vanilla_request.options().exclude_polygons_size() == 1);
 }
 
 TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
