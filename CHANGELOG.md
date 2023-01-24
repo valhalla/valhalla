@@ -5,6 +5,7 @@
    * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
    * FIXED: fix CHANGELOG release year (2022->2023) [#3927](https://github.com/valhalla/valhalla/pull/3927)
    * FIXED: avoid segfault on invalid exclude_polygons input [#3907](https://github.com/valhalla/valhalla/pull/3907)
+   * FIXED: allow _WIN32_WINNT to be defined by build system [[#3933](https://github.com/valhalla/valhalla/issues/3933)]
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
