@@ -291,7 +291,14 @@ if(PKG_CONFIG_FOUND)
   if(NOT \${_res} EQUAL 0)
     message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
   endif()")
-  install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-    COMPONENT development)
+  
+  if(WIN32)
+    install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc.exe
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+      COMPONENT development)
+  else()
+    install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
+      DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
+      COMPONENT development)
+  endif()
 endif()
