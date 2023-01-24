@@ -12,6 +12,7 @@
    * ADDED: log matrix algorithm which was used [#3916](https://github.com/valhalla/valhalla/pull/3916)
    * UPDATED: docker base image to Ubuntu 22.04 [#3912](https://github.com/valhalla/valhalla/pull/3912)
    * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)
+   * FIXED: fix pkg-config error on WIN32 builds [[#3931](https://github.com/valhalla/valhalla/issues/3931)]
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
