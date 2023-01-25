@@ -68,7 +68,7 @@ stages:
     parameters:
       name: build
       variables:
-        - way.emea.shared
+        - way.emea.share
         - blackduck
 
   # RELEASE TO DEV
@@ -80,7 +80,7 @@ stages:
       environment: dev
       namespace: $(app.name)
       variables:
-        - way.emea.shared
+        - way.emea.share
         - datadog
         - way.emea.dev
       dependencies: build
@@ -94,7 +94,7 @@ stages:
       environment: nonprod
       namespace: $(app.name)
       variables:
-        - way.emea.shared
+        - way.emea.share
         - datadog
         - way.emea.nonprod
       dependencies: emea_dev
@@ -108,7 +108,7 @@ stages:
       environment: prod
       namespace: $(app.name)
       variables:
-        - way.emea.shared
+        - way.emea.share
         - datadog
         - way.emea.prod
       dependencies: emea_nonprod
