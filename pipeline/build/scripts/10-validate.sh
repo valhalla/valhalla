@@ -35,12 +35,12 @@ then
   echo "ERROR: SHARE_CLIENT_SECRET not defined." && exit 1
 fi
 
-if [[ -z ${AZURE_SUBSCRIPTION_ID} ]]
+if [[ -z ${SHARE_SUBSCRIPTION_ID} ]]
 then
-  echo "ERROR: AZURE_SUBSCRIPTION_ID not defined." && exit 1
+  echo "ERROR: SHARE_SUBSCRIPTION_ID not defined." && exit 1
 fi
 
-if [[ -z ${AZURE_TENANT_ID} ]]
+if [[ -z ${SHARE_TENANT_ID} ]]
 then
-  echo "ERROR: AZURE_TENANT_ID not defined." && exit 1
+  echo "ERROR: SHARE_TENANT_ID not defined." && exit 1
 fi

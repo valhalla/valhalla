@@ -11,8 +11,10 @@ stages:
   - stage: ${{ parameters.name }}
     displayName: ${{ parameters.region }}.${{ parameters.environment }}
     dependsOn: ${{ parameters.dependencies }}
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'Manual'), ${{ parameters.branchFilter }})
+    condition: and(or(eq(variables['run.provision'], 'True'), eq(variables['run.deploy'], 'True')), eq( ${{ parameters.enabled }} , true), in(stageDependencies.build.result, 'Succeeded', 'Skipped'))
     variables:
+      - name: APP_VERSION
+        value: $[ stageDependencies.build.build.outputs['version.app.version'] ]
       - name: region
         value: ${{ parameters.region }}
       - name: environment
@@ -29,7 +31,7 @@ stages:
         displayName: ${{ parameters.region }}.${{ parameters.environment }}.release
         environment: ${{ parameters.environment }}
         pool:
-          vmImage: ubuntu-20.04
+          vmImage: ubuntu-22.04
         strategy:
           runOnce:
             deploy:
@@ -39,7 +41,7 @@ stages:
                   persistCredentials: true
 
                 - bash: |
-                    echo "##vso[task.setvariable variable=app.version]${BUILD_BUILDNUMBER}"
+                    source pipeline/release/scripts/01-version.sh
                   name: version
                   displayName: Version
 
@@ -50,18 +52,21 @@ stages:
                   env:
                     APP_REGISTRY_PASSWORD: $(app.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    #DATADOG_APP_KEY: $(datadog.app.key)
-                    #DATADOG_API_KEY: $(datadog.api.key)
+                    DATADOG_APP_KEY: $(datadog.app.key)
+                    DATADOG_API_KEY: $(datadog.api.key)
 
                 - bash: |
-                    source pipeline/release/scripts/20-datadog.sh
+                    source pipeline/release/scripts/20-provision.sh
                   name: provision
-                  displayName: Datadog Monitors
-                  condition: and(succeeded(), eq(variables['datadog.monitors.enabled'], 'True'))
+                  displayName: Provision
+                  condition: and(succeeded(), eq(variables['run.provision'], 'True'))
                   env:
+                    ACR_CLIENT_SECRET: $(acr.client.secret)
                     APP_CLIENT_SECRET: $(app.client.secret)
-                    #DATADOG_APP_KEY: $(datadog.app.key)
-                    #DATADOG_API_KEY: $(datadog.api.key)
+                    AKS_CLIENT_SECRET: $(aks.client.secret)
+                    DATADOG_APP_KEY: $(datadog.app.key)
+                    DATADOG_API_KEY: $(datadog.api.key)
+                    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
                 - bash: |
                     source pipeline/release/scripts/30-deploy.sh
