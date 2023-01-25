@@ -12,6 +12,7 @@
    * ADDED: log matrix algorithm which was used [#3916](https://github.com/valhalla/valhalla/pull/3916)
    * UPDATED: docker base image to Ubuntu 22.04 [#3912](https://github.com/valhalla/valhalla/pull/3912)
    * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)
+   * CHANGED: Build skadi with -Werror [#3935](https://github.com/valhalla/valhalla/pull/3935)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
