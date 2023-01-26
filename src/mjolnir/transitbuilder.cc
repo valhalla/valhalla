@@ -57,16 +57,6 @@ struct builder_stats {
   }
 };
 
-// Converts a transit stop GraphId on local level to be on the transit level
-GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& tiles) {
-  auto t = tiles.find(nodeid.Tile_Base());
-  if (t == tiles.end()) {
-    return GraphId(); // Invalid graph Id
-  } else {
-    return {nodeid.tileid(), nodeid.level() + 1, nodeid.id()};
-  }
-}
-
 void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     GraphTileBuilder& tilebuilder_transit,
                     const graph_tile_ptr& tile,
@@ -201,29 +191,17 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Some validation here...
   if (added_edges != connection_edges.size()) {
-    LOG_ERROR("Part 1: Added " + std::to_string(added_edges) + " but there are " +
+    LOG_ERROR("Added " + std::to_string(added_edges) + " from local to transit but there are " +
               std::to_string(connection_edges.size()) + " connections");
   }
 
+  // HERE WE CONNECT BACK FROM TRANSIT NODES TO THE LOCAL GRAPH
+
   // Move existing nodes and directed edge builder vectors and clear the lists
-  currentnodes = tilebuilder_transit.nodes();
+  currentnodes = std::move(tilebuilder_transit.nodes());
   tilebuilder_transit.nodes().clear();
-  currentedges = tilebuilder_transit.directededges();
+  currentedges = std::move(tilebuilder_transit.directededges());
   tilebuilder_transit.directededges().clear();
-
-  // Get the directed edge index of the first sign. If no signs are
-  // present in this tile set a value > number of directed edges
-  signidx = 0;
-  nextsignidx = (tilebuilder_transit.header()->signcount() > 0) ? tilebuilder_transit.sign(0).index()
-                                                                : currentedges.size() + 1;
-  signcount = tilebuilder_transit.header()->signcount();
-
-  // Get the directed edge index of the first access restriction.
-  residx = 0;
-  nextresidx = (tilebuilder_transit.header()->access_restriction_count() > 0)
-                   ? tilebuilder_transit.accessrestriction(0).edgeindex()
-                   : currentedges.size() + 1;
-  rescount = tilebuilder_transit.header()->access_restriction_count();
 
   // Iterate through the nodes - add back any stored edges and insert any
   // connections from a transit stop to a node.. Update each nodes edge index.
@@ -254,11 +232,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
     for (const auto& conn : connection_edges) {
       if (conn.stop_node.id() == nb.stop_index()) {
 
-        // Get the Valhalla graphId of the origin node (transit stop)
-        GraphId origin_node = GetGraphId(conn.stop_node, tiles);
-        if (!origin_node.Is_Valid()) {
-          continue;
-        }
         // use the access from the transit node
         const auto& tc_access = nb.access();
         DirectedEdge directededge;
@@ -292,7 +265,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         auto r_shape = conn.shape;
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
-            tilebuilder_transit.AddEdgeInfo(0, origin_node, conn.osm_node, conn.wayid, 0, 0, 0,
+            tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid, 0, 0, 0,
                                             r_shape, conn.names, conn.tagged_values,
                                             conn.pronunciations, 0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
@@ -334,7 +307,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
 
   // Some validation here...
   if (added_edges != connection_edges.size()) {
-    LOG_ERROR("Part 1: Added " + std::to_string(added_edges) + " but there are " +
+    LOG_ERROR("Added " + std::to_string(added_edges) + " from transit to local but there are " +
               std::to_string(connection_edges.size()) + " connections");
   }
 

@@ -47,13 +47,17 @@ const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
 boost::property_tree::ptree get_config() {
 
   return test::make_config(VALHALLA_BUILD_DIR "test/data/transit_tests",
-                           {{"mjolnir.transit_feeds_dir",
-                             VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
-                            {"mjolnir.transit_dir",
-                             VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
-                            {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
-                            {"mjolnir.tile_dir",
-                             VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"}});
+                           {
+                               {"mjolnir.transit_feeds_dir",
+                                VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
+                               {"mjolnir.transit_dir",
+                                VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
+                               {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                               {"mjolnir.tile_dir",
+                                VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
+                               // TODO: fix hierarchy builder transit support
+                               {"mjolnir.hierarchy", "false"},
+                           });
 }
 
 valhalla::gurka::nodelayout create_layout() {
@@ -352,10 +356,6 @@ TEST(GtfsExample, MakeTile) {
   auto station_two_ll = layout.find("2");
   auto station_three_ll = layout.find("3");
 
-  // we build the graph so we can find edges (way ids) where we can connect the transit subgraph
-  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  map = gurka::buildtiles(layout, ways, {}, {}, tile_dir);
-
   // this creates routable transit tiles but doesnt connect them to the rest of the graph
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
@@ -363,7 +363,7 @@ TEST(GtfsExample, MakeTile) {
   map = gurka::buildtiles(layout, ways, {}, {}, pt);
 
   // files are already going to be written from
-  filesystem::recursive_directory_iterator transit_file_itr(tile_dir);
+  filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.tile_dir"));
   filesystem::recursive_directory_iterator end_file_itr;
 
   GraphReader reader(pt.get_child("mjolnir"));

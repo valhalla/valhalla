@@ -396,9 +396,13 @@ bool write_stop_pairs(Transit& tile,
       auto dest_graphid_it = stop_graphIds.find({dest_stopId, currFeedPath});
       const bool origin_is_in_tile = origin_graphid_it != stop_graphIds.end();
       const bool dest_is_in_tile = dest_graphid_it != stop_graphIds.end();
+
       // check if this stop_pair (the origin of the pair) is inside the current tile
       if ((origin_is_in_tile || dest_is_in_tile) &&
           origin_stopTime.trip_id == dest_stopTime.trip_id) {
+
+        dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
+
         auto* stop_pair = tile.add_stop_pairs();
         stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
         const gtfs::Shape& currShape = feed.get_shape(currTrip->shape_id);
@@ -410,10 +414,7 @@ bool write_stop_pairs(Transit& tile,
           stop_pair->set_block_id(inserted.first->second);
           uniques.lock.unlock();
         }
-        // convert Time to uint32 (note: hh, mm, ss are all uint16s)
-        if (!(origin_is_in_tile && dest_is_in_tile)) {
-          dangles = true;
-        }
+
         bool origin_is_generated =
             tile_info.tile_station_children.find({origin_stopId, currFeedPath}) !=
             tile_info.tile_station_children.end();
@@ -608,7 +609,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
 
     // tiles are wrote out with .pbf or .pbf.n ext
     const std::string& prefix = transit_tile.string();
-    LOG_INFO("Fetching " + prefix);
+    LOG_INFO("Writing " + prefix);
 
     std::unordered_map<feedObject, GraphId> stop_graphIds = write_stops(tile, current);
     bool dangles = write_stop_pairs(tile, current, stop_graphIds, uniques);
@@ -748,7 +749,7 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   LOG_INFO("Tiling GTFS Feeds");
   auto tiles = select_transit_tiles(pt);
 
-  LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " +
+  LOG_INFO("Writing " + std::to_string(tiles.size()) + " transit pbf tiles with " +
            std::to_string(thread_count) + " threads...");
 
   // schedule some work
@@ -803,10 +804,9 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
 
   // figure out where the work should go
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
-  std::mutex lock;
 
-  // stitch_tiles(pt, all_tiles, dangling_tiles, lock);
   // make let them rip
+  std::mutex lock;
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles),
                                      std::ref(dangling_tiles), std::ref(lock)));

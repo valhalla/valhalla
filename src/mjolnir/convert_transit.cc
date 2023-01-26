@@ -608,7 +608,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
       NodeInfo station_node(base_ll, station_ll, n_access, NodeType::kTransitStation, false, true,
                             false, false);
-      station_node.set_stop_index(station_pbf_id.id());
+      station_node.set_stop_index(station_pbf_id.id()); // should this be station_graphid.id()?
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
