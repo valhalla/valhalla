@@ -62,7 +62,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     const graph_tile_ptr& tile,
                     GraphReader& reader_transit_level,
                     std::mutex& lock,
-                    const std::unordered_set<GraphId>& tiles,
                     const std::vector<OSMConnectionEdge>& connection_edges) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -460,7 +459,6 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
 // written. Also lock on queue access since shared by different threads.
 void build(const boost::property_tree::ptree& pt,
            std::mutex& lock,
-           const std::unordered_set<GraphId>& tiles,
            std::unordered_set<GraphId>::const_iterator tile_start,
            std::unordered_set<GraphId>::const_iterator tile_end,
            std::promise<builder_stats>& results) {
@@ -515,7 +513,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // Connect the transit graph to the route graph
     ConnectToGraph(tilebuilder_local, tilebuilder_transit, local_tile, reader_transit_level, lock,
-                   tiles, connection_edges);
+                   connection_edges);
 
     // Write the new file
     lock.lock();
@@ -628,8 +626,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
     // Make the thread
     results.emplace_back();
     threads[i].reset(new std::thread(build, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     std::cref(tiles), tile_start, tile_end,
-                                     std::ref(results.back())));
+                                     tile_start, tile_end, std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
