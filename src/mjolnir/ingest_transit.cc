@@ -428,6 +428,7 @@ bool write_stop_pairs(Transit& tile,
             dest_is_generated ? dest_stopId
                               : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
         stop_pair->set_destination_onestop_id(dest_onestop_id);
+        stop_pair->set_origin_graphid(kInvalidGraphId);
         if (origin_is_in_tile) {
           stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
           stop_pair->set_origin_graphid(origin_graphid_it->second +
@@ -438,6 +439,7 @@ bool write_stop_pairs(Transit& tile,
           stop_pair->set_origin_dist_traveled(dist);
         }
 
+        stop_pair->set_destination_graphid(kInvalidGraphId);
         if (dest_is_in_tile) {
           stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
           stop_pair->set_destination_graphid(dest_graphid_it->second +
@@ -907,18 +909,6 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   } else {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stop_pairs_size()) +
              " stop pairs");
-  }
-}
-
-// Converts a stop's pbf graph Id to a Valhalla graph Id by adding the
-// tile's node count. Returns an Invalid GraphId if the tile is not found
-// in the list of Valhalla tiles
-GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& all_tiles) {
-  auto t = all_tiles.find(nodeid.Tile_Base());
-  if (t == all_tiles.end()) {
-    return GraphId(); // Invalid graph Id
-  } else {
-    return {nodeid.tileid(), nodeid.level() + 1, nodeid.id()};
   }
 }
 

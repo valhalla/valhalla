@@ -351,6 +351,7 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     bool should_match_way_id = false;
 
     // keep this info about the closest point to an edge shape
+    GraphId closest_start_node;
     const DirectedEdge* closest_edge = nullptr;
     boost::optional<EdgeInfo> closest_edgeinfo;
     std::tuple<PointLL, decltype(PointLL::first), int> closest_point({}, SNAP_DISTANCE_CUTOFF, 0);
@@ -392,6 +393,7 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
       // must be closer than the closest (or limit) AND way ids match if provided/found
       bool does_match_way_id = way_id == ei.wayid();
       if (distance < std::get<1>(closest_point) && should_match_way_id == does_match_way_id) {
+        closest_start_node = startnode_id;
         closest_edge = directededge;
         closest_point = point;
         closest_edgeinfo = std::move(ei);
@@ -427,7 +429,7 @@ std::vector<OSMConnectionEdge> MakeConnections(graph_tile_ptr local_tile,
     shape.push_back(std::get<0>(closest_point));
     shape.push_back(egress_ll);
     auto length = std::max(1.0, valhalla::midgard::length(shape));
-    connections.emplace_back(OSMConnectionEdge{startnode_id, egress_id, length,
+    connections.emplace_back(OSMConnectionEdge{closest_start_node, egress_id, length,
                                                closest_edgeinfo->wayid(),
                                                closest_edgeinfo->GetNames(), shape});
 

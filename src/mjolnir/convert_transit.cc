@@ -523,6 +523,12 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
   return shape;
 }
 
+// TODO: we cannot leave this function like this! the code in its current state is completely
+//  illegible due to copy pasting. there are multiple nested shadowings of variables which encourages
+//  mistakes. at the very least we should break out the 3 different types of connections into separate
+//  functions. it would be great if it could be a single function with different arguments to get all
+//  3 done but if not at least separating them will remove the shadowing. we cannot call transit done
+//  until this is rectified
 void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const GraphId& tileid,
                 const std::string& tile,
@@ -570,28 +576,24 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
-    GraphId platform_pbf_id = stop_edges.second.origin_pbf_graphid;
-    uint32_t platform_index = platform_pbf_id.id();
-    const Transit_Node& platform = transit.nodes(platform_index);
+    GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
+    const Transit_Node& platform = transit.nodes(platform_graphid.id());
     const std::string& origin_id = platform.onestop_id();
-    if (GraphId(platform.graphid()) != platform_pbf_id) {
+    if (GraphId(platform.graphid()) != platform_graphid) {
       LOG_ERROR("Platform key not equal!");
     }
 
-    LOG_DEBUG("Transit Platform: " + platform.name() + " index= " + std::to_string(platform_index));
-
-    // Get the Valhalla graphId of the origin node (transit stop)
-    GraphId platform_graphid = GetGraphId(platform_pbf_id, all_tiles);
+    LOG_DEBUG("Transit Platform: " + platform.name() +
+              " index= " + std::to_string(platform_graphid.id()));
     PointLL platform_ll = {platform.lon(), platform.lat()};
 
     // the prev_type_graphid is actually the station or parent in
     // platforms
-    GraphId parent = GraphId(platform.prev_type_graphid());
+    GraphId parent(platform.prev_type_graphid());
     const Transit_Node& station = transit.nodes(parent.id());
 
-    GraphId station_pbf_id = GraphId(station.graphid());
     // Get the Valhalla graphId of the station node
-    GraphId station_graphid = GetGraphId(station_pbf_id, all_tiles);
+    GraphId station_graphid(station.graphid());
 
     PointLL station_ll = {station.lon(), station.lat()};
     // Build the station node if it has not already been added.
@@ -599,7 +601,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Build the station node
       uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-      auto s_access = stop_access.find(station_pbf_id);
+      auto s_access = stop_access.find(station_graphid);
       if (s_access != stop_access.end()) {
         n_access &= ~s_access->second;
       }
@@ -608,7 +610,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       PointLL base_ll = tilebuilder_transit.header_builder().base_ll();
       NodeInfo station_node(base_ll, station_ll, n_access, NodeType::kTransitStation, false, true,
                             false, false);
-      station_node.set_stop_index(station_pbf_id.id()); // should this be station_graphid.id()?
+      station_node.set_stop_index(station_graphid.id());
 
       const std::string& tz = station.has_timezone() ? station.timezone() : "";
       uint32_t timezone = 0;
@@ -627,7 +629,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       }
       station_node.set_timezone(timezone);
 
-      LOG_DEBUG("Transit Platform: " + platform.name() + " index= " + std::to_string(platform_index));
+      LOG_DEBUG("Transit Platform: " + platform.name() +
+                " index= " + std::to_string(platform_graphid.id()));
 
       // set the index to the first egress.
       // loop over egresses add the DE to the station from the egress
@@ -641,17 +644,15 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
           break;
         }
 
-        GraphId egress_pbf_id = GraphId(egress.graphid());
         // Get the Valhalla graphId of the origin node (transit stop)
-        GraphId egress_graphid = GetGraphId(egress_pbf_id, all_tiles);
-
+        GraphId egress_graphid(egress.graphid());
         DirectedEdge directededge;
         directededge.set_endnode(station_graphid);
         PointLL egress_ll = {egress.lon(), egress.lat()};
 
         // Build the egress node
         uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-        auto s_access = stop_access.find(egress_pbf_id);
+        auto s_access = stop_access.find(egress_graphid);
         if (s_access != stop_access.end()) {
           n_access &= ~s_access->second;
         }
@@ -722,10 +723,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         const Transit_Node& egress = transit.nodes(j);
         PointLL egress_ll = {egress.lon(), egress.lat()};
-        GraphId egress_pbf_id = GraphId(egress.graphid());
 
         // Get the Valhalla graphId of the origin node (transit stop)
-        GraphId egress_graphid = GetGraphId(egress_pbf_id, all_tiles);
+        GraphId egress_graphid(egress.graphid());
         DirectedEdge directededge;
         directededge.set_endnode(egress_graphid);
 
@@ -775,14 +775,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
           break;
         }
 
-        GraphId platform_pbf_id = GraphId(platform.graphid());
-
         // Get the Valhalla graphId of the origin node (transit stop)
-        GraphId platform_graphid = GetGraphId(platform_pbf_id, all_tiles);
-
+        GraphId platform_graphid(platform.graphid());
         DirectedEdge directededge;
         directededge.set_endnode(platform_graphid);
-
         PointLL platform_ll = {platform.lon(), platform.lat()};
 
         // add the egress connection
@@ -831,7 +827,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // Build the platform node
     uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-    auto s_access = stop_access.find(platform_pbf_id);
+    auto s_access = stop_access.find(platform_graphid);
     if (s_access != stop_access.end()) {
       n_access &= ~s_access->second;
     }
@@ -856,7 +852,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     NodeInfo platform_node(base_ll, platform_ll, n_access, NodeType::kMultiUseTransitPlatform, false,
                            true, false, false);
     platform_node.set_mode_change(true);
-    platform_node.set_stop_index(platform_index);
+    platform_node.set_stop_index(platform_graphid.id());
     platform_node.set_timezone(timezone);
     platform_node.set_edge_index(tilebuilder_transit.directededges().size());
 
@@ -897,24 +893,23 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     for (const auto& transitedge : stop_edges.second.lines) {
       // Get the end node. Skip this directed edge if the Valhalla tile is
       // not valid (or empty)
-      GraphId endnode = GetGraphId(transitedge.dest_pbf_graphid, all_tiles);
-      if (!endnode.Is_Valid()) {
+      GraphId end_platform_graphid(transitedge.dest_pbf_graphid);
+      if (!end_platform_graphid.Is_Valid()) {
+        LOG_ERROR("Unstitched stop pair detected with origin near " +
+                  std::to_string(platform_ll.lat()) + ',' + std::to_string(platform_ll.lng()));
         continue;
       }
 
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      GraphId end_platform_graphid = transitedge.dest_pbf_graphid;
       std::string dest_id;
-
       if (end_platform_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Node& endplatform = transit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
         dest_id = endplatform.onestop_id();
-
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
@@ -932,7 +927,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Add the directed edge
       DirectedEdge directededge;
-      directededge.set_endnode(endnode);
+      directededge.set_endnode(end_platform_graphid);
       directededge.set_length(platform_ll.Distance(endll));
       Use use = GetTransitUse(route_types[transitedge.routeid]);
       directededge.set_use(use);
@@ -974,8 +969,9 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                             transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
 
       uint32_t edge_info_offset =
-          tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, endnode, 0, 0, 0, 0,
-                                          shape, names, tagged_values, pronunciations, 0, added);
+          tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
+                                          0, 0, 0, 0, shape, names, tagged_values, pronunciations, 0,
+                                          added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(added);

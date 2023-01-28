@@ -369,19 +369,13 @@ TEST(GtfsExample, MakeTile) {
   GraphReader reader(pt.get_child("mjolnir"));
   auto graphids = reader.GetTileSet();
   int totalNodes = 0;
+  size_t transit_connections = 0;
   for (auto graphid : graphids) {
     LOG_INFO("Working on : " + std::to_string(graphid));
     graph_tile_ptr tile = reader.GetGraphTile(graphid);
-
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
-      if (graphid.level() == TileHierarchy::levels().back().level) {
-        bool foundTransitConnect = false;
-        for (const auto& edge : tile->GetDirectedEdges()) {
-          foundTransitConnect =
-              foundTransitConnect || edge.use() == valhalla::baldr::Use::kTransitConnection;
-        }
-        // TODO: this is the failing test and the next step that we have to fix
-        EXPECT_TRUE(foundTransitConnect);
+      for (const auto& edge : tile->GetDirectedEdges()) {
+        transit_connections += edge.use() == valhalla::baldr::Use::kTransitConnection;
       }
       continue;
     }
@@ -424,7 +418,7 @@ TEST(GtfsExample, MakeTile) {
     EXPECT_EQ(currRoute->route_text_color(), strtol("00ff00", nullptr, 16));
     EXPECT_EQ(currRoute->route_color(), strtol("ff0000", nullptr, 16));
 
-    std::unordered_set<int> tripIDs = {stoi(tripOneID), stoi(tripTwoID)};
+    std::unordered_set<std::string> tripIDs = {tripOneID, tripTwoID};
 
     for (const auto& departure : tile->GetTransitDepartures()) {
       TransitDeparture* currDeparture = departure.second;
@@ -438,7 +432,10 @@ TEST(GtfsExample, MakeTile) {
       EXPECT_EQ(tileSchedule->end_day(), 60);
     }
   }
+
   EXPECT_EQ(totalNodes, 9);
+  // TODO: this is the failing test and the next step that we have to fix
+  EXPECT_EQ(transit_connections, 6);
 }
 
 // TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
