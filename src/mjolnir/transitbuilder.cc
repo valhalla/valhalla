@@ -318,8 +318,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
            " ms");
 }
 
-std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr local_tile,
-                                               const graph_tile_ptr transit_tile) {
+std::vector<OSMConnectionEdge> MakeConnections(const graph_tile_ptr& local_tile,
+                                               const graph_tile_ptr& transit_tile) {
   assert(local_tile && transit_tile->header()->nodecount());
   std::vector<OSMConnectionEdge> connections;
   connections.reserve(transit_tile->header()->nodecount() * 2 / 3);

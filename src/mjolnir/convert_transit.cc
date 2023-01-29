@@ -1004,7 +1004,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 // written. Also lock on queue access since shared by different threads.
 void build_tiles(const boost::property_tree::ptree& pt,
                  std::mutex& lock,
-                 const std::unordered_set<GraphId>& all_tiles,
                  std::unordered_set<GraphId>::const_iterator tile_start,
                  std::unordered_set<GraphId>::const_iterator tile_end,
                  std::promise<builder_stats>& results) {
@@ -1285,8 +1284,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     // Make the thread
     results.emplace_back();
     threads[i].reset(new std::thread(build_tiles, std::cref(pt.get_child("mjolnir")), std::ref(lock),
-                                     std::cref(all_tiles), tile_start, tile_end,
-                                     std::ref(results.back())));
+                                     tile_start, tile_end, std::ref(results.back())));
   }
 
   // Wait for them to finish up their work
