@@ -195,7 +195,7 @@ private:
   bool reusable;
 
 public:
-  tile_data() : c(nullptr), index(TILE_COUNT), reusable(false), data(nullptr) {
+  tile_data() : c(nullptr), data(nullptr), index(TILE_COUNT), reusable(false) {
   }
 
   tile_data(const tile_data& other) : c(nullptr) {
@@ -308,12 +308,12 @@ struct cache_t {
     return cache.size();
   }
 
-  bool insert(int pos, const std::string& path, format_t format);
+  bool insert(size_t pos, const std::string& path, format_t format);
 
   tile_data source(uint16_t index);
 };
 
-bool cache_t::insert(int pos, const std::string& path, format_t format) {
+bool cache_t::insert(size_t pos, const std::string& path, format_t format) {
   if (pos >= cache.size())
     return false;
 
