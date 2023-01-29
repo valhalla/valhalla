@@ -534,7 +534,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::string& tile,
                 const std::string& transit_dir,
                 std::mutex& lock,
-                const std::unordered_set<GraphId>& all_tiles,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
                 const std::unordered_map<GraphId, uint16_t>& stop_access,
                 const std::unordered_map<uint32_t, Shape>& shape_data,
@@ -542,8 +541,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const std::vector<uint32_t>& route_types,
                 bool tile_within_one_tz,
                 const std::multimap<uint32_t, multi_polygon_type>& tz_polys,
-                uint32_t& no_dir_edge_count,
-                GraphReader& reader) {
+                uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
   // Get Transit PBF data for this tile
@@ -1199,9 +1197,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
     }
 
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, all_tiles, stop_edge_map,
-               stop_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
-               stats.no_dir_edge_count, reader);
+    AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, stop_edge_map, stop_access,
+               shapes, distances, route_types, tile_within_one_tz, tz_polys, stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
              std::to_string(transit.nodes_size()) + " stops, " +

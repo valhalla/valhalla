@@ -210,12 +210,12 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_calendar_dates(path_directory);
 
   // write shapes.txt
-  for (const auto& shape_ll :
-       {layout["1"], layout["a"], layout["b"], layout["2"], layout["c"], layout["3"]}) {
-    feed.add_shape({.shape_id = shapeOneID,
-                    .shape_pt_lat = shape_ll.second,
-                    .shape_pt_lon = shape_ll.first,
-                    .shape_pt_sequence = feed.get_shapes().size()});
+  for (const auto& shape_ll : std::vector<PointLL>{layout["1"], layout["a"], layout["b"], layout["2"],
+                                                   layout["c"], layout["3"]}) {
+    feed.add_shape(ShapePoint{.shape_id = shapeOneID,
+                              .shape_pt_lat = shape_ll.second,
+                              .shape_pt_lon = shape_ll.first,
+                              .shape_pt_sequence = feed.get_shapes().size()});
   }
   feed.write_shapes(path_directory);
 
