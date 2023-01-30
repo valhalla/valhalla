@@ -779,7 +779,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_endnode(platform_graphid);
         PointLL platform_ll = {platform.lon(), platform.lat()};
 
-        // add the egress connection
+        // add the platform connection
         // Make sure length is non-zero
         double length = std::max(1.0, station_ll.Distance(platform_ll));
         directededge.set_length(length);

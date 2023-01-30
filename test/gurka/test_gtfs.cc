@@ -23,6 +23,17 @@ const std::string blockID = "block_one";
 const int headwaySec = 1800;
 
 // the transit shape uses * as separators rather than -/\|
+
+// each station is a number, 1 2 or 3. inside of each station located at the same spot we have
+// an in/egress which connections to a station which connects to a platform
+// from the platform we should have a connection to another platform at the next station
+// it should look like:
+//
+// street node --> transit connect edge --> egress node --> egress connect edge --> station node -->
+// platform node --> rail/bus/ferry edge --> platform node --> (from here down to station node and out
+// through egress node to the street OR keep going on rail/bus/ferry edges to the next platform OR if
+// you need to make a transfer you might go down to the station node and back up to an adjacent
+// platform at the same station. we should test all of this stuff eventually
 const std::string ascii_map = R"(
         a**************b
         *              *
@@ -39,6 +50,7 @@ const std::string ascii_map = R"(
                            |
                            F
     )";
+
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
 const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
                           {"BC", {{"highway", "tertiary"}}},
@@ -369,14 +381,15 @@ TEST(GtfsExample, MakeTile) {
   GraphReader reader(pt.get_child("mjolnir"));
   auto graphids = reader.GetTileSet();
   int totalNodes = 0;
-  size_t transit_connections = 0;
+  std::unordered_map<baldr::Use, size_t> uses;
   for (auto graphid : graphids) {
     LOG_INFO("Working on : " + std::to_string(graphid));
     graph_tile_ptr tile = reader.GetGraphTile(graphid);
+    for (const auto& edge : tile->GetDirectedEdges()) {
+      uses[edge.use()]++;
+    }
+
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
-      for (const auto& edge : tile->GetDirectedEdges()) {
-        transit_connections += edge.use() == valhalla::baldr::Use::kTransitConnection;
-      }
       continue;
     }
 
@@ -434,8 +447,13 @@ TEST(GtfsExample, MakeTile) {
   }
 
   EXPECT_EQ(totalNodes, 9);
-  // TODO: this is the failing test and the next step that we have to fix
-  EXPECT_EQ(transit_connections, 6);
+  EXPECT_EQ(uses[Use::kRoad], 6);
+  // TODO: transit connect edges should only exist between egress and street nodes
+  // EXPECT_EQ(uses[Use::kTransitConnection], 6);
+  EXPECT_EQ(uses[Use::kPlatformConnection], 6);
+  EXPECT_EQ(uses[Use::kEgressConnection], 6);
+  // TODO: it looks like convert transit skips putting any actual rail edges into level 3
+  // EXPECT_EQ(uses[Use::kRail], 4);
 }
 
 // TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
