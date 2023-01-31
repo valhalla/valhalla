@@ -570,7 +570,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   // stations and platforms are connected by platformconnections
 
   // Iterate through the platform and their edges
-  // uint32_t nadded = 0;
   uint32_t transitedges = 0;
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
@@ -677,6 +676,12 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         egress_node.set_stop_index(index);
         egress_node.set_timezone(timezone);
         egress_node.set_edge_index(tilebuilder_transit.directededges().size());
+        if (egress.has_osm_connecting_lat() && egress.has_osm_connecting_lon()) {
+          egress_node.set_connecting_point(
+              PointLL(egress.osm_connecting_lon(), egress.osm_connecting_lat()));
+        } else if (egress.has_osm_connecting_way_id()) {
+          egress_node.set_connecting_wayid(egress.osm_connecting_way_id());
+        }
 
         // add the egress connection
         // Make sure length is non-zero
@@ -715,7 +720,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       }
 
       station_node.set_edge_index(tilebuilder_transit.directededges().size());
-      // now add the DE to the egress from the station
+      // now add the DE to the egress from the station.
       // index now points to the station.
       for (uint32_t j = eg.id(); j < index; j++) {
 

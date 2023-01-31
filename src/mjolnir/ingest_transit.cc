@@ -289,6 +289,7 @@ std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTra
                     get_node_type(currChild.location_type), false);
       }
     }
+    // We require an in/egress so if we didnt add one we need to fake one
     if (tile.nodes_size() == node_count) {
       setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitEgress,
                   true);
@@ -306,6 +307,7 @@ std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTra
       setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed, NodeType::kTransitStation,
                   true, prev_id);
     }
+
     // Add the Platform
     node_count = tile.nodes_size();
     prev_id = GraphId(tile.nodes().rbegin()->graphid());
@@ -318,6 +320,7 @@ std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTra
                     get_node_type(currChild.location_type), false, prev_id);
       }
     }
+    // We require platforms as well so if we didnt add at least 1 we need to fake one now
     if (tile.nodes_size() == node_count) {
       setup_stops(tile, *tile_stop, node_id, stop_graphIds, feed_stop.feed,
                   NodeType::kMultiUseTransitPlatform, true, prev_id);
@@ -431,6 +434,11 @@ bool write_stop_pairs(Transit& tile,
         stop_pair->set_origin_graphid(kInvalidGraphId);
         if (origin_is_in_tile) {
           stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
+          // So we looked up the node graphid by name, the name is either the actual name of the
+          // platform (track 5 or something) OR its just the name of the station (in the case that the
+          // platform is generated). So when its generated we will have gotten back the graphid for
+          // the parent station, not for the platform, and the generated platform in that case will be
+          // the next node after the station (we did this in write_stops)
           stop_pair->set_origin_graphid(origin_graphid_it->second +
                                         static_cast<uint64_t>(origin_is_generated));
 
@@ -442,6 +450,7 @@ bool write_stop_pairs(Transit& tile,
         stop_pair->set_destination_graphid(kInvalidGraphId);
         if (dest_is_in_tile) {
           stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
+          // Same as above wrt to named and unnamed (generated) platforms
           stop_pair->set_destination_graphid(dest_graphid_it->second +
                                              static_cast<uint64_t>(dest_is_generated));
           // call function to set shape

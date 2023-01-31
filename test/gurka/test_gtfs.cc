@@ -30,9 +30,11 @@ const int headwaySec = 1800;
 // it should look like:
 //
 // street node --> transit connect edge --> egress node --> egress connect edge --> station node -->
-// platform node --> rail/bus/ferry edge --> platform node --> (from here down to station node and out
-// through egress node to the street OR keep going on rail/bus/ferry edges to the next platform OR if
-// you need to make a transfer you might go down to the station node and back up to an adjacent
+// platform connection edge --> platform node --> rail/bus --> platform node (at another station) -->
+//
+// from here down to station node and out through egress node to the street OR
+// keep going on rail/bus/ferry edges to the next platform OR
+// if you need to make a transfer you might go down to the station node and back up to an adjacent
 // platform at the same station. we should test all of this stuff eventually
 const std::string ascii_map = R"(
         a**************b
@@ -328,6 +330,9 @@ TEST(GtfsExample, MakeProto) {
       for (int i = 0; i < transit.stop_pairs_size(); i++) {
         stop_pairs.insert(transit.stop_pairs(i).origin_onestop_id());
         stop_pairs.insert(transit.stop_pairs(i).destination_onestop_id());
+        // TODO: we have to have properly stitched together all the pairs
+        // EXPECT_FALSE(transit.stop_pairs(i).origin_graphid() != kInvalidGraphId);
+        // EXPECT_FALSE(transit.stop_pairs(i).destination_graphid() != kInvalidGraphId);
       }
 
       // calendar information
