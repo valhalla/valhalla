@@ -80,9 +80,9 @@ helm upgrade valhalla helm/app \
 --set app.key=${APP_KEY} \
 --set app.name=valhalla \
 --set app.version=${APP_VERSION} \
---set image.registry=${APP_REGISTRY_URL} \
---set image.username=${APP_REGISTRY_USERNAME} \
---set image.password=${APP_REGISTRY_PASSWORD} \
+--set image.registry=${SHARE_REGISTRY_URL} \
+--set image.username=${SHARE_REGISTRY_USERNAME} \
+--set image.password=${SHARE_REGISTRY_PASSWORD} \
 --set image.repository=${APP_NAME} \
 --set image.tag=${APP_VERSION} \
 --set graph.share.name=${GRAPH_SHARE_NAME} \

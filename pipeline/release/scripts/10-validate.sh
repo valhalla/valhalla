@@ -30,19 +30,19 @@ then
   echo "ERROR: APP_VERSION not defined." && exit 1
 fi
 
-if [[ -z ${APP_REGISTRY_URL} ]]
+if [[ -z ${SHARE_REGISTRY_URL} ]]
 then
-  echo "ERROR: APP_REGISTRY_URL not defined." && exit 1
+  echo "ERROR: SHARE_REGISTRY_URL not defined." && exit 1
 fi
 
-if [[ -z ${APP_REGISTRY_USERNAME} ]]
+if [[ -z ${SHARE_REGISTRY_USERNAME} ]]
 then
-  echo "ERROR: APP_REGISTRY_USERNAME not defined." && exit 1
+  echo "ERROR: SHARE_REGISTRY_USERNAME not defined." && exit 1
 fi
 
-if [[ -z ${APP_REGISTRY_PASSWORD} ]]
+if [[ -z ${SHARE_REGISTRY_PASSWORD} ]]
 then
-  echo "ERROR: APP_REGISTRY_PASSWORD not defined." && exit 1
+  echo "ERROR: SHARE_REGISTRY_PASSWORD not defined." && exit 1
 fi
 
 if [[ -z ${APP_CLIENT_ID} ]]

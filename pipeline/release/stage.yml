@@ -50,7 +50,7 @@ stages:
                   name: validate
                   displayName: Validate
                   env:
-                    APP_REGISTRY_PASSWORD: $(app.registry.password)
+                    SHARE_REGISTRY_PASSWORD: $(share.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
                     DATADOG_APP_KEY: $(datadog.app.key)
                     DATADOG_API_KEY: $(datadog.api.key)
@@ -74,6 +74,6 @@ stages:
                   displayName: Deploy
                   condition: and(succeeded(), eq(variables['run.deploy'], 'True'))
                   env:
-                    APP_REGISTRY_PASSWORD: $(app.registry.password)
+                    SHARE_REGISTRY_PASSWORD: $(share.registry.password)
                     APP_CLIENT_SECRET: $(app.client.secret)
                     SHARE_CLIENT_SECRET: $(share.client.secret)
