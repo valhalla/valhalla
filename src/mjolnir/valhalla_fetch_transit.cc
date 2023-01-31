@@ -318,7 +318,7 @@ void get_stop_stations(Transit& tile,
       node->set_type(static_cast<uint32_t>(NodeType::kTransitEgress));
       set_no_null(std::string, egress_pt.second, "name", "null", node->set_name);
       node->set_wheelchair_boarding(egress_pt.second.get<bool>("wheelchair_boarding", true));
-      set_no_null(uint64_t, egress_pt.second, "osm_way_id", 0, node->set_osm_way_id);
+      set_no_null(uint64_t, egress_pt.second, "osm_way_id", 0, node->set_osm_connecting_way_id);
       node->set_generated(egress_pt.second.get<bool>("generated", true));
 
       auto traversability = egress_pt.second.get<std::string>("directionality", "null");
