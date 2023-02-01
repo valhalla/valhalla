@@ -32,7 +32,7 @@ void loki_worker_t::chinese_postman(Api& request) {
 
   // Taken from loki route_action
   // correlate the various locations to the underlying graph
-  std::unordered_map<size_t, size_t> color_counts;
+  std::unordered_map<size_t, int> color_counts;
   try {
     auto locations = PathLocation::fromPBF(options.locations(), true);
     const auto projections = loki::Search(locations, *reader, costing);
