@@ -35,7 +35,7 @@ public:
    * Constructor for a fixed departure time.
    * @param  lineid   Unique line Id within the tile
    * @param  tripid   Unique trip Id (spans tiles)
-   * @param  routeid  Route index within the tile.
+   * @param  routeindex  Route index within the tile.
    * @param  blockid  Block Id.
    * @param  headsign_offset  Offset to headsign within the text/name table.
    * @param  departure_time   Departure time (seconds from midnight)
@@ -46,7 +46,7 @@ public:
    */
   TransitDeparture(const uint32_t lineid,
                    const uint32_t tripid,
-                   const uint32_t routeid,
+                   const uint32_t routeindex,
                    const uint32_t blockid,
                    const uint32_t headsign_offset,
                    const uint32_t departure_time,
@@ -59,7 +59,7 @@ public:
    * Constructor for a frequency based departure.
    * @param  lineid   Unique line Id within the tile
    * @param  tripid   Unique trip Id (spans tiles)
-   * @param  routeid  Route index within the tile.
+   * @param  routeindex  Route index within the tile.
    * @param  blockid  Block Id.
    * @param  headsign_offset  Offset to headsign within the text/name table.
    * @param  start_time   Departure time (seconds from midnight)
@@ -72,7 +72,7 @@ public:
    */
   TransitDeparture(const uint32_t lineid,
                    const uint32_t tripid,
-                   const uint32_t routeid,
+                   const uint32_t routeindex,
                    const uint32_t blockid,
                    const uint32_t headsign_offset,
                    const uint32_t start_time,
@@ -110,10 +110,10 @@ public:
 
   /**
    * Get the route index for this departure.
-   * @return  Returns the internal route Id.
+   * @return  Returns the internal route Index.
    */
-  uint32_t routeid() const {
-    return routeid_;
+  uint32_t routeindex() const {
+    return routeindex_;
   }
 
   /**
@@ -199,11 +199,11 @@ public:
   bool operator<(const TransitDeparture& other) const;
 
 protected:
-  uint64_t lineid_ : 20;  // Line Id - lookup departures by unique line
-                          // Id (which indicates a unique departure /
-                          // arrival stop pair.
-  uint64_t routeid_ : 12; // Route index.
-  uint64_t tripid_ : 32;  // TripId (internal).
+  uint64_t lineid_ : 20;     // Line Id - lookup departures by unique line
+                             // Id (which indicates a unique departure /
+                             // arrival stop pair.
+  uint64_t routeindex_ : 12; // Route index.
+  uint64_t tripid_ : 32;     // TripId (internal).
 
   uint64_t blockid_ : 20;         // Block Id
   uint64_t schedule_index_ : 12;  // Schedule validity index

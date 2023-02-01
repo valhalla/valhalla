@@ -402,7 +402,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
           }
 
           // Get the operator Id
-          operator_id = GetOperatorId(tile, departure->routeid(), operators_);
+          operator_id = GetOperatorId(tile, departure->routeindex(), operators_);
 
           // Add transfer penalty and operator change penalty
           if (pred.transit_operator() > 0 && pred.transit_operator() != operator_id) {
