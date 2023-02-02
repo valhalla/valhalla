@@ -328,11 +328,10 @@ TEST(GtfsExample, MakeProto) {
 
       // stop_pair info
       for (int i = 0; i < transit.stop_pairs_size(); i++) {
+        EXPECT_TRUE(transit.stop_pairs(i).has_origin_graphid());
+        EXPECT_TRUE(transit.stop_pairs(i).has_destination_graphid());
         stop_pairs.insert(transit.stop_pairs(i).origin_onestop_id());
         stop_pairs.insert(transit.stop_pairs(i).destination_onestop_id());
-        // TODO: we have to have properly stitched together all the pairs
-        // EXPECT_FALSE(transit.stop_pairs(i).origin_graphid() != kInvalidGraphId);
-        // EXPECT_FALSE(transit.stop_pairs(i).destination_graphid() != kInvalidGraphId);
       }
 
       // calendar information
