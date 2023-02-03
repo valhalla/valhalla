@@ -49,7 +49,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-struct feedObject {
+struct feed_object_t {
   gtfs::Id id;
   std::string feed;
 };
@@ -58,13 +58,13 @@ struct feedObject {
 
 // information referred by tileBuilder saved spatially
 namespace std {
-template <> struct hash<feedObject> {
-  inline size_t operator()(const feedObject& o) const {
+template <> struct hash<feed_object_t> {
+  inline size_t operator()(const feed_object_t& o) const {
     return hash<string>()(o.id + o.feed);
   }
 };
-template <> struct equal_to<feedObject> {
-  inline bool operator()(const feedObject& a, const feedObject& b) const {
+template <> struct equal_to<feed_object_t> {
+  inline bool operator()(const feed_object_t& a, const feed_object_t& b) const {
     return a.id == b.id && a.feed == b.feed;
   }
 };
@@ -72,28 +72,28 @@ template <> struct equal_to<feedObject> {
 
 namespace {
 
-struct tileTransitInfo {
+struct tile_transit_info_t {
   GraphId graphid;
   // TODO: unordered multimap-string to a pair of strings that maps from station (parent_id) ->
   //  platform/egress (child) (Max 2 kinds / many could exists)
-  std::unordered_multimap<feedObject, gtfs::Id> station_children;
-  std::unordered_set<feedObject> stations;
-  std::unordered_set<feedObject> trips;
-  std::unordered_map<feedObject, size_t> routes;
-  std::unordered_set<feedObject> services;
-  std::unordered_set<feedObject> agencies;
-  std::unordered_map<feedObject, size_t> shapes;
+  std::unordered_multimap<feed_object_t, gtfs::Id> station_children;
+  std::unordered_set<feed_object_t> stations;
+  std::unordered_set<feed_object_t> trips;
+  std::unordered_map<feed_object_t, size_t> routes;
+  std::unordered_set<feed_object_t> services;
+  std::unordered_set<feed_object_t> agencies;
+  std::unordered_map<feed_object_t, size_t> shapes;
 
-  bool operator<(const tileTransitInfo& t1) const {
-    // sort tileTransitInfo by size
+  bool operator<(const tile_transit_info_t& t1) const {
+    // sort tile_transit_info_t by size
     return stations.size() < t1.stations.size();
   }
 };
 
-struct feedCache {
+struct feed_cache_t {
   std::unordered_map<std::string, gtfs::Feed> cache;
 
-  const gtfs::Feed& operator()(const feedObject& feed_object) {
+  const gtfs::Feed& operator()(const feed_object_t& feed_object) {
     auto found = cache.find(feed_object.feed);
     if (found != cache.end()) {
       return found->second;
@@ -129,18 +129,18 @@ struct unique_transit_t {
 };
 
 // Read from GTFS feed, sort data into the tiles they belong to
-std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt) {
+std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
   auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
 
   std::set<GraphId> tiles;
   const auto& local_tiles = TileHierarchy::levels().back().tiles;
-  std::unordered_map<GraphId, tileTransitInfo> tile_map;
+  std::unordered_map<GraphId, tile_transit_info_t> tile_map;
 
   // adds a tile_info for the tile_id to tile_map if there is none yet, and returns the tile_info
   // object
-  auto get_tile_info = [&tile_map, &local_tiles](const gtfs::Stop& stop) -> tileTransitInfo& {
-    tileTransitInfo tile_info;
+  auto get_tile_info = [&tile_map, &local_tiles](const gtfs::Stop& stop) -> tile_transit_info_t& {
+    tile_transit_info_t tile_info;
     auto graphid = GraphId(local_tiles.TileId(stop.stop_lat, stop.stop_lon),
                            TileHierarchy::GetTransitLevel().level, 0);
 
@@ -216,7 +216,7 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
                feed_path);
     }
   }
-  std::priority_queue<tileTransitInfo> prioritized;
+  std::priority_queue<tile_transit_info_t> prioritized;
   for (auto it = tile_map.begin(); it != tile_map.end(); it++) {
     prioritized.push(it->second);
   }
@@ -226,7 +226,7 @@ std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_
 void setup_stops(Transit& tile,
                  const gtfs::Stop& tile_stop,
                  GraphId& node_id,
-                 std::unordered_map<feedObject, GraphId>& platform_node_ids,
+                 std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
                  const std::string& feed_path,
                  NodeType node_type,
                  bool isGenerated,
@@ -271,14 +271,15 @@ void setup_stops(Transit& tile,
  * @return a map of string gtfs id to graph id (so node id) for every platform in the tile
  *         later on we use these ids to connect platforms that reference each other in the schedule
  */
-std::unordered_map<feedObject, GraphId> write_stops(Transit& tile, const tileTransitInfo& tile_info) {
+std::unordered_map<feed_object_t, GraphId> write_stops(Transit& tile,
+                                                       const tile_transit_info_t& tile_info) {
   const auto& tile_children = tile_info.station_children;
   auto node_id = tile_info.graphid;
-  feedCache feeds_cache;
+  feed_cache_t feeds_cache;
 
   // loop through all stations inside the tile, and write PBF nodes in the order that is expected
-  std::unordered_map<feedObject, GraphId> platform_node_ids;
-  for (const feedObject& station : tile_info.stations) {
+  std::unordered_map<feed_object_t, GraphId> platform_node_ids;
+  for (const feed_object_t& station : tile_info.stations) {
     const auto& feed = feeds_cache(station);
     auto station_as_stop = feed.get_stop(station.id);
 
@@ -362,12 +363,12 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 
 // return dangling stop_pairs, write stop data from feed
 bool write_stop_pairs(Transit& tile,
-                      const tileTransitInfo& tile_info,
-                      std::unordered_map<feedObject, GraphId> platform_node_ids,
+                      const tile_transit_info_t& tile_info,
+                      std::unordered_map<feed_object_t, GraphId> platform_node_ids,
                       unique_transit_t& uniques) {
 
   const auto& tile_tripIds = tile_info.trips;
-  feedCache tripFeeds;
+  feed_cache_t tripFeeds;
   bool dangles = false;
 
   // converts service start/end dates of the form (yyyymmdd) into epoch seconds
@@ -378,7 +379,7 @@ bool write_stop_pairs(Transit& tile,
     return static_cast<uint32_t>(tp.time_since_epoch().count());
   };
 
-  for (const feedObject& feed_trip : tile_tripIds) {
+  for (const feed_object_t& feed_trip : tile_tripIds) {
     const auto& tile_tripId = feed_trip.id;
     const std::string currFeedPath = feed_trip.feed;
     const auto& feed = tripFeeds(feed_trip);
@@ -526,10 +527,10 @@ bool write_stop_pairs(Transit& tile,
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tileTransitInfo& tile_info) {
+void write_routes(Transit& tile, const tile_transit_info_t& tile_info) {
 
   const auto& tile_routeIds = tile_info.routes;
-  feedCache feedRoutes;
+  feed_cache_t feedRoutes;
 
   // loop through all stops inside the tile
 
@@ -558,9 +559,9 @@ void write_routes(Transit& tile, const tileTransitInfo& tile_info) {
 }
 
 // grab feed data from feed
-void write_shapes(Transit& tile, const tileTransitInfo& tile_info) {
+void write_shapes(Transit& tile, const tile_transit_info_t& tile_info) {
 
-  feedCache feedShapes;
+  feed_cache_t feedShapes;
 
   // loop through all shapes inside the tile
   for (const auto& feed_shape : tile_info.shapes) {
@@ -581,7 +582,7 @@ void write_shapes(Transit& tile, const tileTransitInfo& tile_info) {
 
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
 void ingest_tiles(const boost::property_tree::ptree& pt,
-                  std::priority_queue<tileTransitInfo>& queue,
+                  std::priority_queue<tile_transit_info_t>& queue,
                   unique_transit_t& uniques,
                   std::promise<std::list<GraphId>>& promise) {
 
@@ -603,7 +604,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
   auto tz_conn = valhalla::mjolnir::make_spatialite_cache(tz_db_handle);
 
   while (true) {
-    tileTransitInfo current;
+    tile_transit_info_t current;
     uniques.lock.lock();
     if (queue.empty()) {
       uniques.lock.unlock();
@@ -623,7 +624,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     const std::string& prefix = transit_tile.string();
     LOG_INFO("Writing " + prefix);
 
-    std::unordered_map<feedObject, GraphId> platform_node_ids = write_stops(tile, current);
+    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
     bool dangles = write_stop_pairs(tile, current, platform_node_ids, uniques);
     write_routes(tile, current);
     write_shapes(tile, current);
