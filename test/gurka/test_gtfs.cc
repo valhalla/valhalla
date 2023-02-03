@@ -478,7 +478,7 @@ TEST(GtfsExample, MakeTile) {
 // TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
 // THE TRIP TYPE IS A TRANSIT TYPE
 
-TEST(GtfsExample, DISABLED_testRouting) {
+TEST(GtfsExample, testRouting) {
 
   boost::property_tree::ptree pt = get_config();
 
