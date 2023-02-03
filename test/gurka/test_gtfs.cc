@@ -113,13 +113,6 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_agencies(path_directory);
 
   // write stops.txt
-  struct gtfs::Stop nemo {
-    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
-    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
-  };
-  feed.add_stop(nemo);
   struct gtfs::Stop nemo_egress {
     .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
@@ -136,6 +129,13 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo_platform);
+  struct gtfs::Stop nemo {
+    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
+    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+  };
+  feed.add_stop(nemo);
 
   struct gtfs::Stop secondStop {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
@@ -270,7 +270,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   const auto& stops = feed_reader.get_stops();
   EXPECT_EQ(stops.size(), 6);
-  EXPECT_EQ(stops[0].stop_id, stopOneID);
+  EXPECT_EQ(stops[2].stop_id, stopOneID);
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);
