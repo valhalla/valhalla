@@ -238,8 +238,14 @@ void setup_stops(Transit& tile,
   // change set_type to match the child / parent type.
   node->set_type(static_cast<uint32_t>(node_type));
   node->set_graphid(node_id);
+
   if (node_type != NodeType::kTransitEgress) {
     node->set_prev_type_graphid(prev_id.Is_Valid() ? prev_id : node_id - 1);
+  } // in/egresses need accessibility set so that transit connect edges inherit that access
+  else {
+    // TODO: its unclear how to determine unidirectionality (entrance-only vs exit-only) from the gtfs
+    //  spec, perhaps one should use pathways.txt::is_bidirectional to differentiate?
+    node->set_traversability(static_cast<uint32_t>(Traversability::kBoth));
   }
   node->set_name(tile_stop.stop_name);
   node->set_timezone(tile_stop.stop_timezone);
