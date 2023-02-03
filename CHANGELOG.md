@@ -16,6 +16,7 @@
    * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)
    * CHANGED: Build skadi with -Werror [#3935](https://github.com/valhalla/valhalla/pull/3935)
    * ADDED: Connect transit tiles to the graph [#3700](https://github.com/valhalla/valhalla/pull/3700)
+   * CHANGED: switch to C++17 master branch of `just_gtfs` [#3947](https://github.com/valhalla/valhalla/pull/3947)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
