@@ -151,12 +151,11 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     if (filesystem::is_directory(gtfs_feed_itr->path())) {
       auto feed_path = gtfs_feed_itr->path().string();
-      LOG_INFO("Trying to load " + feed_path);
+      LOG_INFO("Loading " + feed_path);
       gtfs::Feed feed(feed_path);
       feed.read_feed();
-      LOG_INFO("Done Reading Feed");
-      const auto& stops = feed.get_stops();
 
+      const auto& stops = feed.get_stops();
       // 1st pass to add all the stations, so we can add stops to its children in a 2nd pass
       for (const auto& stop : stops) {
         if (stop.location_type == gtfs::StopLocationType::Station) {
@@ -184,6 +183,13 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
           // we don't have the parent station, if
           // 1) this stop has none or 2) its parent station is in another tile
           // TODO: need to handle the 2nd case somehow!
+          auto parent_station = feed.get_stop(stop.parent_station);
+          if (tile_info.graphid !=
+              GraphId(local_tiles.TileId(parent_station->stop_lat, parent_station->stop_lon),
+                      TileHierarchy::GetTransitLevel().level, 0)) {
+            LOG_WARN("Station ID " + stop.parent_station + " is not in stop's " + stop.stop_id +
+                     " tile: " + std::to_string(tile_info.graphid));
+          }
           tile_info.stations.insert({stop.stop_id, feed_path});
           tile_info.station_children.insert({{stop.stop_id, feed_path}, stop.stop_id});
         }
