@@ -85,7 +85,7 @@ struct tile_transit_info_t {
   std::unordered_map<feed_object_t, size_t> shapes;
 
   bool operator<(const tile_transit_info_t& t1) const {
-    // sort tile_transit_info_t by size
+    // the queue needs to be able to sort
     return stations.size() < t1.stations.size();
   }
 };
@@ -140,16 +140,10 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
   // adds a tile_info for the tile_id to tile_map if there is none yet, and returns the tile_info
   // object
   auto get_tile_info = [&tile_map, &local_tiles](const gtfs::Stop& stop) -> tile_transit_info_t& {
-    tile_transit_info_t tile_info;
     auto graphid = GraphId(local_tiles.TileId(stop.stop_lat, stop.stop_lon),
                            TileHierarchy::GetTransitLevel().level, 0);
 
-    auto tile_inserted = tile_map.insert({graphid, tile_info});
-    if (tile_inserted.second) {
-      tile_inserted.first->second.graphid = graphid;
-    }
-
-    return tile_inserted.first->second;
+    return tile_map.insert({graphid, tile_transit_info_t{graphid}}).first->second;
   };
 
   filesystem::recursive_directory_iterator gtfs_feed_itr(path);
@@ -216,11 +210,11 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
                feed_path);
     }
   }
-  std::priority_queue<tile_transit_info_t> prioritized;
+  std::priority_queue<tile_transit_info_t> queue;
   for (auto it = tile_map.begin(); it != tile_map.end(); it++) {
-    prioritized.push(it->second);
+    queue.push(it->second);
   }
-  return prioritized;
+  return queue;
 }
 
 void setup_stops(Transit& tile,
