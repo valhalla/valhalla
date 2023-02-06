@@ -326,6 +326,7 @@ std::unordered_map<feed_object_t, GraphId> write_stops(Transit& tile,
     }
     // We require platforms as well so if we didnt add at least 1 we need to fake one now
     if (tile.nodes_size() == node_count) {
+      LOG_WARN("Generated platform for station " + station_as_stop->stop_id);
       setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
                   NodeType::kMultiUseTransitPlatform, true, prev_id);
     }
