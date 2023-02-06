@@ -6,6 +6,7 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
+// clang-format off
 // # level 0:  180
 // # level 1:  90             rows: 2 cols: 4
 // # level 2:  45             rows: 4 cols: 8
@@ -20,6 +21,7 @@ namespace baldr {
 // # level 11: 0.087890625    rows: 2048 cols 4096
 // # level 12: 0.0439453125   rows: 4096 cols 8192
 // # level 13: 0.02197265625  rows: 8192 cols 16384
+// clang-format on
 
 const std::vector<TileLevel>& TileHierarchy::levels() {
   // Static tile levels

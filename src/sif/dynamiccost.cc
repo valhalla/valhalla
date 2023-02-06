@@ -5,6 +5,7 @@
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/customcost.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
@@ -553,6 +554,10 @@ void ParseCosting(const rapidjson::Document& doc,
     }
     case Costing::none_: {
       sif::ParseNoCostOptions(doc, key, costing);
+      break;
+    }
+    case Costing::custom: {
+      sif::ParseCustomCostOptions(doc, key, costing);
       break;
     }
     default: {

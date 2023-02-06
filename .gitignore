@@ -72,3 +72,4 @@ CMakeLists.txt.user
 site/
 
 .DS_Store
+valhalla_data
