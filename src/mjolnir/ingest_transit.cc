@@ -128,7 +128,13 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-// Read from GTFS feed, sort data into the tiles they belong to
+std::string get_tile_path(const std::string tile_dir, const GraphId& tile_id) {
+  auto file_name = GraphTile::FileSuffix(tile_id);
+  file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
+  return tile_dir + filesystem::path::preferred_separator + file_name;
+};
+
+// Read from GTFS feed, sort data into the unique tiles they belong to
 std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
   auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
@@ -616,28 +622,37 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     queue.pop();
     uniques.lock.unlock();
 
+    // PBF objects throw when they're too big, so keep writing .pbf.x tiles until there's no more
     Transit tile;
-    auto file_name = GraphTile::FileSuffix(current.graphid, SUFFIX_NON_COMPRESSED);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
-                                    filesystem::path::preferred_separator + file_name;
+    bool dangles = false;
+    uint16_t ext = 0;
 
-    // tiles are wrote out with .pbf or .pbf.n ext
-    const std::string& prefix = transit_tile.string();
-    LOG_INFO("Writing " + prefix);
+    const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
+    // first tile also gets an extension
+    auto current_path = tile_path;
+    do {
+      std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
+      dangles = write_stop_pairs(tile, current, platform_node_ids, uniques) || dangles;
+      write_routes(tile, current);
+      write_shapes(tile, current);
 
-    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
-    bool dangles = write_stop_pairs(tile, current, platform_node_ids, uniques);
-    write_routes(tile, current);
-    write_shapes(tile, current);
+      if (tile.stop_pairs_size() > 500000) {
+        LOG_INFO("Writing " + current_path);
+        write_pbf(tile, current_path);
+        tile.Clear();
+        current_path = tile_path + "." + std::to_string(ext++);
+      }
 
-    // list of dangling tiles
+    } while (filesystem::exists(current_path));
+
     if (dangles) {
       dangling.emplace_back(current.graphid);
     }
 
+    // write the last tile
     if (tile.stop_pairs_size()) {
-      write_pbf(tile, transit_tile.string());
+      LOG_INFO("Writing " + current_path);
+      write_pbf(tile, current_path);
     }
   }
   promise.set_value(dangling);
@@ -649,12 +664,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
   auto grid = TileHierarchy::levels().back().tiles;
-  auto tile_name = [&pt](const GraphId& id) {
-    auto file_name = GraphTile::FileSuffix(id);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-           file_name;
-  };
+  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
 
   // for each tile
   while (true) {
@@ -668,14 +678,14 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
     tiles.pop_front();
     lock.unlock();
 
-    auto prefix = tile_name(current);
-    auto file_name = prefix;
+    auto tile_path = get_tile_path(transit_dir, current);
+    auto current_path = tile_path;
     int ext = 0;
 
     do {
 
       // open tile make a hash of missing stop to invalid graphid
-      auto tile = read_pbf(file_name, lock);
+      auto tile = read_pbf(current_path, lock);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
@@ -695,7 +705,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
         if (neighbor_id != current) {
-          auto neighbor_file_name = tile_name(neighbor_id);
+          auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
           auto neighbor = read_pbf(neighbor_file_name, lock);
           for (const auto& node : neighbor.nodes()) {
             auto platform_itr = needed.find(node.onestop_id());
@@ -731,22 +741,12 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
       }
-      lock.lock();
-#if GOOGLE_PROTOBUF_VERSION >= 3001000
-      auto size = tile.ByteSizeLong();
-#else
-      auto size = tile.ByteSize();
-#endif
-      valhalla::midgard::mem_map<char> buffer;
-      // this is giving an error in the header file
-      buffer.create(file_name, size);
-      tile.SerializeToArray(buffer.get(), size);
-      lock.unlock();
-      LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " +
+      write_pbf(tile, current_path);
+      LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
 
-      file_name = prefix + "." + std::to_string(ext++);
-    } while (filesystem::exists(file_name));
+      current_path = tile_path + "." + std::to_string(ext++);
+    } while (filesystem::exists(current_path));
   }
 }
 } // namespace
@@ -839,8 +839,8 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
-    throw std::runtime_error("Couldn't load " + file_name);
     lock.unlock();
+    throw std::runtime_error("Couldn't load " + file_name);
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
@@ -882,16 +882,7 @@ Transit read_pbf(const std::string& file_name) {
   return transit;
 }
 
-// Get PBF transit data given a GraphId / tile
-Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
-  std::string fname = GraphTile::FileSuffix(id);
-  fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + '/' + fname;
-  Transit transit;
-  transit = read_pbf(file_name);
-  return transit;
-}
-
+// TODO: can we use this also in stitch_tiles?
 void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
