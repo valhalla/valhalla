@@ -184,9 +184,10 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
           // 1) this stop has none or 2) its parent station is in another tile
           // TODO: need to handle the 2nd case somehow!
           auto parent_station = feed.get_stop(stop.parent_station);
-          if (tile_info.graphid !=
-              GraphId(local_tiles.TileId(parent_station->stop_lat, parent_station->stop_lon),
-                      TileHierarchy::GetTransitLevel().level, 0)) {
+          if (parent_station &&
+              tile_info.graphid !=
+                  GraphId(local_tiles.TileId(parent_station->stop_lat, parent_station->stop_lon),
+                          TileHierarchy::GetTransitLevel().level, 0)) {
             LOG_WARN("Station ID " + stop.parent_station + " is not in stop's " + stop.stop_id +
                      " tile: " + std::to_string(tile_info.graphid));
           }
