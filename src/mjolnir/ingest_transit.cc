@@ -628,7 +628,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     uint16_t ext = 0;
 
     const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
-    // first tile also gets an extension
     auto current_path = tile_path;
     do {
       std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
@@ -642,7 +641,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
         tile.Clear();
         current_path = tile_path + "." + std::to_string(ext++);
       }
-
     } while (filesystem::exists(current_path));
 
     if (dangles) {
