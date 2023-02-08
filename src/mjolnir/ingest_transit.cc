@@ -128,7 +128,7 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-std::string get_tile_path(const std::string tile_dir, const GraphId& tile_id) {
+std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
   auto file_name = GraphTile::FileSuffix(tile_id);
   file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
   return tile_dir + filesystem::path::preferred_separator + file_name;
@@ -371,11 +371,11 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 
 // return dangling stop_pairs, write stop data from feed
 bool write_stop_pairs(Transit& tile,
-                      const tile_transit_info_t& tile_info,
+                      tile_transit_info_t& tile_info,
                       std::unordered_map<feed_object_t, GraphId> platform_node_ids,
                       unique_transit_t& uniques) {
 
-  const auto& tile_tripIds = tile_info.trips;
+  auto& tile_tripIds = tile_info.trips;
   feed_cache_t tripFeeds;
   bool dangles = false;
 
@@ -387,7 +387,11 @@ bool write_stop_pairs(Transit& tile,
     return static_cast<uint32_t>(tp.time_since_epoch().count());
   };
 
-  for (const feed_object_t& feed_trip : tile_tripIds) {
+  auto tile_itr = tile_tripIds.cbegin();
+  while (tile_itr != tile_tripIds.cend()) {
+    auto& feed_trip = *tile_itr;
+    // for (const feed_object_t& feed_trip : tile_tripIds) {
+
     const auto& tile_tripId = feed_trip.id;
     const std::string currFeedPath = feed_trip.feed;
     const auto& feed = tripFeeds(feed_trip);
@@ -530,6 +534,17 @@ bool write_stop_pairs(Transit& tile,
         }
       }
     }
+
+    tile_itr = tile_tripIds.erase(tile_itr);
+
+#if GOOGLE_PROTOBUF_VERSION >= 3001000
+    auto size = tile.ByteSizeLong();
+#else
+    auto size = tile.ByteSize();
+#endif
+    if (size > 134217728) {
+      return dangles;
+    }
   }
   return dangles;
 }
@@ -629,19 +644,20 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
 
     const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
     auto current_path = tile_path;
-    do {
-      std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
-      dangles = write_stop_pairs(tile, current, platform_node_ids, uniques) || dangles;
-      write_routes(tile, current);
-      write_shapes(tile, current);
 
-      if (tile.stop_pairs_size() > 500000) {
-        LOG_INFO("Writing " + current_path);
-        write_pbf(tile, current_path);
-        tile.Clear();
-        current_path = tile_path + "." + std::to_string(ext++);
-      }
-    } while (filesystem::exists(current_path));
+    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
+    write_routes(tile, current);
+    write_shapes(tile, current);
+    while (current.trips.size()) {
+
+      // writes every GB a new file with extension
+      dangles = write_stop_pairs(tile, current, platform_node_ids, uniques) || dangles;
+
+      LOG_INFO("Writing " + current_path);
+      write_pbf(tile, current_path);
+      tile.Clear();
+      current_path = tile_path + "." + std::to_string(ext++);
+    }
 
     if (dangles) {
       dangling.emplace_back(current.graphid);
