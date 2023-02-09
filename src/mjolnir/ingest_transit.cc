@@ -439,6 +439,7 @@ bool write_stop_pair(Transit& tile,
       stop_pair->set_destination_onestop_id(dest_onestop_id);
 
       if (origin_is_in_tile) {
+        // TODO: use timezones here?
         stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
         // So we looked up the node graphid by name, the name is either the actual name of the
         // platform (track 5 or something) OR its just the name of the station (in the case that the
@@ -634,14 +635,15 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
       dangles =
           write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 
-      if (trip_count > 50000) {
+      // TODO: config option in mjolnir for the limit stuff
+      if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
         LOG_INFO("Writing " + current_path);
         write_pbf(tile, current_path);
         tile.Clear();
+        current_path = tile_path + "." + std::to_string(ext++);
         trip_count = 0;
       }
 
-      current_path = tile_path + "." + std::to_string(ext++);
       trip_count++;
     }
 
