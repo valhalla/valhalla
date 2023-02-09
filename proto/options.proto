@@ -309,9 +309,7 @@ message Costing {
     }
     uint32 fixed_speed = 80;
     uint32 axle_count = 81;
-    oneof has_use_lit {
-      float use_lit = 82;
-    }
+    float use_lit = 82;
   }
 
   oneof has_options {

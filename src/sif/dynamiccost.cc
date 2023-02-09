@@ -467,7 +467,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                           use_living_streets);
 
   // use_lit
-  JSON_PBF_RANGED_DEFAULT(co, cfg.use_lit_, json, "/use_lit", use_lit);
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit);
 
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
