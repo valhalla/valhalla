@@ -89,6 +89,8 @@ const std::string kDefaultPedestrianType = "foot";
 // hills) to 1 (take hills when they offer a more direct, less time, path).
 constexpr float kDefaultUseHills = 0.5f;
 
+constexpr float kDefaultUseLit = 0.f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<uint32_t> kMaxDistanceWheelchairRange{0, kMaxDistanceWheelchair,
                                                                  kMaxDistanceFoot};
@@ -157,6 +159,7 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_ferry_.def = kDefaultUseFerry;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  cfg.use_lit_.def = kDefaultUseLit;
   return cfg;
 }
 
@@ -718,6 +721,9 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
     factor *= sidewalk_factor_;
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
+  }
+  if (!edge->lit()) {
+    factor *= unlit_factor_;
   }
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
