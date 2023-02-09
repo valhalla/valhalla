@@ -359,8 +359,8 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
 }
 
 void DynamicCost::set_use_lit(float use_lit) {
-  unlit_factor_ =
-      use_lit < 0.5f ? 1 + (kMinLitFactor + 2.f * use_lit) : ((kMinLitFactor - 5) + 12.f * use_lit);
+  unlit_factor_ = use_lit < 0.5f ? 1.f + (kMinLitFactor + 2.f * use_lit)
+                                 : ((kMinLitFactor - 5.f) + 12.f * use_lit);
 }
 
 void ParseBaseCostOptions(const rapidjson::Value& json,
