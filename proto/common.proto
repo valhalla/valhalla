@@ -149,6 +149,7 @@ message BikeShareStationInfo {
   string operator = 5;
   float rent_cost = 6;
   float return_cost = 7;
+  float osm_node_id= 8;
 }
 
 message TransitPlatformInfo {
