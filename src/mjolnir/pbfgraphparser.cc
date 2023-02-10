@@ -2004,6 +2004,7 @@ struct graph_parser {
     n.set_latlng(node.location().lon(), node.location().lat());
     n.set_type(NodeType::kBikeShare);
     valhalla::BikeShareStationInfo bss_info;
+    bss_info.set_osm_node_id(osmid);
 
     for (auto& key_value : tags) {
       if (key_value.first == "name") {
@@ -4210,7 +4211,7 @@ struct graph_parser {
                   return; // should not make it here; has to be bad data.
                 }
               } // else
-            }   // if (condition.empty())
+            } // if (condition.empty())
 
             std::vector<std::string> conditions = GetTagTokens(condition, ';');
 
@@ -4237,7 +4238,7 @@ struct graph_parser {
             }
             return;
           } // if (isConditional)
-        }   // end turning into complex restriction
+        } // end turning into complex restriction
 
         restriction.set_modes(modes);
 
