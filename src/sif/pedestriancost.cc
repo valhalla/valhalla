@@ -722,9 +722,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
   }
-  if (!edge->lit()) {
-    factor *= unlit_factor_;
-  }
+
+  factor *= edge->lit() + (!edge->lit() * unlit_factor_);
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};
