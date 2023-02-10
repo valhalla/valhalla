@@ -1456,7 +1456,7 @@ public:
       n.set_latlng(lng, lat);
       n.set_type(NodeType::kBikeShare);
       valhalla::BikeShareStationInfo bss_info;
-      bss_info.set_osm_node_id(osmid);
+      bss_info.set_osm_node_id("poi:osm:node:" + std::to_string(osmid));
 
       for (auto& key_value : *results) {
         if (key_value.first == "name") {
