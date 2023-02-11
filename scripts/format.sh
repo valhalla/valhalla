@@ -25,7 +25,7 @@ find src valhalla test bench -type f -name '*.h' -o -name '*.cc' \
 
 # Python setup
 py=$(setup_python)
-pip install black==22.10.0 flake8==5.0.4
+${py} -m pip install black==22.10.0 flake8==5.0.4
 python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
 
 # Python formatter
