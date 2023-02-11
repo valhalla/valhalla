@@ -1237,7 +1237,6 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
       std::to_string(TileHierarchy::GetTransitLevel().level));
   filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
-  // TODO: make this robust to .pbf.x scheme that ingest_traffic generates
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     auto tile_path = transit_file_itr->path();
     if (filesystem::is_regular_file(transit_file_itr->path()) &&

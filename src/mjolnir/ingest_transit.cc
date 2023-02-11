@@ -636,7 +636,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
       dangles =
           write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 
-      // TODO: config option in mjolnir for the limit stuff
       if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
         LOG_INFO("Writing " + current_path);
         write_pbf(tile, current_path);
@@ -883,7 +882,6 @@ Transit read_pbf(const std::string& file_name) {
   return transit;
 }
 
-// TODO: can we use this also in stitch_tiles?
 void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
