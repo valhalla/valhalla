@@ -1239,11 +1239,12 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   std::unordered_set<GraphId> all_tiles;
   // TODO: make this robust to .pbf.x scheme that ingest_traffic generates
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
+    auto tile_path = transit_file_itr->path();
     if (filesystem::is_regular_file(transit_file_itr->path()) &&
-        transit_file_itr->path().extension() == ".pbf") {
+        (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
 
-      LOG_INFO("tile: " + transit_file_itr->path().string());
-      all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
+      LOG_INFO("tile: " + tile_path.string());
+      all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
     }
   }
 

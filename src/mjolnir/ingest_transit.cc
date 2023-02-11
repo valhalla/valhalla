@@ -632,6 +632,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     feed_cache_t feeds;
     size_t trip_count = 0;
     for (const auto& trip : current.trips) {
+      trip_count++;
       dangles =
           write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 
@@ -640,11 +641,9 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
         LOG_INFO("Writing " + current_path);
         write_pbf(tile, current_path);
         tile.Clear();
-        current_path = tile_path + "." + std::to_string(ext++);
         trip_count = 0;
+        current_path = tile_path + "." + std::to_string(ext++);
       }
-
-      trip_count++;
     }
 
     if (dangles) {

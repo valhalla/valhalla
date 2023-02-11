@@ -324,6 +324,13 @@ TEST(GtfsExample, MakeProto) {
       std::string fname = transit_file_itr->path().string();
       mjolnir::Transit transit = mjolnir::read_pbf(fname);
 
+      if (std::isdigit(fname.back())) {
+        // we produce 2 pbf tiles on purpose, where the last one (xx.pbf.0) only has a bunch of stop
+        // pairs
+        EXPECT_NE(transit.stop_pairs_size(), 0);
+        continue;
+      }
+
       // make sure we are looking at a pbf file
 
       // make sure that the data written in the previous test is readable through pbfs
