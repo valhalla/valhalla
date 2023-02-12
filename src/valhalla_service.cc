@@ -184,8 +184,9 @@ int main(int argc, char** argv) {
   // setup the cluster within this process
   zmq::context_t context;
   std::thread server_thread =
-      std::thread(std::bind(&http_server_t::serve, http_server_t(context, listen, loki_proxy + "_in",
-                                                                 loopback, interrupt, true, DEFAULT_MAX_REQUEST_SIZE, request_timeout)));
+      std::thread(std::bind(&http_server_t::serve,
+                            http_server_t(context, listen, loki_proxy + "_in", loopback, interrupt,
+                                          true, DEFAULT_MAX_REQUEST_SIZE, request_timeout)));
 
   // loki layer
   std::thread loki_proxy_thread(
