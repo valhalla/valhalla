@@ -145,7 +145,7 @@ waypoints(const google::protobuf::RepeatedPtrField<valhalla::Location>& location
 valhalla::baldr::json::ArrayPtr waypoints(const valhalla::Trip& locations);
 valhalla::baldr::json::ArrayPtr intermediate_waypoints(const valhalla::TripLeg& leg);
 
-//Serialize costOptions
+// Serialize costOptions
 void serializeCostOptions(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
 
 void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& writer,
