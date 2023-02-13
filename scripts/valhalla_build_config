@@ -157,6 +157,7 @@ config = {
             'interrupt': 'ipc:///tmp/interrupt',
             'drain_seconds': 28,
             'shutdown_seconds': 1,
+            'timeout_seconds': -1,
         }
     },
     'service_limits': {
@@ -414,6 +415,7 @@ help_text = {
             'interrupt': 'IPC linux domain socket file location used to cancel work in progress',
             'drain_seconds': 'How long to wait for currently running threads to finish before signaling them to shutdown',
             'shutdown_seconds': 'How long to wait for currently running threads to quit before exiting the process',
+            'timeout_seconds': 'How long to wait for a single request to finish before timing it out (defaults to infinite)',
         }
     },
     'service_limits': {
