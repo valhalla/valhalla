@@ -28,18 +28,15 @@ function setup_mason {
 
 }
 
-function setup_pre_commit {
+function setup_python {
   local python_bin=""
   if [[ $(command -v python3) != "" ]]; then
     python_bin="python3"
   elif [[ $(command -v python) != "" ]]; then
     python_bin="python"
   else
-    echo "WARNING: install python3 to set up pre-commit hooks."
+    echo "WARNING: install python3 for linting" 1>&2
     return
   fi
-  echo "INFO: Installing pre-commit"
-  ${python_bin} -m pip install --user --upgrade pre-commit
-  echo "INFO: Setting up pre-commit hooks"
-  ${python_bin} -m pre_commit install
+  echo ${python_bin}
 }

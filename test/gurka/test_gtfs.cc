@@ -66,6 +66,7 @@ boost::property_tree::ptree get_config() {
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
                                {"mjolnir.transit_dir",
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
+                               {"mjolnir.transit_pbf_limit", "1"},
                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                                {"mjolnir.tile_dir",
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
@@ -322,6 +323,13 @@ TEST(GtfsExample, MakeProto) {
     if (filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       mjolnir::Transit transit = mjolnir::read_pbf(fname);
+
+      if (std::isdigit(fname.back())) {
+        // we produce 2 pbf tiles on purpose, where the last one (xx.pbf.0) only has a bunch of stop
+        // pairs
+        EXPECT_NE(transit.stop_pairs_size(), 0);
+        continue;
+      }
 
       // make sure we are looking at a pbf file
 
