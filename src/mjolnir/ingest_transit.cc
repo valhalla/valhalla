@@ -128,7 +128,21 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-// Read from GTFS feed, sort data into the tiles they belong to
+std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
+  auto file_name = GraphTile::FileSuffix(tile_id);
+  file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
+  return tile_dir + filesystem::path::preferred_separator + file_name;
+};
+
+// converts service start/end dates of the form (yyyymmdd) into epoch seconds
+uint32_t to_local_epoch_sec(const std::string& dt) {
+  date::local_seconds tp;
+  std::istringstream in{dt};
+  in >> date::parse("%Y%m%d", tp);
+  return static_cast<uint32_t>(tp.time_since_epoch().count());
+};
+
+// Read from GTFS feed, sort data into the unique tiles they belong to
 std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
   auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
@@ -364,167 +378,154 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 }
 
 // return dangling stop_pairs, write stop data from feed
-bool write_stop_pairs(Transit& tile,
-                      const tile_transit_info_t& tile_info,
-                      std::unordered_map<feed_object_t, GraphId> platform_node_ids,
-                      unique_transit_t& uniques) {
-
-  const auto& tile_tripIds = tile_info.trips;
-  feed_cache_t tripFeeds;
+bool write_stop_pair(Transit& tile,
+                     const tile_transit_info_t& tile_info,
+                     const feed_object_t& feed_trip,
+                     const gtfs::Feed& feed,
+                     const std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
+                     unique_transit_t& uniques) {
   bool dangles = false;
 
-  // converts service start/end dates of the form (yyyymmdd) into epoch seconds
-  auto to_local_epoch_sec = [](const std::string& dt) -> uint32_t {
-    date::local_seconds tp;
-    std::istringstream in{dt};
-    in >> date::parse("%Y%m%d", tp);
-    return static_cast<uint32_t>(tp.time_since_epoch().count());
-  };
+  const auto& tile_tripId = feed_trip.id;
+  const std::string currFeedPath = feed_trip.feed;
 
-  for (const feed_object_t& feed_trip : tile_tripIds) {
-    const auto& tile_tripId = feed_trip.id;
-    const std::string currFeedPath = feed_trip.feed;
-    const auto& feed = tripFeeds(feed_trip);
+  auto currTrip = feed.get_trip(tile_tripId);
 
-    auto currTrip = feed.get_trip(tile_tripId);
+  // already sorted by stop_sequence
+  const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
-    // already sorted by stop_sequence
-    const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
+  for (size_t stop_sequence = 0; stop_sequence < tile_stopTimes.size() - 1; stop_sequence++) {
+    gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
+    gtfs::Id origin_stopId = origin_stopTime.stop_id;
+    auto origin_stop = feed.get_stop(origin_stopId);
+    assert(origin_stop);
+    gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
+    gtfs::Id dest_stopId = dest_stopTime.stop_id;
+    auto dest_stop = feed.get_stop(dest_stopId);
+    assert(dest_stop);
+    auto origin_graphid_it = platform_node_ids.find({origin_stopId, currFeedPath});
+    auto dest_graphid_it = platform_node_ids.find({dest_stopId, currFeedPath});
+    const bool origin_is_in_tile = origin_graphid_it != platform_node_ids.end();
+    const bool dest_is_in_tile = dest_graphid_it != platform_node_ids.end();
 
-    for (size_t stop_sequence = 0; stop_sequence < tile_stopTimes.size() - 1; stop_sequence++) {
-      gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
-      gtfs::Id origin_stopId = origin_stopTime.stop_id;
-      auto origin_stop = feed.get_stop(origin_stopId);
-      assert(origin_stop);
-      gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
-      gtfs::Id dest_stopId = dest_stopTime.stop_id;
-      auto dest_stop = feed.get_stop(dest_stopId);
-      assert(dest_stop);
-      auto origin_graphid_it = platform_node_ids.find({origin_stopId, currFeedPath});
-      auto dest_graphid_it = platform_node_ids.find({dest_stopId, currFeedPath});
-      const bool origin_is_in_tile = origin_graphid_it != platform_node_ids.end();
-      const bool dest_is_in_tile = dest_graphid_it != platform_node_ids.end();
+    // check if this stop_pair (the origin of the pair) is inside the current tile
+    if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
 
-      // check if this stop_pair (the origin of the pair) is inside the current tile
-      if ((origin_is_in_tile || dest_is_in_tile) &&
-          origin_stopTime.trip_id == dest_stopTime.trip_id) {
+      dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
 
-        dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
+      auto* stop_pair = tile.add_stop_pairs();
+      stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
+      const gtfs::Shape& currShape = feed.get_shape(currTrip->shape_id);
 
-        auto* stop_pair = tile.add_stop_pairs();
-        stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
-        const gtfs::Shape& currShape = feed.get_shape(currTrip->shape_id);
-
-        if (currTrip->block_id != "") {
-          uniques.lock.lock();
-          auto inserted =
-              uniques.block_ids.insert({currTrip->block_id, uniques.block_ids.size() + 1});
-          stop_pair->set_block_id(inserted.first->second);
-          uniques.lock.unlock();
-        }
-
-        bool origin_is_generated = tile_info.station_children.find({origin_stopId, currFeedPath}) !=
-                                   tile_info.station_children.end();
-        auto origin_onestop_id =
-            origin_is_generated ? origin_stopId
-                                : origin_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
-        stop_pair->set_origin_onestop_id(origin_onestop_id);
-
-        bool dest_is_generated = tile_info.station_children.find({dest_stopId, currFeedPath}) !=
-                                 tile_info.station_children.end();
-        auto dest_onestop_id =
-            dest_is_generated ? dest_stopId
-                              : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
-        stop_pair->set_destination_onestop_id(dest_onestop_id);
-
-        if (origin_is_in_tile) {
-          stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
-          // So we looked up the node graphid by name, the name is either the actual name of the
-          // platform (track 5 or something) OR its just the name of the station (in the case that the
-          // platform is generated). So when its generated we will have gotten back the graphid for
-          // the parent station, not for the platform, and the generated platform in that case will be
-          // the next node after the station (we did this in write_stops)
-          stop_pair->set_origin_graphid(origin_graphid_it->second +
-                                        static_cast<uint64_t>(origin_is_generated));
-
-          // call function to set shape
-          float dist = add_stop_pair_shapes(*origin_stop, currShape, origin_stopTime);
-          stop_pair->set_origin_dist_traveled(dist);
-        }
-
-        if (dest_is_in_tile) {
-          stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
-          // Same as above wrt to named and unnamed (generated) platforms
-          stop_pair->set_destination_graphid(dest_graphid_it->second +
-                                             static_cast<uint64_t>(dest_is_generated));
-          // call function to set shape
-          float dist = add_stop_pair_shapes(*dest_stop, currShape, dest_stopTime);
-          stop_pair->set_destination_dist_traveled(dist);
-        }
-        auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
-
-        stop_pair->set_route_index(route_it->second);
-
-        // add information from calendar_dates.txt
-        const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
-        for (const auto& cal_date_item : trip_calDates) {
-          auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
-          if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
-            stop_pair->add_service_added_dates(d);
-          else
-            stop_pair->add_service_except_dates(d);
-        }
-
-        // check that a valid calendar exists for the service id
-        auto trip_calendar = feed.get_calendar(currTrip->service_id);
-        if (trip_calendar) {
-          stop_pair->set_service_start_date(
-              to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
-          stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
-        }
-
-        // grab the headsign
-        stop_pair->set_trip_headsign(currTrip->trip_headsign);
-
+      if (currTrip->block_id != "") {
         uniques.lock.lock();
-        auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size()});
-        stop_pair->set_trip_id(inserted.first->second);
+        auto inserted = uniques.block_ids.insert({currTrip->block_id, uniques.block_ids.size() + 1});
+        stop_pair->set_block_id(inserted.first->second);
         uniques.lock.unlock();
+      }
 
-        stop_pair->set_wheelchair_accessible(currTrip->wheelchair_accessible ==
-                                             gtfs::TripAccess::Yes);
+      bool origin_is_generated = tile_info.station_children.find({origin_stopId, currFeedPath}) !=
+                                 tile_info.station_children.end();
+      auto origin_onestop_id =
+          origin_is_generated ? origin_stopId
+                              : origin_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+      stop_pair->set_origin_onestop_id(origin_onestop_id);
 
-        // get frequency info
-        if (!feed.get_frequencies(currTrip->trip_id).empty()) {
-          const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
-          if (currFrequencies.size() > 1) {
-            LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
-          }
+      bool dest_is_generated = tile_info.station_children.find({dest_stopId, currFeedPath}) !=
+                               tile_info.station_children.end();
+      auto dest_onestop_id = dest_is_generated
+                                 ? dest_stopId
+                                 : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+      stop_pair->set_destination_onestop_id(dest_onestop_id);
 
-          auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
-          auto freq_end_time = (currFrequencies[0].end_time.get_raw_time());
-          auto freq_time = freq_start_time + freq_end_time;
+      if (origin_is_in_tile) {
+        // TODO: use timezones here?
+        stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
+        // So we looked up the node graphid by name, the name is either the actual name of the
+        // platform (track 5 or something) OR its just the name of the station (in the case that the
+        // platform is generated). So when its generated we will have gotten back the graphid for
+        // the parent station, not for the platform, and the generated platform in that case will be
+        // the next node after the station (we did this in write_stops)
+        stop_pair->set_origin_graphid(origin_graphid_it->second +
+                                      static_cast<uint64_t>(origin_is_generated));
 
-          // TODO: check which type of frequency it is, could be exact (meaning headway sections
-          //  between trips) or schedule based (same headway all the time)
+        // call function to set shape
+        float dist = add_stop_pair_shapes(*origin_stop, currShape, origin_stopTime);
+        stop_pair->set_origin_dist_traveled(dist);
+      }
 
-          if (currFrequencies.size() > 0) {
-            stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
-            stop_pair->set_frequency_headway_seconds(currFrequencies[0].headway_secs);
-          }
+      if (dest_is_in_tile) {
+        stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
+        // Same as above wrt to named and unnamed (generated) platforms
+        stop_pair->set_destination_graphid(dest_graphid_it->second +
+                                           static_cast<uint64_t>(dest_is_generated));
+        // call function to set shape
+        float dist = add_stop_pair_shapes(*dest_stop, currShape, dest_stopTime);
+        stop_pair->set_destination_dist_traveled(dist);
+      }
+      auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
-          auto line_id = stop_pair->origin_onestop_id() < stop_pair->destination_onestop_id()
-                             ? stop_pair->origin_onestop_id() + stop_pair->destination_onestop_id() +
-                                   currTrip->route_id + freq_time
-                             : stop_pair->destination_onestop_id() + stop_pair->origin_onestop_id() +
-                                   currTrip->route_id + freq_time;
-          uniques.lock.lock();
-          uniques.lines.insert({line_id, uniques.lines.size()});
-          uniques.lock.unlock();
+      stop_pair->set_route_index(route_it->second);
+
+      // add information from calendar_dates.txt
+      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
+      for (const auto& cal_date_item : trip_calDates) {
+        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
+        if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
+          stop_pair->add_service_added_dates(d);
+        else
+          stop_pair->add_service_except_dates(d);
+      }
+
+      // check that a valid calendar exists for the service id
+      auto trip_calendar = feed.get_calendar(currTrip->service_id);
+      if (trip_calendar) {
+        stop_pair->set_service_start_date(
+            to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
+        stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
+      }
+
+      // grab the headsign
+      stop_pair->set_trip_headsign(currTrip->trip_headsign);
+
+      uniques.lock.lock();
+      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size()});
+      stop_pair->set_trip_id(inserted.first->second);
+      uniques.lock.unlock();
+
+      stop_pair->set_wheelchair_accessible(currTrip->wheelchair_accessible == gtfs::TripAccess::Yes);
+
+      // get frequency info
+      if (!feed.get_frequencies(currTrip->trip_id).empty()) {
+        const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
+        if (currFrequencies.size() > 1) {
+          LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
         }
+
+        auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
+        auto freq_end_time = (currFrequencies[0].end_time.get_raw_time());
+        auto freq_time = freq_start_time + freq_end_time;
+
+        // TODO: check which type of frequency it is, could be exact (meaning headway sections
+        //  between trips) or schedule based (same headway all the time)
+
+        if (currFrequencies.size() > 0) {
+          stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
+          stop_pair->set_frequency_headway_seconds(currFrequencies[0].headway_secs);
+        }
+
+        auto line_id = stop_pair->origin_onestop_id() < stop_pair->destination_onestop_id()
+                           ? stop_pair->origin_onestop_id() + stop_pair->destination_onestop_id() +
+                                 currTrip->route_id + freq_time
+                           : stop_pair->destination_onestop_id() + stop_pair->origin_onestop_id() +
+                                 currTrip->route_id + freq_time;
+        uniques.lock.lock();
+        uniques.lines.insert({line_id, uniques.lines.size()});
+        uniques.lock.unlock();
       }
     }
   }
+
   return dangles;
 }
 
@@ -617,27 +618,41 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     uniques.lock.unlock();
 
     Transit tile;
-    auto file_name = GraphTile::FileSuffix(current.graphid, SUFFIX_NON_COMPRESSED);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
-                                    filesystem::path::preferred_separator + file_name;
+    bool dangles = false;
+    uint16_t ext = 0;
 
-    // tiles are wrote out with .pbf or .pbf.n ext
-    const std::string& prefix = transit_tile.string();
-    LOG_INFO("Writing " + prefix);
+    const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
+    auto current_path = tile_path;
 
     std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
-    bool dangles = write_stop_pairs(tile, current, platform_node_ids, uniques);
     write_routes(tile, current);
     write_shapes(tile, current);
 
-    // list of dangling tiles
+    // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
+    feed_cache_t feeds;
+    size_t trip_count = 0;
+    for (const auto& trip : current.trips) {
+      trip_count++;
+      dangles =
+          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
+
+      if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
+        LOG_INFO("Writing " + current_path);
+        write_pbf(tile, current_path);
+        tile.Clear();
+        trip_count = 0;
+        current_path = tile_path + "." + std::to_string(ext++);
+      }
+    }
+
     if (dangles) {
       dangling.emplace_back(current.graphid);
     }
 
+    // write the last tile
     if (tile.stop_pairs_size()) {
-      write_pbf(tile, transit_tile.string());
+      LOG_INFO("Writing " + current_path);
+      write_pbf(tile, current_path);
     }
   }
   promise.set_value(dangling);
@@ -649,12 +664,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
   auto grid = TileHierarchy::levels().back().tiles;
-  auto tile_name = [&pt](const GraphId& id) {
-    auto file_name = GraphTile::FileSuffix(id);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-           file_name;
-  };
+  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
 
   // for each tile
   while (true) {
@@ -668,14 +678,14 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
     tiles.pop_front();
     lock.unlock();
 
-    auto prefix = tile_name(current);
-    auto file_name = prefix;
+    auto tile_path = get_tile_path(transit_dir, current);
+    auto current_path = tile_path;
     int ext = 0;
 
     do {
 
       // open tile make a hash of missing stop to invalid graphid
-      auto tile = read_pbf(file_name, lock);
+      auto tile = read_pbf(current_path, lock);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
@@ -695,7 +705,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
         if (neighbor_id != current) {
-          auto neighbor_file_name = tile_name(neighbor_id);
+          auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
           auto neighbor = read_pbf(neighbor_file_name, lock);
           for (const auto& node : neighbor.nodes()) {
             auto platform_itr = needed.find(node.onestop_id());
@@ -731,22 +741,12 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
       }
-      lock.lock();
-#if GOOGLE_PROTOBUF_VERSION >= 3001000
-      auto size = tile.ByteSizeLong();
-#else
-      auto size = tile.ByteSize();
-#endif
-      valhalla::midgard::mem_map<char> buffer;
-      // this is giving an error in the header file
-      buffer.create(file_name, size);
-      tile.SerializeToArray(buffer.get(), size);
-      lock.unlock();
-      LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " +
+      write_pbf(tile, current_path);
+      LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
 
-      file_name = prefix + "." + std::to_string(ext++);
-    } while (filesystem::exists(file_name));
+      current_path = tile_path + "." + std::to_string(ext++);
+    } while (filesystem::exists(current_path));
   }
 }
 } // namespace
@@ -839,8 +839,8 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
-    throw std::runtime_error("Couldn't load " + file_name);
     lock.unlock();
+    throw std::runtime_error("Couldn't load " + file_name);
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
@@ -879,16 +879,6 @@ Transit read_pbf(const std::string& file_name) {
   if (!transit.ParseFromCodedStream(&cs)) {
     throw std::runtime_error("Couldn't load " + file_name);
   }
-  return transit;
-}
-
-// Get PBF transit data given a GraphId / tile
-Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
-  std::string fname = GraphTile::FileSuffix(id);
-  fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + '/' + fname;
-  Transit transit;
-  transit = read_pbf(file_name);
   return transit;
 }
 

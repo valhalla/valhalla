@@ -48,16 +48,6 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock);
 Transit read_pbf(const std::string& file_name);
 
 /**
- * @brief Get PBF transit data given a GraphId / tile
- *
- * @param id graphId of the tile
- * @param transit_dir directory where transit data is located
- * @param file_name  name of the file
- * @return transit data of the tile with the given GraphId
- */
-Transit read_pbf(const baldr::GraphId& id, const std::string& transit_dir, std::string& file_name);
-
-/**
  * @brief writes transit information inside the tile to a protobuf
  *
  * @param tile contains transit data
