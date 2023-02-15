@@ -66,6 +66,7 @@ boost::property_tree::ptree get_config() {
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
                                {"mjolnir.transit_dir",
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
+                               {"mjolnir.transit_pbf_limit", "1"},
                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                                {"mjolnir.tile_dir",
                                 VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
@@ -113,6 +114,22 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_agencies(path_directory);
 
   // write stops.txt
+  struct gtfs::Stop nemo_egress {
+    .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
+    .coordinates_present = true, .stop_lat = station_one_ll->second.second,
+    .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
+    .location_type = gtfs::StopLocationType::EntranceExit, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(nemo_egress);
+  struct gtfs::Stop nemo_platform {
+    .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_name = gtfs::Text("POINT NEMO"),
+    .coordinates_present = true, .stop_lat = station_one_ll->second.second,
+    .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(nemo_platform);
   struct gtfs::Stop nemo {
     .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
@@ -120,22 +137,6 @@ TEST(GtfsExample, WriteGtfs) {
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(nemo);
-  struct gtfs::Stop nemo_egress {
-    .stop_id = stopOneID + "_" + to_string(NodeType::kTransitEgress),
-    .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
-    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = stopOneID, .location_type = gtfs::StopLocationType::EntranceExit,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
-  };
-  feed.add_stop(nemo_egress);
-  struct gtfs::Stop nemo_platform {
-    .stop_id = stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
-    .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
-    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = stopOneID, .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
-  };
-  feed.add_stop(nemo_platform);
 
   struct gtfs::Stop secondStop {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
@@ -152,6 +153,15 @@ TEST(GtfsExample, WriteGtfs) {
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(thirdStop);
+  struct gtfs::Stop thirdStopPlatform {
+    .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_name = gtfs::Text("THIRD STOP"),
+    .coordinates_present = true, .stop_lat = station_three_ll->second.second,
+    .stop_lon = station_three_ll->second.first, .parent_station = stopThreeID,
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(thirdStopPlatform);
+
   feed.write_stops(path_directory);
 
   // write routes.txt
@@ -181,8 +191,11 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_trips(path_directory);
 
   // write stop_times.txt
-  std::string stopIds[3] = {stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
-                            stopTwoID, stopThreeID};
+  std::string stopIds[3] = {
+      stopOneID + "_ledge_to_the_train_bucko",
+      stopTwoID,
+      stopThreeID + "_walk_the_plank_pal",
+  };
   for (int i = 0; i < 6; i++) {
     struct StopTime stopTime {
       .trip_id = "", .stop_id = "", .stop_sequence = 0, .arrival_time = Time("6:00:00"),
@@ -257,8 +270,8 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 5);
-  EXPECT_EQ(stops[0].stop_id, stopOneID);
+  EXPECT_EQ(stops.size(), 6);
+  EXPECT_EQ(stops[2].stop_id, stopOneID);
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);
@@ -311,6 +324,13 @@ TEST(GtfsExample, MakeProto) {
       std::string fname = transit_file_itr->path().string();
       mjolnir::Transit transit = mjolnir::read_pbf(fname);
 
+      if (std::isdigit(fname.back())) {
+        // we produce 2 pbf tiles on purpose, where the last one (xx.pbf.0) only has a bunch of stop
+        // pairs
+        EXPECT_NE(transit.stop_pairs_size(), 0);
+        continue;
+      }
+
       // make sure we are looking at a pbf file
 
       // make sure that the data written in the previous test is readable through pbfs
@@ -319,7 +339,11 @@ TEST(GtfsExample, MakeProto) {
       EXPECT_EQ(transit.shapes_size(), 1);
       // stop(node) info
       for (int i = 0; i < transit.nodes_size(); i++) {
-        stops.insert(transit.nodes(i).onestop_id());
+        const auto& tn = transit.nodes(i);
+        stops.insert(tn.onestop_id());
+        if (tn.type() == static_cast<uint32_t>(NodeType::kTransitEgress)) {
+          EXPECT_NE(tn.traversability(), static_cast<uint32_t>(Traversability::kNone));
+        }
       }
 
       // routes info
@@ -328,11 +352,10 @@ TEST(GtfsExample, MakeProto) {
 
       // stop_pair info
       for (int i = 0; i < transit.stop_pairs_size(); i++) {
+        EXPECT_TRUE(transit.stop_pairs(i).has_origin_graphid());
+        EXPECT_TRUE(transit.stop_pairs(i).has_destination_graphid());
         stop_pairs.insert(transit.stop_pairs(i).origin_onestop_id());
         stop_pairs.insert(transit.stop_pairs(i).destination_onestop_id());
-        // TODO: we have to have properly stitched together all the pairs
-        // EXPECT_FALSE(transit.stop_pairs(i).origin_graphid() != kInvalidGraphId);
-        // EXPECT_FALSE(transit.stop_pairs(i).destination_graphid() != kInvalidGraphId);
       }
 
       // calendar information
@@ -352,15 +375,17 @@ TEST(GtfsExample, MakeProto) {
   }
   EXPECT_EQ(stops.size(), 9);
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
-  std::string stop_pair_ids[3] = {stopOneID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
-                                  stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
-                                  stopThreeID + "_" + to_string(NodeType::kMultiUseTransitPlatform)};
+  std::string stop_pair_ids[3] = {
+      stopOneID + "_ledge_to_the_train_bucko",
+      stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
+      stopThreeID + "_walk_the_plank_pal",
+  };
 
   for (const auto& stopID : stopIds) {
-    EXPECT_EQ(*stops.find(stopID), stopID);
+    EXPECT_TRUE(stops.find(stopID) != stops.end());
   }
   for (const auto& stop_pair_id : stop_pair_ids) {
-    EXPECT_EQ(*stops.find(stop_pair_id), stop_pair_id);
+    EXPECT_TRUE(stops.find(stop_pair_id) != stops.end());
   }
   // TODO: MAKE SURE ALL THE GENEREATED STOPS ARE ALSO TESTED FOR
 }
@@ -385,13 +410,17 @@ TEST(GtfsExample, MakeTile) {
 
   GraphReader reader(pt.get_child("mjolnir"));
   auto graphids = reader.GetTileSet();
-  int totalNodes = 0;
+  size_t transit_nodes = 0;
   std::unordered_map<baldr::Use, size_t> uses;
   for (auto graphid : graphids) {
     LOG_INFO("Working on : " + std::to_string(graphid));
     graph_tile_ptr tile = reader.GetGraphTile(graphid);
     for (const auto& edge : tile->GetDirectedEdges()) {
       uses[edge.use()]++;
+      if (edge.use() == Use::kTransitConnection) {
+        EXPECT_TRUE((edge.forwardaccess() & kPedestrianAccess) ||
+                    (edge.reverseaccess() & kPedestrianAccess));
+      }
     }
 
     if (graphid.level() != TileHierarchy::GetTransitLevel().level) {
@@ -408,7 +437,7 @@ TEST(GtfsExample, MakeTile) {
       LOG_INFO("There are " + std::to_string(tile->GetNodes().size()) + " nodes inside tile " +
                std::to_string(graphid));
     }
-    totalNodes += tile->header()->nodecount();
+    transit_nodes += tile->header()->nodecount();
     std::unordered_set<NodeType> node_types = {NodeType::kMultiUseTransitPlatform,
                                                NodeType::kTransitStation, NodeType::kTransitEgress};
     std::vector<PointLL> station_coords = {station_one_ll->second, station_two_ll->second,
@@ -451,14 +480,15 @@ TEST(GtfsExample, MakeTile) {
     }
   }
 
-  EXPECT_EQ(totalNodes, 9);
+  EXPECT_EQ(transit_nodes, 9);
   EXPECT_EQ(uses[Use::kRoad], 6);
-  // TODO: transit connect edges should only exist between egress and street nodes
-  // EXPECT_EQ(uses[Use::kTransitConnection], 6);
+  // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
+  // edge to the station and the connections are bidirectional (as per usual)
+  EXPECT_EQ(uses[Use::kTransitConnection], 12);
   EXPECT_EQ(uses[Use::kPlatformConnection], 6);
   EXPECT_EQ(uses[Use::kEgressConnection], 6);
-  // TODO: it looks like convert transit skips putting any actual rail edges into level 3
-  // EXPECT_EQ(uses[Use::kRail], 4);
+  // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
+  EXPECT_EQ(uses[Use::kRail], 2);
 }
 
 // TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
@@ -470,6 +500,7 @@ TEST(GtfsExample, DISABLED_testRouting) {
 
   auto layout = create_layout();
 
+  // TODO: now the test only fails to find a path
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2022-02-17T05:45"}});
