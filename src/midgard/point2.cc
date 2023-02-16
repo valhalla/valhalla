@@ -151,16 +151,16 @@ template bool PointXY<double>::WithinPolygon(const std::list<PointXY<double>>&) 
 
 namespace std {
 template <typename PrecisionT>
-size_t hash<valhalla::midgard::PointXY<PrecisionT>>::
-operator()(const valhalla::midgard::PointXY<PrecisionT>& p) const {
+size_t hash<valhalla::midgard::PointXY<PrecisionT>>::operator()(
+    const valhalla::midgard::PointXY<PrecisionT>& p) const {
   size_t seed = 0;
   valhalla::midgard::hash_combine(seed, p.first);
   valhalla::midgard::hash_combine(seed, p.second);
   return seed;
 }
 
-template size_t hash<valhalla::midgard::PointXY<float>>::
-operator()(const valhalla::midgard::PointXY<float>&) const;
-template size_t hash<valhalla::midgard::PointXY<double>>::
-operator()(const valhalla::midgard::PointXY<double>&) const;
+template size_t
+hash<valhalla::midgard::PointXY<float>>::operator()(const valhalla::midgard::PointXY<float>&) const;
+template size_t
+hash<valhalla::midgard::PointXY<double>>::operator()(const valhalla::midgard::PointXY<double>&) const;
 } // namespace std

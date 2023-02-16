@@ -4346,7 +4346,9 @@ std::string NarrativeBuilder::FormLength(float distance,
     case Options::miles: {
       return FormUsCustomaryLength(distance, us_customary_lengths);
     }
-    default: { return FormMetricLength(distance, metric_lengths); }
+    default: {
+      return FormMetricLength(distance, metric_lengths);
+    }
   }
 }
 
@@ -4504,7 +4506,9 @@ NarrativeBuilder::FormRelativeTwoDirection(DirectionsLeg_Maneuver_Type type,
     case DirectionsLeg_Maneuver_Type_kDestinationRight: {
       return relative_directions.at(1); // "right"
     }
-    default: { throw valhalla_exception_t{231}; }
+    default: {
+      throw valhalla_exception_t{231};
+    }
   }
 }
 
@@ -4521,7 +4525,9 @@ NarrativeBuilder::FormRelativeThreeDirection(DirectionsLeg_Maneuver_Type type,
     case DirectionsLeg_Maneuver_Type_kStayRight: {
       return relative_directions.at(2); // "right"
     }
-    default: { throw valhalla_exception_t{232}; }
+    default: {
+      throw valhalla_exception_t{232};
+    }
   }
 }
 
