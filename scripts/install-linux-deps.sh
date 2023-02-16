@@ -58,7 +58,7 @@ git clone https://github.com/protocolbuffers/protobuf.git \
   && cd protobuf \
   && git checkout 24487dd104 \
   && git submodule update --init --recursive \
-  && ./autogen \
+  && ./autogen.sh \
   && ./configure \
   && make -j$(nproc) \
   && make install \
