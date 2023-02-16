@@ -69,6 +69,9 @@ constexpr float kMaxLivingStreetPenalty = 500.f;
 constexpr float kMinLivingStreetFactor = 0.8f;
 constexpr float kMaxLivingStreetFactor = 3.f;
 
+// min factor to apply when use lit
+constexpr float kMinLitFactor = 1.f;
+
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
@@ -92,6 +95,7 @@ constexpr float kDefaultUseFerry = 0.5f;         // Default preference of using 
 constexpr float kDefaultUseRailFerry = 0.4f;     // Default preference of using a rail ferry 0-1
 constexpr float kDefaultUseTracks = 0.5f;        // Default preference of using tracks 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
+constexpr float kDefaultUseLit = 0.f;            // Default preference of using lit ways 0-1
 
 // How much to avoid generic service roads.
 constexpr float kDefaultServiceFactor = 1.0f;
@@ -132,8 +136,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
-      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false),
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
+      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
                                                                                       false} {
 }
@@ -354,6 +358,11 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
              2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
 }
 
+void DynamicCost::set_use_lit(float use_lit) {
+  unlit_factor_ =
+      use_lit < 0.5f ? kMinLitFactor + 2.f * use_lit : ((kMinLitFactor - 5.f) + 12.f * use_lit);
+}
+
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* c,
                           const BaseCostingOptionsConfig& cfg) {
@@ -456,6 +465,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   // use_living_streets
   JSON_PBF_RANGED_DEFAULT(co, cfg.use_living_streets_, json, "/use_living_streets",
                           use_living_streets);
+
+  // use_lit
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit);
 
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
