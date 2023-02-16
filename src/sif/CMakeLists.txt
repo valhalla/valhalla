@@ -11,7 +11,6 @@ set(sources
   transitcost.cc
   truckcost.cc
   dynamiccost.cc
-  customcost.cc
   recost.cc)
 
 if (UNIX AND ENABLE_SINGLE_FILES_WERROR)

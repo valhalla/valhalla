@@ -10,7 +10,6 @@
 #include <valhalla/proto_conversions.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/bicyclecost.h>
-#include <valhalla/sif/customcost.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/motorcyclecost.h>
 #include <valhalla/sif/motorscootercost.h>
@@ -46,7 +45,6 @@ public:
     Register(Costing::transit, CreateTransitCost);
     Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
-    Register(Costing::custom, CreateCustomCost);
   }
 
   /**
