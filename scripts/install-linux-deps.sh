@@ -33,7 +33,6 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     liblz4-dev \
     libprime-server${primeserver_version} \
     libprime-server${primeserver_version}-dev \
-    libprotobuf-dev \
     libspatialite-dev \
     libsqlite3-dev \
     libsqlite3-mod-spatialite \
@@ -46,7 +45,6 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     parallel \
     pkg-config \
     prime-server${primeserver_version}-bin \
-    protobuf-compiler \
     python3-all-dev \
     python3-shapely \
     python3-pip \
@@ -54,6 +52,17 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     unzip \
     zlib1g-dev \
   && rm -rf /var/lib/apt/lists/*
+
+# install protobuf from source to get a newer version than in the apt-repos
+git clone https://github.com/protocolbuffers/protobuf.git \
+  && cd protobuf \
+  && git checkout 24487dd104 \
+  && git submodule update --init --recursive \
+  && ./autogen \
+  && ./configure \
+  && make -j$(nproc)
+  && make install
+  && ldconfig
 
 # for boost
 python3 -m pip install --upgrade conan requests
