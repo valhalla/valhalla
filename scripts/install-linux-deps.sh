@@ -60,8 +60,8 @@ git clone https://github.com/protocolbuffers/protobuf.git \
   && git submodule update --init --recursive \
   && ./autogen \
   && ./configure \
-  && make -j$(nproc)
-  && make install
+  && make -j$(nproc) \
+  && make install \
   && ldconfig
 
 # for boost
