@@ -24,7 +24,7 @@
    * ADDED: Support for configuring a universal request timeout [#3966](https://github.com/valhalla/valhalla/pull/3966)
    * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
    * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
-   * ADDED: source & target index when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
+   * ADDED: source & target index in error/warning when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
