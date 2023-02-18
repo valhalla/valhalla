@@ -1169,11 +1169,12 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
 }
 
 // function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code) {
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
   auto message = warning_codes.find(code);
   if (message != warning_codes.end()) {
     auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
+    auto msg = extra.empty() ? message->second : message->second + ": " + extra;
+    warning->set_description(msg);
     warning->set_code(message->first);
   }
 }

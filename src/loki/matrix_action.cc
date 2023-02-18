@@ -26,6 +26,8 @@ void check_distance(Api& request,
   auto& options = *request.mutable_options();
   bool added_warning = false;
   // see if any locations pairs are unreachable or too far apart
+  uint32_t source_idx = 0;
+  uint32_t target_idx = 0;
   for (auto& source : *options.mutable_sources()) {
     for (auto& target : *options.mutable_targets()) {
       // check if distance between latlngs exceed max distance limit
@@ -38,7 +40,8 @@ void check_distance(Api& request,
 
       if (path_distance > matrix_max_distance) {
         throw valhalla_exception_t{154, std::to_string(static_cast<size_t>(matrix_max_distance)) +
-                                            " meters"};
+                                            " meters, origin " + std::to_string(source_idx) +
+                                            " and target " + std::to_string(target_idx)};
       };
 
       // unset the date_time if beyond the limit
@@ -46,12 +49,16 @@ void check_distance(Api& request,
         source.set_date_time("");
         target.set_date_time("");
         if (max_timedep_distance && !added_warning) {
-          add_warning(request, 200);
+          add_warning(request, 200,
+                      std::to_string(max_timedep_distance) + " meters, origin " +
+                          std::to_string(source_idx) + " and target " + std::to_string(target_idx));
           added_warning = true;
         }
       }
     }
+    target_idx++;
   }
+  source_idx++;
 }
 } // namespace
 
