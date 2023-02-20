@@ -57,6 +57,18 @@ TEST(TileHierarchy, Tiles) {
   EXPECT_EQ(ids.size(), 4) << "Should have found 4 results.";
 }
 
+TEST(TileHeirarchy, parent) {
+  GraphId id(1440 * 16 + 16, 3, 0);
+  auto level2 = TileHierarchy::parent(id);
+  EXPECT_EQ(level2, GraphId(id.tileid(), 2, 0));
+  auto level1 = TileHierarchy::parent(level2);
+  EXPECT_EQ(level1, GraphId(360 * 4 + 4, 1, 0));
+  auto level0 = TileHierarchy::parent(level1);
+  EXPECT_EQ(level0, GraphId(90 * 1 + 1, 0, 0));
+  auto invalid = TileHierarchy::parent(level0);
+  EXPECT_EQ(invalid, GraphId(kInvalidGraphId));
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

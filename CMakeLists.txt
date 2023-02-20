@@ -17,7 +17,7 @@ set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)

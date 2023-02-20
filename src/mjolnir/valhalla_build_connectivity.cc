@@ -1,22 +1,21 @@
 #include <cassert>
 #include <cstdint>
+#include <ostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
 #include "baldr/connectivity_map.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
 #include "filesystem.h"
 
 using namespace valhalla::baldr;
-
-#include "baldr/rapidjson_utils.h"
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
-#include <ostream>
 
 using namespace valhalla::midgard;
 

@@ -49,7 +49,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-struct feedObject {
+struct feed_object_t {
   gtfs::Id id;
   std::string feed;
 };
@@ -58,13 +58,13 @@ struct feedObject {
 
 // information referred by tileBuilder saved spatially
 namespace std {
-template <> struct hash<feedObject> {
-  inline size_t operator()(const feedObject& o) const {
+template <> struct hash<feed_object_t> {
+  inline size_t operator()(const feed_object_t& o) const {
     return hash<string>()(o.id + o.feed);
   }
 };
-template <> struct equal_to<feedObject> {
-  inline bool operator()(const feedObject& a, const feedObject& b) const {
+template <> struct equal_to<feed_object_t> {
+  inline bool operator()(const feed_object_t& a, const feed_object_t& b) const {
     return a.id == b.id && a.feed == b.feed;
   }
 };
@@ -72,30 +72,28 @@ template <> struct equal_to<feedObject> {
 
 namespace {
 
-struct tileTransitInfo {
-  GraphId graphId;
-  std::unordered_set<feedObject> tile_stops;
-  std::unordered_set<feedObject> tile_trips;
-  std::unordered_set<feedObject> tile_routes;
-  std::unordered_set<feedObject> tile_services;
-  std::unordered_set<feedObject> tile_agencies;
-  std::unordered_set<feedObject> tile_shapes;
+struct tile_transit_info_t {
+  GraphId graphid;
+  // TODO: unordered multimap-string to a pair of strings that maps from station (parent_id) ->
+  //  platform/egress (child) (Max 2 kinds / many could exists)
+  std::unordered_multimap<feed_object_t, gtfs::Id> station_children;
+  std::unordered_set<feed_object_t> stations;
+  std::unordered_set<feed_object_t> trips;
+  std::unordered_map<feed_object_t, size_t> routes;
+  std::unordered_set<feed_object_t> services;
+  std::unordered_set<feed_object_t> agencies;
+  std::unordered_map<feed_object_t, size_t> shapes;
 
-  bool operator<(const tileTransitInfo& t1) const {
-    // sort tileTransitInfo by size
-    return tile_stops.size() < t1.tile_stops.size();
+  bool operator<(const tile_transit_info_t& t1) const {
+    // the queue needs to be able to sort
+    return stations.size() < t1.stations.size();
   }
 };
 
-struct shapeInfo {
-  gtfs::Id shape_id;
-  float sq_distance;
-};
-
-struct feedCache {
+struct feed_cache_t {
   std::unordered_map<std::string, gtfs::Feed> cache;
 
-  const gtfs::Feed& operator()(const feedObject& feed_object) {
+  const gtfs::Feed& operator()(const feed_object_t& feed_object) {
     auto found = cache.find(feed_object.feed);
     if (found != cache.end()) {
       return found->second;
@@ -130,111 +128,225 @@ struct unique_transit_t {
   std::unordered_map<std::string, size_t> lines;
 };
 
-// Read from GTFS feed, sort data into the tiles they belong to
-std::priority_queue<tileTransitInfo> select_transit_tiles(const boost::property_tree::ptree& pt) {
+std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
+  auto file_name = GraphTile::FileSuffix(tile_id);
+  file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
+  return tile_dir + filesystem::path::preferred_separator + file_name;
+};
+
+// converts service start/end dates of the form (yyyymmdd) into epoch seconds
+uint32_t to_local_epoch_sec(const std::string& dt) {
+  date::local_seconds tp;
+  std::istringstream in{dt};
+  in >> date::parse("%Y%m%d", tp);
+  return static_cast<uint32_t>(tp.time_since_epoch().count());
+};
+
+// Read from GTFS feed, sort data into the unique tiles they belong to
+std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::property_tree::ptree& pt) {
 
   auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
 
   std::set<GraphId> tiles;
-  const auto& tile_level = TileHierarchy::levels().back();
-  std::unordered_map<GraphId, tileTransitInfo> tile_map;
+  const auto& local_tiles = TileHierarchy::levels().back().tiles;
+  std::unordered_map<GraphId, tile_transit_info_t> tile_map;
+
+  // adds a tile_info for the tile_id to tile_map if there is none yet, and returns the tile_info
+  // object
+  auto get_tile_info = [&tile_map, &local_tiles](const gtfs::Stop& stop) -> tile_transit_info_t& {
+    auto graphid = GraphId(local_tiles.TileId(stop.stop_lat, stop.stop_lon),
+                           TileHierarchy::GetTransitLevel().level, 0);
+
+    return tile_map.insert({graphid, tile_transit_info_t{graphid}}).first->second;
+  };
 
   filesystem::recursive_directory_iterator gtfs_feed_itr(path);
   filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     if (filesystem::is_directory(gtfs_feed_itr->path())) {
       auto feed_path = gtfs_feed_itr->path().string();
+      LOG_INFO("Loading " + feed_path);
       gtfs::Feed feed(feed_path);
       feed.read_feed();
-      const auto& stops = feed.get_stops();
 
+      const auto& stops = feed.get_stops();
+      // 1st pass to add all the stations, so we can add stops to its children in a 2nd pass
       for (const auto& stop : stops) {
-        if (stop.stop_id.empty()) {
+        if (stop.location_type == gtfs::StopLocationType::Station) {
+          auto& tile_info = get_tile_info(stop);
+          tile_info.stations.insert({stop.stop_id, feed_path});
+        }
+      }
+
+      // 2nd pass to add the platforms/stops
+      for (const auto& stop : stops) {
+        // TODO: GenericNode & BoardingArea could be useful at some point
+        if (!(stop.location_type == gtfs::StopLocationType::StopOrPlatform) &&
+            !(stop.location_type == gtfs::StopLocationType::EntranceExit)) {
           continue;
         }
-        gtfs::Id currStopId = stop.stop_id;
-        float x = stop.stop_lon;
-        float y = stop.stop_lat;
 
-        // add unique GraphId and stop
-        // might have to typecast these doubles into uint32_t
-        GraphId currId = GraphId(tile_level.tiles.TileId(y, x), 3, 0);
+        auto& tile_info = get_tile_info(stop);
 
-        tileTransitInfo currTile;
-        if (tile_map.find(currId) != tile_map.end()) {
-          currTile = tile_map[currId];
+        // if this station doesn't exist, we need to create it: we use the fact that this entry is
+        // not a station type to fake a station object in write_stops()
+        auto station_in_tile = tile_info.stations.find({stop.parent_station, feed_path});
+        if (station_in_tile != tile_info.stations.end()) {
+          tile_info.station_children.insert({{stop.parent_station, feed_path}, stop.stop_id});
         } else {
-          currTile.graphId = currId;
+          // we don't have the parent station, if
+          // 1) this stop has none or 2) its parent station is in another tile
+          // TODO: need to handle the 2nd case somehow!
+          auto parent_station = feed.get_stop(stop.parent_station);
+          if (parent_station &&
+              tile_info.graphid !=
+                  GraphId(local_tiles.TileId(parent_station->stop_lat, parent_station->stop_lon),
+                          TileHierarchy::GetTransitLevel().level, 0)) {
+            LOG_WARN("Station ID " + stop.parent_station + " is not in stop's " + stop.stop_id +
+                     " tile: " + std::to_string(tile_info.graphid));
+          }
+          tile_info.stations.insert({stop.stop_id, feed_path});
+          tile_info.station_children.insert({{stop.stop_id, feed_path}, stop.stop_id});
         }
-        currTile.tile_stops.insert({currStopId, feed_path});
-        gtfs::StopTimes currStopTimes = feed.get_stop_times_for_stop(currStopId);
 
-        for (const auto& stopTime : currStopTimes) {
-          // add trip, route, agency and service_id from stop_time
-          // could use std::set to not check if it already exists
-
-          // use a set instead to keep track of these points
-          if (stopTime.trip_id.empty() || !feed.get_trip(stopTime.trip_id)) {
+        for (const auto& stopTime : feed.get_stop_times_for_stop(stop.stop_id)) {
+          // add trip, route, agency and service_id from stop_time, it's the only place with that info
+          // TODO: should we throw here?
+          auto trip = feed.get_trip(stopTime.trip_id);
+          auto route = feed.get_route(trip->route_id);
+          if (!trip || !route || trip->service_id.empty()) {
+            LOG_ERROR("Missing trip or route or service_id for trip");
             continue;
           }
-          gtfs::Trip currTrip = *(feed.get_trip(stopTime.trip_id));
-          if (currTrip.service_id.empty() || currTrip.route_id.empty() ||
-              !feed.get_route(currTrip.route_id)) {
-            continue;
-          }
-          currTile.tile_services.insert({currTrip.service_id, feed_path});
-          currTile.tile_trips.insert({currTrip.trip_id, feed_path});
 
-          currTile.tile_shapes.insert({currTrip.shape_id, feed_path});
-          // remember the shape id such that we can access it later
-          gtfs::Route currRoute = *(feed.get_route(currTrip.route_id));
-          currTile.tile_routes.insert({currRoute.route_id, feed_path});
-          currTile.tile_agencies.insert({currRoute.agency_id, feed_path});
-          // add to the queue of tiles
+          tile_info.services.insert({trip->service_id, feed_path});
+          tile_info.trips.insert({trip->trip_id, feed_path});
+          tile_info.shapes.insert({{trip->shape_id, feed_path}, tile_info.shapes.size()});
+          tile_info.routes.insert({{route->route_id, feed_path}, tile_info.routes.size()});
+          tile_info.agencies.insert({route->agency_id, feed_path});
         }
-        tile_map[currId] = currTile;
       }
+
+      LOG_INFO("Done parsing " + std::to_string(tile_map.size()) + " transit tiles for GTFS feed " +
+               feed_path);
     }
   }
-  std::priority_queue<tileTransitInfo> prioritized;
+  std::priority_queue<tile_transit_info_t> queue;
   for (auto it = tile_map.begin(); it != tile_map.end(); it++) {
-    prioritized.push(it->second);
+    queue.push(it->second);
   }
-  return prioritized;
+  return queue;
 }
 
-std::unordered_map<gtfs::Id, GraphId> write_stops(Transit& tile, const tileTransitInfo& tile_info) {
+void setup_stops(Transit& tile,
+                 const gtfs::Stop& tile_stop,
+                 GraphId& node_id,
+                 std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
+                 const std::string& feed_path,
+                 NodeType node_type,
+                 bool isGenerated,
+                 GraphId prev_id = {}) {
+  auto* node = tile.mutable_nodes()->Add();
+  node->set_lon(tile_stop.stop_lon);
+  node->set_lat(tile_stop.stop_lat);
 
-  const auto& tile_stopIds = tile_info.tile_stops;
-  auto node_id = tile_info.graphId;
-  feedCache stopFeeds;
+  // change set_type to match the child / parent type.
+  node->set_type(static_cast<uint32_t>(node_type));
+  node->set_graphid(node_id);
 
-  std::unordered_map<gtfs::Id, GraphId> stop_graphIds;
-  // loop through all stops inside the tile
-  for (const feedObject& feed_stop : tile_stopIds) {
-    const auto& tile_stopId = feed_stop.id;
-    const auto& feed = stopFeeds(feed_stop);
-    auto* node = tile.add_nodes();
-    gtfs::Stop tile_stop = *(feed.get_stop(tile_stopId));
-    node->set_lon(tile_stop.stop_lon);
-    node->set_lat(tile_stop.stop_lat);
-    node->set_type(static_cast<int>(tile_stop.location_type));
-    node->set_graphid(node_id);
-    node_id++;
-    // TODO: look at how prev_graphid() is used in convert transit (and if it is necessary)
-    node->set_name(tile_stop.stop_name);
-    // TODO: Determine how to .set_osm_way_id().
-    // can't be set directly because it used to be processed by transitland but it is not part of GTFS
-    // data
-    node->set_timezone(tile_stop.stop_timezone);
-    // 0 is No Info ; 1 is True ; 2 is False
-    bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
-    node->set_wheelchair_boarding(wheelchair_accessible);
-    // TODO: look at how generated() is used in convert transit (and if it is necessary)
-    node->set_onestop_id(tile_stop.stop_id);
-    stop_graphIds[tile_stopId] = node_id;
+  if (node_type != NodeType::kTransitEgress) {
+    node->set_prev_type_graphid(prev_id.Is_Valid() ? prev_id : node_id - 1);
+  } // in/egresses need accessibility set so that transit connect edges inherit that access
+  else {
+    // TODO: its unclear how to determine unidirectionality (entrance-only vs exit-only) from the gtfs
+    //  spec, perhaps one should use pathways.txt::is_bidirectional to differentiate?
+    node->set_traversability(static_cast<uint32_t>(Traversability::kBoth));
   }
-  return stop_graphIds;
+  node->set_name(tile_stop.stop_name);
+  node->set_timezone(tile_stop.stop_timezone);
+  bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
+  node->set_wheelchair_boarding(wheelchair_accessible);
+  node->set_generated(isGenerated);
+  auto onestop_id = isGenerated ? tile_stop.stop_id + "_" + to_string(node_type) : tile_stop.stop_id;
+  node->set_onestop_id(onestop_id);
+  if (node_type == NodeType::kMultiUseTransitPlatform) {
+    // when this platform is not generated, we can use its actual given id verbatim because thats how
+    // other gtfs entities will refer to it. however when it is generated we must use its parents id
+    // and not the generated one because the references in the feed have no idea that we are doing
+    // the generation of new ideas for non-existant platforms
+    platform_node_ids[{tile_stop.stop_id, feed_path}] = node_id;
+  }
+  node_id++;
+}
+
+/**
+ * Writes all of the nodes of the graph in pbf tile
+ * @param tile       the transit pbf tile to modify
+ * @param tile_info  ephemeral info from the transit feeds which we write into the tile
+ * @return a map of string gtfs id to graph id (so node id) for every platform in the tile
+ *         later on we use these ids to connect platforms that reference each other in the schedule
+ */
+std::unordered_map<feed_object_t, GraphId> write_stops(Transit& tile,
+                                                       const tile_transit_info_t& tile_info) {
+  const auto& tile_children = tile_info.station_children;
+  auto node_id = tile_info.graphid;
+  feed_cache_t feeds_cache;
+
+  // loop through all stations inside the tile, and write PBF nodes in the order that is expected
+  std::unordered_map<feed_object_t, GraphId> platform_node_ids;
+  for (const feed_object_t& station : tile_info.stations) {
+    const auto& feed = feeds_cache(station);
+    auto station_as_stop = feed.get_stop(station.id);
+
+    // Add the Egress
+    int node_count = tile.nodes_size();
+    for (const auto& child : tile_children) {
+      auto child_stop = feed.get_stop(child.second);
+      if (child.first.id == station.id &&
+          child_stop->location_type == gtfs::StopLocationType::EntranceExit) {
+        setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
+                    NodeType::kTransitEgress, false);
+      }
+    }
+    // We require an in/egress so if we didnt add one we need to fake one
+    if (tile.nodes_size() == node_count) {
+      setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
+                  NodeType::kTransitEgress, true);
+    }
+
+    // Add the Station
+    GraphId prev_id(tile.nodes(node_count).graphid());
+    if (station_as_stop->location_type == gtfs::StopLocationType::Station) {
+      // TODO(nils): what happens to the station if it was actually in another tile but still recorded
+      // here (see above)?!
+      setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
+                  NodeType::kTransitStation, false, prev_id);
+    } else {
+      // if there was a platform/egress with no parent station, we add one
+      setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
+                  NodeType::kTransitStation, true, prev_id);
+    }
+
+    // Add the Platform
+    node_count = tile.nodes_size();
+    prev_id = GraphId(tile.nodes().rbegin()->graphid());
+    for (const auto& child : tile_children) {
+      auto child_stop = feed.get_stop(child.second);
+
+      if (child.first.id == station.id &&
+          child_stop->location_type == gtfs::StopLocationType::StopOrPlatform) {
+        setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
+                    NodeType::kMultiUseTransitPlatform, false, prev_id);
+      }
+    }
+    // We require platforms as well so if we didnt add at least 1 we need to fake one now
+    if (tile.nodes_size() == node_count) {
+      LOG_WARN("Generated platform for station " + station_as_stop->stop_id);
+      setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
+                  NodeType::kMultiUseTransitPlatform, true, prev_id);
+    }
+  }
+  return platform_node_ids;
 }
 
 // read feed data per stop, given shape
@@ -266,102 +378,137 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 }
 
 // return dangling stop_pairs, write stop data from feed
-bool write_stop_pairs(Transit& tile,
-                      const tileTransitInfo& tile_info,
-                      std::unordered_map<gtfs::Id, GraphId> stop_graphIds,
-                      unique_transit_t& uniques) {
-
-  const auto& tile_tripIds = tile_info.tile_trips;
-  feedCache tripFeeds;
+bool write_stop_pair(Transit& tile,
+                     const tile_transit_info_t& tile_info,
+                     const feed_object_t& feed_trip,
+                     const gtfs::Feed& feed,
+                     const std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
+                     unique_transit_t& uniques) {
   bool dangles = false;
 
-  for (const feedObject& feed_trip : tile_tripIds) {
-    const auto& tile_tripId = feed_trip.id;
-    const std::string currFeedPath = feed_trip.feed;
-    const auto& feed = tripFeeds(feed_trip);
+  const auto& tile_tripId = feed_trip.id;
+  const std::string currFeedPath = feed_trip.feed;
 
-    gtfs::Trip currTrip = *(feed.get_trip(tile_tripId));
+  auto currTrip = feed.get_trip(tile_tripId);
 
-    // already sorted by stop_sequence
-    auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
+  // already sorted by stop_sequence
+  const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
-    for (int stop_sequence = 0; stop_sequence < static_cast<int>(tile_stopTimes.size()) - 1;
-         stop_sequence++) {
-      gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
-      gtfs::Id origin_stopId = origin_stopTime.stop_id;
-      gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
-      gtfs::Id dest_stopId = dest_stopTime.stop_id;
-      const bool origin_is_in_tile =
-          tile_info.tile_stops.find({origin_stopId, currFeedPath}) != tile_info.tile_stops.end();
-      const bool dest_is_in_tile =
-          tile_info.tile_stops.find({dest_stopId, currFeedPath}) != tile_info.tile_stops.end();
-      // check if this stop_pair (the origin of the pair) is inside the current tile
-      if (origin_is_in_tile || dest_is_in_tile) {
-        auto* stop_pair = tile.add_stop_pairs();
-        stop_pair->set_bikes_allowed(currTrip.bikes_allowed == gtfs::TripAccess::Yes);
-        gtfs::Shape currShape = feed.get_shape(currTrip.shape_id);
+  for (size_t stop_sequence = 0; stop_sequence < tile_stopTimes.size() - 1; stop_sequence++) {
+    gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
+    gtfs::Id origin_stopId = origin_stopTime.stop_id;
+    auto origin_stop = feed.get_stop(origin_stopId);
+    assert(origin_stop);
+    gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
+    gtfs::Id dest_stopId = dest_stopTime.stop_id;
+    auto dest_stop = feed.get_stop(dest_stopId);
+    assert(dest_stop);
+    auto origin_graphid_it = platform_node_ids.find({origin_stopId, currFeedPath});
+    auto dest_graphid_it = platform_node_ids.find({dest_stopId, currFeedPath});
+    const bool origin_is_in_tile = origin_graphid_it != platform_node_ids.end();
+    const bool dest_is_in_tile = dest_graphid_it != platform_node_ids.end();
 
-        if (currTrip.block_id != "") {
-          uniques.lock.lock();
-          stop_pair->set_block_id(stoi(currTrip.block_id));
-          uniques.block_ids.insert({currTrip.block_id, uniques.block_ids.size() + 1});
-          uniques.lock.unlock();
-        }
-        // convert Time to uint32 (note: hh, mm, ss are all uint16s)
-        if (!(origin_is_in_tile && dest_is_in_tile)) {
-          dangles = true;
-        }
-        stop_pair->set_origin_onestop_id(origin_stopId);
-        stop_pair->set_destination_onestop_id(dest_stopId);
-        if (origin_is_in_tile) {
-          stop_pair->set_origin_departure_time(stoi(origin_stopTime.departure_time.get_raw_time()));
-          stop_pair->set_origin_graphid(stop_graphIds[origin_stopId]);
+    // check if this stop_pair (the origin of the pair) is inside the current tile
+    if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
 
-          // call function to set shape
-          float dist =
-              add_stop_pair_shapes(*(feed.get_stop(origin_stopId)), currShape, origin_stopTime);
-          stop_pair->set_origin_dist_traveled(dist);
-        }
+      dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
 
-        if (dest_is_in_tile) {
-          stop_pair->set_destination_arrival_time(stoi(dest_stopTime.arrival_time.get_raw_time()));
-          stop_pair->set_destination_graphid(stop_graphIds[dest_stopId]);
-          // call function to set shape
-          float dist = add_stop_pair_shapes(*(feed.get_stop(dest_stopId)), currShape, dest_stopTime);
-          stop_pair->set_destination_dist_traveled(dist);
-        }
+      auto* stop_pair = tile.add_stop_pairs();
+      stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
+      const gtfs::Shape& currShape = feed.get_shape(currTrip->shape_id);
 
-        stop_pair->set_route_index(stoi(currTrip.route_id));
-        // add information from calendar_dates.txt
-        gtfs::CalendarDates trip_calDates = feed.get_calendar_dates(currTrip.service_id);
-        for (const auto& cal_date_item : trip_calDates) {
-
-          auto d = (cal_date_item.date).get_raw_date();
-          if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
-            stop_pair->add_service_added_dates(stoi(d));
-          else
-            stop_pair->add_service_except_dates(stoi(d));
-        }
-        gtfs::CalendarItem trip_calendar = *(feed.get_calendar(currTrip.service_id));
-
-        stop_pair->set_service_start_date(stoi(trip_calendar.start_date.get_raw_date()));
-        stop_pair->set_service_end_date(stoi(trip_calendar.end_date.get_raw_date()));
-        stop_pair->set_trip_headsign(currTrip.trip_headsign);
-
+      if (currTrip->block_id != "") {
         uniques.lock.lock();
-        uniques.trips.insert({currTrip.trip_id, uniques.trips.size()});
-        stop_pair->set_trip_id(stoi(currTrip.trip_id));
+        auto inserted = uniques.block_ids.insert({currTrip->block_id, uniques.block_ids.size() + 1});
+        stop_pair->set_block_id(inserted.first->second);
         uniques.lock.unlock();
+      }
 
-        stop_pair->set_wheelchair_accessible(currTrip.wheelchair_accessible == gtfs::TripAccess::Yes);
+      bool origin_is_generated = tile_info.station_children.find({origin_stopId, currFeedPath}) !=
+                                 tile_info.station_children.end();
+      auto origin_onestop_id =
+          origin_is_generated ? origin_stopId
+                              : origin_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+      stop_pair->set_origin_onestop_id(origin_onestop_id);
 
-        // get frequency info
-        auto currFrequencies = feed.get_frequencies(currTrip.trip_id);
+      bool dest_is_generated = tile_info.station_children.find({dest_stopId, currFeedPath}) !=
+                               tile_info.station_children.end();
+      auto dest_onestop_id = dest_is_generated
+                                 ? dest_stopId
+                                 : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+      stop_pair->set_destination_onestop_id(dest_onestop_id);
+
+      if (origin_is_in_tile) {
+        // TODO: use timezones here?
+        stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
+        // So we looked up the node graphid by name, the name is either the actual name of the
+        // platform (track 5 or something) OR its just the name of the station (in the case that the
+        // platform is generated). So when its generated we will have gotten back the graphid for
+        // the parent station, not for the platform, and the generated platform in that case will be
+        // the next node after the station (we did this in write_stops)
+        stop_pair->set_origin_graphid(origin_graphid_it->second +
+                                      static_cast<uint64_t>(origin_is_generated));
+
+        // call function to set shape
+        float dist = add_stop_pair_shapes(*origin_stop, currShape, origin_stopTime);
+        stop_pair->set_origin_dist_traveled(dist);
+      }
+
+      if (dest_is_in_tile) {
+        stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
+        // Same as above wrt to named and unnamed (generated) platforms
+        stop_pair->set_destination_graphid(dest_graphid_it->second +
+                                           static_cast<uint64_t>(dest_is_generated));
+        // call function to set shape
+        float dist = add_stop_pair_shapes(*dest_stop, currShape, dest_stopTime);
+        stop_pair->set_destination_dist_traveled(dist);
+      }
+      auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
+
+      stop_pair->set_route_index(route_it->second);
+
+      // add information from calendar_dates.txt
+      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
+      for (const auto& cal_date_item : trip_calDates) {
+        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
+        if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
+          stop_pair->add_service_added_dates(d);
+        else
+          stop_pair->add_service_except_dates(d);
+      }
+
+      // check that a valid calendar exists for the service id
+      auto trip_calendar = feed.get_calendar(currTrip->service_id);
+      if (trip_calendar) {
+        stop_pair->set_service_start_date(
+            to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
+        stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
+      }
+
+      // grab the headsign
+      stop_pair->set_trip_headsign(currTrip->trip_headsign);
+
+      uniques.lock.lock();
+      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size()});
+      stop_pair->set_trip_id(inserted.first->second);
+      uniques.lock.unlock();
+
+      stop_pair->set_wheelchair_accessible(currTrip->wheelchair_accessible == gtfs::TripAccess::Yes);
+
+      // get frequency info
+      if (!feed.get_frequencies(currTrip->trip_id).empty()) {
+        const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
+        if (currFrequencies.size() > 1) {
+          LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
+        }
+
         auto freq_start_time = (currFrequencies[0].start_time.get_raw_time());
-        auto freq_end_time = (currFrequencies[0].start_time.get_raw_time());
+        auto freq_end_time = (currFrequencies[0].end_time.get_raw_time());
         auto freq_time = freq_start_time + freq_end_time;
-        // TODO: Determine what to do if there are multiple frequencies.
-        // currently, choose fist one
+
+        // TODO: check which type of frequency it is, could be exact (meaning headway sections
+        //  between trips) or schedule based (same headway all the time)
+
         if (currFrequencies.size() > 0) {
           stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
           stop_pair->set_frequency_headway_seconds(currFrequencies[0].headway_secs);
@@ -369,62 +516,65 @@ bool write_stop_pairs(Transit& tile,
 
         auto line_id = stop_pair->origin_onestop_id() < stop_pair->destination_onestop_id()
                            ? stop_pair->origin_onestop_id() + stop_pair->destination_onestop_id() +
-                                 currTrip.route_id + freq_time
+                                 currTrip->route_id + freq_time
                            : stop_pair->destination_onestop_id() + stop_pair->origin_onestop_id() +
-                                 currTrip.route_id + freq_time;
+                                 currTrip->route_id + freq_time;
         uniques.lock.lock();
         uniques.lines.insert({line_id, uniques.lines.size()});
         uniques.lock.unlock();
       }
     }
   }
+
   return dangles;
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tileTransitInfo& tile_info) {
+void write_routes(Transit& tile, const tile_transit_info_t& tile_info) {
 
-  const auto& tile_routeIds = tile_info.tile_routes;
-  feedCache feedRoutes;
+  const auto& tile_routeIds = tile_info.routes;
+  feed_cache_t feedRoutes;
 
   // loop through all stops inside the tile
 
-  for (const feedObject& feed_route : tile_routeIds) {
-    const auto& tile_routeId = feed_route.id;
-    const auto& feed = feedRoutes(feed_route);
+  for (const auto& feed_route : tile_routeIds) {
+    const auto& tile_routeId = feed_route.first.id;
+    const auto& feed = feedRoutes(feed_route.first);
     auto* route = tile.add_routes();
-    gtfs::Route currRoute = *(feed.get_route(tile_routeId));
+    auto currRoute = feed.get_route(tile_routeId);
+    assert(currRoute);
 
-    route->set_name(currRoute.route_short_name);
-    route->set_onestop_id(currRoute.route_id);
-    route->set_operated_by_onestop_id(currRoute.agency_id);
-    gtfs::Agency currAgency = *(feed.get_agency(currRoute.agency_id));
-    route->set_operated_by_name(currAgency.agency_name);
-    route->set_operated_by_website(currAgency.agency_url);
+    route->set_name(currRoute->route_short_name);
+    route->set_onestop_id(currRoute->route_id);
+    route->set_operated_by_onestop_id(currRoute->agency_id);
+    auto currAgency = feed.get_agency(currRoute->agency_id);
+    assert(currAgency);
+    route->set_operated_by_name(currAgency->agency_name);
+    route->set_operated_by_website(currAgency->agency_url);
 
-    route->set_route_color(strtol(currRoute.route_color.c_str(), nullptr, 16));
-    route->set_route_desc(currRoute.route_desc);
-    route->set_route_long_name(currRoute.route_long_name);
-    route->set_route_text_color(strtol(currRoute.route_text_color.c_str(), nullptr, 16));
+    route->set_route_color(strtol(currRoute->route_color.c_str(), nullptr, 16));
+    route->set_route_desc(currRoute->route_desc);
+    route->set_route_long_name(currRoute->route_long_name);
+    route->set_route_text_color(strtol(currRoute->route_text_color.c_str(), nullptr, 16));
     route->set_vehicle_type(
-        (valhalla::mjolnir::Transit_VehicleType)(static_cast<int>(currRoute.route_type)));
+        (valhalla::mjolnir::Transit_VehicleType)(static_cast<int>(currRoute->route_type)));
   }
 }
 
 // grab feed data from feed
-void write_shapes(Transit& tile, const tileTransitInfo& tile_info) {
+void write_shapes(Transit& tile, const tile_transit_info_t& tile_info) {
 
-  feedCache feedShapes;
+  feed_cache_t feedShapes;
 
   // loop through all shapes inside the tile
-  for (const feedObject& feed_shape : tile_info.tile_shapes) {
-    const auto& tile_shape = feed_shape.id;
-    const auto& feed = feedShapes(feed_shape);
+  for (const auto& feed_shape : tile_info.shapes) {
+    const auto& tile_shape = feed_shape.first.id;
+    const auto& feed = feedShapes(feed_shape.first);
     auto* shape = tile.add_shapes();
-    gtfs::Shape currShape = feed.get_shape(tile_shape, true);
+    const gtfs::Shape& currShape = feed.get_shape(tile_shape, true);
     // We use currShape[0] because 'Shape' type is a vector of ShapePoints, but they all have the same
     // shape_id
-    shape->set_shape_id(stoi(currShape[0].shape_id));
+    shape->set_shape_id(feed_shape.second);
     std::vector<PointLL> trip_shape;
     for (const auto& shape_pt : currShape) {
       trip_shape.emplace_back(PointLL(shape_pt.shape_pt_lon, shape_pt.shape_pt_lat));
@@ -435,12 +585,10 @@ void write_shapes(Transit& tile, const tileTransitInfo& tile_info) {
 
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
 void ingest_tiles(const boost::property_tree::ptree& pt,
-                  std::priority_queue<tileTransitInfo>& queue,
+                  std::priority_queue<tile_transit_info_t>& queue,
                   unique_transit_t& uniques,
                   std::promise<std::list<GraphId>>& promise) {
-  // write some stuff here like all the
-  // write_stops / stop_pairs / routes / shapes belong here
-  // refer to fetch_tiles when trying to write this f^n
+
   std::list<GraphId> dangling;
   auto now = time(nullptr);
   auto* utc = gmtime(&now);
@@ -459,7 +607,7 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
   auto tz_conn = valhalla::mjolnir::make_spatialite_cache(tz_db_handle);
 
   while (true) {
-    tileTransitInfo current;
+    tile_transit_info_t current;
     uniques.lock.lock();
     if (queue.empty()) {
       uniques.lock.unlock();
@@ -470,27 +618,41 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     uniques.lock.unlock();
 
     Transit tile;
-    auto file_name = GraphTile::FileSuffix(current.graphId, SUFFIX_NON_COMPRESSED);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    filesystem::path transit_tile = pt.get<std::string>("mjolnir.transit_dir") +
-                                    filesystem::path::preferred_separator + file_name;
+    bool dangles = false;
+    uint16_t ext = 0;
 
-    // tiles are wrote out with .pbf or .pbf.n ext
-    const std::string& prefix = transit_tile.string();
-    LOG_INFO("Fetching " + prefix);
+    const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
+    auto current_path = tile_path;
 
-    std::unordered_map<gtfs::Id, GraphId> stop_graphIds = write_stops(tile, current);
-    bool dangles = write_stop_pairs(tile, current, stop_graphIds, uniques);
+    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
     write_routes(tile, current);
     write_shapes(tile, current);
 
-    // list of dangling tiles
-    if (dangles) {
-      dangling.emplace_back(current.graphId);
+    // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
+    feed_cache_t feeds;
+    size_t trip_count = 0;
+    for (const auto& trip : current.trips) {
+      trip_count++;
+      dangles =
+          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
+
+      if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
+        LOG_INFO("Writing " + current_path);
+        write_pbf(tile, current_path);
+        tile.Clear();
+        trip_count = 0;
+        current_path = tile_path + "." + std::to_string(ext++);
+      }
     }
 
+    if (dangles) {
+      dangling.emplace_back(current.graphid);
+    }
+
+    // write the last tile
     if (tile.stop_pairs_size()) {
-      write_pbf(tile, transit_tile.string());
+      LOG_INFO("Writing " + current_path);
+      write_pbf(tile, current_path);
     }
   }
   promise.set_value(dangling);
@@ -502,12 +664,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
   auto grid = TileHierarchy::levels().back().tiles;
-  auto tile_name = [&pt](const GraphId& id) {
-    auto file_name = GraphTile::FileSuffix(id);
-    file_name = file_name.substr(0, file_name.size() - 3) + "pbf";
-    return pt.get<std::string>("mjolnir.transit_dir") + filesystem::path::preferred_separator +
-           file_name;
-  };
+  auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
 
   // for each tile
   while (true) {
@@ -521,14 +678,14 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
     tiles.pop_front();
     lock.unlock();
 
-    auto prefix = tile_name(current);
-    auto file_name = prefix;
+    auto tile_path = get_tile_path(transit_dir, current);
+    auto current_path = tile_path;
     int ext = 0;
 
     do {
 
       // open tile make a hash of missing stop to invalid graphid
-      auto tile = read_pbf(file_name, lock);
+      auto tile = read_pbf(current_path, lock);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
@@ -548,7 +705,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
         if (neighbor_id != current) {
-          auto neighbor_file_name = tile_name(neighbor_id);
+          auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
           auto neighbor = read_pbf(neighbor_file_name, lock);
           for (const auto& node : neighbor.nodes()) {
             auto platform_itr = needed.find(node.onestop_id());
@@ -564,9 +721,9 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
       std::unordered_set<std::string> not_found;
       for (auto& stop_pair : *tile.mutable_stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
-          auto found = needed.find(stop_pair.origin_onestop_id())->second;
-          if (found.Is_Valid()) {
-            stop_pair.set_origin_graphid(found);
+          auto found_stop = needed.find(stop_pair.origin_onestop_id())->second;
+          if (found_stop.Is_Valid()) {
+            stop_pair.set_origin_graphid(found_stop);
           } else if (not_found.find(stop_pair.origin_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.origin_onestop_id());
             not_found.emplace(stop_pair.origin_onestop_id());
@@ -574,9 +731,9 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
         if (!stop_pair.has_destination_graphid()) {
-          auto found = needed.find(stop_pair.destination_onestop_id())->second;
-          if (found.Is_Valid()) {
-            stop_pair.set_destination_graphid(found);
+          auto found_stop = needed.find(stop_pair.destination_onestop_id())->second;
+          if (found_stop.Is_Valid()) {
+            stop_pair.set_destination_graphid(found_stop);
           } else if (not_found.find(stop_pair.destination_onestop_id()) == not_found.cend()) {
             LOG_ERROR("Stop not found: " + stop_pair.destination_onestop_id());
             not_found.emplace(stop_pair.destination_onestop_id());
@@ -584,22 +741,12 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
       }
-      lock.lock();
-#if GOOGLE_PROTOBUF_VERSION >= 3001000
-      auto size = tile.ByteSizeLong();
-#else
-      auto size = tile.ByteSize();
-#endif
-      valhalla::midgard::mem_map<char> buffer;
-      // this is giving an error in the header file
-      buffer.create(file_name, size);
-      tile.SerializeToArray(buffer.get(), size);
-      lock.unlock();
-      LOG_INFO(file_name + " stitched " + std::to_string(found) + " of " +
+      write_pbf(tile, current_path);
+      LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
 
-      file_name = prefix + "." + std::to_string(ext++);
-    } while (filesystem::exists(file_name));
+      current_path = tile_path + "." + std::to_string(ext++);
+    } while (filesystem::exists(current_path));
   }
 }
 } // namespace
@@ -617,7 +764,7 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   LOG_INFO("Tiling GTFS Feeds");
   auto tiles = select_transit_tiles(pt);
 
-  LOG_INFO("Fetching " + std::to_string(tiles.size()) + " transit tiles with " +
+  LOG_INFO("Writing " + std::to_string(tiles.size()) + " transit pbf tiles with " +
            std::to_string(thread_count) + " threads...");
 
   // schedule some work
@@ -672,10 +819,9 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
 
   // figure out where the work should go
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
-  std::mutex lock;
 
-  // stitch_tiles(pt, all_tiles, dangling_tiles, lock);
   // make let them rip
+  std::mutex lock;
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(stitch_tiles, std::cref(pt), std::cref(all_tiles),
                                      std::ref(dangling_tiles), std::ref(lock)));
@@ -693,8 +839,8 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock) {
   lock.lock();
   std::fstream file(file_name, std::ios::in | std::ios::binary);
   if (!file) {
-    throw std::runtime_error("Couldn't load " + file_name);
     lock.unlock();
+    throw std::runtime_error("Couldn't load " + file_name);
   }
   std::string buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   lock.unlock();
@@ -736,16 +882,6 @@ Transit read_pbf(const std::string& file_name) {
   return transit;
 }
 
-// Get PBF transit data given a GraphId / tile
-Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
-  std::string fname = GraphTile::FileSuffix(id);
-  fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + '/' + fname;
-  Transit transit;
-  transit = read_pbf(file_name);
-  return transit;
-}
-
 void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
@@ -776,18 +912,6 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   } else {
     LOG_INFO(transit_tile.string() + " had " + std::to_string(tile.stop_pairs_size()) +
              " stop pairs");
-  }
-}
-
-// Converts a stop's pbf graph Id to a Valhalla graph Id by adding the
-// tile's node count. Returns an Invalid GraphId if the tile is not found
-// in the list of Valhalla tiles
-GraphId GetGraphId(const GraphId& nodeid, const std::unordered_set<GraphId>& all_tiles) {
-  auto t = all_tiles.find(nodeid.Tile_Base());
-  if (t == all_tiles.end()) {
-    return GraphId(); // Invalid graph Id
-  } else {
-    return {nodeid.tileid(), nodeid.level() + 1, nodeid.id()};
   }
 }
 

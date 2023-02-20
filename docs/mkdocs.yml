@@ -1,0 +1,119 @@
+# https://www.mkdocs.org/user-guide/configuration/
+
+theme:
+  name: material
+  logo: images/valhalla.png
+  favicon: images/valhalla.png
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+      primary: black
+      accent: deep purple
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+      primary: white
+      accent: lime
+
+markdown_extensions:
+  - toc:
+      permalink: True
+  - attr_list
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.highlight
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+
+site_name: Valhalla Docs
+repo_url: https://github.com/valhalla/valhalla/
+site_url: https://valhalla.github.io/valhalla
+docs_dir: docs
+nav:
+  - index.md
+  - Introduction for Users: valhalla-intro.md
+  - Build from Source: building.md
+  - Terminology: terminology.md
+  - Public APIs:
+    - API Overview: api/index.md
+    - Protocol Buffers: api/protocol-buffers.md
+    - Turn-by-Turn Route API:
+        - Overview: api/turn-by-turn/overview.md
+        - API Reference: api/turn-by-turn/api-reference.md
+    - Optimized Route API: api/optimized/api-reference.md
+    - Matrix API: api/matrix/api-reference.md
+    - Isochrone API: api/isochrone/api-reference.md
+    - Map Matching API: api/map-matching/api-reference.md
+    - Locate API: api/locate/api-reference.md
+    - Elevation API: api/elevation/api-reference.md
+    - Expansion API: api/expansion/api-reference.md
+    - Status API: api/status/api-reference.md
+  - Internal topics:
+    - "Why tiles?": mjolnir/why_tiles.md
+    - route_overview.md
+    - Decoding shape: decoding.md
+    - Tile structure: tiles.md
+    - Speed information: speeds.md
+    - Dynamic costing: sif/dynamic-costing.md
+    - Elevation influenced bicycle routing: sif/elevation_costing.md
+    - elevation.md
+    - testing.md
+  - Internal components:
+    - Baldr (routing data strutures/algorithms): baldr.md
+    - Loki (associate locations with graph edges): loki.md
+    - Midgard (data structures for geography/geometry): midgard.md
+    - Odin (route narrative/maneuver generation): odin.md
+    - Sif (costing for edges/transitions): sif.md
+    - Skadi (digital elevation model usage): skadi.md
+    - Tyr (service layer): tyr.md
+    - Meili (map matching):
+      - meili.md
+      - Overview: meili/overview.md
+      - Algorithms: meili/algorithms.md
+      - Configuration: meili/configuration.md
+      - meili/implementation_details.md
+      - meili/library_api.md
+      - meili/service_api.md
+    - Mjolnir (routing graph/tile generation):
+      - mjolnir.md
+      - mjolnir/geojson.md
+      - mjolnir/getting_started_guide.md
+      - mjolnir/map_roulette.md
+      - mjolnir/map_roulette_blog.md
+      - mjolnir/tag_parsing.md
+    - Thor (routing algorithms):
+      - thor.md
+      - thor/isochrones.md
+      - thor/path-algorithm.md
+      - thor/simple_traffic.md 
+      - incidents.md
+  - Data sources:
+    - Data sources: mjolnir/data_sources.md
+    - Administrative data: mjolnir/admins.md
+    - Attribution requirements: mjolnir/attribution.md
+  - Development:
+    - Changelog: https://github.com/valhalla/valhalla/blob/master/CHANGELOG.md
+    - releasing.md
