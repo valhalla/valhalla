@@ -28,9 +28,6 @@ inline std::tm* get_gmtime(const std::time_t* time, std::tm* tm) {
 #endif
 }
 
-// Choose something high to avoid format-truncation warnings.
-const size_t TIMESTAMP_SIZE = 400;
-
 // returns formatted to: 'year/mo/dy hr:mn:sc.xxxxxx'
 std::string TimeStamp() {
   // get the time
@@ -41,10 +38,11 @@ std::string TimeStamp() {
   std::chrono::duration<double> fractional_seconds =
       (tp - std::chrono::system_clock::from_time_t(tt)) + std::chrono::seconds(gmt.tm_sec);
   // format the string
-  char buffer[TIMESTAMP_SIZE];
-  snprintf(buffer, TIMESTAMP_SIZE, "%04d/%02d/%02d %02d:%02d:%09.6f", gmt.tm_year + 1900,
+  std::string buffer("year/mo/dy hr:mn:sc.xxxxxx0");
+  snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f", gmt.tm_year + 1900,
            gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min, fractional_seconds.count());
-  return {buffer};
+  buffer.pop_back();
+  return buffer;
 }
 
 // the Log levels we support
