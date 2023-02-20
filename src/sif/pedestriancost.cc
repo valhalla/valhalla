@@ -165,29 +165,42 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
 
 const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
-// Speed adjustment factors based on weighted grade. Comments here show an
-// example of speed changes based on "grade", using a base speed of 5 KPH
-// on flat roads.
-// Tobler seems a bit too "fast" uphill so we use
-// but downhill Tobler seems good
+// Cost adjustments based on variation in speed due to changes in altitude.
+// Based on the pen and paper algorithm specified in DIN 33466. For data
+// see https://gist.github.com/hungerburg/4936fa430552d625a0c8677f46492d1e
+//
+// The recipe from DIN 33466 goes: For every 300m ascent/500m descent, add
+// one hour to bucket H. For every 4km distance, add one hour to bucket D.
+// Now add half of the value in the smaller bucket to the bigger bucket
+// to get the estimated duration. The method is recommeded by the DAV and
+// the OEAV for casual hiking.
+//
+// For comparison, value researched by the Mountain Tactical Institute
 // https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
+// https://mtntactical.com/research/walking-uphill-10-grade-cuts-speed-13not-12/
+//
+// When tweaking for users with better performance, do not change flat-speed,
+// instead up the values of ascent/descent, e.g. 400/800 better matches
+// intermediate hikers. This will bring the uphill values quite close to the
+// ones from the exponential while still keeping downhill speed below flat speed.
+
 constexpr float kGradeBasedSpeedFactor[] = {
-    0.67f, // -10%  - 4.71
-    0.71f, // -8%   - 4.4
-    0.75f, // -6.5% - 4.17
-    0.8f,  // -5%   - 3.96
-    0.85f, // -3%   - 3.69
-    0.90f, // -1.5% - 3.5
-    1.0f,  // 0%    - 3.16
-    1.06f, // 1.5%  - 3.15
-    1.12f, // 3%    - 2.99
-    1.21f, // 5%    - 2.79
-    1.30f, // 6.5%  - 2.65
-    1.37f, // 8%    - 2.51
-    1.49f, // 10%   - 2.34
-    1.59f, // 11.5% - 2.22
-    1.69f, // 13%   - 2.11
-    1.82f  // 15%   - 1.97
+    1.40f,  // -10.0% - 0.67
+    1.32f,  //  -8.0% - 0.73
+    1.26f,  //  -6.5% - 0.77
+    1.20f,  //  -5.0% - 0.82
+    1.12f,  //  -3.0% - 0.89
+    1.06f,  //  -1.5% - 0.94
+    1.00f,  //   0.0% - 1.00
+    1.10f,  //   1.5% - 1.06
+    1.20f,  //   3.0% - 1.13
+    1.33f,  //   5.0% - 1.22
+    1.43f,  //   6.5% - 1.30
+    1.57f,  //   8.0% - 1.38
+    1.83f,  //  10.0% - 1.49
+    2.03f,  //  11.5% - 1.58
+    2.23f,  //  13.0% - 1.68
+    2.50f   //  15.0% - 1.82
 };
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
