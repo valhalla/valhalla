@@ -178,6 +178,9 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // For comparison, value researched by the Mountain Tactical Institute
 // https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
 // https://mtntactical.com/research/walking-uphill-10-grade-cuts-speed-13not-12/
+// The MTNT finding goes: Contrary to some conventional wisdom, instead of
+// halving speed, 10% increase in incline only bring down speed one third.
+// Their approximation "math.exp(-0.04*slope)" below shown as last value per row.
 //
 // When tweaking for users with better performance, do not change flat-speed,
 // instead up the values of ascent/descent, e.g. 400/800 better matches
