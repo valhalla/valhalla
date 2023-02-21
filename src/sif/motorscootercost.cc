@@ -373,6 +373,11 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx) const {
+	auto conditionResult = DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
+	if(conditionResult.is_hit){
+		return conditionResult.c_result;
+	}
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -380,11 +385,9 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile))) {
-    return false;
+      return false;
   }
-
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -397,18 +400,27 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                       const uint64_t current_time,
                                       const uint32_t tz_index,
                                       uint8_t& restriction_idx) const {
+	// Check access, U-turn, and simple turn restriction.
+	// Allow U-turns at dead-end nodes.
+	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+			return false;
+	}
+
+	auto conditionResult = DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
+	if(conditionResult.is_hit){
+		return conditionResult.c_result;
+	}
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if (!IsAccessible(opp_edge) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
-
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+	return true;
 }
 
 Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,

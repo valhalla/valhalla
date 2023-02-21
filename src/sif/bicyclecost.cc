@@ -539,14 +539,27 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
                           const uint64_t current_time,
                           const uint32_t tz_index,
                           uint8_t& restriction_idx) const {
+
+	// Check bicycle access and turn restrictions. Bicycles should obey
+	// vehicular turn restrictions. Allow Uturns at dead ends only.
+	// Skip impassable edges and shortcut edges.
+	if (edge->is_shortcut() ||
+      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
+       pred.mode() == TravelMode::kBicycle) ||
+      IsUserAvoidEdge(edgeid)) {
+			return false;
+	}
+
+	auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
+	if(conditionResult.is_hit){
+		return conditionResult.c_result;
+	}
+
   // Check bicycle access and turn restrictions. Bicycles should obey
   // vehicular turn restrictions. Allow Uturns at dead ends only.
   // Skip impassable edges and shortcut edges.
-  if (!IsAccessible(edge) || edge->is_shortcut() ||
-      (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
-       pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx()))) ||
-      IsUserAvoidEdge(edgeid)) {
+  if (!IsAccessible(edge) ||
+      (!ignore_restrictions_ && (pred.restrictions() & (1 << edge->localedgeidx())))) {
     return false;
   }
 
@@ -561,8 +574,7 @@ bool BicycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (edge->surface() > worst_allowed_surface_) {
     return false;
   }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+	return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -575,24 +587,36 @@ bool BicycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                  const uint64_t current_time,
                                  const uint32_t tz_index,
                                  uint8_t& restriction_idx) const {
-  // Check access, U-turn (allow at dead-ends), and simple turn restriction.
-  // Do not allow transit connection edges.
-  if (!IsAccessible(opp_edge) || opp_edge->is_shortcut() ||
+
+	// Check access, U-turn (allow at dead-ends), and simple turn restriction.
+	// Do not allow transit connection edges.
+	if (opp_edge->is_shortcut() ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
       opp_edge->use() == Use::kPlatformConnection ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kBicycle) ||
-      (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx()))) ||
       IsUserAvoidEdge(opp_edgeid)) {
+			return false;
+	}
+
+	// Prohibit certain roads based on surface type and bicycle type
+	if (edge->surface() > worst_allowed_surface_) {
+			return false;
+	}
+
+	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
+	if(conditionResult.is_hit){
+		return conditionResult.c_result;
+	}
+
+  // Check access, U-turn (allow at dead-ends), and simple turn restriction.
+  // Do not allow transit connection edges.
+  if (!IsAccessible(opp_edge)||
+      (!ignore_restrictions_ && (opp_edge->restrictions() & (1 << pred.opp_local_idx())))) {
     return false;
   }
 
-  // Prohibit certain roads based on surface type and bicycle type
-  if (edge->surface() > worst_allowed_surface_) {
-    return false;
-  }
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+	return true;
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time
