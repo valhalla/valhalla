@@ -65,12 +65,3 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     \
     # python smoke test
     python3 -c "import valhalla,sys; print (sys.version, valhalla)"
-
-# build the config to /etc/valhalla and point the directories to /data/valhalla
-WORKDIR /data/valhalla
-RUN mkdir /etc/valhalla && \
-    valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles \
-      --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
-      --mjolnir-traffic-extract ${PWD}/traffic.tar \
-      --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
-      --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > /etc/valhalla/valhalla.json
