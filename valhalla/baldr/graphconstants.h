@@ -308,6 +308,7 @@ enum class Use : uint8_t {
   kPedestrianCrossing = 32, // cross walks
   kElevator = 33,
   kEscalator = 34,
+  kPlatform = 35,
 
   // Rest/Service Areas
   kRestArea = 30,

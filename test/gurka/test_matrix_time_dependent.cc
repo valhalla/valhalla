@@ -160,8 +160,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
   const auto result =
       gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E", "H"}, "auto", options);
 
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 200);
+  ASSERT_EQ(result.info().warnings().size(), 0);
   for (auto& loc : result.options().sources()) {
     ASSERT_TRUE(loc.date_time().empty());
   }

@@ -8,6 +8,9 @@
    * FIXED: allow \_WIN32_WINNT to be defined by build system [#3933](https://github.com/valhalla/valhalla/issues/3933)
    * FIXED: disconnected stop pairs in gtfs import [#3943](https://github.com/valhalla/valhalla/pull/3943)
    * FIXED: in/egress traversability in gtfs ingestion is now defaulted to kBoth to enable pedestrian access on transit connect edges and through the in/egress node [#3948](https://github.com/valhalla/valhalla/pull/3948)
+   * FIXED: parsing logic needed implicit order of stations/egresses/platforms in the GTFS feeds [#3949](https://github.com/valhalla/valhalla/pull/3949)
+   * FIXED: segfault in TimeDistanceMatrix [#3964](https://github.com/valhalla/valhalla/pull/3949)
+   * FIXED: write multiple PBFs if the protobuf object gets too big [#3954](https://github.com/valhalla/valhalla/pull/3954)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
@@ -18,6 +21,11 @@
    * CHANGED: Build skadi with -Werror [#3935](https://github.com/valhalla/valhalla/pull/3935)
    * ADDED: Connect transit tiles to the graph [#3700](https://github.com/valhalla/valhalla/pull/3700)
    * CHANGED: switch to C++17 master branch of `just_gtfs` [#3947](https://github.com/valhalla/valhalla/pull/3947)
+   * ADDED: Support for configuring a universal request timeout [#3966](https://github.com/valhalla/valhalla/pull/3966)
+   * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
+   * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
+   * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
+   * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
