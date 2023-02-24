@@ -263,6 +263,7 @@ void setup_stops(Transit& tile,
     node->set_traversability(static_cast<uint32_t>(Traversability::kBoth));
   }
   node->set_name(tile_stop.stop_name);
+  // TODO(nils): this is usually empty and should only override an agency's timezone
   node->set_timezone(tile_stop.stop_timezone);
   bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
   node->set_wheelchair_boarding(wheelchair_accessible);
@@ -389,33 +390,50 @@ bool write_stop_pair(Transit& tile,
   const auto& tile_tripId = feed_trip.id;
   const std::string currFeedPath = feed_trip.feed;
 
-  auto currTrip = feed.get_trip(tile_tripId);
+  const auto& currTrip = feed.get_trip(tile_tripId);
+  const auto& currShape = feed.get_shape(currTrip->shape_id);
+  const auto& trip_calendar = feed.get_calendar(currTrip->service_id);
 
   // already sorted by stop_sequence
   const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
 
   for (size_t stop_sequence = 0; stop_sequence < tile_stopTimes.size() - 1; stop_sequence++) {
-    gtfs::StopTime origin_stopTime = tile_stopTimes[stop_sequence];
-    gtfs::Id origin_stopId = origin_stopTime.stop_id;
-    auto origin_stop = feed.get_stop(origin_stopId);
+    const auto& origin_stopTime = tile_stopTimes[stop_sequence];
+    const auto& origin_stopId = origin_stopTime.stop_id;
+    const auto& origin_stop = feed.get_stop(origin_stopId);
     assert(origin_stop);
-    gtfs::StopTime dest_stopTime = tile_stopTimes[stop_sequence + 1];
-    gtfs::Id dest_stopId = dest_stopTime.stop_id;
-    auto dest_stop = feed.get_stop(dest_stopId);
+    const auto& dest_stopTime = tile_stopTimes[stop_sequence + 1];
+    const auto& dest_stopId = dest_stopTime.stop_id;
+    const auto& dest_stop = feed.get_stop(dest_stopId);
     assert(dest_stop);
-    auto origin_graphid_it = platform_node_ids.find({origin_stopId, currFeedPath});
-    auto dest_graphid_it = platform_node_ids.find({dest_stopId, currFeedPath});
+    const auto origin_graphid_it = platform_node_ids.find({origin_stopId, currFeedPath});
+    const auto dest_graphid_it = platform_node_ids.find({dest_stopId, currFeedPath});
     const bool origin_is_in_tile = origin_graphid_it != platform_node_ids.end();
     const bool dest_is_in_tile = dest_graphid_it != platform_node_ids.end();
 
     // check if this stop_pair (the origin of the pair) is inside the current tile
     if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
+      auto* stop_pair = tile.add_stop_pairs();
+
+      auto* service_dow = stop_pair->mutable_service_days_of_week();
+      service_dow->Add(trip_calendar->monday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->tuesday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->wednesday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->thursday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->friday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->saturday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(trip_calendar->sunday == gtfs::CalendarAvailability::Available);
+      // skip if no days are valid
+      if (!trip_calendar || !service_dow->size()) {
+        LOG_WARN("Service ID " + currTrip->service_id + " has no calendar entry, skip.");
+        continue;
+      }
+
+      stop_pair->set_service_start_date(to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
+      stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
 
       dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
-
-      auto* stop_pair = tile.add_stop_pairs();
       stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
-      const gtfs::Shape& currShape = feed.get_shape(currTrip->shape_id);
 
       if (currTrip->block_id != "") {
         uniques.lock.lock();
@@ -475,14 +493,6 @@ bool write_stop_pair(Transit& tile,
           stop_pair->add_service_added_dates(d);
         else
           stop_pair->add_service_except_dates(d);
-      }
-
-      // check that a valid calendar exists for the service id
-      auto trip_calendar = feed.get_calendar(currTrip->service_id);
-      if (trip_calendar) {
-        stop_pair->set_service_start_date(
-            to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
-        stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
       }
 
       // grab the headsign

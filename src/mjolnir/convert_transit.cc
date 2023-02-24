@@ -100,7 +100,8 @@ struct StopEdges {
   std::vector<TransitLine> lines;                     // Set of unique route/stop pairs
 };
 
-// Get scheduled departures for a stop
+// Get scheduled departures for a stop; here we also look at the .pbf.x files,
+// as there can be only stop pairs in the extended ones
 std::unordered_multimap<GraphId, Departure>
 ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const uint32_t tile_date,
@@ -246,7 +247,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
           // end_date
           if (days == 0 && !sp.service_added_dates_size()) {
-            LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) +
+            LOG_ERROR("Feed rejected: " + file +
+                      "!  Start date: " + to_iso_extended_string(start_date) +
                       " End date: " + to_iso_extended_string(end_date));
             continue;
           }

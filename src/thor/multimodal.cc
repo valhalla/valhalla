@@ -367,8 +367,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time, day_, dow_,
-                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
+          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time % kSecondsPerDay,
+                                 day_, dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
 
       if (departure) {
         // Check if there has been a mode change
@@ -390,11 +390,12 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
             // is an "in-station" transfer. Add a small transfer time and
             // call GetNextDeparture again if we cannot make the current
             // departure.
-            // TODO - is there a better way?
+            // TODO - let's get the transfers.txt implemented!
             if (offset_time.local_time + 30 > departure->departure_time()) {
               departure =
-                  tile->GetNextDeparture(directededge->lineid(), offset_time.local_time + 30, day_,
-                                         dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
+                  tile->GetNextDeparture(directededge->lineid(),
+                                         (offset_time.local_time % kSecondsPerDay) + 30, day_, dow_,
+                                         date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
               }
