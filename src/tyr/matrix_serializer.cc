@@ -10,7 +10,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::thor;
 
-namespace osrm_serializers {
+namespace time_dis_serializers {
 
 json::ArrayPtr
 serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const size_t td_count) {
@@ -43,6 +43,9 @@ json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
   }
   return distance;
 }
+} // namespace time_dis_serializers
+
+namespace osrm_serializers {
 
 // Serialize route response in OSRM compatible format.
 json::MapPtr serialize(const Api& request,
@@ -60,11 +63,14 @@ json::MapPtr serialize(const Api& request,
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
   for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-    time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
-                                          options.targets_size()));
-    distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
-                                              options.targets_size(), source_index, 0,
-                                              distance_scale));
+    time->emplace_back(time_dis_serializers::serialize_duration(time_distances,
+                                                                source_index * options.targets_size(),
+                                                                options.targets_size()));
+    distance->emplace_back(
+        time_dis_serializers::serialize_distance(time_distances,
+                                                 source_index * options.targets_size(),
+                                                 options.targets_size(), source_index, 0,
+                                                 distance_scale));
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
@@ -142,13 +148,15 @@ json::MapPtr serialize(const Api& request,
     auto distance = json::array({});
 
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-      time->emplace_back(osrm_serializers::serialize_duration(time_distances,
-                                                              source_index * options.targets_size(),
-                                                              options.targets_size()));
+      time->emplace_back(
+          time_dis_serializers::serialize_duration(time_distances,
+                                                   source_index * options.targets_size(),
+                                                   options.targets_size()));
       distance->emplace_back(
-          osrm_serializers::serialize_distance(time_distances, source_index * options.targets_size(),
-                                               options.targets_size(), source_index, 0,
-                                               distance_scale));
+          time_dis_serializers::serialize_distance(time_distances,
+                                                   source_index * options.targets_size(),
+                                                   options.targets_size(), source_index, 0,
+                                                   distance_scale));
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
