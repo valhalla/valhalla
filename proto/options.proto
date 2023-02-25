@@ -392,6 +392,7 @@ message Options {
   oneof has_range {
     bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
   }
+  // verbose needs to stay oneof, see https://github.com/valhalla/valhalla/pull/3987
   oneof has_verbose {
     bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
   }
