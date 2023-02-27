@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
@@ -426,9 +427,39 @@ TEST(Matrix, default_matrix) {
                                      *request.mutable_options()->mutable_targets(), reader,
                                      mode_costing, sif::TravelMode::kDrive, 400000.0);
 
-  auto ans = serializeMatrix(request, results, 1.0);
+  auto response = serializeMatrix(request, results, 1.0);
 
-  std::cout << ans << std::endl;
+  // std::cout << response << std::endl;
+
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  // if(json.HasMember("targets")){
+  //   std::cout<<"TARGET FOUND"<<std::endl<<std::endl;
+  // }
+
+  // for (auto i = json.MemberBegin(); i != json.MemberEnd(); ++i){
+  //   std::cout << "key: " << i->name.GetString() << std::endl;
+  // }
+
+  // rapidjson::StringBuffer sb;
+  // rapidjson::Writer<rapidjson::StringBuffer> writer(sb);
+
+  // json.Accept(writer);
+
+  // std::cout<<sb.GetString()<<std::endl<<std::endl;
+
+  //   for(const auto& x: json["sources"].GetArray()){
+  //     x.Accept(writer);
+  //     std::cout<<sb.GetString()<<std::endl;
+  //   }
+
+  EXPECT_TRUE(json.HasMember("sources"));
+  EXPECT_TRUE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
 }
 
 const auto test_matrix_verbose_false = R"({
@@ -465,9 +496,17 @@ TEST(Matrix, slim_matrix) {
                                      *request.mutable_options()->mutable_targets(), reader,
                                      mode_costing, sif::TravelMode::kDrive, 400000.0);
 
-  auto ans = serializeMatrix(request, results, 1.0);
+  auto response = serializeMatrix(request, results, 1.0);
 
-  std::cout << ans << std::endl;
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_FALSE(json.HasMember("sources"));
+  EXPECT_FALSE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
 }
 
 int main(int argc, char* argv[]) {
