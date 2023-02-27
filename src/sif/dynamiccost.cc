@@ -168,6 +168,13 @@ DynamicCost::DynamicCost(const Costing& costing,
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
   }
+
+  // set all max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning is true
+  if (costing.options().disable_hierarchy_pruning()) {
+      for (auto& h : hierarchy_limits_) {
+        h.max_up_transitions = kUnlimitedTransitions;
+      }
+  }
 }
 
 DynamicCost::~DynamicCost() {
@@ -391,6 +398,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+
+  // disable hierarchy pruning
+  JSON_PBF_DEFAULT(co, false, json, "/disable_hierarchy_pruning", disable_hierarchy_pruning);
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
