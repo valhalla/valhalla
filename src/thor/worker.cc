@@ -86,6 +86,12 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       continue;
     }
 
+    // assign max_distance_disable_hierarchy_culling
+    if (kv.first == "max_distance_disable_hierarchy_culling") {
+      max_distance_disable_hierarchy_culling = config.get<float>("service_limits." + kv.first);
+      continue;
+    }
+
     max_matrix_distance.emplace(kv.first, config.get<float>("service_limits." + kv.first +
                                                             ".max_matrix_distance"));
   }
