@@ -65,4 +65,4 @@ git clone https://github.com/protocolbuffers/protobuf.git \
   && ldconfig
 
 # for boost
-python3 -m pip install --upgrade conan requests
+python3 -m pip install --upgrade "conan<2.0.0" requests
