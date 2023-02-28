@@ -436,32 +436,26 @@ TEST(Matrix, default_matrix) {
 
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
-  if (json.HasMember("sources_to_targets")) {
+  // contains 4 keys i.e, "distance", "time", "to_index" and "from_index"
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4);
 
-    EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4)
-        << " contains 4 keys i.e, distance, time, to_index and from_index";
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
 
-    EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
-    EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
-    EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
-    EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
 
-    EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
+  // all objects must have equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCapacity(),
+            json["sources_to_targets"].GetArray()[0][1].MemberCapacity());
 
-    ASSERT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCapacity(),
-              json["sources_to_targets"].GetArray()[0][1].MemberCapacity())
-        << " all objects must have equal sizes";
-
-    EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
-                     5176.000)
-        << " value of distance in first object";
-    EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 5561)
-        << " value of time in first object";
-    EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0)
-        << " value of to_index in first object";
-    EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0)
-        << " value of from_index in first object";
-  }
+  // first values in the object
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
+                   5176.000);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 5561);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
 
   EXPECT_TRUE(json.HasMember("sources"));
   EXPECT_TRUE(json.HasMember("targets"));
@@ -511,26 +505,24 @@ TEST(Matrix, slim_matrix) {
 
   EXPECT_TRUE(json.HasMember("sources_to_targets"));
 
-  if (json.HasMember("sources_to_targets")) {
+  // contains two array i.e, "durations" and  "distances"
+  EXPECT_EQ(json["sources_to_targets"].GetObject().MemberCount(), 2);
 
-    EXPECT_EQ(json["sources_to_targets"].GetObject().MemberCount(), 2)
-        << " contains two array i.e, durations and  distances";
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("durations"));
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("distances"));
 
-    EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("durations"));
-    EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("distances"));
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["durations"].IsArray());
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["distances"].IsArray());
 
-    EXPECT_TRUE(json["sources_to_targets"].GetObject()["durations"].IsArray());
-    EXPECT_TRUE(json["sources_to_targets"].GetObject()["distances"].IsArray());
+  // "durations" and "distances" are array of equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetObject()["durations"][0].Size(),
+            json["sources_to_targets"].GetObject()["distances"][0].Size());
 
-    ASSERT_EQ(json["sources_to_targets"].GetObject()["durations"][0].Size(),
-              json["sources_to_targets"].GetObject()["distances"][0].Size())
-        << " durations and distances are array of equal sizes";
+  // first value of "distances" array
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5176.000);
 
-    EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5176.000)
-        << " first value of distances array";
-    EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 5561)
-        << " first value of durations array";
-  }
+  // first value of "durations" array
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 5561);
 
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));
