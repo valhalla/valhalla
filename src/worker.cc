@@ -924,7 +924,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   }
 
   // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
-  if (options.action() == Options_Action_sources_to_targets) {
+  if (options.action() == Options::sources_to_targets) {
     options.set_verbose(
         rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
   } else {
