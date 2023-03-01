@@ -75,7 +75,6 @@ public:
 
 protected:
   // Current walking distance.
-  uint32_t walking_distance_;
   uint32_t max_label_count_; // Max label count to allow
   sif::TravelMode mode_;     // Current travel mode
   uint8_t travel_type_;      // Current travel type

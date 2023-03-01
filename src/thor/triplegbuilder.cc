@@ -920,8 +920,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   }
 
   // Set speed if requested
-  if (controller(kEdgeSpeed)) {
-    // TODO: if this is a transit edge then the costing will throw
+  // TODO: what to do about transit edges?
+  if (controller(kEdgeSpeed) && !(mode == sif::TravelMode::kPublicTransit)) {
     // TODO: could get better precision speed here by calling GraphTile::GetSpeed but we'd need to
     // know whether or not the costing actually cares about the speed of the edge. Perhaps a
     // refactor of costing to have a GetSpeed function which EdgeCost calls internally but which we

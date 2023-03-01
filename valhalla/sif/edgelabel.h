@@ -416,7 +416,8 @@ protected:
   // be part of a bit field make sure kInvalidLabel is changed.
   uint32_t predecessor_;
 
-  // path_distance_: Accumulated path distance in meters.
+  // path_distance_: Accumulated path distance in meters. Can have a different meaning per algorithm,
+  //   e.g. represents walking distance in sif/multimodal.cc
   // restriction_:   Bit mask of edges (by local edge index at the end node)
   //                 that are restricted (simple turn restrictions)
   uint32_t path_distance_ : 25;

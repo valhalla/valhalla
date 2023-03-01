@@ -36,10 +36,12 @@ const int headwaySec = 1800;
 // keep going on rail/bus/ferry edges to the next platform OR
 // if you need to make a transfer you might go down to the station node and back up to an adjacent
 // platform at the same station. we should test all of this stuff eventually
+
+// loki::Search won't find osm <-> transit connection edges, so pad with extra edge on each end
 const std::string ascii_map = R"(
         a**************b
         *              *
-     A--1-----------B--2---C
+ A---B--1-----------C--2---D
                        *   |
                        *   |
                        *   |
@@ -50,13 +52,17 @@ const std::string ascii_map = R"(
                        *   |
                        c***3
                            |
+                           E
+                           |
                            F
     )";
 
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
-const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
-                          {"BC", {{"highway", "residential"}}},
-                          {"CF", {{"highway", "residential"}}}};
+const gurka::ways ways = {
+    {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
+    {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
+    {"EF", {{"highway", "residential"}}},
+};
 
 boost::property_tree::ptree get_config() {
 
@@ -537,7 +543,7 @@ TEST(GtfsExample, MakeTile) {
   }
 
   EXPECT_EQ(transit_nodes, 9);
-  EXPECT_EQ(uses[Use::kRoad], 6);
+  EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
   // edge to the station and the connections are bidirectional (as per usual)
   EXPECT_EQ(uses[Use::kTransitConnection], 12);
@@ -550,17 +556,8 @@ TEST(GtfsExample, MakeTile) {
 // TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
 // THE TRIP TYPE IS A TRANSIT TYPE
 
-TEST(GtfsExample, DISABLED_test_routing) {
+TEST(GtfsExample, test_routing) {
 
-  // TODO: create a simpler map: currently somehow at edge label 8 or so, it connects back to edge
-  // label 3, which has the origin as predecessor.. smth is wrong with some directed edges.. possibly
-  // with kRail not having opposing edges?
-
-  boost::property_tree::ptree pt = get_config();
-
-  auto layout = create_layout();
-
-  // TODO: now the test only fails to find a path
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2023-02-27T05:50"}});

@@ -44,8 +44,8 @@ constexpr uint32_t kInitialEdgeLabelCount = 200000;
 MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
                     config.get<bool>("clear_reserved_memory", false)),
-      walking_distance_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(travel_mode_t::kPedestrian), travel_type_(0) {
+      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kPedestrian),
+      travel_type_(0) {
 }
 
 // Destructor
@@ -287,6 +287,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // any costs along paths and roads. We only do this once
     // so if its from a transition we don't need to do it again
     if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
+      // TODO: this needs to update second_of_week: careful, needs to wrap around the
+      // end of the week and we also need to update the day_ and dow_ mask in that case
+      // maybe make it a TimeInfo function for convenience
       offset_time.local_time += transfer_cost.secs;
     }
 
@@ -346,7 +349,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Reset cost and walking distance
     Cost newcost = pred.cost();
-    walking_distance_ = pred.path_distance();
+    uint32_t walking_distance_ = pred.path_distance();
 
     // If this is a transit edge - get the next departure. Do not check
     // if allowed by costing - assume if you get a transit edge you
@@ -354,7 +357,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t tripid = 0;
     uint32_t blockid = 0;
     uint8_t restriction_idx = -1;
-    const bool is_dest = destinations_.find(edgeid) != destinations_.cend();
+    const auto dest_edge_itr = destinations_.find(edgeid);
+    const bool is_dest = dest_edge_itr != destinations_.cend();
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
       if (!tc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx)) {
@@ -365,10 +369,12 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         continue;
       }
 
+      uint32_t day_seconds = static_cast<uint32_t>(offset_time.second_of_week) % kSecondsPerDay;
+
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time % kSecondsPerDay,
-                                 day_, dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
+          tile->GetNextDeparture(directededge->lineid(), day_seconds, day_, dow_, date_before_tile_,
+                                 tc->wheelchair(), tc->bicycle());
 
       if (departure) {
         // Check if there has been a mode change
@@ -391,11 +397,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - let's get the transfers.txt implemented!
-            if (offset_time.local_time + 30 > departure->departure_time()) {
-              departure =
-                  tile->GetNextDeparture(directededge->lineid(),
-                                         (offset_time.local_time % kSecondsPerDay) + 30, day_, dow_,
-                                         date_before_tile_, tc->wheelchair(), tc->bicycle());
+            if (day_seconds + 30 > departure->departure_time()) {
+              departure = tile->GetNextDeparture(directededge->lineid(), day_seconds + 30, day_, dow_,
+                                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
               }
@@ -416,7 +420,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
         // Change mode and costing to transit. Add edge cost.
         mode_ = travel_mode_t::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
+        newcost += tc->EdgeCost(directededge, departure, day_seconds);
       } else {
         // No matching departures found for this edge
         continue;
@@ -471,9 +475,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // If this edge is a destination, subtract the partial/remainder cost
     // (cost from the dest. location to the end of the edge)
-    auto p = destinations_.find(edgeid);
-    if (p != destinations_.end()) {
-      newcost -= p->second;
+    if (is_dest) {
+      newcost -= dest_edge_itr->second;
     }
 
     // Do not allow transit connection edges if transit is disabled. Also,
@@ -509,7 +512,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // end node of the directed edge.
     float dist = 0.0f;
     float sortcost = newcost.cost;
-    if (p == destinations_.end()) {
+    if (!is_dest) {
       // Get the end node, skip if the end node tile is not found
       auto endtile = tile;
       endtile = graphreader.GetGraphTile(directededge->endnode(), endtile);

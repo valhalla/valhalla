@@ -557,6 +557,8 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info) {
     route->set_name(currRoute->route_short_name);
     route->set_onestop_id(currRoute->route_id);
     route->set_operated_by_onestop_id(currRoute->agency_id);
+
+    // TODO: we already parsed the agencies, get it from the tile_info
     auto currAgency = feed.get_agency(currRoute->agency_id);
     assert(currAgency);
     route->set_operated_by_name(currAgency->agency_name);
@@ -600,21 +602,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
                   std::promise<std::list<GraphId>>& promise) {
 
   std::list<GraphId> dangling;
-  auto now = time(nullptr);
-  auto* utc = gmtime(&now);
-  utc->tm_year += 1900;
-  ++utc->tm_mon; // TODO: use timezone code?
-
-  auto database = pt.get_optional<std::string>("mjolnir.timezone");
-  auto path = pt.get<std::string>("mjolnir.transit_feeds_dir");
-  // Initialize the tz DB (if it exists)
-  sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
-    LOG_WARN("Time zone db not found.  Not saving time zone information from db.");
-  } else if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information from db.");
-  }
-  auto tz_conn = valhalla::mjolnir::make_spatialite_cache(tz_db_handle);
 
   while (true) {
     tile_transit_info_t current;
@@ -643,6 +630,9 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     size_t trip_count = 0;
     for (const auto& trip : current.trips) {
       trip_count++;
+      // TODO: get this agency's timezone to pass it on for default, as mostly it's not available from
+      // the stops
+      //   likely only when a trip crosses timezones
       dangles =
           write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 
