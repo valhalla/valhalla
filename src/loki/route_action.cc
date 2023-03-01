@@ -70,7 +70,7 @@ void loki_worker_t::route(Api& request) {
 
   // Validate distance if disable hiererchy pruning is true
   auto costing_options = options.mutable_costings()->find(options.costing_type());
-  if (costing_options != options.costings().end() && 
+  if (costing_options != options.costings().end() &&
       costing_options->second.options().disable_hierarchy_pruning() &&
       !check_hierarchy_distance(options.locations())) {
     add_warning(request, 205);

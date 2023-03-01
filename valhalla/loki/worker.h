@@ -54,7 +54,8 @@ protected:
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
-  bool check_hierarchy_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
+  bool
+  check_hierarchy_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations);
 
   void init_locate(Api& request);
   void init_route(Api& request);

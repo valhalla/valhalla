@@ -171,9 +171,9 @@ DynamicCost::DynamicCost(const Costing& costing,
 
   // set all max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning is true
   if (costing.options().disable_hierarchy_pruning()) {
-      for (auto& h : hierarchy_limits_) {
-        h.max_up_transitions = kUnlimitedTransitions;
-      }
+    for (auto& h : hierarchy_limits_) {
+      h.max_up_transitions = kUnlimitedTransitions;
+    }
   }
 }
 

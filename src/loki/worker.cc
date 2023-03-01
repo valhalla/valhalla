@@ -185,8 +185,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "max_distance_disable_hierarchy_culling" ||
-        kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
+        kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -247,7 +248,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
   max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
   // assign max_distance_disable_hierarchy_culling
-  max_distance_disable_hierarchy_culling = 
+  max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling");
 
   // signal that the worker started successfully
@@ -267,11 +268,11 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
 }
 
 bool loki_worker_t::check_hierarchy_distance(
-  const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   // Check every location pair
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
-      // Check if arc distance exceeds max distance limit for disabled hierarchy pruning 
+      // Check if arc distance exceeds max distance limit for disabled hierarchy pruning
       auto arc_distance = to_ll(*source).Distance(to_ll(*target));
       if (arc_distance > max_distance_disable_hierarchy_culling) {
         return false;
