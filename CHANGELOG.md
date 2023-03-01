@@ -12,6 +12,7 @@
    * FIXED: segfault in TimeDistanceMatrix [#3964](https://github.com/valhalla/valhalla/pull/3949)
    * FIXED: write multiple PBFs if the protobuf object gets too big [#3954](https://github.com/valhalla/valhalla/pull/3954)
    * FIXED: a few bugs in the GTFS test and multimodal routing, almost working! [#3988](https://github.com/valhalla/valhalla/pull/3988)
+   * FIXED: pin conan version to latest 1.x for now [#3990](https://github.com/valhalla/valhalla/pull/3990)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
