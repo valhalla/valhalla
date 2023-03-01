@@ -28,12 +28,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::loki;
 
-namespace {
-PointLL loc_to_point(const valhalla::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
-}
-}
-
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
@@ -278,11 +272,9 @@ bool loki_worker_t::check_hierarchy_distance(const google::protobuf::RepeatedPtr
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
       // check if arc distance exceeds max distance limit of disabled hierarchy pruning 
-      auto arc_distance = loc_to_point(*source).Distance(loc_to_point(*target));
+      auto arc_distance = to_ll(*source).Distance(to_ll(*target));
       if (arc_distance > max_distance_disable_hierarchy_culling) {
         // add warning
-        // throw valhalla_exception_t{154,
-                                //   std::to_string(static_cast<size_t>(max_distance_disable_hierarchy_culling)) + " meters"};
         return false;
       };
     }
