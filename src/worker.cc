@@ -975,7 +975,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
