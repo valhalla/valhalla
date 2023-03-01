@@ -707,7 +707,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
                                             names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
-        directededge.set_forward(false);
+        directededge.set_forward(true);
 
         // Add to list of directed edges
         tilebuilder_transit.directededges().emplace_back(std::move(directededge));
@@ -755,24 +755,14 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
                                             names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
-        directededge.set_forward(true);
+        directededge.set_forward(false);
 
         // Add to list of directed edges
         tilebuilder_transit.directededges().emplace_back(std::move(directededge));
       }
 
-      // point to first platform
-      // there is always one platform
-      // TODO: why increment here again? it should point to the station already!
-      //   assert that this is the same as station_graphid!
-      bool is_same = station_graphid.id() == index;
+      // advance the index to skip the station and point to the first platform
       index++;
-      // int count = 0;
-      // now add the DE from the station to all the platforms.
-
-      // TODO: this is not true! stations follow the egresses and platforms follow the stations!
-      // the platforms follow the egresses in the pbf.
-      // index is currently set to the first platform for this station.
       while (true) {
 
         if (index == (uint32_t)tile_pbf.nodes_size()) {
@@ -813,7 +803,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
                                             names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
-        directededge.set_forward(false);
+        directededge.set_forward(true);
 
         // Add to list of directed edges
         tilebuilder_transit.directededges().emplace_back(std::move(directededge));
@@ -893,7 +883,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                                         names, tagged_values, pronunciations, 0, added);
 
     directededge.set_edgeinfo_offset(edge_info_offset);
-    directededge.set_forward(true);
+    directededge.set_forward(false);
 
     // Add to list of directed edges
     tilebuilder_transit.directededges().emplace_back(std::move(directededge));
@@ -1130,7 +1120,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
                          lock, stats);
 
     // Form departures and egress/station/platform hierarchy
-    // TODO: take care of the intratile nodes/hierarchy, here we only look at platforms!
+    // TODO: get pathways.txt or some other means to better correlate the intra-station edges
     for (const auto& platform : tile_pbf.nodes()) {
       if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform) {
         continue;
