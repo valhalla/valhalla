@@ -266,15 +266,14 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
   reader->SetInterrupt(interrupt);
 }
 
-bool loki_worker_t::check_hierarchy_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    float max_distance_disable_hierarchy_culling) {
-  // check every location pair
+bool loki_worker_t::check_hierarchy_distance(
+  const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
+  // Check every location pair
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
-      // check if arc distance exceeds max distance limit of disabled hierarchy pruning 
+      // Check if arc distance exceeds max distance limit for disabled hierarchy pruning 
       auto arc_distance = to_ll(*source).Distance(to_ll(*target));
       if (arc_distance > max_distance_disable_hierarchy_culling) {
-        // add warning
         return false;
       };
     }

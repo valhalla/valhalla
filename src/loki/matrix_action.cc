@@ -15,9 +15,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_distance(Api& request,
                     float matrix_max_distance,
@@ -53,6 +50,7 @@ void check_distance(Api& request,
     }
   }
 }
+
 } // namespace
 
 namespace valhalla {
@@ -104,6 +102,15 @@ void loki_worker_t::matrix(Api& request) {
   init_matrix(request);
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing_type());
+
+  // Validate distance if disable hiererchy pruning is true
+  auto costing_options = options.mutable_costings()->find(options.costing_type());
+  if (costing_options != options.costings().end() && 
+      costing_options->second.options().disable_hierarchy_pruning() &&
+      !check_hierarchy_distance(options.locations())) {
+    add_warning(request, 205);
+    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
+  }
 
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
