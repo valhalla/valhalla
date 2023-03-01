@@ -27,6 +27,7 @@
    * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
    * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
    * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
+   * ADDED: An option to Slim down Matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
