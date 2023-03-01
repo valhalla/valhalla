@@ -408,26 +408,9 @@ const auto test_matrix_default = R"({
   })";
 
 TEST(Matrix, default_matrix) {
-  loki_worker_t loki_worker(config);
+  tyr::actor_t actor(config, true);
 
-  Api request;
-  ParseApi(test_matrix_default, Options::sources_to_targets, request);
-
-  loki_worker.matrix(request);
-
-  GraphReader reader(config.get_child("mjolnir"));
-
-  sif::mode_costing_t mode_costing;
-  mode_costing[0] =
-      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
-
-  TimeDistanceMatrix timedist_matrix;
-  std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                     *request.mutable_options()->mutable_targets(), reader,
-                                     mode_costing, sif::TravelMode::kDrive, 400000.0);
-
-  auto response = serializeMatrix(request, results, 1.0);
+  auto response = actor.matrix(test_matrix_default);
 
   rapidjson::Document json;
   json.Parse(response);
@@ -452,8 +435,8 @@ TEST(Matrix, default_matrix) {
 
   // first values in the object
   EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
-                   5176.000);
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 5561);
+                   5.88);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 474);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
 
@@ -477,26 +460,9 @@ const auto test_matrix_verbose_false = R"({
   })";
 
 TEST(Matrix, slim_matrix) {
-  loki_worker_t loki_worker(config);
+  tyr::actor_t actor(config, true);
 
-  Api request;
-  ParseApi(test_matrix_verbose_false, Options::sources_to_targets, request);
-
-  loki_worker.matrix(request);
-
-  GraphReader reader(config.get_child("mjolnir"));
-
-  sif::mode_costing_t mode_costing;
-  mode_costing[0] =
-      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
-
-  TimeDistanceMatrix timedist_matrix;
-  std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                     *request.mutable_options()->mutable_targets(), reader,
-                                     mode_costing, sif::TravelMode::kDrive, 400000.0);
-
-  auto response = serializeMatrix(request, results, 1.0);
+  auto response = actor.matrix(test_matrix_verbose_false);
 
   rapidjson::Document json;
   json.Parse(response);
@@ -519,10 +485,10 @@ TEST(Matrix, slim_matrix) {
             json["sources_to_targets"].GetObject()["distances"][0].Size());
 
   // first value of "distances" array
-  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5176.000);
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
 
   // first value of "durations" array
-  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 5561);
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 474);
 
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));
