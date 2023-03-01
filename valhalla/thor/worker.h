@@ -139,9 +139,6 @@ protected:
   baldr::AttributesController controller;
   Centroid centroid_gen;
 
-  // add max_distance_disable_hierarchy_culling
-  float max_distance_disable_hierarchy_culling;
-
 private:
   std::string service_name() const override {
     return "thor";

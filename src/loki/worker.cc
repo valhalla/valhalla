@@ -185,7 +185,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_distance_disable_hierarchy_culling" ||
+        kv.first == "skadi" || kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -245,6 +246,9 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
   max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
+  // assign max_distance_disable_hierarchy_culling
+  max_distance_disable_hierarchy_culling = 
+      config.get<float>("service_limits.max_distance_disable_hierarchy_culling");
 
   // signal that the worker started successfully
   started();
