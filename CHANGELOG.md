@@ -29,6 +29,7 @@
    * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
    * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
    * ADDED: An option to Slim down Matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
+   * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
