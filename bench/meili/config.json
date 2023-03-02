@@ -80,6 +80,7 @@
     "max_reachability": 100,
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
+    "max_distance_disable_hierarchy_culling": 0,
     "multimodal": {
       "max_distance": 500000,
       "max_locations": 50,
