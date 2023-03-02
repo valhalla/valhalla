@@ -269,7 +269,8 @@
     "max_radius": 200,
     "max_timedep_distance": 500000,
     "max_alternates": 2,
-    "max_exclude_polygons_length": 10000
+    "max_exclude_polygons_length": 10000,
+    "max_distance_disable_hierarchy_culling": 0
   },
   "statsd": {
     "port": 8125,
