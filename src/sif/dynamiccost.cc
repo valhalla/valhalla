@@ -161,19 +161,17 @@ DynamicCost::DynamicCost(const Costing& costing,
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(level));
+    auto h = HierarchyLimits(level);
+    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
+    if (costing.options().disable_hierarchy_pruning()) {
+      h.max_up_transitions = kUnlimitedTransitions;
+    }
+    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
   for (auto& edge : costing.options().exclude_edges()) {
     user_exclude_edges_.insert({GraphId(edge.id()), edge.percent_along()});
-  }
-
-  // set all max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning is true
-  if (costing.options().disable_hierarchy_pruning()) {
-    for (auto& h : hierarchy_limits_) {
-      h.max_up_transitions = kUnlimitedTransitions;
-    }
   }
 }
 
