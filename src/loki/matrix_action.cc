@@ -103,15 +103,6 @@ void loki_worker_t::matrix(Api& request) {
   auto& options = *request.mutable_options();
   const auto& costing_name = Costing_Enum_Name(options.costing_type());
 
-  // Validate distance if disable hiererchy pruning is true
-  auto costing_options = options.mutable_costings()->find(options.costing_type());
-  if (costing_options != options.costings().end() &&
-      costing_options->second.options().disable_hierarchy_pruning() &&
-      !check_hierarchy_distance(options.locations())) {
-    add_warning(request, 205);
-    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
-  }
-
   if (costing_name == "multimodal") {
     throw valhalla_exception_t{140, Options_Action_Enum_Name(options.action())};
   };
@@ -126,6 +117,9 @@ void loki_worker_t::matrix(Api& request) {
   auto max_location_distance = std::numeric_limits<float>::min();
   check_distance(request, max_matrix_distance.find(costing_name)->second, max_location_distance,
                  max_timedep_dist_matrix);
+
+  // check distance for hierarchy pruning
+  check_hierarchy_distance(request, true);
 
   // correlate the various locations to the underlying graph
   auto sources_targets = PathLocation::fromPBF(options.sources());

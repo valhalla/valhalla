@@ -120,14 +120,8 @@ void loki_worker_t::init_trace(Api& request) {
   parse_costing(request);
   auto& options = *request.mutable_options();
 
-  // Validate distance if disable hiererchy pruning is true
-  auto costing_options = options.mutable_costings()->find(options.costing_type());
-  if (costing_options != options.costings().end() &&
-      costing_options->second.options().disable_hierarchy_pruning() &&
-      !check_hierarchy_distance(options.locations())) {
-    add_warning(request, 205);
-    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
-  }
+  // check distance for hierarchy pruning
+  check_hierarchy_distance(request, false);
 
   // we require shape or encoded polyline but we dont know which at first
   if (!options.shape_size()) {

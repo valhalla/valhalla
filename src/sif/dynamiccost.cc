@@ -398,7 +398,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
 
   // disable hierarchy pruning
-  JSON_PBF_DEFAULT(co, false, json, "/disable_hierarchy_pruning", disable_hierarchy_pruning);
+  co->set_disable_hierarchy_pruning(rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);

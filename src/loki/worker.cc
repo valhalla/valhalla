@@ -267,19 +267,41 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
   reader->SetInterrupt(interrupt);
 }
 
-bool loki_worker_t::check_hierarchy_distance(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  // Check every location pair
-  for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
-    for (auto target = source + 1; target != locations.end(); ++target) {
-      // Check if arc distance exceeds max distance limit for disabled hierarchy pruning
-      auto arc_distance = to_ll(*source).Distance(to_ll(*target));
+// Check if total arc distance exceeds the max distance limit for disable_hierarchy_pruning.
+// If true, add a warning and set the disable_hierarchy_pruning costing option to false.
+void loki_worker_t::check_hierarchy_distance(Api& request, bool is_matrix) {
+  auto& options = *request.mutable_options();
+  auto costing_options = options.mutable_costings()->find(options.costing_type());
+  if (!costing_options->second.options().disable_hierarchy_pruning()) {
+    return;
+  }
+
+  bool max_distance_exceeded = false;
+  if (is_matrix) {
+    for (auto& source : *options.mutable_sources()) {
+      for (auto& target : *options.mutable_targets()) {
+        if (to_ll(source).Distance(to_ll(target)) > max_distance_disable_hierarchy_culling) {
+          max_distance_exceeded = true;
+          break;
+        }
+      }
+    }
+  } else {
+    auto locations = options.locations();
+    float arc_distance = 0.0f;
+    for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
+      arc_distance += to_ll(*source).Distance(to_ll(*(source + 1)));
       if (arc_distance > max_distance_disable_hierarchy_culling) {
-        return false;
-      };
+        max_distance_exceeded = true;
+        break;
+      }
     }
   }
-  return true;
+
+  if (max_distance_exceeded) {
+    add_warning(request, 205);
+    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
+  }
 }
 
 #ifdef HAVE_HTTP
