@@ -923,7 +923,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
@@ -975,7 +981,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
