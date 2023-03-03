@@ -96,7 +96,17 @@
 #  include <windows.h>
 #endif  // _WIN32
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include "date/tz_private.h"
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
 #include "date_time_africa.h"
 #include "date_time_antarctica.h"
