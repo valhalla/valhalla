@@ -557,6 +557,16 @@ TEST(GtfsExample, MakeTile) {
 // THE TRIP TYPE IS A TRANSIT TYPE
 
 TEST(GtfsExample, test_routing) {
+  auto layout = create_layout();
+
+  baldr::GraphReader reader(map.config.get_child("mjolnir"));
+  for (const auto& node : layout) {
+    try {
+      auto node_id = gurka::findNode(reader, layout, node.first);
+
+      std::cout << node.first << ", " << std::to_string(node_id) << std::endl;
+    } catch (...) {}
+  }
 
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",

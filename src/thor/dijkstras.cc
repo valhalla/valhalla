@@ -498,7 +498,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
     // Reset cost and walking distance
     Cost newcost = pred.cost();
-    uint32_t walking_distance = pred.path_distance();
+    uint32_t walking_distance = pred.walking_distance();
+    uint32_t path_distance = pred.path_distance();
 
     // If this is a transit edge - get the next departure. Do not check if allowed by
     // costing - assume if you get a transit edge you walked to the transit stop
@@ -633,11 +634,10 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     }
 
     // Make the label in advance, we may not end up using it but we need it for the expansion decision
-    MMEdgeLabel edge_label{pred_idx,      edgeid,           directededge,
-                           newcost,       newcost.cost,     0.0f,
-                           mode_,         walking_distance, tripid,
-                           prior_stop,    blockid,          operator_id,
-                           has_transit,   transition_cost,  restriction_idx,
+    MMEdgeLabel edge_label{pred_idx,         edgeid,      directededge,    newcost,
+                           newcost.cost,     0.0f,        mode_,           path_distance,
+                           walking_distance, tripid,      prior_stop,      blockid,
+                           operator_id,      has_transit, transition_cost, restriction_idx,
                            pred.path_id()};
 
     // See if this is even worth expanding
@@ -656,8 +656,8 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         mmadjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, tripid, blockid, transition_cost,
-                   restriction_idx);
+        lab.Update(pred_idx, newcost, newsortcost, path_distance, walking_distance, tripid, blockid,
+                   transition_cost, restriction_idx);
       }
       continue;
     }
@@ -970,8 +970,8 @@ void Dijkstras::SetOriginLocationsMultiModal(
       int restriction_idx = -1;
       // TODO How about transition cost?
       auto transition_cost = Cost{};
-      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, 0,
-                             GraphId(), 0, 0, false, transition_cost, restriction_idx);
+      MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_, d, d,
+                             0, GraphId(), 0, 0, false, transition_cost, restriction_idx);
 
       // Set the origin flag
       edge_label.set_origin();

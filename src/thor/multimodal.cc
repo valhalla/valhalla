@@ -349,7 +349,8 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Reset cost and walking distance
     Cost newcost = pred.cost();
-    uint32_t walking_distance_ = pred.path_distance();
+    uint32_t walking_distance = pred.walking_distance();
+    uint32_t path_dist = pred.path_distance() + directededge->length();
 
     // If this is a transit edge - get the next departure. Do not check
     // if allowed by costing - assume if you get a transit edge you
@@ -431,25 +432,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (mode_ == travel_mode_t::kPublicTransit) {
         // Disembark from transit and reset walking distance
         mode_ = travel_mode_t::kPedestrian;
-        walking_distance_ = 0;
+        walking_distance = 0;
         mode_change = true;
-      }
-
-      // Regular edge - use the appropriate costing and check if access
-      // is allowed. If mode is pedestrian this will validate walking
-      // distance has not been exceeded.
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, is_dest, pred, tile,
-                                                               edgeid, 0, 0, restriction_idx)) {
-        continue;
-      }
-
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
-      c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
-      newcost += c;
-
-      // Add to walking distance
-      if (mode_ == travel_mode_t::kPedestrian) {
-        walking_distance_ += directededge->length();
+      } else {
+        walking_distance += directededge->length();
 
         // Prevent going from one transit connection directly to another
         // at a transit stop - this is like entering a station and exiting
@@ -459,6 +445,18 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
           continue;
         }
       }
+
+      // Regular edge - use the appropriate costing and check if access is allowed
+      // and the walking distance didn't exceed (can't check in Allowed())
+      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, is_dest, pred, tile,
+                                                               edgeid, 0, 0, restriction_idx) ||
+          walking_distance > max_walking_dist_) {
+        continue;
+      }
+
+      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
+      c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
+      newcost += c;
     }
 
     // Add mode change cost or edge transition cost from the costing model
@@ -488,7 +486,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Test if exceeding maximum transfer walking distance
     if (directededge->use() == Use::kPlatformConnection && pred.prior_stopid().Is_Valid() &&
-        walking_distance_ > max_transfer_distance_) {
+        walking_distance > max_transfer_distance_) {
       continue;
     }
 
@@ -501,7 +499,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance_, tripid, blockid,
+        lab.Update(pred_idx, newcost, newsortcost, path_dist, walking_distance, tripid, blockid,
                    transition_cost, restriction_idx);
       }
       continue;
@@ -527,9 +525,16 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
+
+    std::cout << "Pred: " << std::to_string(pred_idx) << ", Label: " << std::to_string(idx)
+              << ", from " << std::to_string(pred.endnode()) << ", to "
+              << std::to_string(directededge->endnode()) << ", walking "
+              << std::to_string(walking_distance) << ", use" << baldr::to_string(directededge->use())
+              << std::endl;
+
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
-                             walking_distance_, tripid, prior_stop, blockid, operator_id, has_transit,
-                             transition_cost, baldr::kInvalidRestriction);
+                             path_dist, walking_distance, tripid, prior_stop, blockid, operator_id,
+                             has_transit, transition_cost, baldr::kInvalidRestriction);
     adjacencylist_.add(idx);
   }
 
@@ -633,7 +638,7 @@ void MultiModalPathAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, 0,
+    MMEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_, d, d, 0,
                            GraphId(), 0, 0, false, Cost{}, baldr::kInvalidRestriction);
     // Set the origin flag
     edge_label.set_origin();

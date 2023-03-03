@@ -637,7 +637,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
 // Check if access is allowed on the specified edge. Disallow if no
 // access for this pedestrian type, if surface type exceeds (worse than)
-// the minimum allowed surface type, or if max grade is exceeded.
+// the minimum allowed surface type, or if max grade is exceeded
+// (currently disabled bcs of noisy data).
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const bool is_dest,
@@ -652,7 +653,8 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
-      ((pred.path_distance() + edge->length()) > max_distance_)) {
+      // path_distance for multimodal is currently checked inside the algorithm
+      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
     return false;
   }
 

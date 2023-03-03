@@ -73,8 +73,15 @@ public:
    */
   void Clear() override;
 
+  /**
+   * Set the maximum walking distance.
+   */
+  void SetMaxWalkingDist(uint32_t dist) {
+    max_walking_dist_ = dist;
+  };
+
 protected:
-  // Current walking distance.
+  uint32_t max_walking_dist_;
   uint32_t max_label_count_; // Max label count to allow
   sif::TravelMode mode_;     // Current travel mode
   uint8_t travel_type_;      // Current travel type
