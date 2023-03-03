@@ -9,8 +9,10 @@
 #include <regex>
 #include <sstream>
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include <date/date.h>
 #include <date/tz.h>
+#pragma GCC diagnostic pop
 
 #include "baldr/turnlanes.h"
 #include "locales.h"

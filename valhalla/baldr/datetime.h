@@ -16,8 +16,10 @@
 // https://github.com/valhalla/valhalla/pull/3878#issuecomment-1365487437
 #define HAS_UNCAUGHT_EXCEPTIONS 1
 
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #include <date/date.h>
 #include <date/tz.h>
+#pragma GCC diagnostic pop
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/nodeinfo.h>

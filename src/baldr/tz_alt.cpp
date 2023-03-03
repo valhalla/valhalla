@@ -96,7 +96,9 @@
 #  include <windows.h>
 #endif  // _WIN32
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "date/tz_private.h"
+#pragma GCC diagnostic pop
 
 #include "date_time_africa.h"
 #include "date_time_antarctica.h"
