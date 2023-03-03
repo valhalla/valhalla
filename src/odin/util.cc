@@ -9,10 +9,18 @@
 #include <regex>
 #include <sstream>
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <date/date.h>
 #include <date/tz.h>
+#if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
 #include "baldr/turnlanes.h"
 #include "locales.h"
