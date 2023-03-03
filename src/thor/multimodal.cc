@@ -287,10 +287,9 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     // any costs along paths and roads. We only do this once
     // so if its from a transition we don't need to do it again
     if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
-      // TODO: this needs to update second_of_week: careful, needs to wrap around the
-      // end of the week and we also need to update the day_ and dow_ mask in that case
-      // maybe make it a TimeInfo function for convenience
-      offset_time.local_time += transfer_cost.secs;
+      // TODO(nils): What happens if this wraps the day past midnight?
+      // It might have to advance the day_ and dow_?
+      offset_time.forward(transfer_cost.secs, static_cast<int>(nodeinfo->timezone()));
     }
 
     // Update prior stop. TODO - parent/child stop info?
@@ -370,12 +369,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         continue;
       }
 
-      uint32_t day_seconds = static_cast<uint32_t>(offset_time.second_of_week) % kSecondsPerDay;
-
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), day_seconds, day_, dow_, date_before_tile_,
-                                 tc->wheelchair(), tc->bicycle());
+          tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds(), day_, dow_,
+                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
 
       if (departure) {
         // Check if there has been a mode change
@@ -398,9 +395,10 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - let's get the transfers.txt implemented!
-            if (day_seconds + 30 > departure->departure_time()) {
-              departure = tile->GetNextDeparture(directededge->lineid(), day_seconds + 30, day_, dow_,
-                                                 date_before_tile_, tc->wheelchair(), tc->bicycle());
+            if (offset_time.day_seconds() + 30 > departure->departure_time()) {
+              departure =
+                  tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds() + 30, day_,
+                                         dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
               }
@@ -421,7 +419,7 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
         // Change mode and costing to transit. Add edge cost.
         mode_ = travel_mode_t::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, day_seconds);
+        newcost += tc->EdgeCost(directededge, departure, offset_time.day_seconds());
       } else {
         // No matching departures found for this edge
         continue;
