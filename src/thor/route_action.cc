@@ -245,8 +245,11 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
 
   // Have to use multimodal for transit based routing
   if (routetype == "multimodal" || routetype == "transit") {
+    // TODO: no way to see if which one was
+    valhalla::Costing::Type costing;
+    const auto& costing_str = Costing_Enum_Parse(routetype, &costing);
     const auto& max_walking_dist =
-        options.costings().find(Costing::pedestrian)->second.options().max_distance();
+        options.costings().find(costing)->second.options().transit_start_end_max_distance();
     multi_modal_astar.SetMaxWalkingDist(max_walking_dist);
     return &multi_modal_astar;
   }
