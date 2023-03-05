@@ -83,7 +83,6 @@ struct tile_transit_info_t {
   std::unordered_set<feed_object_t> services;
   std::unordered_set<feed_object_t> agencies;
   std::unordered_map<feed_object_t, size_t> shapes;
-  std::unordered_map<gtfs::Id, gtfs::Id> stops_to_agencies;
 
   bool operator<(const tile_transit_info_t& t1) const {
     // the queue needs to be able to sort
@@ -169,6 +168,7 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
       LOG_INFO("Loading " + feed_path);
       gtfs::Feed feed(feed_path);
       feed.read_feed();
+      LOG_INFO("Done loading, now parsing " + feed_path);
 
       const auto& stops = feed.get_stops();
       // 1st pass to add all the stations, so we can add stops to its children in a 2nd pass

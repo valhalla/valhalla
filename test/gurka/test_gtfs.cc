@@ -82,6 +82,9 @@ boost::property_tree::ptree get_config() {
 }
 
 // put the base somewhere in toronto for timezone stuff to work
+// TODO: put it closer to the tile boundary, so the stitcher gets work to do, currently failing
+// be careful though when extending the grid size to make it easier hitting a tile boundary:
+// the max walking distance might be affected, need to account for that in the route call at least
 valhalla::gurka::nodelayout create_layout() {
   int gridsize_metres = 100;
   auto layout =
