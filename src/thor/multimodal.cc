@@ -524,12 +524,6 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
 
-    std::cout << "Pred: " << std::to_string(pred_idx) << ", Label: " << std::to_string(idx)
-              << ", from " << std::to_string(pred.endnode()) << ", to "
-              << std::to_string(directededge->endnode()) << ", walking "
-              << std::to_string(walking_distance) << ", use" << baldr::to_string(directededge->use())
-              << std::endl;
-
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode_,
                              path_dist, walking_distance, tripid, prior_stop, blockid, operator_id,
                              has_transit, transition_cost, baldr::kInvalidRestriction);

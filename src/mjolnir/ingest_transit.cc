@@ -634,9 +634,6 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     size_t trip_count = 0;
     for (const auto& trip : current.trips) {
       trip_count++;
-      // TODO: get this agency's timezone to pass it on for default, as mostly it's not available from
-      // the stops
-      //   likely only when a trip crosses timezones
       dangles =
           write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 

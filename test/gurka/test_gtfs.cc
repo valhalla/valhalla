@@ -562,15 +562,6 @@ TEST(GtfsExample, MakeTile) {
 TEST(GtfsExample, test_routing) {
   auto layout = create_layout();
 
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  for (const auto& node : layout) {
-    try {
-      auto node_id = gurka::findNode(reader, layout, node.first);
-
-      std::cout << node.first << ", " << std::to_string(node_id) << std::endl;
-    } catch (...) {}
-  }
-
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2023-02-27T05:50"}});
