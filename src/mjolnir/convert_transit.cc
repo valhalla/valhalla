@@ -123,6 +123,23 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   filesystem::recursive_directory_iterator transit_file_itr(directory);
   filesystem::recursive_directory_iterator end_file_itr;
 
+  // lambda to add a schedule
+  auto add_schedule = [&schedules, &transit_tilebuilder](uint32_t& schedule_idx, Departure& dep,
+                                                         const uint64_t days, const uint32_t dow,
+                                                         const uint32_t end_day) {
+    TransitSchedule sched(days, dow, end_day);
+    auto sched_itr = schedules.find(sched);
+    if (sched_itr == schedules.end()) {
+      transit_tilebuilder.AddTransitSchedule(sched);
+      // Add to the map and increment the index
+      schedules[sched] = schedule_idx;
+      dep.schedule_index = schedule_idx;
+      schedule_idx++;
+    } else {
+      dep.schedule_index = sched_itr->second;
+    }
+  };
+
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (filesystem::is_regular_file(transit_file_itr->path())) {
@@ -277,19 +294,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             days = add_service_day(days, end_date, tile_date, add_date);
           }
 
-          TransitSchedule sched(days, dow_mask, end_day);
-          auto sched_itr = schedules.find(sched);
-          if (sched_itr == schedules.end()) {
-            // Not in the map - add a new transit schedule to the tile
-            transit_tilebuilder.AddTransitSchedule(sched);
-
-            // Add to the map and increment the index
-            schedules[sched] = schedule_index;
-            dep.schedule_index = schedule_index;
-            schedule_index++;
-          } else {
-            dep.schedule_index = sched_itr->second;
-          }
+          add_schedule(schedule_index, dep, days, dow_mask, end_day);
 
           // is this past midnight?
           // create a departure for before midnight and one after
@@ -313,19 +318,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               dow_mask =
                   ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
 
-              TransitSchedule sched(days, dow_mask, end_day);
-              auto sched_itr = schedules.find(sched);
-              if (sched_itr == schedules.end()) {
-                // Not in the map - add a new transit schedule to the tile
-                transit_tilebuilder.AddTransitSchedule(sched);
-
-                // Add to the map and increment the index
-                schedules[sched] = schedule_index;
-                dep.schedule_index = schedule_index;
-                schedule_index++;
-              } else {
-                dep.schedule_index = sched_itr->second;
-              }
+              add_schedule(schedule_index, dep, days, dow_mask, end_day);
             }
 
             dep.dep_time = origin_seconds;
