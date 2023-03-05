@@ -83,6 +83,7 @@ struct tile_transit_info_t {
   std::unordered_set<feed_object_t> services;
   std::unordered_set<feed_object_t> agencies;
   std::unordered_map<feed_object_t, size_t> shapes;
+  std::unordered_map<gtfs::Id, gtfs::Id> stops_to_agencies;
 
   bool operator<(const tile_transit_info_t& t1) const {
     // the queue needs to be able to sort
@@ -287,8 +288,8 @@ void setup_stops(Transit& tile,
  * @return a map of string gtfs id to graph id (so node id) for every platform in the tile
  *         later on we use these ids to connect platforms that reference each other in the schedule
  */
-std::unordered_map<feed_object_t, GraphId> write_stops(Transit& tile,
-                                                       const tile_transit_info_t& tile_info) {
+std::unordered_map<feed_object_t, GraphId>
+write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
   const auto& tile_children = tile_info.station_children;
   auto node_id = tile_info.graphid;
   feed_cache_t feeds_cache;
@@ -296,7 +297,7 @@ std::unordered_map<feed_object_t, GraphId> write_stops(Transit& tile,
   // loop through all stations inside the tile, and write PBF nodes in the order that is expected
   std::unordered_map<feed_object_t, GraphId> platform_node_ids;
   for (const feed_object_t& station : tile_info.stations) {
-    const auto& feed = feeds_cache(station);
+    const auto& feed = feeds(station);
     auto station_as_stop = feed.get_stop(station.id);
 
     // Add the Egress
@@ -540,27 +541,23 @@ bool write_stop_pair(Transit& tile,
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tile_transit_info_t& tile_info) {
+void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
 
   const auto& tile_routeIds = tile_info.routes;
-  feed_cache_t feedRoutes;
 
   // loop through all stops inside the tile
 
   for (const auto& feed_route : tile_routeIds) {
     const auto& tile_routeId = feed_route.first.id;
-    const auto& feed = feedRoutes(feed_route.first);
+    const auto& feed = feeds(feed_route.first);
     auto* route = tile.add_routes();
     auto currRoute = feed.get_route(tile_routeId);
-    assert(currRoute);
 
     route->set_name(currRoute->route_short_name);
     route->set_onestop_id(currRoute->route_id);
     route->set_operated_by_onestop_id(currRoute->agency_id);
 
-    // TODO: we already parsed the agencies, get it from the tile_info
     auto currAgency = feed.get_agency(currRoute->agency_id);
-    assert(currAgency);
     route->set_operated_by_name(currAgency->agency_name);
     route->set_operated_by_website(currAgency->agency_url);
 
@@ -574,14 +571,12 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info) {
 }
 
 // grab feed data from feed
-void write_shapes(Transit& tile, const tile_transit_info_t& tile_info) {
-
-  feed_cache_t feedShapes;
+void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
 
   // loop through all shapes inside the tile
   for (const auto& feed_shape : tile_info.shapes) {
     const auto& tile_shape = feed_shape.first.id;
-    const auto& feed = feedShapes(feed_shape.first);
+    const auto& feed = feeds(feed_shape.first);
     auto* shape = tile.add_shapes();
     const gtfs::Shape& currShape = feed.get_shape(tile_shape, true);
     // We use currShape[0] because 'Shape' type is a vector of ShapePoints, but they all have the same
@@ -621,12 +616,17 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
     const auto tile_path = get_tile_path(pt.get<std::string>("mjolnir.transit_dir"), current.graphid);
     auto current_path = tile_path;
 
-    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current);
-    write_routes(tile, current);
-    write_shapes(tile, current);
+    // collect all the feeds in this tile
+    feed_cache_t feeds;
+    for (const auto& route : current.routes) {
+      feeds(route.first);
+    }
+
+    write_routes(tile, current, feeds);
+    write_shapes(tile, current, feeds);
+    std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current, feeds);
 
     // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
-    feed_cache_t feeds;
     size_t trip_count = 0;
     for (const auto& trip : current.trips) {
       trip_count++;

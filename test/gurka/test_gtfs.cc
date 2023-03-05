@@ -126,23 +126,21 @@ TEST(GtfsExample, WriteGtfs) {
     .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
     .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
-    .location_type = gtfs::StopLocationType::EntranceExit, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .location_type = gtfs::StopLocationType::EntranceExit, .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_egress);
   struct gtfs::Stop first_stop_platform {
     .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
     .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
-    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_platform);
   struct gtfs::Stop first_stop_station {
     .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
     .parent_station = "", .location_type = gtfs::StopLocationType::Station,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+    .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_station);
 
@@ -516,6 +514,8 @@ TEST(GtfsExample, MakeTile) {
         coordinates_found = coordinates_found || node_ll.ApproximatelyEqual(station_coord);
       }
       EXPECT_TRUE(coordinates_found);
+      // some GTFS stops don't define a timezone, but we fall back to our own
+      EXPECT_EQ(node.timezone(), 145); // America/Toronto
     }
 
     std::unordered_set<std::string> stopIds = {stopOneID, stopTwoID, stopThreeID};
