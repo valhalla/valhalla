@@ -242,6 +242,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
+          // TODO(nils): why? it's still valid for this one day right? So rather find out that dow?
           if (stop_pair.service_start_date() == stop_pair.service_end_date()) {
             dow_mask = kDOWNone;
           }
@@ -328,9 +329,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             }
 
             dep.dep_time = origin_seconds;
-            dep.frequency_end_time = 0;
-            dep.frequency = 0;
-            if (stop_pair.has_frequency_end_time() && stop_pair.has_frequency_headway_seconds()) {
+            // if there used to be a frequency, there'll be one now
+            if (dep.frequency_end_time && dep.frequency) {
               uint32_t frequency_end_time = stop_pair.frequency_end_time();
               // adjust the end time if it is after midnight.
               while (frequency_end_time >= kSecondsPerDay) {
@@ -1154,6 +1154,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
           lineid = m->second;
         }
 
+        // we prefer the frequency-based schedule if it was set
         try {
           if (dep.frequency == 0) {
             // Form transit departures -- fixed departure time
@@ -1164,6 +1165,11 @@ void build_tiles(const boost::property_tree::ptree& pt,
           } else {
 
             // Form transit departures -- frequency departure time
+            // TODO(nils): this doesn't differentiate between frequencies.txt entries with
+            // exact_times true/false; it's a bit random right now what departure_time represents:
+            // it's the time set by the stop_time's departure_time which might just be an example,
+            // but not represent an actual departure_time. can't we just take the service's start_time
+            // if it's exact_times=true or start_time + 0.5 * headway for exact_times=false?
             TransitDeparture td(lineid, dep.trip, dep.route, dep.blockid, dep.headsign_offset,
                                 dep.dep_time, dep.frequency_end_time, dep.frequency, dep.elapsed_time,
                                 dep.schedule_index, dep.wheelchair_accessible,

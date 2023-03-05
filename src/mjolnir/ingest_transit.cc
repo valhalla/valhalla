@@ -371,6 +371,8 @@ float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
 
     PointLL minPoint = project(originPoint, destPoint);
     float sq_distance = project.approx.DistanceSquared(minPoint);
+    // TODO(nils): this doesn't seem right: if there's not shape_dist_traveled set,
+    // we seem to always return the full length of the shape for every stop!
     if (sq_distance < min_sq_distance) {
       min_sq_distance = dist_traveled + originPoint.Distance(minPoint);
     }
@@ -458,7 +460,6 @@ bool write_stop_pair(Transit& tile,
       stop_pair->set_destination_onestop_id(dest_onestop_id);
 
       if (origin_is_in_tile) {
-        // TODO: use timezones here?
         stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
         // So we looked up the node graphid by name, the name is either the actual name of the
         // platform (track 5 or something) OR its just the name of the station (in the case that the
@@ -508,6 +509,7 @@ bool write_stop_pair(Transit& tile,
 
       // get frequency info
       if (!feed.get_frequencies(currTrip->trip_id).empty()) {
+        // TODO(nils): is this correct? a trip has a unique frequency?
         const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
         if (currFrequencies.size() > 1) {
           LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
@@ -517,8 +519,11 @@ bool write_stop_pair(Transit& tile,
         auto freq_end_time = (currFrequencies[0].end_time.get_raw_time());
         auto freq_time = freq_start_time + freq_end_time;
 
-        // TODO: check which type of frequency it is, could be exact (meaning headway sections
-        //  between trips) or schedule based (same headway all the time)
+        // TODO: check which type of frequency it is, could be exact_time = true (meaning schedule
+        // starts exactly
+        //  at start_time and ends before end_time, one headway after the other) or schedule based
+        //  (start_time is approximate, i.e. we don't know when the departure really is, only how long
+        //  it'll take)
 
         if (currFrequencies.size() > 0) {
           stop_pair->set_frequency_end_time(DateTime::seconds_from_midnight(freq_end_time));
