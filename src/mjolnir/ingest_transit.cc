@@ -264,7 +264,6 @@ void setup_stops(Transit& tile,
     node->set_traversability(static_cast<uint32_t>(Traversability::kBoth));
   }
   node->set_name(tile_stop.stop_name);
-  // TODO(nils): this is usually empty and should only override an agency's timezone
   node->set_timezone(tile_stop.stop_timezone);
   bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
   node->set_wheelchair_boarding(wheelchair_accessible);
