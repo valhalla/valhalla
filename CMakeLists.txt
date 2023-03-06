@@ -157,6 +157,8 @@ if (NOT Boost_FOUND)
 endif()
 find_package(Boost ${boost_VERSION} REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
