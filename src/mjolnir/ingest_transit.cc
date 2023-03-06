@@ -742,8 +742,9 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
       }
-      // TODO: lock for now!
+      lock.lock();
       write_pbf(tile, current_path);
+      lock.unlock();
       LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");
 
