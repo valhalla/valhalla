@@ -269,7 +269,7 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
 
 // Check if total arc distance exceeds the max distance limit for disable_hierarchy_pruning.
 // If true, add a warning and set the disable_hierarchy_pruning costing option to false.
-void loki_worker_t::check_hierarchy_distance(Api& request, bool is_matrix) {
+void loki_worker_t::check_hierarchy_distance(Api& request, bool pair_wise) {
   auto& options = *request.mutable_options();
   auto costing_options = options.mutable_costings()->find(options.costing_type());
   if (!costing_options->second.options().disable_hierarchy_pruning()) {
@@ -277,7 +277,7 @@ void loki_worker_t::check_hierarchy_distance(Api& request, bool is_matrix) {
   }
 
   bool max_distance_exceeded = false;
-  if (is_matrix) {
+  if (pair_wise) {
     for (auto& source : *options.mutable_sources()) {
       for (auto& target : *options.mutable_targets()) {
         if (to_ll(source).Distance(to_ll(target)) > max_distance_disable_hierarchy_culling) {
