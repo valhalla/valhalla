@@ -197,7 +197,7 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
         } else {
           // we don't have the parent station, if
           // 1) this stop has none or 2) its parent station is in another tile
-          // TODO: need to handle the 2nd case somehow!
+          // TODO: need to handle the 2nd case somehow! Fow now, log it as ERROR
           auto parent_station = feed.get_stop(stop.parent_station);
           if (parent_station &&
               tile_info.graphid !=
@@ -447,15 +447,15 @@ bool write_stop_pair(Transit& tile,
       bool origin_is_generated = tile_info.station_children.find({origin_stopId, currFeedPath}) !=
                                  tile_info.station_children.end();
       auto origin_onestop_id =
-          origin_is_generated ? origin_stopId
-                              : origin_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+          origin_is_generated ? origin_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform)
+                              : origin_stopId;
       stop_pair->set_origin_onestop_id(origin_onestop_id);
 
       bool dest_is_generated = tile_info.station_children.find({dest_stopId, currFeedPath}) !=
                                tile_info.station_children.end();
       auto dest_onestop_id = dest_is_generated
-                                 ? dest_stopId
-                                 : dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform);
+                                 ? dest_stopId + "_" + to_string(NodeType::kMultiUseTransitPlatform)
+                                 : dest_stopId;
       stop_pair->set_destination_onestop_id(dest_onestop_id);
 
       if (origin_is_in_tile) {
@@ -664,7 +664,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
                   const std::unordered_set<GraphId>& all_tiles,
                   std::list<GraphId>& tiles,
                   std::mutex& lock) {
-  auto grid = TileHierarchy::levels().back().tiles;
+  auto grid = TileHierarchy::GetTransitLevel().tiles;
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
 
   // for each tile
@@ -700,20 +700,20 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
       // do while we have more to find and arent sick of searching
       std::set<GraphId, dist_sort_t> unchecked(all_tiles.cbegin(), all_tiles.cend(),
                                                dist_sort_t(current, grid));
+      // the first one will have to be the same tile as current, so remove it
+      unchecked.erase(unchecked.begin());
       size_t found = 0;
       while (found < needed.size() && unchecked.size()) {
         // crack it open to see if it has what we want
         auto neighbor_id = *unchecked.cbegin();
         unchecked.erase(unchecked.begin());
-        if (neighbor_id != current) {
-          auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
-          auto neighbor = read_pbf(neighbor_file_name, lock);
-          for (const auto& node : neighbor.nodes()) {
-            auto platform_itr = needed.find(node.onestop_id());
-            if (platform_itr != needed.cend()) {
-              platform_itr->second.value = node.graphid();
-              ++found;
-            }
+        auto neighbor_file_name = get_tile_path(transit_dir, neighbor_id);
+        auto neighbor = read_pbf(neighbor_file_name, lock);
+        for (const auto& node : neighbor.nodes()) {
+          auto platform_itr = needed.find(node.onestop_id());
+          if (platform_itr != needed.cend()) {
+            platform_itr->second.value = node.graphid();
+            ++found;
           }
         }
       }
@@ -742,6 +742,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
           // else{ TODO: we could delete this stop pair }
         }
       }
+      // TODO: lock for now!
       write_pbf(tile, current_path);
       LOG_INFO(current_path + " stitched " + std::to_string(found) + " of " +
                std::to_string(needed.size()) + " stops");

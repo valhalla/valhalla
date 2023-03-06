@@ -38,23 +38,25 @@ const int headwaySec = 1800;
 // platform at the same station. we should test all of this stuff eventually
 
 // loki::Search won't find osm <-> transit connection edges, so pad with extra edge on each end
+
+// the map should be big enough so that there's one stop_pair with stops in different tiles.
 const std::string ascii_map = R"(
-        a**************b
-        *              *
- A---B--1-----------C--2---D
-                       *   |
-                       *   |
-                       *   |
-                       *   |
-                       *   |
-                       *   |
-                       *   |
-                       *   |
-                       c***3
-                           |
-                           E
-                           |
-                           F
+        a******************************b
+        *                              *
+ A---B--1---------------------------C--2---D
+                                       *   |
+                                       *   |
+                                       *   |
+                                       *   |
+                                       *   |
+                                       *   |
+                                       *   |
+                                       *   |
+                                       c***3
+                                           |
+                                           E
+                                           |
+                                           F
     )";
 
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
@@ -67,28 +69,23 @@ const gurka::ways ways = {
 boost::property_tree::ptree get_config() {
 
   return test::make_config(VALHALLA_BUILD_DIR "test/data/transit_tests",
-                           {
-                               {"mjolnir.transit_feeds_dir",
-                                VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
-                               {"mjolnir.transit_dir",
-                                VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
-                               {"mjolnir.transit_pbf_limit", "1"},
-                               {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
-                               {"mjolnir.tile_dir",
-                                VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
-                               // TODO: fix hierarchy builder transit support
-                               {"mjolnir.hierarchy", "false"},
-                           });
+                           {{"mjolnir.transit_feeds_dir",
+                             VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
+                            {"mjolnir.transit_dir",
+                             VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
+                            {"mjolnir.transit_pbf_limit",
+                             "1"}, // so we create more than one file per tile
+                            {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                            {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
+                            // TODO: fix hierarchy builder transit support
+                            {"mjolnir.hierarchy", "false"},
+                            {"service_limits.pedestrian.max_transit_walking_distance", "100000"}});
 }
 
-// put the base somewhere in toronto for timezone stuff to work
-// TODO: put it closer to the tile boundary, so the stitcher gets work to do, currently failing
-// be careful though when extending the grid size to make it easier hitting a tile boundary:
-// the max walking distance might be affected, need to account for that in the route call at least
+// put the base in toronto for timezone stuff to work and put it on the edge of a level 2/3 tile
 valhalla::gurka::nodelayout create_layout() {
-  int gridsize_metres = 100;
-  auto layout =
-      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-79.401798, 43.679187});
+  int gridsize_metres = 1000;
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-79.249, 43.749});
 
   return layout;
 }
@@ -345,7 +342,6 @@ TEST(GtfsExample, MakeProto) {
   auto serviceEndDate = baldr::DateTime::get_formatted_date("2024-01-31").time_since_epoch().count();
   auto addedDate = baldr::DateTime::get_formatted_date("2023-02-02").time_since_epoch().count();
   auto removedDate = baldr::DateTime::get_formatted_date("2023-02-03").time_since_epoch().count();
-  const int headwaySec = 1800;
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
@@ -360,6 +356,14 @@ TEST(GtfsExample, MakeProto) {
 
   std::unordered_set<std::string> stops;
   std::unordered_set<std::string> stop_pairs;
+  std::unordered_set<std::string> routes;
+  std::unordered_set<uint32_t> service_start_dates;
+  std::unordered_set<uint32_t> service_end_dates;
+  std::unordered_set<uint32_t> service_added_dates;
+  std::unordered_set<uint32_t> service_except_dates;
+  std::unordered_set<uint32_t> headway_seconds;
+
+  size_t shapes = 0;
   // for each pbf.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
     if (filesystem::is_regular_file(transit_file_itr->path())) {
@@ -370,7 +374,6 @@ TEST(GtfsExample, MakeProto) {
         // we produce 2 pbf tiles on purpose, where the last one (xx.pbf.0) only has a bunch of stop
         // pairs
         EXPECT_NE(transit.stop_pairs_size(), 0);
-        continue;
       }
 
       // make sure we are looking at a pbf file
@@ -378,57 +381,85 @@ TEST(GtfsExample, MakeProto) {
       // make sure that the data written in the previous test is readable through pbfs
       // shape info
       // becomes 1 shape from 4 shape_points last test
-      EXPECT_EQ(transit.shapes_size(), 1);
+
+      shapes += transit.shapes().size();
       // stop(node) info
-      for (int i = 0; i < transit.nodes_size(); i++) {
-        const auto& tn = transit.nodes(i);
-        stops.insert(tn.onestop_id());
-        if (tn.type() == static_cast<uint32_t>(NodeType::kTransitEgress)) {
-          EXPECT_NE(tn.traversability(), static_cast<uint32_t>(Traversability::kNone));
+      for (const auto& node : transit.nodes()) {
+        stops.insert(node.onestop_id());
+        if (node.type() == static_cast<uint32_t>(NodeType::kTransitEgress)) {
+          EXPECT_NE(node.traversability(), static_cast<uint32_t>(Traversability::kNone));
         }
       }
 
       // routes info
-      EXPECT_EQ(transit.routes_size(), 1);
-      EXPECT_EQ(transit.routes(0).onestop_id(), routeID);
+      for (const auto route : transit.routes()) {
+        routes.insert(route.onestop_id());
+      }
 
       // stop_pair info
       for (int i = 0; i < transit.stop_pairs_size(); i++) {
         EXPECT_TRUE(transit.stop_pairs(i).has_origin_graphid());
         EXPECT_TRUE(transit.stop_pairs(i).has_destination_graphid());
-        stop_pairs.insert(transit.stop_pairs(i).origin_onestop_id());
-        stop_pairs.insert(transit.stop_pairs(i).destination_onestop_id());
       }
 
       // calendar information
-      EXPECT_EQ(transit.stop_pairs(0).service_start_date(), serviceStartDate);
-      EXPECT_EQ(transit.stop_pairs(0).service_end_date(), serviceEndDate);
-      //   .start_date = Date(2022, 1, 31), .end_date = Date(2023, 1, 31) is written to gtfs
-
-      // calendar date information
-      EXPECT_EQ(transit.stop_pairs(0).service_except_dates_size(), 1);
-      EXPECT_EQ(transit.stop_pairs(0).service_except_dates(0), removedDate);
-      EXPECT_EQ(transit.stop_pairs(0).service_added_dates(0), addedDate);
-
-      // frequency information
-      EXPECT_EQ(transit.stop_pairs(0).frequency_headway_seconds(), headwaySec);
-      EXPECT_EQ(transit.stop_pairs(1).frequency_headway_seconds(), headwaySec);
+      for (const auto& stop_pair : transit.stop_pairs()) {
+        EXPECT_TRUE(stop_pair.has_origin_graphid());
+        EXPECT_TRUE(stop_pair.has_destination_graphid());
+        stop_pairs.insert(stop_pair.origin_onestop_id());
+        stop_pairs.insert(stop_pair.destination_onestop_id());
+        service_start_dates.insert(stop_pair.service_start_date());
+        service_end_dates.insert(stop_pair.service_end_date());
+        headway_seconds.insert(stop_pair.frequency_headway_seconds());
+        for (const auto& added_date : stop_pair.service_added_dates()) {
+          service_added_dates.insert(added_date);
+        }
+        for (const auto& except_date : stop_pair.service_except_dates()) {
+          service_except_dates.insert(except_date);
+        }
+      }
     }
   }
-  EXPECT_EQ(stops.size(), 9);
+
+  EXPECT_EQ(shapes, 2);
+
+  // routes
+  EXPECT_TRUE(routes.find(routeID) != routes.end());
+  EXPECT_EQ(routes.size(), 1);
+
+  // stops
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
+  EXPECT_EQ(stops.size(), 9);
+  for (const auto& stopID : stopIds) {
+    EXPECT_TRUE(stops.find(stopID) != stops.end());
+  }
+
+  // stop_pairs
   std::string stop_pair_ids[3] = {
       stopOneID + "_ledge_to_the_train_bucko",
       stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
       stopThreeID + "_walk_the_plank_pal",
   };
-
-  for (const auto& stopID : stopIds) {
-    EXPECT_TRUE(stops.find(stopID) != stops.end());
-  }
   for (const auto& stop_pair_id : stop_pair_ids) {
     EXPECT_TRUE(stops.find(stop_pair_id) != stops.end());
   }
+
+  // service
+  EXPECT_EQ(service_start_dates.size(), 1);
+  EXPECT_EQ(*service_start_dates.begin(), serviceStartDate);
+
+  EXPECT_EQ(service_end_dates.size(), 1);
+  EXPECT_EQ(*service_end_dates.begin(), serviceEndDate);
+
+  EXPECT_EQ(service_added_dates.size(), 1);
+  EXPECT_EQ(*service_added_dates.begin(), addedDate);
+
+  EXPECT_EQ(service_except_dates.size(), 1);
+  EXPECT_EQ(*service_except_dates.begin(), removedDate);
+
+  EXPECT_EQ(headway_seconds.size(), 1);
+  EXPECT_EQ(*headway_seconds.begin(), headwaySec);
+
   // TODO: MAKE SURE ALL THE GENEREATED STOPS ARE ALSO TESTED FOR
 }
 
@@ -549,7 +580,7 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
   // edge to the station and the connections are bidirectional (as per usual)
-  EXPECT_EQ(uses[Use::kTransitConnection], 12);
+  EXPECT_EQ(uses[Use::kTransitConnection], 10);
   EXPECT_EQ(uses[Use::kPlatformConnection], 6);
   EXPECT_EQ(uses[Use::kEgressConnection], 6);
   // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
@@ -562,8 +593,11 @@ TEST(GtfsExample, MakeTile) {
 TEST(GtfsExample, test_routing) {
   auto layout = create_layout();
 
+  // TODO(nils): adjust the max walking distance, the grid is 1 km per unit now
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
-                       {{"/date_time/type", "1"}, {"/date_time/value", "2023-02-27T05:50"}});
+                       {{"/date_time/type", "1"},
+                        {"/date_time/value", "2023-02-27T05:50"},
+                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}});
   EXPECT_EQ(result0.trip().routes_size(), 1);
 }
