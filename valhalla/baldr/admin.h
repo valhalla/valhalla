@@ -63,11 +63,11 @@ public:
   uint32_t country_offset() const;
 
 protected:
-  uint32_t country_offset_;         // country name offset
-  uint32_t state_offset_;           // state name offset
+  uint32_t country_offset_;                     // country name offset
+  uint32_t state_offset_;                       // state name offset
   std::array<char, kCountryIso> country_iso_{}; // country ISO3166-1
   std::array<char, kStateIso> state_iso_{};     // state ISO3166-2
-  char spare_[3]{};                 // spare for byte alignment
+  char spare_[3]{};                             // spare for byte alignment
 };
 
 } // namespace baldr
