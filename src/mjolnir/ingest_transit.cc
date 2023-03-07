@@ -606,6 +606,17 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
   }
 }
 
+gtfs::Shape AddTripShape(const gtfs::StopTimes stop_times, uint32_t shape_id) {
+  gtfs::Shape gtfs_shape;
+  for (size_t stop_seq = 0; stop_seq < stop_times.size(); stop_seq++) {
+    gtfs::ShapePoint shape_point;
+    shape_point.shape_id = shape_id;
+    shape_point.shape_pt_sequence = stop_seq;
+    const auto origin = stop_times[stop_seq];
+    const auto dest = stop_times[stop_seq + 1];
+  }
+}
+
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
 void ingest_tiles(const boost::property_tree::ptree& pt,
                   std::priority_queue<tile_transit_info_t>& queue,
@@ -644,10 +655,17 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
 
     // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
     size_t trip_count = 0;
+    size_t shape_id = current.shapes.size();
     for (const auto& trip : current.trips) {
       trip_count++;
-      dangles =
-          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
+      // write made-up shape to the trip as shape_id and to shapes
+      const auto& feed = feeds(trip);
+      const auto& gtfs_trip = feed.get_trip(trip.id);
+      if (gtfs_trip->shape_id.empty()) {
+        AddTripShape(feed.get_stop_times_for_trip(trip.id), shape_id);
+      }
+
+      dangles = write_stop_pair(tile, current, trip, feed, platform_node_ids, uniques) || dangles;
 
       if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
         LOG_INFO("Writing " + current_path);
