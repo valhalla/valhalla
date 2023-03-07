@@ -698,7 +698,7 @@ void stitch_tiles(const boost::property_tree::ptree& pt,
     do {
 
       // open tile make a hash of missing stop to invalid graphid
-      auto tile = read_pbf(current_path, lock);
+      auto tile = read_pbf(current_path);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {
         if (!stop_pair.has_origin_graphid()) {
