@@ -70,23 +70,10 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
   for (const auto& ring : polygon) {
     auto ring_coords = json::array({});
     for (const auto& coord : ring) {
-#if 1
       ring_coords->emplace_back(
           json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
-#else
-      if (outer) {
-        ring_coords->emplace_back(
-            json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
-      } else {
-        ring_coords->emplace_front(
-            json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
-      }
-#endif
     }
     coords->emplace_back(ring_coords);
-#if 0
-    outer = false;
-#endif
   }
   return json::map({{"type", std::string("Polygon")}, {"coordinates", coords}});
 }
