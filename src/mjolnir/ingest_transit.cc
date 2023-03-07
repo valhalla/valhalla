@@ -347,33 +347,46 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t fe
 }
 
 // read feed data per stop, given shape
-float add_stop_pair_shapes(const gtfs::Stop& stop_connect,
-                           const gtfs::Shape& trip_shape,
-                           const gtfs::StopTime& pointStopTime) {
+float get_stop_pair_dist(const gtfs::Stop& stop_connect,
+                         const gtfs::Shape& trip_shape,
+                         const gtfs::StopTime& pointStopTime) {
   // check which segment would belong to which tile
   if (pointStopTime.shape_dist_traveled > 0) {
     return pointStopTime.shape_dist_traveled;
+  } else if (!trip_shape.size()) {
+    LOG_ERROR("No shape for stop " + stop_connect.stop_id + ". Can't determine dist_traveled.");
+    return 0.f;
   }
+
+  // collect all distances and return the index with the lowest
   float dist_traveled = 0;
+  float final_dist_traveled = 0;
   float min_sq_distance = INFINITY;
+
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
-  for (int segment = 0; segment < static_cast<int>(trip_shape.size()) - 1; segment++) {
+  for (size_t segment = 0; segment < trip_shape.size() - 1; segment++) {
     auto currOrigin = trip_shape[segment];
     auto currDest = trip_shape[segment + 1];
     PointLL originPoint = PointLL(currOrigin.shape_pt_lon, currOrigin.shape_pt_lat);
     PointLL destPoint = PointLL(currDest.shape_pt_lon, currDest.shape_pt_lat);
 
-    PointLL minPoint = project(originPoint, destPoint);
-    float sq_distance = project.approx.DistanceSquared(minPoint);
-    // TODO(nils): this doesn't seem right: if there's not shape_dist_traveled set,
-    // we seem to always return the full length of the shape for every stop!
+    PointLL proj_point = project(originPoint, destPoint);
+    float sq_distance = project.approx.DistanceSquared(proj_point);
+
+    float segment_length = originPoint.Distance(destPoint);
+    dist_traveled += segment_length;
+
+    DistanceApproximator<PointLL> proj_approx(proj_point);
     if (sq_distance < min_sq_distance) {
-      min_sq_distance = dist_traveled + originPoint.Distance(minPoint);
+      min_sq_distance = sq_distance;
+      final_dist_traveled =
+          proj_approx.DistanceSquared(originPoint) > proj_approx.DistanceSquared(destPoint)
+              ? dist_traveled
+              : dist_traveled - segment_length;
     }
-    dist_traveled += originPoint.Distance(destPoint);
   }
-  return dist_traveled;
+  return final_dist_traveled;
 }
 
 // return dangling stop_pairs, write stop data from feed
@@ -465,7 +478,7 @@ bool write_stop_pair(Transit& tile,
                                       static_cast<uint64_t>(origin_is_generated));
 
         // call function to set shape
-        float dist = add_stop_pair_shapes(*origin_stop, currShape, origin_stopTime);
+        float dist = get_stop_pair_dist(*origin_stop, currShape, origin_stopTime);
         stop_pair->set_origin_dist_traveled(dist);
       }
 
@@ -475,7 +488,7 @@ bool write_stop_pair(Transit& tile,
         stop_pair->set_destination_graphid(dest_graphid_it->second +
                                            static_cast<uint64_t>(dest_is_generated));
         // call function to set shape
-        float dist = add_stop_pair_shapes(*dest_stop, currShape, dest_stopTime);
+        float dist = get_stop_pair_dist(*dest_stop, currShape, dest_stopTime);
         stop_pair->set_destination_dist_traveled(dist);
       }
       auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});

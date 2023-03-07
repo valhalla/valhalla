@@ -227,13 +227,13 @@ TEST(GtfsExample, WriteGtfs) {
   struct StopTime trip_two_stop_one {
     .trip_id = tripTwoID, .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_sequence = 0,
     .arrival_time = Time("10:00:00"), .departure_time = Time("10:00:00"), .stop_headsign = "head",
-    .shape_dist_traveled = 0.0, .timepoint = gtfs::StopTimePoint::Exact,
+    .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_two_stop_one);
 
   struct StopTime trip_two_stop_two {
     .trip_id = tripTwoID, .stop_id = stopTwoID, .stop_sequence = 1, .arrival_time = Time("10:03:00"),
-    .departure_time = Time("10:03:00"), .stop_headsign = "head", .shape_dist_traveled = 3.0,
+    .departure_time = Time("10:03:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_two_stop_two);
@@ -241,7 +241,7 @@ TEST(GtfsExample, WriteGtfs) {
   struct StopTime trip_two_stop_three {
     .trip_id = tripTwoID, .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_sequence = 2,
     .arrival_time = Time("10:06:00"), .departure_time = Time("10:06:00"), .stop_headsign = "head",
-    .shape_dist_traveled = 6.0, .timepoint = gtfs::StopTimePoint::Exact,
+    .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_two_stop_three);
 
@@ -363,6 +363,21 @@ TEST(GtfsExample, MakeProto) {
   std::unordered_set<uint32_t> service_except_dates;
   std::unordered_set<uint32_t> headway_seconds;
 
+  std::vector<float> first_origin_dist_traveled;
+  std::vector<float> last_dest_dist_traveled;
+
+  // get the full shape length
+  float shape_length = 0;
+
+  auto layout = create_layout();
+  const std::vector<PointLL> transit_lls{layout["1"], layout["a"], layout["b"],
+                                         layout["2"], layout["c"], layout["3"]};
+  for (uint32_t segment = 0; segment < transit_lls.size() - 1; segment++) {
+    auto currOrigin = transit_lls[segment];
+    auto currDest = transit_lls[segment + 1];
+    shape_length += currOrigin.Distance(currDest);
+  }
+
   size_t shapes = 0;
   // for each pbf.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -417,6 +432,15 @@ TEST(GtfsExample, MakeProto) {
         for (const auto& except_date : stop_pair.service_except_dates()) {
           service_except_dates.insert(except_date);
         }
+
+        // make sure:
+        //   - the first stop pair has 0 as origin_dist_traveled
+        //   - the last stop pair of tripOne has exactly 6.0f and tripTwo has the full shape length
+        if (stop_pair.origin_onestop_id() == stopOneID + "_ledge_to_the_train_bucko") {
+          first_origin_dist_traveled.push_back(stop_pair.origin_dist_traveled());
+        } else if (stop_pair.destination_onestop_id() == stopThreeID + "_walk_the_plank_pal") {
+          last_dest_dist_traveled.push_back(stop_pair.destination_dist_traveled());
+        }
       }
     }
   }
@@ -434,15 +458,24 @@ TEST(GtfsExample, MakeProto) {
     EXPECT_TRUE(stops.find(stopID) != stops.end());
   }
 
-  // stop_pairs
+  // stop_pairs, we have 3 in total since one stop_pair is across 2 tiles
   std::string stop_pair_ids[3] = {
       stopOneID + "_ledge_to_the_train_bucko",
       stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
       stopThreeID + "_walk_the_plank_pal",
   };
+  EXPECT_EQ(stop_pairs.size(), 3);
   for (const auto& stop_pair_id : stop_pair_ids) {
     EXPECT_TRUE(stops.find(stop_pair_id) != stops.end());
   }
+  // we have 4 here since we have the first stop_pair in two tiles on two trips
+  EXPECT_EQ(first_origin_dist_traveled.size(), 4);
+  for (const auto& dist : first_origin_dist_traveled) {
+    EXPECT_EQ(dist, 0.f);
+  }
+  EXPECT_EQ(last_dest_dist_traveled.size(), 2);
+  EXPECT_NEAR(last_dest_dist_traveled[0], shape_length, 1.f);
+  EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
 
   // service
   EXPECT_EQ(service_start_dates.size(), 1);
@@ -533,8 +566,6 @@ TEST(GtfsExample, MakeTile) {
     std::vector<PointLL> station_coords = {station_one_ll->second, station_two_ll->second,
                                            station_three_ll->second};
     for (const auto& node : tile->GetNodes()) {
-      // I notice that the coordinates in the tiles are 'rounded' to [x] decimal places, what is a way
-      // to round when testing?
       auto currNode_type = node_types.find(node.type());
       EXPECT_NE(node_types.end(), currNode_type);
       auto node_ll = node.latlng(tile->header()->base_ll());
@@ -567,9 +598,7 @@ TEST(GtfsExample, MakeTile) {
 
     for (uint32_t schedule_it = 0; schedule_it < tile->header()->schedulecount(); schedule_it++) {
       auto* tileSchedule = tile->GetTransitSchedule(schedule_it);
-      // TODO: get the right value here, should be first 60 bits set
-      // EXPECT_EQ(tileSchedule->days(), );
-      // TODO: why not 60 days? Why only 60 days schedule validity at all?
+      EXPECT_EQ(tileSchedule->days(), (static_cast<int64_t>(1) << 60) - 1);
       EXPECT_EQ(tileSchedule->end_day(), 59);
     }
   }
