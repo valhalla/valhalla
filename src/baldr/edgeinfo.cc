@@ -93,7 +93,39 @@ std::vector<std::string> EdgeInfo::GetNames() const {
       throw std::runtime_error("GetNames: offset exceeds size of text list");
     }
   }
+  names.shrink_to_fit();
   return names;
+}
+
+std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged_values) const {
+  // Get each name
+  std::vector<std::pair<std::string, bool>> name_type_pairs;
+  name_type_pairs.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    // Skip any tagged names (FUTURE code may make use of them)
+    if (ni->tagged_ && !include_tagged_values) {
+      continue;
+    }
+    if (ni->tagged_) {
+      if (ni->name_offset_ < names_list_length_) {
+        std::string name = names_list_ + ni->name_offset_;
+        try {
+          if (IsNameTag(name[0])) {
+            name_type_pairs.push_back({name.substr(1), false});
+          }
+        } catch (const std::invalid_argument& arg) {
+          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        }
+      } else
+        throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+    } else if (ni->name_offset_ < names_list_length_) {
+      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
+    } else {
+      throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
+    }
+  }
+  return name_type_pairs;
 }
 
 // Get a list of tagged names
@@ -134,15 +166,16 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
     }
   }
+  names.shrink_to_fit();
   return names;
 }
 
 // Get a list of names
-std::vector<std::pair<std::string, bool>>
-EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_values) const {
+std::vector<std::tuple<std::string, bool, uint8_t>>
+EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
 
   // Get each name
-  std::vector<std::pair<std::string, bool>> name_type_pairs;
+  std::vector<std::tuple<std::string, bool, uint8_t>> name_type_pairs;
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
@@ -155,8 +188,7 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_valu
         std::string name = names_list_ + ni->name_offset_;
         try {
           if (IsNameTag(name[0])) {
-            name_type_pairs.push_back({name.substr(1), false});
-            types.push_back(static_cast<uint8_t>(name.at(0)));
+            name_type_pairs.push_back({name.substr(1), false, static_cast<uint8_t>(name.at(0))});
           }
         } catch (const std::invalid_argument& arg) {
           LOG_DEBUG("invalid_argument thrown for name: " + name);
@@ -164,12 +196,12 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_valu
       } else
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     } else if (ni->name_offset_ < names_list_length_) {
-      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
-      types.push_back(0);
+      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_, 0});
     } else {
       throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     }
   }
+  name_type_pairs.shrink_to_fit();
   return name_type_pairs;
 }
 
