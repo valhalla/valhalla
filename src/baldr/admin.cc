@@ -76,6 +76,7 @@ Admin::Admin(const uint32_t country_offset,
     case kStateIso - 1:
       // Example:  PA
       state_iso_[kStateIso - 1] = '\0';
+      [[fallthrough]];
     case kStateIso:
       // Example:  WLS
       std::copy(state_iso.begin(), state_iso.end(), state_iso_.begin());
