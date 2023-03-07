@@ -517,7 +517,6 @@ bool write_stop_pair(Transit& tile,
 
       // get frequency info
       if (!feed.get_frequencies(currTrip->trip_id).empty()) {
-        // TODO(nils): is this correct? a trip has a unique frequency?
         const auto& currFrequencies = feed.get_frequencies(currTrip->trip_id);
         if (currFrequencies.size() > 1) {
           LOG_WARN("More than one frequencies based schedule for " + currTrip->trip_id);
