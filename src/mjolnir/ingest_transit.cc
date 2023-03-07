@@ -80,8 +80,6 @@ struct tile_transit_info_t {
   std::unordered_set<feed_object_t> stations;
   std::unordered_set<feed_object_t> trips;
   std::unordered_map<feed_object_t, size_t> routes;
-  std::unordered_set<feed_object_t> services;
-  std::unordered_set<feed_object_t> agencies;
   std::unordered_map<feed_object_t, size_t> shapes;
 
   bool operator<(const tile_transit_info_t& t1) const {
@@ -220,11 +218,9 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
             continue;
           }
 
-          tile_info.services.insert({trip->service_id, feed_path});
           tile_info.trips.insert({trip->trip_id, feed_path});
           tile_info.shapes.insert({{trip->shape_id, feed_path}, tile_info.shapes.size()});
           tile_info.routes.insert({{route->route_id, feed_path}, tile_info.routes.size()});
-          tile_info.agencies.insert({route->agency_id, feed_path});
         }
       }
 
