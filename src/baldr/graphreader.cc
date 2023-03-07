@@ -754,7 +754,8 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
       if (idx == edgeid.id() || directededge->is_shortcut() ||
           directededge->use() == Use::kTransitConnection ||
           directededge->use() == Use::kEgressConnection ||
-          directededge->use() == Use::kPlatformConnection) {
+          directededge->use() == Use::kPlatformConnection ||
+          directededge->use() == Use::kConstruction || directededge->bss_connection()) {
         continue;
       }
       if (continuing_edge != nullptr) {
@@ -805,7 +806,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     directededge = tile->directededge(edgeid);
     if (directededge->superseded()) {
       // Get the shortcut edge Id that supersedes this edge
-      uint32_t idx = node->edge_index() + (directededge->superseded() - 1);
+      uint32_t idx = node->edge_index() + directededge->superseded_idx() - 1;
       return GraphId(endnode.tileid(), endnode.level(), idx);
     }
   }

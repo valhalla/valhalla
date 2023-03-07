@@ -22,7 +22,7 @@ std::string to_string(const midgard::PointLL& p) {
 }
 } // namespace std
 
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config("data/utrecht_tiles");
 
 // expose the constructor
 struct testable_recovery : public shortcut_recovery_t {
@@ -175,6 +175,11 @@ std::unordered_set<valhalla::baldr::GraphId> get_all_shortcuts(boost::property_t
   return found_shortcut_ids;
 }
 
+void log_edge(GraphReader& reader, GraphId edge) {
+  std::cout << *reader.directededge(edge)->json() << "\n";
+  std::cout << *reader.edgeinfo(edge).json() << "\n";
+}
+
 TEST(GetShortcut, find_get_shortcut_errors) {
   GraphReader reader(conf.get_child("mjolnir"));
 
@@ -197,8 +202,42 @@ TEST(GetShortcut, find_get_shortcut_errors) {
             auto shortcut_directed_edge = reader.GetGraphTile(shortcut_id)->directededge(shortcut_id);
             EXPECT_TRUE(shortcut_directed_edge->is_shortcut());
             EXPECT_EQ(shortcut_id, edge_id);
-            if (shortcut_id != edge_id) {
-              LOG_INFO("Edge ID: " + std::to_string(edge_of_shortcut));
+          } else {
+            LOG_INFO("Edge " + std::to_string(edge_of_shortcut) +
+                     " did not lead to a shortcut, but " + std::to_string(edge_id) + " was expected");
+          }
+        }
+      }
+    }
+
+    edge_id = valhalla::baldr::GraphId{tile_id};
+    for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+      auto shortcut_id = reader.GetShortcut(edge_id);
+      if (shortcut_id.Is_Valid()) {
+        // If edge_id is already a shortcut we will get the same Id back
+        if (shortcut_id != edge_id) {
+          auto directed_shortcut = reader.GetGraphTile(shortcut_id)->directededge(shortcut_id);
+          EXPECT_TRUE(directed_shortcut->is_shortcut());
+          if (directed_shortcut->is_shortcut()) {
+            auto edges_of_shortcut = reader.RecoverShortcut(shortcut_id);
+            auto found_edge = false;
+
+            for (const auto& edge_of_shortcut : edges_of_shortcut) {
+              if (edge_of_shortcut == edge_id) {
+                found_edge = true;
+                break;
+              }
+            }
+            EXPECT_TRUE(found_edge);
+            if (!found_edge) {
+              LOG_INFO("Edge " + std::to_string(edge_id) + " not part of resolved shortcut " +
+                       std::to_string(shortcut_id));
+              log_edge(reader, edge_id);
+              log_edge(reader, shortcut_id);
+              for (const auto& edge_of_shortcut : edges_of_shortcut) {
+                LOG_INFO("   - " + std::to_string(edge_of_shortcut));
+                log_edge(reader, edge_of_shortcut);
+              }
             }
           }
         }

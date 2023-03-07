@@ -1077,6 +1077,15 @@ public:
   }
 
   /**
+   * Unlike superseded(), this does not return the raw mask but the shortcut index
+   * that was originally passed to set_superseded().
+   * @return  Returns the index of the set bit in the superseded mask.
+   */
+  uint32_t superseded_idx() const {
+    return log2(superseded_) + 1;
+  }
+
+  /**
    * Set the mask for whether this edge is superseded by a shortcut edge.
    * Superseded edges can be skipped unless downward transitions are allowed.
    * @param  superseded  Mask that matches the shortcut that supersedes this
