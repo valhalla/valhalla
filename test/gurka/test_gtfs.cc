@@ -459,8 +459,6 @@ TEST(GtfsExample, MakeProto) {
 
   EXPECT_EQ(headway_seconds.size(), 1);
   EXPECT_EQ(*headway_seconds.begin(), headwaySec);
-
-  // TODO: MAKE SURE ALL THE GENEREATED STOPS ARE ALSO TESTED FOR
 }
 
 TEST(GtfsExample, MakeTile) {

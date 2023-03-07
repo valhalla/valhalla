@@ -759,6 +759,16 @@ namespace mjolnir {
 
 // thread and call ingest_tiles
 std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
+  // remove transit directory if it exists
+  std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
+  if (transit_dir.back() != filesystem::path::preferred_separator) {
+    transit_dir.push_back(filesystem::path::preferred_separator);
+  }
+  transit_dir += std::to_string(TileHierarchy::GetTransitLevel().level);
+  if (filesystem::exists(transit_dir) && !filesystem::is_empty(transit_dir)) {
+    LOG_WARN("Non-empty " + transit_dir + " will be purged of tiles");
+    filesystem::remove_all(transit_dir);
+  }
 
   auto thread_count =
       pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
@@ -775,7 +785,6 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
 
-  // ingest_tiles(pt, tiles, uniques, promises[0]);
   for (size_t i = 0; i < threads.size(); ++i) {
     threads[i].reset(new std::thread(ingest_tiles, std::cref(pt), std::ref(tiles), std::ref(uniques),
                                      std::ref(promises[i])));
