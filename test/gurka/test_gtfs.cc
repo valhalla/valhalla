@@ -190,7 +190,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   struct gtfs::Trip tripTwo {
     .route_id = routeID, .service_id = serviceOneID, .trip_id = tripTwoID, .trip_headsign = "bonjour",
-    .block_id = blockID, .shape_id = shapeOneID, .wheelchair_accessible = gtfs::TripAccess::Yes,
+    .block_id = blockID, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No,
   };
   feed.add_trip(tripTwo);
@@ -407,7 +407,7 @@ TEST(GtfsExample, MakeProto) {
       }
 
       // routes info
-      for (const auto route : transit.routes()) {
+      for (const auto& route : transit.routes()) {
         routes.insert(route.onestop_id());
       }
 
