@@ -70,16 +70,23 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
   for (const auto& ring : polygon) {
     auto ring_coords = json::array({});
     for (const auto& coord : ring) {
-      // if (outer) {
+#if 1
       ring_coords->emplace_back(
           json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
-      /*} else {
+#else
+      if (outer) {
+        ring_coords->emplace_back(
+          json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
+      } else {
         ring_coords->emplace_front(
             json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
-      }*/
+      }
+#endif
     }
     coords->emplace_back(ring_coords);
-    // outer = false;
+#if 0
+    outer = false;
+#endif
   }
   return json::map({{"type", std::string("Polygon")}, {"coordinates", coords}});
 }
@@ -189,7 +196,7 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
       AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
                           Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
       std::vector<int32_t> tilelist = tiles.TileList(bbox);
-      for (auto& id : tilelist) {
+      for (const auto& id : tilelist) {
         auto color = level->second.find(id);
         if (color != level->second.cend()) {
           result.emplace(color->second);
@@ -248,8 +255,7 @@ std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level)
   }
   const auto& level_tiles = TileHierarchy::levels()[tile_level];
 
-  std::vector<size_t> tiles(level_tiles.tiles.nrows() * level_tiles.tiles.ncolumns(),
-                            static_cast<uint32_t>(0));
+  std::vector<size_t> tiles(level_tiles.tiles.nrows() * level_tiles.tiles.ncolumns(), 0);
   auto level = colors.find(hierarchy_level);
   if (level != colors.cend()) {
     for (size_t i = 0; i < tiles.size(); ++i) {
