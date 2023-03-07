@@ -430,6 +430,8 @@ bool write_stop_pair(Transit& tile,
     if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
       auto* stop_pair = tile.add_stop_pairs();
 
+      // TODO: need to also set the stop_pair's shape_id, convert_transit can use it
+      // but currently doesn't
       auto* service_dow = stop_pair->mutable_service_days_of_week();
       service_dow->Add(trip_calendar->monday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->tuesday == gtfs::CalendarAvailability::Available);
@@ -481,9 +483,12 @@ bool write_stop_pair(Transit& tile,
         stop_pair->set_origin_graphid(origin_graphid_it->second +
                                       static_cast<uint64_t>(origin_is_generated));
 
-        // call function to set shape
-        float dist = get_stop_pair_dist(*origin_stop, currShape, origin_stopTime);
-        stop_pair->set_origin_dist_traveled(dist);
+        // call function to set shape, only if it has a shape_id, otherwise no need (see
+        // convert_transit)
+        if (stop_pair->has_shape_id()) {
+          float dist = get_stop_pair_dist(*origin_stop, currShape, origin_stopTime);
+          stop_pair->set_origin_dist_traveled(dist);
+        }
       }
 
       if (dest_is_in_tile) {
@@ -491,9 +496,12 @@ bool write_stop_pair(Transit& tile,
         // Same as above wrt to named and unnamed (generated) platforms
         stop_pair->set_destination_graphid(dest_graphid_it->second +
                                            static_cast<uint64_t>(dest_is_generated));
-        // call function to set shape
-        float dist = get_stop_pair_dist(*dest_stop, currShape, dest_stopTime);
-        stop_pair->set_destination_dist_traveled(dist);
+        // call function to set shape, only if it has a shape_id, otherwise no need (see
+        // convert_transit)
+        if (stop_pair->has_shape_id()) {
+          float dist = get_stop_pair_dist(*dest_stop, currShape, dest_stopTime);
+          stop_pair->set_destination_dist_traveled(dist);
+        }
       }
       auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
@@ -606,17 +614,6 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
   }
 }
 
-gtfs::Shape AddTripShape(const gtfs::StopTimes stop_times, uint32_t shape_id) {
-  gtfs::Shape gtfs_shape;
-  for (size_t stop_seq = 0; stop_seq < stop_times.size(); stop_seq++) {
-    gtfs::ShapePoint shape_point;
-    shape_point.shape_id = shape_id;
-    shape_point.shape_pt_sequence = stop_seq;
-    const auto origin = stop_times[stop_seq];
-    const auto dest = stop_times[stop_seq + 1];
-  }
-}
-
 // pre-processes feed data and writes to the pbfs (calls the 'write' functions)
 void ingest_tiles(const boost::property_tree::ptree& pt,
                   std::priority_queue<tile_transit_info_t>& queue,
@@ -655,17 +652,11 @@ void ingest_tiles(const boost::property_tree::ptree& pt,
 
     // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
     size_t trip_count = 0;
-    size_t shape_id = current.shapes.size();
     for (const auto& trip : current.trips) {
       trip_count++;
-      // write made-up shape to the trip as shape_id and to shapes
-      const auto& feed = feeds(trip);
-      const auto& gtfs_trip = feed.get_trip(trip.id);
-      if (gtfs_trip->shape_id.empty()) {
-        AddTripShape(feed.get_stop_times_for_trip(trip.id), shape_id);
-      }
 
-      dangles = write_stop_pair(tile, current, trip, feed, platform_node_ids, uniques) || dangles;
+      dangles =
+          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques) || dangles;
 
       if (trip_count >= pt.get<uint32_t>("mjolnir.transit_pbf_limit")) {
         LOG_INFO("Writing " + current_path);

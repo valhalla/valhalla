@@ -474,9 +474,8 @@ TEST(GtfsExample, MakeProto) {
     EXPECT_EQ(dist, 0.f);
   }
   EXPECT_EQ(last_dest_dist_traveled.size(), 2);
-  // TODO: since we removed the shape id from the second trip it's not recorded anymore
-  // will fix and re-enable in next PR, so we're robust against missing shapes.txt entries
-  // EXPECT_NEAR(last_dest_dist_traveled[0], shape_length, 1.f);
+  // Only one shape was present, for the other one we had to generate
+  // the edge's shapes from the the stop locations in convert_transit
   EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
 
   // service
@@ -545,6 +544,8 @@ TEST(GtfsExample, MakeTile) {
             tile->GetNextDeparture(edge.lineid(), 21600, // 06:00 am
                                    dt_day, dt_dow, date_before_tile, false, false);
         EXPECT_NE(dep->elapsed_time(), 0);
+        const auto shape = tile->edgeinfo(&edge).encoded_shape();
+        EXPECT_FALSE(shape.empty());
       }
     }
 

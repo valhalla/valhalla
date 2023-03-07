@@ -511,12 +511,6 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
     shape.push_back(endstop_ll);
   }
 
-  if (shape.size() == 0) {
-    LOG_ERROR("Invalid shape from " + origin_id + " to " + dest_id);
-    shape.push_back(stop_ll);
-    shape.push_back(endstop_ll);
-  }
-
   return shape;
 }
 
