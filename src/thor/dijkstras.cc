@@ -689,7 +689,6 @@ void Dijkstras::ComputeMultiModal(
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint8_t>(travel_mode_t::kPedestrian)];
   pc->SetAllowTransitConnections(true);
-  pc->UseMaxMultiModalDistance();
 
   // Set the mode from the origin
   mode_ = mode;

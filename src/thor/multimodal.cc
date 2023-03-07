@@ -44,8 +44,8 @@ constexpr uint32_t kInitialEdgeLabelCount = 200000;
 MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kPedestrian),
-      travel_type_(0) {
+      max_walking_dist_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
+      mode_(travel_mode_t::kPedestrian), travel_type_(0) {
 }
 
 // Destructor
@@ -103,13 +103,15 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                                      GraphReader& graphreader,
                                      const sif::mode_costing_t& mode_costing,
                                      const travel_mode_t mode,
-                                     const Options&) {
+                                     const Options& options) {
   // For pedestrian costing - set flag allowing use of transit connections
   // Set pedestrian costing to use max distance. TODO - need for other modes
   const auto& pc = mode_costing[static_cast<uint32_t>(travel_mode_t::kPedestrian)];
   pc->SetAllowTransitConnections(true);
-  pc->UseMaxMultiModalDistance();
 
+  // set the maximum_walking distance for this request
+  max_walking_dist_ =
+      options.costings().find(Costing::pedestrian)->second.options().transit_start_end_max_distance();
   // Set the mode from the origin
   mode_ = mode;
   const auto& costing = mode_costing[static_cast<uint32_t>(mode)];

@@ -73,13 +73,6 @@ public:
    */
   void Clear() override;
 
-  /**
-   * Set the maximum walking distance.
-   */
-  void SetMaxWalkingDist(uint32_t dist) {
-    max_walking_dist_ = dist;
-  };
-
 protected:
   uint32_t max_walking_dist_;
   uint32_t max_label_count_; // Max label count to allow
