@@ -288,7 +288,7 @@ void setup_stops(Transit& tile,
  *         later on we use these ids to connect platforms that reference each other in the schedule
  */
 std::unordered_map<feed_object_t, GraphId>
-write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
+write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
   const auto& tile_children = tile_info.station_children;
   auto node_id = tile_info.graphid;
   feed_cache_t feeds_cache;
@@ -557,7 +557,7 @@ bool write_stop_pair(Transit& tile,
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
+void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
 
   const auto& tile_routeIds = tile_info.routes;
 
@@ -587,7 +587,7 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
 }
 
 // grab feed data from feed
-void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t feeds) {
+void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
 
   // loop through all shapes inside the tile
   for (const auto& feed_shape : tile_info.shapes) {
