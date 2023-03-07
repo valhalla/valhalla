@@ -928,7 +928,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // can also call externally
     double speed = 0;
     if (mode == sif::TravelMode::kPublicTransit) {
-      speed = 5;
+      speed = directededge->speed();
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
