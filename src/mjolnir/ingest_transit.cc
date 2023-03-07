@@ -219,8 +219,12 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const boost::prope
           }
 
           tile_info.trips.insert({trip->trip_id, feed_path});
-          tile_info.shapes.insert({{trip->shape_id, feed_path}, tile_info.shapes.size()});
           tile_info.routes.insert({{route->route_id, feed_path}, tile_info.routes.size()});
+
+          // shapes are optional, don't keep non-existing shapes around
+          if (!trip->shape_id.empty()) {
+            tile_info.shapes.insert({{trip->shape_id, feed_path}, tile_info.shapes.size()});
+          }
         }
       }
 
