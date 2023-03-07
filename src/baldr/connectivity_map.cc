@@ -76,7 +76,7 @@ json::MapPtr to_geometry(const polygon_t& polygon) {
 #else
       if (outer) {
         ring_coords->emplace_back(
-          json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
+            json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));
       } else {
         ring_coords->emplace_front(
             json::array({json::fixed_t{coord.first, 6}, json::fixed_t{coord.second, 6}}));

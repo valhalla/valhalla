@@ -98,12 +98,15 @@ uint32_t Admin::country_offset() const {
 
 // country ISO3166-1
 std::string Admin::country_iso() const {
-  return country_iso_[0] == '\0'? std::string() : std::string(country_iso_.begin(), country_iso_.end());
+  return country_iso_[0] == '\0' ? std::string()
+                                 : std::string(country_iso_.begin(), country_iso_.end());
 }
 
 // country ISO + dash + state ISO will give you ISO3166-2 for state.
 std::string Admin::state_iso() const {
-  return state_iso_[0] == '\0'? std::string() : std::string(state_iso_.begin(), std::find(state_iso_.begin(),state_iso_.end(),'\0'));
+  return state_iso_[0] == '\0'
+             ? std::string()
+             : std::string(state_iso_.begin(), std::find(state_iso_.begin(), state_iso_.end(), '\0'));
 }
 
 } // namespace baldr
