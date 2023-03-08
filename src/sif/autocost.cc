@@ -204,7 +204,8 @@ public:
   /**
    * Callback for Allowed doing mode  specific restriction checks
    */
-  virtual ConditionalResult ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
+  virtual ConditionalResult
+  ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -430,30 +431,31 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx) const {
 
-	// Check access, U-turn, and simple turn restriction.
-	// Allow U-turns at dead-end nodes in case the origin is inside
-	// a not thru region and a heading selected an edge entering the
-	// region.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-		edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-		(pred.closure_pruning() && IsClosed(edge, tile)) ||
-		(exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
-		return false;
-	}
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes in case the origin is inside
+  // a not thru region and a heading selected an edge entering the
+  // region.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge)) {
+    return false;
+  }
 
-	// Check conditional access and mode specific conditional restriction.
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  // Check conditional access and mode specific conditional restriction.
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                              tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
-	// Check access, simple turn restriction and private road.
-	if (!IsAccessible(edge) ||
-    ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
-    (!allow_destination_only_ && !pred.destonly() && edge->destonly())){
-		return false;
-	}
-	return true;
+  // Check access, simple turn restriction and private road.
+  if (!IsAccessible(edge) ||
+      ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+    return false;
+  }
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -466,44 +468,45 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx) const {
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge)) {
-			return false;
-	}
-
-	// Check conditional access and mode specific conditional restriction.
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
-
-	// Check access, simple turn restriction and private road.
-  if (!IsAccessible(opp_edge) ||
-			((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
-      return false;
+    return false;
   }
-	return true;
+
+  // Check conditional access and mode specific conditional restriction.
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
+
+  // Check access, simple turn restriction and private road.
+  if (!IsAccessible(opp_edge) ||
+      ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+    return false;
+  }
+  return true;
 }
 
 ConditionalResult AutoCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const {
   switch (restriction.type()) {
     case AccessType::kMaxHeight:
-		   if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-		       return {false,true};
-       }
-			 break;
-    case AccessType::kMaxWidth:
-			if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-				    return {false,true};
+      if (height_ > static_cast<float>(restriction.value() * 0.01)) {
+        return {false, true};
       }
-			break;
+      break;
+    case AccessType::kMaxWidth:
+      if (width_ > static_cast<float>(restriction.value() * 0.01)) {
+        return {false, true};
+      }
+      break;
     default:
-      return {true,false};
+      return {true, false};
   };
-	return {true,false};
+  return {true, false};
 }
 
 // Get the cost to traverse the edge in seconds
@@ -815,29 +818,30 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
                       const uint64_t current_time,
                       const uint32_t tz_index,
                       uint8_t& restriction_idx) const {
-	// Check access, U-turn, and simple turn restriction.
-	// Allow U-turns at dead-end nodes.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-    edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-    (pred.closure_pruning() && IsClosed(edge, tile)) ||
-    (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
-		return false;
-	}
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                              tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
-  if ( !IsAccessible(edge) ||
+  if (!IsAccessible(edge) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
 
-	return true;
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -850,19 +854,20 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx) const {
-		// Check access, U-turn, and simple turn restriction.
-		// Allow U-turns at dead-end nodes.
-		if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-		    opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-		    (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-		    (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
-				return false;
-		}
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
@@ -872,7 +877,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-	return true;
+  return true;
 }
 
 void ParseBusCostOptions(const rapidjson::Document& doc,
@@ -1013,21 +1018,22 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
                        const uint32_t tz_index,
                        uint8_t& restriction_idx) const {
 
-	// Check access, U-turn, and simple turn restriction.
-	// Allow U-turns at dead-end nodes in case the origin is inside
-	// a not thru region and a heading selected an edge entering the
-	// region.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-	    edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-	    (pred.closure_pruning() && IsClosed(edge, tile)) ||
-	    (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
-			return false;
-	}
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes in case the origin is inside
+  // a not thru region and a heading selected an edge entering the
+  // region.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                              tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes in case the origin is inside
@@ -1039,7 +1045,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-	return true;
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -1052,19 +1058,20 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
                               const uint64_t current_time,
                               const uint32_t tz_index,
                               uint8_t& restriction_idx) const {
-	// Check access, U-turn, and simple turn restriction.
-	// Allow U-turns at dead-end nodes.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  // Check access, U-turn, and simple turn restriction.
+  // Allow U-turns at dead-end nodes.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
-			return false;
-	}
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
@@ -1074,7 +1081,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-	return true;
+  return true;
 }
 
 void ParseTaxiCostOptions(const rapidjson::Document& doc,

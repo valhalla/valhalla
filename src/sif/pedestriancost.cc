@@ -628,15 +628,15 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx) const {
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       ((pred.path_distance() + edge->length()) > max_distance_)) {
-			return false;
-	}
+    return false;
+  }
 
   // Disallow transit connections (except when set for multi-modal routes)
   if (!allow_transit_connections_ &&
@@ -645,16 +645,17 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-	auto conditionResult = DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid,
+                                                           current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
-	if (!IsAccessible(edge)) {
-		return false;
-	}
+  if (!IsAccessible(edge)) {
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -668,10 +669,10 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint32_t tz_index,
                                     uint8_t& restriction_idx) const {
 
-	// Do not check max walking distance and assume we are not allowing
-	// transit connections. Assume this method is never used in
-	// multimodal routes).
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  // Do not check max walking distance and assume we are not allowing
+  // transit connections. Assume this method is never used in
+  // multimodal routes).
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
       IsUserAvoidEdge(opp_edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
@@ -679,13 +680,14 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
       opp_edge->use() == Use::kTransitConnection || opp_edge->use() == Use::kEgressConnection ||
       opp_edge->use() == Use::kPlatformConnection) {
-			return false;
-	}
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
@@ -693,7 +695,7 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!IsAccessible(opp_edge)) {
     return false;
   }
-	return true;
+  return true;
 }
 
 // Returns the cost to traverse the edge and an estimate of the actual time

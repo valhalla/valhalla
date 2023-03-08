@@ -194,7 +194,8 @@ public:
   /**
    * Callback for Allowed doing mode  specific restriction checks
    */
-  virtual ConditionalResult ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
+  virtual ConditionalResult
+  ModeSpecificAllowed(const baldr::AccessRestriction& restriction) const override;
 
   /**
    * Only transit costings are valid for this method call, hence we throw
@@ -382,43 +383,43 @@ ConditionalResult TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction&
   switch (restriction.type()) {
     case AccessType::kHazmat:
       if (hazmat_ && !restriction.value()) {
-		      return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxAxleLoad:
       if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
-        return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxAxles:
       if (axle_count_ > static_cast<uint8_t>(restriction.value())) {
-        return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxHeight:
       if (height_ > static_cast<float>(restriction.value() * 0.01)) {
-        return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxLength:
       if (length_ > static_cast<float>(restriction.value() * 0.01)) {
-        return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxWeight:
       if (weight_ > static_cast<float>(restriction.value() * 0.01)) {
-        return {false,true};
+        return {false, true};
       }
       break;
     case AccessType::kMaxWidth:
       if (width_ > static_cast<float>(restriction.value() * 0.01)) {
-        return {false,true};
+        return {false, true};
       }
       break;
     default:
-      return {true,false};
+      return {true, false};
   };
-  return {true,false};
+  return {true, false};
 }
 
 // Check if access is allowed on the specified edge.
@@ -430,18 +431,19 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint64_t current_time,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx) const {
-	// Check access, U-turn, and simple turn restriction.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+  // Check access, U-turn, and simple turn restriction.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
-			return false;
-	}
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
+                                              tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(edge) ||
@@ -449,7 +451,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
     return false;
   }
-	return true;
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -463,18 +465,19 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx) const {
 
-	// Check access, U-turn, and simple turn restriction.
-	if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-    opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-    (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-    (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
-		return false;
-	}
+  // Check access, U-turn, and simple turn restriction.
+  if ((!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
+      opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
+    return false;
+  }
 
-	auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time, tz_index, restriction_idx);
-	if(conditionResult.is_hit){
-		return conditionResult.c_result;
-	}
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
 
   // Check access, U-turn, and simple turn restriction.
   if (!IsAccessible(opp_edge) ||
@@ -482,7 +485,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
     return false;
   }
-	return true;
+  return true;
 }
 
 // Get the cost to traverse the edge in seconds
