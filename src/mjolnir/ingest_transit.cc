@@ -466,6 +466,8 @@ bool write_stop_pair(Transit& tile,
         uniques.lock.unlock();
       }
 
+      // TODO: we can't do this, since we have no info about this stop if it wasn't in this tile!
+      //   it's not an accurate heuristic for being generated, need to find another way.
       bool origin_is_generated = tile_info.station_children.find({origin_stopId, currFeedPath}) !=
                                  tile_info.station_children.end();
       auto origin_onestop_id =

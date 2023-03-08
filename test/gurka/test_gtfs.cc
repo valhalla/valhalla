@@ -147,19 +147,11 @@ TEST(GtfsExample, WriteGtfs) {
   struct gtfs::Stop second_stop_platform {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
     .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
-    .parent_station = "", .location_type = gtfs::StopLocationType::EntranceExit,
+    .parent_station = "", .location_type = gtfs::StopLocationType::StopOrPlatform,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(second_stop_platform);
-  /*
-    struct gtfs::Stop third_stop_station {
-      .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
-      .stop_lat = station_three_ll->second.second, .stop_lon = station_three_ll->second.first,
-      .parent_station = "", .location_type = gtfs::StopLocationType::Station,
-      .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
-    };
-    feed.add_stop(third_stop_station);
-    */
+
   struct gtfs::Stop third_stop_platform {
     .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_name = gtfs::Text("THIRD STOP"),
     .coordinates_present = true, .stop_lat = station_three_ll->second.second,
