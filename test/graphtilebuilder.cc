@@ -124,8 +124,6 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_NEAR(ei.mean_elevation(), 555.0f, kElevationBinSize);
   EXPECT_EQ(ei.speed_limit(), 120);
 
-  // TODO tests for GetNames(false);
-
   auto n1 = ei.GetNames();
   EXPECT_EQ(n1.size(), 1);
   EXPECT_EQ(n1.at(0), "einzelweg");
@@ -163,6 +161,42 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   const auto& tags = ei.GetTags();
   EXPECT_EQ(tags.size(), 1);
   EXPECT_EQ(tags.find(TaggedValue::kTunnel)->second, "xyz tunnel");
+
+  /* Comparing similar results
+   * GetNamesAndTypes -> (name, is_tagged, type)
+   * GetNames(false) -> (name, is_tagged always false)
+   * GetNames() -> (names) when is not tagged
+   */
+  names_and_types = ei.GetNamesAndTypes(false);
+  auto names = ei.GetNames(false);
+  auto only_names = ei.GetNames();
+  /* sizes should be the same */
+  EXPECT_EQ(names_and_types.size(), 1);
+  EXPECT_EQ(names.size(), names_and_types.size());
+  EXPECT_EQ(only_names.size(), names_and_types.size());
+
+  for (size_t i = 0; i < names.size(); ++i) {
+    /* contents (name) should be the same */
+    EXPECT_EQ(std::get<0>(names_and_types[i]), names[i].first);
+    EXPECT_EQ(only_names[i], names[i].first);
+    /* contents (is_tagged) should be the same */
+    EXPECT_EQ(std::get<1>(names_and_types[i]), false);
+    EXPECT_EQ(std::get<1>(names_and_types[i]), names[i].second);
+  }
+
+  /* Comparing similar results
+   * GetNamesAndTypes -> (name, is_tagged, type)
+   * GetNames(false) -> (name, is_tagged)
+   */
+  names_and_types = ei.GetNamesAndTypes(true);
+  names = ei.GetNames(true);
+  EXPECT_EQ(names_and_types.size(), 2);
+  EXPECT_EQ(names.size(), names_and_types.size());
+
+  for (size_t i = 0; i < names.size(); ++i) {
+    EXPECT_EQ(std::get<0>(names_and_types[i]), names[i].first);
+    EXPECT_EQ(std::get<1>(names_and_types[i]), names[i].second);
+  }
 }
 
 TEST(GraphTileBuilder, TestAddBins) {

@@ -928,7 +928,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
                    "int_ref:pronunciation:nt-sampa int_direction:pronunciation:nt-sampa") {
-          EXPECT_EQ(std::get<0>(name_and_type), "nt_ref int_direction");
+          EXPECT_EQ(std::get<0>(name_and_type), "int_ref int_direction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
