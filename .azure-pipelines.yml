@@ -118,7 +118,7 @@ jobs:
         displayName: 'Download Ninja'
 
       - script: |
-          pip install conan
+          pip install "conan<2.0.0"
         displayName: Install conan
 
       - script: |
