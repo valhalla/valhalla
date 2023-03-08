@@ -352,6 +352,12 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx) const {
+  auto conditionResult = DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid,
+                                                           current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -362,8 +368,7 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return true;
 }
 
 // Checks if access is allowed for an edge on the reverse path (from
@@ -376,6 +381,12 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                     const uint64_t current_time,
                                     const uint32_t tz_index,
                                     uint8_t& restriction_idx) const {
+  auto conditionResult = EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid,
+                                              current_time, tz_index, restriction_idx);
+  if (conditionResult.is_hit) {
+    return conditionResult.c_result;
+  }
+
   // Check access, U-turn, and simple turn restriction.
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
@@ -385,9 +396,7 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
-
-  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
-                                           tz_index, restriction_idx);
+  return true;
 }
 
 Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
