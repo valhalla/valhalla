@@ -264,15 +264,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             dow_mask = kDOWNone;
           }
 
-          // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
-          // end_date
-          if (days == 0 && !stop_pair.service_added_dates_size()) {
-            LOG_ERROR("Feed rejected: " + pbf_fp +
-                      "!  Start date: " + to_iso_extended_string(start_date) +
-                      " End date: " + to_iso_extended_string(end_date));
-            continue;
-          }
-
           dep.headsign_offset = transit_tilebuilder.AddName(stop_pair.trip_headsign());
 
           date::sys_days t_d = date::sys_days(date::year_month_day(d + date::days(tile_date)));
@@ -292,6 +283,15 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           for (const auto& x : stop_pair.service_added_dates()) {
             date::sys_days add_date = date::sys_days(date::year_month_day(d + date::days(x)));
             days = add_service_day(days, end_date, tile_date, add_date);
+          }
+
+          // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
+          // end_date or dow mask is not set by the calendar.txt
+          if (days == 0) {
+            LOG_ERROR("Feed rejected: " + pbf_fp +
+                      "!  Start date: " + to_iso_extended_string(start_date) +
+                      " End date: " + to_iso_extended_string(end_date));
+            continue;
           }
 
           add_schedule(schedule_index, dep, days, dow_mask, end_day);
@@ -1122,6 +1122,8 @@ void build_tiles(const boost::property_tree::ptree& pt,
       // the end of the route line
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
       auto range = departures.equal_range(platform_pbf_graphid);
+
+      // TODO: on real data there's no valid range
       for (auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
 
