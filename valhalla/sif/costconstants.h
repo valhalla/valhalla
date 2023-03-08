@@ -78,6 +78,11 @@ struct AvoidEdge {
   double percent_along;
 };
 
+struct ConditionalResult {
+  bool c_result;
+  bool is_hit;
+};
+
 /**
  * Simple structure for returning costs. Includes cost and true elapsed time
  * in seconds.
