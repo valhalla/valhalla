@@ -406,8 +406,11 @@ bool write_stop_pair(Transit& tile,
   const std::string currFeedPath = feed_trip.feed;
 
   const auto& currTrip = feed.get_trip(tile_tripId);
-  const auto& currShape = feed.get_shape(currTrip->shape_id);
   const auto& trip_calendar = feed.get_calendar(currTrip->service_id);
+
+  // get the gtfs shape and our pbf shape_id if present
+  const auto& currShape = feed.get_shape(currTrip->shape_id);
+  auto pbf_shape_it = tile_info.shapes.find({currTrip->shape_id, feed_trip.feed});
 
   // already sorted by stop_sequence
   const auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
@@ -429,6 +432,10 @@ bool write_stop_pair(Transit& tile,
     // check if this stop_pair (the origin of the pair) is inside the current tile
     if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
       auto* stop_pair = tile.add_stop_pairs();
+
+      if (!currShape.empty()) {
+        stop_pair->set_shape_id(pbf_shape_it->second);
+      }
 
       // TODO: need to also set the stop_pair's shape_id, convert_transit can use it
       // but currently doesn't
@@ -603,8 +610,6 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     const auto& feed = feeds(feed_shape.first);
     auto* shape = tile.add_shapes();
     const gtfs::Shape& currShape = feed.get_shape(tile_shape, true);
-    // We use currShape[0] because 'Shape' type is a vector of ShapePoints, but they all have the same
-    // shape_id
     shape->set_shape_id(feed_shape.second);
     std::vector<PointLL> trip_shape;
     for (const auto& shape_pt : currShape) {
