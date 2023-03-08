@@ -10,7 +10,7 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::thor;
 
-namespace osrm_serializers {
+namespace {
 
 json::ArrayPtr
 serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const size_t td_count) {
@@ -43,6 +43,9 @@ json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
   }
   return distance;
 }
+} // namespace
+
+namespace osrm_serializers {
 
 // Serialize route response in OSRM compatible format.
 json::MapPtr serialize(const Api& request,
@@ -121,18 +124,40 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
 json::MapPtr serialize(const Api& request,
                        const std::vector<TimeDistance>& time_distances,
                        double distance_scale) {
-  json::ArrayPtr matrix = json::array({});
+  auto json = json::map({});
   const auto& options = request.options();
-  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-    matrix->emplace_back(serialize_row(time_distances, source_index * options.targets_size(),
-                                       options.targets_size(), source_index, 0, distance_scale));
+
+  if (options.verbose()) {
+    json::ArrayPtr matrix = json::array({});
+    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+      matrix->emplace_back(serialize_row(time_distances, source_index * options.targets_size(),
+                                         options.targets_size(), source_index, 0, distance_scale));
+    }
+
+    json->emplace("sources_to_targets", matrix);
+
+    json->emplace("targets", json::array({locations(options.targets())}));
+    json->emplace("sources", json::array({locations(options.sources())}));
+  } // slim it down
+  else {
+    auto matrix = json::map({});
+    auto time = json::array({});
+    auto distance = json::array({});
+
+    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+      time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
+                                            options.targets_size()));
+      distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
+                                                options.targets_size(), source_index, 0,
+                                                distance_scale));
+    }
+    matrix->emplace("distances", distance);
+    matrix->emplace("durations", time);
+
+    json->emplace("sources_to_targets", matrix);
   }
-  auto json = json::map({
-      {"sources_to_targets", matrix},
-      {"units", Options_Units_Enum_Name(options.units())},
-  });
-  json->emplace("targets", json::array({locations(options.targets())}));
-  json->emplace("sources", json::array({locations(options.sources())}));
+
+  json->emplace("units", Options_Units_Enum_Name(options.units()));
 
   if (options.has_id_case()) {
     json->emplace("id", options.id());

@@ -10,6 +10,7 @@ jobs:
     name: Build and deploy docs
 
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'valhalla' }}
 
     steps:
       - name: Checkout
