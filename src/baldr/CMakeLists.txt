@@ -30,7 +30,6 @@ set(includes
      ${VALHALLA_SOURCE_DIR}/valhalla
      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
