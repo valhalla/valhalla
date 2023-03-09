@@ -183,12 +183,8 @@ void FlatTileCache::Reserve(size_t tile_size) {
 
 // Checks if tile exists in the cache.
 bool FlatTileCache::Contains(const GraphId& graphid) const {
-  // TODO there is something wrong with this check:
-  // get_index returns an uint32_t which is never negative
-  // therefore it allways different from -1
-  // warning: comparison of integers of different signs: 'uint32_t' (aka 'unsigned int') and 'int'
-  // [-Wsign-compare]
-  return get_index(graphid) != -1;
+  // max value means invalid
+  return get_index(graphid) != std::numeric_limits<uint32_t>::max();
 }
 
 // Lets you know if the cache is too large.
@@ -211,12 +207,8 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
-  // TODO there is something wrong with this if:
-  // get_index returns an uint32_t which is never negative
-  // therefore it allways different from -1
-  // warning: comparison of integers of different signs: 'uint32_t' (aka 'unsigned int') and 'int'
-  // [-Wsign-compare]
-  if (index == -1)
+  // max value means invalid
+  if (index == std::numeric_limits<uint32_t>::max())
     return nullptr;
   return cache_[index];
 }

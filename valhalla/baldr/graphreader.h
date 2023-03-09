@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -157,8 +158,9 @@ protected:
   }
   inline uint32_t get_index(const GraphId& graphid) const {
     auto offset = get_offset(graphid);
-    // TODO a negative value can not be stored on an uint32_t, anything can happen
-    return offset < cache_indices_.size() ? cache_indices_[offset] : -1;
+    // using max value to indicate invalid
+    return offset < cache_indices_.size() ? cache_indices_[offset]
+                                          : std::numeric_limits<uint32_t>::max();
   }
 
   // The actual cached GraphTile objects
