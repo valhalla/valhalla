@@ -4,12 +4,10 @@ import json
 from typing import List, Union
 
 def strtobool(val):
-    true = { 'y', 'yes', 't', 'true', 'on', '1' }
-    false = { 'n', 'no', 'f', 'false', 'off', '0' }
     lower = str(value).lower()
-    if lower in true:
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
         return True
-    elif lower in false:
+    elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
         return False
     else:
         raise ValueError('"{}" is not a valid bool value'.format(value))
