@@ -42,7 +42,7 @@ GraphTileHeader& GraphTileHeader::operator=(const GraphTileHeader& other) {
 
 // Set the version string.
 void GraphTileHeader::set_version(const std::string& version) {
-  strncpy(version_, version.c_str(), kMaxVersionSize);
+  memcpy(version_, version.c_str(), std::min(kMaxVersionSize, sizeof(version.c_str())));
   version_[kMaxVersionSize - 1] = 0;
 }
 
