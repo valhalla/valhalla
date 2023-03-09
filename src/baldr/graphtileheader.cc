@@ -24,7 +24,7 @@ GraphTileHeader::GraphTileHeader()
   // The initializer list substitutes this
   memset(this, 0, sizeof(GraphTileHeader));
 #endif
-  strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
+  memcpy(version_, PACKAGE_VERSION, std::min(kMaxVersionSize, sizeof(PACKAGE_VERSION)));
   version_[kMaxVersionSize - 1] = 0;
 #if 0
   // All non bitfields of uint32_t are directly initializatin on the class definition
