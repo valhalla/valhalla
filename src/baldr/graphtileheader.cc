@@ -21,28 +21,15 @@ GraphTileHeader::GraphTileHeader()
       spare4_(0), transfercount_(0), spare2_(0), departurecount_(0), stopcount_(0), spare5_(0),
       routecount_(0), schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0),
       admincount_(0), spare7_(0) {
-#if 0
-  // The initializer list substitutes this
-  memset(this, 0, sizeof(GraphTileHeader));
-#endif
-  memcpy(version_, PACKAGE_VERSION, std::min(kMaxVersionSize, sizeof(PACKAGE_VERSION)));
-  version_[kMaxVersionSize - 1] = 0;
-#if 0
-  // All non bitfields of uint32_t are directly initializatin on the class definition
-  tile_size_ = 0;
-#endif
+  set_version(PACKAGE_VERSION);
 }
-
-#if 0
-GraphTileHeader& GraphTileHeader::operator=(const GraphTileHeader& other) {
-  memcpy(this, &other, sizeof(GraphTileHeader));
-  return *this;
-}
-#endif
 
 // Set the version string.
 void GraphTileHeader::set_version(const std::string& version) {
-  memcpy(version_, version.c_str(), std::min(kMaxVersionSize, sizeof(version.c_str())));
+  // reinitializing the version array before copying
+  version_ = {};
+  std::copy(version.begin(), version.begin() + std::min(kMaxVersionSize, sizeof(version.c_str())),
+            version_.data());
   version_[kMaxVersionSize - 1] = 0;
 }
 
