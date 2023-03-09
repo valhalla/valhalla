@@ -10,12 +10,6 @@ parameters:
   - name: build
     type: boolean
     default: true
-  - name: provision
-    type: boolean
-    default: false
-  - name: deploy
-    type: boolean
-    default: true
   - name: trivy
     type: boolean
     default: false
@@ -32,15 +26,7 @@ parameters:
     type: boolean
     default: false
     displayName: Build in Debug Mode with Assertions
-  - name: EMEA_DEV
-    type: boolean
-    default: false
-  - name: EMEA_NONPROD
-    type: boolean
-    default: false
-  - name: EMEA_PROD
-    type: boolean
-    default: false
+
 
 variables:
   - name: app.key
@@ -49,10 +35,6 @@ variables:
     value: valhalla
   - name: run.build
     value: ${{ parameters.build }}
-  - name: run.provision
-    value: ${{ parameters.provision }}
-  - name: run.deploy
-    value: ${{ parameters.deploy }}
   - name: blackduck.enabled
     value: ${{ parameters.blackduck }}
   - name: trivy.enabled
@@ -70,45 +52,3 @@ stages:
       variables:
         - way.emea.share
         - blackduck
-
-  # RELEASE TO DEV
-  - template: pipeline/release/stage.yml
-    parameters:
-      name: emea_dev
-      enabled: eq('${{ parameters.EMEA_DEV }}', true )
-      region: emea
-      environment: dev
-      namespace: $(app.name)
-      variables:
-        - way.emea.share
-        - datadog
-        - way.emea.dev
-      dependencies: build
-
-  # RELEASE TO NONPROD
-  - template: pipeline/release/stage.yml
-    parameters:
-      name: emea_nonprod
-      enabled: or( eq('${{ parameters.EMEA_NONPROD }}', true ) , eq('${{ parameters.EMEA_PROD }}', true ) )
-      region: emea
-      environment: nonprod
-      namespace: $(app.name)
-      variables:
-        - way.emea.share
-        - datadog
-        - way.emea.nonprod
-      dependencies: emea_dev
-
-  # RELEASE TO PROD
-  - template: pipeline/release/stage.yml
-    parameters:
-      name: emea_prod
-      enabled: eq('${{ parameters.EMEA_PROD }}', true )
-      region: emea
-      environment: prod
-      namespace: $(app.name)
-      variables:
-        - way.emea.share
-        - datadog
-        - way.emea.prod
-      dependencies: emea_nonprod
