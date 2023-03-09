@@ -694,7 +694,7 @@ protected:
   // simply add a uint32_t some_offset_; just above empty_slots_ and decrease
   // kEmptySlots by 1. Note that you can ONLY add an offset here and NOT a
   // bitfield or union or anything like that
-  uint32_t empty_slots_[kEmptySlots] = {};
+  std::array<uint32_t, kEmptySlots> empty_slots_ = {};
 };
 
 } // namespace baldr
