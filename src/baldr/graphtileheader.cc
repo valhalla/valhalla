@@ -80,7 +80,7 @@ void GraphTileHeader::set_transfercount(const uint32_t transfers) {
 
 // Sets the edge bin offsets
 void GraphTileHeader::set_edge_bin_offsets(const uint32_t (&offsets)[kBinCount]) {
-  memcpy(bin_offsets_, offsets, sizeof(bin_offsets_));
+  std::copy(std::begin(offsets), std::end(offsets), bin_offsets_.data());
 }
 
 // Get the offsets to the given bin in the 5x5 grid.

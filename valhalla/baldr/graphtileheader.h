@@ -678,7 +678,7 @@ protected:
   uint32_t date_created_ = 0;
 
   // Offsets for each bin of the 5x5 grid (for search/lookup)
-  uint32_t bin_offsets_[kBinCount] = {};
+  std::array<uint32_t, kBinCount> bin_offsets_ = {};
 
   // Offset to beginning of the lane connectivity data
   uint32_t lane_connectivity_offset_ = 0;
