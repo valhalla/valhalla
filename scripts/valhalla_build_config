@@ -3,7 +3,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import json
 from typing import List, Union
 
-def strtobool(val):
+def strtobool(value):
     lower = str(value).lower()
     if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
         return True
