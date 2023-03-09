@@ -4,6 +4,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/nodeinfo.h"
 #include "config.h"
+#include <algorithm>
 #include <string.h>
 
 using namespace valhalla::baldr;
