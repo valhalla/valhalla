@@ -751,11 +751,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
     const DirectedEdge* directededge = tile->directededge(idx);
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
-      if (idx == edgeid.id() || directededge->is_shortcut() ||
-          directededge->use() == Use::kTransitConnection ||
-          directededge->use() == Use::kEgressConnection ||
-          directededge->use() == Use::kPlatformConnection ||
-          directededge->use() == Use::kConstruction || directededge->bss_connection()) {
+      if (idx == edgeid.id() || directededge->can_form_shortcut()) {
         continue;
       }
       if (continuing_edge != nullptr) {

@@ -386,10 +386,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
     const DirectedEdge* directededge = tile->directededge(edge_id);
-    if (directededge->use() == Use::kTransitConnection ||
-        directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection || directededge->bss_connection() ||
-        directededge->use() == Use::kConstruction) {
+    if (!directededge->can_form_shortcut()) {
       continue;
     }
 

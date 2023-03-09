@@ -564,6 +564,12 @@ public:
     return static_cast<Use>(use_);
   }
 
+  bool can_form_shortcut() const {
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
+  }
+
   /**
    * Sets the specialized use type of this edge.
    * @param  use  Use of this edge.
