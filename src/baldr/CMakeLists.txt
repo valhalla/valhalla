@@ -44,6 +44,9 @@ set(sources
     directededge.cc
     edgeinfo.cc
     graphid.cc
+    graphreader.cc
+    graphtile.cc
+    graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
     nodeinfo.cc
@@ -63,17 +66,13 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
     verbal_text_formatter_us_co.cc
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
-
-set (sources_with_warnings
-    graphreader.cc
-    graphtile.cc
-    graphtileheader.cc)
 
 list(APPEND sources
     #basic timezone stuff
@@ -91,8 +90,6 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
-list(APPEND sources_with_warnings
-    tz_alt.cpp)
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
