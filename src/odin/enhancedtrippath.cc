@@ -27,6 +27,7 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
+#ifdef LOGGING_LEVEL_TRACE
 const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
@@ -39,9 +40,6 @@ const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet 
   return f->second;
 }
 
-#if 0
-// From Clang:
-// warning: unused function 'TripLeg_Sidewalk_Name' [-Wunused-function]
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -531,7 +529,7 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
 std::string EnhancedTripLeg_Edge::GetLevelRef() const {
   std::string level_ref;
   if (!tagged_value().empty()) {
-    for (uint32_t t = 0; t < tagged_value().size(); ++t) {
+    for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
         level_ref = tagged_value().Get(t).value();
         break;
