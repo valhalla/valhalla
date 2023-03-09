@@ -39,6 +39,9 @@ const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet 
   return f->second;
 }
 
+#if 0
+// From Clang:
+// warning: unused function 'TripLeg_Sidewalk_Name' [-Wunused-function]
 const std::string& RoadClass_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
@@ -190,6 +193,7 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
     throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
+#endif
 
 // TODO: in the future might have to have dynamic angle based on road class and lane count
 bool is_fork_forward(uint32_t turn_degree) {
