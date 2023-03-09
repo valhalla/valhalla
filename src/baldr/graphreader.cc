@@ -183,6 +183,11 @@ void FlatTileCache::Reserve(size_t tile_size) {
 
 // Checks if tile exists in the cache.
 bool FlatTileCache::Contains(const GraphId& graphid) const {
+  // TODO there is something wrong with this check:
+  // get_index returns an uint32_t which is never negative
+  // therefore it allways different from -1
+  // warning: comparison of integers of different signs: 'uint32_t' (aka 'unsigned int') and 'int'
+  // [-Wsign-compare]
   return get_index(graphid) != -1;
 }
 
@@ -206,6 +211,11 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
+  // TODO there is something wrong with this if:
+  // get_index returns an uint32_t which is never negative
+  // therefore it allways different from -1
+  // warning: comparison of integers of different signs: 'uint32_t' (aka 'unsigned int') and 'int'
+  // [-Wsign-compare]
   if (index == -1)
     return nullptr;
   return cache_[index];
@@ -1014,7 +1024,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
-  const auto metadata_index = incident_location.metadata_index();
+  const int64_t metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(metadata_index) + " but total incident metadata of " +
