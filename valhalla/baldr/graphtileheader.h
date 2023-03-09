@@ -1,6 +1,7 @@
 #ifndef VALHALLA_BALDR_GRAPHTILEHEADER_H_
 #define VALHALLA_BALDR_GRAPHTILEHEADER_H_
 
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <string>
@@ -46,9 +47,6 @@ public:
    * Constructor
    */
   GraphTileHeader();
-#if 0
-  GraphTileHeader& operator=(const GraphTileHeader&);
-#endif
 
   /**
    * Get the GraphId (tileid and level) of this tile.
@@ -190,7 +188,7 @@ public:
    * @return  Returns the version of this tile.
    */
   std::string version() const {
-    return version_;
+    return version_.data();
   }
 
   /**
@@ -608,7 +606,7 @@ protected:
   std::pair<float, float> base_ll_ = {0, 0};
 
   // baldr version.
-  char version_[kMaxVersionSize] = {};
+  std::array<char, kMaxVersionSize> version_ = {};
 
   // Dataset Id
   uint64_t dataset_id_ = 0;
