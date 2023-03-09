@@ -745,24 +745,39 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  auto continuing_edge = [](const graph_tile_ptr& tile, const GraphId& edgeid,
-                            const NodeInfo* nodeinfo) {
+  bool shortcut_at_node;
+  auto continuing_edge = [&shortcut_at_node](const graph_tile_ptr& tile, const GraphId& edgeid,
+                            const NodeInfo* nodeinfo) -> const DirectedEdge* {
     uint32_t idx = nodeinfo->edge_index();
-    const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
+    const DirectedEdge* continuing_edge = nullptr;
     const DirectedEdge* directededge = tile->directededge(idx);
+    shortcut_at_node = false;
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
+      // remember any shortcuts we saw here
+      shortcut_at_node = shortcut_at_node || directededge->is_shortcut();
+      // we cant do shortcuts on these
       if (idx == edgeid.id() || directededge->is_shortcut() ||
           directededge->use() == Use::kTransitConnection ||
           directededge->use() == Use::kEgressConnection ||
           directededge->use() == Use::kPlatformConnection) {
         continue;
       }
+
+      // TODO: we should care more about what edge to pick to continue the shortcut search on
+      //  this doesnt match any of the edges attributes to decide which edge to continue with
+      //  in shortcut building we match edge properties to find the shortcut we need the same
+      //  to have a chance at finding the right shortcut for this edge
+
+      // we already found an edge to continue on if this one is too then its ambiguous
       if (continuing_edge != nullptr) {
-        return static_cast<const DirectedEdge*>(nullptr);
+        // set it to past the end to signify failure but allow us to keep looking at edges here
+        continuing_edge = directededge + (nodeinfo->edge_count() - i);
       }
+      // we could continue on this edge
       continuing_edge = directededge;
     }
-    return continuing_edge;
+    // if we went past the end we failed
+    return continuing_edge == directededge ? nullptr : continuing_edge;
   };
 
   // No shortcuts on the local level or transit level.
@@ -789,6 +804,12 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // directed edge.
     cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
     if (cont_de == nullptr) {
+      return {};
+    }
+
+    // if the edge isnt superseded but there was a shortcut here then we must have started
+    // outside of a shortcuts internal edges
+    if (!cont_de->superseded() && shortcut_at_node) {
       return {};
     }
 
