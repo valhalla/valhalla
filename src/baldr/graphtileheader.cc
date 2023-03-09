@@ -12,12 +12,32 @@ namespace valhalla {
 namespace baldr {
 
 // Default constructor.
-GraphTileHeader::GraphTileHeader() {
+GraphTileHeader::GraphTileHeader()
+    : // initialization of bitfields done here in c++20 can be done in the class definition
+      graphid_(0), density_(0), name_quality_(0), speed_quality_(0), exit_quality_(0),
+      has_elevation_(0), has_ext_directededge_(0), nodecount_(0), directededgecount_(0),
+      predictedspeeds_count_(0), spare1_(0), transitioncount_(0), spare3_(0), turnlane_count_(0),
+      spare4_(0), transfercount_(0), spare2_(0), departurecount_(0), stopcount_(0), spare5_(0),
+      routecount_(0), schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0),
+      admincount_(0), spare7_(0) {
+#if 0
+  // The initializer list substitutes this
   memset(this, 0, sizeof(GraphTileHeader));
+#endif
   strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
   version_[kMaxVersionSize - 1] = 0;
+#if 0
+  // All non bitfields of uint32_t are directly initializatin on the class definition
   tile_size_ = 0;
+#endif
 }
+
+#if 0
+GraphTileHeader& GraphTileHeader::operator=(const GraphTileHeader& other) {
+  memcpy(this, &other, sizeof(GraphTileHeader));
+  return *this;
+}
+#endif
 
 // Set the version string.
 void GraphTileHeader::set_version(const std::string& version) {
