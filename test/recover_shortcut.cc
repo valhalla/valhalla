@@ -22,7 +22,7 @@ std::string to_string(const midgard::PointLL& p) {
 }
 } // namespace std
 
-const auto conf = test::make_config("data/utrecht_tiles");
+const auto conf = test::make_config("test/data/utrecht_tiles");
 
 // expose the constructor
 struct testable_recovery : public shortcut_recovery_t {
