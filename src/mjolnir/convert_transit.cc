@@ -413,9 +413,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
                             const float orig_dist_traveled,
                             const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape,
-                            const std::vector<float>& distances,
-                            const std::string& origin_id,
-                            const std::string& dest_id) {
+                            const std::vector<float>& distances) {
 
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
@@ -563,7 +561,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     // Get the platform information
     GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
     const Transit_Node& platform = tile_pbf.nodes(platform_graphid.id());
-    const std::string& origin_id = platform.onestop_id();
     if (GraphId(platform.graphid()) != platform_graphid) {
       LOG_ERROR("Platform key not equal!");
     }
@@ -890,13 +887,11 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      std::string dest_id;
       if (end_platform_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
         const Transit_Node& endplatform = tile_pbf.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
-        dest_id = endplatform.onestop_id();
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
@@ -909,7 +904,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
-        dest_id = endplatform.onestop_id();
       }
 
       // Add the directed edge
@@ -953,7 +947,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
       auto shape = GetShape(platform_ll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
-                            transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
+                            transitedge.dest_dist_traveled, points, distance);
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
