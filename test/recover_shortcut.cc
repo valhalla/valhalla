@@ -175,11 +175,6 @@ std::unordered_set<valhalla::baldr::GraphId> get_all_shortcuts(boost::property_t
   return found_shortcut_ids;
 }
 
-void log_edge(GraphReader& reader, GraphId edge) {
-  std::cout << *reader.directededge(edge)->json() << "\n";
-  std::cout << *reader.edgeinfo(edge).json() << "\n";
-}
-
 TEST(GetShortcut, find_get_shortcut_errors) {
   GraphReader reader(conf.get_child("mjolnir"));
 
@@ -232,11 +227,8 @@ TEST(GetShortcut, find_get_shortcut_errors) {
             if (!found_edge) {
               LOG_INFO("Edge " + std::to_string(edge_id) + " not part of resolved shortcut " +
                        std::to_string(shortcut_id));
-              log_edge(reader, edge_id);
-              log_edge(reader, shortcut_id);
               for (const auto& edge_of_shortcut : edges_of_shortcut) {
                 LOG_INFO("   - " + std::to_string(edge_of_shortcut));
-                log_edge(reader, edge_of_shortcut);
               }
             }
           }
