@@ -197,10 +197,8 @@ bool CanContract(GraphReader& reader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, ++edgeid) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    if (!directededge->is_shortcut() && directededge->use() != Use::kTransitConnection &&
-        directededge->use() != Use::kEgressConnection &&
-        directededge->use() != Use::kPlatformConnection &&
-        directededge->use() != Use::kConstruction && !directededge->start_restriction() &&
+
+    if (directededge->can_form_shortcut() && !directededge->start_restriction() &&
         !directededge->end_restriction()) {
       edges.push_back(edgeid);
     }

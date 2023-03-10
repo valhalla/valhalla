@@ -1093,7 +1093,7 @@ public:
    * @return  Returns the index of the set bit in the superseded mask.
    */
   uint32_t superseded_idx() const {
-    return log2(superseded_) + 1;
+    return ffs(superseded_);
   }
 
   /**
