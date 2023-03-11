@@ -201,7 +201,7 @@ public:
    *
    * @return String in format "lon,lat"
    */
-  inline std::string to_string() const {
+  inline const std::string to_string() const {
     return std::to_string(this->first) + "," + std::to_string(this->second);
   }
 };
