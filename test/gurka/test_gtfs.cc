@@ -463,12 +463,13 @@ TEST(GtfsExample, MakeProto) {
     EXPECT_EQ(dist, 0.f);
   }
   EXPECT_EQ(last_dest_dist_traveled.size(), 2);
-  // Only one shape was present, for the other one we had to generate
-  // the edge's shapes from the the stop locations in convert_transit
-
-  // TODO: this should work, but currently a stop_pair doesn't set a shape_id so we don't record this
-  // see TODO in ingest_traffic's stop pair writer
-  EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
+  // Only one shape was present, for the other one we have to generate
+  // the edge's shapes from the the stop locations in convert_transit,
+  // in the pbf the dist_traveled will be empty for that one though
+  EXPECT_TRUE(std::find(last_dest_dist_traveled.begin(), last_dest_dist_traveled.end(), 6.0f) !=
+              last_dest_dist_traveled.end());
+  EXPECT_TRUE(std::find(last_dest_dist_traveled.begin(), last_dest_dist_traveled.end(), 0.0f) !=
+              last_dest_dist_traveled.end());
 
   // service
   EXPECT_EQ(service_start_dates.size(), 1);
@@ -601,7 +602,7 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(transit_nodes, 9);
   EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
-  // edge to the station and the connections are bidirectional (as per usual)
+  // edge to the station and the connections are bidirectional (as per usual), minus 2 bcs of 2 tiles
   EXPECT_EQ(uses[Use::kTransitConnection], 10);
   EXPECT_EQ(uses[Use::kPlatformConnection], 6);
   EXPECT_EQ(uses[Use::kEgressConnection], 6);

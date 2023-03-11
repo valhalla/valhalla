@@ -144,7 +144,7 @@ uint32_t to_local_epoch_sec(const std::string& dt) {
   return static_cast<uint32_t>(tp.time_since_epoch().count());
 };
 
-std::string get_origin_id_base(const std::string& stop_id, const std::string feed_name) {
+std::string get_origin_id_base(const std::string& stop_id, const std::string& feed_name) {
   return feed_name + "_" + stop_id;
 }
 

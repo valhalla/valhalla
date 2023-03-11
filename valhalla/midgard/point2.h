@@ -5,6 +5,7 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
