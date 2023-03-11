@@ -519,8 +519,8 @@ bool write_stop_pair(
 
       stop_pair->set_origin_onestop_id(origin_onestop_id);
       stop_pair->set_destination_onestop_id(dest_onestop_id);
-      stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
 
+      stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
       stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
 
       if (origin_is_in_tile) {
@@ -693,8 +693,9 @@ void ingest_tiles(const std::string& gtfs_dir,
     write_shapes(tile, current, feeds);
     std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current, feeds);
 
-    // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
+    // keep the tile's nodes, they'll be cleared if we exceed the config's trip_limit
     const auto tile_nodes = tile.nodes();
+    // we have to be careful with writing stop_pairs to not exceed PBF's stupid 2 GB limit
     size_t trip_count = 0;
     for (const auto& trip : current.trips) {
       trip_count++;

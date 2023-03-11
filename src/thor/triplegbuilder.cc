@@ -808,7 +808,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const uint32_t start_node_idx,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
-                          const uint8_t restrictions_idx) {
+                          const uint8_t restrictions_idx,
+                          float elapsed_secs) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -928,11 +929,14 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     // can also call externally
     double speed = 0;
     if (mode == sif::TravelMode::kPublicTransit) {
-      speed = directededge->speed();
+      // TODO(nils): get the actual speed here by passing in the elapsed seconds (or the whole
+      // pathinfo)
+      speed = directededge->length() / elapsed_secs * kMetersPerSectoKPH;
     } else {
       uint8_t flow_sources;
       speed = directededge->length() /
-              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs * 3.6;
+              costing->EdgeCost(directededge, graphtile, time_info, flow_sources).secs *
+              kMetersPerSectoKPH;
     }
     trip_edge->set_speed(speed);
   }
@@ -1576,7 +1580,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
                     time_info, startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->restriction_index);
+                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;

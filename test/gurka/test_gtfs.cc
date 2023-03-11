@@ -468,7 +468,7 @@ TEST(GtfsExample, MakeProto) {
 
   // TODO: this should work, but currently a stop_pair doesn't set a shape_id so we don't record this
   // see TODO in ingest_traffic's stop pair writer
-  // EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
+  EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
 
   // service
   EXPECT_EQ(service_start_dates.size(), 1);

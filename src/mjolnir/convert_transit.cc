@@ -253,7 +253,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // skip if no days are valid; this can happen a lot when there's a calendar.txt entry with
           // no valid days but some calendar_dates.txt entries which add a date lying in the past
-          if (days == 0) {
+          if (!days) {
             stats.invalid_service_dates++;
             continue;
           }
