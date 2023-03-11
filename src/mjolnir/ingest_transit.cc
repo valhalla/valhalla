@@ -421,6 +421,11 @@ bool write_stop_pair(
 
   const auto& currTrip = feed.get_trip(tile_tripId);
   const auto& trip_calendar = feed.get_calendar(currTrip->service_id);
+  if (!currTrip || !trip_calendar) {
+    LOG_ERROR("Feed " + feed_trip.feed + ", trip ID" + tile_tripId +
+              " can't be found or has no calendar.txt entry, skipping...");
+    return false;
+  }
 
   // get the gtfs shape and our pbf shape_id if present
   const auto& currShape = feed.get_shape(currTrip->shape_id);
@@ -462,6 +467,7 @@ bool write_stop_pair(
     if ((origin_is_in_tile || dest_is_in_tile) && origin_stopTime.trip_id == dest_stopTime.trip_id) {
       auto* stop_pair = tile.add_stop_pairs();
 
+      // add information from calendar.txt and calendar_dates.txt
       auto* service_dow = stop_pair->mutable_service_days_of_week();
       service_dow->Add(trip_calendar->monday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->tuesday == gtfs::CalendarAvailability::Available);
@@ -470,10 +476,24 @@ bool write_stop_pair(
       service_dow->Add(trip_calendar->friday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->saturday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->sunday == gtfs::CalendarAvailability::Available);
-      // skip if no days are valid,
-      // TODO(nils): also needs to be removed from the pbf?
-      if (!trip_calendar || !service_dow->size()) {
-        LOG_WARN("Service ID " + currTrip->service_id + " has no calendar entry, skip.");
+
+      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
+      bool had_added_date = false;
+      for (const auto& cal_date_item : trip_calDates) {
+        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
+        if (cal_date_item.exception_type == gtfs::CalendarDateException::Added) {
+          stop_pair->add_service_added_dates(d);
+          had_added_date = true;
+        } else
+          stop_pair->add_service_except_dates(d);
+      }
+
+      // this shouldn't happen, but let's make sure it doesn't
+      // in convert_transit we'll check if there was a valid date for this service and skip if not
+      if (!service_dow->size() && !had_added_date) {
+        LOG_WARN("Service ID " + currTrip->service_id +
+                 " has no valid calendar or calendar_dates entry, skipping...");
+        tile.mutable_stop_pairs()->RemoveLast();
         continue;
       }
 
@@ -535,16 +555,6 @@ bool write_stop_pair(
       auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
       stop_pair->set_route_index(route_it->second);
-
-      // add information from calendar_dates.txt
-      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
-      for (const auto& cal_date_item : trip_calDates) {
-        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
-        if (cal_date_item.exception_type == gtfs::CalendarDateException::Added)
-          stop_pair->add_service_added_dates(d);
-        else
-          stop_pair->add_service_except_dates(d);
-      }
 
       // grab the headsign
       stop_pair->set_trip_headsign(currTrip->trip_headsign);

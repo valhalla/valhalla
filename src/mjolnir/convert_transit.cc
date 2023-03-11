@@ -47,14 +47,16 @@ namespace {
 
 // Struct to hold stats information during each threads work
 struct builder_stats {
-  uint32_t no_dir_edge_count;
-  uint32_t dep_count;
-  uint32_t midnight_dep_count;
+  uint32_t no_dir_edge_count = 0;
+  uint32_t dep_count = 0;
+  uint32_t midnight_dep_count = 0;
+  uint32_t invalid_service_dates = 0;
   // Accumulate stats from all threads
   void operator()(const builder_stats& other) {
     no_dir_edge_count += other.no_dir_edge_count;
     dep_count += other.dep_count;
     midnight_dep_count += other.midnight_dep_count;
+    invalid_service_dates += other.invalid_service_dates;
   }
 };
 
@@ -184,39 +186,8 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           dep.route = stop_pair.route_index();
           dep.trip = stop_pair.trip_id();
 
-          // if we have shape data then set everything, else shapeid = 0;
-          if (stop_pair.has_shape_id() && stop_pair.has_destination_dist_traveled() &&
-              stop_pair.has_origin_dist_traveled()) {
-            dep.shapeid = stop_pair.shape_id();
-            dep.orig_dist_traveled = stop_pair.origin_dist_traveled();
-            dep.dest_dist_traveled = stop_pair.destination_dist_traveled();
-          } else {
-            dep.shapeid = 0;
-          }
-
-          dep.blockid = stop_pair.has_block_id() ? stop_pair.block_id() : 0;
-          dep.dep_time = stop_pair.origin_departure_time();
-          dep.elapsed_time = stop_pair.destination_arrival_time() - dep.dep_time;
-
-          dep.frequency_end_time =
-              stop_pair.has_frequency_end_time() ? stop_pair.frequency_end_time() : 0;
-          dep.frequency =
-              stop_pair.has_frequency_headway_seconds() ? stop_pair.frequency_headway_seconds() : 0;
-
-          if (!stop_pair.bikes_allowed()) {
-            stop_no_access[dep.orig_pbf_graphid] |= kBicycleAccess;
-            stop_no_access[dep.dest_pbf_graphid] |= kBicycleAccess;
-          }
-
-          if (!stop_pair.wheelchair_accessible()) {
-            stop_no_access[dep.orig_pbf_graphid] |= kWheelchairAccess;
-            stop_no_access[dep.dest_pbf_graphid] |= kWheelchairAccess;
-          }
-
-          dep.bicycle_accessible = stop_pair.bikes_allowed();
-          dep.wheelchair_accessible = stop_pair.wheelchair_accessible();
-
-          // Compute days of week mask
+          // Compute the valid days
+          // set the bits based on the dow.// Compute days of week mask
           uint32_t dow_mask = kDOWNone;
           for (uint32_t x = 0; x < (uint32_t)stop_pair.service_days_of_week_size(); x++) {
             bool dow = stop_pair.service_days_of_week(x);
@@ -247,9 +218,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             }
           }
 
-          // Compute the valid days
-          // set the bits based on the dow.
-
           auto d = date::floor<date::days>(DateTime::pivot_date_);
           date::sys_days start_date =
               date::sys_days(date::year_month_day(d + date::days(stop_pair.service_start_date())));
@@ -263,8 +231,6 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           if (stop_pair.service_start_date() == stop_pair.service_end_date()) {
             dow_mask = kDOWNone;
           }
-
-          dep.headsign_offset = transit_tilebuilder.AddName(stop_pair.trip_headsign());
 
           date::sys_days t_d = date::sys_days(date::year_month_day(d + date::days(tile_date)));
           uint32_t end_day = static_cast<uint32_t>((end_date - t_d).count());
@@ -285,14 +251,45 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             days = add_service_day(days, end_date, tile_date, add_date);
           }
 
-          // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
-          // end_date or dow mask is not set by the calendar.txt
+          // skip if no days are valid; this can happen a lot when there's a calendar.txt entry with
+          // no valid days but some calendar_dates.txt entries which add a date lying in the past
           if (days == 0) {
-            LOG_ERROR("Feed rejected: " + pbf_fp +
-                      "!  Start date: " + to_iso_extended_string(start_date) +
-                      " End date: " + to_iso_extended_string(end_date));
+            stats.invalid_service_dates++;
             continue;
           }
+
+          // if we have shape data then set everything, else shapeid = 0;
+          if (stop_pair.has_shape_id() && stop_pair.has_destination_dist_traveled() &&
+              stop_pair.has_origin_dist_traveled()) {
+            dep.shapeid = stop_pair.shape_id();
+            dep.orig_dist_traveled = stop_pair.origin_dist_traveled();
+            dep.dest_dist_traveled = stop_pair.destination_dist_traveled();
+          } else {
+            dep.shapeid = 0;
+          }
+
+          dep.blockid = stop_pair.has_block_id() ? stop_pair.block_id() : 0;
+          dep.dep_time = stop_pair.origin_departure_time();
+          dep.elapsed_time = stop_pair.destination_arrival_time() - dep.dep_time;
+          dep.headsign_offset = transit_tilebuilder.AddName(stop_pair.trip_headsign());
+
+          dep.frequency_end_time =
+              stop_pair.has_frequency_end_time() ? stop_pair.frequency_end_time() : 0;
+          dep.frequency =
+              stop_pair.has_frequency_headway_seconds() ? stop_pair.frequency_headway_seconds() : 0;
+
+          if (!stop_pair.bikes_allowed()) {
+            stop_no_access[dep.orig_pbf_graphid] |= kBicycleAccess;
+            stop_no_access[dep.dest_pbf_graphid] |= kBicycleAccess;
+          }
+
+          if (!stop_pair.wheelchair_accessible()) {
+            stop_no_access[dep.orig_pbf_graphid] |= kWheelchairAccess;
+            stop_no_access[dep.dest_pbf_graphid] |= kWheelchairAccess;
+          }
+
+          dep.bicycle_accessible = stop_pair.bikes_allowed();
+          dep.wheelchair_accessible = stop_pair.wheelchair_accessible();
 
           add_schedule(schedule_index, dep, days, dow_mask, end_day);
 
@@ -993,9 +990,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
                  std::promise<builder_stats>& results) {
 
   builder_stats stats;
-  stats.no_dir_edge_count = 0;
-  stats.dep_count = 0;
-  stats.midnight_dep_count = 0;
 
   GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
@@ -1285,6 +1279,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   uint32_t total_no_dir_edge_count = 0;
   uint32_t total_dep_count = 0;
   uint32_t total_midnight_dep_count = 0;
+  uint32_t total_invalid_service_dates = 0;
 
   for (auto& result : results) {
     // If something bad went down this will rethrow it
@@ -1294,9 +1289,15 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
       total_no_dir_edge_count += stats.no_dir_edge_count;
       total_dep_count += stats.dep_count;
       total_midnight_dep_count += stats.midnight_dep_count;
+      total_invalid_service_dates += stats.invalid_service_dates;
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
+  }
+
+  if (total_invalid_service_dates) {
+    LOG_ERROR("There were " + std::to_string(total_invalid_service_dates) +
+              " stop pairs with invalid service dates");
   }
 
   if (total_no_dir_edge_count) {
