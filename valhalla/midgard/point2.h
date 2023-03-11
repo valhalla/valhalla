@@ -195,6 +195,15 @@ public:
   static bool IsSpherical() {
     return false;
   }
+
+  /**
+   * Return a string in format "lon,lat"
+   *
+   * @return String in format "lon,lat"
+   */
+  inline std::string to_string() const {
+    return std::to_string(this->first) + "," + std::to_string(this->second);
+  }
 };
 
 using Point2 = PointXY<float>;

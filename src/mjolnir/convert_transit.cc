@@ -506,6 +506,12 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
     shape.push_back(endstop_ll);
   }
 
+  if (shape.size() == 0) {
+    LOG_ERROR("Invalid shape between " + stop_ll.to_string() + " and " + endstop_ll.to_string());
+    shape.push_back(stop_ll);
+    shape.push_back(endstop_ll);
+  }
+
   return shape;
 }
 
@@ -1111,7 +1117,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
       auto range = departures.equal_range(platform_pbf_graphid);
 
-      // TODO: on real data there's no valid range
       for (auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
 

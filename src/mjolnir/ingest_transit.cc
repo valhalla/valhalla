@@ -736,9 +736,8 @@ void stitch_tiles(const std::string& transit_dir,
   // for a missing stop_pair member's onestop_id we had to take the stop's gtfs stop_id
   // but generated nodes actually have their node_type appended on the onestop_id, so here we
   // need to remove the node_type before matching a candidate tile's nodes with the missing ones
-  const auto stop_id_from_onestop_id = [](const auto& n_oid, NodeType node_type) {
-    const auto type_found = n_oid.find("_" + to_string(node_type));
-    return type_found != n_oid.npos ? n_oid.substr(0, n_oid.length() - type_found) : n_oid;
+  const auto stop_id_from_onestop_id = [](const auto& n_oid, NodeType node_type, bool is_generated) {
+    return is_generated ? n_oid.substr(0, n_oid.length() - to_string(node_type).size()) : n_oid;
   };
 
   // for each tile
@@ -788,7 +787,8 @@ void stitch_tiles(const std::string& transit_dir,
           if (node_type != NodeType::kMultiUseTransitPlatform) {
             continue;
           }
-          auto platform_itr = needed.find(stop_id_from_onestop_id(node.onestop_id(), node_type));
+          auto platform_itr =
+              needed.find(stop_id_from_onestop_id(node.onestop_id(), node_type, node.generated()));
           if (platform_itr != needed.cend()) {
             platform_itr->second.value = node.graphid();
             ++found;
