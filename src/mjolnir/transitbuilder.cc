@@ -64,8 +64,6 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
                     std::mutex& lock,
                     const std::vector<OSMConnectionEdge>& connection_edges,
                     builder_stats& stats) {
-  auto t1 = std::chrono::high_resolution_clock::now();
-
   // Move existing nodes and directed edge builder vectors and clear the lists
   std::vector<NodeInfo> currentnodes(std::move(tilebuilder_local.nodes()));
   tilebuilder_local.nodes().clear();
@@ -312,11 +310,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
   }
 
   // Log the number of added nodes and edges
-  auto t2 = std::chrono::high_resolution_clock::now();
   LOG_DEBUG("Tile " + std::to_string(tilebuilder_local.header()->graphid().tileid()) + ": added " +
-            std::to_string(connedges) + " connection edges. time = " +
-            std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()) +
-            " ms");
+            std::to_string(connedges) + " connection edges.");
   stats.conn_edges = connedges;
 }
 
