@@ -570,9 +570,9 @@ public:
    * @return true if the edge is not a shortcut, not related to transit and not under construction
    */
   bool can_form_shortcut() const {
-    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
-           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
-           use() != Use::kConstruction;
+    return !is_shortcut() && !bss_connection() && !start_restriction() && !end_restriction() &&
+           use() != Use::kTransitConnection && use() != Use::kEgressConnection &&
+           use() != Use::kPlatformConnection && use() != Use::kConstruction;
   }
 
   /**
@@ -1086,6 +1086,20 @@ public:
   uint32_t superseded() const {
     return superseded_;
   }
+
+#ifdef _WIN32
+  // TODO: Workaround for missing strings.h on Windows. Replace with platform independent
+  //       std::countr_zero in C++20 (see https://en.cppreference.com/w/cpp/numeric/countr_zero).
+  int ffs(int mask) {
+    if (0 == mask)
+      return 0;
+
+    int idx;
+    for (idx = 1; !(mask & 1); ++idx)
+      mask >>= 1;
+    return idx;
+  }
+#endif
 
   /**
    * Unlike superseded(), this does not return the raw mask but the shortcut index
