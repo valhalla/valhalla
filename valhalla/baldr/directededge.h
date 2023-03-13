@@ -1090,7 +1090,7 @@ public:
 #ifdef _WIN32
   // TODO: Workaround for missing strings.h on Windows. Replace with platform independent
   //       std::countr_zero in C++20 (see https://en.cppreference.com/w/cpp/numeric/countr_zero).
-  int ffs(int mask) {
+  int ffs(int mask) const {
     if (0 == mask)
       return 0;
 

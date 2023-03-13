@@ -206,7 +206,7 @@ public:
   bool can_contract() const {
     return edge_count() >= 2 && intersection() != IntersectionType::kFork &&
            type() != NodeType::kGate && type() != NodeType::kTollBooth &&
-           type() != NodeType::kTollGantry && type() == NodeType::kSumpBuster;
+           type() != NodeType::kTollGantry && type() != NodeType::kSumpBuster;
   }
 
   /**
