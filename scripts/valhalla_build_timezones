@@ -231,7 +231,7 @@ Atlantic/St_Helena,Africa/Abidjan
 EOF
 
 echo "downloading timezone polygon file." 1>&2
-curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "wget failed for " ${url}
+curl -L -s -o ./timezones-with-oceans.shapefile.zip ${url} || error_exit "curl failed for ${url}"
 unzip ./timezones-with-oceans.shapefile.zip 1>&2 || error_exit "unzip failed"
 
 tz_file=$(mktemp)

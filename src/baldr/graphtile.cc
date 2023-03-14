@@ -980,7 +980,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
   for (; found < count && departures_[found].lineid() == lineid; ++found) {
-    // Make sure valid departure time
+    // Make sure valid departure time for the exact/fixed schedule
     if (departures_[found].type() == kFixedSchedule) {
       if (departures_[found].departure_time() >= current_time &&
           GetTransitSchedule(departures_[found].schedule_index())
@@ -1003,6 +1003,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
           (!wheelchair || departures_[found].wheelchair_accessible()) &&
           (!bicycle || departures_[found].bicycle_accessible())) {
 
+        // make a new departure with a guess for departure time
         const auto& d = departures_[found];
         const TransitDeparture* dep =
             new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
