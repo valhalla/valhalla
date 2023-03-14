@@ -122,16 +122,9 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_agencies(path_directory);
 
   // write stops.txt:
-  // 1st has all stop objects, egress/station/platform
-  // 2nd has only platform
+  // 1st has all stop objects, egress/station/platform, but egress has no parent
+  // 2nd has only platform, station, but the platform has not parent
   // 3rd has only station
-  struct gtfs::Stop first_stop_station {
-    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
-    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
-    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
-    .wheelchair_boarding = "1",
-  };
-  feed.add_stop(first_stop_station);
   struct gtfs::Stop first_stop_egress {
     .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
@@ -139,6 +132,13 @@ TEST(GtfsExample, WriteGtfs) {
     .location_type = gtfs::StopLocationType::EntranceExit, .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_egress);
+  struct gtfs::Stop first_stop_station {
+    .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
+    .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(first_stop_station);
   struct gtfs::Stop first_stop_platform {
     .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
@@ -147,6 +147,14 @@ TEST(GtfsExample, WriteGtfs) {
   };
   feed.add_stop(first_stop_platform);
 
+  struct gtfs::Stop second_stop_station {
+    .stop_id = stopTwoID + "_station", .stop_name = gtfs::Text("SECOND STOP"),
+    .coordinates_present = true, .stop_lat = station_two_ll->second.second,
+    .stop_lon = station_two_ll->second.first, .parent_station = "",
+    .location_type = gtfs::StopLocationType::Station, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
+  };
+  feed.add_stop(second_stop_station);
   struct gtfs::Stop second_stop_platform {
     .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
     .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
@@ -298,8 +306,8 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(trips[0].trip_id, tripOneID);
 
   const auto& stops = feed_reader.get_stops();
-  EXPECT_EQ(stops.size(), 5);
-  EXPECT_EQ(stops[0].stop_id, stopOneID);
+  EXPECT_EQ(stops.size(), 6);
+  EXPECT_EQ(stops[0].stop_id, stopOneID + "stop_one_rotating_door_eh");
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);
@@ -442,7 +450,7 @@ TEST(GtfsExample, MakeProto) {
 
   // stops
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
-  EXPECT_EQ(stops.size(), 9);
+  EXPECT_EQ(stops.size(), 12);
   for (const auto& stopID : stopIds) {
     EXPECT_TRUE(stops.find("toronto_" + stopID) != stops.end());
   }
@@ -599,13 +607,14 @@ TEST(GtfsExample, MakeTile) {
     }
   }
 
-  EXPECT_EQ(transit_nodes, 9);
+  EXPECT_EQ(transit_nodes, 12);
   EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
-  // edge to the station and the connections are bidirectional (as per usual), minus 2 bcs of 2 tiles
-  EXPECT_EQ(uses[Use::kTransitConnection], 10);
-  EXPECT_EQ(uses[Use::kPlatformConnection], 6);
-  EXPECT_EQ(uses[Use::kEgressConnection], 6);
+  // edge to the station and the connections are bidirectional (as per usual), plus some more because
+  // the second platform has no parent
+  EXPECT_EQ(uses[Use::kTransitConnection], 14);
+  EXPECT_EQ(uses[Use::kPlatformConnection], 8);
+  EXPECT_EQ(uses[Use::kEgressConnection], 8);
   // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
   EXPECT_EQ(uses[Use::kRail], 2);
 }

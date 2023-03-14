@@ -144,7 +144,7 @@ uint32_t to_local_epoch_sec(const std::string& dt) {
   return static_cast<uint32_t>(tp.time_since_epoch().count());
 };
 
-std::string get_origin_id_base(const std::string& stop_id, const std::string& feed_name) {
+std::string get_onestop_id_base(const std::string& stop_id, const std::string& feed_name) {
   return feed_name + "_" + stop_id;
 }
 
@@ -277,7 +277,7 @@ void setup_stops(Transit& tile,
   bool wheelchair_accessible = (tile_stop.wheelchair_boarding == "1");
   node->set_wheelchair_boarding(wheelchair_accessible);
   node->set_generated(isGenerated);
-  const auto& onestop_base = get_origin_id_base(tile_stop.stop_id, feed_name);
+  const auto& onestop_base = get_onestop_id_base(tile_stop.stop_id, feed_name);
   node->set_onestop_id(isGenerated ? onestop_base + "_" + to_string(node_type) : onestop_base);
   if (node_type == NodeType::kMultiUseTransitPlatform) {
     // when this platform is not generated, we can use its actual given id verbatim because thats how
@@ -351,8 +351,9 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     }
     // This really shouldn't happen, as platform IDs are referenced by the
     // stop_times.txt and the whole downstream logic would get messed up
-    // can only happen if there was an entrance and a platform at the same station
-    // without that station being referenced by their parent_station atttributes
+    // TODO: might want to completely skip this stop if this happens, be careful
+    //   to properly remove its associated station/egress IF they're not referenced
+    //   by other platforms.
     if (tile.nodes_size() == node_count) {
       LOG_ERROR("Generated platform for station " + station_as_stop->stop_id);
       setup_stops(tile, *station_as_stop, node_id, platform_node_ids, station.feed,
@@ -452,10 +453,10 @@ bool write_stop_pair(
     // we check further down when stitching and adjust if it's was generated
     std::string origin_onestop_id = origin_is_in_tile
                                         ? tile_nodes.Get(origin_graphid_it->second.id()).onestop_id()
-                                        : get_origin_id_base(origin_stopId, feed_trip.feed);
+                                        : get_onestop_id_base(origin_stopId, feed_trip.feed);
     std::string dest_onestop_id = dest_is_in_tile
                                       ? tile_nodes.Get(dest_graphid_it->second.id()).onestop_id()
-                                      : get_origin_id_base(dest_stopId, feed_trip.feed);
+                                      : get_onestop_id_base(dest_stopId, feed_trip.feed);
 
     // we don't use this value unless the origin is in the tile, so it's fine to set it false
     bool origin_is_generated =
@@ -759,6 +760,11 @@ void stitch_tiles(const std::string& transit_dir,
     do {
 
       // open tile make a hash of missing stop to invalid graphid
+
+      // NOTE, that for missing origin/dest, we don't have any information right
+      // now if it was generated or not. If it's missing, it's just the "base"
+      // onestop ID and we also don't patch it here, since (for now) nodes' onestop
+      // IDs aren't used anywhere after this code block
       auto tile = read_pbf(current_path);
       std::unordered_map<std::string, GraphId> needed;
       for (const auto& stop_pair : tile.stop_pairs()) {

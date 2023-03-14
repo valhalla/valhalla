@@ -982,8 +982,8 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   for (; found < count && departures_[found].lineid() == lineid; ++found) {
     // Make sure it falls within the schedule and departure props are valid
     const auto& d = departures_[found];
-    if (!GetTransitSchedule(d.schedule_index())->IsValid(day, dow, date_before_tile) ||
-        (wheelchair && !d.wheelchair_accessible()) || (bicycle && !d.bicycle_accessible())) {
+    if ((wheelchair && !d.wheelchair_accessible()) || (bicycle && !d.bicycle_accessible()) ||
+        !GetTransitSchedule(d.schedule_index())->IsValid(day, dow, date_before_tile)) {
       continue;
     }
 
