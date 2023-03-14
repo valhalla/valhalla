@@ -13,6 +13,7 @@ def strtobool(value):
     else:
         raise ValueError('"{}" is not a valid bool value'.format(value))
 
+
 class Optional:
     def __init__(self, t=None):
         self.type = t
