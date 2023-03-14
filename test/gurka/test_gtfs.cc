@@ -307,7 +307,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   const auto& stops = feed_reader.get_stops();
   EXPECT_EQ(stops.size(), 6);
-  EXPECT_EQ(stops[0].stop_id, stopOneID + "stop_one_rotating_door_eh");
+  EXPECT_EQ(stops[0].stop_id, stopOneID + "_rotating_door_eh");
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);

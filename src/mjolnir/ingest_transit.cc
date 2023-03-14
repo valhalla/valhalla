@@ -524,6 +524,14 @@ bool write_stop_pair(
       stop_pair->set_destination_arrival_time(dest_stopTime.arrival_time.get_total_seconds());
       stop_pair->set_origin_departure_time(origin_stopTime.departure_time.get_total_seconds());
 
+      // maybe set the dist_traveled
+      if (const auto dist = get_stop_pair_dist(*origin_stop, currShape, origin_stopTime)) {
+        stop_pair->set_origin_dist_traveled(dist);
+      }
+      if (const auto dist = get_stop_pair_dist(*dest_stop, currShape, dest_stopTime)) {
+        stop_pair->set_destination_dist_traveled(dist);
+      }
+
       if (origin_is_in_tile) {
         // So we looked up the node graphid by name, the name is either the actual name of the
         // platform (track 5 or something) OR its just the name of the station (in the case that the
@@ -533,25 +541,11 @@ bool write_stop_pair(
         // platform which is generated has one individual station
         stop_pair->set_origin_graphid(origin_graphid_it->second +
                                       static_cast<uint64_t>(origin_is_generated));
-
-        // call function to set shape, only if it has a shape_id, otherwise no need (see
-        // convert_transit)
-        if (stop_pair->has_shape_id()) {
-          float dist = get_stop_pair_dist(*origin_stop, currShape, origin_stopTime);
-          stop_pair->set_origin_dist_traveled(dist);
-        }
       }
-
       if (dest_is_in_tile) {
         // Same as above wrt to named and unnamed (generated) platforms
         stop_pair->set_destination_graphid(dest_graphid_it->second +
                                            static_cast<uint64_t>(dest_is_generated));
-        // call function to set dist_traveled, only if it has a shape_id, otherwise no need (see
-        // convert_transit)
-        if (stop_pair->has_shape_id()) {
-          float dist = get_stop_pair_dist(*dest_stop, currShape, dest_stopTime);
-          stop_pair->set_destination_dist_traveled(dist);
-        }
       }
       auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
