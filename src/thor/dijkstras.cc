@@ -933,7 +933,7 @@ void Dijkstras::SetOriginLocationsMultiModal(
 
       // Disallow any user avoid edges if the avoid location is ahead of the origin along the edge
       GraphId edgeid(edge.graph_id());
-      if (costing_->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
+      if (costing->AvoidAsOriginEdge(edgeid, edge.percent_along())) {
         continue;
       }
 

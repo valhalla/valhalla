@@ -619,10 +619,7 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRail], 2);
 }
 
-// TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
-// THE TRIP TYPE IS A TRANSIT TYPE
-
-TEST(GtfsExample, test_routing) {
+TEST(GtfsExample, route) {
   auto layout = create_layout();
 
   valhalla::Api result0 =
@@ -631,4 +628,21 @@ TEST(GtfsExample, test_routing) {
                         {"/date_time/value", "2023-02-27T05:50"},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}});
   EXPECT_EQ(result0.trip().routes_size(), 1);
+}
+
+TEST(GtfsExample, isochrones) {
+  auto layout = create_layout();
+
+  std::string res_string;
+  valhalla::Api res =
+      gurka::do_action(valhalla::Options::isochrone, map, {"A"}, "multimodal",
+                       {{"/date_time/type", "1"},
+                        {"/date_time/value", "2023-02-27T05:50"},
+                        {"/contours/0/time", "20"},
+                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
+                       {}, &res_string);
+
+  rapidjson::Document doc;
+  doc.Parse(res_string.c_str());
+  EXPECT_TRUE(doc.HasMember("features"));
 }
