@@ -1,3 +1,5 @@
+#include "midgard/logging.h"
+
 #include "baldr/streetname.h"
 
 #include "odin/sign.h"
