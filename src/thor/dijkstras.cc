@@ -458,7 +458,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // is a small added cost on top of any costs along paths and roads. We only do this
     // once so if its from a transition we don't need to do it again
     if (mode_ == travel_mode_t::kPedestrian && !from_transition) {
-      offset_time.local_time += transfer_cost.secs;
+      offset_time.forward(transfer_cost.secs, static_cast<int>(nodeinfo->timezone()));
     }
 
     // Update prior stop. TODO - parent/child stop info?
@@ -520,7 +520,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
       // Look up the next departure along this edge
       const TransitDeparture* departure =
-          tile->GetNextDeparture(directededge->lineid(), offset_time.local_time, day_, dow_,
+          tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds(), day_, dow_,
                                  date_before_tile_, tc->wheelchair(), tc->bicycle());
       if (departure) {
         // Check if there has been a mode change
@@ -543,9 +543,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
             // call GetNextDeparture again if we cannot make the current
             // departure.
             // TODO - is there a better way?
-            if (offset_time.local_time + 30 > departure->departure_time()) {
+            if (offset_time.day_seconds() + 30 > departure->departure_time()) {
               departure =
-                  tile->GetNextDeparture(directededge->lineid(), offset_time.local_time + 30, day_,
+                  tile->GetNextDeparture(directededge->lineid(), offset_time.day_seconds() + 30, day_,
                                          dow_, date_before_tile_, tc->wheelchair(), tc->bicycle());
               if (!departure) {
                 continue;
@@ -567,7 +567,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
 
         // Change mode and costing to transit. Add edge cost.
         mode_ = travel_mode_t::kPublicTransit;
-        newcost += tc->EdgeCost(directededge, departure, offset_time.local_time);
+        newcost += tc->EdgeCost(directededge, departure, offset_time.day_seconds());
       } else {
         // No matching departures found for this edge
         continue;
