@@ -121,7 +121,10 @@ TEST(GtfsExample, WriteGtfs) {
 
   feed.write_agencies(path_directory);
 
-  // write stops.txt
+  // write stops.txt:
+  // 1st has all stop objects, egress/station/platform
+  // 2nd has only platform, station
+  // 3rd has only platform
   struct gtfs::Stop first_stop_egress {
     .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
@@ -129,13 +132,6 @@ TEST(GtfsExample, WriteGtfs) {
     .location_type = gtfs::StopLocationType::EntranceExit, .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_egress);
-  struct gtfs::Stop first_stop_platform {
-    .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_name = gtfs::Text("POINT NEMO"),
-    .coordinates_present = true, .stop_lat = station_one_ll->second.second,
-    .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
-    .location_type = gtfs::StopLocationType::StopOrPlatform, .wheelchair_boarding = "1",
-  };
-  feed.add_stop(first_stop_platform);
   struct gtfs::Stop first_stop_station {
     .stop_id = stopOneID, .stop_name = gtfs::Text("POINT NEMO"), .coordinates_present = true,
     .stop_lat = station_one_ll->second.second, .stop_lon = station_one_ll->second.first,
@@ -143,28 +139,35 @@ TEST(GtfsExample, WriteGtfs) {
     .wheelchair_boarding = "1",
   };
   feed.add_stop(first_stop_station);
+  struct gtfs::Stop first_stop_platform {
+    .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_name = gtfs::Text("POINT NEMO"),
+    .coordinates_present = true, .stop_lat = station_one_ll->second.second,
+    .stop_lon = station_one_ll->second.first, .parent_station = stopOneID,
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .wheelchair_boarding = "1",
+  };
+  feed.add_stop(first_stop_platform);
 
   struct gtfs::Stop second_stop_station {
-    .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
+    .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STATION"), .coordinates_present = true,
     .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
     .parent_station = "", .location_type = gtfs::StopLocationType::Station,
     .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(second_stop_station);
-
-  struct gtfs::Stop third_stop_station {
-    .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
-    .stop_lat = station_three_ll->second.second, .stop_lon = station_three_ll->second.first,
-    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
-  };
-  feed.add_stop(third_stop_station);
-  struct gtfs::Stop third_stop_platform {
-    .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_name = gtfs::Text("THIRD STOP"),
-    .coordinates_present = true, .stop_lat = station_three_ll->second.second,
-    .stop_lon = station_three_ll->second.first, .parent_station = stopThreeID,
+  struct gtfs::Stop second_stop_platform {
+    .stop_id = stopTwoID + "_platform", .stop_name = gtfs::Text("SECOND STOP"),
+    .coordinates_present = true, .stop_lat = station_two_ll->second.second,
+    .stop_lon = station_two_ll->second.first, .parent_station = stopTwoID,
     .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
     .wheelchair_boarding = "1",
+  };
+  feed.add_stop(second_stop_platform);
+
+  struct gtfs::Stop third_stop_platform {
+    .stop_id = stopThreeID, .stop_name = gtfs::Text("THIRD STOP"), .coordinates_present = true,
+    .stop_lat = station_three_ll->second.second, .stop_lon = station_three_ll->second.first,
+    .parent_station = "", .location_type = gtfs::StopLocationType::StopOrPlatform,
+    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(third_stop_platform);
 
@@ -197,12 +200,6 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_trips(path_directory);
 
   // write stop_times.txt
-  std::string stopIds[3] = {
-      stopOneID + "_ledge_to_the_train_bucko",
-      stopTwoID,
-      stopThreeID + "_walk_the_plank_pal",
-  };
-
   struct StopTime trip_one_stop_one {
     .trip_id = tripOneID, .stop_id = stopOneID + "_ledge_to_the_train_bucko", .stop_sequence = 0,
     .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_headsign = "head",
@@ -211,16 +208,16 @@ TEST(GtfsExample, WriteGtfs) {
   feed.add_stop_time(trip_one_stop_one);
 
   struct StopTime trip_one_stop_two {
-    .trip_id = tripOneID, .stop_id = stopTwoID, .stop_sequence = 1, .arrival_time = Time("6:03:00"),
-    .departure_time = Time("6:03:00"), .stop_headsign = "head", .shape_dist_traveled = 3.0,
-    .timepoint = gtfs::StopTimePoint::Exact,
+    .trip_id = tripOneID, .stop_id = stopTwoID + "_platform", .stop_sequence = 1,
+    .arrival_time = Time("6:03:00"), .departure_time = Time("6:03:00"), .stop_headsign = "head",
+    .shape_dist_traveled = 3.0, .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_one_stop_two);
 
   struct StopTime trip_one_stop_three {
-    .trip_id = tripOneID, .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_sequence = 2,
-    .arrival_time = Time("6:06:00"), .departure_time = Time("6:06:00"), .stop_headsign = "head",
-    .shape_dist_traveled = 6.0, .timepoint = gtfs::StopTimePoint::Exact,
+    .trip_id = tripOneID, .stop_id = stopThreeID, .stop_sequence = 2, .arrival_time = Time("6:06:00"),
+    .departure_time = Time("6:06:00"), .stop_headsign = "head", .shape_dist_traveled = 6.0,
+    .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_one_stop_three);
 
@@ -232,14 +229,14 @@ TEST(GtfsExample, WriteGtfs) {
   feed.add_stop_time(trip_two_stop_one);
 
   struct StopTime trip_two_stop_two {
-    .trip_id = tripTwoID, .stop_id = stopTwoID, .stop_sequence = 1, .arrival_time = Time("10:03:00"),
-    .departure_time = Time("10:03:00"), .stop_headsign = "head",
+    .trip_id = tripTwoID, .stop_id = stopTwoID + "_platform", .stop_sequence = 1,
+    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_two_stop_two);
 
   struct StopTime trip_two_stop_three {
-    .trip_id = tripTwoID, .stop_id = stopThreeID + "_walk_the_plank_pal", .stop_sequence = 2,
+    .trip_id = tripTwoID, .stop_id = stopThreeID, .stop_sequence = 2,
     .arrival_time = Time("10:06:00"), .departure_time = Time("10:06:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
@@ -310,7 +307,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   const auto& stops = feed_reader.get_stops();
   EXPECT_EQ(stops.size(), 6);
-  EXPECT_EQ(stops[2].stop_id, stopOneID);
+  EXPECT_EQ(stops[0].stop_id, stopOneID + "_rotating_door_eh");
 
   const auto& shapes = feed_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);
@@ -436,9 +433,9 @@ TEST(GtfsExample, MakeProto) {
         // make sure:
         //   - the first stop pair has 0 as origin_dist_traveled
         //   - the last stop pair of tripOne has exactly 6.0f and tripTwo has the full shape length
-        if (stop_pair.origin_onestop_id() == stopOneID + "_ledge_to_the_train_bucko") {
+        if (stop_pair.origin_onestop_id() == "toronto_" + stopOneID + "_ledge_to_the_train_bucko") {
           first_origin_dist_traveled.push_back(stop_pair.origin_dist_traveled());
-        } else if (stop_pair.destination_onestop_id() == stopThreeID + "_walk_the_plank_pal") {
+        } else if (stop_pair.destination_onestop_id() == "toronto_" + stopThreeID) {
           last_dest_dist_traveled.push_back(stop_pair.destination_dist_traveled());
         }
       }
@@ -455,18 +452,18 @@ TEST(GtfsExample, MakeProto) {
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
   EXPECT_EQ(stops.size(), 9);
   for (const auto& stopID : stopIds) {
-    EXPECT_TRUE(stops.find(stopID) != stops.end());
+    EXPECT_TRUE(stops.find("toronto_" + stopID) != stops.end());
   }
 
   // stop_pairs, we have 3 in total since one stop_pair is across 2 tiles
   std::string stop_pair_ids[3] = {
       stopOneID + "_ledge_to_the_train_bucko",
-      stopTwoID + "_" + to_string(NodeType::kMultiUseTransitPlatform),
-      stopThreeID + "_walk_the_plank_pal",
+      stopTwoID,
+      stopThreeID,
   };
   EXPECT_EQ(stop_pairs.size(), 3);
   for (const auto& stop_pair_id : stop_pair_ids) {
-    EXPECT_TRUE(stops.find(stop_pair_id) != stops.end());
+    EXPECT_TRUE(stops.find("toronto_" + stop_pair_id) != stops.end());
   }
   // we have 4 here since we have the first stop_pair in two tiles on two trips
   EXPECT_EQ(first_origin_dist_traveled.size(), 4);
@@ -474,10 +471,13 @@ TEST(GtfsExample, MakeProto) {
     EXPECT_EQ(dist, 0.f);
   }
   EXPECT_EQ(last_dest_dist_traveled.size(), 2);
-  // TODO: since we removed the shape id from the second trip it's not recorded anymore
-  // will fix and re-enable in next PR, so we're robust against missing shapes.txt entries
-  // EXPECT_NEAR(last_dest_dist_traveled[0], shape_length, 1.f);
-  // EXPECT_EQ(last_dest_dist_traveled[1], 6.0f);
+  // Only one shape was present, for the other one we have to generate
+  // the edge's shapes from the the stop locations in convert_transit,
+  // in the pbf the dist_traveled will be empty for that one though
+  EXPECT_TRUE(std::find(last_dest_dist_traveled.begin(), last_dest_dist_traveled.end(), 6.0f) !=
+              last_dest_dist_traveled.end());
+  EXPECT_TRUE(std::find(last_dest_dist_traveled.begin(), last_dest_dist_traveled.end(), 0.0f) !=
+              last_dest_dist_traveled.end());
 
   // service
   EXPECT_EQ(service_start_dates.size(), 1);
@@ -504,7 +504,7 @@ TEST(GtfsExample, MakeTile) {
   auto station_two_ll = layout.find("2");
   auto station_three_ll = layout.find("3");
 
-  auto dt = "2023-02-27T05:50";
+  auto dt = "2023-03-27T05:50";
   auto dt_date = DateTime::get_formatted_date(dt);
   auto dt_date_days = DateTime::days_from_pivot_date(dt_date);
   auto dt_dow = DateTime::day_of_week_mask(dt);
@@ -545,6 +545,8 @@ TEST(GtfsExample, MakeTile) {
             tile->GetNextDeparture(edge.lineid(), 21600, // 06:00 am
                                    dt_day, dt_dow, date_before_tile, false, false);
         EXPECT_NE(dep->elapsed_time(), 0);
+        const auto shape = tile->edgeinfo(&edge).encoded_shape();
+        EXPECT_FALSE(shape.empty());
       }
     }
 
@@ -608,7 +610,8 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(transit_nodes, 9);
   EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
-  // edge to the station and the connections are bidirectional (as per usual)
+  // edge to the station and the connections are bidirectional (as per usual), plus some more because
+  // the second platform has no parent
   EXPECT_EQ(uses[Use::kTransitConnection], 10);
   EXPECT_EQ(uses[Use::kPlatformConnection], 6);
   EXPECT_EQ(uses[Use::kEgressConnection], 6);
@@ -622,7 +625,6 @@ TEST(GtfsExample, MakeTile) {
 TEST(GtfsExample, test_routing) {
   auto layout = create_layout();
 
-  // TODO(nils): adjust the max walking distance, the grid is 1 km per unit now
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"},
