@@ -151,10 +151,13 @@ public:
    * @return   Returns a list (vector) of untagged names.
    */
   std::vector<std::string> GetNames() const;
+
   /** get the name & is_tagged flag
    *
    *  This one does not calculate the types but has the is_tagged flag
    *  Like GetNamesAndTypes but without using memory for the types
+   *
+   *  @return iReturns a list (vector) (name, is_tagged) pairs
    */
   std::vector<std::pair<std::string, bool>> GetNames(bool) const;
 
@@ -170,7 +173,7 @@ public:
    * Convenience method to get the names and route number flags for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
-   * @return   Returns a list (vector) of name/route number pairs.
+   * @return   Returns a list (vector) of (name, is_tagged, route number) tuple.
    */
   std::vector<std::tuple<std::string, bool, uint8_t>>
   GetNamesAndTypes(bool include_tagged_names = false) const;

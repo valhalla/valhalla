@@ -449,9 +449,8 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
                                    : TileHierarchy::levels()[graphid.level()]);
 
   // figure out how many digits in tile-id
-  const uint32_t max_id = level.tiles.ncolumns() > 0 && level.tiles.nrows() > 0
-                              ? level.tiles.ncolumns() * level.tiles.nrows() - 1
-                              : 0;
+  const uint32_t max_id = static_cast<uint32_t>(level.tiles.ncolumns() * level.tiles.nrows() - 1);
+
   if (graphid.tileid() > max_id) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid tile id:" +
                              std::to_string(graphid));
