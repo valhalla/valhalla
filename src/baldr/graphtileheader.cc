@@ -28,7 +28,7 @@ GraphTileHeader::GraphTileHeader()
 void GraphTileHeader::set_version(const std::string& version) {
   // reinitializing the version array before copying
   version_ = {};
-  std::copy(version.begin(), version.begin() + std::min(kMaxVersionSize, sizeof(version.c_str())),
+  std::copy(version.begin(), version.begin() + std::min(kMaxVersionSize, version.size()),
             version_.data());
   version_[kMaxVersionSize - 1] = 0;
 }
