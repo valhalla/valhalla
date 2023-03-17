@@ -559,7 +559,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                : TileHierarchy::levels()[level];
 
   // get the number of sub directories that we should have
-  uint32_t max_id = stat_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
+  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
   size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
   if (parts % 3 != 0) {
     parts += 3 - (parts % 3);
