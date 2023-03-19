@@ -159,8 +159,7 @@ protected:
   inline uint32_t get_index(const GraphId& graphid) const {
     auto offset = get_offset(graphid);
     // using max value to indicate invalid
-    return offset < cache_indices_.size() ? cache_indices_[offset]
-                                          : std::numeric_limits<uint32_t>::max();
+    return offset < cache_indices_.size() ? cache_indices_[offset] : midgard::invalid<uint32_t>();
   }
 
   // The actual cached GraphTile objects

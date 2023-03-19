@@ -821,28 +821,16 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
-#if 0
-    std::vector<uint8_t> types;
-#endif
-
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-#if 0
-      if (types.at(name_index) != 0) {
-        // Skip the tagged names
-        name_index++;
-        continue;
-      }
-#else
       if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         continue;
       }
-#endif
 
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
       // Assign name and type

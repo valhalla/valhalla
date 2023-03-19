@@ -14,6 +14,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <limits>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
@@ -695,6 +696,15 @@ unaligned_read(const void* ptr) {
   T r;
   std::memcpy(&r, ptr, sizeof(T));
   return r;
+}
+
+/**
+ * When using max value as invalid
+ * @returns true when value is max
+ */
+template <typename numeric_t>
+bool invalid() {
+  return std::numeric_limits<numeric_t>::max();
 }
 
 } // namespace midgard
