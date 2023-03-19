@@ -5,6 +5,7 @@
 #include <cstring>
 #include <functional>
 #include <limits>
+#include <string>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -194,6 +195,15 @@ public:
    */
   static bool IsSpherical() {
     return false;
+  }
+
+  /**
+   * Return a string in format "lon,lat"
+   *
+   * @return String in format "lon,lat"
+   */
+  inline const std::string to_string() const {
+    return std::to_string(this->first) + "," + std::to_string(this->second);
   }
 };
 
