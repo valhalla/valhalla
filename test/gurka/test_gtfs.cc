@@ -122,9 +122,9 @@ TEST(GtfsExample, WriteGtfs) {
   feed.write_agencies(path_directory);
 
   // write stops.txt:
-  // 1st has all stop objects, egress/station/platform, but egress has no parent
-  // 2nd has only platform, station, but the platform has not parent
-  // 3rd has only station
+  // 1st has all stop objects, egress/station/platform
+  // 2nd has only platform, station
+  // 3rd has only platform
   struct gtfs::Stop first_stop_egress {
     .stop_id = stopOneID + "_rotating_door_eh", .stop_name = gtfs::Text("POINT NEMO"),
     .coordinates_present = true, .stop_lat = station_one_ll->second.second,
@@ -148,18 +148,18 @@ TEST(GtfsExample, WriteGtfs) {
   feed.add_stop(first_stop_platform);
 
   struct gtfs::Stop second_stop_station {
-    .stop_id = stopTwoID + "_station", .stop_name = gtfs::Text("SECOND STOP"),
-    .coordinates_present = true, .stop_lat = station_two_ll->second.second,
-    .stop_lon = station_two_ll->second.first, .parent_station = "",
-    .location_type = gtfs::StopLocationType::Station, .stop_timezone = "America/Toronto",
-    .wheelchair_boarding = "1",
+    .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STATION"), .coordinates_present = true,
+    .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
+    .parent_station = "", .location_type = gtfs::StopLocationType::Station,
+    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
   };
   feed.add_stop(second_stop_station);
   struct gtfs::Stop second_stop_platform {
-    .stop_id = stopTwoID, .stop_name = gtfs::Text("SECOND STOP"), .coordinates_present = true,
-    .stop_lat = station_two_ll->second.second, .stop_lon = station_two_ll->second.first,
-    .parent_station = "", .location_type = gtfs::StopLocationType::StopOrPlatform,
-    .stop_timezone = "America/Toronto", .wheelchair_boarding = "1",
+    .stop_id = stopTwoID + "_platform", .stop_name = gtfs::Text("SECOND STOP"),
+    .coordinates_present = true, .stop_lat = station_two_ll->second.second,
+    .stop_lon = station_two_ll->second.first, .parent_station = stopTwoID,
+    .location_type = gtfs::StopLocationType::StopOrPlatform, .stop_timezone = "America/Toronto",
+    .wheelchair_boarding = "1",
   };
   feed.add_stop(second_stop_platform);
 
@@ -208,9 +208,9 @@ TEST(GtfsExample, WriteGtfs) {
   feed.add_stop_time(trip_one_stop_one);
 
   struct StopTime trip_one_stop_two {
-    .trip_id = tripOneID, .stop_id = stopTwoID, .stop_sequence = 1, .arrival_time = Time("6:03:00"),
-    .departure_time = Time("6:03:00"), .stop_headsign = "head", .shape_dist_traveled = 3.0,
-    .timepoint = gtfs::StopTimePoint::Exact,
+    .trip_id = tripOneID, .stop_id = stopTwoID + "_platform", .stop_sequence = 1,
+    .arrival_time = Time("6:03:00"), .departure_time = Time("6:03:00"), .stop_headsign = "head",
+    .shape_dist_traveled = 3.0, .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_one_stop_two);
 
@@ -229,8 +229,8 @@ TEST(GtfsExample, WriteGtfs) {
   feed.add_stop_time(trip_two_stop_one);
 
   struct StopTime trip_two_stop_two {
-    .trip_id = tripTwoID, .stop_id = stopTwoID, .stop_sequence = 1, .arrival_time = Time("10:03:00"),
-    .departure_time = Time("10:03:00"), .stop_headsign = "head",
+    .trip_id = tripTwoID, .stop_id = stopTwoID + "_platform", .stop_sequence = 1,
+    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   feed.add_stop_time(trip_two_stop_two);
@@ -612,9 +612,9 @@ TEST(GtfsExample, MakeTile) {
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
   // edge to the station and the connections are bidirectional (as per usual), plus some more because
   // the second platform has no parent
-  EXPECT_EQ(uses[Use::kTransitConnection], 14);
-  EXPECT_EQ(uses[Use::kPlatformConnection], 8);
-  EXPECT_EQ(uses[Use::kEgressConnection], 8);
+  EXPECT_EQ(uses[Use::kTransitConnection], 10);
+  EXPECT_EQ(uses[Use::kPlatformConnection], 6);
+  EXPECT_EQ(uses[Use::kEgressConnection], 6);
   // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
   EXPECT_EQ(uses[Use::kRail], 2);
 }
