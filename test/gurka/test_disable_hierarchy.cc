@@ -31,7 +31,7 @@ void doTest(Costing::Type costing_type) {
 
   // Check hierarchy limits
   auto& hierarchy_limits =
-    mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
+      mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
   for (auto& hierarchy : hierarchy_limits) {
     EXPECT_EQ(hierarchy.max_up_transitions, kUnlimitedTransitions);
   }
