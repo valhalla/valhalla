@@ -635,9 +635,9 @@ TEST(GtfsExample, isochrones) {
 
   std::string res_string;
   valhalla::Api res =
-      gurka::do_action(valhalla::Options::isochrone, map, {"A"}, "multimodal",
+      gurka::do_action(valhalla::Options::isochrone, map, {"C"}, "multimodal",
                        {{"/date_time/type", "1"},
-                        {"/date_time/value", "2023-02-27T05:50"},
+                        {"/date_time/value", "2023-02-27T05:58"},
                         {"/contours/0/time", "20"},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
                        {}, &res_string);

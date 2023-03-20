@@ -292,7 +292,9 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
 
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
-                                                const ExpansionType route_type) {
+                                                const ExpansionType route_type,
+                                                const float secs,
+                                                const uint32_t dist) {
   if (route_type == ExpansionType::multimodal) {
     // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
     // label
@@ -303,17 +305,13 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // Continue if the time and distance intervals have been met. This bus or rail line goes beyond the
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
-  float time =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
-  float distance =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].path_distance();
   // prune the edge if its start is above max contour
-  if (time > max_seconds_ && distance > max_meters_)
+  if (secs > max_seconds_ && dist > max_meters_)
     return ExpansionRecommendation::prune_expansion;
 
   // track expansion
-  if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
-                                    distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
+  if (inner_expansion_callback_ && (secs <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
+                                    dist <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
     if (!expansion_callback_) {
       expansion_callback_ = inner_expansion_callback_;
     }

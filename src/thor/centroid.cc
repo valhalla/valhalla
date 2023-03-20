@@ -122,7 +122,9 @@ std::vector<std::vector<PathInfo>> Centroid::Expand(const ExpansionType& expansi
 // our intersections and add or update them
 thor::ExpansionRecommendation Centroid::ShouldExpand(baldr::GraphReader& reader,
                                                      const sif::EdgeLabel& label,
-                                                     const thor::ExpansionType) {
+                                                     const thor::ExpansionType,
+                                                     const float /*time*/,
+                                                     const uint32_t /*dist*/) {
   // TODO: we should quit earlier if finding a centroid isnt working out
 
   // TODO: refactor dijkstras a bit to get the tile and send it to us so we dont have to
