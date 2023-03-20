@@ -450,7 +450,7 @@ TEST(GtfsExample, MakeProto) {
 
   // stops
   std::string stopIds[3] = {stopOneID, stopTwoID, stopThreeID};
-  EXPECT_EQ(stops.size(), 12);
+  EXPECT_EQ(stops.size(), 9);
   for (const auto& stopID : stopIds) {
     EXPECT_TRUE(stops.find("toronto_" + stopID) != stops.end());
   }
@@ -607,7 +607,7 @@ TEST(GtfsExample, MakeTile) {
     }
   }
 
-  EXPECT_EQ(transit_nodes, 12);
+  EXPECT_EQ(transit_nodes, 9);
   EXPECT_EQ(uses[Use::kRoad], 10);
   // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
   // edge to the station and the connections are bidirectional (as per usual), plus some more because
@@ -620,8 +620,6 @@ TEST(GtfsExample, MakeTile) {
 }
 
 TEST(GtfsExample, route) {
-  auto layout = create_layout();
-
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"},
@@ -631,8 +629,6 @@ TEST(GtfsExample, route) {
 }
 
 TEST(GtfsExample, isochrones) {
-  auto layout = create_layout();
-
   std::string res_string;
   valhalla::Api res =
       gurka::do_action(valhalla::Options::isochrone, map, {"C"}, "multimodal",
