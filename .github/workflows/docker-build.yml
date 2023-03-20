@@ -44,10 +44,7 @@ jobs:
           tags: |
             ghcr.io/valhalla/valhalla:${{ steps.extract_branch.outputs.branch }}
       - name: Build latest image
-        uses: docker/build-push-action@v4
         if: github.ref == 'refs/heads/nn-remove-dockerhub'
-        with:
-          push: false
-          tags: |
-            ghcr.io/valhalla/valhalla:latest
-
+        run: |
+          docker build -t ghcr.io/valhalla/valhalla:latest .
+          docker push ghcr.io/valhalla/valhalla:latest
