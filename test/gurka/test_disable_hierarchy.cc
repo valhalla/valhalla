@@ -1,6 +1,6 @@
 #include "gurka.h"
-#include "test.h"
 #include "proto/options.pb.h"
+#include "test.h"
 #include <boost/format.hpp>
 #include <gtest/gtest.h>
 
@@ -33,8 +33,7 @@ protected:
     const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode);
 
     // Check hierarchy limits
-    auto& hierarchy_limits =
-        mode_costing[int(travel_mode)]->GetHierarchyLimits();
+    auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
     for (auto& hierarchy : hierarchy_limits) {
       EXPECT_EQ(hierarchy.max_up_transitions, kUnlimitedTransitions);
     }
