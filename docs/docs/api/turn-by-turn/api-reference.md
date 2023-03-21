@@ -225,11 +225,8 @@ These options are available for transit costing when the multimodal costing mode
 | `use_bus` | User's desire to use buses. Range of values from 0 (try to avoid buses) to 1 (strong preference for riding buses). |
 | `use_rail` | User's desire to use rail/subway/metro. Range of values from 0 (try to avoid rail) to 1 (strong preference for riding rail).|
 | `use_transfers` |User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).|
-| `filters` | TODO: describe new approach with raw GTFS. It should also work, but we need to document how people can determine our `onestop_id` themselves. Also, I'm pretty sure we don't even offered excluding `stops` by filtering, but I'm not 100%. ~~A way to filter for one or more `stops`, `routes`, or `operators`. Filters must contain a list of [Onestop IDs](https://transit.land/documentation/onestop-id-scheme/), which is a unique identifier for Transitland data, and an `action`. <ul><li>`ids`: any number of Onestop IDs (such as o-9q9-bart)</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>~~
+| `filters` | A way to filter for one or more ~~`stops`~~ (TODO: need to re-enable), `routes`, or `operators`. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an `action`. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies. <ul><li>`ids`: any number of Onestop IDs</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
 
-###### Filter transit data
-
-**TODO: describe new OneStop IDs**
 
 ##### Sample JSON payloads for multimodal requests with transit
 
@@ -251,7 +248,11 @@ A multimodal request for a route favoring buses and a person walking at a set sp
 {"locations":[{"lat":40.749706,"lon":-73.991562,"type":"break","street":"Penn Plaza"},{"lat":40.73093,"lon":-73.991379,"type":"break","street":"Wanamaker Place"}],"costing":"multimodal","costing_options":{"transit":{"use_bus":"1.0","use_rail":"0.0","use_transfers":"0.3"},"pedestrian":{"walking_speed":"4.1"}}}
 ```
 
-**TODO: show  a request with the new OneStop IDs**
+A multimodal request with a filter for certain Onestop IDs:
+
+```json
+{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"routes":{"ids":["NYC_AUR"],"action":"exclude"},"operators":{"ids":["paris_CFG","berlin_VBB"],"action":"include"}}}},"units":"miles"}
+```
 
 #### Directions options
 
