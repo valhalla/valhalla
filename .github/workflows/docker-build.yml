@@ -2,7 +2,7 @@ name: Publish Docker image
 on:
   push:
     branches:
-      - '*'
+      - 'master'
     tags:
       - '*'
     paths-ignore:
@@ -35,7 +35,7 @@ jobs:
           docker build -t ghcr.io/valhalla/valhalla:${{ steps.extract_branch.outputs.tag }} .
           docker push ghcr.io/valhalla/valhalla:${{ steps.extract_branch.outputs.tag }}
       - name: Build latest image
-        if: github.ref == 'refs/heads/nn-remove-dockerhub'
+        if: github.ref == 'refs/heads/master'
         run: |
           docker build -t ghcr.io/valhalla/valhalla:latest .
           docker push ghcr.io/valhalla/valhalla:latest
