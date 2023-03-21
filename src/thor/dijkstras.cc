@@ -436,7 +436,9 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     if (tc->IsExcluded(tile, nodeinfo)) {
       return;
     }
-  } else if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
+  }
+
+  if (!mode_costing[static_cast<uint8_t>(mode_)]->Allowed(nodeinfo)) {
     return;
   }
 
