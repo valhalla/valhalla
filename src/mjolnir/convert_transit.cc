@@ -1172,8 +1172,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
         } catch (const std::exception& e) { LOG_ERROR(e.what()); }
       }
 
-      // TODO Get any transfers from this stop (no transfers currently
-      // available from Transitland)
+      // TODO Get any transfers from this stop
       // AddTransfers(tilebuilder);
 
       // Add to stop edge map - track edges that need to be added. This is
