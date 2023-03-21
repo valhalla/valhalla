@@ -115,9 +115,7 @@ protected:
   // A child-class must implement this to decide when to stop the expansion
   virtual ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                const sif::EdgeLabel& pred,
-                                               const ExpansionType route_type,
-                                               const float secs,
-                                               const uint32_t dist) = 0;
+                                               const ExpansionType route_type) = 0;
 
   // A child-class must implement this to tell the algorithm how much expansion to expect to do
   virtual void GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const = 0;

@@ -363,11 +363,7 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     }
 
     // Check if we should stop
-    const float time =
-        pred.predecessor() != kInvalidLabel ? bdedgelabels_[pred.predecessor()].cost().secs : 0.f;
-    const uint32_t dist =
-        pred.predecessor() != kInvalidLabel ? bdedgelabels_[pred.predecessor()].path_distance() : 0;
-    cb_decision = ShouldExpand(graphreader, pred, expansion_direction, time, dist);
+    cb_decision = ShouldExpand(graphreader, pred, expansion_direction);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node in expansion_direction.
       ExpandInner<expansion_direction>(graphreader, pred.endnode(), pred, predindex, opp_pred_edge,
@@ -737,11 +733,7 @@ void Dijkstras::ComputeMultiModal(
     edgestatus_.Update(pred.edgeid(), EdgeSet::kPermanent, pred.path_id());
 
     // Check if we should stop
-    const auto time =
-        pred.predecessor() != kInvalidLabel ? mmedgelabels_[pred.predecessor()].cost().secs : 0.f;
-    const auto dist =
-        pred.predecessor() != kInvalidLabel ? mmedgelabels_[pred.predecessor()].path_distance() : 0;
-    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::multimodal, time, dist);
+    cb_decision = ShouldExpand(graphreader, pred, ExpansionType::multimodal);
     if (cb_decision != ExpansionRecommendation::prune_expansion) {
       // Expand from the end node of the predecessor edge.
       ExpandForwardMultiModal(graphreader, pred.endnode(), pred, predindex, false, pc, tc,

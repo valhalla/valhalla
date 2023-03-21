@@ -87,9 +87,7 @@ protected:
   // when the main loop is looking to continue expanding we tell it to terminate here
   virtual thor::ExpansionRecommendation ShouldExpand(baldr::GraphReader& graphreader,
                                                      const sif::EdgeLabel& pred,
-                                                     const thor::ExpansionType route_type,
-                                                     const float secs,
-                                                     const uint32_t dist) override;
+                                                     const thor::ExpansionType route_type) override;
 
   // tell the expansion how many labels to expect and how many buckets to use
   virtual void GetExpansionHints(uint32_t& bucket_count,

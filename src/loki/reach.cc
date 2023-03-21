@@ -221,11 +221,8 @@ void Reach::ExpandingNode(baldr::GraphReader&,
 }
 
 // when the main loop is looking to continue expanding we tell it to terminate here
-thor::ExpansionRecommendation Reach::ShouldExpand(baldr::GraphReader&,
-                                                  const sif::EdgeLabel&,
-                                                  const thor::ExpansionType,
-                                                  const float /*time*/,
-                                                  const uint32_t /*dist*/) {
+thor::ExpansionRecommendation
+Reach::ShouldExpand(baldr::GraphReader&, const sif::EdgeLabel&, const thor::ExpansionType) {
   return done_.size() - transitions_ < max_reach_ ? thor::ExpansionRecommendation::continue_expansion
                                                   : thor::ExpansionRecommendation::stop_expansion;
 }
