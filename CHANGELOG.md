@@ -1,5 +1,6 @@
 ## Release Date: 2023-??-?? Valhalla 3.3.1
 * **Removed**
+   * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
 * **Bug Fix**
    * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
    * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
@@ -34,6 +35,7 @@
    * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
    * ADDED: An option to Slim down Matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
    * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
+   * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
