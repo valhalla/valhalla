@@ -640,5 +640,8 @@ TEST(GtfsExample, isochrones) {
 
   rapidjson::Document doc;
   doc.Parse(res_string.c_str());
+  // TODO: some more testing of this similar to the isochrone.cc test: dump the polygon
+  // to geos and check if at least the stops are inside. Mid-future: play a bit more
+  // with schedules to see it's doing the right thing
   EXPECT_TRUE(doc.HasMember("features"));
 }
