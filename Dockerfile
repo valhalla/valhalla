@@ -14,8 +14,8 @@ COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-lin
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
 
 # get the code into the right place and prepare to build it
-ADD . /usr/local/src/valhalla
-RUN ls
+ADD . .
+RUN ls -la
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
