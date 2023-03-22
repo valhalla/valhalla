@@ -14,7 +14,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <limits>
 
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
@@ -702,8 +701,7 @@ unaligned_read(const void* ptr) {
  * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
  * @returns the invalid value of the type
  */
-template <typename numeric_t>
-numeric_t invalid() {
+template <typename numeric_t> numeric_t invalid() {
   return std::numeric_limits<numeric_t>::max();
 }
 
@@ -711,8 +709,7 @@ numeric_t invalid() {
  * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
  * @returns true when the value is invalid
  */
-template <typename numeric_t>
-bool is_invalid(numeric_t value) {
+template <typename numeric_t> bool is_invalid(numeric_t value) {
   return value == invalid<numeric_t>();
 }
 
@@ -720,11 +717,9 @@ bool is_invalid(numeric_t value) {
  * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
  * @returns true when the value is valid
  */
-template <typename numeric_t>
-bool is_valid(numeric_t value) {
+template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
 }
-
 
 } // namespace midgard
 } // namespace valhalla
