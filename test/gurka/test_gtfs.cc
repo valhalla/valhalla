@@ -619,16 +619,29 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRail], 2);
 }
 
-// TODO: TEST THAT TRANSIT ROUTING IS FUNCTIONAL BY MULTIMOTDAL ROUTING THROUGH WAYPOINTS, CHECK THAT
-// THE TRIP TYPE IS A TRANSIT TYPE
-
-TEST(GtfsExample, test_routing) {
-  auto layout = create_layout();
-
+TEST(GtfsExample, route) {
   valhalla::Api result0 =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", "2023-02-27T05:50"},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}});
   EXPECT_EQ(result0.trip().routes_size(), 1);
+}
+
+TEST(GtfsExample, isochrones) {
+  std::string res_string;
+  valhalla::Api res =
+      gurka::do_action(valhalla::Options::isochrone, map, {"C"}, "multimodal",
+                       {{"/date_time/type", "1"},
+                        {"/date_time/value", "2023-02-27T05:58"},
+                        {"/contours/0/time", "20"},
+                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
+                       {}, &res_string);
+
+  rapidjson::Document doc;
+  doc.Parse(res_string.c_str());
+  // TODO: some more testing of this similar to the isochrone.cc test: dump the polygon
+  // to geos and check if at least the stops are inside. Mid-future: play a bit more
+  // with schedules to see it's doing the right thing
+  EXPECT_TRUE(doc.HasMember("features"));
 }
