@@ -26,7 +26,7 @@ TRAFFIC_HEADER_SIZE = struct.calcsize('<2Q4I')
 TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
 
 Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
-TILE_SIZES = {0: 4, 1: 1, 2: 0.25}
+TILE_SIZES = {0: 4, 1: 1, 2: 0.25, 3: 0.25}
 
 # hack so ArgumentParser can accept negative numbers
 # see https://github.com/valhalla/valhalla/issues/3426

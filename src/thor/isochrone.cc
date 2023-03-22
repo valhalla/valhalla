@@ -14,29 +14,6 @@ namespace {
 
 constexpr float METRIC_PADDING = 10.f;
 
-// Method to get an operator Id from a map of operator strings vs. Id.
-uint32_t GetOperatorId(const graph_tile_ptr& tile,
-                       uint32_t routeid,
-                       std::unordered_map<std::string, uint32_t>& operators) {
-  const TransitRoute* transit_route = tile->GetTransitRoute(routeid);
-
-  // Test if the transit operator changed
-  if (transit_route && transit_route->op_by_onestop_id_offset()) {
-    // Get the operator name and look up in the operators map
-    std::string operator_name = tile->GetName(transit_route->op_by_onestop_id_offset());
-    auto operator_itr = operators.find(operator_name);
-    if (operator_itr == operators.end()) {
-      // Operator not found - add to the map
-      uint32_t id = operators.size() + 1;
-      operators[operator_name] = id;
-      return id;
-    } else {
-      return operator_itr->second;
-    }
-  }
-  return 0;
-}
-
 template <typename PrecisionT>
 std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<PrecisionT>>& pts,
                                                   double distance_along) {
@@ -316,27 +293,33 @@ void Isochrone::ExpandingNode(baldr::GraphReader& graphreader,
 ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreader*/,
                                                 const sif::EdgeLabel& pred,
                                                 const ExpansionType route_type) {
+  float time;
+  uint32_t dist;
   if (route_type == ExpansionType::multimodal) {
     // Skip edges with large penalties (e.g. ferries?), MMCompute function will skip expanding this
     // label
     if (pred.cost().cost > max_seconds_ * 2) {
       return ExpansionRecommendation::prune_expansion;
     }
+    time = pred.predecessor() == kInvalidLabel ? 0.f : mmedgelabels_[pred.predecessor()].cost().secs;
+    dist =
+        pred.predecessor() == kInvalidLabel ? 0 : mmedgelabels_[pred.predecessor()].path_distance();
+  } else {
+    time = pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
+    dist =
+        pred.predecessor() == kInvalidLabel ? 0 : bdedgelabels_[pred.predecessor()].path_distance();
   }
+
   // Continue if the time and distance intervals have been met. This bus or rail line goes beyond the
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
-  float time =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].cost().secs;
-  float distance =
-      pred.predecessor() == kInvalidLabel ? 0.f : bdedgelabels_[pred.predecessor()].path_distance();
   // prune the edge if its start is above max contour
-  if (time > max_seconds_ && distance > max_meters_)
+  if (time > max_seconds_ && dist > max_meters_)
     return ExpansionRecommendation::prune_expansion;
 
   // track expansion
   if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
-                                    distance <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
+                                    dist <= (max_meters_ - METRIC_PADDING * kMetersPerKm))) {
     if (!expansion_callback_) {
       expansion_callback_ = inner_expansion_callback_;
     }
