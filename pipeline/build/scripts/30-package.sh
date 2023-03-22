@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo ${APP_REGISTRY_PASSWORD} | \
-docker login ${APP_REGISTRY_URL} \
---username ${APP_REGISTRY_USERNAME} \
+echo ${SHARE_REGISTRY_PASSWORD} | \
+docker login ${SHARE_REGISTRY_URL} \
+--username ${SHARE_REGISTRY_USERNAME} \
 --password-stdin \
 || exit 1
 
@@ -19,13 +19,13 @@ fi
 if [[ "${APP_VERSION_LATEST}" = true ]]
 then
   docker build . --file "Dockerfile" \
-  --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
-  --tag ${APP_REGISTRY_URL}/${APP_NAME}:latest \
+  --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
+  --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:latest \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 else
   docker build . --file "Dockerfile" \
-  --tag ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
+  --tag ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
   --build-arg DOCKER_TAG="${DOCKER_TAG}" \
   || exit 2
 fi
@@ -45,9 +45,9 @@ then
     --ignore-unfixed \
     --timeout 10m \
     --exit-code 1 \
-    ${APP_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
+    ${SHARE_REGISTRY_URL}/${APP_NAME}:${APP_VERSION} \
     || exit 4
 fi
 
-docker push -a ${APP_REGISTRY_URL}/${APP_NAME} \
+docker push -a ${SHARE_REGISTRY_URL}/${APP_NAME} \
 || exit 5

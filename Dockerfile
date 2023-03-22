@@ -21,7 +21,7 @@ RUN rm -rf build && mkdir build
 
 # upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN pip install --upgrade conan
+RUN pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
@@ -65,12 +65,3 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     \
     # python smoke test
     python3 -c "import valhalla,sys; print (sys.version, valhalla)"
-
-# build the config to /etc/valhalla and point the directories to /data/valhalla
-WORKDIR /data/valhalla
-RUN mkdir /etc/valhalla && \
-    valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles \
-      --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar \
-      --mjolnir-traffic-extract ${PWD}/traffic.tar \
-      --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite \
-      --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > /etc/valhalla/valhalla.json
