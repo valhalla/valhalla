@@ -206,7 +206,8 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
-  if (is_invalid(index)) return nullptr;
+  if (is_invalid(index))
+    return nullptr;
   return cache_[index];
 }
 
