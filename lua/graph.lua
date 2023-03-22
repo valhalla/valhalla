@@ -31,7 +31,8 @@ highway = {
 ["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
+["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -406,6 +407,17 @@ toll = {
 ["1"] = "true",
 ["interval"] = "true",
 ["snowmobile"] = "true"
+}
+
+lit = {
+  ["yes"] = "true",
+  ["no"] = "false",
+  ["24/7"] = "true",
+  ["automatic"] = "true",
+  ["limited"] = "false",
+  ["disused"] = "false",
+  ["dusk-dawn"] = "true",
+  ["sunset-sunrise"] = "true"
 }
 
 --node proc needs the same info as above but in the form of a mask so duplicate..
@@ -1430,6 +1442,8 @@ function filter_tags_generic(kv)
      kv["default_speed"] = math.floor(tonumber(kv["default_speed"]) * 0.5)
   end
 
+  kv["lit"] = lit[kv["lit"]]
+
   local use = use[kv["service"]]
 
   if kv["highway"] then
@@ -1461,6 +1475,8 @@ function filter_tags_generic(kv)
         use = 27
      elseif kv["highway"] == "pedestrian" then
         use = 28
+     elseif kv["highway"] == "platform" then
+        use = 35
      elseif kv["pedestrian_forward"] == "true" and
             kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
             kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and

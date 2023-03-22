@@ -88,7 +88,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
 
 #ifdef DATA_TOOLS
 using HistoricalTrafficCustomize =
-    std::function<boost::optional<std::array<float, kBucketsPerWeek>>(DirectedEdge&)>;
+    std::function<std::optional<std::array<float, kBucketsPerWeek>>(DirectedEdge&)>;
 void customize_historical_traffic(const boost::property_tree::ptree& config,
                                   const HistoricalTrafficCustomize& cb);
 

@@ -48,33 +48,12 @@ Transit read_pbf(const std::string& file_name, std::mutex& lock);
 Transit read_pbf(const std::string& file_name);
 
 /**
- * @brief Get PBF transit data given a GraphId / tile
- *
- * @param id graphId of the tile
- * @param transit_dir directory where transit data is located
- * @param file_name  name of the file
- * @return transit data of the tile with the given GraphId
- */
-Transit read_pbf(const baldr::GraphId& id, const std::string& transit_dir, std::string& file_name);
-
-/**
  * @brief writes transit information inside the tile to a protobuf
  *
  * @param tile contains transit data
  * @param transit_tile destination where the protobuf is written
  */
 void write_pbf(const Transit& tile, const filesystem::path& transit_tile);
-
-/**
- * @brief Converts a stop's pbf graph Id to a Valhalla graph Id by adding the tile's node count.
- * Returns an Invalid GraphId if the tile is not found in the list of Valhalla tiles
- *
- * @param nodeid the id of the stop inside gtfs (node)
- * @param all_tiles list of tiles with transit data
- * @return the id of the stop inside valhalla
- */
-baldr::GraphId GetGraphId(const baldr::GraphId& nodeid,
-                          const std::unordered_set<baldr::GraphId>& all_tiles);
 
 } // namespace mjolnir
 } // namespace valhalla

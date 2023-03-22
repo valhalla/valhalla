@@ -31,7 +31,7 @@ using namespace valhalla::loki;
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
-                                    boost::optional<valhalla_exception_t> required_exception) {
+                                    std::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
       if (!location.has_minimum_reachability_case())

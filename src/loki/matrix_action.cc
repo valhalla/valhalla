@@ -45,7 +45,7 @@ void check_distance(Api& request,
       if (static_cast<size_t>(path_distance) > max_timedep_distance) {
         source.set_date_time("");
         target.set_date_time("");
-        if (!added_warning) {
+        if (max_timedep_distance && !added_warning) {
           add_warning(request, 200);
           added_warning = true;
         }

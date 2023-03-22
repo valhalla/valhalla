@@ -35,13 +35,15 @@ std::string GetDateTime(const std::string& origin_dt,
     return origin_dt;
   }
   graph_tile_ptr tile = nullptr;
-  // get the timezone of the output location
-  auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
   uint32_t dest_tz = 0;
-  if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-    dest_tz = node->timezone();
-  else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-    dest_tz = node->timezone();
+  if (pred_id.Is_Valid()) {
+    // get the timezone of the output location
+    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
+    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
+      dest_tz = node->timezone();
+    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
+      dest_tz = node->timezone();
+  }
 
   auto in_epoch =
       DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
@@ -250,14 +252,15 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       // Get next element from adjacency list. Check that it is valid. An
       // invalid label indicates there are no edges that can be expanded.
       uint32_t predindex = adjacencylist_.pop();
-      // Copy the EdgeLabel for use in costing
-      EdgeLabel pred = edgelabels_[predindex];
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
         one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, pred.edgeid());
+                                             time_info.timezone_index, GraphId{});
         break;
       }
+
+      // Copy the EdgeLabel for use in costing
+      EdgeLabel pred = edgelabels_[predindex];
 
       // Remove label from adjacency list, mark it as permanently labeled.
 
@@ -274,7 +277,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
         // have been settled or the requested amount of destinations has been found
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
-        if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
+        if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
           one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
                                                time_info.timezone_index, pred.edgeid());
@@ -475,6 +478,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
     const DirectedEdge* edge,
     const graph_tile_ptr& tile,
     const EdgeLabel& pred,
+    const TimeInfo& time_info,
     const uint32_t matrix_locations) {
   // For each destination along this edge
   for (auto dest_idx : destinations) {
@@ -498,6 +502,23 @@ bool TimeDistanceMatrix::UpdateDestinations(
       }
       continue;
     }
+
+    // stuff we need to do when settling a destination (edge)
+    auto settle_dest = [&]() {
+      dest.dest_edges_available.erase(dest_available);
+      if (dest.dest_edges_available.empty()) {
+        dest.settled = true;
+        settled_count_++;
+      }
+    };
+
+    if (origin.ll().lat() == dest_loc.ll().lat() && origin.ll().lng() == dest_loc.ll().lng()) {
+      dest.best_cost = Cost{0.f, 0.f};
+      dest.distance = 0;
+      settle_dest();
+      continue;
+    }
+
     auto dest_edge = dest.dest_edges_percent_along.find(pred.edgeid());
 
     // Skip case where destination is along the origin edge, there is no
@@ -508,8 +529,10 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
     // Get the cost. The predecessor cost is cost to the end of the edge.
     // Subtract the partial remaining cost and distance along the edge.
+    uint8_t flow_sources;
     float remainder = dest_edge->second;
-    Cost newcost = pred.cost() - (costing_->EdgeCost(edge, tile) * remainder);
+    Cost newcost =
+        pred.cost() - (costing_->EdgeCost(edge, tile, time_info, flow_sources) * remainder);
     if (newcost.cost < dest.best_cost.cost) {
       dest.best_cost = newcost;
       dest.distance = pred.path_distance() - (edge->length() * remainder);
@@ -517,11 +540,7 @@ bool TimeDistanceMatrix::UpdateDestinations(
 
     // Erase this edge from further consideration. Mark this destination as
     // settled if all edges have been found
-    dest.dest_edges_available.erase(dest_available);
-    if (dest.dest_edges_available.empty()) {
-      dest.settled = true;
-      settled_count_++;
-    }
+    settle_dest();
   }
 
   // Settle any destinations where current cost is above the destination's
