@@ -33,6 +33,12 @@ set(includes
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
+
 set(sources
     accessrestriction.cc
     admin.cc
@@ -90,10 +96,11 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
+list(APPEND sources_with_warnings
+    tz_alt.cpp)
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
   list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
 endif()
 
@@ -110,6 +117,9 @@ valhalla_module(NAME baldr
       ${includes}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
 
   DEPENDS
     valhalla::midgard
