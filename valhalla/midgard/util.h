@@ -699,13 +699,32 @@ unaligned_read(const void* ptr) {
 }
 
 /**
- * When using max value as invalid
- * @returns true when value is max
+ * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * @returns the invalid value of the type
  */
 template <typename numeric_t>
-bool invalid() {
+numeric_t invalid() {
   return std::numeric_limits<numeric_t>::max();
 }
+
+/**
+ * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is invalid
+ */
+template <typename numeric_t>
+bool is_invalid(numeric_t value) {
+  return value == invalid<numeric_t>();
+}
+
+/**
+ * For some variables, an ivalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is valid
+ */
+template <typename numeric_t>
+bool is_valid(numeric_t value) {
+  return value != invalid<numeric_t>();
+}
+
 
 } // namespace midgard
 } // namespace valhalla
