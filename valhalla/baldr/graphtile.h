@@ -637,10 +637,8 @@ public:
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
-
-    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    // TODO: Make this configurable if possible and contribute the changes
+    constexpr double LIVE_SPEED_FADE = 0.;
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
