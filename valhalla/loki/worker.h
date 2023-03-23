@@ -54,7 +54,7 @@ protected:
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
-  void check_hierarchy_distance(Api& request, bool pair_wise);
+  void check_hierarchy_distance(Api& request);
 
   void init_locate(Api& request);
   void init_route(Api& request);

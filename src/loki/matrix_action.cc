@@ -119,7 +119,7 @@ void loki_worker_t::matrix(Api& request) {
                  max_timedep_dist_matrix);
 
   // check distance for hierarchy pruning
-  check_hierarchy_distance(request, true);
+  check_hierarchy_distance(request);
 
   // correlate the various locations to the underlying graph
   auto sources_targets = PathLocation::fromPBF(options.sources());

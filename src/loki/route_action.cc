@@ -69,7 +69,7 @@ void loki_worker_t::route(Api& request) {
   }
 
   // check distance for hierarchy pruning
-  check_hierarchy_distance(request, false);
+  check_hierarchy_distance(request);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing_name == "multimodal" || costing_name == "transit") {

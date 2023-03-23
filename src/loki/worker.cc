@@ -249,7 +249,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
-      config.get<float>("service_limits.max_distance_disable_hierarchy_culling");
+      config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
 
   // signal that the worker started successfully
   started();
@@ -269,15 +269,25 @@ void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
 
 // Check if total arc distance exceeds the max distance limit for disable_hierarchy_pruning.
 // If true, add a warning and set the disable_hierarchy_pruning costing option to false.
-void loki_worker_t::check_hierarchy_distance(Api& request, bool pair_wise) {
+void loki_worker_t::check_hierarchy_distance(Api& request) {
   auto& options = *request.mutable_options();
+  // Bail early if the mode of travel is not vehicular.
+  // Bike and pedestrian don't use hierarchies anyway.
+  if (options.costing_type() == Costing_Type_bicycle ||
+      options.costing_type() == Costing_Type_pedestrian) {
+    return;
+  }
+
+  // If disable_hierarchy_pruning is not true, skip the rest.
   auto costing_options = options.mutable_costings()->find(options.costing_type());
   if (!costing_options->second.options().disable_hierarchy_pruning()) {
     return;
   }
 
+  // For route action check if total distances between locations exceed the max limit.
+  // For matrix action, check every pair of source and target. 
   bool max_distance_exceeded = false;
-  if (pair_wise) {
+  if (request.options().action() == Options_Action_sources_to_targets) {
     for (auto& source : *options.mutable_sources()) {
       for (auto& target : *options.mutable_targets()) {
         if (to_ll(source).Distance(to_ll(target)) > max_distance_disable_hierarchy_culling) {
@@ -298,6 +308,7 @@ void loki_worker_t::check_hierarchy_distance(Api& request, bool pair_wise) {
     }
   }
 
+  // Turn off disable_hierarchy_pruning and add a warning if max limit exceeded.
   if (max_distance_exceeded) {
     add_warning(request, 205);
     costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);

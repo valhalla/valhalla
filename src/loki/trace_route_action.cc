@@ -121,7 +121,7 @@ void loki_worker_t::init_trace(Api& request) {
   auto& options = *request.mutable_options();
 
   // check distance for hierarchy pruning
-  check_hierarchy_distance(request, false);
+  check_hierarchy_distance(request);
 
   // we require shape or encoded polyline but we dont know which at first
   if (!options.shape_size()) {
