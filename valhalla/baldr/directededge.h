@@ -1140,6 +1140,20 @@ public:
   }
 
   /**
+   * Set the flag indicating whether the edge is golf_cart=designated
+   * @param designated golf_cart == designated
+   */
+  void set_golf_cart_designated(const bool designated);
+
+  /**
+   * Is the edge lit?
+   * @return Returns whether the edge has designated golf cart access
+   */
+  bool golf_cart_designated() const {
+    return golf_cart_designated_;
+  }
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
@@ -1207,7 +1221,8 @@ protected:
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
-  uint64_t spare4_ : 4;
+  uint64_t golf_cart_designated_ : 1;            // Is this a designated golf cart edge?
+  uint64_t spare3_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

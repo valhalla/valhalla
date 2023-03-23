@@ -247,6 +247,12 @@ config = {
             'max_matrix_distance': 200000.0,
             'max_matrix_location_pairs': 2500,
         },
+        'golf_cart': {
+            'max_distance': 250000.0,
+            'max_locations': 50,
+            'max_matrix_distance': 200000.0,
+            'max_matrix_location_pairs': 2500,
+        },
         'centroid': {'max_distance': 200000.0, 'max_locations': 5},
         'max_exclude_locations': 50,
         'max_reachability': 100,
@@ -506,6 +512,12 @@ help_text = {
             'max_alternates_shape': 'Maximum number of input shape points when requesting multiple paths',
         },
         'bikeshare': {
+            'max_distance': 'Maximum b-line distance between all locations in meters',
+            'max_locations': 'Maximum number of input locations',
+            'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
+            'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
+        },
+        'golf_cart': {
             'max_distance': 'Maximum b-line distance between all locations in meters',
             'max_locations': 'Maximum number of input locations',
             'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',

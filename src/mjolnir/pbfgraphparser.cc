@@ -255,6 +255,10 @@ public:
       osm_access_.set_motorcycle_tag(true);
       has_user_tags_ = true;
     };
+    tag_handlers_["golf_cart_tag"] = [this]() {
+      osm_access_.set_golf_cart_tag(true);
+      has_user_tags_ = true;
+    };
     tag_handlers_["hov_tag"] = [this]() {
       osm_access_.set_hov_tag(true);
       has_user_tags_ = true;
@@ -309,6 +313,9 @@ public:
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
+    tag_handlers_["golf_cart_forward"] = [this]() {
+      way_.set_golf_cart_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["pedestrian_forward"] = [this]() {
       way_.set_pedestrian_forward(tag_.second == "true" ? true : false);
     };
@@ -338,6 +345,9 @@ public:
     };
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["golf_cart_backward"] = [this]() {
+      way_.set_golf_cart_backward(tag_.second == "true" ? true : false);
     };
     tag_handlers_["pedestrian_backward"] = [this]() {
       way_.set_pedestrian_backward(tag_.second == "true" ? true : false);
@@ -1410,6 +1420,7 @@ public:
       way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
     };
     tag_handlers_["lit"] = [this]() { way_.set_lit(tag_.second == "true" ? true : false); };
+    tag_handlers_["golf_cart_designated"] = [this]() { way_.set_golf_cart_designated(tag_.second == "true" ? true : false); };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {

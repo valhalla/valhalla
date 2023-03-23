@@ -699,6 +699,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the golf_cart_forward flag
+   * @param  golf_cart_forward  Can a golf cart drive in the forward direction?
+   */
+  void set_golf_cart_forward(const bool golf_cart_forward) {
+    golf_cart_forward_ = golf_cart_forward;
+  }
+
+  /**
+   * Get the golf cart forward flag
+   * @return  Returns the golf cart forward flag
+   */
+  bool golf_cart_forward() const {
+    return golf_cart_forward_;
+  }
+
+  /**
    * Sets the pedestrian forward flag.
    * @param  pedestrian_forward   Are pedestrians allowed in the forward direction?
    */
@@ -859,6 +875,22 @@ struct OSMWay {
    */
   bool motorcycle_backward() const {
     return motorcycle_backward_;
+  }
+
+  /**
+   * Sets the golf_cart_backward flag
+   * @param  golf_cart_backward  Can a golf cart drive in the reverse direction?
+   */
+  void set_golf_cart_backward(const bool golf_cart_backward) {
+    golf_cart_backward_ = golf_cart_backward;
+  }
+
+  /**
+   * Get the golf cart backward flag
+   * @return  Returns the golf cart backward flag
+   */
+  bool golf_cart_backward() const {
+    return golf_cart_backward_;
   }
 
   /**
@@ -1701,6 +1733,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets whether the way has golf_cart=designated.
+   * @param  golf_cart_designated Whether the way has golf_cart=designated.
+   */
+  void set_golf_cart_designated(const bool golf_cart_designated) {
+    golf_cart_designated_ = golf_cart_designated;
+  }
+
+  /**
+   * Get the golf cart designated status.
+   * @return  Returns the bike network mask.
+   */
+  bool golf_cart_designated() const {
+    return golf_cart_designated_;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1844,7 +1892,10 @@ struct OSMWay {
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
   bool lit_ : 1;
-  uint16_t spare2_ : 3;
+  bool golf_cart_designated_ : 1;
+  // 2 access flags that didn't fit in the previous bit
+  uint16_t golf_cart_forward_ : 1;
+  uint16_t golf_cart_backward_ : 1;
 
   uint16_t nodecount_;
 

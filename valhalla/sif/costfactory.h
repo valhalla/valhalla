@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 
+#include "golfcartcost.h"
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto_conversions.h>
@@ -45,6 +46,7 @@ public:
     Register(Costing::transit, CreateTransitCost);
     Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
+    Register(Costing::golf_cart, CreateGolfCartCost);
   }
 
   /**

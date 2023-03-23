@@ -7,6 +7,7 @@
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
 #include "sif/dynamiccost.h"
+#include "sif/golfcartcost.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
@@ -562,6 +563,10 @@ void ParseCosting(const rapidjson::Document& doc,
     }
     case Costing::motorcycle: {
       sif::ParseMotorcycleCostOptions(doc, key, costing);
+      break;
+    }
+    case Costing::golf_cart: {
+      sif::ParseGolfCartCostOptions(doc, key, costing);
       break;
     }
     case Costing::none_: {

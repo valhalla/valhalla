@@ -11,7 +11,8 @@ set(sources
   transitcost.cc
   truckcost.cc
   dynamiccost.cc
-  recost.cc)
+  recost.cc
+  golfcartcost.cc)
 
 valhalla_module(NAME sif
   SOURCES ${sources}

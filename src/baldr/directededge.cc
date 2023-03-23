@@ -581,6 +581,10 @@ void DirectedEdge::set_lit(const bool lit) {
   lit_ = lit;
 }
 
+void DirectedEdge::set_golf_cart_designated(const bool designated) {
+  golf_cart_designated_ = designated;
+}
+
 // Json representation
 json::MapPtr DirectedEdge::json() const {
   json::MapPtr map = json::map({
