@@ -6,7 +6,7 @@ test:
   image:
     name: ubuntu:22.04
     entrypoint:
-      - ["/usr/bin/env bash"]
+      - "/usr/bin/env bash"
   tags:
     - docker
   script:
