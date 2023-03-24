@@ -16,7 +16,7 @@ test:
     - mkdir build
     - pip install --upgrade "conan<2.0.0"
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On
     - cd ..
     - python3 ./scripts/valhalla_build_config
     - make -C build -j${CONCURRENCY:-$(nproc)}
