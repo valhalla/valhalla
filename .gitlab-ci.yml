@@ -1,0 +1,23 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image:
+    name: ubuntu:22.04
+    entrypoint:
+      - ["/usr/bin/env bash"]
+  tags:
+    - docker
+  script:
+    # Essentially copied from the Dockerfile, but this is focused on running the tests, not creating
+    # an optimized release build image.
+    - scripts/install-linux-deps.sh
+    - git submodule sync && git submodule update --init --recursive
+    - rm -rf build && mkdir build
+    - pip install --upgrade "conan<2.0.0"
+    - cd build
+    - cmake .. -DCMAKE_C_COMPILER=gcc
+    - make all -j${CONCURRENCY:-$(nproc)}
+    - make test
+  interruptible: true
