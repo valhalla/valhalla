@@ -364,13 +364,6 @@ std::list<std::pair<std::string, std::string>>
          */
     };
 
-const std::vector<http_request_t> hierarchy_requests{
-    http_request_t(
-        POST,
-        "/route",
-        R"({"locations":[{"lon":0,"lat":90,"type":"break"},{"lon":0,"lat":89.9,"type":"break"}], "costing": "auto", "costing_options":{"auto":{"disable_hierarchy_pruning":true}}})"),
-};
-
 boost::property_tree::ptree make_config(const std::vector<std::string>& whitelist = {
                                             "locate",
                                             "route",
