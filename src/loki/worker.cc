@@ -285,7 +285,7 @@ void loki_worker_t::check_hierarchy_distance(Api& request) {
   }
 
   // For route action check if total distances between locations exceed the max limit.
-  // For matrix action, check every pair of source and target. 
+  // For matrix action, check every pair of source and target.
   bool max_distance_exceeded = false;
   if (request.options().action() == Options_Action_sources_to_targets) {
     for (auto& source : *options.mutable_sources()) {
