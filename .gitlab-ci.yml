@@ -17,6 +17,6 @@ test:
     - pip install --upgrade "conan<2.0.0"
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
-    - make all -j${CONCURRENCY:-$(nproc)}
     - make check -j${CONCURRENCY:-$(nproc)}
+    - make all -j${CONCURRENCY:-$(nproc)}
   interruptible: true
