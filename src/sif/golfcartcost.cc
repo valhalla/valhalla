@@ -61,7 +61,7 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTo
 constexpr float kGolfCartDesignatedFactor = 0.9f;
 
 // Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are modulated by the road factor - further
+// roads. These penalties are additive based on other penalties - further
 // avoiding higher class roads for those with low propensity for using
 // more major roads.
 constexpr float kRoadClassPenaltyFactor[] = {
@@ -257,6 +257,10 @@ public:
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
+           // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
+           // on roads having speed limits up to 35mph. Block any road having an
+           // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
+           (edge->speed_type() == SpeedType::kClassified || edge -> speed() <= 60) &&
            (allow_closures || !tile->IsClosed(edge));
   }
 
