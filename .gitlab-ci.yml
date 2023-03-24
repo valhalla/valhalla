@@ -18,5 +18,5 @@ test:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
     - make all -j${CONCURRENCY:-$(nproc)}
-    - make run-benchmarks
+    - make check -j${CONCURRENCY:-$(nproc)}
   interruptible: true
