@@ -7,6 +7,7 @@ test:
     name: ubuntu:22.04
   tags:
     - docker
+    - himem
   script:
     # Essentially copied from the Dockerfile, but this is focused on running the tests, not creating
     # an optimized release build image.
@@ -15,7 +16,7 @@ test:
     - rm -rf build && mkdir build
     - pip install --upgrade "conan<2.0.0"
     - cd build
-    - cmake .. -DCMAKE_C_COMPILER=gcc
+    - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
     - make all -j${CONCURRENCY:-$(nproc)}
-    - make test
+    - make run-benchmarks
   interruptible: true
