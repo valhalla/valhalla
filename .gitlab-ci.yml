@@ -9,14 +9,16 @@ test:
     - docker
     - himem
   script:
-    # Essentially copied from the Dockerfile, but this is focused on running the tests, not creating
-    # an optimized release build image.
+    # Essentially copied from the CircleCI config, sans benchmarks and code coverage
+    - python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
     - scripts/install-linux-deps.sh
     - git submodule sync && git submodule update --init --recursive
-    - rm -rf build && mkdir build
+    - mkdir build
     - pip install --upgrade "conan<2.0.0"
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
-    - make check -j${CONCURRENCY:-$(nproc)}
-    - make all -j${CONCURRENCY:-$(nproc)}
+    - cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On
+    - cd ..
+    - python3 ./scripts/valhalla_build_config
+    - make -C build -j${CONCURRENCY:-$(nproc)}
+    - make -C build -j${CONCURRENCY:-$(nproc)} check
   interruptible: true
