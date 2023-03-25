@@ -19,25 +19,10 @@ commands:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
 
-jobs:    
-  build-docker-images:
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run:
-          name: Build and push Valhalla Docker image
-          command: |
-            if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
-              BUILD_TAG="${CIRCLE_TAG:-latest}"
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
-              docker push valhalla/valhalla:run-${BUILD_TAG}
-            fi
-
+jobs:
   lint-build-debug:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     resource_class: xlarge
     steps:
       - checkout
@@ -86,7 +71,7 @@ jobs:
 
   build-release:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     resource_class: xlarge
     steps:
       - checkout
@@ -159,12 +144,6 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-docker-images:
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              only: master
       - lint-build-debug:
           filters:
             tags:

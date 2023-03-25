@@ -254,14 +254,6 @@ float DynamicCost::GetModeFactor() {
   return 1.0f;
 }
 
-// This method overrides the max_distance with the max_distance_mm per segment
-// distance. An example is a pure walking route may have a max distance of
-// 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-// meters per segment (e.g. from origin to a transit stop or from the last
-// transit stop to the destination).
-void DynamicCost::UseMaxMultiModalDistance() {
-}
-
 // Gets the hierarchy limits.
 std::vector<HierarchyLimits>& DynamicCost::GetHierarchyLimits() {
   return hierarchy_limits_;

@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from distutils.util import strtobool
 import json
 from typing import List, Union
+
+
+def strtobool(value):
+    lower = str(value).lower()
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
+        return True
+    elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
+        return False
+    else:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
 
 
 class Optional:
@@ -450,7 +459,7 @@ help_text = {
             'max_locations': 'Maximum number of input locations',
             'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
             'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
-            'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
+            'min_transit_walking_distance': 'Minimum distance you must walk to the egress of to a station',
             'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit',
         },
         'motor_scooter': {
