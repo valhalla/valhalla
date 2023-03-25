@@ -4,7 +4,7 @@ stages:
 test:
   stage: test
   image:
-    name: ubuntu:20.04
+    name: ubuntu:22.04
   tags:
     - docker
     - himem
@@ -19,5 +19,7 @@ test:
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE -DENABLE_SANITIZERS=ON
     - make -j${CONCURRENCY:-$(nproc)}
     - make utrecht_tiles
+    - make -j${CONCURRENCY:-$(nproc)} tests
+    # leaks in glibc we cant control for
     - export ASAN_OPTIONS=detect_leaks=0 && make -j${CONCURRENCY:-$(nproc)} check
   interruptible: true
