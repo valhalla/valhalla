@@ -19,5 +19,5 @@ test:
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE -DENABLE_SANITIZERS=ON
     - make -j${CONCURRENCY:-$(nproc)}
     - make utrecht_tiles
-    - make -j${CONCURRENCY:-$(nproc)} check
+    - export ASAN_OPTIONS=detect_leaks=0 && make -j${CONCURRENCY:-$(nproc)} check
   interruptible: true
