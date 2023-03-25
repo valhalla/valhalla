@@ -4,7 +4,7 @@ stages:
 test:
   stage: test
   image:
-    name: ubuntu:22.04
+    name: ubuntu:20.04
   tags:
     - docker
     - himem
@@ -20,5 +20,6 @@ test:
     - cd ..
     - python3 ./scripts/valhalla_build_config
     - make -C build -j${CONCURRENCY:-$(nproc)}
+    - make -C utrecht_tiles
     - make -C build -j${CONCURRENCY:-$(nproc)} check
   interruptible: true
