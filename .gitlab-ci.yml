@@ -20,6 +20,6 @@ test:
     - cd ..
     - python3 ./scripts/valhalla_build_config
     - make -C build -j${CONCURRENCY:-$(nproc)}
-    - make -C utrecht_tiles
+    - make -C build utrecht_tiles
     - make -C build -j${CONCURRENCY:-$(nproc)} check
   interruptible: true
