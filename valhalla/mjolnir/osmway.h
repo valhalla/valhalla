@@ -1893,7 +1893,7 @@ struct OSMWay {
   uint16_t bike_backward_ : 1;
   bool lit_ : 1;
   bool golf_cart_designated_ : 1;
-  // 2 access flags that didn't fit in the previous bit
+  // 2 access flags that didn't fit in the previous 16 bits
   uint16_t golf_cart_forward_ : 1;
   uint16_t golf_cart_backward_ : 1;
 

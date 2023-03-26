@@ -241,7 +241,7 @@ struct OSMAccess {
       uint16_t moped_tag : 1;
       uint16_t motorcycle_tag : 1;
       uint16_t golf_cart_tag : 1;
-      uint16_t spare : 5;
+      uint16_t spare_ : 5;
     } fields;
     uint32_t v; // this should be 64bits wide for architectures who require word alignment
   };
