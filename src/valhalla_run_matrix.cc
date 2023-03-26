@@ -231,8 +231,8 @@ int main(int argc, char* argv[]) {
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                                max_distance);
+    res = matrix.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
+                                mode_costing, mode, max_distance);
     matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();

@@ -152,7 +152,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
-  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"}
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
+  {205, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
 };
 // clang-format on
 

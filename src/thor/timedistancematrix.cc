@@ -22,37 +22,6 @@ static bool IsTrivial(const uint64_t& edgeid,
   }
   return false;
 }
-
-// Will return a destination's date_time string
-std::string GetDateTime(const std::string& origin_dt,
-                        const uint64_t& origin_tz,
-                        const GraphId& pred_id,
-                        GraphReader& reader,
-                        const uint64_t& offset) {
-  if (origin_dt.empty()) {
-    return "";
-  } else if (!offset) {
-    return origin_dt;
-  }
-  graph_tile_ptr tile = nullptr;
-  uint32_t dest_tz = 0;
-  if (pred_id.Is_Valid()) {
-    // get the timezone of the output location
-    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
-    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-      dest_tz = node->timezone();
-    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-      dest_tz = node->timezone();
-  }
-
-  auto in_epoch =
-      DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
-  uint64_t out_epoch = in_epoch + offset;
-  std::string out_dt =
-      DateTime::seconds_to_date(out_epoch, DateTime::get_tz_db().from_index(dest_tz), false);
-
-  return out_dt;
-}
 } // namespace
 
 namespace valhalla {
@@ -589,8 +558,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader
                                                                      const GraphId& pred_id) {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
-    auto date_time = GetDateTime(origin_dt, origin_tz, pred_id, reader,
-                                 static_cast<uint64_t>(dest.best_cost.secs + .5f));
+    auto date_time = get_date_time(origin_dt, origin_tz, pred_id, reader,
+                                   static_cast<uint64_t>(dest.best_cost.secs + .5f));
     td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
   }
   return td;

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "midgard/logging.h"
+#include "sif/recost.h"
 #include "thor/costmatrix.h"
 #include "worker.h"
 
@@ -24,6 +25,14 @@ int GetThreshold(const travel_mode_t mode, const int n) {
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
   return a.has_lat_case() == b.has_lat_case() && a.has_lng_case() == b.has_lng_case() &&
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
+}
+
+inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
+  for (const auto& e : location.correlation().edges()) {
+    if (e.graph_id() == edge_id)
+      return e.percent_along();
+  }
+  throw std::logic_error("Could not find candidate edge for the location");
 }
 
 } // namespace
@@ -108,12 +117,14 @@ void CostMatrix::clear() {
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
 std::vector<TimeDistance> CostMatrix::SourceToTarget(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    GraphReader& graphreader,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+    baldr::GraphReader& graphreader,
     const sif::mode_costing_t& mode_costing,
-    const travel_mode_t mode,
-    const float max_matrix_distance) {
+    const sif::travel_mode_t mode,
+    const float max_matrix_distance,
+    const bool has_time,
+    const bool invariant) {
 
   LOG_INFO("matrix::CostMatrix");
 
@@ -124,8 +135,10 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
+  auto time_infos = SetOriginTimes(source_location_list, graphreader);
   // Set the source and target locations
-  SetSources(graphreader, source_location_list);
+  // TODO: for now we only allow depart_at/current date_time
+  SetSources(graphreader, source_location_list, time_infos);
   SetTargets(graphreader, target_location_list);
 
   // Initialize best connections and status. Any locations that are the
@@ -143,6 +156,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
       if (target_status_[i].threshold > 0) {
         target_status_[i].threshold--;
         BackwardSearch(i, graphreader);
+        // if we didn't see this
         if (target_status_[i].threshold == 0) {
           for (uint32_t source = 0; source < source_count_; source++) {
             //  Get all targets remaining for the origin
@@ -170,7 +184,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     for (uint32_t i = 0; i < source_count_; i++) {
       if (source_status_[i].threshold > 0) {
         source_status_[i].threshold--;
-        ForwardSearch(i, n, graphreader);
+        ForwardSearch(i, n, graphreader, time_infos[i], invariant);
         if (source_status_[i].threshold == 0) {
           for (uint32_t target = 0; target < target_count_; target++) {
             //  Get all sources remaining for the destination
@@ -208,12 +222,26 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     n++;
   }
 
+  if (has_time) {
+    RecostPaths(graphreader, source_location_list, target_location_list, time_infos, invariant);
+  }
+
   // Form the time, distance matrix from the destinations list
-  uint32_t idx = 0;
   std::vector<TimeDistance> td;
+  uint32_t count = 0;
   for (const auto& connection : best_connection_) {
-    td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
-    idx++;
+    uint32_t target_idx = count % target_location_list.size();
+    uint32_t origin_idx = count / target_location_list.size();
+    if (has_time) {
+      auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
+                                     time_infos[origin_idx].timezone_index,
+                                     target_edgelabel_[target_idx].back().edgeid(), graphreader,
+                                     static_cast<uint64_t>(connection.cost.secs + .5f));
+      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance), date_time);
+    } else {
+      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
+    }
+    count++;
   }
   return td;
 }
@@ -268,7 +296,11 @@ void CostMatrix::Initialize(
 }
 
 // Iterate the forward search from the source/origin location.
-void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphReader& graphreader) {
+void CostMatrix::ForwardSearch(const uint32_t index,
+                               const uint32_t n,
+                               GraphReader& graphreader,
+                               const baldr::TimeInfo& time_info,
+                               const bool invariant) {
   // Get the next edge from the adjacency list for this source location
   auto& adj = source_adjacency_[index];
   auto& edgelabels = source_edgelabel_[index];
@@ -313,10 +345,15 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
 
   // lambda to expand search forward from the end node
   std::function<void(graph_tile_ptr, const GraphId&, const NodeInfo*, BDEdgeLabel&, const uint32_t,
-                     const bool)>
+                     const bool, const baldr::TimeInfo&)>
       expand;
   expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo, BDEdgeLabel& pred,
-               const uint32_t pred_idx, const bool from_transition) {
+               const uint32_t pred_idx, const bool from_transition, const baldr::TimeInfo& ti) {
+    // will be updated along the expansion
+    // TODO: for some reason nodeinfo has no timezone set for the gurka test, wtf...
+    auto offset_time = from_transition ? ti
+                                       : ti.forward(invariant ? 0.f : pred.cost().secs,
+                                                    static_cast<int>(nodeinfo->timezone()));
     uint32_t shortcuts = 0;
     GraphId edgeid = {node.tileid(), node.level(), nodeinfo->edge_index()};
     EdgeStatusInfo* es = edgestate.GetPtr(edgeid, tile);
@@ -345,16 +382,18 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
       // Skip this edge if no access is allowed (based on costing method)
       // or if a complex restriction prevents transition onto this edge.
       uint8_t restriction_idx = -1;
-      if (!costing_->Allowed(directededge, false, pred, tile, edgeid, 0, 0, restriction_idx) ||
-          costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true)) {
+      if (!costing_->Allowed(directededge, false, pred, tile, edgeid, offset_time.local_time,
+                             nodeinfo->timezone(), restriction_idx) ||
+          costing_->Restricted(directededge, pred, edgelabels, tile, edgeid, true, nullptr,
+                               offset_time.local_time, nodeinfo->timezone())) {
         continue;
       }
 
       // Get cost. Separate out transition cost.
       Cost tc = costing_->TransitionCost(directededge, nodeinfo, pred);
       uint8_t flow_sources;
-      Cost newcost = pred.cost() + tc +
-                     costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
+      Cost newcost =
+          pred.cost() + tc + costing_->EdgeCost(directededge, tile, offset_time, flow_sources);
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -403,7 +442,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
         GraphId node = trans->endnode();
         graph_tile_ptr endtile = graphreader.GetGraphTile(node);
         if (endtile != nullptr) {
-          expand(endtile, node, endtile->node(node), pred, pred_idx, true);
+          expand(endtile, node, endtile->node(node), pred, pred_idx, true, ti);
         }
       }
     }
@@ -416,7 +455,7 @@ void CostMatrix::ForwardSearch(const uint32_t index, const uint32_t n, GraphRead
   if (tile != nullptr) {
     const NodeInfo* nodeinfo = tile->node(node);
     if (costing_->Allowed(nodeinfo)) {
-      expand(tile, node, nodeinfo, pred, pred_idx, false);
+      expand(tile, node, nodeinfo, pred, pred_idx, false, time_info);
     }
   }
 }
@@ -719,7 +758,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 // Sets the source/origin locations. Search expands forward from these
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
-                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
+                            const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                            const std::vector<baldr::TimeInfo>& time_infos) {
   // Allocate edge labels and edge status
   source_count_ = sources.size();
   source_edgelabel_.resize(source_count_);
@@ -764,7 +804,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
-      Cost edgecost = costing_->EdgeCost(directededge, tile, TimeInfo::invalid(), flow_sources);
+      Cost edgecost = costing_->EdgeCost(directededge, tile, time_infos[index], flow_sources);
       Cost cost = edgecost * (1.0f - edge.percent_along());
       uint32_t d = std::round(directededge->length() * (1.0f - edge.percent_along()));
 
@@ -887,6 +927,112 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       (*targets_)[opp_edge_id].push_back(index);
     }
     index++;
+  }
+}
+
+// Form the path from the adjacency list.
+void CostMatrix::RecostPaths(GraphReader& graphreader,
+                             google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                             google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                             const std::vector<baldr::TimeInfo>& time_infos,
+                             bool invariant) {
+  uint32_t idx = 0;
+  for (auto best_connection = best_connection_.begin(); best_connection != best_connection_.end();
+       ++best_connection, ++idx) {
+    // no need to look at 0 paths, i.e. source == target
+    if (best_connection->cost.secs == 0.f) {
+      continue;
+    }
+
+    uint32_t source_idx = idx / static_cast<uint32_t>(targets.size());
+    uint32_t target_idx = idx % static_cast<uint32_t>(targets.size());
+    const auto& source = sources.Get(source_idx);
+    const auto& target = targets.Get(target_idx);
+    // Get the indexes where the connection occurs.
+    uint32_t connedge_idx1 = source_edgestatus_[source_idx].Get(best_connection->edgeid).index();
+    uint32_t connedge_idx2 = target_edgestatus_[target_idx].Get(best_connection->opp_edgeid).index();
+
+    // set of edges recovered from shortcuts (excluding shortcut's start edges)
+    std::unordered_set<GraphId> recovered_inner_edges;
+
+    // A place to keep the path
+    std::vector<GraphId> path_edges;
+
+    // Work backwards on the forward path
+    graph_tile_ptr tile;
+    for (auto edgelabel_index = connedge_idx1; edgelabel_index != kInvalidLabel;
+         edgelabel_index = source_edgelabel_[source_idx][edgelabel_index].predecessor()) {
+      const BDEdgeLabel& edgelabel = source_edgelabel_[source_idx][edgelabel_index];
+
+      const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
+      if (edge == nullptr) {
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+      }
+
+      if (edge->is_shortcut()) {
+        auto superseded = graphreader.RecoverShortcut(edgelabel.edgeid());
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
+        std::move(superseded.rbegin(), superseded.rend(), std::back_inserter(path_edges));
+      } else
+        path_edges.push_back(edgelabel.edgeid());
+    }
+
+    // Reverse the list
+    std::reverse(path_edges.begin(), path_edges.end());
+
+    // Append the reverse path from the destination - use opposing edges
+    // The first edge on the reverse path is the same as the last on the forward
+    // path, so get the predecessor.
+    for (auto edgelabel_index = target_edgelabel_[target_idx][connedge_idx2].predecessor();
+         edgelabel_index != kInvalidLabel;
+         edgelabel_index = target_edgelabel_[target_idx][edgelabel_index].predecessor()) {
+      const BDEdgeLabel& edgelabel = target_edgelabel_[target_idx][edgelabel_index];
+      const DirectedEdge* opp_edge = nullptr;
+      GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
+      if (opp_edge == nullptr) {
+        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+      }
+
+      if (opp_edge->is_shortcut()) {
+        auto superseded = graphreader.RecoverShortcut(opp_edge_id);
+        recovered_inner_edges.insert(superseded.begin() + 1, superseded.end());
+        std::move(superseded.begin(), superseded.end(), std::back_inserter(path_edges));
+      } else
+        path_edges.emplace_back(std::move(opp_edge_id));
+    }
+
+    auto edge_itr = path_edges.begin();
+    const auto edge_cb = [&edge_itr, &path_edges]() {
+      return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
+    };
+
+    Cost new_cost{0.f, 0.f};
+    const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
+
+    float source_pct;
+    try {
+      source_pct = find_percent_along(source, path_edges.front());
+    } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
+
+    float target_pct;
+    try {
+      target_pct = find_percent_along(target, path_edges.back());
+    } catch (...) {
+      throw std::logic_error("Could not find candidate edge used for destination label");
+    }
+
+    // recost edges in final path; ignore access restrictions
+    auto& time_info = time_infos[source_idx];
+    try {
+      sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
+                          time_info, invariant, true);
+    } catch (const std::exception& e) {
+      LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
+      continue;
+    }
+
+    // update the existing best_connection cost
+    best_connection->cost = new_cost;
   }
 }
 

@@ -37,6 +37,7 @@ void check_dist(const rapidjson::Document& result,
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
       if (valid_traffic) {
         EXPECT_TRUE(v.GetObject().HasMember("date_time")) << msg;
+        EXPECT_TRUE(v.GetObject()["date_time"] != "") << msg;
       }
       i++;
     }
@@ -108,7 +109,9 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
 }
 
 TEST_F(MatrixTest, MatrixWithLiveTraffic) {
-  std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"}};
+  std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
+                                                          {"/costing_options/auto/speed_types/0",
+                                                           "current"}};
 
   // forward tree
   std::string res;
@@ -116,7 +119,6 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
                                  options, nullptr, &res);
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
-  // we expect to take the shorter lower path on residential
   check_dist(res_doc, {0.0f, 1.6f, 1.6f, 0.0f}, true);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
@@ -132,17 +134,12 @@ TEST_F(MatrixTest, MatrixWithLiveTraffic) {
   check_dist(res_doc, {0.0f, 1.6f, 2.0f, 0.0f});
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // reverse tree, CostMatrix
+  // CostMatrix
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"H"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  // without time, we'd expect to take the longer, faster route
-  // TODO: be aware that it's actually 2.0f, but CostMatrix has a bug here, see
-  // https://github.com/valhalla/valhalla/issues/3803
   check_dist(res_doc, {1.6f, 0.0f});
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
 
   // forward tree, source & target within a single edge
   options = {{"/sources/0/date_time", "current"}, {"/costing_options/auto/speed_types/0", "current"}};
@@ -173,8 +170,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
 }
 
 TEST_F(MatrixTest, Sources) {
-  // more sources than targets are allowed, but since we only have live traffic it won't have an
-  // effect
+  // bidirectional matrix doesn't allow for arrive_by
   rapidjson::Document res_doc;
   std::string res;
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "2"},
@@ -183,9 +179,12 @@ TEST_F(MatrixTest, Sources) {
                                  nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().size(), 0);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 205);
+  ASSERT_EQ(result.info().warnings().size(), 1);
 
   // more targets than sources with date_time.type = 2 are disallowed
+  // TODO: re-enable for TimeDistance algo, not allowed for bidir matrix
+  /*
   options = {{"/date_time/type", "2"}, {"/date_time/value", "2016-07-03T08:06"}};
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E"}, {"E", "H"}, "auto", options,
@@ -194,8 +193,11 @@ TEST_F(MatrixTest, Sources) {
   check_dist(res_doc, {0.0f, 2.0f});
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
   ASSERT_EQ(result.info().warnings().size(), 1);
+  */
 
   // date_time on the sources, disallowed reverse
+  // TODO: re-enable for TimeDistance algo, will work for bidir matrix
+  /*
   options = {{"/sources/0/date_time", "current"}, {"/sources/1/date_time", "2016-07-03T08:06"}};
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E"}, "auto", options,
@@ -204,6 +206,18 @@ TEST_F(MatrixTest, Sources) {
   check_dist(res_doc, {0.0f, 2.0f});
   ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
   ASSERT_EQ(result.info().warnings().size(), 1);
+  */
+
+  // bidir matrix allows less targets than sources and date_time on the sources
+  options = {{"/sources/0/date_time", "2016-07-03T08:06"},
+             {"/sources/1/date_time", "current"},
+             {"/costing_options/auto/speed_types/0", "current"}};
+  res.erase();
+  result = gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E"}, "auto", options,
+                            nullptr, &res);
+  res_doc.Parse(res.c_str());
+  check_dist(res_doc, {0.0f, 1.6f}, true);
+  ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
 TEST_F(MatrixTest, Targets) {
@@ -226,8 +240,7 @@ TEST_F(MatrixTest, Targets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
-  ASSERT_EQ(result.info().warnings().size(), 1);
+  ASSERT_EQ(result.info().warnings().size(), 0);
 
   // date_time on the targets, disallowed forward
   options = {{"/targets/0/date_time", "current"}, {"/targets/1/date_time", "2016-07-03T08:06"}};
@@ -236,6 +249,6 @@ TEST_F(MatrixTest, Targets) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   check_dist(res_doc, {0.0f, 2.0f});
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
+  ASSERT_EQ(result.info().warnings().Get(0).code(), 205);
   ASSERT_EQ(result.info().warnings().size(), 1);
 }
