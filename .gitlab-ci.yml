@@ -14,7 +14,6 @@ test:
     - scripts/install-linux-deps.sh
     - git submodule sync && git submodule update --init --recursive
     - mkdir build
-    - pip install --upgrade "conan<2.0.0"
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE -DENABLE_SANITIZERS=ON
     - make -j${CONCURRENCY:-$(nproc)}
