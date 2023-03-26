@@ -20,5 +20,5 @@ test:
     - make utrecht_tiles
     - make -j8 tests
     # leaks in glibc we cant control for
-    - export ASAN_OPTIONS=detect_leaks=0 && make -j1 check
+    - export ASAN_OPTIONS=detect_leaks=0 && make -j4 check
   interruptible: true
