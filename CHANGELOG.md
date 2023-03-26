@@ -2,7 +2,6 @@
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
 * **Bug Fix**
-   * FIXED: docker image fails building for arm64 [#3950](https://github.com/valhalla/valhalla/issues/3950)
    * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
    * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
    * FIXED: fix CHANGELOG release year (2022->2023) [#3927](https://github.com/valhalla/valhalla/pull/3927)
@@ -19,6 +18,8 @@
    * FIXED: fix build with LOGGING_LEVEL=ALL [#3992](https://github.com/valhalla/valhalla/pull/3992)
    * FIXED: transit stitching when determining whether a platform was generated [#4020](https://github.com/valhalla/valhalla/pull/4020)
    * FIXED: multimodal isochrones [#4030](https://github.com/valhalla/valhalla/pull/4030)
+   * FIXED: Remove Arch-Type from strip command [#4040](https://github.com/valhalla/valhalla/pull/4040)
+
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
