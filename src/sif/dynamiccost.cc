@@ -542,6 +542,7 @@ void ParseCosting(const rapidjson::Document& doc,
     }
     case Costing::bikeshare: {
       costing->set_type(Costing::bikeshare); // Nothing to parse for this one
+      costing->set_name(Costing_Enum_Name(costing->type()));
       break;
     }
     case Costing::transit: {
