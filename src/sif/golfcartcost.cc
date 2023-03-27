@@ -260,7 +260,7 @@ public:
            // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
            // on roads having speed limits up to 35mph. Block any road having an
            // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
-           (edge->speed_type() == SpeedType::kClassified || edge -> speed() <= 60) &&
+           (edge->speed_type() == SpeedType::kClassified || tile->edgeinfo(edge).speed_limit() <= 60) &&
            (allow_closures || !tile->IsClosed(edge));
   }
 
@@ -322,7 +322,11 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(edge, tile))) {
+      (pred.closure_pruning() && IsClosed(edge, tile)) ||
+      // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
+      // on roads having speed limits up to 35mph. Block any road having an
+      // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
+      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > 60)) {
     return false;
   }
 
@@ -346,7 +350,11 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
-      (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
+      (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
+      // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
+      // on roads having speed limits up to 35mph. Block any road having an
+      // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
+      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > 60)) {
     return false;
   }
 
