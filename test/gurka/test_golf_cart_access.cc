@@ -17,13 +17,17 @@ protected:
 
     // A network with varying levels of golf cart access
     const std::string ascii_map = R"(
-        A----B----C----D----E----F----G----H
-                                      |    |
-                                      I----J
+        A--B--C--D--E--F--G--H--I--J
+                          |  |  |  |
+                          K--L--M--N
+                                |
+                                O---P
+                                |   |
+                                Q---R
     )";
     const gurka::ways ways = {{"AB",
-                               {{"highway", "residential"},
-                                {"golf_cart", "designated"}}},
+                               {{"highway", "residential"}
+                               }},
                               {"BC",
                                {{"highway", "living_street"},
                                }},
@@ -34,31 +38,73 @@ protected:
                                {{"highway", "service"},
                                }},
                               {"EF",
-                               {{"highway", "path"},
-                                   {"surface", "paved"},
+                               {{"highway", "service"},
+                                   {"service", "parking_aisle"},  // Should be allowed
                                }},
                               {"FG",
                                {{"highway", "path"},
                                    {"surface", "paved"},
                                }},
                               {"GH",
-                               {{"highway", "path"},  // not paved
+                               {{"highway", "path"},  // not paved!
                                }},
-                              {"GI",
-                               {{"highway", "path"},
-                                   {"surface", "paved"},
+                              {"HI",
+                               {{"highway", "secondary"},
                                }},
                               {"IJ",
                                {{"highway", "path"},
                                    {"surface", "paved"},
+                                   {"motor_vehicle", "no"},  // Tricky; motor_vehicle=no...
+                                   {"golf_cart", "yes"},     // ... but golf_cart=yes
                                }},
-                              {"HJ",
-                               {{"highway", "path"},
-                                   {"surface", "paved"},
+
+                              // N/S cross streets
+                              {"GK",
+                               {{"highway", "residential"},
+                               }},
+                              {"HL",
+                               {{"highway", "residential"},
+                               }},
+                              {"IM",
+                               {{"highway", "primary"},
+                               }},
+                              {"JN",
+                               {{"highway", "residential"},
+                               }},
+
+                              // Second set of N/S connectors
+                              {"MO",
+                               {{"highway", "residential"},
+                               }},
+                              {"OQ",
+                               {{"highway", "residential"},
+                                   {"maxspeed", "40mph"}  // Exceeds allowable speed of 60kph
+                               }},
+                              {"PR",
+                               {{"highway", "residential"},
+                               }},
+
+                              // Middle E/W highway segments
+                              {"KL",
+                               {{"highway", "residential"},
+                               }},
+                              {"LM",
+                               {{"highway", "primary"},  // No access for golf carts
+                               }},
+                              {"MN",
+                               {{"highway", "residential"},
+                               }},
+
+                              // Lower
+                              {"OP",
+                               {{"highway", "residential"},
+                               }},
+                              {"QR",
+                               {{"highway", "residential"},
                                }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mtb_access");
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/golf_cart_access");
   }
 };
 
@@ -67,7 +113,7 @@ gurka::map GolfCartAccess::map = {};
 /*************************************************************/
 
 TEST_F(GolfCartAccess, CheckGolfCartAccess) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "H"}, "golf_cart");
-  gurka::assert::osrm::expect_steps(result, {"AB", "GI", "IJ", "HJ"});
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GI", "IJ", "HJ"});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "Q"}, "golf_cart");
+  gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR"});
 }
