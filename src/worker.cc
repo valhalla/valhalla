@@ -940,6 +940,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (recostings && recostings->IsArray()) {
     // make sure we only have unique recosting names in the end
     std::unordered_set<std::string> names;
+    names.reserve(recostings->GetArray().Size());
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
