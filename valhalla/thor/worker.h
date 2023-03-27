@@ -5,6 +5,7 @@
 #include <tuple>
 #include <vector>
 
+#include <boost/multi_array.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/attributes_controller.h>
@@ -22,6 +23,7 @@
 #include <valhalla/thor/astar_bss.h>
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
+#include <valhalla/thor/chinese_postman_graph.h>
 #include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
@@ -38,6 +40,9 @@ namespace thor {
 #ifdef HAVE_HTTP
 void run_service(const boost::property_tree::ptree& config);
 #endif
+
+// A matrix to store a distance between a list of location to a list of location
+typedef boost::multi_array<double, 2> DistanceMatrix;
 
 class thor_worker_t : public service_worker_t {
 public:
@@ -69,6 +74,7 @@ public:
   std::string expansion(Api& request);
   void centroid(Api& request);
   void status(Api& request) const;
+  void chinese_postman(Api& request);
 
   void set_interrupt(const std::function<void()>* interrupt) override;
 
@@ -97,6 +103,25 @@ protected:
   void path_depart_at(Api& api, const std::string& costing);
   void parse_measurements(const Api& request);
   std::string parse_costing(const Api& request);
+
+  // Compute a cost matrix among graph ids. It calls costmatrix.SourceToTarget
+  DistanceMatrix computeCostMatrix(const std::vector<baldr::GraphId>& graph_ids,
+                                   const std::shared_ptr<sif::DynamicCost>& costing,
+                                   const float max_matrix_distance);
+
+  // Compute a route from cpvertex_start to cpvertex_end. It calls PathAlgorithm's GetBestPath
+  std::vector<baldr::GraphId> computeFullRoute(baldr::GraphId cpvertex_start,
+                                               baldr::GraphId cpvertex_end,
+                                               const Options& options,
+                                               const std::string& costing_str,
+                                               const std::shared_ptr<sif::DynamicCost>& costing);
+
+  // Build Edge Ids from a list of (reversedEulerPath)
+  std::vector<baldr::GraphId> buildEdgeIds(std::vector<int> reversedEulerPath,
+                                           ChinesePostmanGraph& G,
+                                           const Options& options,
+                                           const std::string& costing_str,
+                                           const std::shared_ptr<sif::DynamicCost>& costing);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&

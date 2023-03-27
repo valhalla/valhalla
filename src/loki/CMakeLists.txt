@@ -7,7 +7,8 @@ set(sources
   matrix_action.cc
   status_action.cc
   transit_available_action.cc
-  polygon_search.cc)
+  polygon_search.cc
+  chinese_postman_action.cc)
 
 # Enables stricter compiler checks on a file-by-file basis
 # which allows us to migrate piecemeal
@@ -26,18 +27,18 @@ valhalla_module(NAME loki
   SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
-    PUBLIC
-      ${VALHALLA_SOURCE_DIR}
-      ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-    PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      ${CMAKE_BINARY_DIR}
+  PUBLIC
+  ${VALHALLA_SOURCE_DIR}
+  ${VALHALLA_SOURCE_DIR}/valhalla
+  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+  PRIVATE
+  ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+  ${CMAKE_BINARY_DIR}
   DEPENDS
-    valhalla::skadi
-    valhalla::sif
-    valhalla::proto
-    ${valhalla_protobuf_targets}
-    Boost::boost
-    libprime_server)
+  valhalla::skadi
+  valhalla::sif
+  valhalla::proto
+  ${valhalla_protobuf_targets}
+  Boost::boost
+  libprime_server)

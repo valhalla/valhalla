@@ -145,6 +145,32 @@ public:
   }
 
   /**
+   * Return the graph id for an edge contained within this tile
+   * @param edge  the edge for which we want to know the id
+   * @return the edges id or an invalid id if the edge doesnt belong to the tile
+   */
+  GraphId id(const DirectedEdge* edge) const {
+    if (edge < directededges_ || edge >= directededges_ + header_->directededgecount())
+      return {};
+    auto edge_id = header_->graphid();
+    edge_id.set_id(edge - directededges_);
+    return edge_id;
+  }
+
+  /**
+   * Return the graph id for a node contained within this tile
+   * @param node  the node for which we want to know the id
+   * @return the nodes id or an invalid id if the node doesnt belong to the tile
+   */
+  GraphId id(const NodeInfo* node) const {
+    if (node < nodes_ || node >= nodes_ + header_->nodecount())
+      return {};
+    auto node_id = header_->graphid();
+    node_id.set_id(node - nodes_);
+    return node_id;
+  }
+
+  /**
    * Gets a pointer to the graph tile header.
    * @return  Returns the header for the graph tile.
    */
@@ -321,9 +347,9 @@ public:
   }
 
   /**
-   * Get a pointer to a node transition.
-   * @param  idx  Index of the directed edge within the current tile.
-   * @return  Returns a pointer to the edge.
+   * Get a pointer to a node transition (to another level of the hierarchy).
+   * @param  idx  Index of the transition within the current tile.
+   * @return  Returns a pointer to the transition info.
    */
   const NodeTransition* transition(const uint32_t idx) const {
     if (idx < header_->transitioncount())
@@ -364,6 +390,33 @@ public:
     }
     const auto* nodeinfo = nodes_ + node.id();
     return GetNodeTransitions(nodeinfo);
+  }
+
+  /**
+   * Returns the GraphIds of the given node and other nodes that represent it on other levels of the
+   * hierarchy Usually there will only be 3 of these as transit nodes are not shared across levels of
+   * the hierarchy
+   * @return  an array of nodes
+   */
+  std::array<GraphId, 4> GetNodesAcrossLevels(const GraphId& node_id) const {
+    if (node_id.id() >= header_->nodecount()) {
+      throw std::logic_error(
+          std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+          " GraphTile NodeInfo index out of bounds: " + std::to_string(node_id.tileid()) + "," +
+          std::to_string(node_id.level()) + "," + std::to_string(node_id.id()) +
+          " nodecount= " + std::to_string(header_->nodecount()));
+    }
+
+    // we count ourselves
+    std::array<GraphId, 4> ids{};
+    ids[node_id.level()] = node_id;
+    // we count the siblings on other levels too
+    const auto& node = nodes_[node_id.id()];
+    for (uint32_t i = node.transition_index(); i < node.transition_count(); ++i) {
+      auto twin = transitions_[i].endnode();
+      ids[twin.level()] = twin;
+    }
+    return ids;
   }
 
   /**

@@ -84,11 +84,14 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     }
   } catch (const std::runtime_error&) { throw valhalla_exception_t{125, "'" + costing_str + "'"}; }
 
+  // save the full set of avoid edges to skip chinese edges further down
+
+  std::unordered_set<GraphId> avoid_edges;
   if (options.exclude_polygons_size()) {
-    const auto edges =
-        edges_in_rings(options.exclude_polygons(), *reader, costing, max_exclude_polygons_length);
+    avoid_edges = edges_in_rings(options.exclude_polygons(), *reader, costing,
+                                 max_exclude_polygons_length, SearchStrategy::AVOID);
     auto& co = *options.mutable_costings()->find(options.costing_type())->second.mutable_options();
-    for (const auto& edge_id : edges) {
+    for (const auto& edge_id : avoid_edges) {
       auto* avoid = co.add_exclude_edges();
       avoid->set_id(edge_id);
       // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
@@ -118,6 +121,8 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
             auto* avoid = co.add_exclude_edges();
             avoid->set_id(edge.id);
             avoid->set_percent_along(edge.percent_along);
+            // add to the avoid_edges container for the chinese postman
+            avoid_edges.emplace(GraphId(edge.id));
 
             // Check if a shortcut exists
             GraphId shortcut = reader->GetShortcut(edge.id);
@@ -139,6 +144,21 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     } // swallow all failures on optional avoids
     catch (...) {
       LOG_WARN("Failed to find exclude_locations");
+    }
+  }
+
+  // Save the edges for chinese postman graph
+  if (options.has_chinese_polygon()) {
+    const auto chinese_edges = edges_in_rings(options.chinese_polygon(), *reader, costing,
+                                              max_chinese_polygon_length, SearchStrategy::CHINESE);
+    for (const auto& edge_id : chinese_edges) {
+      if (avoid_edges.find(edge_id) != avoid_edges.end()) {
+        continue;
+      }
+      auto* chinese_edge = options.add_chinese_edges();
+      chinese_edge->set_id(edge_id);
+      // TODO: set correct percent_along in edges_in_rings (for origin & destination edges)
+      chinese_edge->set_percent_along(0);
     }
   }
 
@@ -185,7 +205,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
-        kv.first == "max_exclude_polygons_length" || kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_exclude_polygons_length" || kv.first == "max_chinese_polygon_length" ||
+        kv.first == "skadi" || kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -226,6 +247,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
 
   max_exclude_locations = config.get<size_t>("service_limits.max_exclude_locations");
   max_exclude_polygons_length = config.get<float>("service_limits.max_exclude_polygons_length");
+  max_chinese_polygon_length = config.get<float>("service_limits.max_chinese_polygon_length");
   max_reachability = config.get<unsigned int>("service_limits.max_reachability");
   default_reachability = config.get<unsigned int>("loki.service_defaults.minimum_reachability");
   max_radius = config.get<unsigned int>("service_limits.max_radius");

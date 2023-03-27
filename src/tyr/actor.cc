@@ -80,6 +80,8 @@ std::string actor_t::act(Api& api, const std::function<void()>* interrupt) {
       return centroid("", interrupt, &api);
     case Options::status:
       return status("", interrupt, &api);
+    case Options::chinese_postman:
+      return chinese_postman("", interrupt, &api);
     default:
       throw valhalla_exception_t{106};
   }
@@ -354,13 +356,40 @@ actor_t::status(const std::string& request_str, const std::function<void()>* int
   pimpl->thor_worker.status(*api);
   // check odins status
   pimpl->odin_worker.status(*api);
-  // get the json
-  auto json = tyr::serializeStatus(*api);
+  // get the status serialized
+  auto bytes = tyr::serializeStatus(*api);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
-  return json;
+  return bytes;
+}
+
+std::string actor_t::chinese_postman(const std::string& request_str,
+                                     const std::function<void()>* interrupt,
+                                     Api* api) {
+  // set the interrupts
+  pimpl->set_interrupts(interrupt);
+  // if the caller doesn't want a copy we'll use this dummy
+  Api dummy;
+  if (!api) {
+    api = &dummy;
+  }
+  // parse the request
+  ParseApi(request_str, Options::chinese_postman, *api);
+  // check the request and locate the locations in the graph
+  pimpl->loki_worker.chinese_postman(*api);
+  // Find chinese postman route
+  pimpl->thor_worker.chinese_postman(*api);
+  // get some directions back from them
+  pimpl->odin_worker.narrate(*api);
+  // serialize them out to json string
+  auto bytes = tyr::serializeDirections(*api);
+  // if they want you do to do the cleanup automatically
+  if (auto_cleanup) {
+    cleanup();
+  }
+  return bytes;
 }
 
 } // namespace tyr

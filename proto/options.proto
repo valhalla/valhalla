@@ -67,6 +67,15 @@ message AvoidEdge {
   }
 }
 
+message ChinesePostmanEdge {
+  oneof has_id {
+    uint64 id = 1;
+  }
+  oneof has_percent_along {
+    float percent_along = 2;
+  }
+}
+
 message Costing {
   enum Type {
     none_ = 0;
@@ -354,6 +363,7 @@ message Options {
     expansion = 10;
     centroid = 11;
     status = 12;
+    chinese_postman = 13;
   }
 
   enum DateTimeType {
@@ -402,6 +412,7 @@ message Options {
   repeated Location exclude_locations = 15;                        // Avoids for any costing
   repeated Location sources = 16;                                  // Sources for /sources_to_targets
   repeated Location targets = 17;                                  // Targets for /sources_to_targets
+  repeated ChinesePostmanEdge chinese_edges = 80;                  // Edges to be visited for chinese postman algorithm
   DateTimeType date_time_type = 18;                                // Are you leaving now or then or arriving then
   oneof has_date_time {
     string date_time = 19;                                         // And what day and time
@@ -481,4 +492,7 @@ message Options {
     uint32 matrix_locations = 54;                                  // a one to many or many to one time distance matrix. Does not affect
   }                                                                // sources_to_targets when either sources or targets has more than 1 location
                                                                    // or when CostMatrix is the selected matrix mode.
+  oneof has_chinese_polygon {
+    Ring chinese_polygon = 55;                                     // Polygon to select which roads to be visited on chinese postman
+  }
 }
