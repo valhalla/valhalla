@@ -7,7 +7,7 @@
 
 using namespace valhalla;
 
-// Check that golf cart tags override others to allow access
+// Check that golf carts have access to the correct roads
 class GolfCartAccess : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -24,6 +24,10 @@ protected:
                                 O---P
                                 |   |
                                 Q---R
+                                |\
+                                S-T
+                                |/
+                                U
     )";
     const gurka::ways ways = {{"AB",
                                {{"highway", "residential"}
@@ -101,6 +105,26 @@ protected:
                                }},
                               {"QR",
                                {{"highway", "residential"},
+                               }},
+
+                              // Triangle
+                              {"QS",
+                               {{"highway", "residential"},
+                                   {"access", "private"},
+                               }},
+                              {"QT",
+                               {{"highway", "secondary"},
+                               }},
+                              {"ST",
+                               {{"highway", "residential"},
+                                   {"golf_cart", "private"},
+                               }},
+                              {"SU",
+                               {{"highway", "residential"},
+                                   {"golf_cart", "private"},
+                               }},
+                              {"TU",
+                               {{"highway", "secondary"},
                                }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -113,7 +137,7 @@ gurka::map GolfCartAccess::map = {};
 /*************************************************************/
 
 TEST_F(GolfCartAccess, CheckGolfCartAccess) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "Q"}, "golf_cart");
-  gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR"});
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR"});
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart");
+  gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TU"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TU"});
 }
