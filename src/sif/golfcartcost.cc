@@ -58,7 +58,7 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTo
                                                     kMaximumTopSpeed};
 
 // How much to favor golf cart designated roads (factor that is multiplied in later)
-constexpr float kGolfCartDesignatedFactor = 0.9f;
+constexpr float kGolfCartDesignatedFactor = 3.f;
 
 // Weighting factor based on road class. These apply penalties to higher class
 // roads. These penalties are additive based on other penalties - further
@@ -67,12 +67,12 @@ constexpr float kGolfCartDesignatedFactor = 0.9f;
 constexpr float kRoadClassPenaltyFactor[] = {
     1.0f,  // Motorway
     1.0f,  // Trunk
-    0.75f,  // Primary
-    0.25f,  // Secondary
-    0.05f, // Tertiary
-    0.05f, // Unclassified
-    0.05f,  // Residential
-    0.05f   // Service, other
+    0.75f, // Primary
+    0.25f, // Secondary
+    0.1f,  // Tertiary
+    0.1f,  // Unclassified
+    0.1f,  // Residential
+    0.05f  // Service, other
 };
 
 // TODO: hills?
@@ -376,14 +376,6 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Represents negative traits without looking at special accommodations for golf carts
   float avoidance_factor = 1.0f;
 
-  // Represents special accommodations for golf carts
-  float accommodation_factor = 1.0f;
-
-  // Favor golf cart paths
-  if (edge->golf_cart_designated()) {
-    accommodation_factor *= kGolfCartDesignatedFactor;
-  }
-
   if (edge->use() == Use::kLivingStreet) {
     avoidance_factor = living_street_factor_;
   } else {
@@ -397,9 +389,14 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
     avoidance_factor *= speedpenalty_[edge->speed()];
   }
 
+  // Favor golf cart paths
+  if (!edge->golf_cart_designated()) {
+    avoidance_factor *= kGolfCartDesignatedFactor;
+  }
+
   // TODO: Grade penalty?
   float factor = 1.0f +
-                 (avoidance_factor * accommodation_factor) +
+                 avoidance_factor +
                  SpeedPenalty(edge, tile, time_info, flow_sources, speed);
 
   if (IsClosed(edge, tile)) {
