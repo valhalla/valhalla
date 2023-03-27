@@ -496,12 +496,14 @@ TEST(recosting, error_request) {
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
 
   try {
-    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"},{"costing":"auto"}]})");
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"},{"costing":"auto"}]})");
     FAIL() << "Duplicate names should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
 
   try {
-    actor.route(R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto","name": "same"},{"costing":"auto","name": "same"}]})");
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto","name": "same"},{"costing":"auto","name": "same"}]})");
     FAIL() << "Duplicate names should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
 }
