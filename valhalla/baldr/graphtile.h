@@ -870,16 +870,16 @@ protected:
   std::size_t lane_connectivity_size_{};
 
   // Predicted speeds
-  PredictedSpeeds predictedspeeds_;
+  PredictedSpeeds predictedspeeds_{};
 
   // Map of stop one stops in this tile.
-  std::unordered_map<std::string, GraphId> stop_one_stops;
+  std::unordered_map<std::string, GraphId> stop_one_stops{};
 
   // Map of route one stops in this tile.
-  std::unordered_map<std::string, std::list<GraphId>> route_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> route_one_stops{};
 
   // Map of operator one stops in this tile.
-  std::unordered_map<std::string, std::list<GraphId>> oper_one_stops;
+  std::unordered_map<std::string, std::list<GraphId>> oper_one_stops{};
 
   // Pointer to live traffic data (can be nullptr if not active)
   TrafficTile traffic_tile{nullptr};
