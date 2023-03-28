@@ -35,32 +35,32 @@ public:
   }
 
   /**
-   * Get the TransitLand one stop Id offset for this route.
-   * @return  Returns the TransitLand one-stop Id offset.
+   * Get the one stop Id offset for this route.
+   * @return  Returns the one-stop Id offset.
    */
   uint32_t one_stop_offset() const {
     return one_stop_offset_;
   }
 
   /**
-   * Get the TransitLand operator one stop Id offset for this route.
-   * @return  Returns the TransitLand operator one-stop Id offset.
+   * Get the operator one stop Id offset for this route.
+   * @return  Returns the operator one-stop Id offset.
    */
   uint32_t op_by_onestop_id_offset() const {
     return op_by_onestop_id_offset_;
   }
 
   /**
-   * Get the TransitLand operator name offset for this route.
-   * @return  Returns the TransitLand operator name offset.
+   * Get the operator name offset for this route.
+   * @return  Returns the operator name offset.
    */
   uint32_t op_by_name_offset() const {
     return op_by_name_offset_;
   }
 
   /**
-   * Get the TransitLand operator website offset for this route.
-   * @return  Returns the TransitLand operator website offset.
+   * Get the operator website offset for this route.
+   * @return  Returns the operator website offset.
    */
   uint32_t op_by_website_offset() const {
     return op_by_website_offset_;
@@ -119,14 +119,14 @@ protected:
 
   // Offsets in the text/name list
   uint64_t route_type_ : 8;       // Internal route type
-  uint64_t one_stop_offset_ : 24; // TransitLand onestop Id for this route.
+  uint64_t one_stop_offset_ : 24; // onestop Id for this route.
   uint64_t spare1_ : 32;
 
-  uint64_t op_by_onestop_id_offset_ : 24; // TransitLand operated by onestop id.
-  uint64_t op_by_name_offset_ : 24;       // TransitLand operated by name.
+  uint64_t op_by_onestop_id_offset_ : 24; // operated by onestop id.
+  uint64_t op_by_name_offset_ : 24;       // operated by name.
   uint64_t spare2_ : 16;
 
-  uint64_t op_by_website_offset_ : 24; // TransitLand operated by website.
+  uint64_t op_by_website_offset_ : 24; // operated by website.
   uint64_t short_name_offset_ : 24;    // Short route name.
   uint64_t spare3_ : 16;
 

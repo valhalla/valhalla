@@ -28,7 +28,6 @@ valhalla_skadi_worker
 valhalla_thor_worker
 valhalla_tyr_worker
 valhalla_associate_segments
-valhalla_fetch_transit
 valhalla_pack_elevation
 valhalla_add_elevation
 genfiles/

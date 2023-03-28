@@ -9,7 +9,7 @@ namespace valhalla {
 namespace mjolnir {
 
 /**
- * @brief Grabs protobufs written in fetch_transit and converts them into transit level tiles
+ * @brief Grabs protobufs written in ingest_transit and converts them into transit level tiles
  *        Non-transit graph tiles are also required to find locations where to connect the
  *        transit subgraph (nodes where we can add transit connect edges)
  * @param pt Property tree containing the hierarchy configuration
