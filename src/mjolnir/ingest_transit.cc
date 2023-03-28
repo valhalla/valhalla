@@ -614,8 +614,9 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     auto currRoute = feed.get_route(tile_routeId);
 
     route->set_name(currRoute->route_short_name);
-    route->set_onestop_id(currRoute->route_id);
-    route->set_operated_by_onestop_id(currRoute->agency_id);
+    route->set_onestop_id(get_onestop_id_base(currRoute->route_id, feed_route.first.feed));
+    route->set_operated_by_onestop_id(
+        get_onestop_id_base(currRoute->agency_id, feed_route.first.feed));
 
     auto currAgency = feed.get_agency(currRoute->agency_id);
     route->set_operated_by_name(currAgency->agency_name);
