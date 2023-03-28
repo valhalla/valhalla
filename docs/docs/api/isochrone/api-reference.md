@@ -72,8 +72,9 @@ The Isochrone service is in active development. To report software issues or sug
 Several other options are being considered as future service enhancements. These include:
 
 * ~~Using distance rather than time for each unit.~~
-* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time, including with options to control the minimum size of interior holes.
-* ~~Removing self intersections from polygonal contours.~~
+* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time
+* ~~Options to control the minimum size of interior holes.~~
+* Removing self intersections from polygonal contours.
 * ~~Allowing multiple locations to compute the region reachable from any of the locations within a specified time.~~
 * ~~Generating contours with reverse access logic to see the region that can reach a specific location within the specified time.~~
 * Returning raster data for potential animation using OpenGL shaders. This also has analysis use for being able to query thousands of locations to determine the time to each location, including improvements with one-to-many requests to the Valhalla Time-Distance Matrix service.
