@@ -47,15 +47,26 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
-// Minimum and maximum average golf cart speed (to validate input).
+// Minimum and maximum golf cart top speed (to validate input).
 // Maximum is based on Eddie Connell's somewhat joking claim of being able to hit ~40mph
-constexpr uint32_t kMinimumTopSpeed = 30; // KPH
+constexpr uint32_t kMinimumTopSpeed = 20; // KPH
 constexpr uint32_t kDefaultTopSpeed = 35; // KPH (21.75mph)
 constexpr uint32_t kMaximumTopSpeed = 60; // KPH
 
 // Valid ranges and defaults
 constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTopSpeed,
                                                     kMaximumTopSpeed};
+// Bounds on max allowed speed limits (to validate input).
+// In the presence of a maxspeed tag, it will be compared against this value. If the maxspeed
+// value is greater than this tunable, the road will be inaccessible.
+// 57kph is 35.42mph. In the US, LSV regulations typically state that golf carts may drive
+// on roads having speed limits up to 35mph. Block any road having an
+// *explicitly tagged* higher speed limit (implicit ones just get a penalty).
+constexpr uint32_t kMinimumAllowedSpeedLimit = 20; // KPH (12.43mph)
+constexpr uint32_t kDefaultAllowedSpeedLimit = 57; // KPH (35.42mph)
+constexpr uint32_t kMaximumAllowedSpeedLimit = 80; // KPH
+constexpr ranged_default_t<uint32_t> kMaxAllowedSpeedLimit{kMinimumAllowedSpeedLimit, kDefaultAllowedSpeedLimit,
+                                                           kMaximumAllowedSpeedLimit};
 
 // How much to favor golf cart designated roads (factor that is multiplied in later)
 constexpr float kGolfCartDesignatedFactor = 3.f;
@@ -257,10 +268,7 @@ public:
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
-           // on roads having speed limits up to 35mph. Block any road having an
-           // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
-           (edge->speed_type() == SpeedType::kClassified || tile->edgeinfo(edge).speed_limit() <= 60) &&
+           (edge->speed_type() == SpeedType::kClassified || tile->edgeinfo(edge).speed_limit() <= max_allowed_speed_limit_) &&
            (allow_closures || !tile->IsClosed(edge));
   }
 
@@ -273,6 +281,7 @@ public:
   float speedpenalty_[kMaxSpeedKph + 1];
   float density_factor_[16]; // Density factor
   std::vector<float> trans_density_factor_; // Density factor used in edge transition costing
+  uint32_t max_allowed_speed_limit_;
 
   // TODO: hills?
 };
@@ -281,8 +290,7 @@ GolfCartCost::GolfCartCost(const Costing& costing)
     : DynamicCost(costing, TravelMode::kDrive, kGolfCartAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
-  // TODO: Any configuration?
-//  const auto& costing_options = costing.options();
+  const auto& costing_options = costing.options();
 
   // Get the base costs
   get_base_costs(costing);
@@ -293,16 +301,17 @@ GolfCartCost::GolfCartCost(const Costing& costing)
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
 
-    // TODO: configurable cutoff
-    // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
-    // on roads having speed limits up to 35mph. Severely penalize anything above this.
-    speedpenalty_[s] = s < 60 ? 1 : 3;
+    // Severely penalize anything above the max speed, but don't block it since the
+    // maxspeed hasn't been explicitly tagged if we got this far...
+    speedpenalty_[s] = s < max_allowed_speed_limit_ ? 1 : 3;
   }
 
   // Set density factors - used to penalize edges in dense, urban areas
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.018f);
   }
+
+  max_allowed_speed_limit_ = costing_options.max_allowed_speed_limit();
 
   // TODO: hills?
 }
@@ -323,10 +332,7 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
       (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
-      // on roads having speed limits up to 35mph. Block any road having an
-      // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
-      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > 60)) {
+      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
     return false;
   }
 
@@ -351,10 +357,7 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      // 60kph is ~37mph. In the US, LSV regulations typically state that golf carts may drive
-      // on roads having speed limits up to 35mph. Block any road having an
-      // *explicitly tagged* higher speed limit (implicit ones just get a penalty).
-      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > 60)) {
+      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
     return false;
   }
 
@@ -549,6 +552,7 @@ void ParseGolfCartCostOptions(const rapidjson::Document& doc,
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
+  JSON_PBF_RANGED_DEFAULT(co, kMaxAllowedSpeedLimit, json, "/max_allowed_speed_limit", max_allowed_speed_limit);
   // TODO: hills?
 //  JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
 }

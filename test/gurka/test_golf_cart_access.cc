@@ -114,6 +114,7 @@ protected:
                                }},
                               {"QT",
                                {{"highway", "secondary"},
+                                   {"maxspeed", "30mph"}
                                }},
                               {"ST",
                                {{"highway", "residential"},
@@ -140,4 +141,15 @@ TEST_F(GolfCartAccess, CheckGolfCartAccess) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart");
   gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TU"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TU"});
+}
+
+TEST_F(GolfCartAccess, CheckGolfCartAccessReducedSpeedLimit) {
+  try {
+    std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/golf_cart/max_allowed_speed_limit", "47"}};
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart", options);
+    gurka::assert::raw::expect_path(result, {"Unexpected path found"});
+  } catch (const std::runtime_error& e) {
+    EXPECT_STREQ(e.what(), "No path could be found for input");
+  }
 }

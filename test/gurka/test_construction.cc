@@ -156,6 +156,6 @@ TEST_P(ConstructionRoutingTest, CheckAvoidRoadsUnderConstruction) {
 
 const std::vector<std::string> costing_types = {"auto",       "taxi",       "bus",
                                                 "truck",      "bicycle",    "motor_scooter",
-                                                "motorcycle", "pedestrian", "hov"};
+                                                "motorcycle", "pedestrian", "hov", "golf_cart"};
 
 INSTANTIATE_TEST_SUITE_P(Test, ConstructionRoutingTest, ::testing::ValuesIn(costing_types));
