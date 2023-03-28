@@ -19,6 +19,7 @@
    * FIXED: transit stitching when determining whether a platform was generated [#4020](https://github.com/valhalla/valhalla/pull/4020)
    * FIXED: multimodal isochrones [#4030](https://github.com/valhalla/valhalla/pull/4030)
    * FIXED: duplicated recosting names should throw [#4042](https://github.com/valhalla/valhalla/pull/4042)
+   * FIXED: Remove arch specificity from strip command of Python bindings to make it more compatible with other archs [#4040](https://github.com/valhalla/valhalla/pull/4040)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
