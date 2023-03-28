@@ -385,6 +385,7 @@ const std::unordered_map<int, std::string> vehicle_to_string{
     {static_cast<int>(VehicleType::kAutoBus), "bus"},
     {static_cast<int>(VehicleType::kTractorTrailer), "tractor_trailer"},
     {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
+    {static_cast<int>(VehicleType::kGolfCart), "golf_cart"},
 };
 
 const std::unordered_map<int, std::string> pedestrian_to_string{

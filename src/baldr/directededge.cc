@@ -17,7 +17,8 @@ json::MapPtr access_json(uint32_t access) {
                     {"truck", static_cast<bool>(access & kTruckAccess)},
                     {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
                     {"moped", static_cast<bool>(access & kMopedAccess)},
-                    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)}});
+                    {"motorcycle", static_cast<bool>(access & kMotorcycleAccess)},
+                    {"golf_cart", static_cast<bool>(access & kGolfCartAccess)}});
 }
 
 /**

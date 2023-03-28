@@ -791,6 +791,7 @@ const std::unordered_map<uint8_t, std::string> TripLeg_VehicleType_Strings{
     {static_cast<uint8_t>(VehicleType::kMotorcycle), "motorcycle"},
     {static_cast<uint8_t>(VehicleType::kAutoBus), "bus"},
     {static_cast<uint8_t>(VehicleType::kTractorTrailer), "tractor_trailer"},
+    {static_cast<uint8_t>(VehicleType::kGolfCart), "golf_cart"},
 };
 inline std::string to_string(VehicleType vehicle_type) {
   auto i = TripLeg_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));

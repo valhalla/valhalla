@@ -1869,7 +1869,7 @@ public:
           if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
               boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                    kHOVAccess | kMopedAccess | kMotorcycleAccess);
+                    kHOVAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
@@ -1882,6 +1882,8 @@ public:
             mode = kMopedAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
             mode = kMotorcycleAccess;
+          } else if (boost::algorithm::starts_with(tag_.first, "golf_cart:conditional")) {
+            mode = kGolfCartAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
@@ -2298,6 +2300,8 @@ public:
           modes |= (kAutoAccess | kMopedAccess);
         } else if (tag.first == "restriction:motorcycle") {
           modes |= kMotorcycleAccess;
+        } else if (tag.first == "restriction:golf_cart") {
+          modes |= kGolfCartAccess;
         } else if (tag.first == "restriction:taxi") {
           modes |= kTaxiAccess;
         } else if (tag.first == "restriction:bus") {
@@ -2530,7 +2534,7 @@ public:
         if (!isTypeRestriction) {
 
           modes = (kAutoAccess | kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
-                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess);
+                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess | kGolfCartAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens = GetTagTokens(except);
           for (const auto& t : tokens) {
@@ -2538,6 +2542,8 @@ public:
               modes = modes & ~(kAutoAccess | kMopedAccess);
             } else if (t == "motorcycle") {
               modes = modes & ~kMotorcycleAccess;
+            } else if (t == "golf_cart") {
+              modes = modes & ~kGolfCartAccess;
             } else if (t == "psv") {
               modes = modes & ~(kTaxiAccess | kBusAccess);
             } else if (t == "taxi") {
