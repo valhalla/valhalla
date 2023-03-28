@@ -78,11 +78,11 @@ constexpr float kGolfCartDesignatedFactor = 3.f;
 constexpr float kRoadClassPenaltyFactor[] = {
     1.0f,  // Motorway
     1.0f,  // Trunk
-    0.75f, // Primary
-    0.25f, // Secondary
-    0.1f,  // Tertiary
-    0.1f,  // Unclassified
-    0.1f,  // Residential
+    1.0f, // Primary
+    1.0f, // Secondary
+    0.75f,  // Tertiary
+    0.5f,  // Unclassified
+    0.25f,  // Residential
     0.05f  // Service, other
 };
 

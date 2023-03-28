@@ -996,6 +996,11 @@ function filter_tags_generic(kv)
     kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or kv["golf_cart_forward"]
     kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
+    -- Override per Justin
+    if kv["access"] == "private" then
+      kv["golf_cart_forward"] = "false"
+    end
+
     if kv["bike_tag"] == nil then
       if kv["sac_scale"] == "hiking" then
         kv["bike_forward"] = "true"
