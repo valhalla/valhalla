@@ -402,7 +402,11 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   // Favor golf cart paths
   if (!edge->golf_cart_designated()) {
-    avoidance_factor *= kGolfCartDesignatedFactor;
+    if (edge->classification() == valhalla::baldr::RoadClass::kServiceOther) {
+      avoidance_factor *= kGolfCartDesignatedFactor / 2.0f;
+    } else {
+      avoidance_factor *= kGolfCartDesignatedFactor;
+    }
   }
 
   // TODO: Grade penalty?
