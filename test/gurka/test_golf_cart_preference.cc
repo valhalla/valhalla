@@ -64,7 +64,7 @@ protected:
                                }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/golf_cart_access");
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/golf_cart_preference");
   }
 };
 
