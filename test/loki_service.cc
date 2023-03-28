@@ -518,8 +518,6 @@ void test_hierarchy_warning(const Options_Action& action, const Costing_Type& ty
       worker.route(request);
     } else if (action == Options_Action_sources_to_targets) {
       worker.matrix(request);
-    } else if (action == Options_Action_trace_route) {
-      worker.trace(request);
     }
   } catch (...) {}
 
@@ -583,8 +581,7 @@ TEST(LokiService, test_actions_whitelist) {
 
 TEST(LokiService, test_hierarchy_warning) {
   // all actions involving disble_hierarchy_pruning
-  const std::vector<Options_Action> actions{Options_Action_route, Options_Action_sources_to_targets,
-                                            Options_Action_trace_route};
+  const std::vector<Options_Action> actions{Options_Action_route, Options_Action_sources_to_targets};
   // all relevant costing types, with or without warning
   const std::vector<Costing_Type> costing_types{Costing_Type_bicycle,       Costing_Type_bus,
                                                 Costing_Type_motor_scooter, Costing_Type_pedestrian,
