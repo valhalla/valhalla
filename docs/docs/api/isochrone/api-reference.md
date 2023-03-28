@@ -72,7 +72,7 @@ The Isochrone service is in active development. To report software issues or sug
 Several other options are being considered as future service enhancements. These include:
 
 * ~~Using distance rather than time for each unit.~~
-* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time
+* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time.
 * ~~Options to control the minimum size of interior holes.~~
 * Removing self intersections from polygonal contours.
 * ~~Allowing multiple locations to compute the region reachable from any of the locations within a specified time.~~
