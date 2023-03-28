@@ -40,12 +40,8 @@ def last_build_successful():
         print('CIRCLE_API_TOKEN env not set! Unable to do CI skip check', file=sys.stderr)
         return False, None
 
-    # If master, we run 4 jobs, if PR, we run 3 (no docker workflow)
     # jobs defined in .circleci/config.yml
-    if branch == "master":
-        JOBS = ['build-docker-images', 'lint-build-debug', 'build-release', 'build-osx']
-    else:
-        JOBS = ['lint-build-debug', 'build-release', 'build-osx']
+    JOBS = ['lint-build-debug', 'build-release', 'build-osx']
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run

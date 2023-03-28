@@ -14,8 +14,8 @@ COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-lin
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
 
 # get the code into the right place and prepare to build it
-ADD . /usr/local/src/valhalla
-RUN ls
+ADD . .
+RUN ls -la
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
@@ -42,7 +42,7 @@ RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 RUN rm -f valhalla_*.debug
 RUN strip --strip-debug --strip-unneeded valhalla_* || true
 RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla.cpython-310-x86_64-linux-gnu.so
+RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image

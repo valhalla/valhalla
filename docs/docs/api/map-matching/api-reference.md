@@ -2,7 +2,7 @@
 
 With Valhalla's Map Matching service, you can match coordinates, such as GPS locations, to roads and paths that have been mapped in OpenStreetMap. By doing this, you can turn a path into a route with narrative instructions and also get the attribute values from that matched line.
 
-You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/) or use [Mobility Explorer](https://github.com/transitland/mobility-explorer).
+You can view an [interactive demo](http://valhalla.github.io/demos/map_matching/).
 
 There are two separate Map Matching calls that perform different operations on an input set of latitude,longitude coordinates. The `trace_route` action returns the shape snapped to the road network and narrative directions, while `trace_attributes` returns detailed attribution along the portion of the route.
 

@@ -114,11 +114,10 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
       options.costings().find(Costing::pedestrian)->second.options().transit_start_end_max_distance();
   // Set the mode from the origin
   mode_ = mode;
-  const auto& costing = mode_costing[static_cast<uint32_t>(mode)];
   const auto& tc = mode_costing[static_cast<uint32_t>(travel_mode_t::kPublicTransit)];
 
   // Get maximum transfer distance
-  max_transfer_distance_ = costing->GetMaxTransferDistanceMM();
+  max_transfer_distance_ = pc->GetMaxTransferDistanceMM();
 
   // For now the date_time must be set on the origin.
   if (origin.date_time().empty()) {
@@ -133,7 +132,7 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
                               origin.correlation().edges(0).ll().lat());
   midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
                                    destination.correlation().edges(0).ll().lat());
-  Init(destination_new, costing);
+  Init(destination_new, pc);
   float mindist = astarheuristic_.GetDistance(origin_new);
 
   // Check if there no possible path to destination based on mode to the
@@ -157,8 +156,8 @@ MultiModalPathAlgorithm::GetBestPath(valhalla::Location& origin,
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
-  SetDestination(graphreader, destination, costing);
-  SetOrigin(graphreader, origin, destination, costing);
+  SetDestination(graphreader, destination, pc);
+  SetOrigin(graphreader, origin, destination, pc);
 
   // Set route start time (seconds from midnight) and timezone.
   // NOTe: already made sure origin has date_time set.
@@ -448,14 +447,13 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
 
       // Regular edge - use the appropriate costing and check if access is allowed
       // and the walking distance didn't exceed (can't check in Allowed())
-      if (!mode_costing[static_cast<uint32_t>(mode_)]->Allowed(directededge, is_dest, pred, tile,
-                                                               edgeid, 0, 0, restriction_idx) ||
+      if (!pc->Allowed(directededge, is_dest, pred, tile, edgeid, 0, 0, restriction_idx) ||
           walking_distance > max_walking_dist_) {
         continue;
       }
 
-      Cost c = mode_costing[static_cast<uint32_t>(mode_)]->EdgeCost(directededge, tile);
-      c.cost *= mode_costing[static_cast<uint32_t>(mode_)]->GetModeFactor();
+      Cost c = pc->EdgeCost(directededge, tile);
+      c.cost *= pc->GetModeFactor();
       newcost += c;
     }
 

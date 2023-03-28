@@ -20,7 +20,6 @@ pr:
       - README.md
       - CHANGELOG.md
       - bench/
-      - docker/
       - docs/
       - run_route_scripts/
       - test/

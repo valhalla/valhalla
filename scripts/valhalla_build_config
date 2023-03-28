@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from distutils.util import strtobool
 import json
 from typing import List, Union
+
+
+def strtobool(value):
+    lower = str(value).lower()
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
+        return True
+    elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
+        return False
+    else:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
 
 
 class Optional:
@@ -255,6 +264,7 @@ config = {
         'max_timedep_distance_matrix': 0,
         'max_alternates': 2,
         'max_exclude_polygons_length': 10000,
+        'max_distance_disable_hierarchy_culling': 0,
     },
     'statsd': {
         'host': Optional(str),
@@ -522,6 +532,7 @@ help_text = {
         'max_timedep_distance_matrix': 'Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix',
         'max_alternates': 'Maximum number of alternate routes to allow in a request',
         'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
+        'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
     },
     'statsd': {
         'host': 'The statsd host address',
