@@ -1,7 +1,7 @@
 ## Release Date: 2023-??-?? Valhalla 3.3.1
 * **Removed**
-   * REMOVED: transitland references and scripts and replace with info for raw GTFS feeds [#4033](https://github.com/valhalla/valhalla/pull/3906)
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
+   * REMOVED: transitland references and scripts and replace with info for raw GTFS feeds [#4033](https://github.com/valhalla/valhalla/pull/3906)
 * **Bug Fix**
    * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
    * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
