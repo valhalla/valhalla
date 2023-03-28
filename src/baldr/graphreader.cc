@@ -745,7 +745,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  bool shortcut_at_node;
+  bool shortcut_at_node = false;
   auto continuing_edge = [&shortcut_at_node](const graph_tile_ptr& tile, const GraphId& edgeid,
                                              const NodeInfo* nodeinfo) {
     uint32_t idx = nodeinfo->edge_index();
