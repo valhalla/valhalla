@@ -49,8 +49,8 @@ TEST(Standalone, AccessPsvWay) {
       {"GK", {{"highway", "primary"}}},
       {"KJ", {{"highway", "primary"}}},
       {"LI", {{"highway", "primary"}}},
-      {"MN", {{"highway", "busway"}, {"access", "no"}}},
-      {"NO", {{"highway", "busway"}, {"access", "no"}}},
+      {"MN", {{"highway", "busway"}, {"access", "no"}, {"bus", "yes"}}},
+      {"NO", {{"highway", "busway"}, {"access", "no"}, {"bus", "yes"}}},
   };
 
   const auto layout =
