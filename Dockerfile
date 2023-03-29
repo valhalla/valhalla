@@ -48,6 +48,11 @@ RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 # copy the important stuff from the build stage to the runner image
 FROM ubuntu:22.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
+
+# github packaging niceties
+LABEL org.opencontainers.image.description = "Open Source Routing Engine for OpenStreetMap and Other Datasources"
+LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
+
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
