@@ -45,14 +45,11 @@ set(sources
     directededge.cc
     edgeinfo.cc
     graphid.cc
-    graphreader.cc
-    graphtile.cc
-    graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
-    merge.cc
     nodeinfo.cc
     location.cc
+    merge.cc
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
@@ -74,6 +71,11 @@ set(sources
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
 
+set (sources_with_warnings
+    graphreader.cc
+    graphtile.cc
+    graphtileheader.cc)
+
 list(APPEND sources
     #basic timezone stuff
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_africa.h
@@ -88,14 +90,10 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-    tz_alt.cpp)
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Werror")
-endif()
+list(APPEND sources_with_warnings
+    tz_alt.cpp)
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
@@ -106,6 +104,8 @@ endif()
 valhalla_module(NAME baldr
   SOURCES
     ${sources}
+  SOURCES_WITH_WARNINGS
+    ${sources_with_warnings}
 
   HEADERS
     ${headers}

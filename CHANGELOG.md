@@ -1,4 +1,49 @@
-## Release Date: 2022-??-?? Valhalla 3.2.1
+## Release Date: 2023-??-?? Valhalla 3.3.1
+* **Removed**
+   * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
+* **Bug Fix**
+   * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
+   * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
+   * FIXED: fix CHANGELOG release year (2022->2023) [#3927](https://github.com/valhalla/valhalla/pull/3927)
+   * FIXED: avoid segfault on invalid exclude_polygons input [#3907](https://github.com/valhalla/valhalla/pull/3907)
+   * FIXED: allow \_WIN32_WINNT to be defined by build system [#3933](https://github.com/valhalla/valhalla/issues/3933)
+   * FIXED: disconnected stop pairs in gtfs import [#3943](https://github.com/valhalla/valhalla/pull/3943)
+   * FIXED: in/egress traversability in gtfs ingestion is now defaulted to kBoth to enable pedestrian access on transit connect edges and through the in/egress node [#3948](https://github.com/valhalla/valhalla/pull/3948)
+   * FIXED: parsing logic needed implicit order of stations/egresses/platforms in the GTFS feeds [#3949](https://github.com/valhalla/valhalla/pull/3949)
+   * FIXED: segfault in TimeDistanceMatrix [#3964](https://github.com/valhalla/valhalla/pull/3949)
+   * FIXED: write multiple PBFs if the protobuf object gets too big [#3954](https://github.com/valhalla/valhalla/pull/3954)
+   * FIXED: pin conan version to latest 1.x for now [#3990](https://github.com/valhalla/valhalla/pull/3990)
+   * FIXED: Fix matrix_locations when used in pbf request [#3997](https://github.com/valhalla/valhalla/pull/3997)
+   * FIXED: got to the point where the basic transit routing test works [#3988](https://github.com/valhalla/valhalla/pull/3988)
+   * FIXED: fix build with LOGGING_LEVEL=ALL [#3992](https://github.com/valhalla/valhalla/pull/3992)
+   * FIXED: transit stitching when determining whether a platform was generated [#4020](https://github.com/valhalla/valhalla/pull/4020)
+   * FIXED: multimodal isochrones [#4030](https://github.com/valhalla/valhalla/pull/4030)
+* **Enhancement**
+   * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
+   * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
+   * ADDED: log lat/lon of node where children link edges exceed the configured maximum [#3911](https://github.com/valhalla/valhalla/pull/3911)
+   * ADDED: log matrix algorithm which was used [#3916](https://github.com/valhalla/valhalla/pull/3916)
+   * UPDATED: docker base image to Ubuntu 22.04 [#3912](https://github.com/valhalla/valhalla/pull/3912)
+   * CHANGED: Unify handling of single-file -Werror in all modules [#3910](https://github.com/valhalla/valhalla/pull/3910)
+   * CHANGED: Build skadi with -Werror [#3935](https://github.com/valhalla/valhalla/pull/3935)
+   * ADDED: Connect transit tiles to the graph [#3700](https://github.com/valhalla/valhalla/pull/3700)
+   * CHANGED: switch to C++17 master branch of `just_gtfs` [#3947](https://github.com/valhalla/valhalla/pull/3947)
+   * ADDED: Support for configuring a universal request timeout [#3966](https://github.com/valhalla/valhalla/pull/3966)
+   * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
+   * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
+   * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
+   * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
+   * ADDED: An option to Slim down Matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
+   * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
+   * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
+
+## Release Date: 2023-01-03 Valhalla 3.3.0
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+  * CHANGED: Upgraded from C++14 to C++17. [#3878](https://github.com/valhalla/valhalla/pull/3878)
+
+## Release Date: 2023-01-03 Valhalla 3.2.1
 * **Removed**
 * **Bug Fix**
    * FIXED: valhalla_run_route was missing config logic.[#3824](https://github.com/valhalla/valhalla/pull/3824)
@@ -12,6 +57,7 @@
    * FIXED: Make sure there is at least one path which is accessible for all vehicular modes when reclassifying ferry edges [#3860](https://github.com/valhalla/valhalla/pull/3860)
    * FIXED: valhalla_build_extract was failing to determine the tile ID to include in the extract [#3864](https://github.com/valhalla/valhalla/pull/3864)
    * FIXED: valhalla_ways_to_edges missed trimming the cache when overcommitted [#3872](https://github.com/valhalla/valhalla/pull/3864)
+   * FIXED: Strange detours with multi-origin/destination unidirectional A* [#3585](https://github.com/valhalla/valhalla/pull/3585)
 * **Enhancement**
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
@@ -20,6 +66,11 @@
    * ADDED: --bbox & --geojson-dir options to valhalla_build_extract to only archive a subset of tiles [#3856](https://github.com/valhalla/valhalla/pull/3856)
    * CHANGED: Replace unstable c++ geos API with a mix of geos' c api and boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * ADDED: optional write-access to traffic extract from GraphReader [#3876](https://github.com/valhalla/valhalla/pull/3876)
+   * UPDATED: locales from Transifex [#3879](https://github.com/valhalla/valhalla/pull/3879)
+   * CHANGED: Build most of Baldr with -Werror [#3885](https://github.com/valhalla/valhalla/pull/3885)
+   * UPDATED: some documentation overhaul to slim down root's README [#3881](https://github.com/valhalla/valhalla/pull/3881)
+   * CHANGED: move documentation hosting to Github Pages from readthedocs.io [#3884](https://github.com/valhalla/valhalla/pull/3884)
+   * ADDED: inline config arguments to some more executables [#3873](https://github.com/valhalla/valhalla/pull/3873)
 
 ## Release Date: 2022-10-26 Valhalla 3.2.0
 * **Removed**

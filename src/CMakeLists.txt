@@ -70,8 +70,17 @@ endfunction()
 
 function(valhalla_module)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS DEPENDS INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(
+            ${MODULE_SOURCES}
+            PROPERTIES
+            COMPILE_FLAGS
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+  endif()
+  list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
   set(library valhalla-${MODULE_NAME})
   if (ENABLE_STATIC_LIBRARY_MODULES)

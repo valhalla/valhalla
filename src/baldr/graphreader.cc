@@ -54,12 +54,11 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 
     // get the info
     decltype(midgard::tar::contents) contents;
-    auto entry_size = sizeof(tile_index_entry);
     auto entries = midgard::iterable_t<tile_index_entry>(reinterpret_cast<tile_index_entry*>(
                                                              const_cast<char*>(index_begin)),
                                                          size / sizeof(tile_index_entry));
     for (const auto& entry : entries) {
-      auto inserted = contents.insert(
+      contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
                          std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
       if (!traffic_from_index) {

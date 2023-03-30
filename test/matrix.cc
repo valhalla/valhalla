@@ -4,12 +4,14 @@
 #include <string>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -389,6 +391,108 @@ TEST(Matrix, partial_matrix) {
     }
   }
   EXPECT_EQ(found, 2) << " partial result did not find 2 results as expected";
+}
+
+// slim dowm matrix response: https://github.com/valhalla/valhalla/pull/3987
+const auto test_matrix_default = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto"
+  })";
+
+TEST(Matrix, default_matrix) {
+  tyr::actor_t actor(config, true);
+
+  auto response = actor.matrix(test_matrix_default);
+
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+
+  // contains 4 keys i.e, "distance", "time", "to_index" and "from_index"
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4);
+
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
+
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
+
+  // all objects must have equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCapacity(),
+            json["sources_to_targets"].GetArray()[0][1].MemberCapacity());
+
+  // first values in the object
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
+                   5.88);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 474);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
+
+  EXPECT_TRUE(json.HasMember("sources"));
+  EXPECT_TRUE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
+}
+
+const auto test_matrix_verbose_false = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813},
+      {"lat":52.111276,"lon":5.089717}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005}
+    ],
+    "costing":"auto",
+    "verbose":false
+  })";
+
+TEST(Matrix, slim_matrix) {
+  tyr::actor_t actor(config, true);
+
+  auto response = actor.matrix(test_matrix_verbose_false);
+
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+
+  // contains two array i.e, "durations" and  "distances"
+  EXPECT_EQ(json["sources_to_targets"].GetObject().MemberCount(), 2);
+
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("durations"));
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("distances"));
+
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["durations"].IsArray());
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["distances"].IsArray());
+
+  // "durations" and "distances" are array of equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetObject()["durations"][0].Size(),
+            json["sources_to_targets"].GetObject()["distances"][0].Size());
+
+  // first value of "distances" array
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
+
+  // first value of "durations" array
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 474);
+
+  EXPECT_FALSE(json.HasMember("sources"));
+  EXPECT_FALSE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
 }
 
 int main(int argc, char* argv[]) {

@@ -1,7 +1,6 @@
 {
   "data_format": 1,
   "data_url": "",
-  "data_updated": "20160324T000000Z",
   "project": {
     "name": "Valhalla",
     "description": "Open Source Tile-Based Routing Applications and APIs",
@@ -3101,7 +3100,7 @@
       "key": "indoor",
       "object_types": [
         "node",
-        "ways"
+        "way"
       ],
       "description": "Used for indoor elements."
     },
@@ -7289,6 +7288,70 @@
         "way"
       ],
       "description": "Overrides access flags for wheelchair.  Wheelchair access allowed."
+    },
+    {
+      "key": "lit",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "automatic",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "24/7",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "disused",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "limited",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way unlit"
+    },
+    {
+      "key": "lit",
+      "value": "sunset-sunrise",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
+    },
+    {
+      "key": "lit",
+      "value": "dusk-dawn",
+      "object_types": [
+        "way"
+      ],
+      "description": "Considers the way lit"
     }
   ]
 }

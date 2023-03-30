@@ -5,18 +5,20 @@ package valhalla.mjolnir;
 message Transit {
 
   message Node { // stations
-    optional float lon = 1;
-    optional float lat = 2;
-    optional uint32 type = 3;
+    optional double lon = 1;
+    optional double lat = 2;
+    optional uint32 type = 3; // comes from baldr::NodeType
     optional uint64 graphid = 4;
     optional uint64 prev_type_graphid = 5;
     optional string name = 6;
     optional string onestop_id = 7;
-    optional uint64 osm_way_id = 8;
+    optional uint64 osm_connecting_way_id = 8;  // use as a hint to connect to osm
     optional string timezone = 9;
     optional bool wheelchair_boarding = 10;
     optional bool generated = 11;
     optional uint32 traversability = 12;
+    optional double osm_connecting_lon = 13; // use as a hint to connect to osm
+    optional double osm_connecting_lat = 14; // use as a hint to connect to osm
   }
 
   message StopPair {

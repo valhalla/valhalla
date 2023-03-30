@@ -2175,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Menjen a lifttel.",
+        "1": "Menjen fel a lifttel a <LEVEL> "
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2189,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Menjen a lépcsőn.",
+        "1": "Menjen a lépcsőn a <LEVEL>-re"
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2203,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Menjen a mozgólépcsőn.",
+        "1": "Menjen a mozgólépcsőn a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,13 +2217,13 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Lépjen be az épületbe.",
+        "1": "Lépjen be az épületbe, és menjen tovább <STREET_NAMES> felé"
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpár út",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2237,13 +2237,13 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Menjen ki az épületből.",
+        "1": "Lépjen ki az épületből, és menjen tovább <STREET_NAMES> felé."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "a sétány",
+        "a kerékpárút",
+        "a hegyi kerékpár út",
         "the crosswalk"
       ],
       "example_phrases": {

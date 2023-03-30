@@ -17,6 +17,7 @@
 #include "thor/worker.h"
 #include "worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
@@ -151,6 +152,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"}
 };
 // clang-format on
 
@@ -921,7 +923,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
@@ -973,7 +981,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
@@ -982,13 +990,20 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_exclude_polygons();
-    try {
-      for (const auto& req_poly : rings_req->GetArray()) {
-        auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly);
-      }
-    } catch (...) { throw valhalla_exception_t{137}; }
+    if (!rings_req->IsArray()) {
+      add_warning(api, 204);
+    } else {
+      auto* rings_pbf = options.mutable_exclude_polygons();
+      try {
+        for (const auto& req_poly : rings_req->GetArray()) {
+          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+            continue;
+          }
+          auto* ring = rings_pbf->Add();
+          parse_ring(ring, req_poly);
+        }
+      } catch (...) { throw valhalla_exception_t{137}; }
+    }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {

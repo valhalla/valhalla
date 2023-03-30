@@ -308,6 +308,7 @@ enum class Use : uint8_t {
   kPedestrianCrossing = 32, // cross walks
   kElevator = 33,
   kEscalator = 34,
+  kPlatform = 35,
 
   // Rest/Service Areas
   kRestArea = 30,
@@ -325,9 +326,9 @@ enum class Use : uint8_t {
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
-  kEgressConnection = 52,   // Connection to a egress node
-  kPlatformConnection = 53, // Connection to a platform node
-  kTransitConnection = 54,  // Connection to multi-use transit stop
+  kEgressConnection = 52,   // Connection egress <-> station
+  kPlatformConnection = 53, // Connection station <-> platform
+  kTransitConnection = 54,  // Connection osm <-> egress
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {

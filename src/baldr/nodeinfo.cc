@@ -249,7 +249,15 @@ void NodeInfo::set_heading(uint32_t localidx, uint32_t heading) {
 
 // Set the connecting way id for a transit stop.
 void NodeInfo::set_connecting_wayid(const uint64_t wayid) {
+  if (wayid >> 63)
+    throw std::logic_error("Way ids larger than 63 bits are not allowed for transit connections");
   headings_ = wayid;
+}
+
+void NodeInfo::set_connecting_point(const midgard::PointLL& p) {
+  if (!p.InRange())
+    throw std::logic_error("Invalid coordinates are not allowed for transit connections");
+  headings_ = static_cast<uint64_t>(p) | (1ull << 63);
 }
 
 json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {

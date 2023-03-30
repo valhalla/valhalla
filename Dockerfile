@@ -1,5 +1,5 @@
 ####################################################################
-FROM ubuntu:20.04 as builder
+FROM ubuntu:22.04 as builder 
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
@@ -14,8 +14,8 @@ COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-lin
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
 
 # get the code into the right place and prepare to build it
-ADD . /usr/local/src/valhalla
-RUN ls
+ADD . .
+RUN ls -la
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
@@ -41,15 +41,13 @@ RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
 RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 RUN rm -f valhalla_*.debug
 RUN strip --strip-debug --strip-unneeded valhalla_* || true
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla.cpython-38-x86_64-linux-gnu.so
+RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla.cpython-310-x86_64-linux-gnu.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-FROM ubuntu:20.04 as runner
+FROM ubuntu:22.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/bin/prime_* /usr/bin/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
@@ -57,11 +55,11 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libcurl4 libczmq4 libluajit-5.1-2 \
-      libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
+      libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      curl gdb locales parallel python3.10-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \
     cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
     rm -rf /var/lib/apt/lists/* && \
     \
     # python smoke test
-    python3 -c "import valhalla,sys; print (sys.version, valhalla)"
+    python3 -c "import valhalla,sys; print(sys.version, valhalla)"

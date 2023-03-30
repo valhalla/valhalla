@@ -35,8 +35,6 @@ static std::shared_ptr<CURL> init_curl() {
   return std::shared_ptr<CURL>(curl_easy_init(), [](CURL* c) { curl_easy_cleanup(c); });
 }
 
-char ALL_ENCODINGS[] = "";
-
 size_t write_callback(char* in, size_t block_size, size_t blocks, std::vector<char>* out) {
   if (!out) {
     return static_cast<size_t>(0);

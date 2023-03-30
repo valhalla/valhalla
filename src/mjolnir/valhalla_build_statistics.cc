@@ -620,8 +620,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto loggin_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

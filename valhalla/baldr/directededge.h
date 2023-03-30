@@ -1126,6 +1126,20 @@ public:
   }
 
   /**
+   * Set the flag indicating whether the edge is lit
+   * @param lit the edge's lit state
+   */
+  void set_lit(const bool lit);
+
+  /**
+   * Is the edge lit?
+   * @return Returns the edge's lit state
+   */
+  bool lit() const {
+    return lit_;
+  }
+
+  /**
    * Create a json object representing this edge
    * @return  Returns the json object
    */
@@ -1192,7 +1206,8 @@ protected:
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
-  uint64_t spare4_ : 5;
+  uint64_t lit_ : 1;            // Is the edge lit?
+  uint64_t spare4_ : 4;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

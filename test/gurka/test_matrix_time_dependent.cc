@@ -36,7 +36,7 @@ void check_dist(const rapidjson::Document& result,
                         std::to_string(i % origin_td.Size());
       EXPECT_NEAR(v.GetObject()["distance"].GetFloat(), exp_dists[i], 0.01) << msg;
       if (valid_traffic) {
-        EXPECT_TRUE(v.GetObject().HasMember("date_time"));
+        EXPECT_TRUE(v.GetObject().HasMember("date_time")) << msg;
       }
       i++;
     }
@@ -160,8 +160,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
   const auto result =
       gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"E", "H"}, "auto", options);
 
-  ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings().Get(0).code(), 200);
+  ASSERT_EQ(result.info().warnings().size(), 0);
   for (auto& loc : result.options().sources()) {
     ASSERT_TRUE(loc.date_time().empty());
   }

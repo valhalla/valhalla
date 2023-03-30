@@ -87,6 +87,8 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
       (way.tagged_speed() || way.forward_tagged_speed() || way.backward_tagged_speed());
   set_speed_type(tagged_speed ? SpeedType::kTagged : SpeedType::kClassified);
 
+  set_lit(way.lit());
+
   // Set forward flag and access modes (based on direction)
   set_forward(forward);
   uint32_t forward_access = 0;

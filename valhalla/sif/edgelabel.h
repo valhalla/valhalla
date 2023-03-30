@@ -30,9 +30,10 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0), closure_pruning_(0),
-        has_measured_speed_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        cost_(0, 0), sortcost_(0), distance_(0), transition_cost_(0, 0) {
+        origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
+        closure_pruning_(0), has_measured_speed_(0), path_id_(0), restriction_idx_(0),
+        internal_turn_(0), unpaved_(0), cost_(0, 0), sortcost_(0), distance_(0),
+        transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -75,8 +76,8 @@ public:
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        dest_only_(edge->destonly()), origin_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
-        deadend_(edge->deadend()),
+        dest_only_(edge->destonly()), origin_(0), destination_(0), toll_(edge->toll()),
+        not_thru_(edge->not_thru()), deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
@@ -270,6 +271,21 @@ public:
   void set_origin() {
     origin_ = true;
   }
+
+  /**
+   * Is this edge a destination edge?
+   * @return  Returns true if this edge is a destination edge.
+   */
+  bool destination() const {
+    return destination_;
+  }
+
+  /**
+   * Sets this edge as a destination.
+   */
+  void set_destination() {
+    destination_ = true;
+  }
   /**
    * Get the restriction idx, 255 means no restriction
    */
@@ -441,6 +457,7 @@ protected:
   uint64_t shortcut_ : 1;
   uint64_t dest_only_ : 1;
   uint64_t origin_ : 1;
+  uint64_t destination_ : 1;
   uint64_t toll_ : 1;
   uint64_t not_thru_ : 1;
   uint64_t deadend_ : 1;
@@ -456,7 +473,7 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-  uint32_t spare : 14;
+  uint32_t spare : 13;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -721,6 +738,7 @@ public:
    * @param dist             Distance meters to the destination
    * @param mode             Mode of travel along this edge.
    * @param path_distance    Accumulated distance.
+   * @param walking_distance Accumulated walking distance. Used to prune the expansion.
    * @param tripid           Trip Id for a transit edge.
    * @param prior_stopid     Prior transit stop Id.
    * @param blockid          Transit trip block Id.
@@ -739,6 +757,7 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const uint32_t path_distance,
+              const uint32_t walking_distance,
               const uint32_t tripid,
               const baldr::GraphId& prior_stopid,
               const uint32_t blockid,
@@ -762,7 +781,8 @@ public:
                   InternalTurn::kNoTurn,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
-        transit_operator_(transit_operator), has_transit_(has_transit) {
+        transit_operator_(transit_operator), has_transit_(has_transit),
+        walking_distance_(walking_distance) {
   }
 
   /**
@@ -774,6 +794,7 @@ public:
    * @param cost             True cost (and elapsed time in seconds) to the edge.
    * @param sortcost         Cost for sorting (includes A* heuristic).
    * @param path_distance    Accumulated path distance.
+   * @param walking_distance Accumulated walking distance. Used to prune the expansion.
    * @param tripid           Trip Id for a transit edge.
    * @param blockid          Transit trip block Id.
    * @param transition_cost  Transition cost
@@ -783,6 +804,7 @@ public:
               const sif::Cost& cost,
               const float sortcost,
               const uint32_t path_distance,
+              const uint32_t walking_distance,
               const uint32_t tripid,
               const uint32_t blockid,
               const Cost& transition_cost,
@@ -791,6 +813,7 @@ public:
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
+    walking_distance_ = walking_distance;
     tripid_ = tripid;
     blockid_ = blockid;
     transition_cost_ = transition_cost;
@@ -837,6 +860,13 @@ public:
     return has_transit_;
   }
 
+  /**
+   * Return the current walking distance in meters.
+   */
+  uint32_t walking_distance() const {
+    return walking_distance_;
+  }
+
 protected:
   // GraphId of the predecessor transit stop.
   baldr::GraphId prior_stopid_;
@@ -850,6 +880,9 @@ protected:
   uint32_t blockid_ : 21; // Really only needs 20 bits
   uint32_t transit_operator_ : 10;
   uint32_t has_transit_ : 1;
+
+  // Accumulated walking distance to prune the expansion
+  uint32_t walking_distance_;
 };
 
 } // namespace sif

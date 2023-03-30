@@ -329,8 +329,9 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1 && compare_with_previous_edge)
+    if (kmh != -1 && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
+    }
     kmh = new_kmh;
   }
   return kmh;
@@ -914,4 +915,85 @@ TEST(AlgorithmTestTrivial, unidirectional_regression) {
                                 {"/date_time/value", "2111-11-11T11:11"},
                             });
   gurka::assert::raw::expect_path(result, {"AB"});
+}
+
+// check that non-bidir A* algorithms behave well with multiple origin and destination edges
+TEST(AlgorithmTestDest, TestAlgoMultiOriginDestination) {
+  constexpr double gridsize = 10;
+  constexpr double radius = gridsize * 20;
+
+  const std::string ascii_map = R"(
+       A-----B-----C-----D
+     1   2 3   4 5   6 7   8
+           )";
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BC", {{"highway", "primary"}}},
+                            {"CD", {{"highway", "primary"}}}};
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/algo_multi_o_d");
+
+  auto check = [&](const char* from, const char* to, const std::vector<std::string>& expected_names) {
+    for (int type = 1; type <= 2; type++) {
+      const std::string& request =
+          (boost::format(
+               R"({"locations":[{"lat":%s,"lon":%s,"radius":%s,"node_snap_tolerance":0},{"lat":%s,"lon":%s,"radius":%s,"node_snap_tolerance":0}],"costing":"auto","date_time":{"type":%s,"value":"2111-11-11T11:11"}})") %
+           std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+           std::to_string(radius) % std::to_string(map.nodes.at(to).lat()) %
+           std::to_string(map.nodes.at(to).lng()) % std::to_string(radius) % std::to_string(type))
+              .str();
+
+      auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+      EXPECT_EQ(result.trip().routes(0).legs(0).algorithms(0),
+                type == 1 ? "time_dependent_forward_a*" : "time_dependent_reverse_a*");
+      EXPECT_EQ(result.options().locations(0).correlation().edges().size(), 6);
+      EXPECT_EQ(result.options().locations(1).correlation().edges().size(), 6);
+
+      gurka::assert::raw::expect_path(result, expected_names);
+    }
+  };
+
+  check("1", "1", {"AB"});
+  check("1", "2", {"AB"});
+  check("1", "3", {"AB"});
+  check("1", "4", {"AB", "BC"});
+  check("1", "5", {"AB", "BC"});
+  check("1", "6", {"AB", "BC", "CD"});
+  check("1", "7", {"AB", "BC", "CD"});
+  check("1", "8", {"AB", "BC", "CD"});
+
+  check("2", "2", {"AB"});
+  check("2", "3", {"AB"});
+  check("2", "4", {"AB", "BC"});
+  check("2", "5", {"AB", "BC"});
+  check("2", "6", {"AB", "BC", "CD"});
+  check("2", "7", {"AB", "BC", "CD"});
+  check("2", "8", {"AB", "BC", "CD"});
+
+  check("3", "3", {"AB"});
+  check("3", "4", {"AB", "BC"});
+  check("3", "5", {"AB", "BC"});
+  check("3", "6", {"AB", "BC", "CD"});
+  check("3", "7", {"AB", "BC", "CD"});
+  check("3", "8", {"AB", "BC", "CD"});
+
+  check("4", "4", {"BC"});
+  check("4", "5", {"BC"});
+  check("4", "6", {"BC", "CD"});
+  check("4", "7", {"BC", "CD"});
+  check("4", "8", {"BC", "CD"});
+
+  check("5", "5", {"BC"});
+  check("5", "6", {"BC", "CD"});
+  check("5", "7", {"BC", "CD"});
+  check("5", "8", {"BC", "CD"});
+
+  check("6", "6", {"CD"});
+  check("6", "7", {"CD"});
+  check("6", "8", {"CD"});
+
+  check("7", "7", {"CD"});
+  check("7", "8", {"CD"});
+
+  check("8", "8", {"CD"});
 }
