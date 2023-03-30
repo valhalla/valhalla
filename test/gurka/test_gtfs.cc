@@ -641,7 +641,10 @@ TEST(GtfsExample, MakeTile) {
   auto station_three_ll = layout.find("3");
   auto station_four_ll = layout.find("4");
 
-  auto dt = "2023-03-28T23:50";
+  // Tuesday, only to get the dow for getting the departures from tiles
+  // it's fine to hard-code, would be more hassle to dynamically allocate
+  // as we'd need to make sure we're not falling on a weekend (no service2)
+  auto dt = "2023-03-28";
   auto dt_date = DateTime::get_formatted_date(dt);
   auto dt_date_days = DateTime::days_from_pivot_date(dt_date);
   auto dt_dow = DateTime::day_of_week_mask(dt);
