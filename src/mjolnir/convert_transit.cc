@@ -243,13 +243,15 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : stop_pair.service_except_dates()) {
-            date::sys_days rm_date = date::sys_days(date::year_month_day(d + date::days(x / 86400)));
+            date::sys_days rm_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = remove_service_day(days, end_date, tile_date, rm_date);
           }
 
           // if additions are between start and end date then turn on bit.
           for (const auto& x : stop_pair.service_added_dates()) {
-            date::sys_days add_date = date::sys_days(date::year_month_day(d + date::days(x / 86400)));
+            date::sys_days add_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = add_service_day(days, end_date, tile_date, add_date);
           }
 
