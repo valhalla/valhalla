@@ -78,8 +78,6 @@ boost::property_tree::ptree get_config() {
                             {"mjolnir.hierarchy", "1"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
-                            // TODO: fix hierarchy builder transit support
-                            {"mjolnir.hierarchy", "false"},
                             {"service_limits.pedestrian.max_transit_walking_distance", "100000"}});
 }
 
