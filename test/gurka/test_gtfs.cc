@@ -61,9 +61,9 @@ const std::string ascii_map = R"(
 
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
 const gurka::ways ways = {
-    {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}}},
-    {"CD", {{"highway", "residential"}}}, {"DE", {{"highway", "residential"}}},
-    {"EF", {{"highway", "residential"}}},
+    {"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
+    {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
+    {"EF", {{"highway", "primary"}}},
 };
 
 boost::property_tree::ptree get_config() {
@@ -75,6 +75,7 @@ boost::property_tree::ptree get_config() {
                              VALHALLA_BUILD_DIR "test/data/transit_tests/transit_tiles"},
                             {"mjolnir.transit_pbf_limit",
                              "1"}, // so we create more than one file per tile
+                            {"mjolnir.hierarchy", "1"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
                             // TODO: fix hierarchy builder transit support

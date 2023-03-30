@@ -25,6 +25,7 @@
    * FIXED: Tagging with bus=permit or taxi=permit did not override access=no [#4045](https://github.com/valhalla/valhalla/pull/4045)
    * FIXED: Upgrade RapidJSON to address undefined behavior [#4051](https://github.com/valhalla/valhalla/pull/4051)
    * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
+   * FIXED: hierarchies handling transit connection edges [#4054](https://github.com/valhalla/valhalla/pull/4054)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
