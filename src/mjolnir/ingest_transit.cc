@@ -137,11 +137,11 @@ std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
 };
 
 // converts service start/end dates of the form (yyyymmdd) into epoch seconds
-uint32_t to_local_epoch_sec(const std::string& dt) {
+uint32_t to_local_pivot_sec(const std::string& dt) {
   date::local_seconds tp;
   std::istringstream in{dt};
   in >> date::parse("%Y%m%d", tp);
-  return static_cast<uint32_t>(tp.time_since_epoch().count());
+  return static_cast<uint32_t>((tp - DateTime::pivot_date_).count());
 };
 
 std::string get_onestop_id_base(const std::string& stop_id, const std::string& feed_name) {
@@ -481,7 +481,7 @@ bool write_stop_pair(
       const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
       bool had_added_date = false;
       for (const auto& cal_date_item : trip_calDates) {
-        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
+        auto d = to_local_pivot_sec(cal_date_item.date.get_raw_date());
         if (cal_date_item.exception_type == gtfs::CalendarDateException::Added) {
           stop_pair->add_service_added_dates(d);
           had_added_date = true;
@@ -505,8 +505,8 @@ bool write_stop_pair(
         stop_pair->set_shape_id(pbf_shape_it->second);
       }
 
-      stop_pair->set_service_start_date(to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
-      stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
+      stop_pair->set_service_start_date(to_local_pivot_sec(trip_calendar->start_date.get_raw_date()));
+      stop_pair->set_service_end_date(to_local_pivot_sec(trip_calendar->end_date.get_raw_date()));
 
       dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
       stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
@@ -614,8 +614,9 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     auto currRoute = feed.get_route(tile_routeId);
 
     route->set_name(currRoute->route_short_name);
-    route->set_onestop_id(currRoute->route_id);
-    route->set_operated_by_onestop_id(currRoute->agency_id);
+    route->set_onestop_id(get_onestop_id_base(currRoute->route_id, feed_route.first.feed));
+    route->set_operated_by_onestop_id(
+        get_onestop_id_base(currRoute->agency_id, feed_route.first.feed));
 
     auto currAgency = feed.get_agency(currRoute->agency_id);
     route->set_operated_by_name(currAgency->agency_name);

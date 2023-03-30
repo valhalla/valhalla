@@ -35,13 +35,13 @@ Refer to the [route location documentation](../turn-by-turn/api-reference.md#loc
 
 ### Costing parameters
 
-The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal` costing models available in the Valhalla Turn-by-Turn service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
+The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal` and all other costing models available in the Valhalla Turn-by-Turn service. Refer to the [route costing models](../turn-by-turn/api-reference.md#costing-models) and [costing options](../turn-by-turn/api-reference.md#costing-options) documentation for more on how to specify this input.
 
 ### Other request parameters
 
 | Parameter | Description |
 | :------------------ | :----------- |
-| `date_time` | The local date and time at the location. These parameters apply only for multimodal requests and are not used with other costing methods.<ul><li>`type`<ul><li>0 - Current departure time for multimodal requests.</li><li>1 - Specified departure time for multimodal requests.</li><li>2 - Specified arrival time. Note: This is not yet implemented.</li></ul></li><li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> |
+| `date_time` | The local date and time at the location. <ul><li>`type`<ul><li>0 - Current departure time.</li><li>1 - Specified departure time.</li><li>2 - Specified arrival time. Note: This is not yet implemented for `multimodal`.</li></ul></li><li>`value` - the date and time specified in ISO 8601 format (YYYY-MM-DDThh:mm) in the local time zone of departure or arrival. For example, "2016-07-03T08:06"</li></ul> |
 | `id` | Name of the isochrone request. If `id` is specified, the name is returned with the response. |
 | `contours` | A JSON array of contour objects with the time in minutes or distance in kilometers and color to use for each isochrone contour. You can specify up to four contours (by default).<ul><li>`time` - A floating point value specifying the time in minutes for the contour.</li><li>`distance` - A floating point value specifying the distance in kilometers for the contour.</li><li>`color` - The color for the output of the contour. Specify it as a [Hex value](http://www.w3schools.com/colors/colors_hexadecimal.asp), but without the `#`, such as `"color":"ff0000"` for red. If no color is specified, the isochrone service will assign a default color to the output.</li></ul>You can only specify **one metric per contour**, i.e. `time` or `distance`.  |
 | `polygons` | A Boolean value to determine whether to return geojson polygons or linestrings as the contours. The default is `false`, which returns lines; when `true`, polygons are returned. Note: When `polygons` is `true`, any contour that forms a ring is returned as a polygon. |
@@ -65,10 +65,6 @@ When making a map, drawing the isochrone contours as lines is more straightforwa
 
 The Valhalla team has plans to improving the polygon isochrone output and rendering capabilities, including by demoting some rings to be inners of other rings and removing potential self-intersections in polygon geometries.
 
-## Isochrone demonstration in Mobility Explorer
-
-The open-source [Mobility Explorer](https://github.com/transitland/mobility-explorer) tool helps you understand transportation networks around the world and has tools for adding isochrones to a map. Search for a location and add a point to the map, then generate isochrones for certain modes of transit from that location.
-
 ## Future work on the isochrone service
 
 The Isochrone service is in active development. To report software issues or suggest enhancements, open an issue in the [Valhalla GitHub repository](https://github.com/valhalla/valhalla/issues).
@@ -76,10 +72,11 @@ The Isochrone service is in active development. To report software issues or sug
 Several other options are being considered as future service enhancements. These include:
 
 * ~~Using distance rather than time for each unit.~~
-* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time, including with options to control the minimum size of interior holes.
+* Generating outer contours or contours with interior holes for regions that cannot be accessed within the specified time.
+* ~~Options to control the minimum size of interior holes.~~
 * Removing self intersections from polygonal contours.
-* Allowing multiple locations to compute the region reachable from any of the locations within a specified time.
-* Generating contours with reverse access logic to see the region that can reach a specific location within the specified time.
+* ~~Allowing multiple locations to compute the region reachable from any of the locations within a specified time.~~
+* ~~Generating contours with reverse access logic to see the region that can reach a specific location within the specified time.~~
 * Returning raster data for potential animation using OpenGL shaders. This also has analysis use for being able to query thousands of locations to determine the time to each location, including improvements with one-to-many requests to the Valhalla Time-Distance Matrix service.
 
 ## Data credits

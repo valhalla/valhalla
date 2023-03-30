@@ -15,9 +15,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::loki;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_distance(Api& request,
                     float matrix_max_distance,
@@ -53,6 +50,7 @@ void check_distance(Api& request,
     }
   }
 }
+
 } // namespace
 
 namespace valhalla {
@@ -119,6 +117,9 @@ void loki_worker_t::matrix(Api& request) {
   auto max_location_distance = std::numeric_limits<float>::min();
   check_distance(request, max_matrix_distance.find(costing_name)->second, max_location_distance,
                  max_timedep_dist_matrix);
+
+  // check distance for hierarchy pruning
+  check_hierarchy_distance(request);
 
   // correlate the various locations to the underlying graph
   auto sources_targets = PathLocation::fromPBF(options.sources());

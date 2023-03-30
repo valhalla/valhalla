@@ -25,6 +25,8 @@ TEST(Standalone, AccessPsvWay) {
                 F-------G-------K
                 |
                 H
+
+        M------N------O
     )";
 
   const gurka::ways ways = {
@@ -47,6 +49,8 @@ TEST(Standalone, AccessPsvWay) {
       {"GK", {{"highway", "primary"}}},
       {"KJ", {{"highway", "primary"}}},
       {"LI", {{"highway", "primary"}}},
+      {"MN", {{"highway", "residential"}, {"access", "no"}, {"bus", "permit"}, {"taxi", "permit"}}},
+      {"NO", {{"highway", "residential"}, {"access", "no"}, {"bus", "permit"}, {"taxi", "permit"}}},
   };
 
   const auto layout =
@@ -77,6 +81,14 @@ TEST(Standalone, AccessPsvWay) {
       EXPECT_THROW(gurka::do_action(valhalla::Options::route, map, {"D", "L"}, c),
                    std::runtime_error);
   }
+
+  // Test bus=permit overriding access=no
+  auto result = gurka::do_action(valhalla::Options::route, map, {"M", "O"}, "bus");
+  gurka::assert::raw::expect_path(result, {"MN", "NO"});
+
+  // Test taxi=permit overriding access=no
+  result = gurka::do_action(valhalla::Options::route, map, {"M", "O"}, "taxi");
+  gurka::assert::raw::expect_path(result, {"MN", "NO"});
 }
 
 TEST(Standalone, AccessPsvNode) {

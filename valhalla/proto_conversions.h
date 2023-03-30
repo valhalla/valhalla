@@ -284,6 +284,10 @@ inline midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
 }
 
+inline midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
+}
+
 inline void from_ll(valhalla::Location* l, const midgard::PointLL& p) {
   l->mutable_ll()->set_lat(p.lat());
   l->mutable_ll()->set_lng(p.lng());

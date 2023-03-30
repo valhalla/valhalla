@@ -68,7 +68,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {124, {124, "No edge/node costing provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "costing_required"}},
     {125, {125, "No costing method found", 400, HTTP_400, OSRM_INVALID_OPTIONS, "wrong_costing"}},
     {126, {126, "No shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_required"}},
-    {127, {127, "Recostings require both name and costing parameters", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {127, {127, "Recostings require a valid costing parameter", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {128, {128, "Recostings require a unique 'name' field for each recosting", 400, HTTP_400, OSRM_INVALID_OPTIONS, "no_recosting_duplicate_names"}},
     {130, {130, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, "location_parse_failed"}},
     {131, {131, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, "source_parse_failed"}},
     {132, {132, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, "target_parse_failed"}},
@@ -152,7 +153,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
-  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"}
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"}
 };
 // clang-format on
 
@@ -937,12 +939,17 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
   if (recostings && recostings->IsArray()) {
+    // make sure we only have unique recosting names in the end
+    std::unordered_set<std::string> names;
+    names.reserve(recostings->GetArray().Size());
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
       sif::ParseCosting(doc, key, options.add_recostings());
       if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
+      } else if (!names.insert(options.recostings().rbegin()->name()).second) {
+        throw valhalla_exception_t{128};
       }
     }
     // TODO: throw if not all names are unique?

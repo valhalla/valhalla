@@ -335,10 +335,13 @@ TEST(GtfsExample, MakeProto) {
 
   // constants written in the last function
   auto serviceStartDate =
-      baldr::DateTime::get_formatted_date("2023-01-31").time_since_epoch().count();
-  auto serviceEndDate = baldr::DateTime::get_formatted_date("2024-01-31").time_since_epoch().count();
-  auto addedDate = baldr::DateTime::get_formatted_date("2023-02-02").time_since_epoch().count();
-  auto removedDate = baldr::DateTime::get_formatted_date("2023-02-03").time_since_epoch().count();
+      (baldr::DateTime::get_formatted_date("2023-01-31") - DateTime::pivot_date_).count();
+  auto serviceEndDate =
+      (baldr::DateTime::get_formatted_date("2024-01-31") - DateTime::pivot_date_).count();
+  auto addedDate =
+      (baldr::DateTime::get_formatted_date("2023-02-02") - DateTime::pivot_date_).count();
+  auto removedDate =
+      (baldr::DateTime::get_formatted_date("2023-02-03") - DateTime::pivot_date_).count();
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
@@ -445,7 +448,7 @@ TEST(GtfsExample, MakeProto) {
   EXPECT_EQ(shapes, 2);
 
   // routes
-  EXPECT_TRUE(routes.find(routeID) != routes.end());
+  EXPECT_TRUE(routes.find("toronto_" + routeID) != routes.end());
   EXPECT_EQ(routes.size(), 1);
 
   // stops
@@ -588,16 +591,17 @@ TEST(GtfsExample, MakeTile) {
     std::unordered_set<std::string> stopIds = {stopOneID, stopTwoID, stopThreeID};
 
     auto currRoute = tile->GetTransitRoute(0);
-    EXPECT_EQ(tile->GetName(currRoute->one_stop_offset()), routeID);
+    EXPECT_EQ(tile->GetName(currRoute->one_stop_offset()), "toronto_" + routeID);
     EXPECT_EQ(currRoute->route_text_color(), strtol("00ff00", nullptr, 16));
     EXPECT_EQ(currRoute->route_color(), strtol("ff0000", nullptr, 16));
+    EXPECT_EQ(tile->GetName(currRoute->op_by_onestop_id_offset()), "toronto_TTC");
 
     std::unordered_set<std::string> tripIDs = {tripOneID, tripTwoID};
 
     for (const auto& departure : tile->GetTransitDepartures()) {
       TransitDeparture* currDeparture = departure.second;
       auto transit_route = tile->GetTransitRoute(currDeparture->routeindex());
-      EXPECT_EQ(tile->GetName(transit_route->one_stop_offset()), routeID);
+      EXPECT_EQ(tile->GetName(transit_route->one_stop_offset()), "toronto_" + routeID);
     }
 
     for (uint32_t schedule_it = 0; schedule_it < tile->header()->schedulecount(); schedule_it++) {
