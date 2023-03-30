@@ -312,7 +312,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     int node_count = tile.nodes_size();
     for (const auto& child : tile_children) {
       auto child_stop = feed.get_stop(child.second);
-      if (child.first.id == station.id &&
+      if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop->location_type == gtfs::StopLocationType::EntranceExit) {
         setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
                     NodeType::kTransitEgress, false);
@@ -343,7 +343,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     for (const auto& child : tile_children) {
       auto child_stop = feed.get_stop(child.second);
 
-      if (child.first.id == station.id &&
+      if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop->location_type == gtfs::StopLocationType::StopOrPlatform) {
         setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
                     NodeType::kMultiUseTransitPlatform, false, prev_id);

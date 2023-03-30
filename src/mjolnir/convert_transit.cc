@@ -126,17 +126,17 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   filesystem::recursive_directory_iterator end_file_itr;
 
   // lambda to add a schedule
-  auto add_schedule = [&schedules, &transit_tilebuilder](uint32_t& schedule_idx, Departure& dep,
-                                                         const uint64_t days, const uint32_t dow,
-                                                         const uint32_t end_day) {
+  auto add_schedule = [&schedule_index, &schedules,
+                       &transit_tilebuilder](Departure& dep, const uint64_t days, const uint32_t dow,
+                                             const uint32_t end_day) {
     TransitSchedule sched(days, dow, end_day);
     auto sched_itr = schedules.find(sched);
     if (sched_itr == schedules.end()) {
       transit_tilebuilder.AddTransitSchedule(sched);
       // Add to the map and increment the index
-      schedules[sched] = schedule_idx;
-      dep.schedule_index = schedule_idx;
-      schedule_idx++;
+      schedules[sched] = schedule_index;
+      dep.schedule_index = schedule_index;
+      schedule_index++;
     } else {
       dep.schedule_index = sched_itr->second;
     }
@@ -295,7 +295,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           dep.bicycle_accessible = stop_pair.bikes_allowed();
           dep.wheelchair_accessible = stop_pair.wheelchair_accessible();
 
-          add_schedule(schedule_index, dep, days, dow_mask, end_day);
+          add_schedule(dep, days, dow_mask, end_day);
 
           // is this past midnight?
           // create a departure for before midnight and one after
@@ -319,7 +319,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               dow_mask =
                   ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
 
-              add_schedule(schedule_index, dep, days, dow_mask, end_day);
+              add_schedule(dep, days, dow_mask, end_day);
             }
 
             dep.dep_time = origin_seconds;
