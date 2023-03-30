@@ -218,11 +218,13 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             }
           }
 
+          // service_start_date are relative to our pivot date
           auto d = date::floor<date::days>(DateTime::pivot_date_);
-          date::sys_days start_date =
-              date::sys_days(date::year_month_day(d + date::days(stop_pair.service_start_date())));
-          date::sys_days end_date =
-              date::sys_days(date::year_month_day(d + date::days(stop_pair.service_end_date())));
+          date::sys_days start_date = date::sys_days(date::year_month_day(
+              d +
+              date::floor<date::days>(date::days(stop_pair.service_start_date() / kSecondsPerDay))));
+          date::sys_days end_date = date::sys_days(date::year_month_day(
+              d + date::ceil<date::days>(date::days(stop_pair.service_end_date() / kSecondsPerDay))));
 
           uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
@@ -241,13 +243,15 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
           // if subtractions are between start and end date then turn off bit.
           for (const auto& x : stop_pair.service_except_dates()) {
-            date::sys_days rm_date = date::sys_days(date::year_month_day(d + date::days(x)));
+            date::sys_days rm_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = remove_service_day(days, end_date, tile_date, rm_date);
           }
 
           // if additions are between start and end date then turn on bit.
           for (const auto& x : stop_pair.service_added_dates()) {
-            date::sys_days add_date = date::sys_days(date::year_month_day(d + date::days(x)));
+            date::sys_days add_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = add_service_day(days, end_date, tile_date, add_date);
           }
 
