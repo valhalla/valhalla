@@ -335,10 +335,13 @@ TEST(GtfsExample, MakeProto) {
 
   // constants written in the last function
   auto serviceStartDate =
-      baldr::DateTime::get_formatted_date("2023-01-31").time_since_epoch().count();
-  auto serviceEndDate = baldr::DateTime::get_formatted_date("2024-01-31").time_since_epoch().count();
-  auto addedDate = baldr::DateTime::get_formatted_date("2023-02-02").time_since_epoch().count();
-  auto removedDate = baldr::DateTime::get_formatted_date("2023-02-03").time_since_epoch().count();
+      (baldr::DateTime::get_formatted_date("2023-01-31") - DateTime::pivot_date_).count();
+  auto serviceEndDate =
+      (baldr::DateTime::get_formatted_date("2024-01-31") - DateTime::pivot_date_).count();
+  auto addedDate =
+      (baldr::DateTime::get_formatted_date("2023-02-02") - DateTime::pivot_date_).count();
+  auto removedDate =
+      (baldr::DateTime::get_formatted_date("2023-02-03") - DateTime::pivot_date_).count();
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
