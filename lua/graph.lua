@@ -433,6 +433,14 @@ golf_cart = {
 ["customers"] = "true"
 }
 
+golf = {
+["cartpath"] = "true"
+}
+
+golf_surface = {
+["cartpath"] = "paved"
+}
+
 --node proc needs the same info as above but in the form of a mask so duplicate..
 motor_vehicle_node = {
 ["yes"] = 1,
@@ -630,6 +638,10 @@ golf_cart_node = {
 ["destination"] = 2048,
 ["delivery"] = 2048,
 ["customers"] = 2048
+}
+
+golf_node = {
+["cartpath"] = 2048
 }
 
 function round(val, n)
@@ -998,8 +1010,8 @@ function filter_tags_generic(kv)
     kv["motorcycle_tag"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     --check for golf cart forward overrides
-    kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or kv["golf_cart_forward"]
-    kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or nil
+    kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or kv["golf_cart_forward"]
+    kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
     -- Override per Justin
     if kv["access"] == "private" then
@@ -1098,8 +1110,8 @@ function filter_tags_generic(kv)
       kv["motorcycle_tag"] = motor_vehicle[kv["motorcycle"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
       --check for golf cart forward overrides
-      kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
-      kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or motor_vehicle[kv["motor_vehicle"]] or nil
+      kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or default_val
+      kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or nil
 
       if kv["bike_tag"] == nil then
         if kv["sac_scale"] == "hiking" then
@@ -1728,7 +1740,7 @@ function filter_tags_generic(kv)
   kv["forward_speed"] = normalize_speed(kv["maxspeed:forward"])
   kv["int"] = kv["int"]
   kv["int_ref"] = kv["int_ref"]
-  kv["surface"] = kv["surface"]
+  kv["surface"] = kv["surface"] or golf_surface[kv["golf"]]
   kv["wheelchair"] = wheelchair[kv["wheelchair"]]
 
   --lower the default speed for tracks
@@ -1995,7 +2007,7 @@ function nodes_proc (kv, nokeys)
   local motor_vehicle_tag = motor_vehicle_node[kv["motor_vehicle"]]
   local moped_tag = moped_node[kv["moped"]] or moped_node[kv["mofa"]]
   local motorcycle_tag = motor_cycle_node[kv["motorcycle"]]
-  local golf_cart_tag = golf_cart_node[kv["golf_cart"]]
+  local golf_cart_tag = golf_cart_node[kv["golf_cart"]] or golf_node[kv["golf"]]
 
   if auto_tag == nil then
     auto_tag = motor_vehicle_tag
