@@ -23,6 +23,7 @@
    * FIXED: Remove arch specificity from strip command of Python bindings to make it more compatible with other archs [#4040](https://github.com/valhalla/valhalla/pull/4040)
    * FIXED: GraphReader::GetShortcut no longer returns false positives or false negatives [#4019](https://github.com/valhalla/valhalla/pull/4019)
    * FIXED: Tagging with bus=permit or taxi=permit did not override access=no [#4045](https://github.com/valhalla/valhalla/pull/4045)
+   * FIXED: Upgrade RapidJSON to address undefined behavior [#4051](https://github.com/valhalla/valhalla/pull/4051)
    * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
