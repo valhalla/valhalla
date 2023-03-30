@@ -328,14 +328,14 @@ TEST(GtfsExample, WriteGtfs) {
 
   struct StopTime t3p1 {
     .trip_id = t3_id, .stop_id = st2_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("23:59:00"), .departure_time = Time("24:02:00"), .stop_headsign = "head",
+    .arrival_time = Time("23:59:00"), .departure_time = Time("23:59:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p1);
 
   struct StopTime t3p2 {
     .trip_id = t3_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("24:02:00"),
-    .departure_time = Time("24:05:00"), .stop_headsign = "head",
+    .departure_time = Time("24:02:00"), .stop_headsign = "head",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p2);
@@ -641,7 +641,7 @@ TEST(GtfsExample, MakeTile) {
   auto station_three_ll = layout.find("3");
   auto station_four_ll = layout.find("4");
 
-  auto dt = "2023-03-28T05:50";
+  auto dt = "2023-03-28T23:50";
   auto dt_date = DateTime::get_formatted_date(dt);
   auto dt_date_days = DateTime::days_from_pivot_date(dt_date);
   auto dt_dow = DateTime::day_of_week_mask(dt);
@@ -686,9 +686,10 @@ TEST(GtfsExample, MakeTile) {
         const valhalla::baldr::TransitDeparture* dep =
             tile->GetNextDeparture(edge.lineid(), 21600, // 06:00 am
                                    dt_day, dt_dow, date_before_tile, false, false);
-        EXPECT_NE(dep->elapsed_time(), 0);
+        EXPECT_EQ(dep->elapsed_time(), 180);
         const auto shape = tile->edgeinfo(&edge).encoded_shape();
         EXPECT_FALSE(shape.empty());
+        dep->routeindex();
       }
     }
 
@@ -736,10 +737,17 @@ TEST(GtfsExample, MakeTile) {
       } catch (...) {};
     }
 
+    for (const auto& departure : tile->GetTransitDepartures()) {
+      TransitDeparture* currDeparture = departure.second;
+      auto transit_route = tile->GetTransitRoute(currDeparture->routeindex());
+      deps_route_oid.insert(tile->GetName(transit_route->one_stop_offset()));
+    }
+
     for (uint32_t schedule_it = 0; schedule_it < tile->header()->schedulecount(); schedule_it++) {
-      // schedules.insert({tileid, *tile->GetTransitSchedule(schedule_it)});
       auto* tileSchedule = tile->GetTransitSchedule(schedule_it);
-      EXPECT_EQ(tileSchedule->days(), (static_cast<int64_t>(1) << 60) - 1);
+      // we either remove a date or we don't allow weekends, so it's neither all days, nor no days
+      EXPECT_NE(tileSchedule->days(), (static_cast<int64_t>(1) << 60) - 1);
+      EXPECT_NE(tileSchedule->days(), 0);
       EXPECT_EQ(tileSchedule->end_day(), 59);
     }
   }
@@ -756,16 +764,13 @@ TEST(GtfsExample, MakeTile) {
     EXPECT_TRUE(routes_colors.find(strtol(c, nullptr, 16)) != routes_colors.end());
   }
 
-  EXPECT_EQ(transit_nodes, 9);
+  EXPECT_EQ(transit_nodes, 15);
   EXPECT_EQ(uses[Use::kRoad], 10);
-  // NOTE: there are 4 for every station (3 of those) because we connect to both ends of the closest
-  // edge to the station and the connections are bidirectional (as per usual), plus some more because
-  // the second platform has no parent
-  EXPECT_EQ(uses[Use::kTransitConnection], 10);
-  EXPECT_EQ(uses[Use::kPlatformConnection], 6);
-  EXPECT_EQ(uses[Use::kEgressConnection], 6);
+  EXPECT_EQ(uses[Use::kTransitConnection], 18);
+  EXPECT_EQ(uses[Use::kPlatformConnection], 10);
+  EXPECT_EQ(uses[Use::kEgressConnection], 10);
   // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
-  EXPECT_EQ(uses[Use::kRail], 2);
+  EXPECT_EQ(uses[Use::kRail], 3);
 }
 
 TEST(GtfsExample, route) {
