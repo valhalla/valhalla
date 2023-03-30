@@ -1,0 +1,97 @@
+name: Valhalla Ubuntu Build
+on: [workflow_dispatch]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
+jobs:
+  build:
+    name: Ubuntu build
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        fail-fast: false
+        matrix:
+          os: [ubuntu-20.04]
+          tools: [ON]
+          datatools: [ON]
+          services: [ON]
+          ccache: [ON]
+          tests: [ON]
+          benchmarks: [ON]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache submodules
+        id: cache-third_party
+        uses: actions/cache@v3
+        with:
+          path: third_party
+          key: ${{ runner.os }}-third_party
+
+      - name: Checkout submodules
+        if: steps.cache-third_party.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git submodule sync --recursive
+          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+
+      - name: Get dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            curl libcurl4 libcurl4-gnutls-dev \
+            libboost-all-dev \
+            libprotobuf-dev \
+            protobuf-compiler
+
+      - name: get datatools dependencies
+        if: ${{ matrix.datatools  == 'ON'}}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libspatialite-dev \
+            libluajit-5.1-dev \
+            libgeos++-dev
+
+      - name: get benchmarks dependencies when datatools is ON
+        if: ${{ matrix.datatools  == 'ON' && matrix.benchmarks  == 'ON' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            spatialite-bin \
+            libspatialite-dev \
+            libluajit-5.1-dev \
+            libgeos++-dev
+
+      - name: get services dependencies
+        if: ${{ matrix.services  == 'ON' }}
+        run: |
+          sudo add-apt-repository ppa:kevinkreiser/prime-server
+          sudo apt-get update
+          sudo apt-get install libprime-server0 libprime-server-dev prime-server-bin
+
+      - name: Configure
+        run: |
+          mkdir -p build && cd build \
+          && cmake .. \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_TOOLS=${{ matrix.tools }} \
+            -DENABLE_DATA_TOOLS=${{ matrix.datatools }} \
+            -DENABLE_SERVICES=${{ matrix.services }} \
+            -DENABLE_CCACHE=${{ matrix.ccache }} \
+            -DENABLE_TESTS=${{ matrix.tests }} \
+            -DENABLE_BENCHMARKS=${{ matrix.benchmarks }}
+
+      - name: get benchmark dependencies
+        if: ${{ matrix.benchmarks  == 'ON' && matrix.datatools  == 'ON'}}
+        run: |
+          mkdir -p build && cd build \
+          && make -j$(nproc) utrecht_tiles
+
+      - name: build
+        run: |
+          cd build \
+          && make -j$(nproc)
