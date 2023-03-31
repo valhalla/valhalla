@@ -172,7 +172,8 @@ private:
       TransitPlatformInfo* transit_platform_info = trip_node->mutable_transit_platform_info();
 
       // TODO: for now we will set to station for rail and stop for others
-      //       in future, we will set based on transitland value
+      //   not sure how to deal with this in the future: maybe assume it'll be
+      //   station for rail if there's a station and platform if not..
       // Set type
       if (directededge->use() == Use::kRail) {
         // Set node transit info type if requested
