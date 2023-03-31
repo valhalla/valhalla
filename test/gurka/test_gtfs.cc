@@ -60,6 +60,7 @@ const std::string st4_id = "st4_id";
 const std::string sh1_id = "sh1_id";
 const std::string sv1_id = "sv1_id";
 const std::string sv2_id = "sv2_id";
+const std::string sv3_id = "sv2_id";
 const std::string r1_id = "r1_id";
 const std::string r2_id = "r2_id";
 const std::string b1_id = "b1_id";
@@ -252,7 +253,7 @@ TEST(GtfsExample, WriteGtfs) {
   struct Route r2 {
     .route_id = r2_id, .route_type = RouteType::Subway, .agency_id = a2_id, .route_short_name = "ba2",
     .route_long_name = "bababa2", .route_desc = "this is the first route for TTC2",
-    .route_color = "0000ff", .route_text_color = "001100"
+    .route_color = "112233", .route_text_color = "001100"
   };
   f2.add_route(r2);
 
@@ -275,7 +276,7 @@ TEST(GtfsExample, WriteGtfs) {
   f1.add_trip(t2);
 
   struct gtfs::Trip t3 {
-    .route_id = r2_id, .service_id = sv2_id, .trip_id = t3_id, .trip_headsign = "grüß gott!",
+    .route_id = r2_id, .service_id = sv3_id, .trip_id = t3_id, .trip_headsign = "grüß gott!",
     .block_id = b2_id, .wheelchair_accessible = gtfs::TripAccess::Yes,
     .bikes_allowed = gtfs::TripAccess::No
   };
@@ -363,7 +364,16 @@ TEST(GtfsExample, WriteGtfs) {
     .start_date = Date(sv_start), .end_date = Date(sv_end),
   };
   f1.add_calendar_item(c2);
-  f2.add_calendar_item(c2);
+
+  // only week days are available, no service on weekends, add to both feeds
+  struct CalendarItem c3 {
+    .service_id = sv3_id, .monday = CalendarAvailability::Available,
+    .tuesday = CalendarAvailability::Available, .wednesday = CalendarAvailability::Available,
+    .thursday = CalendarAvailability::Available, .friday = CalendarAvailability::Available,
+    .saturday = CalendarAvailability::Available, .sunday = CalendarAvailability::NotAvailable,
+    .start_date = Date(sv_start), .end_date = Date(sv_end),
+  };
+  f2.add_calendar_item(c3);
 
   f1.write_calendar(f1_path);
   f2.write_calendar(f2_path);
@@ -415,6 +425,10 @@ TEST(GtfsExample, WriteGtfs) {
   // make sure files are actually written
 
   // feed1
+  auto routes = f1_reader.get_routes();
+  EXPECT_EQ(routes.size(), 1);
+  EXPECT_EQ(routes[0].route_id, r1_id);
+
   auto trips = f1_reader.get_trips();
   EXPECT_EQ(trips.size(), 2);
   EXPECT_EQ(trips[0].trip_id, t1_id);
@@ -444,6 +458,10 @@ TEST(GtfsExample, WriteGtfs) {
   EXPECT_EQ(frequencies[1].exact_times, gtfs::FrequencyTripService::ScheduleBased);
 
   // feed2
+  routes = f2_reader.get_routes();
+  EXPECT_EQ(routes.size(), 1);
+  EXPECT_EQ(routes[0].route_id, r2_id);
+
   trips = f2_reader.get_trips();
   EXPECT_EQ(trips.size(), 1);
   EXPECT_EQ(trips[0].trip_id, t3_id);
@@ -777,7 +795,7 @@ TEST(GtfsExample, MakeTile) {
   EXPECT_EQ(uses[Use::kRail], 3);
 }
 
-TEST(GtfsExample, route) {
+TEST(GtfsExample, route_trip1) {
   std::string res_json;
   valhalla::Api res =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
@@ -800,17 +818,18 @@ TEST(GtfsExample, route) {
 
   // TODO: there's some mixup of agencies/stations/platforms & onestop IDs
   const auto& transit_info = leg.maneuver(2).transit_info();
-  // EXPECT_EQ(transit_info.onestop_id(), f1_name + "_" + r1_id);
+  EXPECT_EQ(transit_info.onestop_id(), f1_name + "_" + r1_id);
   EXPECT_EQ(transit_info.headsign(), "hello");
   EXPECT_EQ(transit_info.transit_stops().size(), 3);
-  // EXPECT_EQ(transit_info.transit_stops(0).type(), TransitPlatformInfo_Type_kStation);
-  // EXPECT_EQ(transit_info.transit_stops(0).onestop_id(), f1_name + "_" + st1_id);
-  // EXPECT_EQ(transit_info.transit_stops(2).onestop_id(), f1_name + "_" + st3_id +
-  // "_transit_station");
+  EXPECT_EQ(transit_info.transit_stops(0).type(), TransitPlatformInfo_Type_kStation);
+  EXPECT_EQ(transit_info.transit_stops(0).onestop_id(), f1_name + "_" + st1_id);
+  EXPECT_EQ(transit_info.transit_stops(2).onestop_id(), f1_name + "_" + st3_id + "_transit_station");
   EXPECT_EQ(transit_info.transit_stops(0).arrival_date_time(), "");
   EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T06:59-05:00");
   EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), "2023-02-27T07:06-05:00");
   EXPECT_EQ(transit_info.transit_stops(2).departure_date_time(), "");
+
+  std::cerr << res_json << std::endl;
 }
 
 TEST(GtfsExample, isochrones) {

@@ -414,7 +414,8 @@ bool write_stop_pair(
     const gtfs::Feed& feed,
     const std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
     unique_transit_t& uniques,
-    const google::protobuf::RepeatedPtrField<valhalla::mjolnir::Transit_Node>& tile_nodes) {
+    const google::protobuf::RepeatedPtrField<valhalla::mjolnir::Transit_Node>& tile_nodes,
+    const std::unordered_map<feed_object_t, size_t>& routes_ids) {
   bool dangles = false;
 
   const auto& tile_tripId = feed_trip.id;
@@ -547,9 +548,9 @@ bool write_stop_pair(
         stop_pair->set_destination_graphid(dest_graphid_it->second +
                                            static_cast<uint64_t>(dest_is_generated));
       }
-      auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
-      stop_pair->set_route_index(route_it->second);
+      // set the proper route_index which will be referred to later in convert_transit
+      stop_pair->set_route_index(routes_ids.at({currTrip->route_id, currFeedPath}));
 
       // grab the headsign
       stop_pair->set_trip_headsign(currTrip->trip_headsign);
@@ -601,12 +602,15 @@ bool write_stop_pair(
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
+std::unordered_map<feed_object_t, size_t>
+write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
 
   const auto& tile_routeIds = tile_info.routes;
 
-  // loop through all stops inside the tile
+  std::unordered_map<feed_object_t, size_t> routes_ids;
 
+  // loop through all stops inside the tile
+  size_t idx = 0;
   for (const auto& feed_route : tile_routeIds) {
     const auto& tile_routeId = feed_route.first.id;
     const auto& feed = feeds(feed_route.first);
@@ -630,7 +634,12 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     route->set_route_text_color(strtol(currRoute->route_text_color.c_str(), nullptr, 16));
     route->set_vehicle_type(
         (valhalla::mjolnir::Transit_VehicleType)(static_cast<int>(currRoute->route_type)));
+
+    routes_ids.emplace(feed_route.first, idx);
+    idx++;
   }
+
+  return routes_ids;
 }
 
 // grab feed data from feed
@@ -685,7 +694,8 @@ void ingest_tiles(const std::string& gtfs_dir,
       feeds(route.first);
     }
 
-    write_routes(tile, current, feeds);
+    // keep track of the PBF insertion order for the routes to set route_index on the stop_pairs
+    std::unordered_map<feed_object_t, size_t> routes_ids = write_routes(tile, current, feeds);
     write_shapes(tile, current, feeds);
     std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current, feeds);
 
@@ -696,9 +706,9 @@ void ingest_tiles(const std::string& gtfs_dir,
     for (const auto& trip : current.trips) {
       trip_count++;
 
-      dangles =
-          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques, tile_nodes) ||
-          dangles;
+      dangles = write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques,
+                                tile_nodes, routes_ids) ||
+                dangles;
 
       if (trip_count >= pbf_trip_limit) {
         LOG_INFO("Writing " + current_path);
