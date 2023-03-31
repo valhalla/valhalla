@@ -159,6 +159,7 @@ public:
       }
     }
 
+    include_platforms_ = pt.get<bool>("include_platforms", false);
     include_driveways_ = pt.get<bool>("include_driveways", true);
     include_construction_ = pt.get<bool>("include_construction", false);
     infer_internal_intersections_ =
@@ -1737,6 +1738,11 @@ public:
           static_cast<Use>(std::stoi(use->second)) == Use::kConstruction) {
         return;
       }
+      // Throw away platforms if include_platforms_ is false
+      if (!include_platforms_ && (use = results.find("use")) != results.end() &&
+          static_cast<Use>(std::stoi(use->second)) == Use::kPlatform) {
+        return;
+      }
     } catch (const std::invalid_argument& arg) {
       LOG_INFO("invalid_argument thrown for way id: " + std::to_string(osmid_));
     } catch (const std::out_of_range& oor) {
@@ -2950,6 +2956,9 @@ public:
       direction_pronunciation_katakana_, int_direction_pronunciation_katakana_,
       direction_pronunciation_jeita_, int_direction_pronunciation_jeita_;
   std::string name_, service_, amenity_;
+
+  // Configuration option to include highway=platform for pedestrians
+  bool include_platforms_;
 
   // Configuration option to include driveways
   bool include_driveways_;

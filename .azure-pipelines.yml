@@ -20,7 +20,6 @@ pr:
       - README.md
       - CHANGELOG.md
       - bench/
-      - docker/
       - docs/
       - run_route_scripts/
       - test/
@@ -118,7 +117,7 @@ jobs:
         displayName: 'Download Ninja'
 
       - script: |
-          pip install conan
+          pip install "conan<2.0.0"
         displayName: Install conan
 
       - script: |

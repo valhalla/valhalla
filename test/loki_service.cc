@@ -478,6 +478,58 @@ void run_requests(const std::vector<http_request_t>& requests,
   EXPECT_EQ(success_count, requests.size());
 }
 
+// test warning for disable_hierarchy_pruning costing option
+void test_hierarchy_warning(const Options_Action& action, const Costing_Type& type) {
+  Api request = {};
+  // Set action and costing type for the request api
+  auto& options = *request.mutable_options();
+  options.set_action(action);
+  options.set_costing_type(type);
+
+  // Set pseudo locations
+  auto* source = options.mutable_locations()->Add();
+  source->mutable_ll()->set_lat(46.f);
+  source->mutable_ll()->set_lng(8.f);
+  auto* target = options.mutable_locations()->Add();
+  target->mutable_ll()->set_lat(47.f);
+  target->mutable_ll()->set_lng(8.4f);
+  // Set pseudo sources and targets for the matrix action
+  if (action == Options_Action_sources_to_targets) {
+    auto* source = options.mutable_sources()->Add();
+    source->mutable_ll()->set_lat(46.f);
+    source->mutable_ll()->set_lng(8.f);
+    auto* target = options.mutable_targets()->Add();
+    target->mutable_ll()->set_lat(47.f);
+    target->mutable_ll()->set_lng(8.4f);
+  }
+
+  // Set disable_hiersrchy_pruning costing option as true
+  Costing costing;
+  costing.mutable_options()->set_disable_hierarchy_pruning(true);
+  options.mutable_costings()->insert({type, costing});
+
+  // Config and initiate a loki worker
+  auto cfg = make_config();
+  loki::loki_worker_t worker(cfg);
+
+  // Call the corresponding actions, and ignore all exceptions
+  try {
+    if (action == Options_Action_route) {
+      worker.route(request);
+    } else if (action == Options_Action_sources_to_targets) {
+      worker.matrix(request);
+    }
+  } catch (...) {}
+
+  // Check warning: bicycle and pedastrian modes shouldn't have warning
+  if (type == Costing_Type_bicycle || type == Costing_Type_pedestrian) {
+    EXPECT_EQ(request.info().warnings_size(), 0);
+  } else { // Other vehicular modes should have warning 205
+    EXPECT_EQ(request.info().warnings_size(), 1);
+    EXPECT_EQ(request.info().warnings(0).code(), 205);
+  }
+}
+
 TEST(LokiService, test_failure_requests) {
   run_requests(valhalla_requests, valhalla_responses);
 }
@@ -524,6 +576,21 @@ TEST(LokiService, test_actions_whitelist) {
 
     // found the action this time but failed for no locations
     EXPECT_TRUE(result.messages.front().find("Try any") == std::string::npos);
+  }
+}
+
+TEST(LokiService, test_hierarchy_warning) {
+  // all actions involving disble_hierarchy_pruning
+  const std::vector<Options_Action> actions{Options_Action_route, Options_Action_sources_to_targets};
+  // all relevant costing types, with or without warning
+  const std::vector<Costing_Type> costing_types{Costing_Type_bicycle,       Costing_Type_bus,
+                                                Costing_Type_motor_scooter, Costing_Type_pedestrian,
+                                                Costing_Type_truck,         Costing_Type_motorcycle,
+                                                Costing_Type_taxi,          Costing_Type_auto_};
+  for (auto& action : actions) {
+    for (auto& type : costing_types) {
+      test_hierarchy_warning(action, type);
+    }
   }
 }
 

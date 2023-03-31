@@ -48,6 +48,25 @@
   }
 
 /**
+ * same as above, but for costing options without pbf's awful oneof
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param range            ranged_default_t object which will check any provided values are in range
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name)              \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
+                                                  costing_options->option_name()                     \
+                                                      ? costing_options->option_name()               \
+                                                      : range.def)));                                \
+  }
+
+/**
  * this macro takes a default value and uses it when no user provided values exist (in json or in pbf)
  * to set the option on the costing options object
  *
@@ -174,15 +193,6 @@ public:
    * @return  mode factor
    */
   virtual float GetModeFactor();
-
-  /**
-   * This method overrides the max_distance with the max_distance_mm per segment
-   * distance. An example is a pure walking route may have a max distance of
-   * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-   * meters per segment (e.g. from origin to a transit stop or from the last
-   * transit stop to the destination).
-   */
-  virtual void UseMaxMultiModalDistance();
 
   /**
    * Get the access mode used by this costing method.
@@ -899,6 +909,12 @@ protected:
    */
   virtual void set_use_living_streets(float use_living_streets);
 
+  /**
+   * Calculate `lit` costs based on lit preference.
+   * @param use_lit value of lit preference in range [0; 1]
+   */
+  virtual void set_use_lit(float use_lit);
+
   // Algorithm pass
   uint32_t pass_;
 
@@ -930,6 +946,7 @@ protected:
   float living_street_factor_; // Avoid living streets factor.
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
+  float unlit_factor_;         // Avoid unlit edges factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -1053,6 +1070,9 @@ protected:
     // Get living street factor from costing options.
     set_use_living_streets(costing_options.use_living_streets());
 
+    // Calculate lit factor from costing options.
+    set_use_lit(costing_options.use_lit());
+
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
@@ -1171,6 +1191,7 @@ struct BaseCostingOptionsConfig {
 
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
+  ranged_default_t<float> use_lit_;
 
   ranged_default_t<float> closure_factor_;
 

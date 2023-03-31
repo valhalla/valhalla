@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from distutils.util import strtobool
 import json
 from typing import List, Union
+
+
+def strtobool(value):
+    lower = str(value).lower()
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
+        return True
+    elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
+        return False
+    else:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
 
 
 class Optional:
@@ -33,8 +42,10 @@ config = {
         'transit_dir': '/data/valhalla/transit',
         'transit_feeds_dir': '/data/valhalla/transit_feeds',
         'transit_bounding_box': Optional(str),
+        'transit_pbf_limit': 20000,
         'hierarchy': True,
         'shortcuts': True,
+        'include_platforms': False,
         'include_driveways': True,
         'include_construction': False,
         'include_bicycle': True,
@@ -156,6 +167,7 @@ config = {
             'interrupt': 'ipc:///tmp/interrupt',
             'drain_seconds': 28,
             'shutdown_seconds': 1,
+            'timeout_seconds': -1,
         }
     },
     'service_limits': {
@@ -252,6 +264,7 @@ config = {
         'max_timedep_distance_matrix': 0,
         'max_alternates': 2,
         'max_exclude_polygons_length': 10000,
+        'max_distance_disable_hierarchy_culling': 0,
     },
     'statsd': {
         'host': Optional(str),
@@ -284,8 +297,10 @@ help_text = {
         'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
         'transit_feeds_dir': 'Location of GTFS transit feeds',
         'transit_bounding_box': 'Add comma separated bounding box values to only download transit data inside the given bounding box',
+        'transit_pbf_limit': 'Limit individual PBF files to this many trips (needed for PBF\'s stupid size limit)',
         'hierarchy': 'bool indicating whether road hierarchy is to be built - default to True',
         'shortcuts': 'bool indicating whether shortcuts are to be built - default to True',
+        'include_platforms': 'bool indicating whether to include highway=platform - default to False',
         'include_driveways': 'bool indicating whether private driveways are included - default to True',
         'include_construction': 'bool indicating where roads under construction are included - default to False',
         'include_bicycle': 'bool indicating whether cycling only ways are included - default to True',
@@ -412,6 +427,7 @@ help_text = {
             'interrupt': 'IPC linux domain socket file location used to cancel work in progress',
             'drain_seconds': 'How long to wait for currently running threads to finish before signaling them to shutdown',
             'shutdown_seconds': 'How long to wait for currently running threads to quit before exiting the process',
+            'timeout_seconds': 'How long to wait for a single request to finish before timing it out (defaults to infinite)',
         }
     },
     'service_limits': {
@@ -438,7 +454,7 @@ help_text = {
             'max_locations': 'Maximum number of input locations',
             'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
             'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
-            'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
+            'min_transit_walking_distance': 'Minimum distance you must walk to the egress of to a station',
             'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit',
         },
         'motor_scooter': {
@@ -516,6 +532,7 @@ help_text = {
         'max_timedep_distance_matrix': 'Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix',
         'max_alternates': 'Maximum number of alternate routes to allow in a request',
         'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
+        'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
     },
     'statsd': {
         'host': 'The statsd host address',

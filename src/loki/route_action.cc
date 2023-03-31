@@ -11,9 +11,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_locations(const size_t location_count, const size_t max_locations) {
   // check that location size does not exceed max.
@@ -70,6 +67,9 @@ void loki_worker_t::route(Api& request) {
     check_locations(options.locations_size(), max_locations.find(costing_name)->second);
     check_distance(options.locations(), max_distance.find(costing_name)->second, false);
   }
+
+  // check distance for hierarchy pruning
+  check_hierarchy_distance(request);
 
   // Validate walking distances (make sure they are in the accepted range)
   if (costing_name == "multimodal" || costing_name == "transit") {

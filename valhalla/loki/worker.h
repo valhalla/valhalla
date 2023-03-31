@@ -54,6 +54,7 @@ protected:
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
+  void check_hierarchy_distance(Api& request);
 
   void init_locate(Api& request);
   void init_route(Api& request);
@@ -103,6 +104,9 @@ protected:
   float min_resample;
   unsigned int max_alternates;
   bool allow_verbose;
+
+  // add max_distance_disable_hierarchy_culling
+  float max_distance_disable_hierarchy_culling;
 
 private:
   std::string service_name() const override {

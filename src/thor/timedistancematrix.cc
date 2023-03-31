@@ -35,13 +35,15 @@ std::string GetDateTime(const std::string& origin_dt,
     return origin_dt;
   }
   graph_tile_ptr tile = nullptr;
-  // get the timezone of the output location
-  auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
   uint32_t dest_tz = 0;
-  if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-    dest_tz = node->timezone();
-  else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-    dest_tz = node->timezone();
+  if (pred_id.Is_Valid()) {
+    // get the timezone of the output location
+    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
+    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
+      dest_tz = node->timezone();
+    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
+      dest_tz = node->timezone();
+  }
 
   auto in_epoch =
       DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
@@ -250,14 +252,15 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       // Get next element from adjacency list. Check that it is valid. An
       // invalid label indicates there are no edges that can be expanded.
       uint32_t predindex = adjacencylist_.pop();
-      // Copy the EdgeLabel for use in costing
-      EdgeLabel pred = edgelabels_[predindex];
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
         one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, pred.edgeid());
+                                             time_info.timezone_index, GraphId{});
         break;
       }
+
+      // Copy the EdgeLabel for use in costing
+      EdgeLabel pred = edgelabels_[predindex];
 
       // Remove label from adjacency list, mark it as permanently labeled.
 
