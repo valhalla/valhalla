@@ -36,6 +36,7 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
+#ifdef LOGGING_LEVEL_TRACE
 const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
   static const std::unordered_map<int, std::string> values{{0, "kNone"},
                                                            {1, "kStart"},
@@ -113,6 +114,7 @@ const std::string& TrailType_Name(int v) {
     throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
   return f->second;
 }
+#endif
 
 } // namespace
 
