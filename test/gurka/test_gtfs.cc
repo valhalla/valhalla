@@ -830,7 +830,31 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), "2023-02-27T07:06-05:00");
   EXPECT_EQ(transit_info.transit_stops(2).departure_date_time(), "");
 
-  std::cerr << res_json << std::endl;
+  // test the JSON output
+  rapidjson::Document doc;
+  auto& res_doc = doc.Parse(res_json);
+  EXPECT_EQ(res_doc["trip"]["legs"].GetArray().Size(), 1);
+
+  const auto& leg_json = res_doc["trip"]["legs"].GetArray()[0];
+  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 7358.0, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 40.914, 0.001);
+  EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
+            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kStart));
+  EXPECT_EQ(leg_json["maneuvers"][1]["type"].GetUint(),
+            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kTransitConnectionStart));
+  EXPECT_EQ(leg_json["maneuvers"][2]["type"].GetUint(),
+            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kTransit));
+  EXPECT_EQ(leg_json["maneuvers"][2]["travel_type"], "metro");
+
+  const auto& ti_json = leg_json["maneuvers"][2]["transit_info"];
+  EXPECT_EQ(ti_json["onestop_id"], f1_name + "_" + r1_id);
+  EXPECT_EQ(ti_json["headsign"], "hello");
+  EXPECT_EQ(ti_json["transit_stops"].GetArray().Size(), 3);
+  EXPECT_EQ(ti_json["transit_stops"][0]["type"], "station");
+  EXPECT_FALSE(ti_json["transit_stops"][0].HasMember("arrival_date_time"));
+  EXPECT_EQ(ti_json["transit_stops"][0]["departure_date_time"], "2023-02-27T06:59-05:00");
+  EXPECT_EQ(ti_json["transit_stops"][2]["arrival_date_time"], "2023-02-27T07:06-05:00");
+  EXPECT_FALSE(ti_json["transit_stops"][2].HasMember("departure_date_time"));
 }
 
 TEST(GtfsExample, isochrones) {
