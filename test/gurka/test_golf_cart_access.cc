@@ -47,10 +47,10 @@ protected:
                                }},
                               {"FG",
                                {{"highway", "path"},
-                                   {"surface", "paved"},
                                }},
                               {"GH",
-                               {{"highway", "path"},  // not paved!
+                               {{"highway", "path"},
+                                   {"surface", "dirt"},  // not allowed
                                }},
                               {"HI",
                                {{"highway", "secondary"},

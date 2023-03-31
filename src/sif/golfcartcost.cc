@@ -27,7 +27,7 @@ constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
 
 // Minimum acceptable surface class
-constexpr Surface kMinimumGolfCartSurface = Surface::kPaved;
+constexpr Surface kMinimumGolfCartSurface = Surface::kCompacted;
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
