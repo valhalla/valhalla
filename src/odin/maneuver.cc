@@ -119,32 +119,7 @@ const std::string& TrailType_Name(int v) {
 namespace valhalla {
 namespace odin {
 
-Maneuver::Maneuver()
-    : type_(DirectionsLeg_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
-      turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
-      end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
-      end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
-      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
-      internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      travel_mode_(TravelMode::kDrive), vehicle_type_(VehicleType::kCar),
-      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
-      transit_type_(TransitType::kRail), transit_connection_(false), rail_(false), bus_(false),
-      fork_(false), begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false), tee_(false), trail_type_(TrailType::kNone),
-      imminent_verbal_multi_cue_(false), distant_verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true), has_time_restrictions_(false),
-      has_right_traversable_outbound_intersecting_edge_(false),
-      has_left_traversable_outbound_intersecting_edge_(false),
-      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
-      include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
-      roundabout_exit_count_(0), has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
-      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
-      roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
-      has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false), has_long_street_name_(false), elevator_(false),
-      indoor_steps_(false), escalator_(false), building_enter_(false), building_exit_(false),
-      end_level_ref_("") {
+Maneuver::Maneuver() {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
