@@ -3646,7 +3646,7 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   // Verify that the specified maneuver is a ramp
   if (maneuver.ramp()) {
     // Loop over edges
-    for (uint32_t node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
+    for (int node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
          ++node_index) {
       auto curr_edge = trip_path_->GetCurrEdge(node_index);
       if (curr_edge && (curr_edge->IsRampUse() || curr_edge->IsTurnChannelUse() ||
@@ -3670,7 +3670,7 @@ void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Man
   // Process each maneuver for traversable outbound intersecting edges
   for (Maneuver& maneuver : maneuvers) {
     bool found_first_edge_to_process = false;
-    for (int node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
+    for (uint32_t node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
          ++node_index) {
       if (!found_first_edge_to_process) {
         auto curr_edge = trip_path_->GetCurrEdge(node_index);
