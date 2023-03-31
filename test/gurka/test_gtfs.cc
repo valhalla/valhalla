@@ -4,6 +4,7 @@
 #include "baldr/datetime.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/ingest_transit.h"
+#include "proto/common.pb.h"
 #include "proto/transit.pb.h"
 #include "test.h"
 #include <gtest/gtest.h>
@@ -777,12 +778,39 @@ TEST(GtfsExample, MakeTile) {
 }
 
 TEST(GtfsExample, route) {
-  valhalla::Api result0 =
+  std::string res_json;
+  valhalla::Api res =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", "2023-02-27T05:50"},
-                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}});
-  EXPECT_EQ(result0.trip().routes_size(), 1);
+                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
+                       {}, &res_json);
+
+  // test the PBF output
+  EXPECT_EQ(res.directions().routes().size(), 1);
+  EXPECT_EQ(res.directions().routes(0).legs().size(), 1);
+
+  const auto& leg = res.directions().routes(0).legs(0);
+  EXPECT_NEAR(leg.summary().time(), 7358.0, 0.001);
+  EXPECT_NEAR(leg.summary().length(), 40.914, 0.001);
+  EXPECT_EQ(leg.maneuver(0).type(), DirectionsLeg_Maneuver_Type_kStart);
+  EXPECT_EQ(leg.maneuver(1).type(), DirectionsLeg_Maneuver_Type_kTransitConnectionStart);
+  EXPECT_EQ(leg.maneuver(2).type(), DirectionsLeg_Maneuver_Type_kTransit);
+  EXPECT_EQ(leg.maneuver(2).transit_type(), valhalla::TransitType::kMetro);
+
+  // TODO: there's some mixup of agencies/stations/platforms & onestop IDs
+  const auto& transit_info = leg.maneuver(2).transit_info();
+  // EXPECT_EQ(transit_info.onestop_id(), f1_name + "_" + r1_id);
+  EXPECT_EQ(transit_info.headsign(), "hello");
+  EXPECT_EQ(transit_info.transit_stops().size(), 3);
+  // EXPECT_EQ(transit_info.transit_stops(0).type(), TransitPlatformInfo_Type_kStation);
+  // EXPECT_EQ(transit_info.transit_stops(0).onestop_id(), f1_name + "_" + st1_id);
+  // EXPECT_EQ(transit_info.transit_stops(2).onestop_id(), f1_name + "_" + st3_id +
+  // "_transit_station");
+  EXPECT_EQ(transit_info.transit_stops(0).arrival_date_time(), "");
+  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T06:59-05:00");
+  EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), "2023-02-27T07:06-05:00");
+  EXPECT_EQ(transit_info.transit_stops(2).departure_date_time(), "");
 }
 
 TEST(GtfsExample, isochrones) {

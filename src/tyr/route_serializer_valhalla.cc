@@ -438,7 +438,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         if (transit_info.transit_stops().size() > 0) {
           writer.start_array("transit_stops");
           for (const auto& transit_stop : transit_info.transit_stops()) {
-            writer.start_object("transit_stop");
+            writer.start_object();
 
             // type
             if (transit_stop.type() == TransitPlatformInfo_Type_kStation) {

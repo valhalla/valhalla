@@ -283,10 +283,10 @@ private:
         // negative durations can occur
         if (transit_departure) {
 
-          std::string dt = DateTime::get_duration(origin.date_time(),
-                                                  (transit_departure->departure_time() -
-                                                   (time_info.second_of_week % kSecondsPerDay)),
-                                                  DateTime::get_tz_db().from_index(node->timezone()));
+          std::string dt =
+              DateTime::get_duration(time_info.date_time(),
+                                     transit_departure->departure_time() - time_info.day_seconds(),
+                                     DateTime::get_tz_db().from_index(node->timezone()));
 
           std::size_t found = dt.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
@@ -301,11 +301,11 @@ private:
           // TODO:  set removed tz abbrev on transit_platform_info for departure.
 
           // Copy the arrival time for use at the next transit stop
-          arrival_time = DateTime::get_duration(origin.date_time(),
-                                                (transit_departure->departure_time() +
-                                                 transit_departure->elapsed_time()) -
-                                                    (time_info.second_of_week % kSecondsPerDay),
-                                                DateTime::get_tz_db().from_index(node->timezone()));
+          arrival_time =
+              DateTime::get_duration(time_info.date_time(),
+                                     transit_departure->departure_time() +
+                                         transit_departure->elapsed_time() - time_info.day_seconds(),
+                                     DateTime::get_tz_db().from_index(node->timezone()));
 
           found = arrival_time.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
