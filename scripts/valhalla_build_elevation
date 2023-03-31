@@ -59,7 +59,7 @@ method.add_argument(
     "-g",
     "--from-geojson",
     help="Absolute or relative path to directory with .geojson files used "
-         "as input to tile intersection. Requires shapely.",
+    "as input to tile intersection. Requires shapely.",
     type=Path,
 )
 method.add_argument(
@@ -72,13 +72,13 @@ method.add_argument(
     "-t",
     "--from-tiles",
     help="Only download tiles covered by the Valhalla graph (requires a Valhalla config JSON file).",
-    action="store_true"
+    action="store_true",
 )
 parser.add_argument(
     "-c",
     "--config",
     help="Absolute or relative path to the Valhalla config JSON. "
-         "If present, can be used for download location and bbox.",
+    "If present, can be used for download location and bbox.",
     type=Path,
 )
 parser.add_argument(
@@ -88,10 +88,7 @@ parser.add_argument(
     type=Path,
 )
 parser.add_argument(
-    "-p", "--parallelism",
-    help="Number of processing units to use.",
-    type=int,
-    default=cpu_count()
+    "-p", "--parallelism", help="Number of processing units to use.", type=int, default=cpu_count()
 )
 parser.add_argument(
     "-v",
@@ -112,8 +109,8 @@ group.add_argument(
     "-z",
     "--lz4",
     help="If set, downloaded files will be recompressed with LZ4. Requires lz4. "
-         "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
-         "initial download, tiles will be several times faster to decompress vz gzip.",
+    "Requires ~12% more disk space (216GB total) vs gzip. While you pay upfront in extra CPU and space on the "
+    "initial download, tiles will be several times faster to decompress vz gzip.",
     action="store_true",
 )
 
@@ -158,7 +155,9 @@ def get_tiles_with_geojson(input_dir: Path) -> Set[Tile]:
         sys.exit(1)
 
     if not input_dir.is_dir() or not len(list(input_dir.glob('*.geojson'))) > 0:
-        LOGGER.critical(f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}")
+        LOGGER.critical(
+            f"Geojson directory does not exist or contains no GeoJSON files: {input_dir.resolve()}"
+        )
         sys.exit(1)
 
     def get_outer_rings(input_dir: Path) -> Iterable[Polygon]:
@@ -190,14 +189,7 @@ def get_tiles_with_bbox(bbox_str: str) -> Set[Tile]:
         sys.exit(1)
 
     # validate bbox
-    if (
-        min_x > max_x
-        or min_x < -180
-        or max_x > 180
-        or min_y > max_y
-        or min_y < -90
-        or max_y > 90
-    ):
+    if min_x > max_x or min_x < -180 or max_x > 180 or min_y > max_y or min_y < -90 or max_y > 90:
         LOGGER.critical(f"Bbox invalid: {bbox}")
         sys.exit(1)
 
@@ -221,8 +213,12 @@ def get_tiles_with_graph(graph_dir: Path) -> Set[Tile]:
     tile_width = int(360 / LOCAL_SIZE)
     for tile_fp in local_dir.rglob('*.gph'):
         # turn the path into a tile ID
-        tile_id = int(str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, ''))
-        tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(int(tile_id / tile_width) * LOCAL_SIZE - 90)
+        tile_id = int(
+            str(tile_fp.parent.relative_to(local_dir).joinpath(tile_fp.stem)).replace(os.sep, '')
+        )
+        tile_x, tile_y = floor(int(tile_id % tile_width) * LOCAL_SIZE - 180), floor(
+            int(tile_id / tile_width) * LOCAL_SIZE - 90
+        )
 
         tile_infos.add(get_tile_info(tile_x, tile_y))
 
@@ -238,9 +234,7 @@ def download(tile: Tile, output_dir, compression: TileCompression):
         # Skip if the file already exists
         return False
 
-    url = (
-        f"http://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile.dir}/{tile.name}.gz"
-    )
+    url = f"http://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile.dir}/{tile.name}.gz"
 
     LOGGER.info(f"Downloading tile {tile.name}")
     try:
@@ -258,8 +252,10 @@ def download(tile: Tile, output_dir, compression: TileCompression):
                         # of level). The end result is larger than the maximally gzipped tiles from AWS, but only
                         # by around 12%.
                         import lz4.frame
-                        with lz4.frame.LZ4FrameCompressor(block_size=lz4.frame.BLOCKSIZE_MAX4MB,
-                                                          compression_level=6) as compressor:
+
+                        with lz4.frame.LZ4FrameCompressor(
+                            block_size=lz4.frame.BLOCKSIZE_MAX4MB, compression_level=6
+                        ) as compressor:
                             # Optimization: we know the exact size of every uncompressed hgt file
                             f.write(compressor.begin(25934402))
                             f.write(compressor.compress(uncompressed))
@@ -272,9 +268,7 @@ def download(tile: Tile, output_dir, compression: TileCompression):
         LOGGER.critical(f"Download failed of elevation tile {tile.dir}/{tile.name}: {e.reason}")
         return False
     except ImportError:
-        LOGGER.critical(
-            "Could not import lz4. Please install lz4 or use another compression format."
-        )
+        LOGGER.critical("Could not import lz4. Please install lz4 or use another compression format.")
         sys.exit(1)
 
 

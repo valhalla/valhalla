@@ -1,10 +1,12 @@
-#include "sif/dynamiccost.h"
+#include <boost/optional.hpp>
+#include <utility>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/dynamiccost.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
@@ -12,7 +14,6 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
-#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -105,6 +106,8 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
+                                                      baldr::kMaxSpeedKph};
 } // namespace
 
 /*
@@ -147,7 +150,7 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
-      top_speed_(costing.options().top_speed()),
+      top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
@@ -461,6 +464,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+
+  co->set_fixed_speed(
+      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
 }
 
 void ParseCosting(const rapidjson::Document& doc,
@@ -550,7 +556,9 @@ void ParseCosting(const rapidjson::Document& doc,
       sif::ParseNoCostOptions(doc, key, costing);
       break;
     }
-    default: { throw std::logic_error("Unknown costing"); }
+    default: {
+      throw std::logic_error("Unknown costing");
+    }
   }
   costing->set_type(costing_type);
 }

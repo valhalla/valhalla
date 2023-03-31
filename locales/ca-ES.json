@@ -1171,7 +1171,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Enllaça."
+          "Merge."
         ],
         "1": [
           "Enllaça a l'esquerra."
@@ -1200,8 +1200,8 @@
       },
       "example_phrases": {
         "0": [
-          "Viatja 1 parada.",
-          "Viatja 3 parades."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2078,7 +2078,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Gira a l'esquerra."
+          "Turn left."
         ],
         "1": [
           "Gira a la dreta cap a Flatbush Avenue."
@@ -2315,9 +2315,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la vorera",
+        "el carril bici",
+        "la pista de bicicleta de muntanya",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2335,9 +2335,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la vorera",
+        "el carril bici",
+        "la pista de bicicleta de muntanya",
         "the crosswalk"
       ],
       "example_phrases": {

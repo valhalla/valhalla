@@ -20,8 +20,8 @@
     },
     "arrive_verbal": {
       "phrases": {
-        "0": "Prídete o <TIME>.",
-        "1": "Prídete o <TIME> na <TRANSIT_STOP>."
+        "0": "Príchod: <TIME>.",
+        "1": "Príchod: <TIME> o <TRANSIT_STOP>."
       },
       "example_phrases": {
         "0": [
@@ -43,9 +43,9 @@
       },
       "empty_street_name_labels": [
         "chodník",
-        "cyklocestu",
-        "cestu pre horské bicykle",
-        "the crosswalk",
+"cyklocesta",
+        "cesta pre horské bicykle",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -88,7 +88,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -149,7 +149,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -184,7 +184,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -241,7 +241,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -381,7 +381,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -413,7 +413,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -469,7 +469,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -569,7 +569,7 @@
         "the walkway",
         "the cycleway",
         "the mountain bike trail",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -752,7 +752,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -783,7 +783,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -935,7 +935,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -985,7 +985,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1023,7 +1023,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1065,7 +1065,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1121,7 +1121,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1164,14 +1164,14 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
       ],
       "example_phrases": {
         "0": [
-          "Připojte se."
+          "Merge."
         ],
         "1": [
           "Připojte se vlevo."
@@ -1200,8 +1200,8 @@
       },
       "example_phrases": {
         "0": [
-          "Jeďte 1 zastávku.",
-          "Jeďte 3 zastávky."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -1214,7 +1214,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1453,7 +1453,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1496,7 +1496,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1555,7 +1555,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -1646,7 +1646,7 @@
         "chodníku",
         "cykloceste",
         "ceste pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -2024,7 +2024,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -2067,7 +2067,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -2078,7 +2078,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Odbočte vlevo."
+          "Turn left."
         ],
         "1": [
           "Odbočte vpravo na Flatbush Avenue."
@@ -2112,7 +2112,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -2163,7 +2163,7 @@
         "chodník",
         "cyklocestu",
         "cestu pre horské bicykle",
-        "the crosswalk",
+        "priechod pre chodcov",
         "the stairs",
         "the bridge",
         "the tunnel"
@@ -2315,10 +2315,10 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
+        "chodníku",
         "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "ceste pre horské bicykle",
+        "priechod pre chodcov"
       ],
       "example_phrases": {
         "0": [
@@ -2335,10 +2335,10 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
+        "chodníku",
         "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "ceste pre horské bicykle",
+        "priechod pre chodcov"
       ],
       "example_phrases": {
         "0": [

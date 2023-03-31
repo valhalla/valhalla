@@ -95,6 +95,9 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
                                               EnhancedTripLeg* etp,
                                               std::list<Maneuver>& maneuvers,
                                               DirectionsLeg& trip_directions) {
+  bool has_toll = false;
+  bool has_highway = false;
+  bool has_ferry = false;
   // Populate trip and leg IDs
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
@@ -144,6 +147,15 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     trip_maneuver->set_end_shape_index(maneuver.end_shape_index());
     if (maneuver.portions_toll()) {
       trip_maneuver->set_portions_toll(maneuver.portions_toll());
+      has_toll = true;
+    }
+    if (maneuver.portions_highway()) {
+      trip_maneuver->set_portions_highway(maneuver.portions_highway());
+      has_highway = true;
+    }
+    if (maneuver.ferry()) {
+      trip_maneuver->set_portions_ferry(maneuver.ferry());
+      has_ferry = true;
     }
 
     trip_maneuver->set_has_time_restrictions(maneuver.has_time_restrictions());
@@ -419,6 +431,11 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     has_time_restrictions = node.edge().has_time_restrictions() || has_time_restrictions;
   }
   trip_directions.mutable_summary()->set_has_time_restrictions(has_time_restrictions);
+
+  // Populate toll, highway, ferry tags
+  trip_directions.mutable_summary()->set_has_toll(has_toll);
+  trip_directions.mutable_summary()->set_has_highway(has_highway);
+  trip_directions.mutable_summary()->set_has_ferry(has_ferry);
 }
 
 } // namespace odin

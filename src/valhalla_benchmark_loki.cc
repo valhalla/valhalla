@@ -1,18 +1,5 @@
-#include "config.h"
-
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include "loki/search.h"
-#include "midgard/logging.h"
-#include "midgard/pointll.h"
-#include "worker.h"
-
-#include "sif/costfactory.h"
 #include <algorithm>
 #include <atomic>
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <future>
 #include <list>
@@ -21,6 +8,18 @@
 #include <thread>
 #include <tuple>
 #include <vector>
+
+#include <boost/property_tree/ptree.hpp>
+#include <cxxopts.hpp>
+
+#include "baldr/rapidjson_utils.h"
+#include "config.h"
+#include "filesystem.h"
+#include "loki/search.h"
+#include "midgard/logging.h"
+#include "midgard/pointll.h"
+#include "sif/costfactory.h"
+#include "worker.h"
 
 filesystem::path config_file_path;
 size_t threads, batch, isolated, radius;
@@ -193,8 +192,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("loki.logging");
+  auto logging_subtree = pt.get_child_optional("loki.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

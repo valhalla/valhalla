@@ -12,6 +12,10 @@
 #include <unordered_map>
 #include <vector>
 
+// date emits a warning otherwise for C++17, see
+// https://github.com/valhalla/valhalla/pull/3878#issuecomment-1365487437
+#define HAS_UNCAUGHT_EXCEPTIONS 1
+
 #include <date/date.h>
 #include <date/tz.h>
 

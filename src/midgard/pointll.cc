@@ -419,6 +419,9 @@ template bool GeoPoint<double>::WithinPolygon(const std::list<GeoPoint<double>>&
 
 namespace std {
 size_t hash<valhalla::midgard::PointLL>::operator()(const valhalla::midgard::PointLL& p) const {
+  // TODO: something simpler
+  // return std::hash<uint64_t>()(static_cast<uint64_t>(p));
+
   size_t seed = 0;
   valhalla::midgard::hash_combine(seed, p.first);
   valhalla::midgard::hash_combine(seed, p.second);

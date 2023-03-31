@@ -1169,7 +1169,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Entre."
+          "Merge."
         ],
         "1": [
           "Entre à esquerda."
@@ -1198,8 +1198,8 @@
       },
       "example_phrases": {
         "0": [
-          "Viaje 1 parada.",
-          "Viaje 3 paradas."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2076,7 +2076,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Vire à esquerda."
+          "Turn left."
         ],
         "1": [
           "Vire à direita para Avenida do Brasil."
@@ -2313,9 +2313,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "calçada",
+        "ciclovia",
+        "a trilha de mountain bike",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2333,9 +2333,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "calçada",
+        "ciclovia",
+        "a trilha de mountain bike",
         "the crosswalk"
       ],
       "example_phrases": {

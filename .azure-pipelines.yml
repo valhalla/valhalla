@@ -7,7 +7,10 @@
 
 # No wildcards allowed for file patterns...
 # skip draft PR's, skip all commits except for PRs to master
-trigger: none
+trigger:
+  branches:
+    include:
+      - master
 pr:
   branches:
     include:
@@ -26,18 +29,21 @@ pr:
   drafts: false
 
 jobs:
-  - job: VS2019
-    displayName: 'Windows 2019 | VS2019'
+  - job: VS2022
+    displayName: 'Windows 2022 | VS2022'
     timeoutInMinutes: 120
 
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
 
     variables:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: 'f4bd6423'
+      VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
+      # points to recent commit in master after a bug fix in vcpkg
+      VCPKG_REF: '51e10eb'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
@@ -107,7 +113,7 @@ jobs:
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
       - powershell: |
-          wget https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
+          wget https://github.com/ninja-build/ninja/releases/download/v1.11.0/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
           Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
         displayName: 'Download Ninja'
 

@@ -111,14 +111,17 @@ public:
 
   /**
    * Gets the directory like filename suffix given the graphId
-   * @param  graphid  Graph Id to construct filename.
-   * @param  gzipped  Modifies the suffix if you expect gzipped file names
+   * @param  graphid      Graph Id to construct filename.
+   * @param  gzipped      Modifies the suffix if you expect gzipped file names
    * @param  is_file_path Determines the 1000 separator to be used for file or URL access
+   * @param  tiles        Allows passing a custom tile definition rather than pulling from static
+   *                      hierarchy, which is useful for testing
    * @return  Returns a filename including directory path as a suffix to be appended to another uri
    */
   static std::string FileSuffix(const GraphId& graphid,
                                 const std::string& suffix = valhalla::baldr::SUFFIX_NON_COMPRESSED,
-                                bool is_file_path = true);
+                                bool is_file_path = true,
+                                const TileLevel* tiles = nullptr);
 
   /**
    * Get the tile Id given the full path to the file.
@@ -222,6 +225,43 @@ public:
   }
 
   /**
+   * Get a pointer to an edge extension .
+   * @param  edge  GraphId of the directed edge.
+   * @return  Returns a pointer to the edge extension.
+   */
+  const DirectedEdgeExt* ext_directededge(const GraphId& edge) const {
+    assert(edge.Tile_Base() == header_->graphid().Tile_Base());
+
+    // Testing against directededgecount since the number of directed edges
+    // should be the same as the number of directed edge extensions
+    if (edge.id() < header_->directededgecount()) {
+      return &ext_directededges_[edge.id()];
+    }
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," +
+                             std::to_string(edge.id()) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
+
+  /**
+   * Get a pointer to an edge extension.
+   * @param  idx  Index of the directed edge within the current tile.
+   * @return  Returns a pointer to the edge.
+   */
+  const DirectedEdgeExt* ext_directededge(const size_t idx) const {
+    // Testing against directededgecount since the number of directed edges
+    // should be the same as the number of directed edge extensions
+    if (idx < header_->directededgecount()) {
+      return &ext_directededges_[idx];
+    }
+    throw std::runtime_error("GraphTile DirectedEdgeExt index out of bounds: " +
+                             std::to_string(header_->graphid().tileid()) + "," +
+                             std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+                             " directededgecount= " + std::to_string(header_->directededgecount()));
+  }
+
+  /**
    * Get an iterable set of directed edges from a node in this tile
    * @param  node  Node from which the edges leave
    * @return returns an iterable collection of directed edges
@@ -244,6 +284,30 @@ public:
    * @return returns an iterable collection of directed edges
    */
   midgard::iterable_t<const DirectedEdge> GetDirectedEdges(const size_t idx) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  Node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const NodeInfo* node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * @param  node  GraphId of the node from which the edges leave
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const GraphId& node) const;
+
+  /**
+   * Get an iterable set of directed edges extensions from a node in this tile
+   * WARNING: this only returns edge extensions in this tile, edges at this node on another level
+   *          will not be returned by this method, node transitions must be used
+   *
+   * @param  idx  Index of the node within the current tile
+   * @return returns an iterable collection of directed edges extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts(const size_t idx) const;
 
   /**
    * Convenience method to get opposing edge Id given a directed edge.
@@ -319,6 +383,15 @@ public:
   }
 
   /**
+   * Get an iterable set of edge extensions in this tile
+   * @return returns an iterable collection of edge extensions
+   */
+  midgard::iterable_t<const DirectedEdgeExt> GetDirectedEdgeExts() const {
+    return midgard::iterable_t<const DirectedEdgeExt>{ext_directededges_,
+                                                      header_->directededgecount()};
+  }
+
+  /**
    * Get a pointer to edge info.
    * @return  Returns edge info.
    */
@@ -344,6 +417,16 @@ public:
    */
   const DirectedEdge*
   GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
+
+  /**
+   * Convenience method to get the directed edge extensions originating at a node.
+   * @param  node_index  Node Id within this tile.
+   * @param  count       (OUT) Number of outbound edges
+   * @param  edge_index  (OUT) Index of the first outbound edge.
+   * @return  Returns a pointer to the first outbound directed edge extension.
+   */
+  const DirectedEdgeExt*
+  GetDirectedEdgeExts(const uint32_t node_index, uint32_t& count, uint32_t& edge_index) const;
 
   /**
    * Convenience method to get the names for an edge
@@ -544,7 +627,7 @@ public:
    */
   inline uint32_t GetSpeed(const DirectedEdge* de,
                            uint8_t flow_mask = kConstrainedFlowMask,
-                           uint32_t seconds = kInvalidSecondsOfWeek,
+                           uint64_t seconds = kInvalidSecondsOfWeek,
                            bool is_truck = false,
                            uint8_t* flow_sources = nullptr,
                            const uint64_t seconds_from_now = 0) const {
@@ -620,6 +703,7 @@ public:
 
     // fallback to constrained if time of week is within 7am to 7pm (or if no time was passed in) and
     // if the edge has constrained speed
+    // kInvalidSecondsOfWeek %= midgard::kSecondsPerDay = 12.1
     seconds %= midgard::kSecondsPerDay;
     auto is_daytime = (25200 < seconds && seconds < 68400);
     if ((invalid_time || is_daytime) && (flow_mask & kConstrainedFlowMask) &&

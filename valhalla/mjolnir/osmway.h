@@ -1683,6 +1683,24 @@ struct OSMWay {
   }
 
   /**
+   * Sets the lit state
+   *
+   * @param lit whether the way is lit.
+   */
+  void set_lit(const bool lit) {
+    lit_ = lit;
+  }
+
+  /**
+   * Get the lit state.
+   *
+   * @return bool
+   */
+  bool lit() const {
+    return lit_;
+  }
+
+  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -1788,7 +1806,6 @@ struct OSMWay {
   uint32_t turn_channel_ : 1; // *link tag - turn channel (no ramp)
   uint32_t wheelchair_ : 1;
   uint32_t wheelchair_tag_ : 1;
-  uint32_t spare0_ : 1;
   uint32_t has_user_tags_ : 1;
   uint32_t has_pronunciation_tags_ : 1;
   uint32_t internal_ : 1;
@@ -1826,7 +1843,8 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  uint16_t spare2_ : 4;
+  bool lit_ : 1;
+  uint16_t spare2_ : 3;
 
   uint16_t nodecount_;
 

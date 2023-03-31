@@ -11,17 +11,11 @@
 #include <unordered_set>
 #include <vector>
 
-#include "config.h"
-
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
 
@@ -30,7 +24,10 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
+#include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
+#include "config.h"
+#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
@@ -249,8 +246,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file_path.string(), pt);
 
   // Configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,

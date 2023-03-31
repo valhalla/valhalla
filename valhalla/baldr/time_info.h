@@ -29,7 +29,6 @@ struct TimeInfo {
 
   // the ordinal second from the beginning of the week (starting monday at 00:00)
   // used to look up historical traffic as the route progresses
-  // this defaults to mondays at noon if no time is provided (for constrained flow lookup)
   uint64_t second_of_week : 20;
 
   // the distance in seconds from now
@@ -46,7 +45,7 @@ struct TimeInfo {
    * @return    TimeInfo structure
    */
   static inline TimeInfo invalid() {
-    return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
+    return {false, 0, 0, kInvalidSecondsOfWeek, 0, false, nullptr};
   }
 
   /**
@@ -138,7 +137,7 @@ struct TimeInfo {
       parsed_date = dt::get_formatted_date(date_time, true);
     } catch (...) {
       LOG_ERROR("Could not parse provided date_time: " + date_time);
-      return {false, 0, 0, kConstrainedFlowSecondOfDay, 0, false, nullptr};
+      return {false, 0, 0, kInvalidSecondsOfWeek, 0, false, nullptr};
     }
     const auto then_date = date::make_zoned(tz, parsed_date, date::choose::latest);
     uint64_t local_time = date::to_utc_time(then_date.get_sys_time()).time_since_epoch().count();

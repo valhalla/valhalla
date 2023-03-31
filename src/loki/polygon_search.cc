@@ -99,6 +99,11 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
                baldr::GraphReader& reader,
                const std::shared_ptr<sif::DynamicCost>& costing,
                float max_length) {
+  // protect for bogus input
+  if (rings_pbf.empty() || rings_pbf.Get(0).coords().empty() ||
+      !rings_pbf.Get(0).coords()[0].has_lat_case() || !rings_pbf.Get(0).coords()[0].has_lng_case()) {
+    return {};
+  }
 
   // convert to bg object and check length restriction
   double rings_length = 0;
@@ -109,7 +114,7 @@ edges_in_rings(const google::protobuf::RepeatedPtrField<valhalla::Ring>& rings_p
     rings_length += bg::perimeter(ring_bg, Haversine());
   }
   if (rings_length > max_length) {
-    throw valhalla_exception_t(167, std::to_string(max_length));
+    throw valhalla_exception_t(167, std::to_string(static_cast<size_t>(max_length)) + " meters");
   }
 
   // Get the lowest level and tiles

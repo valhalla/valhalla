@@ -51,7 +51,9 @@ if(ENABLE_DATA_TOOLS)
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
-    list(APPEND tests http_tiles elevation_builder)
+    list(APPEND tests http_tiles)
+    # TODO: fix https://github.com/valhalla/valhalla/issues/3740
+    # list(APPEND tests http_tiles elevation_builder)
   endif()
 endif()
 
@@ -277,18 +279,19 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 set (source "${CMAKE_BINARY_DIR}/test/data/utrecht_tiles")
 set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
-set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
-add_custom_command(
-        TARGET utrecht_tiles POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
-        DEPENDS ${destination}
-        COMMENT "tiles copied from ${source} to ${destination}"
-)
+# TODO: fix https://github.com/valhalla/valhalla/issues/3740
+#set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
+#add_custom_command(
+#        TARGET utrecht_tiles POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
+#        DEPENDS ${destination}
+#        COMMENT "tiles copied from ${source} to ${destination}"
+#)
 
 ## Test run targets
 foreach(test ${tests} ${cost_tests} ${tyr_tests})

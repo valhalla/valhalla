@@ -11,6 +11,7 @@
     "admin": "/data/valhalla/admin.sqlite",
     "timezone": "/data/valhalla/tz_world.sqlite",
     "transit_dir": "/data/valhalla/transit",
+    "transit_feeds_dir": "/data/valhalla/transit_feeds",
     "hierarchy": true,
     "shortcuts": true,
     "include_driveways": true,

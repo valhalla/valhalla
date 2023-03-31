@@ -33,11 +33,16 @@ constexpr float kMaxCost = 99999999.9999f;
 struct TimeDistance {
   uint32_t time; // Time in seconds
   uint32_t dist; // Distance in meters
+  std::string date_time;
 
-  TimeDistance() : time(0), dist(0) {
+  TimeDistance() : time(0), dist(0), date_time("") {
   }
 
-  TimeDistance(const uint32_t secs, const uint32_t meters) : time(secs), dist(meters) {
+  TimeDistance(const uint32_t secs, const uint32_t meters) : time(secs), dist(meters), date_time("") {
+  }
+
+  TimeDistance(const uint32_t secs, const uint32_t meters, std::string date_time)
+      : time(secs), dist(meters), date_time(date_time) {
   }
 };
 

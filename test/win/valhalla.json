@@ -112,7 +112,8 @@
     "tile_dir": "test\\data\\utrecht_tiles",
     "tile_extract": "",
     "timezone": "",
-    "transit_dir": ""
+    "transit_dir": "",
+    "transit_feeds_dir": ""
   },
   "odin": {
     "logging": {

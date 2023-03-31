@@ -439,7 +439,7 @@ void CopyLocations(TripLeg& trip_path,
   trip_path.add_location()->CopyFrom(origin);
   RemovePathEdges(&*trip_path.mutable_location()->rbegin(), path_begin->edgeid);
   // intermediates
-  boost::optional<uint32_t> last_shape_index = boost::make_optional(false, uint32_t());
+  std::optional<uint32_t> last_shape_index = std::nullopt;
   for (const auto& intermediate : intermediates) {
     valhalla::Location* tp_intermediate = trip_path.add_location();
     tp_intermediate->CopyFrom(intermediate);
@@ -569,7 +569,9 @@ void AddSignInfo(const AttributesController& controller,
           }
           break;
         }
-        default: { break; }
+        default: {
+          break;
+        }
       }
       ++sign_index;
     }
@@ -1232,7 +1234,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         transit_route_info->set_headsign(graphtile->GetName(transit_departure->headsign_offset()));
       }
 
-      const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeid());
+      const TransitRoute* transit_route = graphtile->GetTransitRoute(transit_departure->routeindex());
 
       if (transit_route) {
         // Set transit type if requested

@@ -70,10 +70,16 @@
 
 #    ifndef NTDDI_VERSION
 #      define NTDDI_VERSION 0x06000000
-#      define _WIN32_WINNT _WIN32_WINNT_VISTA
+#      ifndef _WIN32_WINNT
+#          define _WIN32_WINNT 
+#      endif
+#      ifndef _WIN32_WINNT_VISTA
+#          define _WIN32_WINNT_VISTA
+#      endif
 #    elif NTDDI_VERSION < 0x06000000
 #      warning "If this fails to compile NTDDI_VERSION may be to low. See comments above."
 #    endif
+
      // But once we define the values above we then get this linker error:
      // "tz.cpp:(.rdata$.refptr.FOLDERID_Downloads[.refptr.FOLDERID_Downloads]+0x0): "
      //     "undefined reference to `FOLDERID_Downloads'"
@@ -357,6 +363,7 @@ CONSTDATA auto max_day = date::December/31;
 
 #if USE_OS_TZDB
 
+// TODO: still the right macro?
 CONSTCD14 const sys_seconds min_seconds = sys_days(min_year/min_day);
 
 #endif  // USE_OS_TZDB

@@ -1,10 +1,9 @@
-#include "mjolnir/ferry_connections.h"
-
 #include <queue>
 #include <unordered_map>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
+#include "mjolnir/ferry_connections.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -14,9 +13,10 @@ namespace mjolnir {
 uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
+    uint16_t fwd_access = edge.first.fwd_access & baldr::kVehicularAccess;
+    uint16_t rev_access = edge.first.rev_access & baldr::kVehicularAccess;
     if (!edge.first.attributes.driveable_ferry && !edge.first.attributes.link &&
-        !edge.first.attributes.reclass_ferry &&
-        (edge.first.attributes.driveableforward || edge.first.attributes.driveablereverse)) {
+        !edge.first.attributes.reclass_ferry && (fwd_access || rev_access)) {
       if (edge.first.attributes.importance < bestrc) {
         bestrc = edge.first.attributes.importance;
       }
@@ -54,154 +54,182 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     return shape;
   };
 
-  // Map to store the status and index of nodes that have been encountered.
-  // Any unreached nodes are not added to the map.
-  std::unordered_map<uint32_t, NodeStatusInfo> node_status;
-  std::vector<NodeLabel> node_labels;
+  // total edge count for all reclassified paths
+  // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
+  uint32_t edge_count = 0;
 
-  // Priority queue for the adjacency list
-  std::priority_queue<std::pair<float, uint32_t>, std::vector<std::pair<float, uint32_t>>,
-                      CompareCost>
-      adjset;
+  uint16_t overall_access_before = baldr::kVehicularAccess;
+  uint16_t overall_access_after = 0;
+  // find accessible paths for as many modes as we can but stop if we can't find any more
+  while (overall_access_before != overall_access_after) {
+    overall_access_before = overall_access_after;
 
-  // Add node to list of node labels, set the node status and add
-  // to the adjacency set
-  uint32_t nodelabel_index = 0;
-  node_labels.emplace_back(0.0f, node_idx, node_idx);
-  node_status[node_idx] = {kTemporary, nodelabel_index};
-  adjset.push({0.0f, nodelabel_index});
-  nodelabel_index++;
+    // which modes do we still have to find a path for?
+    uint32_t access_filter = baldr::kVehicularAccess ^ overall_access_before;
 
-  // Expand edges until a node connected to specified road classification
-  // is reached
-  uint32_t n = 0;
-  uint32_t index = 0;
-  while (!adjset.empty()) {
-    // Get the next node from the adjacency list/priority queue. Gets its
-    // current cost and index
-    const auto& expand_node = adjset.top();
-    float current_cost = expand_node.first;
-    index = expand_node.second;
-    uint32_t node_index = node_labels[index].node_index;
-    adjset.pop();
+    // Map to store the status and index of nodes that have been encountered.
+    // Any unreached nodes are not added to the map.
+    std::unordered_map<uint32_t, NodeStatusInfo> node_status;
+    std::vector<NodeLabel> node_labels;
 
-    // Skip if already labeled - this can happen if an edge is already in
-    // adj. list and a lower cost is found
-    if (node_status[node_index].set == kPermanent) {
-      continue;
-    }
+    // Priority queue for the adjacency list
+    std::priority_queue<std::pair<float, uint32_t>, std::vector<std::pair<float, uint32_t>>,
+                        CompareCost>
+        adjset;
 
-    // Expand all edges from this node
-    auto expand_node_itr = nodes[node_index];
-    auto expanded = collect_node_edges(expand_node_itr, nodes, edges);
+    // Add node to list of node labels, set the node status and add
+    // to the adjacency set
+    uint32_t nodelabel_index = 0;
+    node_labels.emplace_back(0.0f, node_idx, node_idx);
+    node_status[node_idx] = {kTemporary, nodelabel_index};
+    adjset.push({0.0f, nodelabel_index});
+    nodelabel_index++;
 
-    // We are finished if node has RC <= rc and beyond first several edges.
-    // Have seen cases where the immediate connections are high class roads
-    // but then there are service roads (lanes) immediately after (like
-    // Twawwassen Terminal near Vancouver,BC)
-    if (n > 400 && GetBestNonFerryClass(expanded.node_edges) <= rc) {
-      break;
-    }
-    n++;
+    // Expand edges until a node connected to specified road classification
+    // is reached
+    uint32_t n = 0;
+    uint32_t label_idx = 0;
+    while (!adjset.empty()) {
+      // Get the next node from the adjacency list/priority queue. Gets its
+      // current cost and index
+      const auto& expand_node = adjset.top();
+      float current_cost = expand_node.first;
+      label_idx = expand_node.second;
+      uint32_t expand_node_idx = node_labels[label_idx].node_index;
+      adjset.pop();
 
-    // Label the node as done/permanent
-    node_status[node_index] = {kPermanent, index};
-
-    // Expand edges. Skip ferry edges and non-driveable edges (based on
-    // the inbound flag).
-    for (const auto& expandededge : expanded.node_edges) {
-      // Skip any ferry edge and any edge that includes the start node index
-      const auto& edge = expandededge.first;
-      if (edge.attributes.driveable_ferry || edge.sourcenode_ == start_node_idx ||
-          edge.targetnode_ == start_node_idx) {
+      // Skip if already labeled - this can happen if an edge is already in
+      // adj. list and a lower cost is found
+      if (node_status[expand_node_idx].set == kPermanent) {
         continue;
       }
 
-      // Skip uses other than road / other (service?)
-      const OSMWay w = *ways[edge.wayindex_];
-      if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
-          static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
-        continue;
-      }
+      // Expand all edges from this node
+      auto expand_node_itr = nodes[expand_node_idx];
+      auto expanded_bundle = collect_node_edges(expand_node_itr, nodes, edges);
 
-      // Skip non-driveable edges (based on inbound flag)
-      bool forward = (edge.sourcenode_ == node_index);
-      if (forward) {
-        if ((inbound && !edge.attributes.driveablereverse) ||
-            (!inbound && !edge.attributes.driveableforward)) {
+      // We are finished if node has RC <= rc and beyond first several edges.
+      // Have seen cases where the immediate connections are high class roads
+      // but then there are service roads (lanes) immediately after (like
+      // Twawwassen Terminal near Vancouver,BC)
+      if (n > 400 && GetBestNonFerryClass(expanded_bundle.node_edges) <= rc) {
+        break;
+      }
+      n++;
+
+      // Label the node as done/permanent
+      node_status[expand_node_idx] = {kPermanent, label_idx};
+
+      // Expand edges. Skip ferry edges and non-driveable edges (based on
+      // the inbound flag).
+      for (const auto& expandededge : expanded_bundle.node_edges) {
+        // Skip any ferry edge and any edge that includes the start node index
+        const auto& edge = expandededge.first;
+        if (edge.attributes.driveable_ferry || edge.sourcenode_ == start_node_idx ||
+            edge.targetnode_ == start_node_idx) {
           continue;
         }
-      } else {
-        if ((inbound && !edge.attributes.driveableforward) ||
-            (!inbound && !edge.attributes.driveablereverse)) {
+
+        // Skip uses other than road / other (service?)
+        const OSMWay w = *ways[edge.wayindex_];
+        if (w.use() != baldr::Use::kOther && w.use() != baldr::Use::kServiceRoad &&
+            static_cast<int>(w.use()) > static_cast<int>(baldr::Use::kTurnChannel)) {
           continue;
         }
-      }
 
-      // Get the end node. Skip if already permanently labeled or this
-      // edge is a loop
-      uint32_t endnode = forward ? edge.targetnode_ : edge.sourcenode_;
-      if (node_status[endnode].set == kPermanent || endnode == node_index) {
-        continue;
-      }
+        uint16_t edge_fwd_access = edge.fwd_access & baldr::kVehicularAccess;
+        uint16_t edge_rev_access = edge.rev_access & baldr::kVehicularAccess;
 
-      // Get cost - need the length and speed of the edge; Use a penalty if an edge is
-      // destination_only and calculate it in the cost
-      float penalty = w.destination_only() ? 300 : 0;
-      auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
-      float cost = current_cost + ((valhalla::midgard::length(shape) * 3.6f) / w.speed()) + penalty;
+        // Skip non-driveable edges and ones which are not accessible for the current access_filter
+        // (based on inbound flag)
+        bool forward = (edge.sourcenode_ == expand_node_idx);
+        if (forward) {
+          if ((inbound && !edge_rev_access) || (inbound && !(access_filter & edge.rev_access)) ||
+              (!inbound && !edge_fwd_access) || (!inbound && !(access_filter & edge.fwd_access))) {
+            continue;
+          }
+        } else {
+          if ((inbound && !edge_fwd_access) || (inbound && !(access_filter & edge.fwd_access)) ||
+              (!inbound && !edge_rev_access) || (!inbound && !(access_filter & edge.rev_access))) {
+            continue;
+          }
+        }
 
-      // Check if already in adj set - skip if cost is higher than prior path
-      if (node_status[endnode].set == kTemporary) {
-        uint32_t endnode_idx = node_status[endnode].index;
-        if (node_labels[endnode_idx].cost < cost) {
+        // Get the end node. Skip if already permanently labeled or this
+        // edge is a loop
+        uint32_t endnode = forward ? edge.targetnode_ : edge.sourcenode_;
+        if (node_status[endnode].set == kPermanent || endnode == expand_node_idx) {
           continue;
         }
+
+        // Get cost - need the length and speed of the edge; Use a penalty if an edge is
+        // destination_only and calculate it in the cost
+        float penalty = w.destination_only() ? 300 : 0;
+        auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
+        float cost = current_cost + ((valhalla::midgard::length(shape) * 3.6f) / w.speed()) + penalty;
+
+        // Check if already in adj set - skip if cost is higher than prior path
+        if (node_status[endnode].set == kTemporary) {
+          uint32_t endnode_idx = node_status[endnode].index;
+          if (node_labels[endnode_idx].cost < cost) {
+            continue;
+          }
+        }
+
+        // Add to the node labels and adjacency set. Skip if this is a loop.
+        node_labels.emplace_back(cost, endnode, expand_node_idx);
+        node_status[endnode] = {kTemporary, nodelabel_index};
+        adjset.push({cost, nodelabel_index});
+        nodelabel_index++;
       }
-
-      // Add to the node labels and adjacency set. Skip if this is a loop.
-      node_labels.emplace_back(cost, endnode, node_index);
-      node_status[endnode] = {kTemporary, nodelabel_index};
-      adjset.push({cost, nodelabel_index});
-      nodelabel_index++;
     }
-  }
 
-  // If only one label we have immediately found an edge with proper
-  // classification - or we cannot expand due to driveability
-  if (node_labels.size() == 1) {
-    LOG_DEBUG("Only 1 edge reclassified");
-    return 0;
-  }
+    // If only one label we have immediately found an edge with proper
+    // classification - or we cannot expand due to driveability
+    if (node_labels.size() == 1) {
+      LOG_DEBUG("Only 1 edge reclassified");
+      return 0;
+    }
 
-  // Trace shortest path backwards and upgrade edge classifications
-  uint32_t count = 0;
-  while (true) {
-    // Get the edge between this node and the predecessor
-    uint32_t idx = node_labels[index].node_index;
-    uint32_t pred_node = node_labels[index].pred_node_index;
-    auto expand_node_itr = nodes[idx];
-    auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
-    for (auto& edge : bundle2.node_edges) {
-      if (edge.first.sourcenode_ == pred_node || edge.first.targetnode_ == pred_node) {
-        sequence<Edge>::iterator element = edges[edge.second];
-        auto update_edge = *element;
-        if (update_edge.attributes.importance > rc) {
-          update_edge.attributes.importance = rc;
-          update_edge.attributes.reclass_ferry = true;
-          element = update_edge;
-          count++;
+    // Trace shortest path backwards and upgrade edge classifications
+    // did we find all modes in the path?
+    uint16_t path_access = baldr::kVehicularAccess;
+    while (true) {
+      // Get the edge between this node and the predecessor
+      uint32_t idx = node_labels[label_idx].node_index;
+      uint32_t pred_node = node_labels[label_idx].pred_node_index;
+      auto expand_node_itr = nodes[idx];
+      auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
+      for (auto& edge : bundle2.node_edges) {
+        bool forward = edge.first.sourcenode_ == pred_node;
+        if (forward || edge.first.targetnode_ == pred_node) {
+          sequence<Edge>::iterator element = edges[edge.second];
+          auto update_edge = *element;
+          if ((forward && inbound) || (!forward && !inbound)) {
+            path_access &= update_edge.rev_access;
+          } else if ((forward && !inbound) || (!forward && inbound)) {
+            path_access &= update_edge.fwd_access;
+          }
+          if (update_edge.attributes.importance > rc) {
+            update_edge.attributes.importance = rc;
+            update_edge.attributes.reclass_ferry = true;
+            element = update_edge;
+            edge_count++;
+          }
         }
       }
-    }
 
-    // Get the predecessor - break once we have found the start node
-    if (pred_node == node_idx) {
-      break;
+      // Get the predecessor - break once we have found the start node
+      if (pred_node == node_idx) {
+        break;
+      }
+      label_idx = node_status[pred_node].index;
     }
-    index = node_status[pred_node].index;
+    // update the overall mode access with the previous path
+    overall_access_after |= path_access;
   }
-  return count;
+
+  return edge_count;
 }
 
 // Check if the ferry included in this node bundle is short. Must be
@@ -288,9 +316,11 @@ void ReclassifyFerryConnections(const std::string& ways_file,
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
       for (const auto& edge : bundle.node_edges) {
+        uint16_t edge_fwd_access = edge.first.fwd_access & baldr::kVehicularAccess;
+        uint16_t edge_rev_access = edge.first.rev_access & baldr::kVehicularAccess;
+
         // Skip ferry edges and non-driveable edges
-        if (edge.first.attributes.driveable_ferry ||
-            (!edge.first.attributes.driveablereverse && !edge.first.attributes.driveableforward)) {
+        if (edge.first.attributes.driveable_ferry || (!edge_fwd_access && !edge_rev_access)) {
           continue;
         }
 
@@ -303,7 +333,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         // ferry. If edge is drivable both ways we need to expand it twice-
         // once with a driveable path towards the ferry and once with a
         // driveable path away from the ferry
-        if (edge.first.attributes.driveableforward == edge.first.attributes.driveablereverse) {
+        if (edge_fwd_access == edge_rev_access) {
           // Driveable in both directions - get an inbound path and an
           // outbound path.
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
@@ -312,9 +342,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                       nodes, false, rc);
         } else {
           // Check if oneway inbound to the ferry
-          bool inbound = (edge.first.sourcenode_ == node_itr.position())
-                             ? edge.first.attributes.driveablereverse
-                             : edge.first.attributes.driveableforward;
+          bool inbound =
+              (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, inbound, rc);
         }

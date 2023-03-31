@@ -1,9 +1,11 @@
+#include <optional>
+#include <unordered_map>
+
+#include <boost/format.hpp>
+#include <gtest/gtest.h>
+
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
-#include <gtest/gtest.h>
-#include <unordered_map>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -15,7 +17,7 @@ const std::unordered_map<std::string, std::string> build_config{{}};
 namespace {
 struct Waypoint {
   std::string node;
-  boost::optional<int8_t> preferred_layer;
+  std::optional<int8_t> preferred_layer;
 };
 
 } // namespace

@@ -13,6 +13,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
 #include <curl/curl.h>
@@ -28,8 +29,8 @@
 
 #include "filesystem.h"
 #include "mjolnir/admin.h"
+#include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
-#include "mjolnir/transitpbf.h"
 #include "mjolnir/util.h"
 #include "valhalla/proto/transit.pb.h"
 
@@ -317,7 +318,7 @@ void get_stop_stations(Transit& tile,
       node->set_type(static_cast<uint32_t>(NodeType::kTransitEgress));
       set_no_null(std::string, egress_pt.second, "name", "null", node->set_name);
       node->set_wheelchair_boarding(egress_pt.second.get<bool>("wheelchair_boarding", true));
-      set_no_null(uint64_t, egress_pt.second, "osm_way_id", 0, node->set_osm_way_id);
+      set_no_null(uint64_t, egress_pt.second, "osm_way_id", 0, node->set_osm_connecting_way_id);
       node->set_generated(egress_pt.second.get<bool>("generated", true));
 
       auto traversability = egress_pt.second.get<std::string>("directionality", "null");
@@ -858,7 +859,7 @@ void fetch_tiles(const ptree& pt,
       uniques.lock.lock();
       response = curler(*request, "routes");
       uniques.lock.unlock();
-      // copy routes in, keeping track of routeid to route index
+      // copy routes in, keeping track of routeindex to route index
       get_routes(tile, routes, websites, short_names, response);
       // please sir may i have some more?
       request = response.get_optional<std::string>("meta.next");

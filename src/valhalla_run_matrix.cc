@@ -1,7 +1,3 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -10,10 +6,13 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
+#include "baldr/rapidjson_utils.h"
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "config.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
@@ -145,15 +144,14 @@ int main(int argc, char* argv[]) {
 
   Api request;
   ParseApi(json_str, valhalla::Options::sources_to_targets, request);
-  const auto& options = request.options();
+  auto& options = *request.mutable_options();
 
   // parse the config
   boost::property_tree::ptree pt;
   rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
+  auto logging_subtree = pt.get_child_optional("thor.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -191,7 +189,7 @@ int main(int argc, char* argv[]) {
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status") {
+        kv.first == "status" || kv.first == "max_timedep_distance_matrix") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -204,7 +202,7 @@ int main(int argc, char* argv[]) {
   auto m = max_matrix_distance.find(routetype);
   float max_distance;
   if (m == max_matrix_distance.end()) {
-    LOG_ERROR("Could not find max_matrix_distance for " + routetype);
+    LOG_ERROR("Could not find max_matrix_distance for " + routetype + ". Using 4000 km.");
     max_distance = 4000000.0f;
   } else {
     max_distance = m->second;
@@ -247,8 +245,8 @@ int main(int argc, char* argv[]) {
   TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = tdm.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                             max_distance);
+    res = tdm.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
+                             mode_costing, mode, max_distance);
     tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();

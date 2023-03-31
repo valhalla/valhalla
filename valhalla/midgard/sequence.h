@@ -154,7 +154,7 @@ public:
 
   // create a new file to map with a given size
   void create(const std::string& new_file_name, size_t new_count, int advice = POSIX_MADV_NORMAL) {
-    auto target_size = new_count * sizeof(T);
+    decltype(stat::st_size) target_size = new_count * sizeof(T);
     struct stat s;
     if (stat(new_file_name.c_str(), &s) || s.st_size != target_size) {
       // open, create and truncate the file
@@ -669,6 +669,7 @@ struct tar {
   size_t corrupt_blocks;
 
   tar(const std::string& tar_file,
+      bool readonly = true,
       bool regular_files_only = true,
       const std::function<decltype(contents)(const std::string&, const char*, const char*, size_t)>&
           from_index = nullptr)
@@ -684,7 +685,7 @@ struct tar {
     }
 
     // map the file
-    mm.map_readonly(tar_file, s.st_size);
+    mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
 
     // determine opposite of preferred path separator (needed to update OS-specific path separator)
     const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';

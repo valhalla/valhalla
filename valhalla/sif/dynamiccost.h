@@ -90,6 +90,9 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
 
+// Maximum highway avoidance bias (modulates the highway factors based on road class)
+constexpr float kMaxHighwayBiasFactor = 8.0f;
+
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
  * the decision should be. By default allowed methods will not disallow start/end/simple
@@ -408,7 +411,7 @@ public:
       return next_pred;
     };
     auto reset_edge_status =
-        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&edgestatus](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
@@ -960,6 +963,7 @@ protected:
   bool ignore_access_{false};
   bool ignore_closures_{false};
   uint32_t top_speed_;
+  uint32_t fixed_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
@@ -1057,8 +1061,11 @@ protected:
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
+    // Set the fixed speed a vehicle can go
+    fixed_speed_ = costing_options.fixed_speed();
     // Set the top speed a vehicle wants to go
-    top_speed_ = costing_options.top_speed();
+    top_speed_ =
+        fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 

@@ -45,7 +45,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -88,7 +88,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -149,7 +149,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -184,14 +184,14 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
       ],
       "metric_lengths": [
         "<KILOMETERS> km",
-        "1 km",
+        "1 kilometr",
         "<METERS> m",
         "mniej niż 10 metrów"
       ],
@@ -241,7 +241,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -381,7 +381,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -413,7 +413,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -469,7 +469,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -569,7 +569,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -752,7 +752,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -783,7 +783,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -935,7 +935,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -985,7 +985,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1023,7 +1023,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1065,7 +1065,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1121,7 +1121,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1164,7 +1164,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1214,7 +1214,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1230,7 +1230,7 @@
         "1 milę",
         "pół mili",
         "ćwierć mili",
-        "<FEET> ft",
+        "<FEET> stóp",
         "mniej niż 10 stóp"
       ],
       "example_phrases": {
@@ -1453,7 +1453,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1496,7 +1496,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1555,7 +1555,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1646,7 +1646,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -1662,7 +1662,7 @@
         "1 milę",
         "pół mili",
         "ćwierć mili",
-        "<FEET> ft",
+        "<FEET> stóp",
         "mniej niż 10 stóp"
       ],
       "example_phrases": {
@@ -2024,7 +2024,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -2067,7 +2067,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -2112,7 +2112,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -2163,7 +2163,7 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście",
+        "przejście dla pieszych",
         "schody",
         "most",
         "tunel"
@@ -2269,8 +2269,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Wsiądź do windy.",
-        "1": "Wsiądź do windy i jedź na poziom <LEVEL>."
+        "0": "Skorzystaj z windy.",
+        "1": "Skorzystaj z windy na <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2283,8 +2283,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Wejdź na schody.",
-        "1": "Przejdź schodami na poziom <LEVEL>."
+        "0": "Użyj schodów.",
+        "1": "Skorzystaj ze schodów na <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2297,7 +2297,7 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
+        "0": "Skorzystaj z ruchomych schodów.",
         "1": "Take the escalator to <LEVEL>."
       },
       "example_phrases": {
@@ -2311,14 +2311,14 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
+        "0": "Wejdź do budynku.",
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "chodnik",
+        "ścieżka rowerowa",
+        "górski szlak rowerowy",
+        "przejście dla pieszych"
       ],
       "example_phrases": {
         "0": [
@@ -2331,14 +2331,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
+        "0": "Opuść budynek.",
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "chodnik",
+        "ścieżka rowerowa",
+        "górski szlak rowerowy",
+        "przejście dla pieszych"
       ],
       "example_phrases": {
         "0": [

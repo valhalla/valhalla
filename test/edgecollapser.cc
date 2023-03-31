@@ -136,16 +136,16 @@ TEST(EdgeCollapser, TestCollapseEdgeSimple) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";
@@ -192,16 +192,16 @@ TEST(EdgeCollapser, TestCollapseEdgeJunction) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 6) << "Should have not collapsed, leaving 6 original paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";
@@ -245,16 +245,16 @@ TEST(EdgeCollapser, TestCollapseEdgeChain) {
   std::vector<vb::GraphId> tiles;
   tiles.push_back(base_id);
 
-  vb::merge::merge(tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
-                   [](const vb::DirectedEdge*) -> bool { return true; },
-                   [&](const vb::merge::path& p) {
-                     count += 1;
-                     for (auto id : p.m_edges) {
-                       EXPECT_EQ(edges.count(id), 1)
-                           << "Edge not found - either invalid or duplicate!";
-                       edges.erase(id);
-                     }
-                   });
+  vb::merge::merge(
+      tiles, reader, [](const vb::DirectedEdge*) -> bool { return true; },
+      [](const vb::DirectedEdge*) -> bool { return true; },
+      [&](const vb::merge::path& p) {
+        count += 1;
+        for (auto id : p.m_edges) {
+          EXPECT_EQ(edges.count(id), 1) << "Edge not found - either invalid or duplicate!";
+          edges.erase(id);
+        }
+      });
 
   EXPECT_EQ(count, 2) << "Should have collapsed to 2 paths.";
   EXPECT_TRUE(edges.empty()) << "Some edges left over!";

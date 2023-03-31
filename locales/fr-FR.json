@@ -580,7 +580,7 @@
         ],
         "1": [
           "Entrez dans le rond-point et prenez la 1st sortie.",
-          "Entrez dans le rond-point et prenez la 2e sortie.",
+          "Entrez dans le rond-point et prenez la 2nd sortie.",
           "Entrez dans le rond-point et prenez la 3ème sortie.",
           "Entrez dans le rond-point et prenez la 4ème sortie.",
           "Entrez dans le rond-point et prenez la 5ème sortie.",
@@ -1171,7 +1171,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Rejoignez."
+          "Merge."
         ],
         "1": [
           "Rejoignez à gauche."
@@ -1200,8 +1200,8 @@
       },
       "example_phrases": {
         "0": [
-          "Voyage à 1 arrêt.",
-          "Voyage à 3 arrêts."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2078,7 +2078,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Tournez à gauche."
+          "Turn left."
         ],
         "1": [
           "Tournez à droite dans Flatbush Avenue."
@@ -2315,9 +2315,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "l'allée",
+        "la piste cyclable",
+        "la piste de vélo de montagne",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2335,9 +2335,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "l'allée",
+        "la piste cyclable",
+        "la piste de vélo de montagne",
         "the crosswalk"
       ],
       "example_phrases": {

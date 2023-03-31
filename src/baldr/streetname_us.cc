@@ -17,7 +17,7 @@ const std::vector<std::string> StreetNameUs::post_cardinal_dirs_{" North", " Eas
 
 StreetNameUs::StreetNameUs(const std::string& value,
                            const bool is_route_number,
-                           const boost::optional<baldr::Pronunciation>& pronunciation)
+                           const std::optional<baldr::Pronunciation>& pronunciation)
     : StreetName(value, is_route_number, pronunciation) {
 }
 

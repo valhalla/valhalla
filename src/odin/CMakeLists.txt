@@ -12,22 +12,25 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/locales.h
 
-  directionsbuilder.cc
-  maneuversbuilder.cc
   markup_formatter.cc
   narrative_dictionary.cc
-  narrative_builder_factory.cc
-  narrativebuilder.cc
-  enhancedtrippath.cc
-  maneuver.cc
   sign.cc
   signs.cc
-  util.cc
   transitrouteinfo.cc
   worker.cc)
 
+set(sources_with_warnings
+  directionsbuilder.cc
+  enhancedtrippath.cc
+  maneuver.cc
+  maneuversbuilder.cc
+  narrative_builder_factory.cc
+  narrativebuilder.cc
+  util.cc)
+
 valhalla_module(NAME odin
   SOURCES ${sources}
+  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC

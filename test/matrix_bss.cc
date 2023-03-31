@@ -209,6 +209,24 @@ TEST_F(MatrixBssTest, ManyToMany) {
       });
 }
 
+// this fails, meaning the reverse matrix tree is not the same as the AStar forward tree
+TEST_F(MatrixBssTest, DISABLED_ManyToManyMoreSources) {
+  test(
+      // sources lat - lon
+      {
+          {48.858376, 2.358229},
+          {48.859636, 2.362984},
+          {48.857826, 2.366695},
+          {48.85788, 2.36125},
+      },
+      // targets lat - lon
+      {
+          {48.865032, 2.362484},
+          {48.862484, 2.365708},
+          {48.86911, 2.36019},
+      });
+}
+
 int main(int argc, char* argv[]) {
   logging::Configure({{"type", ""}}); // silence logs
   testing::InitGoogleTest(&argc, argv);
