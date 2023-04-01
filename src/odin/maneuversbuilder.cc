@@ -250,7 +250,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(prev2curr_turn_degree) +
               " is a " + Turn::GetTypeString(Turn::GetType(prev2curr_turn_degree)));
     auto node = trip_path_->GetEnhancedNode(i);
-    for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+    for (int z = 0; z < node->intersecting_edge_size(); ++z) {
       auto intersecting_edge = node->GetIntersectingEdge(z);
       auto xturn_degree = GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading());
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
@@ -295,12 +295,12 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
             (curr_edge ? curr_edge->ToParameterString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto node = trip_path_->GetEnhancedNode(0);
-  for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+  for (int z = 0; z < node->intersecting_edge_size(); ++z) {
     auto intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
   }
   LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-  for (size_t z = 0; z < trip_path_->admin_size(); ++z) {
+  for (int z = 0; z < trip_path_->admin_size(); ++z) {
     auto admin = trip_path_->GetAdmin(z);
     LOG_TRACE("ADMIN " + std::to_string(z) + ": " + admin->ToString());
   }
