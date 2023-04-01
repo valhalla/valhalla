@@ -6,12 +6,34 @@
 namespace valhalla {
 namespace odin {
 
+#if 1
+template <class T> std::string Get_string(T item) {
+  return std::to_string(item);
+}
+
+template <> std::string Get_string(std::string item) {
+  return "\"" + item + "\"";
+}
+
+template <typename T, typename... Args>
+std::string Get_string(T item, Args... args) // recursive variadic function
+{
+  return Get_string(item) + ", " + Get_string(args...);
+}
+#endif
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string TransitRouteInfo::ToParameterString() const {
+#if 0
   const std::string delim = ", ";
+#endif
   std::string str;
   str += "{ ";
 
+#if 1
+  str += Get_string(onestop_id, block_id, trip_id, short_name, long_name, headsign, color, text_color,
+                    description, operator_onestop_id, operator_name, operator_url);
+#else
   str += GetQuotedString(onestop_id);
 
   str += delim;
@@ -46,6 +68,7 @@ std::string TransitRouteInfo::ToParameterString() const {
 
   str += delim;
   str += GetQuotedString(operator_url);
+#endif
 
   str += " }";
 
