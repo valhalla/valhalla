@@ -403,6 +403,7 @@ public:
 #endif
 
 protected:
+  /* TODO some members are not initialized */
   DirectionsLeg_Maneuver_Type type_ = DirectionsLeg_Maneuver_Type_kNone;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
