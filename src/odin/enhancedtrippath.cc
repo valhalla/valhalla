@@ -27,7 +27,7 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
-#ifdef LOGGING_LEVEL_TRACE
+#if 0
 const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
@@ -106,6 +106,9 @@ const std::string& TripLeg_Use_Name(int v) {
     throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
+#endif
+
+#ifdef LOGGING_LEVEL_TRACE
 
 const std::string& TripLeg_TravelMode_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -165,7 +168,9 @@ const std::string& TripLeg_TransitType_Name(int v) {
     throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
+#endif
 
+#if 0
 const std::string& TripLeg_CycleLane_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kNoCycleLane"},
@@ -716,6 +721,7 @@ EnhancedTripLeg_Edge::ActivateTurnLanes(uint16_t turn_lane_direction,
   }
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;
   str.reserve(256);
@@ -910,6 +916,7 @@ std::string EnhancedTripLeg_Edge::ToString() const {
 
   return str;
 }
+#endif
 
 std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
   std::string str;
@@ -1036,6 +1043,7 @@ std::string EnhancedTripLeg_Edge::TurnLanesToString() const {
   return str;
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::StreetNamesToString(
     const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const {
   std::string str;
@@ -1072,7 +1080,6 @@ std::string EnhancedTripLeg_Edge::SignElementsToString(
   return str;
 }
 
-#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Edge::ToParameterString() const {
   const std::string delim = ", ";
   std::string str;
@@ -1376,6 +1383,7 @@ bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
   return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
   std::string str;
   str.reserve(128);
@@ -1409,6 +1417,7 @@ std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
 
   return str;
 }
+#endif
 
 ::valhalla::TripLeg_Traversability
 EnhancedTripLeg_IntersectingEdge::GetTravelModeTraversability(const TravelMode travel_mode) const {
@@ -1994,6 +2003,7 @@ bool EnhancedTripLeg_Node::IsElevator() const {
   return (type() == TripLeg_Node_Type_kElevator);
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);
@@ -2041,6 +2051,7 @@ std::string EnhancedTripLeg_Node::ToString() const {
 
   return str;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // EnhancedTripLeg_Admin
@@ -2049,6 +2060,7 @@ EnhancedTripLeg_Admin::EnhancedTripLeg_Admin(TripLeg_Admin* mutable_admin)
     : mutable_admin_(mutable_admin) {
 }
 
+#ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Admin::ToString() const {
   std::string str;
   str.reserve(256);
@@ -2067,6 +2079,7 @@ std::string EnhancedTripLeg_Admin::ToString() const {
 
   return str;
 }
+#endif
 
 } // namespace odin
 } // namespace valhalla

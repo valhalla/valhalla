@@ -433,7 +433,9 @@ public:
                                       const DirectionsLeg_Maneuver_Type& curr_maneuver_type,
                                       uint16_t activated_max = std::numeric_limits<uint16_t>::max());
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
+#endif
 
   std::string TurnLanesToString() const;
 
@@ -444,13 +446,13 @@ public:
 protected:
   TripLeg_Edge* mutable_edge_;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
   std::string SignElementsToString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements) const;
 
-#ifdef LOGGING_LEVEL_TRACE
   std::string StreetNamesToParameterString(
       const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>& street_names) const;
 
@@ -513,7 +515,9 @@ public:
 
   bool IsHighway() const;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
+#endif
 
 protected:
   ::valhalla::TripLeg_Traversability GetTravelModeTraversability(const TravelMode travel_mode) const;
@@ -740,7 +744,9 @@ public:
   bool IsBuildingEntrance() const;
   bool IsElevator() const;
 
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
+#endif
 
 protected:
   TripLeg_Node* mutable_node_;
@@ -765,8 +771,9 @@ public:
   const std::string& state_text() const {
     return mutable_admin_->state_text();
   }
-
+#ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
+#endif
 
 protected:
   TripLeg_Admin* mutable_admin_;
