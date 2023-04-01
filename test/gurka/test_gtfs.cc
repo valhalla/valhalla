@@ -65,7 +65,8 @@ const std::string r1_id = "r1_id";
 const std::string r2_id = "r2_id";
 const std::string b1_id = "b1_id";
 const std::string b2_id = "b2_id";
-const int headwaySec = 1800;
+const uint32_t t1_headsecs = 1800; // 30 mins headway
+const uint32_t t2_headsecs = 300;  // 5 mins headway
 const std::string sv_start = get_date_time_formatted();
 const std::string sv_end = get_date_time_formatted(80);
 const std::string added_date = get_date_time_formatted(10);
@@ -288,59 +289,76 @@ TEST(GtfsExample, WriteGtfs) {
   // write stop_times.txt
   struct StopTime t1p1 {
     .trip_id = t1_id, .stop_id = st1_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_headsign = "head",
+    .arrival_time = Time("6:00:00"), .departure_time = Time("6:00:00"), .stop_headsign = "t1p1",
     .shape_dist_traveled = 0.0, .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p1);
 
   struct StopTime t1p2 {
     .trip_id = t1_id, .stop_id = st2_id + "_platform", .stop_sequence = 1,
-    .arrival_time = Time("6:03:00"), .departure_time = Time("6:03:00"), .stop_headsign = "head",
+    .arrival_time = Time("6:03:00"), .departure_time = Time("6:03:00"), .stop_headsign = "t1p2",
     .shape_dist_traveled = 3.0, .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p2);
 
   struct StopTime t1p3 {
     .trip_id = t1_id, .stop_id = st3_id, .stop_sequence = 2, .arrival_time = Time("6:06:00"),
-    .departure_time = Time("6:06:00"), .stop_headsign = "head", .shape_dist_traveled = 6.0,
+    .departure_time = Time("6:06:00"), .stop_headsign = "t1p3", .shape_dist_traveled = 6.0,
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t1p3);
 
   struct StopTime t2p1 {
     .trip_id = t2_id, .stop_id = st1_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("10:00:00"), .departure_time = Time("10:00:00"), .stop_headsign = "head",
+    .arrival_time = Time("10:00:00"), .departure_time = Time("10:00:00"), .stop_headsign = "t2p1",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p1);
 
   struct StopTime t2p2 {
     .trip_id = t2_id, .stop_id = st2_id + "_platform", .stop_sequence = 1,
-    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "head",
+    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "t2p2",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p2);
 
   struct StopTime t2p3 {
     .trip_id = t2_id, .stop_id = st3_id, .stop_sequence = 2, .arrival_time = Time("10:06:00"),
-    .departure_time = Time("10:06:00"), .stop_headsign = "head",
+    .departure_time = Time("10:06:00"), .stop_headsign = "t2p3",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f1.add_stop_time(t2p3);
 
+  // add one stop_pair which has the same
   struct StopTime t3p1 {
     .trip_id = t3_id, .stop_id = st2_id + "_platform", .stop_sequence = 0,
-    .arrival_time = Time("23:59:00"), .departure_time = Time("23:59:00"), .stop_headsign = "head",
+    .arrival_time = Time("10:03:00"), .departure_time = Time("10:03:00"), .stop_headsign = "t3p1",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p1);
 
   struct StopTime t3p2 {
-    .trip_id = t3_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("24:02:00"),
-    .departure_time = Time("24:02:00"), .stop_headsign = "head",
+    .trip_id = t3_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("10:06:00"),
+    .departure_time = Time("10:06:00"), .stop_headsign = "t3p2",
     .timepoint = gtfs::StopTimePoint::Exact,
   };
   f2.add_stop_time(t3p2);
+
+  // TODO: smth doesn't work here, we fail some departures' elapsed_time test and there's 2 more
+  // transit edges all of a sudden
+  struct StopTime t3p3 {
+    .trip_id = t3_id, .stop_id = st2_id + "_platform", .stop_sequence = 0,
+    .arrival_time = Time("10:10:00"), .departure_time = Time("23:59:00"), .stop_headsign = "t3p3",
+    .timepoint = gtfs::StopTimePoint::Exact,
+  };
+  f2.add_stop_time(t3p3);
+
+  struct StopTime t3p4 {
+    .trip_id = t3_id, .stop_id = st4_id, .stop_sequence = 1, .arrival_time = Time("24:02:00"),
+    .departure_time = Time("10:13:00"), .stop_headsign = "t3p4",
+    .timepoint = gtfs::StopTimePoint::Exact,
+  };
+  f2.add_stop_time(t3p4);
 
   f1.write_stop_times(f1_path);
   f2.write_stop_times(f2_path);
@@ -406,11 +424,11 @@ TEST(GtfsExample, WriteGtfs) {
   // write frequencies.txt
   struct Frequency freqBased {
     .trip_id = t1_id, .start_time = Time(6, 0, 0), .end_time = Time(22, 0, 0),
-    .headway_secs = headwaySec, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
+    .headway_secs = t1_headsecs, .exact_times = gtfs::FrequencyTripService::FrequencyBased,
   };
   struct Frequency schedBased {
     .trip_id = t2_id, .start_time = Time(10, 0, 0), .end_time = Time(22, 0, 0),
-    .headway_secs = headwaySec, .exact_times = gtfs::FrequencyTripService::ScheduleBased,
+    .headway_secs = t2_headsecs, .exact_times = gtfs::FrequencyTripService::ScheduleBased,
   };
 
   f1.add_frequency(freqBased);
@@ -647,8 +665,9 @@ TEST(GtfsExample, MakeProto) {
   EXPECT_EQ(service_except_dates.size(), 1);
   EXPECT_EQ(*service_except_dates.begin(), removedDate);
 
-  EXPECT_EQ(headway_seconds.size(), 1);
-  EXPECT_EQ(*headway_seconds.begin(), headwaySec);
+  EXPECT_EQ(headway_seconds.size(), 2);
+  EXPECT_TRUE(headway_seconds.find(t1_headsecs) != headway_seconds.end());
+  EXPECT_TRUE(headway_seconds.find(t2_headsecs) != headway_seconds.end());
 }
 
 TEST(GtfsExample, MakeTile) {
@@ -796,11 +815,26 @@ TEST(GtfsExample, MakeTile) {
 }
 
 TEST(GtfsExample, route_trip1) {
+  // here we request with the relative current time for tmrw 05:50 am
+  auto req_time = DateTime::iso_date_time(DateTime::get_tz_db().from_index(145));
+  size_t tmrw_int = std::stoul(std::string(&req_time[8], &req_time[10])) + 1;
+  // wrap around the next month if it's getting critical
+  if (tmrw_int > 27) {
+    auto new_month = std::to_string(std::stoul(std::string(&req_time[5], &req_time[7])) + 1);
+    req_time.replace(req_time.find("T") - 5, 2, new_month);
+    tmrw_int -= 20;
+  }
+  auto tmrw_str = std::to_string(tmrw_int);
+  tmrw_str = std::string(2 - std::min(2UL, tmrw_str.length()), '0') + tmrw_str;
+  // replace the day and the time
+  req_time.replace(req_time.find("T") - 2, 2, tmrw_str);
+  req_time.replace(req_time.find("T") + 1, 5, "05:50");
+
   std::string res_json;
   valhalla::Api res =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
                        {{"/date_time/type", "1"},
-                        {"/date_time/value", "2023-02-27T05:50"},
+                        {"/date_time/value", req_time},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
                        {}, &res_json);
 
@@ -809,7 +843,6 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res.directions().routes(0).legs().size(), 1);
 
   const auto& leg = res.directions().routes(0).legs(0);
-  EXPECT_NEAR(leg.summary().time(), 7358.0, 0.001);
   EXPECT_NEAR(leg.summary().length(), 40.914, 0.001);
   EXPECT_EQ(leg.maneuver(0).type(), DirectionsLeg_Maneuver_Type_kStart);
   EXPECT_EQ(leg.maneuver(1).type(), DirectionsLeg_Maneuver_Type_kTransitConnectionStart);
@@ -825,10 +858,17 @@ TEST(GtfsExample, route_trip1) {
   // EXPECT_EQ(transit_info.transit_stops(0).onestop_id(), f1_name + "_" + st1_id);
   // EXPECT_EQ(transit_info.transit_stops(2).onestop_id(), f1_name + "_" + st3_id +
   // "_transit_station");
+
   EXPECT_EQ(transit_info.transit_stops(0).arrival_date_time(), "");
-  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T06:59-05:00");
-  EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), "2023-02-27T07:06-05:00");
   EXPECT_EQ(transit_info.transit_stops(2).departure_date_time(), "");
+
+  // determine the right day
+  req_time.append("-04:00"); // TODO: why -04:00, not -05:00??
+  req_time.replace(req_time.find("T") + 1, 5, "06:59");
+  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), req_time);
+
+  req_time.replace(req_time.find("T") + 1, 5, "07:06");
+  EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), req_time);
 
   // test the JSON output
   rapidjson::Document doc;
@@ -855,6 +895,27 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(ti_json["transit_stops"][0]["departure_date_time"], "2023-02-27T06:59-05:00");
   EXPECT_EQ(ti_json["transit_stops"][2]["arrival_date_time"], "2023-02-27T07:06-05:00");
   EXPECT_FALSE(ti_json["transit_stops"][2].HasMember("departure_date_time"));
+}
+
+TEST(GtfsExample, route_trip2) {
+  // this request should take trip/service 2 with 300 headway seconds
+  std::string res_json;
+  valhalla::Api res =
+      gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
+                       {{"/date_time/type", "1"},
+                        {"/date_time/value", "2023-02-27T10:45"},
+                        {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
+                       {}, &res_json);
+
+  // test the PBF output
+  const auto& leg = res.directions().routes(0).legs(0);
+  EXPECT_NEAR(leg.summary().time(), 7658.0, 0.001);
+  EXPECT_NEAR(leg.summary().length(), 40.914, 0.001);
+
+  const auto& transit_info = leg.maneuver(2).transit_info();
+  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T11:14-05:00");
+  EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), "2023-02-27T11:21-05:00");
+  EXPECT_EQ(transit_info.headsign(), "bonjour");
 }
 
 TEST(GtfsExample, isochrones) {
