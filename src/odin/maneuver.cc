@@ -37,6 +37,33 @@ const std::unordered_map<int, std::string>
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
 #ifdef LOGGING_LEVEL_TRACE
+const std::string& TrailType_Name(int v) {
+  static const std::unordered_map<int, std::string> values{{0, "kNone"},
+                                                           {1, "kNamedCycleway"},
+                                                           {2, "kUnnamedCycleway"},
+                                                           {3, "kNamedWalkway"},
+                                                           {4, "kUnnamedWalkway"},
+                                                           {5, "kNamedMtbTrail"},
+                                                           {6, "kUnnamedMtbTrail"}};
+  auto f = values.find(v);
+  if (f == values.cend())
+    throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
+  return f->second;
+}
+#endif
+} // namespace
+
+#if 0
+/* Using detail namespace because there are functions on the global space with the same name on
+ * valhalla/proto/directions.pb.h
+ * But
+ * Currently the compiler is not considering these functions because of the ambiguity
+ * TODO
+ * To use these functions:
+ * prefix the calls with detail::
+ */
+#ifdef LOGGING_LEVEL_TRACE
+namespace detail {
 const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
   static const std::unordered_map<int, std::string> values{{0, "kNone"},
                                                            {1, "kStart"},
@@ -100,23 +127,9 @@ const std::string& DirectionsLeg_Maneuver_CardinalDirection_Name(int v) {
         "Missing DirectionsLeg_Maneuver_CardinalDirection_Name value in protobuf enum to string");
   return f->second;
 }
-
-const std::string& TrailType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNone"},
-                                                           {1, "kNamedCycleway"},
-                                                           {2, "kUnnamedCycleway"},
-                                                           {3, "kNamedWalkway"},
-                                                           {4, "kUnnamedWalkway"},
-                                                           {5, "kNamedMtbTrail"},
-                                                           {6, "kUnnamedMtbTrail"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
-  return f->second;
-}
+} // namespace detail
 #endif
-
-} // namespace
+#endif
 
 namespace valhalla {
 namespace odin {
