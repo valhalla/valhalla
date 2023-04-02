@@ -259,15 +259,5 @@ std::size_t strlen_utf8(const std::string& str) {
   return length;
 }
 
-#ifdef LOGGING_LEVEL_TRACE
-template <> std::string Get_String(const std::string separator, const std::string item) {
-  return (item == separator) ? "" : "\"" + item + "\"";
-}
-
-template <> std::string Get_String(const std::string, const char* item) {
-  return std::string(item);
-}
-#endif
-
 } // namespace odin
 } // namespace valhalla

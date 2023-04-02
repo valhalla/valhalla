@@ -104,15 +104,25 @@ std::size_t strlen_utf8(const std::string& str);
 
 #ifdef LOGGING_LEVEL_TRACE
 /** TODO document code **/
-template <class T> std::string Get_String(const std::string, const T item) {
+template <class T> inline std::string Get_String(const std::string, const T item) {
   return std::to_string(item);
 }
-template <> std::string Get_String(const std::string, const std::string);
-template <> std::string Get_String(const std::string, const char*);
+
+template <> inline std::string Get_String(const std::string separator, const std::string item) {
+  return (item == separator) ? "" : "\"" + item + "\"";
+}
+
+template <> inline std::string Get_String(const std::string, const char* item) {
+  return std::string(item);
+}
 
 template <typename T, typename... Args>
-std::string Get_String(const std::string separator, const T item, Args... args) {
-  return Get_String(separator, item) + separator + Get_String(separator, args...);
+inline std::string&
+Get_String(std::string& result, const std::string separator, const T item, Args... args) {
+  result += Get_String(separator, item);
+  result += separator;
+  Get_String(result, separator, args...);
+  return result;
 }
 #endif
 
