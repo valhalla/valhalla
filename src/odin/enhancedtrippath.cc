@@ -726,188 +726,65 @@ std::string EnhancedTripLeg_Edge::ToString() const {
   std::string str;
   str.reserve(256);
 
-  str += "name=";
-  if (name_size() == 0) {
-    str += "unnamed";
-  } else {
-    str += StreetNamesToString(this->name());
-  }
-
-  str += " | length=";
-  str += std::to_string(length_km());
-
-  str += " | speed=";
-  str += std::to_string(speed());
-
-  str += " | road_class=";
-  str += std::to_string(road_class());
-
-  str += " | begin_heading=";
-  str += std::to_string(begin_heading());
-
-  str += " | end_heading=";
-  str += std::to_string(end_heading());
-
-  str += " | begin_shape_index=";
-  str += std::to_string(begin_shape_index());
-
-  str += " | end_shape_index=";
-  str += std::to_string(end_shape_index());
-
-  str += " | traversability=";
-  str += std::to_string(traversability());
-
-  str += " | use=";
-  str += std::to_string(use());
-
-  str += " | toll=";
-  str += std::to_string(toll());
-
-  str += " | unpaved=";
-  str += std::to_string(unpaved());
-
-  str += " | tunnel=";
-  str += std::to_string(tunnel());
-
-  str += " | bridge=";
-  str += std::to_string(bridge());
-
-  str += " | roundabout=";
-  str += std::to_string(roundabout());
-
-  str += " | internal_intersection=";
-  str += std::to_string(internal_intersection());
+  Get_String(str, "",
+             "name=", name_size() == 0 ? "unnamed" : StreetNamesToString(this->name()).c_str(),
+             " | length=", length_km(), " | speed=", speed(), " | road_class=", road_class(),
+             " | begin_heading=", begin_heading(), " | end_heading=", end_heading(),
+             " | begin_shape_index=", begin_shape_index(), " | end_shape_index=", end_shape_index(),
+             " | traversability=", traversability(), " | use=", use(), " | toll=", toll(),
+             " | unpaved=", unpaved(), " | tunnel=", tunnel(), " | bridge=", bridge(),
+             " | roundabout=", roundabout(), " | internal_intersection=", internal_intersection());
 
   // Process exits, if needed
   if (this->has_sign()) {
-    str += " | exit_numbers=";
-    str += SignElementsToString(this->sign().exit_numbers());
-
-    str += " | exit_onto_streets=";
-    str += SignElementsToString(this->sign().exit_onto_streets());
-
-    str += " | exit_toward_locations=";
-    str += SignElementsToString(this->sign().exit_toward_locations());
-
-    str += " | exit_names=";
-    str += SignElementsToString(this->sign().exit_names());
-
-    str += " | guide_onto_streets=";
-    str += SignElementsToString(this->sign().guide_onto_streets());
-
-    str += " | guide_toward_locations=";
-    str += SignElementsToString(this->sign().guide_toward_locations());
-
-    str += " | junction_names=";
-    str += SignElementsToString(this->sign().junction_names());
-
-    str += " | guidance_view_junctions=";
-    str += SignElementsToString(this->sign().guidance_view_junctions());
-
-    str += " | guidance_view_signboards=";
-    str += SignElementsToString(this->sign().guidance_view_signboards());
+    Get_String(str, "", " | exit_numbers=", SignElementsToString(this->sign().exit_numbers()).c_str(),
+               " | exit_onto_streets=",
+               SignElementsToString(this->sign().exit_onto_streets()).c_str(),
+               " | exit_toward_locations=",
+               SignElementsToString(this->sign().exit_toward_locations()).c_str(),
+               " | exit_names=", SignElementsToString(this->sign().exit_names()).c_str(),
+               " | guide_onto_streets=",
+               SignElementsToString(this->sign().guide_onto_streets()).c_str(),
+               " | guide_toward_locations=",
+               SignElementsToString(this->sign().guide_toward_locations()).c_str(),
+               " | junction_names=", SignElementsToString(this->sign().junction_names()).c_str(),
+               " | guidance_view_junctions=",
+               SignElementsToString(this->sign().guidance_view_junctions()).c_str(),
+               " | guidance_view_signboards=",
+               SignElementsToString(this->sign().guidance_view_signboards()).c_str());
   }
 
-  str += " | travel_mode=";
-  str += std::to_string(travel_mode());
+  Get_String(str, "", " | travel_mode=", travel_mode(),
 
-  // NOTE: Current PopulateEdge implementation
+             /* NOTE: Current PopulateEdge implementation */
 
-  str += " | vehicle_type=";
-  str += std::to_string(vehicle_type());
-
-  str += " | pedestrian_type=";
-  str += std::to_string(pedestrian_type());
-
-  str += " | bicycle_type=";
-  str += std::to_string(bicycle_type());
-
-  str += " | transit_type=";
-  str += std::to_string(transit_type());
-
-  str += " | drive_on_right=";
-  str += std::to_string(drive_on_right());
-
-  str += " | surface=";
-  str += std::to_string(surface());
+             " | vehicle_type=", vehicle_type(), " | pedestrian_type=", pedestrian_type(),
+             " | bicycle_type=", bicycle_type(), " | transit_type=", transit_type(),
+             " | drive_on_right=", drive_on_right(), " | surface=", surface());
 
   // Process transit route info, if needed
   if (has_transit_route_info()) {
-    str += " | transit_route_info.onestop_id=";
-    str += transit_route_info().onestop_id();
-
-    str += " | transit_route_info.block_id=";
-    str += std::to_string(transit_route_info().block_id());
-
-    str += " | transit_route_info.trip_id=";
-    str += std::to_string(transit_route_info().trip_id());
-
-    str += " | transit_route_info.short_name=";
-    str += transit_route_info().short_name();
-
-    str += " | transit_route_info.long_name=";
-    str += transit_route_info().long_name();
-
-    str += " | transit_route_info.headsign=";
-    str += transit_route_info().headsign();
-
-    str += " | transit_route_info.color=";
-    str += std::to_string(transit_route_info().color());
-
-    str += " | transit_route_info.text_color=";
-    str += std::to_string(transit_route_info().text_color());
-
-    str += " | transit_route_info.description=";
-    str += transit_route_info().description();
-
-    str += " | transit_route_info.operator_onestop_id=";
-    str += transit_route_info().operator_onestop_id();
-
-    str += " | transit_route_info.operator_name=";
-    str += transit_route_info().operator_name();
-
-    str += " | transit_route_info.operator_url=";
-    str += transit_route_info().operator_url();
+    Get_String(str, "", " | transit_route_info.onestop_id=", transit_route_info().onestop_id(),
+               " | transit_route_info.block_id=", transit_route_info().block_id(),
+               " | transit_route_info.trip_id=", transit_route_info().trip_id(),
+               " | transit_route_info.short_name=", transit_route_info().short_name(),
+               " | transit_route_info.long_name=", transit_route_info().long_name(),
+               " | transit_route_info.headsign=", transit_route_info().headsign(),
+               " | transit_route_info.color=", transit_route_info().color(),
+               " | transit_route_info.text_color=", transit_route_info().text_color(),
+               " | transit_route_info.description=", transit_route_info().description(),
+               " | transit_route_info.operator_onestop_id=",
+               transit_route_info().operator_onestop_id(),
+               " | transit_route_info.operator_name=", transit_route_info().operator_name(),
+               " | transit_route_info.operator_url=", transit_route_info().operator_url());
   }
 
-  str += " | id=";
-  str += std::to_string(id());
-
-  str += " | way_id=";
-  str += std::to_string(way_id());
-
-  str += " | weighted_grade=";
-  str += std::to_string(weighted_grade());
-
-  str += " | max_upward_grade=";
-  str += std::to_string(max_upward_grade());
-
-  str += " | max_downward_grade=";
-  str += std::to_string(max_downward_grade());
-
-  str += " | lane_count=";
-  str += std::to_string(lane_count());
-
-  str += " | cycle_lane=";
-  str += std::to_string(cycle_lane());
-
-  str += " | bicycle_network=";
-  str += std::to_string(bicycle_network());
-
-  str += " | sidewalk=";
-  str += std::to_string(sidewalk());
-
-  str += " | density=";
-  str += std::to_string(density());
-
-  str += " | speed_limit=";
-  str += std::to_string(speed_limit());
-
-  str += " | truck_speed=";
-  str += std::to_string(truck_speed());
-
-  str += " | truck_route=";
-  str += std::to_string(truck_route());
+  Get_String(str, "", " | id=", id(), " | way_id=", way_id(), " | weighted_grade=", weighted_grade(),
+             " | max_upward_grade=", max_upward_grade(),
+             " | max_downward_grade=", max_downward_grade(), " | lane_count=", lane_count(),
+             " | cycle_lane=", cycle_lane(), " | bicycle_network=", bicycle_network(),
+             " | sidewalk=", sidewalk(), " | density=", density(), " | speed_limit=", speed_limit(),
+             " | truck_speed=", truck_speed(), " | truck_route=", truck_route());
 
   if (turn_lanes_size() > 0) {
     str += " | turn_lanes=";
@@ -2008,46 +1885,25 @@ std::string EnhancedTripLeg_Node::ToString() const {
   std::string str;
   str.reserve(256);
 
-  str += "elapsed_time=";
-  str += std::to_string(elapsed_time());
-
-  str += " | admin_index=";
-  str += std::to_string(admin_index());
-
-  str += " | type=";
-  str += std::to_string(type());
-
-  str += " | fork=";
-  str += std::to_string(fork());
+  Get_String(str, "", "elapsed_time=", elapsed_time(), " | admin_index=", admin_index(),
+             " | type=", type(), " | fork=", fork());
 
   if (has_transit_platform_info()) {
-    str += " | transit_platform_info.type=";
-    str += std::to_string(transit_platform_info().type());
-
-    str += " | transit_platform_info.onestop_id=";
-    str += transit_platform_info().onestop_id();
-
-    str += " | transit_platform_info.name=";
-    str += transit_platform_info().name();
-
-    str += " | transit_platform_info.arrival_date_time=";
-    str += transit_platform_info().arrival_date_time();
-
-    str += " | transit_platform_info.departure_date_time=";
-    str += transit_platform_info().departure_date_time();
-
-    str += " | transit_platform_info.assumed_schedule()=";
-    str += std::to_string(transit_platform_info().assumed_schedule());
-
-    str += " | transit_platform_info.station_onestop_id=";
-    str += transit_platform_info().station_onestop_id();
-
-    str += " | transit_platform_info.station_name=";
-    str += transit_platform_info().station_name();
+    Get_String(str, "", " | transit_platform_info.type=", transit_platform_info().type(),
+               " | transit_platform_info.onestop_id=", transit_platform_info().onestop_id(),
+               " | transit_platform_info.name=", transit_platform_info().name().c_str(),
+               " | transit_platform_info.arrival_date_time=",
+               transit_platform_info().arrival_date_time(),
+               " | transit_platform_info.departure_date_time=",
+               transit_platform_info().departure_date_time(),
+               " | transit_platform_info.assumed_schedule()=",
+               transit_platform_info().assumed_schedule(),
+               " | transit_platform_info.station_onestop_id=",
+               transit_platform_info().station_onestop_id(),
+               " | transit_platform_info.station_name=", transit_platform_info().station_name());
   }
 
-  str += " | time_zone=";
-  str += time_zone();
+  Get_String(str, "", " | time_zone=", time_zone());
 
   return str;
 }
@@ -2062,8 +1918,11 @@ EnhancedTripLeg_Admin::EnhancedTripLeg_Admin(TripLeg_Admin* mutable_admin)
 
 #ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Admin::ToString() const {
-  return Get_String("", "country_code=", country_code(), " | country_text=", country_text().c_str(),
-                    " | state_code=", state_code(), " | state_text=", state_text().c_str());
+  std::string str;
+  str.reserve(256);
+  return Get_String(str, "", "country_code=", country_code(),
+                    " | country_text=", country_text().c_str(), " | state_code=", state_code(),
+                    " | state_text=", state_text().c_str());
 }
 #endif
 
