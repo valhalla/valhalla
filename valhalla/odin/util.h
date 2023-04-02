@@ -102,6 +102,20 @@ size_t get_word_count(const std::string& street_name);
 
 std::size_t strlen_utf8(const std::string& str);
 
+#ifdef LOGGING_LEVEL_TRACE
+/** TODO document code **/
+template <class T> std::string Get_String(std::string, T item) {
+  return std::to_string(item);
+}
+template <> std::string Get_String(std::string, std::string );
+template <> std::string Get_String(std::string, const char*);
+
+template <typename T, typename... Args>
+std::string Get_String(std::string separator, T item, Args... args) {
+  return Get_String(separator, item) + separator + Get_String(separator, args...);
+}
+#endif
+
 } // namespace odin
 } // namespace valhalla
 #endif // VALHALLA_ODIN_UTIL_H_
