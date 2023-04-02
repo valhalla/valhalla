@@ -2062,22 +2062,8 @@ EnhancedTripLeg_Admin::EnhancedTripLeg_Admin(TripLeg_Admin* mutable_admin)
 
 #ifdef LOGGING_LEVEL_TRACE
 std::string EnhancedTripLeg_Admin::ToString() const {
-  std::string str;
-  str.reserve(256);
-
-  str += "country_code=";
-  str += country_code();
-
-  str += " | country_text=";
-  str += country_text();
-
-  str += " | state_code=";
-  str += state_code();
-
-  str += " | state_text=";
-  str += state_text();
-
-  return str;
+  return Get_String("", "country_code=", country_code(), " | country_text=", country_text().c_str(),
+                    " | state_code=", state_code(), " | state_text=", state_text().c_str());
 }
 #endif
 
