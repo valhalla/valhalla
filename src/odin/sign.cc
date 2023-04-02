@@ -38,17 +38,7 @@ const std::optional<baldr::Pronunciation>& Sign::pronunciation() const {
 
 #ifdef LOGGING_LEVEL_TRACE
 std::string Sign::ToParameterString() const {
-  const std::string delim = ", ";
-  std::string str;
-  str += "std::make_tuple(";
-  str += GetQuotedString(text_);
-  str += delim;
-  str += std::to_string(is_route_number_);
-  str += delim;
-  str += std::to_string(consecutive_count_);
-  str += ")";
-
-  return str;
+  return "std::make_tuple(" + Get_String(", ", text_, is_route_number_, consecutive_count_) + ")";
 }
 #endif
 
