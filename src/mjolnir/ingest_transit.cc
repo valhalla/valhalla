@@ -423,6 +423,7 @@ bool write_stop_pair(
 
   const auto& currTrip = feed.get_trip(tile_tripId);
   const auto& trip_calendar = feed.get_calendar(currTrip->service_id);
+  const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
   if (!currTrip || !trip_calendar) {
     LOG_ERROR("Feed " + feed_trip.feed + ", trip ID" + tile_tripId +
               " can't be found or has no calendar.txt entry, skipping...");
@@ -479,7 +480,6 @@ bool write_stop_pair(
       service_dow->Add(trip_calendar->saturday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->sunday == gtfs::CalendarAvailability::Available);
 
-      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
       bool had_added_date = false;
       for (const auto& cal_date_item : trip_calDates) {
         auto d = to_local_pivot_sec(cal_date_item.date.get_raw_date());
