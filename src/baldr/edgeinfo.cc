@@ -110,12 +110,8 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
-        try {
-          if (IsNameTag(name[0])) {
-            name_type_pairs.push_back({name.substr(1), false});
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        if (IsNameTag(name[0])) {
+          name_type_pairs.push_back({name.substr(1), false});
         }
       } else
         throw std::runtime_error("GetNames: offset exceeds size of text list");
@@ -185,12 +181,8 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;
-        try {
-          if (IsNameTag(name[0])) {
-            name_type_pairs.push_back({name.substr(1), false, static_cast<uint8_t>(name.at(0))});
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        if (IsNameTag(name[0])) {
+          name_type_pairs.push_back({name.substr(1), false, static_cast<uint8_t>(name.at(0))});
         }
       } else
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
