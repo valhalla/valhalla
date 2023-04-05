@@ -9,9 +9,18 @@
 #include "test.h"
 #include <gtest/gtest.h>
 
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/polygon.hpp>
+
+using point_type = boost::geometry::model::d2::point_xy<double>;
+using polygon_type = boost::geometry::model::polygon<point_type>;
+using boost::geometry::within;
+
 using namespace gtfs;
 using namespace valhalla;
 using namespace std::chrono;
+using rp = rapidjson::Pointer;
 
 // since writing GTFS feeds with C++ is sooo annoying, we'll have some var templates, e.g.
 // sv1_id: service 1, ID
@@ -26,6 +35,32 @@ using namespace std::chrono;
 // st: station
 // sv: service
 // t: trip
+
+std::vector<PointLL> polygon_from_geojson(const std::string& geojson) {
+  rapidjson::Document response;
+  response.Parse(geojson);
+
+  auto feature_count = rp("/features").Get(response)->GetArray().Size();
+  for (size_t i = 0; i < feature_count; ++i) {
+    std::string type =
+        rp("/features/" + std::to_string(i) + "/geometry/type").Get(response)->GetString();
+
+    if (type != "Point") {
+      auto geom = rp("/features/" + std::to_string(i) + "/geometry/coordinates" +
+                     (type == "Polygon" ? "/0" : ""))
+                      .Get(response)
+                      ->GetArray();
+      std::vector<PointLL> res;
+      res.reserve(geom.Size());
+      for (size_t j = 0; j < geom.Size(); ++j) {
+        auto coord = geom[j].GetArray();
+        res.emplace_back(coord[0].GetDouble(), coord[1].GetDouble());
+      }
+      return res;
+    }
+  }
+  return {};
+}
 
 const auto NOW = system_clock::now();
 // dynamically get today's date so we don't fail the test at some point
@@ -93,7 +128,7 @@ const std::string removed_date = get_date_time_formatted(20);
 const std::string ascii_map = R"(
         a******************************b********d
         *                              *        *
- A---B--1------------------------g--C--2---D    *
+ A---B--1-------------C----------g--D--2---E    *
                                        *   |    *
                                        *   |    *
                                        *   |    *
@@ -102,19 +137,17 @@ const std::string ascii_map = R"(
                                        *   |
                                        c***3
                                            |
-                                           E
+                                           F
                                            |
                                            h
                                            |
-                                           F
+                                           G
     )";
 
 // TODO: cant get higher road classes to allow egress/ingress connections, no ped access?
-const gurka::ways ways = {
-    {"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
-    {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
-    {"EF", {{"highway", "primary"}}},
-};
+const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
+                          {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
+                          {"EF", {{"highway", "primary"}}}, {"FG", {{"highway", "primary"}}}};
 
 boost::property_tree::ptree get_config() {
 
@@ -812,8 +845,8 @@ TEST(GtfsExample, MakeTile) {
   }
 
   EXPECT_EQ(transit_nodes, 15);
-  EXPECT_EQ(uses[Use::kRoad], 10);
-  EXPECT_EQ(uses[Use::kTransitConnection], 18);
+  EXPECT_EQ(uses[Use::kRoad], 12);
+  EXPECT_EQ(uses[Use::kTransitConnection], 20);
   EXPECT_EQ(uses[Use::kPlatformConnection], 10);
   EXPECT_EQ(uses[Use::kEgressConnection], 10);
   // TODO: this is the only time in the graph that we dont have opposing directed edges (should fix)
@@ -838,7 +871,7 @@ TEST(GtfsExample, route_trip1) {
 
   std::string res_json;
   valhalla::Api res =
-      gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "multimodal",
+      gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", req_time},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
@@ -905,8 +938,7 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(ti_json["transit_stops"][2]["arrival_date_time"].GetString(), req_time);
 }
 
-TEST(GtfsExample, route_trip2) {
-  // this request should take trip/service 2 with 300 headway seconds
+TEST(GtfsExample, route_trip4) {
   std::string res_json;
   valhalla::Api res =
       gurka::do_action(valhalla::Options::route, map, {"g", "h"}, "multimodal",
@@ -917,30 +949,41 @@ TEST(GtfsExample, route_trip2) {
 
   // test the PBF output
   const auto& leg = res.directions().routes(0).legs(0);
-  EXPECT_NEAR(leg.summary().time(), 8529.986, 0.001);
+  EXPECT_NEAR(leg.summary().time(), 8529.033, 0.001);
   EXPECT_NEAR(leg.summary().length(), 16.112, 0.001);
 
   const auto& transit_info = leg.maneuver(2).transit_info();
-  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T23:58-05:00");
-  EXPECT_EQ(transit_info.transit_stops(1).arrival_date_time(), "2023-02-28T00:02-05:00");
+  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T23:57-05:00");
+  EXPECT_EQ(transit_info.transit_stops(1).arrival_date_time(), "2023-02-28T00:01-05:00");
   EXPECT_EQ(transit_info.headsign(), "grüß gott!");
   EXPECT_EQ(transit_info.onestop_id(), f2_name + "_" + r2_id);
 }
 
 TEST(GtfsExample, isochrones) {
+
+  auto WaypointToBoostPoint = [&](std::string waypoint) {
+    auto point = map.nodes[waypoint];
+    return point_type(point.x(), point.y());
+  };
+
   std::string res_string;
   valhalla::Api res =
-      gurka::do_action(valhalla::Options::isochrone, map, {"C"}, "multimodal",
+      gurka::do_action(valhalla::Options::isochrone, map, {"g"}, "multimodal",
                        {{"/date_time/type", "1"},
-                        {"/date_time/value", "2023-02-27T05:58"},
-                        {"/contours/0/time", "20"},
+                        {"/date_time/value", "2023-02-27T04:58"},
+                        {"/contours/0/time", "80"},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
                        {}, &res_string);
 
-  rapidjson::Document doc;
-  doc.Parse(res_string.c_str());
-  // TODO: some more testing of this similar to the isochrone.cc test: dump the polygon
-  // to geos and check if at least the stops are inside. Mid-future: play a bit more
-  // with schedules to see it's doing the right thing
-  EXPECT_TRUE(doc.HasMember("features"));
+  std::vector<PointLL> iso_polygon = polygon_from_geojson(res_string);
+  polygon_type polygon;
+  for (const auto& p : iso_polygon) {
+    boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
+  }
+
+  EXPECT_EQ(within(WaypointToBoostPoint("D"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("2"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("E"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("4"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("1"), polygon), false);
 }
