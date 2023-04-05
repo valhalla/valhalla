@@ -546,7 +546,8 @@ TEST(GtfsExample, MakeProto) {
 
   // constants written in the last function
   auto serviceStartDate = (parse_date_time_string(sv_start) - DateTime::pivot_date_).count();
-  auto serviceEndDate = (parse_date_time_string(sv_end) - DateTime::pivot_date_).count();
+  auto serviceEndDate =
+      (parse_date_time_string(sv_end) - DateTime::pivot_date_).count() + kSecondsPerDay - 1;
   auto addedDate = (parse_date_time_string(added_date) - DateTime::pivot_date_).count();
   auto removedDate = (parse_date_time_string(removed_date) - DateTime::pivot_date_).count();
 
@@ -828,6 +829,7 @@ TEST(GtfsExample, MakeTile) {
       // we either remove a date or we don't allow weekends, so it's neither all days, nor no days
       EXPECT_NE(tileSchedule->days(), (static_cast<int64_t>(1) << 60) - 1);
       EXPECT_NE(tileSchedule->days(), 0);
+      // TODO: why is 59 and not 60?
       EXPECT_EQ(tileSchedule->end_day(), 59);
     }
   }
@@ -910,16 +912,14 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8769.058, 0.001);
   EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.033, 0.001);
   EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
-            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kStart));
+            static_cast<uint32_t>(DirectionsLeg::Maneuver::kStart));
   EXPECT_EQ(leg_json["maneuvers"][1]["type"].GetUint(),
-            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kTransitConnectionStart));
+            static_cast<uint32_t>(DirectionsLeg::Maneuver::kTransitConnectionStart));
   EXPECT_EQ(leg_json["maneuvers"][2]["type"].GetUint(),
-            static_cast<uint32_t>(DirectionsLeg_Maneuver_Type_kTransit));
+            static_cast<uint32_t>(DirectionsLeg::Maneuver::kTransit));
   EXPECT_EQ(leg_json["maneuvers"][2]["travel_type"], "metro");
 
   const auto& ti_json = leg_json["maneuvers"][2]["transit_info"];
-  std::cerr << ti_json["transit_stops"][0]["departure_date_time"].GetString() << std::endl;
-  std::cerr << ti_json["headsign"].GetString() << std::endl;
   EXPECT_EQ(ti_json["onestop_id"].GetString(), f1_name + "_" + r1_id);
   EXPECT_EQ(ti_json["headsign"], "hello");
   EXPECT_EQ(ti_json["transit_stops"].GetArray().Size(), 3);

@@ -137,11 +137,13 @@ std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
 };
 
 // converts service start/end dates of the form (yyyymmdd) into epoch seconds
-uint32_t to_local_pivot_sec(const std::string& dt) {
+uint32_t to_local_pivot_sec(const std::string& dt, bool end_of_day = false) {
   date::local_seconds tp;
   std::istringstream in{dt};
   in >> date::parse("%Y%m%d", tp);
-  return static_cast<uint32_t>((tp - DateTime::pivot_date_).count());
+  auto epoch = static_cast<uint32_t>((tp - DateTime::pivot_date_).count());
+  epoch += end_of_day ? kSecondsPerDay - 1 : 0;
+  return epoch;
 };
 
 std::string get_onestop_id_base(const std::string& stop_id, const std::string& feed_name) {
@@ -507,7 +509,9 @@ bool write_stop_pair(
       }
 
       stop_pair->set_service_start_date(to_local_pivot_sec(trip_calendar->start_date.get_raw_date()));
-      stop_pair->set_service_end_date(to_local_pivot_sec(trip_calendar->end_date.get_raw_date()));
+      // TODO: add a day worth of seconds - 1 to get the last second of that day
+      stop_pair->set_service_end_date(
+          to_local_pivot_sec(trip_calendar->end_date.get_raw_date(), true));
 
       dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
       stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
