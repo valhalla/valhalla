@@ -860,14 +860,14 @@ TEST(GtfsExample, route_trip1) {
   // wrap around the next month if it's getting critical
   if (tmrw_int > 27) {
     auto new_month = std::to_string(std::stoul(std::string(&req_time[5], &req_time[7])) + 1);
-    req_time.replace(req_time.find("T") - 5, 2, new_month);
+    req_time.replace(req_time.find('T') - 5, 2, new_month);
     tmrw_int -= 20;
   }
   auto tmrw_str = std::to_string(tmrw_int);
   tmrw_str = std::string(2 - std::min(2UL, tmrw_str.length()), '0') + tmrw_str;
   // replace the day and the time
-  req_time.replace(req_time.find("T") - 2, 2, tmrw_str);
-  req_time.replace(req_time.find("T") + 1, 5, "05:50");
+  req_time.replace(req_time.find('T') - 2, 2, tmrw_str);
+  req_time.replace(req_time.find('T') + 1, 5, "05:50");
 
   std::string res_json;
   valhalla::Api res =
@@ -929,11 +929,11 @@ TEST(GtfsExample, route_trip1) {
 
   // determine the right day
   req_time.append("-04:00"); // TODO: why -04:00, not -05:00??
-  req_time.replace(req_time.find("T") + 1, 5, "06:59");
+  req_time.replace(req_time.find('T') + 1, 5, "06:59");
   EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), req_time);
   EXPECT_EQ(ti_json["transit_stops"][0]["departure_date_time"].GetString(), req_time);
 
-  req_time.replace(req_time.find("T") + 1, 5, "07:06");
+  req_time.replace(req_time.find('T') + 1, 5, "07:06");
   EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), req_time);
   EXPECT_EQ(ti_json["transit_stops"][2]["arrival_date_time"].GetString(), req_time);
 }
