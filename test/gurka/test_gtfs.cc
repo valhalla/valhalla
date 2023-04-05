@@ -829,7 +829,7 @@ TEST(GtfsExample, MakeTile) {
       // we either remove a date or we don't allow weekends, so it's neither all days, nor no days
       EXPECT_NE(tileSchedule->days(), (static_cast<int64_t>(1) << 60) - 1);
       EXPECT_NE(tileSchedule->days(), 0);
-      // TODO: why is 59 and not 60?
+      // TODO: why is 59 and not 60? see service_days.cc::get_service_days: we add 59 days, not 60?
       EXPECT_EQ(tileSchedule->end_day(), 59);
     }
   }
@@ -909,7 +909,7 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res_doc["trip"]["legs"].GetArray().Size(), 1);
 
   const auto& leg_json = res_doc["trip"]["legs"].GetArray()[0];
-  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8769.058, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8709.058, 0.001);
   EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.033, 0.001);
   EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
             static_cast<uint32_t>(DirectionsLeg::Maneuver::kStart));
@@ -929,7 +929,7 @@ TEST(GtfsExample, route_trip1) {
 
   // determine the right day
   req_time.append("-04:00"); // TODO: why -04:00, not -05:00??
-  req_time.replace(req_time.find('T') + 1, 5, "06:59");
+  req_time.replace(req_time.find('T') + 1, 5, "07:00");
   EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), req_time);
   EXPECT_EQ(ti_json["transit_stops"][0]["departure_date_time"].GetString(), req_time);
 
@@ -953,8 +953,8 @@ TEST(GtfsExample, route_trip4) {
   EXPECT_NEAR(leg.summary().length(), 16.112, 0.001);
 
   const auto& transit_info = leg.maneuver(2).transit_info();
-  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T23:57-05:00");
-  EXPECT_EQ(transit_info.transit_stops(1).arrival_date_time(), "2023-02-28T00:01-05:00");
+  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), "2023-02-27T23:58-05:00");
+  EXPECT_EQ(transit_info.transit_stops(1).arrival_date_time(), "2023-02-28T00:02-05:00");
   EXPECT_EQ(transit_info.headsign(), "grüß gott!");
   EXPECT_EQ(transit_info.onestop_id(), f2_name + "_" + r2_id);
 }

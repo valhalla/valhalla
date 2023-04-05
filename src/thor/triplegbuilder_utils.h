@@ -257,25 +257,21 @@ private:
                                            time_info.second_of_week % kSecondsPerDay);
 
         assumed_schedule = false;
-        uint32_t date, day = 0;
+        uint32_t origin_pivot_days, days_from_creation;
         if (!origin.date_time().empty()) {
-          date = DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
+          origin_pivot_days =
+              DateTime::days_from_pivot_date(DateTime::get_formatted_date(origin.date_time()));
+          days_from_creation = origin_pivot_days - graphtile->header()->date_created();
 
-          if (graphtile->header()->date_created() > date) {
+          // if the departure is in the past or too far in the future, we flag the schedule "assumed"
+          if (graphtile->header()->date_created() > origin_pivot_days ||
+              days_from_creation >
+                  graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
             // Set assumed schedule if requested
             if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
               transit_platform_info->set_assumed_schedule(true);
             }
             assumed_schedule = true;
-          } else {
-            day = date - graphtile->header()->date_created();
-            if (day > graphtile->GetTransitSchedule(transit_departure->schedule_index())->end_day()) {
-              // Set assumed schedule if requested
-              if (controller(kNodeTransitPlatformInfoAssumedSchedule)) {
-                transit_platform_info->set_assumed_schedule(true);
-              }
-              assumed_schedule = true;
-            }
           }
         }
 
@@ -283,11 +279,16 @@ private:
         // the origin date time. if the trip took more than one day this will not be the case and
         // negative durations can occur
         if (transit_departure) {
-
-          std::string dt =
-              DateTime::get_duration(time_info.date_time(),
-                                     transit_departure->departure_time() - time_info.day_seconds(),
-                                     DateTime::get_tz_db().from_index(node->timezone()));
+          // round up the transit times to full minutes because date_time() will always round down
+          auto round_up_mins = [](uint32_t seconds) {
+            auto remainder = seconds % kSecondsPerMinute;
+            return remainder ? seconds + (kSecondsPerMinute - remainder) : seconds;
+          };
+          // round up the waiting time to full minutes, bcs time_info.date_time() floors minutes
+          std::string dt = DateTime::get_duration(time_info.date_time(),
+                                                  round_up_mins(transit_departure->departure_time() -
+                                                                time_info.day_seconds()),
+                                                  DateTime::get_tz_db().from_index(node->timezone()));
 
           std::size_t found = dt.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
@@ -302,11 +303,11 @@ private:
           // TODO:  set removed tz abbrev on transit_platform_info for departure.
 
           // Copy the arrival time for use at the next transit stop
-          arrival_time =
-              DateTime::get_duration(time_info.date_time(),
-                                     transit_departure->departure_time() +
-                                         transit_departure->elapsed_time() - time_info.day_seconds(),
-                                     DateTime::get_tz_db().from_index(node->timezone()));
+          arrival_time = DateTime::get_duration(time_info.date_time(),
+                                                round_up_mins((transit_departure->departure_time() +
+                                                               transit_departure->elapsed_time()) -
+                                                              time_info.day_seconds()),
+                                                DateTime::get_tz_db().from_index(node->timezone()));
 
           found = arrival_time.find_last_of(' '); // remove tz abbrev.
           if (found != std::string::npos) {
