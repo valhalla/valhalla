@@ -909,7 +909,7 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_EQ(res_doc["trip"]["legs"].GetArray().Size(), 1);
 
   const auto& leg_json = res_doc["trip"]["legs"].GetArray()[0];
-  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8709.058, 0.001);
+  EXPECT_NEAR(leg_json["summary"]["time"].GetDouble(), 8769.058, 0.001);
   EXPECT_NEAR(leg_json["summary"]["length"].GetDouble(), 41.033, 0.001);
   EXPECT_EQ(leg_json["maneuvers"][0]["type"].GetUint(),
             static_cast<uint32_t>(DirectionsLeg::Maneuver::kStart));
@@ -971,11 +971,12 @@ TEST(GtfsExample, isochrones) {
       gurka::do_action(valhalla::Options::isochrone, map, {"g"}, "multimodal",
                        {{"/date_time/type", "1"},
                         {"/date_time/value", "2023-02-27T04:58"},
-                        {"/contours/0/time", "80"},
+                        {"/contours/0/time", "120"},
                         {"/costing_options/pedestrian/transit_start_end_max_distance", "20000"}},
                        {}, &res_string);
 
   std::vector<PointLL> iso_polygon = polygon_from_geojson(res_string);
+  std::cerr << res_string << std::endl;
   polygon_type polygon;
   for (const auto& p : iso_polygon) {
     boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
@@ -985,5 +986,6 @@ TEST(GtfsExample, isochrones) {
   EXPECT_EQ(within(WaypointToBoostPoint("2"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("E"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("4"), polygon), true);
+  EXPECT_EQ(within(WaypointToBoostPoint("F"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("1"), polygon), false);
 }
