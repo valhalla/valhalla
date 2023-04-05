@@ -165,7 +165,7 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
   return names;
 }
 
-// Get a list of names with types
+// Get a list of names
 std::vector<std::tuple<std::string, bool, uint8_t>>
 EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
 
