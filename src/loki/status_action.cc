@@ -4,13 +4,15 @@
 #include "loki/worker.h"
 #include "proto/status.pb.h"
 
+using namespace valhalla::baldr;
+
 namespace {
 
-auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
+auto get_graphtile(const std::shared_ptr<GraphReader>& reader) {
   graph_tile_ptr tile = nullptr;
   for (const auto& tile_id : reader->GetTileSet()) {
     tile = reader->GetGraphTile(tile_id);
-    if (tile->id().level() < valhalla::baldr::TileHierarchy::GetTransitLevel().level &&
+    if (tile->id().level() < TileHierarchy::GetTransitLevel().level &&
         tile->header()->nodecount() > 0) {
       break;
     }
@@ -18,7 +20,7 @@ auto get_graphtile(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) 
   return tile;
 }
 
-time_t get_tileset_last_modified(const std::shared_ptr<valhalla::baldr::GraphReader>& reader) {
+time_t get_tileset_last_modified(const std::shared_ptr<GraphReader>& reader) {
   auto path = reader->GetTileSetLocation();
   try {
     return std::chrono::system_clock::to_time_t(filesystem::last_write_time(path));
@@ -64,6 +66,8 @@ void loki_worker_t::status(Api& request) const {
   status->set_has_admins(tile && tile->header()->admincount() > 0);
   status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
   status->set_has_live_traffic(reader->HasLiveTraffic());
+  status->set_has_transit_tiles(!reader->GetTileSet(TileHierarchy::GetTransitLevel().level).empty());
+  status->set_osm_changeset(tile && tile->header()->dataset_id());
 }
 } // namespace loki
 } // namespace valhalla

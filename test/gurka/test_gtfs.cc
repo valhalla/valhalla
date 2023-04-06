@@ -649,3 +649,10 @@ TEST(GtfsExample, isochrones) {
   // with schedules to see it's doing the right thing
   EXPECT_TRUE(doc.HasMember("features"));
 }
+
+TEST(GtfsExample, status) {
+  std::string req = R"({"verbose": true})";
+  std::string res_string;
+  valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
+  EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
+}

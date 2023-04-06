@@ -25,4 +25,10 @@ message Status {
     uint32 tileset_last_modified = 7;
   }
   repeated string available_actions = 8;
+  oneof has_has_transit_tiles {
+    bool has_transit_tiles = 9;
+  }
+  oneof has_osm_changeset {
+    uint64 osm_changeset = 10;
+  }
 }
