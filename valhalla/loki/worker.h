@@ -104,7 +104,6 @@ protected:
   float min_resample;
   unsigned int max_alternates;
   bool allow_verbose;
-  bool has_transit;
 
   // add max_distance_disable_hierarchy_culling
   float max_distance_disable_hierarchy_culling;
