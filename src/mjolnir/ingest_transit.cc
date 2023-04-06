@@ -560,7 +560,8 @@ bool write_stop_pair(
       stop_pair->set_trip_headsign(currTrip->trip_headsign);
 
       uniques.lock.lock();
-      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size()});
+      // trips should never have ID=0, it messes up the triplegbuilder logic
+      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size() + 1});
       stop_pair->set_trip_id(inserted.first->second);
       uniques.lock.unlock();
 
