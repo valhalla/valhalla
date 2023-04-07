@@ -120,10 +120,10 @@ std::string serializeStatus(Api& request) {
   if (request.status().has_has_live_traffic_case())
     status_doc.AddMember("has_live_traffic",
                          rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
-  if (request.status().has_has_transit_tiles())
+  if (request.status().has_has_transit_tiles_case())
     status_doc.AddMember("has_transit_tiles",
                          rapidjson::Value().SetBool(request.status().has_transit_tiles()), alloc);
-  if (request.status().has_osm_changeset())
+  if (request.status().has_osm_changeset_case())
     status_doc.AddMember("osm_changeset",
                          rapidjson::Value().SetUint64(request.status().osm_changeset()), alloc);
 

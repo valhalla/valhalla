@@ -57,16 +57,18 @@ void loki_worker_t::status(Api& request) const {
 
   // get _some_ tile
   const static baldr::graph_tile_ptr tile = get_graphtile(reader);
+  filesystem::path transit_dir(reader->tile_dir() + filesystem::path::preferred_separator +
+                               std::to_string(TileHierarchy::GetTransitLevel().level));
 
-  if (connectivity_map) {
-    status->set_bbox(connectivity_map->to_geojson(2));
-  }
+  status->set_bbox(connectivity_map ? connectivity_map->to_geojson(2) : "");
 
   status->set_has_tiles(static_cast<bool>(tile));
   status->set_has_admins(tile && tile->header()->admincount() > 0);
   status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
   status->set_has_live_traffic(reader->HasLiveTraffic());
-  status->set_has_transit_tiles(!reader->GetTileSet(TileHierarchy::GetTransitLevel().level).empty());
+
+  status->set_has_transit_tiles(filesystem::exists(transit_dir) &&
+                                filesystem::is_directory(transit_dir));
   status->set_osm_changeset(tile && tile->header()->dataset_id());
 }
 } // namespace loki
