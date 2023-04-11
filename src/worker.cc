@@ -149,8 +149,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
-  {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
-  {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
+  {201, R"("sources" have date_time set, but "arrive_by" was requested, using bidirectional CostMatrix instead)"},
+  {202, R"("targets" have date_time set, but "depart_at" was requested, using bidirectional CostMatrix instead)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
   {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
   {205, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},

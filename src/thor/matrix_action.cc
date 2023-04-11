@@ -50,10 +50,11 @@ std::string thor_worker_t::matrix(Api& request) {
                                                  mode_costing, mode,
                                                  max_matrix_distance.find(costing)->second,
                                                  options.matrix_locations());
-    return tyr::serializeMatrix(request, time_distances, distance_scale);
+    return tyr::serializeMatrix(request, time_distances, distance_scale, MatrixType::TimeDist);
   }
 
   MatrixType matrix_type = MatrixType::Cost;
+  bool force_costmatrix = false;
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
@@ -75,19 +76,28 @@ std::string thor_worker_t::matrix(Api& request) {
       }
       break;
     case COST_MATRIX:
+      force_costmatrix = true;
       break;
     case TIME_DISTANCE_MATRIX:
       matrix_type = MatrixType::TimeDist;
       break;
   }
 
-  bool has_time = check_matrix_time(request, matrix_type);
-  if (matrix_type == MatrixType::Cost) {
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale);
+  // similar to routing: prefer the exact unidirectional algo if not requested otherwise
+  // don't use matrix_type, we only need it to set the right warnings for what will be used
+  bool temp = options.prioritize_bidirectional();
+  bool has_time =
+      check_matrix_time(request,
+                        options.prioritize_bidirectional() ? MatrixType::Cost : MatrixType::TimeDist);
+  if (has_time && !options.prioritize_bidirectional() && !force_costmatrix) {
+    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
+  } else if ((has_time && options.prioritize_bidirectional())) {
+    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
+  } else if (matrix_type == MatrixType::Cost) {
+    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, matrix_type);
+  } else {
+    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, matrix_type);
   }
-
-  return tyr::serializeMatrix(request, timedistancematrix(), distance_scale);
-  ;
 }
 } // namespace thor
 } // namespace valhalla

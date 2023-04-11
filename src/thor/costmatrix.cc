@@ -235,7 +235,7 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     if (has_time) {
       auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
                                      time_infos[origin_idx].timezone_index,
-                                     target_edgelabel_[target_idx].back().edgeid(), graphreader,
+                                     target_edgelabel_[target_idx].front().edgeid(), graphreader,
                                      static_cast<uint64_t>(connection.cost.secs + .5f));
       td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance), date_time);
     } else {

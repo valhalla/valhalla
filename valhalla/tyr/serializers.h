@@ -32,7 +32,8 @@ std::string serializeDirections(Api& request);
  */
 std::string serializeMatrix(const Api& request,
                             const std::vector<thor::TimeDistance>& time_distances,
-                            double distance_scale);
+                            double distance_scale,
+                            thor::MatrixType matrix_type);
 
 /**
  * Turn grid data contours into geojson

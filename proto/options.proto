@@ -466,7 +466,7 @@ message Options {
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
+    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   }
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint

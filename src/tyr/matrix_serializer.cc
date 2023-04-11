@@ -50,7 +50,8 @@ namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 json::MapPtr serialize(const Api& request,
                        const std::vector<TimeDistance>& time_distances,
-                       double distance_scale) {
+                       double distance_scale,
+                       MatrixType matrix_type) {
   auto json = json::map({});
   auto time = json::array({});
   auto distance = json::array({});
@@ -71,6 +72,8 @@ json::MapPtr serialize(const Api& request,
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
+  json->emplace("algorithm",
+                std::string(matrix_type == MatrixType::Cost ? "costmatrix" : "timedistancematrix"));
   return json;
 }
 } // namespace osrm_serializers
@@ -123,7 +126,8 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
 
 json::MapPtr serialize(const Api& request,
                        const std::vector<TimeDistance>& time_distances,
-                       double distance_scale) {
+                       double distance_scale,
+                       MatrixType matrix_type) {
   auto json = json::map({});
   const auto& options = request.options();
 
@@ -158,6 +162,8 @@ json::MapPtr serialize(const Api& request,
   }
 
   json->emplace("units", Options_Units_Enum_Name(options.units()));
+  json->emplace("algorithm",
+                std::string(matrix_type == MatrixType::Cost ? "costmatrix" : "timedistancematrix"));
 
   if (options.has_id_case()) {
     json->emplace("id", options.id());
@@ -177,11 +183,13 @@ namespace tyr {
 
 std::string serializeMatrix(const Api& request,
                             const std::vector<TimeDistance>& time_distances,
-                            double distance_scale) {
+                            double distance_scale,
+                            MatrixType matrix_type) {
 
-  auto json = request.options().format() == Options::osrm
-                  ? osrm_serializers::serialize(request, time_distances, distance_scale)
-                  : valhalla_serializers::serialize(request, time_distances, distance_scale);
+  auto json =
+      request.options().format() == Options::osrm
+          ? osrm_serializers::serialize(request, time_distances, distance_scale, matrix_type)
+          : valhalla_serializers::serialize(request, time_distances, distance_scale, matrix_type);
 
   std::stringstream ss;
   ss << *json;
