@@ -449,12 +449,13 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
                                    : TileHierarchy::levels()[graphid.level()]);
 
   // figure out how many digits in tile-id
-  const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  const uint32_t max_id = static_cast<uint32_t>(level.tiles.ncolumns() * level.tiles.nrows() - 1);
+
   if (graphid.tileid() > max_id) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid tile id:" +
                              std::to_string(graphid));
   }
-  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  size_t max_length = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if (remainder) {
     max_length += 3 - remainder;
@@ -516,7 +517,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   }
 
   // run backwards while you find an allowed char but stop if not 3 digits between slashes
-  std::vector<int> digits;
+  std::vector<uint32_t> digits;
   auto last = pos;
   while (--pos < last) {
     auto c = fname[pos];
@@ -558,8 +559,8 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                : TileHierarchy::levels()[level];
 
   // get the number of sub directories that we should have
-  auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
-  size_t parts = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
+  size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
   if (parts % 3 != 0) {
     parts += 3 - (parts % 3);
   }
@@ -766,7 +767,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -833,7 +834,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -912,7 +913,7 @@ std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx)
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& lc = lane_connectivity_[mid];
@@ -958,7 +959,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
@@ -1029,7 +1030,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
@@ -1162,7 +1163,7 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& res = access_restrictions_[mid];

@@ -821,23 +821,21 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
-        name_index++;
         continue;
       }
 
       auto* trip_edge_name = trip_edge->mutable_name()->Add();
       // Assign name and type
-      trip_edge_name->set_value(name_and_type.first);
-      trip_edge_name->set_is_route_number(name_and_type.second);
+      trip_edge_name->set_value(std::get<0>(name_and_type));
+      trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(name_index);
 
