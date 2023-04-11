@@ -171,7 +171,7 @@ public:
   std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
 
   /**
-   * Convenience method to get the names and route number flags for an edge.
+   * Convenience method to get the names, route number flags and tag value type for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
    * @return   Returns a list (vector) of name/route number flags/types tuples.
