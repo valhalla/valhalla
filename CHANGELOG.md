@@ -44,6 +44,7 @@
    * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
    * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
    * ADDED: `disable_hierarchy_pruning` costing option to find the actual optimal route for motorized costing modes, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. [#4000](https://github.com/valhalla/valhalla/pull/4000)
+   * CHANGED: baldr directory: remove warnings and C++17 adjustments [#4011](https://github.com/valhalla/valhalla/pull/4011)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**

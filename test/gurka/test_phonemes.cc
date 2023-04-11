@@ -432,15 +432,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     }
 
     // blank pronunciations for names.
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -453,7 +452,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 1);
         if ((iter->second).second == "name:pronunciation2") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(name_and_type), "xyz street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
@@ -499,14 +498,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank pronunciations for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -519,7 +518,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 0);
         if ((iter->second).second == "name:pronunciation1") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "FG");
+          EXPECT_EQ(std::get<0>(name_and_type), "FG");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
@@ -566,14 +565,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank pronunciations for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -584,11 +583,11 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation2") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(name_and_type), "xyz street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else if ((iter->second).second == "name:pronunciation3") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(name_and_type), "abc ave");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else
@@ -639,14 +638,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank pronunciations for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -657,11 +656,11 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation2:x-jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(name_and_type), "xyz street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else if ((iter->second).second == "name:pronunciation3:x-jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(name_and_type), "abc ave");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else
@@ -711,14 +710,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank pronunciations for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 1);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> name_pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -729,11 +728,11 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         EXPECT_EQ(name_index, 0);
       } else {
         if ((iter->second).second == "name:pronunciation1:x-katakana") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(name_and_type), "xyz street");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
         } else if ((iter->second).second == "name:pronunciation2:x-jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(name_and_type), "abc ave");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else
@@ -899,15 +898,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     GraphId node_id = AB_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
     auto edgeinfo = tile->edgeinfo(AB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 7);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -921,33 +919,33 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else {
 
         if ((iter->second).second == "name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "AB");
+          EXPECT_EQ(std::get<0>(name_and_type), "AB");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "tunnel:name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
+          EXPECT_EQ(std::get<0>(name_and_type), "tunnel:name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
                    "int_ref:pronunciation:nt-sampa int_direction:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "int_ref int_direction");
+          EXPECT_EQ(std::get<0>(name_and_type), "int_ref int_direction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second ==
                    "ref:pronunciation:nt-sampa direction:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "ref direction");
+          EXPECT_EQ(std::get<0>(name_and_type), "ref direction");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "alt_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
+          EXPECT_EQ(std::get<0>(name_and_type), "alt_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "official_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(name_and_type), "official_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "name:en:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(name_and_type), "name:en");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
@@ -1107,14 +1105,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     {
       auto edgeinfo = tile->edgeinfo(BC_edge);
       std::vector<uint8_t> types;
-      auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+      auto names_and_types = edgeinfo.GetNamesAndTypes(true);
       ASSERT_EQ(names_and_types.size(), 4);
 
       std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
           edgeinfo.GetPronunciationsMap();
       uint8_t name_index = 0;
       for (const auto& name_and_type : names_and_types) {
-        if (types.at(name_index) != 0) {
+        if (std::get<2>(name_and_type) != 0) {
           // Skip the tagged names
           ++name_index;
           continue;
@@ -1124,19 +1122,19 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         ASSERT_NE(iter, pronunciations.end());
 
         if ((iter->second).second == "name:pronunciation") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "BC");
+          EXPECT_EQ(std::get<0>(name_and_type), "BC");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else if ((iter->second).second == "alt_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
+          EXPECT_EQ(std::get<0>(name_and_type), "alt_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "official_name:pronunciation:x-jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(name_and_type), "official_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
         } else if ((iter->second).second == "name:en:pronunciation:x-katakana") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(name_and_type), "name:en");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
         } else
@@ -1182,8 +1180,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     // blank pronunciations for names.
     {
       auto edgeinfo = tile->edgeinfo(DE_edge);
-      std::vector<uint8_t> types;
-      auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+      auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
       ASSERT_EQ(names_and_types.size(), 3);
 
@@ -1191,7 +1188,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           edgeinfo.GetPronunciationsMap();
       uint8_t name_index = 0;
       for (const auto& name_and_type : names_and_types) {
-        if (types.at(name_index) != 0) {
+        if (std::get<2>(name_and_type) != 0) {
           // Skip the tagged names
           ++name_index;
           continue;
@@ -1203,7 +1200,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         } else {
           EXPECT_EQ(name_index, 2);
           if ((iter->second).second == "name:pronunciation3") {
-            EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+            EXPECT_EQ(std::get<0>(name_and_type), "abc ave");
             EXPECT_EQ(static_cast<int>((iter->second).first),
                       static_cast<int>(baldr::PronunciationAlphabet::kIpa));
           } else
@@ -1284,15 +1281,14 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
     GraphId node_id = AB_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
     auto edgeinfo = tile->edgeinfo(AB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 6);
 
     std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> pronunciations =
         edgeinfo.GetPronunciationsMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -1306,27 +1302,27 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
         EXPECT_NE(iter, pronunciations.end());
       } else {
         if ((iter->second).second == "name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "AB");
+          EXPECT_EQ(std::get<0>(name_and_type), "AB");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "tunnel:name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
+          EXPECT_EQ(std::get<0>(name_and_type), "tunnel:name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "int_ref:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "int_ref");
+          EXPECT_EQ(std::get<0>(name_and_type), "int_ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "ref:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "ref");
+          EXPECT_EQ(std::get<0>(name_and_type), "ref");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "official_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(name_and_type), "official_name");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if ((iter->second).second == "name:en:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(name_and_type), "name:en");
           EXPECT_EQ(static_cast<int>((iter->second).first),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else
