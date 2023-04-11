@@ -128,7 +128,7 @@ C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
 3. Run the build for all targets.
 ```
 cd C:\path\to\project
-cmake -B build .
+cmake -B build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:8
 ```
 
 The artifacts will be built to `./build/Release`.
