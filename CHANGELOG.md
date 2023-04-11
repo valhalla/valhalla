@@ -36,6 +36,7 @@
    * ADDED: An option to Slim down Matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
    * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
    * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
+   * ADDED: time awareness to CostMatrix for e.g. traffic support [#]()
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
