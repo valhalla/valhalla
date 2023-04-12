@@ -1,0 +1,31 @@
+name: Build Docker PR image
+
+# This one is disabled by default and can be enabled/customized based on specific needs:
+# create a branch, customize this for your branch (i.e. on.push.branches member) and push
+
+# remember: our valhalla fork will have
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build_wheels:
+    name: Wheels - cp*, ${{ matrix.platform }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+        fetch-depth: 0
+
+    - name: Log in to GitHub Docker Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build latest image
+      run: |
+        docker build -t ghcr.io/valhalla/valhalla:manually_triggered_build .
+        docker push ghcr.io/valhalla/valhalla:manually_triggered_build
