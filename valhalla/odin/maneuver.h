@@ -403,87 +403,89 @@ public:
 #endif
 
 protected:
-  DirectionsLeg_Maneuver_Type type_;
+  /* TODO some members are not explicitly initialized */
+  DirectionsLeg_Maneuver_Type type_ = DirectionsLeg_Maneuver_Type_kNone;
   std::unique_ptr<StreetNames> street_names_;
   std::unique_ptr<StreetNames> begin_street_names_;
   std::unique_ptr<StreetNames> cross_street_names_;
   std::string instruction_;
-  float length_;      // Kilometers
-  double time_;       // Seconds
-  double basic_time_; // len/speed on each edge with no stop impact in seconds
-  uint32_t turn_degree_;
-  RelativeDirection begin_relative_direction_;
-  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_;
-  uint32_t begin_heading_;
-  uint32_t end_heading_;
-  uint32_t begin_node_index_;
-  uint32_t end_node_index_;
-  uint32_t begin_shape_index_;
-  uint32_t end_shape_index_;
-  bool ramp_;
-  bool turn_channel_;
-  bool ferry_;
-  bool rail_ferry_;
-  bool roundabout_;
-  bool portions_toll_;
-  bool portions_unpaved_;
-  bool portions_highway_;
-  bool internal_intersection_;
+  float length_ = 0.0f;   // Kilometers
+  double time_ = 0;       // Seconds
+  double basic_time_ = 0; // len/speed on each edge with no stop impact in seconds
+  uint32_t turn_degree_ = 0;
+  RelativeDirection begin_relative_direction_ = RelativeDirection::kNone;
+  DirectionsLeg_Maneuver_CardinalDirection begin_cardinal_direction_ =
+      DirectionsLeg_Maneuver_CardinalDirection_kNorth;
+  uint32_t begin_heading_ = 0;
+  uint32_t end_heading_ = 0;
+  uint32_t begin_node_index_ = 0;
+  uint32_t end_node_index_ = 0;
+  uint32_t begin_shape_index_ = 0;
+  uint32_t end_shape_index_ = 0;
+  bool ramp_ = false;
+  bool turn_channel_ = false;
+  bool ferry_ = false;
+  bool rail_ferry_ = false;
+  bool roundabout_ = false;
+  bool portions_toll_ = false;
+  bool portions_unpaved_ = false;
+  bool portions_highway_ = false;
+  bool internal_intersection_ = false;
   Signs signs_;
-  uint32_t internal_right_turn_count_;
-  uint32_t internal_left_turn_count_;
-  bool fork_;
-  bool begin_intersecting_edge_name_consistency_;
-  bool intersecting_forward_edge_;
+  uint32_t internal_right_turn_count_ = 0;
+  uint32_t internal_left_turn_count_ = 0;
+  bool fork_ = false;
+  bool begin_intersecting_edge_name_consistency_ = false;
+  bool intersecting_forward_edge_ = false;
   std::string verbal_succinct_transition_instruction_;
   std::string verbal_transition_alert_instruction_;
   std::string verbal_pre_transition_instruction_;
   std::string verbal_post_transition_instruction_;
-  bool tee_;
-  TrailType trail_type_;
-  bool imminent_verbal_multi_cue_;
-  bool distant_verbal_multi_cue_;
-  bool to_stay_on_;
-  bool pedestrian_crossing_;
+  bool tee_ = false;
+  TrailType trail_type_ = TrailType::kNone;
+  bool imminent_verbal_multi_cue_ = false;
+  bool distant_verbal_multi_cue_ = false;
+  bool to_stay_on_ = false;
+  bool pedestrian_crossing_ = false;
   RelativeDirection merge_to_relative_direction_;
-  bool drive_on_right_; // Defaults to true
-  bool has_time_restrictions_;
-  bool has_right_traversable_outbound_intersecting_edge_;
-  bool has_left_traversable_outbound_intersecting_edge_;
-  bool include_verbal_pre_transition_length_;
-  bool contains_obvious_maneuver_;
+  bool drive_on_right_ = true;
+  bool has_time_restrictions_ = false;
+  bool has_right_traversable_outbound_intersecting_edge_ = false;
+  bool has_left_traversable_outbound_intersecting_edge_ = false;
+  bool include_verbal_pre_transition_length_ = false;
+  bool contains_obvious_maneuver_ = false;
 
-  uint32_t roundabout_exit_count_;
-  bool has_combined_enter_exit_roundabout_;
-  float roundabout_length_;      // Kilometers
-  float roundabout_exit_length_; // Kilometers
+  uint32_t roundabout_exit_count_ = 0;
+  bool has_combined_enter_exit_roundabout_ = false;
+  float roundabout_length_ = 0.0f;      // Kilometers
+  float roundabout_exit_length_ = 0.0f; // Kilometers
   std::unique_ptr<StreetNames> roundabout_exit_street_names_;
   std::unique_ptr<StreetNames> roundabout_exit_begin_street_names_;
   Signs roundabout_exit_signs_;
-  uint32_t roundabout_exit_begin_heading_;
-  uint32_t roundabout_exit_turn_degree_;
-  uint32_t roundabout_exit_shape_index_;
+  uint32_t roundabout_exit_begin_heading_ = 0;
+  uint32_t roundabout_exit_turn_degree_ = 0;
+  uint32_t roundabout_exit_shape_index_ = 0;
 
-  bool has_collapsed_small_end_ramp_fork_;
-  bool has_collapsed_merge_maneuver_;
-  bool has_long_street_name_;
+  bool has_collapsed_small_end_ramp_fork_ = false;
+  bool has_collapsed_merge_maneuver_ = false;
+  bool has_long_street_name_ = false;
 
   // Bss support
   BikeShareStationInfo bss_info_;
 
   // Indoor elements
-  bool elevator_;
-  bool indoor_steps_;
-  bool escalator_;
-  bool building_enter_;
-  bool building_exit_;
-  std::string end_level_ref_;
+  bool elevator_ = false;
+  bool indoor_steps_ = false;
+  bool escalator_ = false;
+  bool building_enter_ = false;
+  bool building_exit_ = false;
+  std::string end_level_ref_ = "";
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support
 
   // Transit connection flag and the associated stop
-  bool transit_connection_;
+  bool transit_connection_ = false;
 
   TransitEgressInfo transit_connection_egress_info_;
   TransitStationInfo transit_connection_station_info_;
@@ -499,17 +501,18 @@ protected:
   ////////////////////////////////////////////////////////////////////////////
 
   // Travel mode
-  TravelMode travel_mode_;
-  bool rail_;
-  bool bus_;
+  TravelMode travel_mode_ = TravelMode::kDrive;
+  bool rail_ = false;
+  bool bus_ = false;
 
   // Travel types
-  VehicleType vehicle_type_;
-  PedestrianType pedestrian_type_;
-  BicycleType bicycle_type_;
-  TransitType transit_type_;
+  VehicleType vehicle_type_ = VehicleType::kCar;
+  PedestrianType pedestrian_type_ = PedestrianType::kFoot;
+  BicycleType bicycle_type_ = BicycleType::kRoad;
+  TransitType transit_type_ = TransitType::kRail;
 
-  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_;
+  DirectionsLeg_Maneuver_BssManeuverType bss_maneuver_type_ =
+      DirectionsLeg_Maneuver_BssManeuverType_kNoneAction;
 
   std::unique_ptr<VerbalTextFormatter> verbal_formatter_;
 
