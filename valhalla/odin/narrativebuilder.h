@@ -25,12 +25,7 @@ public:
                    const MarkupFormatter& markup_formatter);
 
   virtual ~NarrativeBuilder() = default;
-
-  NarrativeBuilder(NarrativeBuilder&&) = default;
-  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
-
   NarrativeBuilder(const NarrativeBuilder&) = default;
-  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
   void Build(std::list<Maneuver>& maneuvers);
 
