@@ -9,8 +9,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_wheels:
-    name: Wheels - cp*, ${{ matrix.platform }}
+  build_image:
+    name: Manual docker image build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
