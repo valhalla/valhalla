@@ -1,4 +1,4 @@
-## Release Date: 2022-??-?? Valhalla 3.2.1
+## Release Date: 2022-??-?? Valhalla 3.4.1
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
