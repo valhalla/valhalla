@@ -280,6 +280,7 @@ private:
         // negative durations can occur
         if (transit_departure) {
           // round up the transit times to full minutes because date_time() will always round down
+          // TODO: do (optional) seconds resolution for the input & output so that this becomes robust
           auto round_up_mins = [](uint32_t seconds) {
             auto remainder = seconds % kSecondsPerMinute;
             return remainder ? seconds + (kSecondsPerMinute - remainder) : seconds;
