@@ -976,7 +976,6 @@ TEST(GtfsExample, isochrones) {
                        {}, &res_string);
 
   std::vector<PointLL> iso_polygon = polygon_from_geojson(res_string);
-  std::cerr << res_string << std::endl;
   polygon_type polygon;
   for (const auto& p : iso_polygon) {
     boost::geometry::append(polygon.outer(), point_type(p.x(), p.y()));
