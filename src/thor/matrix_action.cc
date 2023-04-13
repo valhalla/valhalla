@@ -85,13 +85,12 @@ std::string thor_worker_t::matrix(Api& request) {
 
   // similar to routing: prefer the exact unidirectional algo if not requested otherwise
   // don't use matrix_type, we only need it to set the right warnings for what will be used
-  bool temp = options.prioritize_bidirectional();
   bool has_time =
       check_matrix_time(request,
                         options.prioritize_bidirectional() ? MatrixType::Cost : MatrixType::TimeDist);
   if (has_time && !options.prioritize_bidirectional() && !force_costmatrix) {
     return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
-  } else if ((has_time && options.prioritize_bidirectional())) {
+  } else if (has_time && options.prioritize_bidirectional()) {
     return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
   } else if (matrix_type == MatrixType::Cost) {
     return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, matrix_type);
