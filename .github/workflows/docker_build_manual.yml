@@ -1,9 +1,4 @@
-name: Build Docker PR image
-
-# This one is disabled by default and can be enabled/customized based on specific needs:
-# create a branch, customize this for your branch (i.e. on.push.branches member) and push
-
-# remember: our valhalla fork will have
+name: Build manual Docker image
 
 on:
   workflow_dispatch:
