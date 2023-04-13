@@ -991,10 +991,14 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
     if (d.type() == kFixedSchedule) {
       return &d;
     } else {
+      // TODO: this is for now only respecting frequencies.txt exact_times=true, e.g.
+      // auto departure_time = kFrequencySchedule ? d.departure_time() : d.departure_time() +
+      // (d.frequency() * 0.5f);
       auto departure_time = d.departure_time();
       const auto end_time = d.end_time();
       const auto frequency = d.frequency();
-      while (departure_time < frequency && departure_time < end_time) {
+      // make sure the departure time is after the current_time for a frequency based trip
+      while (departure_time < current_time && departure_time < end_time) {
         departure_time += frequency;
       }
 
