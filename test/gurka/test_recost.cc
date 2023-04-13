@@ -494,6 +494,18 @@ TEST(recosting, error_request) {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");
     FAIL() << "No costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"},{"costing":"auto"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto","name": "same"},{"costing":"auto","name": "same"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
 }
 
 TEST(recosting, api) {
@@ -520,10 +532,11 @@ TEST(recosting, api) {
                           std::to_string(map.nodes["7"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["7"].lat()) + "}";
 
-  // lets also do a bunch of costings
+  // lets also do a bunch of costings, note that one recosting omits the optional "name" parameter
+  // in which case it'll take the costing name as "name" field
   Api api;
   auto json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
-      {"costing":"auto","name":"same"},
+      {"costing":"auto"},
       {"costing":"auto","name":"avoid_highways","use_highways":0.1},
       {"costing":"bicycle","name":"slower"},
       {"costing":"pedestrian","name":"slower_still"},
@@ -568,7 +581,7 @@ TEST(recosting, api) {
     const auto& trip = d["trip"].GetObject();
     const auto& trip_summary = trip["summary"].GetObject();
     EXPECT_TRUE(trip_summary["time"].IsNumber());
-    EXPECT_TRUE(trip_summary["time_same"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_auto"].IsNumber());
     EXPECT_TRUE(trip_summary["time_avoid_highways"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower_still"].IsNumber());
@@ -576,14 +589,14 @@ TEST(recosting, api) {
     for (const auto& leg : trip["legs"].GetArray()) {
       const auto& leg_summary = leg["summary"].GetObject();
       EXPECT_TRUE(leg_summary["time"].IsNumber());
-      EXPECT_TRUE(leg_summary["time_same"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_auto"].IsNumber());
       EXPECT_TRUE(leg_summary["time_avoid_highways"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower_still"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slowest"].IsNumber());
       for (const auto& man : leg["maneuvers"].GetArray()) {
         EXPECT_TRUE(man["time"].IsNumber());
-        EXPECT_TRUE(man["time_same"].IsNumber());
+        EXPECT_TRUE(man["time_auto"].IsNumber());
         EXPECT_TRUE(man["time_avoid_highways"].IsNumber());
         EXPECT_TRUE(man["time_slower"].IsNumber());
         EXPECT_TRUE(man["time_slower_still"].IsNumber());

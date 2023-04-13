@@ -161,7 +161,12 @@ DynamicCost::DynamicCost(const Costing& costing,
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(level));
+    auto h = HierarchyLimits(level);
+    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
+    if (costing.options().disable_hierarchy_pruning()) {
+      h.max_up_transitions = kUnlimitedTransitions;
+    }
+    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
@@ -383,6 +388,10 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+
+  // disable hierarchy pruning
+  co->set_disable_hierarchy_pruning(
+      rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);

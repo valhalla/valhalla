@@ -126,7 +126,7 @@ inline bool check_matrix_time(Api& request, const MatrixType type) {
         add_warning(request, 202);
         return false;
       } else if (type == MatrixType::Cost) {
-        add_warning(request, 205);
+        add_warning(request, 206);
         return false;
       }
       return true;

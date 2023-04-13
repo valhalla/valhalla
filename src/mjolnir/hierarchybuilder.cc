@@ -308,7 +308,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       // Do we need to force adding edgeinfo (opposing edge could have diff names)?
       // If end node is in the same tile and there is no opposing edge with matching
       // edge_info_offset).
-      bool diff_names = directededge->endnode().tileid() == base_edge_id.tileid() &&
+      bool diff_names = directededge->endnode().tile_value() == base_edge_id.tile_value() &&
                         !OpposingEdgeInfoMatches(tile, directededge);
 
       // Get edge info, shape, and names from the old tile and add to the

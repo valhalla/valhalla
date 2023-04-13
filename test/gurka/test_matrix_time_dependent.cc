@@ -223,7 +223,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   // this should really take the longer route since it's not using traffic here
   check_matrix(res_doc, {0.0f, 1.6f}, false, MatrixType::Cost);
   ASSERT_EQ(result.info().warnings().size(), 1);
-  ASSERT_EQ(result.info().warnings(0).code(), 205);
+  ASSERT_EQ(result.info().warnings(0).code(), 206);
 }
 
 TEST_F(MatrixTest, DisallowedRequest) {
