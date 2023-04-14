@@ -33,7 +33,7 @@ TEST_F(Precision, WaypointsOnNodes) {
                                         map.nodes["D"], map.nodes["E"], map.nodes["F"]};
 
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
     EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
   }
@@ -47,7 +47,7 @@ TEST_F(Precision, PartialOffsetCheckOne) {
                                         map.nodes["D"], map.nodes["E"], map.nodes["2"]};
 
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
     EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
   }
@@ -61,7 +61,7 @@ TEST_F(Precision, PartialOffsetCheckTwo) {
                                         map.nodes["D"], map.nodes["E"], map.nodes["2"]};
 
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
     EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
   }
@@ -75,7 +75,7 @@ TEST_F(Precision, PartialOffsetCheckThree) {
                                         map.nodes["D"], map.nodes["E"], map.nodes["F"]};
 
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_NEAR(shape[i].lat(), expected_shape[i].lat(), 0.000001);
     EXPECT_NEAR(shape[i].lng(), expected_shape[i].lng(), 0.000001);
   }
