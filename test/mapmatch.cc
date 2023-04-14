@@ -1040,7 +1040,7 @@ TEST(Mapmatch, test_leg_duration_trimming) {
       const auto& rlegs = route_api.trip().routes(i).legs();
       const auto& mlegs = match_api.trip().routes(i).legs();
       EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
-      printf("Route %zu\n", i);
+      printf("Route %d\n", i);
       for (int j = 0; j < rlegs.size(); ++j) {
         auto rtime = rlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         auto mtime = mlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
