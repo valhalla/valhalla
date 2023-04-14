@@ -50,7 +50,7 @@ TEST(ShapeAttributes, test_shape_attributes_included) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length
@@ -110,7 +110,7 @@ TEST(ShapeAttributes, test_shape_attributes_duplicated_point) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length
@@ -168,7 +168,7 @@ TEST(ShapeAttributes, test_shape_attributes_no_turncosts) {
   EXPECT_EQ(shape_attributes_speed.Size(), shape.size() - 1);
 
   // Measures the length between point
-  for (int i = 1; i < shape.size(); i++) {
+  for (size_t i = 1; i < shape.size(); i++) {
     auto distance = shape[i].Distance(shape[i - 1]) * .001f;
 
     // Measuring that the length between shape pts is approx. to the shape attributes length
