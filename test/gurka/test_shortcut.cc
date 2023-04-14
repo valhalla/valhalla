@@ -143,7 +143,7 @@ TEST(Shortcuts, ShortcutSpeed) {
 
   ASSERT_EQ(shortcut_infos.size(), 2);
 
-  for (auto const &shortcut_info : shortcut_infos) {
+  for (auto const& shortcut_info : shortcut_infos) {
     auto const shortcutid = std::get<0>(shortcut_info);
     auto const shortcut_speed = std::get<1>(shortcut_info);
     auto const shortcut_truck_speed = std::get<2>(shortcut_info);
