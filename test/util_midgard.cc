@@ -198,7 +198,6 @@ TEST(UtilMidgard, TestResample) {
     auto length = pl.Length();
     resampled = resample_polyline(input_shape, length, resolution);
     size_t n = std::round(length / resolution);
-    float sample_distance = length / n;
     EXPECT_EQ(resampled.size(), n + 1)
         << "resample_polyline - Sampled polyline is not the expected length";
   }
