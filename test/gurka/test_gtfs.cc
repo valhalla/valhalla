@@ -575,7 +575,7 @@ TEST(GtfsExample, MakeProto) {
   std::vector<float> last_dest_dist_traveled;
 
   // get the full shape length
-  float shape_length = 0;
+  [[maybe_unused]] float shape_length = 0;
 
   auto layout = create_layout();
   const std::vector<PointLL> transit_lls{layout["1"], layout["a"], layout["b"],
