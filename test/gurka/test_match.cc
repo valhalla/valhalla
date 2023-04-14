@@ -118,7 +118,7 @@ D--3--4--C--5--6--E)";
       map.nodes["2"], map.nodes["B"], map.nodes["C"], map.nodes["6"], map.nodes["C"], map.nodes["3"],
   };
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
@@ -157,7 +157,7 @@ TEST(MapMatch, NodeSnapFix) {
 
   auto expected_shape = decltype(shape){map.nodes["B"], map.nodes["C"], map.nodes["F"]};
   EXPECT_EQ(shape.size(), expected_shape.size());
-  for (int i = 0; i < shape.size(); ++i) {
+  for (size_t i = 0; i < shape.size(); ++i) {
     EXPECT_TRUE(shape[i].ApproximatelyEqual(expected_shape[i]));
   }
 }
