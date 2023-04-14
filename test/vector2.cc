@@ -187,7 +187,7 @@ void TryOpMultiplication(const Vector2& v, const float scalar, const Vector2& ex
   EXPECT_EQ(expected, result) << "scalar pre";
 
   Vector2 result2 = scalar * v;
-  EXPECT_EQ(expected, result) << "scalar post";
+  EXPECT_EQ(expected, result2) << "scalar post";
 }
 
 TEST(Vector2, TestOpMultiplication) {
