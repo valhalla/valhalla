@@ -1090,7 +1090,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = tester.match(test_cases[i]);
     EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
-    int j = 0, k = 0;
+    int j = 0;
     for (const auto& route : result.trip().routes()) {
       ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +
