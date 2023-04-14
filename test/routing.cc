@@ -18,7 +18,7 @@ struct simple_label {
 
 void Add(baldr::DoubleBucketQueue<simple_label>& adjlist, const std::vector<simple_label>& costs) {
   uint32_t idx = 0;
-  for (const auto cost : costs) {
+  for ([[maybe_unused]] const auto cost : costs) {
     adjlist.add(idx++);
   }
 }
