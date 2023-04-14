@@ -428,13 +428,14 @@ void PopulateEdge(TripLeg_Edge* edge,
   edge->set_travel_mode(travel_mode);
 }
 
-void PopulateIntersectingEdge(TripLeg_IntersectingEdge* xedge,
-                              ::google::protobuf::uint32 begin_heading,
-                              bool prev_name_consistency = false,
-                              bool curr_name_consistency = false,
-                              TripLeg_Traversability driveability = TripLeg_Traversability_kBoth,
-                              TripLeg_Traversability cyclability = TripLeg_Traversability_kBoth,
-                              TripLeg_Traversability walkability = TripLeg_Traversability_kBoth) {
+void PopulateIntersectingEdge(
+    TripLeg_IntersectingEdge* xedge,
+    ::google::protobuf::uint32 begin_heading,
+    bool prev_name_consistency = false,
+    bool curr_name_consistency = false,
+    TripLeg_Traversability driveability = TripLeg_Traversability_kBoth,
+    [[maybe_unused]] TripLeg_Traversability cyclability = TripLeg_Traversability_kBoth,
+    [[maybe_unused]] TripLeg_Traversability walkability = TripLeg_Traversability_kBoth) {
   xedge->set_begin_heading(begin_heading);
   xedge->set_driveability(driveability);
   xedge->set_prev_name_consistency(prev_name_consistency);
