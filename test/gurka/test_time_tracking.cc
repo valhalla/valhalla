@@ -26,7 +26,7 @@ TEST(TimeTracking, make) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   // this is what the default should be, with constrained second of day
-  baldr::TimeInfo basic_ti{false, 0, 0, baldr::kInvalidSecondsOfWeek};
+  baldr::TimeInfo basic_ti{false, 0, 0, baldr::kInvalidSecondsOfWeek, 0, 0, 0};
 
   // once without tz cache and once with
   for (auto* cache : std::vector<baldr::DateTime::tz_sys_info_cache_t*>{
@@ -100,7 +100,7 @@ TEST(TimeTracking, make) {
     // zero out the part we dont care to test
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
-    ASSERT_EQ(ti, (baldr::TimeInfo{1, 110, 1585667787, 213387}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{1, 110, 1585667787, 213387, 0, 0, 0}));
     ASSERT_EQ(location.date_time(), "2020-03-31T11:16");
   }
 }
