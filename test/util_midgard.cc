@@ -27,7 +27,7 @@ TEST(UtilMidgard, TestRangedDefaultT) {
 
   for (unsigned i = 0; i < 100; ++i) {
     ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
-    float defaultVal = testRange.def;
+    [[maybe_unused]] float defaultVal = testRange.def;
     float testVal = testDistributor(generator);
 
     float finalVal = testRange(testVal);
@@ -648,7 +648,8 @@ TEST(UtilMidgard, TestExpandLocation) {
   EXPECT_GE(area, 199.0f * 199.0f);
 
   // Should throw an exception if negative value is sent
-  EXPECT_THROW(AABB2<PointLL> box = ExpandMeters(loc, -10.0f);, std::invalid_argument)
+  EXPECT_THROW([[maybe_unused]] AABB2<PointLL> box = ExpandMeters(loc, -10.0f);
+               , std::invalid_argument)
       << "ExpandLocation: should throw exception with negative meters supplied";
 }
 
