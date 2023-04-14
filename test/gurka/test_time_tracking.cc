@@ -62,7 +62,7 @@ TEST(TimeTracking, make) {
     auto now_str = dt::iso_date_time(tz);
     auto lt = dt::seconds_since_epoch(now_str, tz);
     auto sec = dt::second_of_week(lt, tz);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0, 0, 0}));
     ASSERT_EQ(location.date_time(), now_str);
 
     // not current time but the same date time just set as a string
@@ -71,7 +71,7 @@ TEST(TimeTracking, make) {
     ti = baldr::TimeInfo::make(location, reader, cache);
     lt = dt::seconds_since_epoch(now_str, dt::get_tz_db().from_index(1));
     sec = dt::second_of_week(lt, tz);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 291, lt, sec, 0, 0, 0}));
     ASSERT_EQ(location.date_time(), now_str);
 
     // offset the time from now a bit
@@ -117,20 +117,21 @@ TEST(TimeTracking, forward) {
 
     // change in timezone should result in some offset (LA to NY)
     ti = baldr::TimeInfo{true, 94, 123456789, 0, 0, 0, cache}.forward(10, 110);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 110, 123456789 + 10 + 60 * 60 * 3, 10 + 60 * 60 * 3, 10}));
+    ASSERT_EQ(ti,
+              (baldr::TimeInfo{true, 110, 123456789 + 10 + 60 * 60 * 3, 10 + 60 * 60 * 3, 10, 0, 0}));
 
     // change in timezone should result in some offset (NY to LA) wrap around backwards
     ti = baldr::TimeInfo{true, 110, 123456789, 0, 0, 0, cache}.forward(10, 94);
     ASSERT_EQ(ti, (baldr::TimeInfo{true, 94, 123456789 + 10 - 60 * 60 * 3,
-                                   midgard::kSecondsPerWeek + 10 - 60 * 60 * 3, 10}));
+                                   midgard::kSecondsPerWeek + 10 - 60 * 60 * 3, 10, 0, 0}));
 
     // wrap around second of week
     ti = baldr::TimeInfo{true, 1, 2, midgard::kSecondsPerWeek - 5, 0, 0, cache}.forward(10, 1);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 12, 5, 10}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 12, 5, 10, 0, 0}));
 
     // cross now time
     ti = baldr::TimeInfo{true, 1, 2, 0, 5, 1, cache}.forward(10, 1);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 12, 10, 5}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 12, 10, 5, 0, 0}));
 
     // dont cross now time
     ti = baldr::TimeInfo{true, 1, 2, 0, 5, 1, cache}.forward(2, 1);
@@ -169,7 +170,7 @@ TEST(TimeTracking, reverse) {
 
     // dont cross now time
     ti = baldr::TimeInfo{true, 1, 22, midgard::kSecondsPerWeek - 1, 5, 0, cache}.reverse(2, 1);
-    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 20, midgard::kSecondsPerWeek - 3, 3}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{true, 1, 20, midgard::kSecondsPerWeek - 3, 3, 0, 0}));
   }
 }
 
