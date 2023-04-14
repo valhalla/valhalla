@@ -54,7 +54,7 @@ TEST(Standalone, HeadingNumberTurnLeft) {
   //
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   auto heading_number{1};
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i)
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i)
     ASSERT_EQ(heading_number, json["routes"][0]["legs"][0]["steps"][0]["intersections"][0]["bearings"]
                                   .GetArray()
                                   .Size());
@@ -81,9 +81,9 @@ TEST(Standalone, HeadingNumberTRoute) {
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 3, 1};
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (int j = 0; j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size();
-         ++j) {
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
+    for (size_t j = 0;
+         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
       ASSERT_EQ(expected_headings[i],
                 json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
                     .GetArray()
@@ -111,9 +111,9 @@ TEST(Standalone, HeadingNumberForkRoute) {
 
   auto json = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
   std::vector<int> expected_headings{1, 3, 3, 1};
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (int j = 0; j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size();
-         ++j) {
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
+    for (size_t j = 0;
+         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
       ASSERT_EQ(expected_headings[i],
                 json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
                     .GetArray()
@@ -146,9 +146,9 @@ TEST(Standalone, HeadingNumberCrossRoad) {
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 4, 1};
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (int j = 0; j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size();
-         ++j) {
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
+    for (size_t j = 0;
+         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
       ASSERT_EQ(expected_headings[i],
                 json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
                     .GetArray()
@@ -182,9 +182,9 @@ TEST(Standalone, HeadingNumber2CrossRoadPedestrian) {
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 4, 4, 1};
   int index{0};
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (int j = 0; j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size();
-         ++j) {
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
+    for (size_t j = 0;
+         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
       ASSERT_EQ(expected_headings[index++],
                 json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
                     .GetArray()
@@ -195,9 +195,9 @@ TEST(Standalone, HeadingNumber2CrossRoadPedestrian) {
   result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "pedestrian");
   json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   index = 0;
-  for (int i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (int j = 0; j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size();
-         ++j) {
+  for (size_t i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
+    for (size_t j = 0;
+         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
       ASSERT_EQ(expected_headings[index++],
                 json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
                     .GetArray()
@@ -238,7 +238,7 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
     int out_cnt{0};
     std::vector<int> in_indexes{3, 3, 0}; // `in` field expected values
     int in_cnt{0};
-    for (int steps = 0; steps < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++steps) {
+    for (size_t steps = 0; steps < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++steps) {
       int intersection_num =
           json["routes"][0]["legs"][0]["steps"][steps]["intersections"].GetArray().Size();
       for (int intersection = 0; intersection < intersection_num; ++intersection) {
@@ -301,7 +301,7 @@ TEST(Standalone, HeadingNumber2CrossRoadAuto) {
     int in_cnt{0};
 
     // clang-format off
-    for (int step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
+    for (size_t step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
 
       int intersection_num = json["routes"][0]["legs"][0]["steps"][step]["intersections"].GetArray().Size();
       for (int intersection = 0; intersection < intersection_num; ++intersection) {
@@ -430,7 +430,7 @@ TEST(Standalone, HeadingNumberAutoRoute) {
   std::vector<int> expected_headings{1, 2, 4, 2, 4, 1};
   int index{0};
   // Validate number of bearings at each intersection of each step.
-  for (int step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
+  for (size_t step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
     int intersection_num =
         json["routes"][0]["legs"][0]["steps"][step]["intersections"].GetArray().Size();
     for (int intersection = 0; intersection < intersection_num; ++intersection) {
@@ -457,7 +457,7 @@ TEST(Standalone, HeadingNumberAutoRoute) {
 
   // Validating `in` and `out` edge indexes and bearings at each intersection of each step.
   // clang-format off
-  for (int step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
+  for (size_t step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
     int intersection_num = json["routes"][0]["legs"][0]["steps"][step]["intersections"].GetArray().Size();
     for (int intersection = 0; intersection < intersection_num; ++intersection) {
       if (step == 0) {
