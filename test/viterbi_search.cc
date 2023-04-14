@@ -369,7 +369,7 @@ std::vector<PathWithCost> sort_all_paths(const std::vector<Column>& columns,
 
   const auto& sub_pcs = sort_all_paths(columns, since_time + 1);
   std::vector<PathWithCost> pcs;
-  for (auto id = 0; id < columns[since_time].size(); id++) {
+  for (size_t id = 0; id < columns[since_time].size(); id++) {
     const StateId stateid(since_time, id);
     const auto& state = get_state(columns, stateid);
     for (const auto& sub_pc : sub_pcs) {
