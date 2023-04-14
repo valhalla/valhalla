@@ -115,7 +115,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
+[[maybe_unused]] std::string output_shape(const valhalla::Api& api) {
   std::stringstream shape;
   for (const auto& r : api.directions().routes()) {
     shape << "new route" << std::endl;
