@@ -113,7 +113,7 @@ TEST(TimeTracking, forward) {
        }) {
     // invalid should stay that way
     auto ti = baldr::TimeInfo{false, 0, 0, 0, 0, 0, cache}.forward(10, 1);
-    ASSERT_EQ(ti, (baldr::TimeInfo{false}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{false, 0, 0, 0, 0, 0, 0}));
 
     // change in timezone should result in some offset (LA to NY)
     ti = baldr::TimeInfo{true, 94, 123456789, 0, 0, 0, cache}.forward(10, 110);
@@ -147,7 +147,7 @@ TEST(TimeTracking, reverse) {
        }) {
     // invalid should stay that way
     auto ti = baldr::TimeInfo{false, 0, 0, 0, 0, 0, cache}.reverse(10, 1);
-    ASSERT_EQ(ti, (baldr::TimeInfo{false}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{false, 0, 0, 0, 0, 0, 0}));
 
     // change in timezone should result in some offset (NY to LA)
     ti = baldr::TimeInfo{true, 110, 123456789, 0, 0, 0, cache}.reverse(10, 94);
