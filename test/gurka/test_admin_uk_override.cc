@@ -66,8 +66,6 @@ void GetAdminData(const std::string& dbname,
   std::string sql = "SELECT admin_level, name from admins;";
 
   uint32_t result = 0;
-  bool dor = true;
-  bool intersection_name = false;
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
