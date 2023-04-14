@@ -130,7 +130,7 @@ TEST(Compression, fail_inflate) {
                                inflate_dst_fail))
       << "dst should fail";
 
-  bool inflate_result;
+  bool inflate_result{false};
   EXPECT_NO_THROW(
       inflate_result =
           valhalla::baldr::inflate(inflate_src_fail3, std::bind(inflate_dst, std::placeholders::_1,
