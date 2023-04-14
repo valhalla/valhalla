@@ -52,7 +52,7 @@ TEST(TimeTracking, make) {
     ti.second_of_week = 0;
     ti.seconds_from_now = 0;
     ti.negative_seconds_from_now = 0;
-    ASSERT_EQ(ti, (baldr::TimeInfo{1, 291}));
+    ASSERT_EQ(ti, (baldr::TimeInfo{1, 291, 0, 0, 0, 0, 0}));
     ASSERT_EQ(location.date_time(), "2020-04-01T12:34");
 
     // current time (technically we could fail if the minute changes between the next 3 lines)
