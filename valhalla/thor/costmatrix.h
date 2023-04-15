@@ -55,8 +55,6 @@ struct LocationStatus {
   int threshold;
   std::set<uint32_t> remaining_locations;
 
-  LocationStatus() : threshold(0) {
-  }
   LocationStatus(const int t) : threshold(t) {
   }
 };
