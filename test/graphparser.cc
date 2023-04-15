@@ -33,7 +33,7 @@ const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
 };
 
 OSMNode GetNode(uint64_t node_id, sequence<OSMWayNode>& way_nodes) {
-  auto found = way_nodes.find({node_id, 0, 0, 0}, node_predicate);
+  auto found = way_nodes.find({node_id, 0, 0}, node_predicate);
   if (found == way_nodes.end())
     throw std::runtime_error("Couldn't find node: " + std::to_string(node_id));
   return (*found).node;
