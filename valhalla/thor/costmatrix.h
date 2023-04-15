@@ -55,6 +55,8 @@ struct LocationStatus {
   int threshold;
   std::set<uint32_t> remaining_locations;
 
+  LocationStatus() : threshold(0) {
+  }
   LocationStatus(const int t) : threshold(t) {
   }
 };
@@ -96,7 +98,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  CostMatrix();
+  CostMatrix(const boost::property_tree::ptree& config = {});
   ~CostMatrix();
 
   /**
@@ -133,6 +135,8 @@ protected:
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
+
+  uint32_t max_reserved_labels_count_;
 
   // Number of source and target locations that can be expanded
   uint32_t source_count_;

@@ -15,8 +15,6 @@ using namespace valhalla::sif;
 
 namespace {
 
-constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
-
 // Threshold (seconds) to extend search once the first connection has been found.
 // TODO - this is currently set based on some exceptional cases (e.g. routes taking
 // the PA Turnpike which have very long edges). Using a metric based on maximum edge

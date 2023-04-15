@@ -11,6 +11,7 @@ using namespace valhalla::sif;
 namespace valhalla {
 namespace thor {
 
+// TODO: this should be _more_ than BD variant label reservation, not less
 constexpr uint32_t kInitialEdgeLabelCount = 500000;
 
 // Number of iterations to allow with no convergence to the destination

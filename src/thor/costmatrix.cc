@@ -26,6 +26,8 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
+constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
+
 } // namespace
 
 namespace valhalla {
@@ -34,10 +36,12 @@ namespace thor {
 class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
 
 // Constructor with cost threshold.
-CostMatrix::CostMatrix()
+CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
-      current_cost_threshold_(0), targets_{new TargetMap} {
+      current_cost_threshold_(0), targets_{new TargetMap},
+      max_reserved_labels_count_(
+          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountBDMatrix)) {
 }
 
 CostMatrix::~CostMatrix() {
@@ -124,14 +128,14 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
-  // Set the source and target locations
-  SetSources(graphreader, source_location_list);
-  SetTargets(graphreader, target_location_list);
-
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
   Initialize(source_location_list, target_location_list);
+
+  // Set the source and target locations
+  SetSources(graphreader, source_location_list);
+  SetTargets(graphreader, target_location_list);
 
   // Perform backward search from all target locations. Perform forward
   // search from all source locations. Connections between the 2 search
@@ -224,20 +228,50 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
-  // Add initial status
-  const uint32_t kMaxThreshold = std::numeric_limits<int>::max();
+  source_count_ = source_locations.size();
+  target_count_ = target_locations.size();
+
+  // Add initial sources status
+  source_status_.reserve(source_count_);
+  source_hierarchy_limits_.reserve(source_count_);
+  source_adjacency_.reserve(source_count_);
+  source_edgestatus_.resize(source_count_);
+  source_edgelabel_.resize(source_count_);
   for (uint32_t i = 0; i < source_count_; i++) {
+    // Allocate the adjacency list and hierarchy limits for this source.
+    // Use the cost threshold to size the adjacency list.
+    source_edgelabel_[i].reserve(
+        std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBDMatrix));
+    source_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                  costing_->UnitSize(),
+                                                                  &source_edgelabel_[i]));
     source_status_.emplace_back(kMaxThreshold);
+    source_hierarchy_limits_.emplace_back(costing_->GetHierarchyLimits());
   }
+
+  // Add initial targets status
+  target_status_.reserve(target_count_);
+  target_hierarchy_limits_.reserve(target_count_);
+  target_adjacency_.reserve(target_count_);
+  target_edgestatus_.resize(target_count_);
+  target_edgelabel_.resize(target_count_);
   for (uint32_t i = 0; i < target_count_; i++) {
+    // Allocate the adjacency list and hierarchy limits for target location.
+    // Use the cost threshold to size the adjacency list.
+    target_edgelabel_[i].reserve(
+        std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBDMatrix));
+    target_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
+                                                                  costing_->UnitSize(),
+                                                                  &target_edgelabel_[i]));
     target_status_.emplace_back(kMaxThreshold);
+    target_hierarchy_limits_.emplace_back(costing_->GetHierarchyLimits());
   }
 
   // Initialize best connection
-  bool all_the_same = true;
   GraphId empty;
   Cost trivial_cost(0.0f, 0.0f);
   Cost max_cost(kMaxCost, kMaxCost);
+  best_connection_.reserve(source_count_ * target_count_);
   for (uint32_t i = 0; i < source_count_; i++) {
     for (uint32_t j = 0; j < target_count_; j++) {
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
@@ -247,7 +281,6 @@ void CostMatrix::Initialize(
         best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
         source_status_[i].remaining_locations.insert(j);
         target_status_[j].remaining_locations.insert(i);
-        all_the_same = false;
       }
     }
   }
@@ -720,23 +753,10 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 // locations.
 void CostMatrix::SetSources(GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources) {
-  // Allocate edge labels and edge status
-  source_count_ = sources.size();
-  source_edgelabel_.resize(source_count_);
-  source_edgestatus_.resize(source_count_);
-  source_hierarchy_limits_.resize(source_count_);
-
   // Go through each source location
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& origin : sources) {
-    // Allocate the adjacency list and hierarchy limits for this source.
-    // Use the cost threshold to size the adjacency list.
-    source_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                  costing_->UnitSize(),
-                                                                  &source_edgelabel_[index]));
-    source_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
-
     // Only skip inbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(origin.correlation().edges().begin(), origin.correlation().edges().end(),
@@ -801,23 +821,10 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 // these locations.
 void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& targets) {
-  // Allocate target edge labels and edge status
-  target_count_ = targets.size();
-  target_edgelabel_.resize(targets.size());
-  target_edgestatus_.resize(targets.size());
-  target_hierarchy_limits_.resize(targets.size());
-
   // Go through each target location
   uint32_t index = 0;
   Cost empty_cost;
   for (const auto& dest : targets) {
-    // Allocate the adjacency list and hierarchy limits for target location.
-    // Use the cost threshold to size the adjacency list.
-    target_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                  costing_->UnitSize(),
-                                                                  &target_edgelabel_[index]));
-    target_hierarchy_limits_[index] = costing_->GetHierarchyLimits();
-
     // Only skip outbound edges if we have other options
     bool has_other_edges = false;
     std::for_each(dest.correlation().edges().begin(), dest.correlation().edges().end(),
