@@ -113,9 +113,8 @@ config = {
         'source_to_target_algorithm': 'select_optimal',
         'service': {'proxy': 'ipc:///tmp/thor'},
         'max_reserved_labels_count': 1000000,
-        'max_reserved_labels_count_matrix': 2000000,
+        'max_reserved_labels_count_matrix': 4000000,
         'clear_reserved_memory': False,
-        'clear_reserved_memory_matrix': False,
         'extended_search': False,
     },
     'odin': {
@@ -366,7 +365,6 @@ help_text = {
         'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.',
         'max_reserved_labels_count_matrix': 'Maximum capacity that allowed to keep reserved in matrix algorithm.',
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
-        'clear_reserved_memory_matrix': 'If True clean reserved memory in matrix algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
     },
     'odin': {

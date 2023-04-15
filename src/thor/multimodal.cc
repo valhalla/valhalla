@@ -38,11 +38,9 @@ uint32_t GetOperatorId(const graph_tile_ptr& tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kInitialEdgeLabelCount = 200000;
-
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
-    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCountMM),
                     config.get<bool>("clear_reserved_memory", false)),
       max_walking_dist_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
       mode_(travel_mode_t::kPedestrian), travel_type_(0) {

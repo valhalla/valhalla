@@ -20,8 +20,6 @@
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
 
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
-
 namespace valhalla {
 namespace thor {
 
@@ -60,7 +58,7 @@ public:
     // Set the costings
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
     bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
-    edgelabels_.reserve(kInitialEdgeLabelCount);
+    edgelabels_.reserve(sif::kInitialEdgeLabelCount);
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {

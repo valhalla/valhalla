@@ -12,9 +12,11 @@
 namespace valhalla {
 namespace sif {
 
+constexpr uint32_t kInitialEdgeLabelCount = 1000000;
 constexpr uint32_t kInitialEdgeLabelCountMatrix = 4000000;
-constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
+constexpr uint32_t kInitialEdgeLabelCountBD = 500000;
 constexpr uint32_t kInitialEdgeLabelCountBDMatrix = 2000000;
+constexpr uint32_t kInitialEdgeLabelCountMM = 200000;
 
 /**
  * Labeling information for shortest path algorithm. Contains cost,

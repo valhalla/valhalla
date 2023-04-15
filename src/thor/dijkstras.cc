@@ -9,8 +9,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
-
 namespace {
 
 // Method to get an operator Id from a map of operator strings vs. Id.

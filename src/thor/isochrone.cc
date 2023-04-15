@@ -37,8 +37,6 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
-
 // Default constructor
 Isochrone::Isochrone(const boost::property_tree::ptree& config)
     : Dijkstras(config), shape_interval_(50.0f) {
