@@ -32,7 +32,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceBSSMatrix();
+  TimeDistanceBSSMatrix(const boost::property_tree::ptree& config = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -88,6 +88,7 @@ protected:
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
+  uint32_t max_reserved_labels_count_;
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;

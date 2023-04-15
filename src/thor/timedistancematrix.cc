@@ -59,8 +59,10 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
+TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
+    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0),
+      max_reserved_labels_count_(
+          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountMatrix)) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -237,8 +239,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
     std::vector<TimeDistance> one_to_many;
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
-    // Construct adjacency list, edge status, and done set. Set bucket size and
-    // cost range based on DynamicCost.
+    // Construct adjacency list. Set bucket size and cost range based on DynamicCost.
     adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
 
     // Initialize the origin and set the available destination edges

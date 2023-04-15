@@ -27,6 +27,7 @@
    * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
    * FIXED: multiple smaller bugs while testing more multimodal /route & /isochrones [#4055](https://github.com/valhalla/valhalla/pull/4055)
    * FIXED: `FindLuaJit.cmake` to include Windows paths/library names [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * FIXED: fix `clear` methods on matrix algorithms and reserve some space for labels with a new config [#4075](https://github.com/valhalla/valhalla/pull/4075)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)

@@ -18,6 +18,9 @@
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
 
+using namespace valhalla::baldr;
+using namespace valhalla::sif;
+
 namespace valhalla {
 namespace thor {
 
@@ -28,7 +31,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceMatrix();
+  TimeDistanceMatrix(const boost::property_tree::ptree& config = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -49,9 +52,9 @@ public:
   inline std::vector<TimeDistance>
   SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                  google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t mode,
+                 GraphReader& graphreader,
+                 const mode_costing_t& mode_costing,
+                 const travel_mode_t mode,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations,
                  const bool invariant = false) {
@@ -61,6 +64,7 @@ public:
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
+    edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCountMatrix));
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {
@@ -88,6 +92,7 @@ protected:
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
+  uint32_t max_reserved_labels_count_;
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
@@ -96,22 +101,22 @@ protected:
   std::vector<Destination> destinations_;
 
   // Current costing mode
-  std::shared_ptr<sif::DynamicCost> costing_;
+  std::shared_ptr<DynamicCost> costing_;
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<EdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  DoubleBucketQueue<EdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  sif::TravelMode mode_;
+  travel_mode_t mode_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
@@ -120,8 +125,6 @@ protected:
    * Reset all origin-specific information
    */
   inline void reset() {
-    // Clear the edge labels and destination list
-    edgelabels_.clear();
     // Clear the per-origin information
     for (auto& dest : destinations_) {
       dest.reset();
@@ -165,7 +168,7 @@ protected:
             const bool FORWARD = expansion_direction == ExpansionType::forward>
   void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
-              const sif::EdgeLabel& pred,
+              const EdgeLabel& pred,
               const uint32_t pred_idx,
               const bool from_transition,
               const baldr::TimeInfo& time_info,
@@ -231,7 +234,7 @@ protected:
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
-                          const sif::EdgeLabel& pred,
+                          const EdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);
 

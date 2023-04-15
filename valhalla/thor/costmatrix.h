@@ -99,6 +99,7 @@ public:
    * the constructor mainly just sets some internals to a default empty value.
    */
   CostMatrix(const boost::property_tree::ptree& config = {});
+
   ~CostMatrix();
 
   /**
