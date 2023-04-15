@@ -105,8 +105,7 @@ inline std::string get_date_time(const std::string& origin_dt,
 }
 
 // return true if any location had a valid time set
-// return false if it doesn't make sense computationally
-// check with prioritize_bidir if we'll turn process with CostMatrix and set warnings accordingly
+// return false if it doesn't make sense computationally and add warnings accordingly
 inline bool check_matrix_time(Api& request, const MatrixType type) {
   const auto& options = request.options();
   bool less_sources = options.sources().size() <= options.targets().size();

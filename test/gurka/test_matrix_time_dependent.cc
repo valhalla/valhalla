@@ -140,7 +140,9 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
   check_matrix(res_doc, {0.0f, 1.6f, 2.0f, 0.0f}, false, MatrixType::TimeDist);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
-  // invalid time/location combo for tdmatrix, i.e. will use CostMatrix instead with traffic
+  // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
+  // https://github.com/valhalla/valhalla/issues/3803
+  // this should really take the longer route since it's not using traffic here for TDMatrix
   res.erase();
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "H"}, {"H"}, "auto", options,
                             nullptr, &res);

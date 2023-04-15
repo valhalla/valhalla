@@ -350,7 +350,6 @@ void CostMatrix::ForwardSearch(const uint32_t index,
   expand = [&](graph_tile_ptr tile, const GraphId& node, const NodeInfo* nodeinfo, BDEdgeLabel& pred,
                const uint32_t pred_idx, const bool from_transition, const baldr::TimeInfo& ti) {
     // will be updated along the expansion
-    // TODO: for some reason nodeinfo has no timezone set for the gurka test, wtf...
     auto offset_time = from_transition ? ti
                                        : ti.forward(invariant ? 0.f : pred.cost().secs,
                                                     static_cast<int>(nodeinfo->timezone()));
