@@ -18,9 +18,6 @@
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
 
-using namespace valhalla::baldr;
-using namespace valhalla::sif;
-
 namespace valhalla {
 namespace thor {
 
@@ -52,9 +49,9 @@ public:
   inline std::vector<TimeDistance>
   SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
                  google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 GraphReader& graphreader,
-                 const mode_costing_t& mode_costing,
-                 const travel_mode_t mode,
+                 baldr::GraphReader& graphreader,
+                 const sif::mode_costing_t& mode_costing,
+                 const sif::travel_mode_t mode,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations,
                  const bool invariant = false) {
@@ -64,7 +61,7 @@ public:
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-    edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCountMatrix));
+    edgelabels_.reserve(std::min(max_reserved_labels_count_, sif::kInitialEdgeLabelCountMatrix));
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {
@@ -101,22 +98,22 @@ protected:
   std::vector<Destination> destinations_;
 
   // Current costing mode
-  std::shared_ptr<DynamicCost> costing_;
+  std::shared_ptr<sif::DynamicCost> costing_;
 
   // List of edges that have potential destinations. Each "marked" edge
   // has a vector of indexes into the destinations vector
   std::unordered_map<uint64_t, std::vector<uint32_t>> dest_edges_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<EdgeLabel> edgelabels_;
+  std::vector<sif::EdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  DoubleBucketQueue<EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  travel_mode_t mode_;
+  sif::travel_mode_t mode_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
@@ -168,7 +165,7 @@ protected:
             const bool FORWARD = expansion_direction == ExpansionType::forward>
   void Expand(baldr::GraphReader& graphreader,
               const baldr::GraphId& node,
-              const EdgeLabel& pred,
+              const sif::EdgeLabel& pred,
               const uint32_t pred_idx,
               const bool from_transition,
               const baldr::TimeInfo& time_info,
@@ -234,7 +231,7 @@ protected:
                           std::vector<uint32_t>& destinations,
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
-                          const EdgeLabel& pred,
+                          const sif::EdgeLabel& pred,
                           const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);
 
