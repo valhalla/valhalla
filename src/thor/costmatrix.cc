@@ -32,7 +32,6 @@ inline float find_percent_along(const valhalla::Location& location, const GraphI
     if (e.graph_id() == edge_id)
       return e.percent_along();
   }
-  throw std::logic_error("Could not find candidate edge for the location");
 }
 
 } // namespace
@@ -965,7 +964,7 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
 
       const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
       if (edge == nullptr) {
-        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+        throw tile_gone_error_t("CostMatrix::RecostPaths failed", edgelabel.edgeid());
       }
 
       if (edge->is_shortcut()) {
@@ -989,7 +988,7 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
       const DirectedEdge* opp_edge = nullptr;
       GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
       if (opp_edge == nullptr) {
-        throw tile_gone_error_t("BidirectionalAStar::FormPath failed", edgelabel.edgeid());
+        throw tile_gone_error_t("CostMatrix::RecostPaths failed", edgelabel.edgeid());
       }
 
       if (opp_edge->is_shortcut()) {
@@ -1026,7 +1025,7 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
       sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
                           time_info, invariant, true);
     } catch (const std::exception& e) {
-      LOG_ERROR(std::string("Bi-directional astar failed to recost final path: ") + e.what());
+      LOG_ERROR(std::string("CostMatrix failed to recost final paths: ") + e.what());
       continue;
     }
 
