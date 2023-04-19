@@ -21,7 +21,7 @@ namespace sif {
 namespace {
 
 // Base transition costs (not toll booth penalties since golf carts likely don't take toll roads)
-constexpr float kDefaultDestinationOnlyPenalty = 120.0f; // Seconds
+constexpr float kDefaultDestinationOnlyPenalty = 30.0f; // Seconds
 
 // Other options
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
@@ -330,7 +330,9 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      // NOTE: Parking aisles are baked as destination-only, but for golf carts we actually need
+      // to ignore this according to Peachtree City's assistant manager.
+      (!allow_destination_only_ && (!pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle)) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
     return false;

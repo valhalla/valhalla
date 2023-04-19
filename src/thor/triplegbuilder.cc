@@ -941,11 +941,15 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_speed(speed);
   }
 
-  uint8_t kAccess = 0;
+  uint16_t kAccess = 0;
   if (mode == sif::TravelMode::kBicycle) {
     kAccess = kBicycleAccess;
   } else if (mode == sif::TravelMode::kDrive) {
     kAccess = kAutoAccess;
+
+    if (travel_type == static_cast<uint8_t>(sif::VehicleType::kGolfCart)) {
+      kAccess = kGolfCartAccess;
+    }
   } else if (mode == sif::TravelMode::kPedestrian || mode == sif::TravelMode::kPublicTransit) {
     kAccess = kPedestrianAccess;
   }

@@ -19,7 +19,8 @@ json::MapPtr access_json(uint16_t access) {
                     {"pedestrian", static_cast<bool>(access & kPedestrianAccess)},
                     {"taxi", static_cast<bool>(access & kTaxiAccess)},
                     {"truck", static_cast<bool>(access & kTruckAccess)},
-                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)}});
+                    {"wheelchair", static_cast<bool>(access & kWheelchairAccess)},
+                    {"golf_cart", static_cast<bool>(access & kGolfCartAccess)}});
 }
 
 json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
