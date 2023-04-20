@@ -44,7 +44,7 @@ std::string TimeStamp() {
       snprintf(&buffer.front(), buffer.length(), "%04d/%02d/%02d %02d:%02d:%09.6f",
                gmt.tm_year + 1900, gmt.tm_mon + 1, gmt.tm_mday, gmt.tm_hour, gmt.tm_min,
                fractional_seconds.count());
-  assert(ret == 0)
+  assert(ret == 0);
 
   // Remove trailing null terminator added by snprintf.
   buffer.pop_back();
