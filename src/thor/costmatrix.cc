@@ -27,10 +27,12 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
-inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
+inline void find_percent_along(const valhalla::Location& location,
+                               const GraphId& edge_id,
+                               double& percent_along) {
   for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
-      return e.percent_along();
+      percent_along = e.percent_along();
   }
 }
 
@@ -1007,14 +1009,14 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     Cost new_cost{0.f, 0.f};
     const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
 
-    float source_pct;
+    double source_pct = 0.0;
     try {
-      source_pct = find_percent_along(source, path_edges.front());
+      find_percent_along(source, path_edges.front(), source_pct);
     } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
 
-    float target_pct;
+    double target_pct = 1.0;
     try {
-      target_pct = find_percent_along(target, path_edges.back());
+      find_percent_along(target, path_edges.back(), target_pct);
     } catch (...) {
       throw std::logic_error("Could not find candidate edge used for destination label");
     }
