@@ -137,7 +137,7 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt,
   }
 
   // All tiles have color 0 (not connected), go through and connect
-  // (build the ColorMap). Transit level uses local hierarchy tiles
+  // (build the ColorMap).
   for (auto& color : colors) {
     if (color.first == transit_level) {
       TileHierarchy::GetTransitLevel().tiles.ColorMap(color.second, not_neighbors);
@@ -196,11 +196,12 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
 
 std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const {
   // bail if we dont have the level
-  uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
-  if (tile_level >= TileHierarchy::levels().size()) {
+  if (hierarchy_level > TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("hierarchy level not found");
   }
-  const auto& tiles = TileHierarchy::levels()[tile_level].tiles;
+  const auto& tiles = hierarchy_level == transit_level
+                          ? TileHierarchy::GetTransitLevel().tiles
+                          : TileHierarchy::levels()[hierarchy_level].tiles;
 
   // make a region map (inverse mapping of color to lists of tiles)
   // could cache this but shouldnt need to call it much
@@ -236,13 +237,14 @@ std::string connectivity_map_t::to_geojson(const uint32_t hierarchy_level) const
 }
 
 std::vector<size_t> connectivity_map_t::to_image(const uint32_t hierarchy_level) const {
-  uint32_t tile_level = (hierarchy_level == transit_level) ? transit_level - 1 : hierarchy_level;
-  if (tile_level >= TileHierarchy::levels().size()) {
+  if (hierarchy_level > TileHierarchy::GetTransitLevel().level) {
     throw std::runtime_error("hierarchy level not found");
   }
-  const auto& level_tiles = TileHierarchy::levels()[tile_level];
+  const auto& level_tiles = hierarchy_level == transit_level
+                                ? TileHierarchy::GetTransitLevel().tiles
+                                : TileHierarchy::levels()[hierarchy_level].tiles;
 
-  std::vector<size_t> tiles(level_tiles.tiles.nrows() * level_tiles.tiles.ncolumns(), 0);
+  std::vector<size_t> tiles(level_tiles.nrows() * level_tiles.ncolumns(), 0);
   auto level = colors.find(hierarchy_level);
   if (level != colors.cend()) {
     for (size_t i = 0; i < tiles.size(); ++i) {
