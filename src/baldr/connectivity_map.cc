@@ -162,16 +162,15 @@ size_t connectivity_map_t::get_color(const GraphId& id) const {
   return color->second;
 }
 
-std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_level,
+std::unordered_set<size_t> connectivity_map_t::get_colors(const baldr::TileLevel& hierarchy_level,
                                                           const baldr::PathLocation& location,
                                                           float radius) const {
 
   std::unordered_set<size_t> result;
-  auto level = colors.find(hierarchy_level);
+  auto level = colors.find(hierarchy_level.level);
   if (level == colors.cend()) {
     return result;
   }
-  const auto& tiles = TileHierarchy::levels()[hierarchy_level].tiles;
   std::vector<const decltype(location.edges)*> edge_sets{&location.edges, &location.filtered_edges};
   for (const auto* edges : edge_sets) {
     for (const auto& edge : *edges) {
@@ -182,7 +181,7 @@ std::unordered_set<size_t> connectivity_map_t::get_colors(uint32_t hierarchy_lev
       float lngdeg = (radius / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
       AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - latdeg),
                           Point2(ll.lng() + lngdeg, ll.lat() + latdeg));
-      std::vector<int32_t> tilelist = tiles.TileList(bbox);
+      std::vector<int32_t> tilelist = hierarchy_level.tiles.TileList(bbox);
       for (const auto& id : tilelist) {
         auto color = level->second.find(id);
         if (color != level->second.cend()) {

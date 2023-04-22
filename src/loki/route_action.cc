@@ -72,7 +72,7 @@ void loki_worker_t::route(Api& request) {
   check_hierarchy_distance(request);
 
   auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
-  auto connectivity_level = TileHierarchy::levels().back().level;
+  auto connectivity_level = TileHierarchy::levels().back();
   uint32_t connectivity_radius = 0;
   // Validate walking distances (make sure they are in the accepted range)
   if (costing_name == "multimodal" || costing_name == "transit") {
@@ -94,7 +94,7 @@ void loki_worker_t::route(Api& request) {
       throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
                                           std::to_string(max_transit_walking_dis) + " (Meters)"};
     }
-    connectivity_level = TileHierarchy::GetTransitLevel().level;
+    connectivity_level = TileHierarchy::GetTransitLevel();
     connectivity_radius = ped_opts.transit_start_end_max_distance();
   }
 
