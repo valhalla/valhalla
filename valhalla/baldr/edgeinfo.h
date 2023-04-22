@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
@@ -151,6 +152,16 @@ public:
    */
   std::vector<std::string> GetNames() const;
 
+  /** Convenience method to get the names and route number flags for an edge.
+   *
+   *  This one does not calculate the types
+   *  Like GetNamesAndTypes but without using memory for the types
+   *
+   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
+   * @return Returns a list (vector) (name, route number flag) pairs
+   */
+  std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
+
   /**
    * Convenience method to get the names for an edge
    * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
@@ -160,13 +171,13 @@ public:
   std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
 
   /**
-   * Convenience method to get the names and route number flags for an edge.
+   * Convenience method to get the names, route number flags and tag value type for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
-   * @return   Returns a list (vector) of name/route number pairs.
+   * @return   Returns a list (vector) of name/route number flags/types tuples.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
-                                                             bool include_tagged_names = false) const;
+  std::vector<std::tuple<std::string, bool, uint8_t>>
+  GetNamesAndTypes(bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get tags of the edge.
