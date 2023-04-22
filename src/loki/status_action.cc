@@ -60,7 +60,9 @@ void loki_worker_t::status(Api& request) const {
   filesystem::path transit_dir(reader->tile_dir() + filesystem::path::preferred_separator +
                                std::to_string(TileHierarchy::GetTransitLevel().level));
 
-  status->set_bbox(connectivity_map ? connectivity_map->to_geojson(2) : "");
+  if (connectivity_map) {
+    status->set_bbox(connectivity_map->to_geojson(2));
+  }
 
   status->set_has_tiles(static_cast<bool>(tile));
   status->set_has_admins(tile && tile->header()->admincount() > 0);
