@@ -64,8 +64,8 @@ TEST(SimpleCache, CacheLimitsNoOvercommitAfterClear) {
   EXPECT_FALSE(cache.OverCommitted());
 }
 
-void touch_tile(const uint32_t tile_id, const std::string& tile_dir) {
-  auto suffix = GraphTile::FileSuffix({tile_id, 2, 0});
+void touch_tile(const uint32_t tile_id, const std::string& tile_dir, uint8_t level) {
+  auto suffix = GraphTile::FileSuffix({tile_id, level, 0});
   auto fullpath = tile_dir + filesystem::path::preferred_separator + suffix;
   filesystem::create_directories(filesystem::path(fullpath).parent_path());
   int fd = open(fullpath.c_str(), O_CREAT | O_WRONLY, 0644);
@@ -92,25 +92,25 @@ TEST(ConnectivityMap, Basic) {
 
     // create some empty files with tile names
     uint32_t a0 = 0;
-    touch_tile(a0, tile_dir);
+    touch_tile(a0, tile_dir, level.level);
 
     uint32_t a1 = level.tiles.RightNeighbor(a0);
-    touch_tile(a1, tile_dir);
+    touch_tile(a1, tile_dir, level.level);
 
     uint32_t a2 = level.tiles.TopNeighbor(a0);
-    touch_tile(a2, tile_dir);
+    touch_tile(a2, tile_dir, level.level);
 
     uint32_t b0 = level.tiles.RightNeighbor(level.tiles.RightNeighbor(a1));
-    touch_tile(b0, tile_dir);
+    touch_tile(b0, tile_dir, level.level);
 
     uint32_t c0 = level.tiles.TopNeighbor(level.tiles.RightNeighbor(a1));
-    touch_tile(c0, tile_dir);
+    touch_tile(c0, tile_dir, level.level);
 
     uint32_t d0 = level.tiles.TopNeighbor(level.tiles.RightNeighbor(a2));
-    touch_tile(d0, tile_dir);
+    touch_tile(d0, tile_dir, level.level);
 
     uint32_t d1 = level.tiles.TopNeighbor(d0);
-    touch_tile(d1, tile_dir);
+    touch_tile(d1, tile_dir, level.level);
 
     // check that it looks right
     connectivity_map_t conn(pt);
