@@ -55,89 +55,7 @@ int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree)
 } // namespace
 
 #ifdef LOGGING_LEVEL_TRACE
-/* Using detail namespace because there are functions on the global space with the same name on
- * valhalla/proto/directions.pb.h */
-namespace detail {
-#if 0
-const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
-  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
-      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
-  auto f = values.find(alphabet);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
-  return f->second;
-}
-
-const std::string& RoadClass_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
-      {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Traversability_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNone"},
-      {1, "kForward"},
-      {2, "kward"},
-      {3, "kBoth"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Use_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kRoadUse"},
-      {1, "kRampUse"},
-      {2, "kTurnChannelUse"},
-      {3, "kUse"},
-      {4, "kDrivewayUse"},
-      {5, "kAlleyUse"},
-      {6, "kingAisleUse"},
-      {7, "kEmergencyAccessUse"},
-      {8, "kDriveThruUse"},
-      {9, "kCuldesacUse"},
-      {10, "kLivingStreetUse"},
-      {11, "kServiceRoadUse"},
-      {20, "kCyclewayUse"},
-      {21, "kMountainBikeUse"},
-      {24, "kSidewalkUse"},
-      {25, "kFootwayUse"},
-      {26, "kStepsUse"},
-      {27, "kPathUse"},
-      {28, "kPedestrianUse"},
-      {29, "kBridlewayUse"},
-      {30, "kRestAreaUse"},
-      {31, "kServiceAreaUse"},
-      {32, "kPedestrianCrossingUse"},
-      {33, "kElevatorUse"},
-      {34, "kEscalatorUse"},
-      {40, "kOtherUse"},
-      {41, "kFerryUse"},
-      {42, "kRailFerryUse"},
-      {43, "kConstructionUse"},
-      {50, "kRailUse"},
-      {51, "kBusUse"},
-      {52, "kEgressConnectionUse"},
-      {53, "kPlatformConnectionUse"},
-      {54, "kTransitConnectionUse"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-#endif
+namespace {
 
 const std::string& TripLeg_TravelMode_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -198,34 +116,7 @@ const std::string& TripLeg_TransitType_Name(int v) {
   return f->second;
 }
 
-#if 0
-const std::string& TripLeg_CycleLane_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoCycleLane"},
-      {1, "kShared"},
-      {2, "kDedicated"},
-      {3, "kSeparated"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Sidewalk_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoSidewalk"},
-      {1, "kLeft"},
-      {2, "kRight"},
-      {3, "kBothSides"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-#endif // if 0
-} // namespace detail
+} // namespace
 #endif // LOGGING_LEVEL_TRACE
 
 namespace valhalla {
@@ -1164,32 +1055,32 @@ std::string EnhancedTripLeg_Edge::ToParameterString() const {
 
   str += delim;
   str += "TripLeg_TravelMode_";
-  str += detail::TripLeg_TravelMode_Name(travel_mode());
+  str += TripLeg_TravelMode_Name(travel_mode());
 
   // NOTE: Current PopulateEdge implementation
 
   str += delim;
   if (travel_mode() == kDrive) {
     str += "TripLeg_VehicleType_";
-    str += detail::TripLeg_VehicleType_Name(vehicle_type());
+    str += TripLeg_VehicleType_Name(vehicle_type());
   }
 
   str += delim;
   if (travel_mode() == kPedestrian) {
     str += "TripLeg_PedestrianType_";
-    str += detail::TripLeg_PedestrianType_Name(pedestrian_type());
+    str += TripLeg_PedestrianType_Name(pedestrian_type());
   }
 
   str += delim;
   if (travel_mode() == kBicycle) {
     str += "TripLeg_BicycleType_";
-    str += detail::TripLeg_BicycleType_Name(bicycle_type());
+    str += TripLeg_BicycleType_Name(bicycle_type());
   }
 
   str += delim;
   if (travel_mode() == kTransit) {
     str += "TripLeg_TransitType_";
-    str += detail::TripLeg_TransitType_Name(transit_type());
+    str += TripLeg_TransitType_Name(transit_type());
   }
 
   str += delim;
