@@ -150,6 +150,10 @@ connectivity_map_t::connectivity_map_t(const boost::property_tree::ptree& pt,
   }
 }
 
+bool connectivity_map_t::level_color_exists(const uint32_t level) const {
+  return colors.find(level) != colors.end();
+}
+
 size_t connectivity_map_t::get_color(const GraphId& id) const {
   auto level = colors.find(id.level());
   if (level == colors.cend()) {
