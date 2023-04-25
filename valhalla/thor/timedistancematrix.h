@@ -61,7 +61,6 @@ public:
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-    edgelabels_.reserve(max_reserved_labels_count_);
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {
@@ -80,6 +79,11 @@ public:
    * matrix construction.
    */
   inline void clear() {
+    auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+    if (edgelabels_.size() > reservation) {
+      edgelabels_.resize(max_reserved_labels_count_);
+      edgelabels_.shrink_to_fit();
+    }
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -89,10 +93,12 @@ protected:
   // Number of destinations that have been found and settled (least cost path
   // computed).
   uint32_t settled_count_;
-  uint32_t max_reserved_labels_count_;
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
+
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;
@@ -126,6 +132,9 @@ protected:
     for (auto& dest : destinations_) {
       dest.reset();
     }
+
+    // Clear the edge labels
+    edgelabels_.clear();
 
     // Clear elements from the adjacency list
     adjacencylist_.clear();

@@ -40,7 +40,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
       current_cost_threshold_(0), targets_{new TargetMap},
-      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_matrix",
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)) {
 }
 

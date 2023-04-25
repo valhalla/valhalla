@@ -61,8 +61,9 @@ namespace thor {
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0),
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountDijkstras)) {
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
+                                                      kInitialEdgeLabelCountDijkstras)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -233,6 +234,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
 
   std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+    // reserve some space for the next dijkstras (will be cleared at the end of the loop)
+    edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
     const auto& time_info = time_infos[origin_index];
 
