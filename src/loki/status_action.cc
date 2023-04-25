@@ -73,7 +73,6 @@ void loki_worker_t::status(Api& request) const {
   status->set_has_admins(tile && tile->header()->admincount() > 0);
   status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
   status->set_has_live_traffic(reader->HasLiveTraffic());
-
   status->set_osm_changeset(tile && tile->header()->dataset_id());
 }
 } // namespace loki
