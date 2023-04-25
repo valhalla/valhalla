@@ -61,7 +61,7 @@ public:
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
-    edgelabels_.reserve(std::min(max_reserved_labels_count_, sif::kInitialEdgeLabelCountMatrix));
+    edgelabels_.reserve(max_reserved_labels_count_);
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {

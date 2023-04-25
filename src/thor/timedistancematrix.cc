@@ -62,7 +62,7 @@ namespace thor {
 TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0),
       max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountMatrix)) {
+          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountDijkstras)) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.

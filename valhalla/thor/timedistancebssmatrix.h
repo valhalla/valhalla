@@ -55,10 +55,13 @@ public:
                  const sif::travel_mode_t /*mode*/,
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations) {
+
+    LOG_INFO("matrix::TimeDistanceBSSMatrix");
+
     // Set the costings
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
     bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
-    edgelabels_.reserve(sif::kInitialEdgeLabelCount);
+    edgelabels_.reserve(max_reserved_labels_count_);
 
     const bool forward_search = source_location_list.size() <= target_location_list.size();
     if (forward_search) {

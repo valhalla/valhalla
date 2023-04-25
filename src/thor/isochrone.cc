@@ -330,7 +330,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   bucket_count = 20000;
-  edge_label_reservation = kInitialEdgeLabelCount;
+  edge_label_reservation = kInitialEdgeLabelCountDijkstras;
 }
 
 } // namespace thor

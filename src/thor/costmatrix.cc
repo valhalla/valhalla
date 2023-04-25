@@ -40,8 +40,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
       current_cost_threshold_(0), targets_{new TargetMap},
-      max_reserved_labels_count_(
-          config.get<uint32_t>("max_reserved_labels_count_matrix", kInitialEdgeLabelCountBDMatrix)) {
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_matrix",
+                                                      kInitialEdgeLabelCountBidirDijkstra)) {
 }
 
 CostMatrix::~CostMatrix() {
@@ -240,8 +240,7 @@ void CostMatrix::Initialize(
   for (uint32_t i = 0; i < source_count_; i++) {
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
-    source_edgelabel_[i].reserve(
-        std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBDMatrix));
+    source_edgelabel_[i].reserve(max_reserved_labels_count_);
     source_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
                                                                   costing_->UnitSize(),
                                                                   &source_edgelabel_[i]));
@@ -258,8 +257,7 @@ void CostMatrix::Initialize(
   for (uint32_t i = 0; i < target_count_; i++) {
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
-    target_edgelabel_[i].reserve(
-        std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBDMatrix));
+    target_edgelabel_[i].reserve(max_reserved_labels_count_);
     target_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
                                                                   costing_->UnitSize(),
                                                                   &target_edgelabel_[i]));

@@ -66,21 +66,15 @@ std::string thor_worker_t::matrix(Api& request) {
   // lambdas to do the real work
   std::vector<TimeDistance> time_distances;
   auto costmatrix = [&]() {
-    time_distances =
-        costmatrix_.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                   max_matrix_distance.find(costing)->second);
-    costmatrix_.clear();
-    return time_distances;
+    return costmatrix_.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing,
+                                      mode, max_matrix_distance.find(costing)->second);
   };
   auto timedistancematrix = [&]() {
-    time_distances =
-        time_distance_matrix_.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(),
-                                             *reader, mode_costing, mode,
-                                             max_matrix_distance.find(costing)->second,
-                                             options.matrix_locations(),
-                                             options.date_time_type() == Options::invariant);
-    time_distance_matrix_.clear();
-    return time_distances;
+    return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
+                                                *options.mutable_targets(), *reader, mode_costing,
+                                                mode, max_matrix_distance.find(costing)->second,
+                                                options.matrix_locations(),
+                                                options.date_time_type() == Options::invariant);
   };
 
   if (costing == "bikeshare") {
@@ -89,7 +83,6 @@ std::string thor_worker_t::matrix(Api& request) {
                                                  mode_costing, mode,
                                                  max_matrix_distance.find(costing)->second,
                                                  options.matrix_locations());
-    time_distance_bss_matrix_.clear();
     return tyr::serializeMatrix(request, time_distances, distance_scale);
   }
   switch (source_to_target_algorithm) {
