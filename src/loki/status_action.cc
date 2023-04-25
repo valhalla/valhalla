@@ -61,7 +61,7 @@ void loki_worker_t::status(Api& request) const {
 
   if (connectivity_map) {
     status->set_bbox(connectivity_map->to_geojson(2));
-    const static bool has_transit_tiles =
+    const bool has_transit_tiles =
         connectivity_map->level_color_exists(TileHierarchy::GetTransitLevel().level);
     status->set_has_transit_tiles(has_transit_tiles);
   } else {
