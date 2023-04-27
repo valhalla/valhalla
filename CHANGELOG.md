@@ -22,6 +22,11 @@
    * FIXED: duplicated recosting names should throw [#4042](https://github.com/valhalla/valhalla/pull/4042)
    * FIXED: Remove arch specificity from strip command of Python bindings to make it more compatible with other archs [#4040](https://github.com/valhalla/valhalla/pull/4040)
    * FIXED: GraphReader::GetShortcut no longer returns false positives or false negatives [#4019](https://github.com/valhalla/valhalla/pull/4019)
+   * FIXED: Tagging with bus=permit or taxi=permit did not override access=no [#4045](https://github.com/valhalla/valhalla/pull/4045)
+   * FIXED: Upgrade RapidJSON to address undefined behavior [#4051](https://github.com/valhalla/valhalla/pull/4051)
+   * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
+   * FIXED: multiple smaller bugs while testing more multimodal /route & /isochrones [#4055](https://github.com/valhalla/valhalla/pull/4055)
+   * FIXED: `FindLuaJit.cmake` to include Windows paths/library names [#4067](https://github.com/valhalla/valhalla/pull/4067)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
@@ -41,6 +46,10 @@
    * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
    * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
    * ADDED: `disable_hierarchy_pruning` costing option to find the actual optimal route for motorized costing modes, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. [#4000](https://github.com/valhalla/valhalla/pull/4000)
+   * CHANGED: baldr directory: remove warnings and C++17 adjustments [#4011](https://github.com/valhalla/valhalla/pull/4011)
+   * UPDATED: `vcpkg` to latest master, iconv wasn't building anymore [#4066](https://github.com/valhalla/valhalla/pull/4066)
+   * CHANGED: pybind11 upgrade for python 3.11 [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
