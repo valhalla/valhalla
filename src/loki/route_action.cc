@@ -71,6 +71,8 @@ void loki_worker_t::route(Api& request) {
   // check distance for hierarchy pruning
   check_hierarchy_distance(request);
 
+  auto connectivity_level = TileHierarchy::levels().back();
+  uint32_t connectivity_radius = 0;
   // Validate walking distances (make sure they are in the accepted range)
   if (costing_name == "multimodal" || costing_name == "transit") {
     auto& ped_opts = *options.mutable_costings()->find(Costing::pedestrian)->second.mutable_options();
@@ -92,6 +94,8 @@ void loki_worker_t::route(Api& request) {
       throw valhalla_exception_t{156, " Min: " + std::to_string(min_transit_walking_dis) + " Max: " +
                                           std::to_string(max_transit_walking_dis) + " (Meters)"};
     }
+    connectivity_level = TileHierarchy::GetTransitLevel();
+    connectivity_radius = ped_opts.transit_start_end_max_distance();
   }
 
   // correlate the various locations to the underlying graph
@@ -102,12 +106,10 @@ void loki_worker_t::route(Api& request) {
     for (size_t i = 0; i < locations.size(); ++i) {
       const auto& correlated = projections.at(locations[i]);
       PathLocation::toPBF(correlated, options.mutable_locations(i), *reader);
-      // TODO: get transit level for transit costing
-      // TODO: if transit send a non zero radius
       if (!connectivity_map) {
         continue;
       }
-      auto colors = connectivity_map->get_colors(TileHierarchy::levels().back().level, correlated, 0);
+      auto colors = connectivity_map->get_colors(connectivity_level, correlated, connectivity_radius);
       for (auto color : colors) {
         auto itr = color_counts.find(color);
         if (itr == color_counts.cend()) {
