@@ -50,8 +50,8 @@
    * CHANGED: baldr directory: remove warnings and C++17 adjustments [#4011](https://github.com/valhalla/valhalla/pull/4011)
    * UPDATED: `vcpkg` to latest master, iconv wasn't building anymore [#4066](https://github.com/valhalla/valhalla/pull/4066)
    * CHANGED: pybind11 upgrade for python 3.11 [#4067](https://github.com/valhalla/valhalla/pull/4067)
-   * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
    * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
+   * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
