@@ -92,9 +92,16 @@ std::string thor_worker_t::matrix(Api& request) {
              source_to_target_algorithm != TIME_DISTANCE_MATRIX) {
     return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
   } else if (matrix_type == MatrixType::Cost) {
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, matrix_type);
+    // if this happens, the server config only allows for timedist matrix
+    if (has_time && !options.prioritize_bidirectional()) {
+      add_warning(request, 301);
+    }
+    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
   } else {
-    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, matrix_type);
+    if (has_time && options.prioritize_bidirectional()) {
+      add_warning(request, 300);
+    }
+    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
   }
 }
 } // namespace thor
