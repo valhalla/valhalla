@@ -1052,6 +1052,7 @@ std::string ramp_type(const valhalla::DirectionsLeg::Maneuver& maneuver) {
   return "";
 }
 
+// Determine the OSRM type of a maneuver in a step and in bannerInstructions
 std::string maneuver_type(const valhalla::DirectionsLeg::Maneuver& maneuver,
                           valhalla::odin::EnhancedTripLeg* etp,
                           const bool depart_maneuver,
@@ -1169,16 +1170,12 @@ std::string maneuver_type(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
 // Populate the OSRM maneuver record within a step.
 json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                           valhalla::odin::EnhancedTripLeg* etp,
+                           const std::string& maneuver_type,
+                           const std::string& modifier,
+                           const uint32_t in_brg,
+                           const uint32_t out_brg,
                            const PointLL& man_ll,
-                           const bool depart_maneuver,
-                           const bool arrive_maneuver,
-                           const uint32_t prev_intersection_count,
-                           const std::string& mode,
-                           const std::string& prev_mode,
-                           const bool rotary,
-                           const bool prev_rotary,
-                           const valhalla::Options& options) {
+                           const bool emplace_instructions) {
   auto osrm_man = json::map({});
 
   // Set the location
@@ -1187,52 +1184,30 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
   loc->emplace_back(json::fixed_t{man_ll.lat(), 6});
   osrm_man->emplace("location", loc);
 
-  // Get incoming and outgoing bearing. For the incoming heading, use the
-  // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
-  // turn degrees between Valhalla and OSRM
-  uint32_t idx = maneuver.begin_path_index();
-  uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
-  uint32_t out_brg = maneuver.begin_heading();
   osrm_man->emplace("bearing_before", static_cast<uint64_t>(in_brg));
   osrm_man->emplace("bearing_after", static_cast<uint64_t>(out_brg));
+  osrm_man->emplace("type", maneuver_type);
 
-  std::string modifier;
-  if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
-    if (!modifier.empty())
-      osrm_man->emplace("modifier", modifier);
-  }
-
-  if (options.directions_type() == DirectionsType::instructions) {
+  if (emplace_instructions) {
     osrm_man->emplace("instruction", maneuver.text_instruction());
   }
-
-  osrm_man->emplace("type",
-                    maneuver_type(maneuver, etp, depart_maneuver, arrive_maneuver, modifier,
-                                  prev_intersection_count, mode, prev_mode, rotary, prev_rotary));
+  if (!modifier.empty()) {
+    osrm_man->emplace("modifier", modifier);
+  }
   // Roundabout count
-  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter && maneuver.roundabout_exit_count() > 0) {
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter &&
+      maneuver.roundabout_exit_count() > 0) {
     osrm_man->emplace("exit", static_cast<uint64_t>(maneuver.roundabout_exit_count()));
   }
 
   return osrm_man;
 }
 
-// Populate the OSRM bannerInstructions record within a step.
-json::ArrayPtr osrm_banner_instructions(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                                        valhalla::odin::EnhancedTripLeg* etp,
-                                        const PointLL& man_ll,
-                                        const bool depart_maneuver,
-                                        const bool arrive_maneuver,
-                                        const uint32_t prev_intersection_count,
-                                        const std::string& mode,
-                                        const std::string& prev_mode,
-                                        const bool rotary,
-                                        const bool prev_rotary,
-                                        const valhalla::Options& options,
-                                        const std::string& name,
-                                        const double distance) {
-
+// Populate the bannerInstructions record within a step.
+json::ArrayPtr banner_instructions(const std::string& name,
+                                   const std::string& maneuver_type,
+                                   const std::string& modifier,
+                                   const double distance) {
   auto bannerInstructions = json::array({});
   auto bannerInstruction = json::map({});
   auto primaryBannerInstruction = json::map({});
@@ -1241,20 +1216,10 @@ json::ArrayPtr osrm_banner_instructions(const valhalla::DirectionsLeg::Maneuver&
 
   bannerInstruction->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
   primaryBannerInstruction->emplace("text", name);
-
-  uint32_t idx = maneuver.begin_path_index();
-  uint32_t in_brg = (idx > 0) ? etp->GetPrevEdge(idx)->end_heading() : 0;
-  uint32_t out_brg = maneuver.begin_heading();
-
-  std::string modifier;
-  if (!depart_maneuver) {
-    modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
-    if (!modifier.empty())
-      primaryBannerInstruction->emplace("modifier", modifier);
+  primaryBannerInstruction->emplace("type", maneuver_type);
+  if (!modifier.empty()) {
+    primaryBannerInstruction->emplace("modifier", modifier);
   }
-  primaryBannerInstruction->emplace("type",
-                                    maneuver_type(maneuver, etp, depart_maneuver, arrive_maneuver, modifier,
-                                                  prev_intersection_count, mode, prev_mode, rotary, prev_rotary));
 
   std::string bannerComponentType = "text";
   bannerComponent->emplace("type", bannerComponentType);
@@ -1508,18 +1473,32 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         step->emplace("rotary_name", maneuver.street_name(0).value());
       }
 
+      // Get incoming and outgoing bearing. For the incoming heading, use the
+      // prior edge from the TripLeg. Compute turn modifier. TODO - reconcile
+      // turn degrees between Valhalla and OSRM
+      uint32_t idx = maneuver.begin_path_index();
+      uint32_t in_brg = (idx > 0) ? etp.GetPrevEdge(idx)->end_heading() : 0;
+      uint32_t out_brg = maneuver.begin_heading();
+
+      std::string modifier;
+      if (!depart_maneuver) {
+        modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
+      }
+
+      std::string mnvr_type = maneuver_type(maneuver, &etp, depart_maneuver, arrive_maneuver,
+                                            modifier, prev_intersection_count, mode, prev_mode,
+                                            rotary, prev_rotary);
+
       // Add OSRM maneuver
       step->emplace("maneuver",
-                    osrm_maneuver(maneuver, &etp, shape[maneuver.begin_shape_index()],
-                                  depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                  prev_mode, rotary, prev_rotary, options));
+                    osrm_maneuver(maneuver, mnvr_type, modifier, in_brg, out_brg,
+                                  shape[maneuver.begin_shape_index()],
+                                  (options.directions_type() == DirectionsType::instructions)));
 
-      // Add OSRM bannerInstructions
+      // Add bannerInstructions
       if (prev_step) {
         prev_step->emplace("bannerInstructions",
-                           osrm_banner_instructions(maneuver, &etp, shape[maneuver.begin_shape_index()],
-                                                    depart_maneuver, arrive_maneuver, prev_intersection_count, mode,
-                                                    prev_mode, rotary, prev_rotary, options, name, prev_distance));
+                           banner_instructions(name, mnvr_type, modifier, prev_distance));
       }
 
       // Add destinations
