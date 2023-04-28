@@ -62,8 +62,8 @@ std::string thor_worker_t::matrix(Api& request) {
         case travel_mode_t::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
-          if (options.sources().size() < kCostMatrixThreshold ||
-              options.targets().size() < kCostMatrixThreshold) {
+          if (options.sources().size() <= kCostMatrixThreshold ||
+              options.targets().size() <= kCostMatrixThreshold) {
             matrix_type = MatrixType::TimeDist;
           }
           break;

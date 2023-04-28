@@ -930,6 +930,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 }
 
 // Form the path from the adjacency list.
+// TODO: move this function to PathInfo header or so, where both bidir A* and CostMatrix
+// can see it
 void CostMatrix::RecostPaths(GraphReader& graphreader,
                              google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
                              google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
