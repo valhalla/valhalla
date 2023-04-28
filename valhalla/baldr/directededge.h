@@ -570,9 +570,9 @@ public:
    * @return true if the edge is not a shortcut, not related to transit and not under construction
    */
   bool can_form_shortcut() const {
-    return !is_shortcut() && !bss_connection() && !start_restriction() && !end_restriction() &&
-           use() != Use::kTransitConnection && use() != Use::kEgressConnection &&
-           use() != Use::kPlatformConnection && use() != Use::kConstruction;
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
   }
 
   /**

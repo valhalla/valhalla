@@ -59,6 +59,12 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
+  // Neither edge can be part of a complex turn restriction
+  if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
+      edge2->end_restriction()) {
+    return false;
+  }
+
   // classification, link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
