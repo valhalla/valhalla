@@ -27,6 +27,7 @@
    * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
    * FIXED: multiple smaller bugs while testing more multimodal /route & /isochrones [#4055](https://github.com/valhalla/valhalla/pull/4055)
    * FIXED: `FindLuaJit.cmake` to include Windows paths/library names [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * FIXED: Move complex turn restriction check out of can_form_shortcut() [#4047](https://github.com/valhalla/valhalla/pull/4047)
    * FIXED: fix `clear` methods on matrix algorithms and reserve some space for labels with a new config [#4075](https://github.com/valhalla/valhalla/pull/4075)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
@@ -50,6 +51,7 @@
    * CHANGED: baldr directory: remove warnings and C++17 adjustments [#4011](https://github.com/valhalla/valhalla/pull/4011)
    * UPDATED: `vcpkg` to latest master, iconv wasn't building anymore [#4066](https://github.com/valhalla/valhalla/pull/4066)
    * CHANGED: pybind11 upgrade for python 3.11 [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
