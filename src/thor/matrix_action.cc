@@ -54,7 +54,6 @@ std::string thor_worker_t::matrix(Api& request) {
   }
 
   MatrixType matrix_type = MatrixType::Cost;
-  bool force_costmatrix = false;
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
@@ -76,7 +75,6 @@ std::string thor_worker_t::matrix(Api& request) {
       }
       break;
     case COST_MATRIX:
-      force_costmatrix = true;
       break;
     case TIME_DISTANCE_MATRIX:
       matrix_type = MatrixType::TimeDist;
@@ -88,9 +86,10 @@ std::string thor_worker_t::matrix(Api& request) {
   bool has_time =
       check_matrix_time(request,
                         options.prioritize_bidirectional() ? MatrixType::Cost : MatrixType::TimeDist);
-  if (has_time && !options.prioritize_bidirectional() && !force_costmatrix) {
+  if (has_time && !options.prioritize_bidirectional() && source_to_target_algorithm != COST_MATRIX) {
     return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
-  } else if (has_time && options.prioritize_bidirectional()) {
+  } else if (has_time && options.prioritize_bidirectional() &&
+             source_to_target_algorithm != TIME_DISTANCE_MATRIX) {
     return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
   } else if (matrix_type == MatrixType::Cost) {
     return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, matrix_type);
