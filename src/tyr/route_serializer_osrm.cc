@@ -1495,8 +1495,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                   shape[maneuver.begin_shape_index()],
                                   (options.directions_type() == DirectionsType::instructions)));
 
-      // Add bannerInstructions
-      if (prev_step) {
+      // Add banner instructions if the user requested them
+      if (options.banner_instructions() && prev_step) {
         prev_step->emplace("bannerInstructions",
                            banner_instructions(name, mnvr_type, modifier, prev_distance));
       }
