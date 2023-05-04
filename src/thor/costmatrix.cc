@@ -138,10 +138,6 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
-  // Set the source and target locations
-  // TODO: for now we only allow depart_at/current date_time
-  SetSources(graphreader, source_location_list, time_infos);
-  SetTargets(graphreader, target_location_list);
 
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
@@ -149,7 +145,8 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   Initialize(source_location_list, target_location_list);
 
   // Set the source and target locations
-  SetSources(graphreader, source_location_list);
+  // TODO: for now we only allow depart_at/current date_time
+  SetSources(graphreader, source_location_list, time_infos);
   SetTargets(graphreader, target_location_list);
 
   // Perform backward search from all target locations. Perform forward
