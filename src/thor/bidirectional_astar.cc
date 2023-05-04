@@ -15,8 +15,6 @@ using namespace valhalla::sif;
 
 namespace {
 
-constexpr uint32_t kInitialEdgeLabelCountBD = 1000000;
-
 // Threshold (seconds) to extend search once the first connection has been found.
 // TODO - this is currently set based on some exceptional cases (e.g. routes taking
 // the PA Turnpike which have very long edges). Using a metric based on maximum edge
@@ -50,7 +48,8 @@ namespace thor {
 
 // Default constructor
 BidirectionalAStar::BidirectionalAStar(const boost::property_tree::ptree& config)
-    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCountBD),
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_bidir_astar",
+                                         kInitialEdgeLabelCountBidirAstar),
                     config.get<bool>("clear_reserved_memory", false)),
       extended_search_(config.get<bool>("extended_search", false)) {
   cost_threshold_ = 0;
@@ -108,8 +107,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_forward_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBD));
-  edgelabels_reverse_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCountBD));
+  edgelabels_forward_.reserve(kInitialEdgeLabelCountBidirAstar);
+  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBidirAstar);
 
   // Construct adjacency list and initialize edge status lookup.
   // Set bucket size and cost range based on DynamicCost.
