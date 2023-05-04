@@ -88,7 +88,10 @@
     "service": {
       "proxy": "ipc:///tmp/thor"
     },
-    "max_reserved_labels_count": 1000000,
+    "max_reserved_labels_count_astar": 2000000,
+    "max_reserved_labels_count_bidir_astar": 1000000,
+    "max_reserved_labels_count_dijkstras": 4000000,
+    "max_reserved_labels_count_bidir_dijkstras": 2000000,
     "extended_search": false
   },
   "odin": {

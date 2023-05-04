@@ -37,8 +37,6 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kInitialEdgeLabelCount = 500000;
-
 // Default constructor
 Isochrone::Isochrone(const boost::property_tree::ptree& config)
     : Dijkstras(config), shape_interval_(50.0f) {
@@ -332,7 +330,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
   bucket_count = 20000;
-  edge_label_reservation = kInitialEdgeLabelCount;
+  edge_label_reservation = kInitialEdgeLabelCountDijkstras;
 }
 
 } // namespace thor
