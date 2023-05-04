@@ -67,13 +67,14 @@ bool ParseArguments(int argc, char* argv[]) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, pt);
+      return true;
     } else if (result.count("config") &&
                filesystem::is_regular_file(
                    config_file_path = filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
+      return true;
     } else {
       std::cerr << "Configuration is required\n" << options.help() << std::endl;
-      return EXIT_FAILURE;
     }
   } catch (const cxxopts::OptionException& e) {
     std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
