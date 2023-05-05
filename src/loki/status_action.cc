@@ -57,7 +57,6 @@ void loki_worker_t::status(Api& request) const {
 
   // get _some_ tile
   const static baldr::graph_tile_ptr tile = get_graphtile(reader);
-  // TODO: get this from the connectivity_map once transit is implemented there
 
   if (connectivity_map) {
     status->set_bbox(connectivity_map->to_geojson(2));
@@ -73,7 +72,7 @@ void loki_worker_t::status(Api& request) const {
   status->set_has_admins(tile && tile->header()->admincount() > 0);
   status->set_has_timezones(tile && tile->node(0)->timezone() > 0);
   status->set_has_live_traffic(reader->HasLiveTraffic());
-  status->set_osm_changeset(tile && tile->header()->dataset_id());
+  status->set_osm_changeset(tile ? tile->header()->dataset_id() : 0);
 }
 } // namespace loki
 } // namespace valhalla
