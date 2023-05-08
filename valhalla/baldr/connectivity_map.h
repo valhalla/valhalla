@@ -24,6 +24,14 @@ public:
                      const std::shared_ptr<GraphReader>& graph_reader = {});
 
   /**
+   * Alternative to GetTiles() to query whether a level even exists, e.g. transit.#
+   *
+   * @param level  the level to query
+   * @return boolean indicating whether a level even exists
+   */
+  bool level_color_exists(const uint32_t level) const;
+
+  /**
    * Returns the color for the given graphid
    *
    * @param id      the graphid
