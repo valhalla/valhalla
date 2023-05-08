@@ -250,7 +250,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
     LOG_TRACE(std::string("  prev2curr_turn_degree=") + std::to_string(prev2curr_turn_degree) +
               " is a " + Turn::GetTypeString(Turn::GetType(prev2curr_turn_degree)));
     auto node = trip_path_->GetEnhancedNode(i);
-    for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+    for (int z = 0; z < node->intersecting_edge_size(); ++z) {
       auto intersecting_edge = node->GetIntersectingEdge(z);
       auto xturn_degree = GetTurnDegree(prev_edge->end_heading(), intersecting_edge->begin_heading());
       LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
@@ -295,12 +295,12 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
             (curr_edge ? curr_edge->ToParameterString() : "NONE"));
   LOG_TRACE(std::string("  curr_edge=") + (curr_edge ? curr_edge->ToString() : "NONE"));
   auto node = trip_path_->GetEnhancedNode(0);
-  for (size_t z = 0; z < node->intersecting_edge_size(); ++z) {
+  for (int z = 0; z < node->intersecting_edge_size(); ++z) {
     auto intersecting_edge = node->GetIntersectingEdge(z);
     LOG_TRACE(std::string("    intersectingEdge=") + intersecting_edge->ToString());
   }
   LOG_TRACE("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-  for (size_t z = 0; z < trip_path_->admin_size(); ++z) {
+  for (int z = 0; z < trip_path_->admin_size(); ++z) {
     auto admin = trip_path_->GetAdmin(z);
     LOG_TRACE("ADMIN " + std::to_string(z) + ": " + admin->ToString());
   }
@@ -3646,7 +3646,7 @@ bool ManeuversBuilder::RampLeadsToHighway(Maneuver& maneuver) const {
   // Verify that the specified maneuver is a ramp
   if (maneuver.ramp()) {
     // Loop over edges
-    for (uint32_t node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
+    for (int node_index = maneuver.end_node_index(); node_index < trip_path_->GetLastNodeIndex();
          ++node_index) {
       auto curr_edge = trip_path_->GetCurrEdge(node_index);
       if (curr_edge && (curr_edge->IsRampUse() || curr_edge->IsTurnChannelUse() ||
@@ -3670,7 +3670,7 @@ void ManeuversBuilder::SetTraversableOutboundIntersectingEdgeFlags(std::list<Man
   // Process each maneuver for traversable outbound intersecting edges
   for (Maneuver& maneuver : maneuvers) {
     bool found_first_edge_to_process = false;
-    for (int node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
+    for (uint32_t node_index = maneuver.begin_node_index(); node_index < maneuver.end_node_index();
          ++node_index) {
       if (!found_first_edge_to_process) {
         auto curr_edge = trip_path_->GetCurrEdge(node_index);

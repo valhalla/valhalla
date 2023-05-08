@@ -12,21 +12,20 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/odin/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/locales.h
 
-  markup_formatter.cc
-  narrative_dictionary.cc
-  sign.cc
-  signs.cc
-  transitrouteinfo.cc
-  worker.cc)
-
-set(sources_with_warnings
   directionsbuilder.cc
   enhancedtrippath.cc
   maneuver.cc
   maneuversbuilder.cc
-  narrative_builder_factory.cc
+  markup_formatter.cc
   narrativebuilder.cc
-  util.cc)
+  narrative_builder_factory.cc
+  narrative_dictionary.cc
+  sign.cc
+  signs.cc
+  transitrouteinfo.cc
+  util.cc
+  worker.cc
+)
 
 # treat date library as system
 set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
@@ -36,7 +35,6 @@ endif()
 
 valhalla_module(NAME odin
   SOURCES ${sources}
-  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC

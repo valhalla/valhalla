@@ -25,12 +25,7 @@ public:
                    const MarkupFormatter& markup_formatter);
 
   virtual ~NarrativeBuilder() = default;
-
-  NarrativeBuilder(NarrativeBuilder&&) = default;
-  NarrativeBuilder& operator=(NarrativeBuilder&&) = default;
-
   NarrativeBuilder(const NarrativeBuilder&) = default;
-  NarrativeBuilder& operator=(const NarrativeBuilder&) = default;
 
   void Build(std::list<Maneuver>& maneuvers);
 
@@ -638,7 +633,7 @@ protected:
   /**
    * Combines a simple preposition and a definite article for certain languages.
    */
-  virtual void FormArticulatedPrepositions(std::string& instruction) {
+  virtual void FormArticulatedPrepositions([[maybe_unused]] std::string& instruction) {
   }
 
   /**

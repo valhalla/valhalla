@@ -27,85 +27,35 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
+// TODO: in the future might have to have dynamic angle based on road class and lane count
+bool is_fork_forward(uint32_t turn_degree) {
+  return ((turn_degree > 339) || (turn_degree < 21));
+}
+
+bool is_relative_straight(uint32_t turn_degree) {
+  return ((turn_degree > 329) || (turn_degree < 31));
+}
+
+bool is_forward(uint32_t turn_degree) {
+  return ((turn_degree > 314) || (turn_degree < 46));
+}
+
+bool is_wider_forward(uint32_t turn_degree) {
+  return ((turn_degree > 304) || (turn_degree < 56));
+}
+
+int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree) {
+  int path_xedge_turn_degree_delta =
+      std::abs(static_cast<int>(path_turn_degree) - static_cast<int>(xedge_turn_degree));
+  if (path_xedge_turn_degree_delta > 180) {
+    path_xedge_turn_degree_delta = (360 - path_xedge_turn_degree_delta);
+  }
+  return path_xedge_turn_degree_delta;
+}
+} // namespace
+
 #ifdef LOGGING_LEVEL_TRACE
-const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
-  static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
-      values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
-  auto f = values.find(alphabet);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf Pronunciation_Alphabet enum to string");
-  return f->second;
-}
-
-const std::string& RoadClass_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kMotorway"}, {1, "kTrunk"},        {2, "kPrimary"},     {3, "kSecondary"},
-      {4, "kTertiary"}, {5, "kUnclassified"}, {6, "kResidential"}, {7, "kServiceOther"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Traversability_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNone"},
-      {1, "kForward"},
-      {2, "kward"},
-      {3, "kBoth"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Use_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kRoadUse"},
-      {1, "kRampUse"},
-      {2, "kTurnChannelUse"},
-      {3, "kUse"},
-      {4, "kDrivewayUse"},
-      {5, "kAlleyUse"},
-      {6, "kingAisleUse"},
-      {7, "kEmergencyAccessUse"},
-      {8, "kDriveThruUse"},
-      {9, "kCuldesacUse"},
-      {10, "kLivingStreetUse"},
-      {11, "kServiceRoadUse"},
-      {20, "kCyclewayUse"},
-      {21, "kMountainBikeUse"},
-      {24, "kSidewalkUse"},
-      {25, "kFootwayUse"},
-      {26, "kStepsUse"},
-      {27, "kPathUse"},
-      {28, "kPedestrianUse"},
-      {29, "kBridlewayUse"},
-      {30, "kRestAreaUse"},
-      {31, "kServiceAreaUse"},
-      {32, "kPedestrianCrossingUse"},
-      {33, "kElevatorUse"},
-      {34, "kEscalatorUse"},
-      {40, "kOtherUse"},
-      {41, "kFerryUse"},
-      {42, "kRailFerryUse"},
-      {43, "kConstructionUse"},
-      {50, "kRailUse"},
-      {51, "kBusUse"},
-      {52, "kEgressConnectionUse"},
-      {53, "kPlatformConnectionUse"},
-      {54, "kTransitConnectionUse"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
+namespace {
 
 const std::string& TripLeg_TravelMode_Name(int v) {
   static const std::unordered_map<int, std::string> values{
@@ -166,60 +116,8 @@ const std::string& TripLeg_TransitType_Name(int v) {
   return f->second;
 }
 
-const std::string& TripLeg_CycleLane_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoCycleLane"},
-      {1, "kShared"},
-      {2, "kDedicated"},
-      {3, "kSeparated"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& TripLeg_Sidewalk_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kNoSidewalk"},
-      {1, "kLeft"},
-      {2, "kRight"},
-      {3, "kBothSides"},
-  };
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error("Missing value in protobuf enum to string");
-  return f->second;
-}
-#endif
-
-// TODO: in the future might have to have dynamic angle based on road class and lane count
-bool is_fork_forward(uint32_t turn_degree) {
-  return ((turn_degree > 339) || (turn_degree < 21));
-}
-
-bool is_relative_straight(uint32_t turn_degree) {
-  return ((turn_degree > 329) || (turn_degree < 31));
-}
-
-bool is_forward(uint32_t turn_degree) {
-  return ((turn_degree > 314) || (turn_degree < 46));
-}
-
-bool is_wider_forward(uint32_t turn_degree) {
-  return ((turn_degree > 304) || (turn_degree < 56));
-}
-
-int get_turn_degree_delta(uint32_t path_turn_degree, uint32_t xedge_turn_degree) {
-  int path_xedge_turn_degree_delta =
-      std::abs(static_cast<int>(path_turn_degree) - static_cast<int>(xedge_turn_degree));
-  if (path_xedge_turn_degree_delta > 180) {
-    path_xedge_turn_degree_delta = (360 - path_xedge_turn_degree_delta);
-  }
-  return path_xedge_turn_degree_delta;
-}
-
 } // namespace
+#endif // LOGGING_LEVEL_TRACE
 
 namespace valhalla {
 namespace odin {

@@ -19,7 +19,9 @@
 using namespace valhalla::odin;
 using namespace valhalla::baldr;
 
-namespace {
+/* Using detail namespace because there are functions on the global space with the same name on
+ * valhalla/proto/directions.pb.h */
+namespace detail {
 const std::unordered_map<int, std::string>
     relative_direction_string{{static_cast<int>(Maneuver::RelativeDirection::kNone),
                                "Maneuver::RelativeDirection::kNone"},
@@ -36,69 +38,7 @@ const std::unordered_map<int, std::string>
                               {static_cast<int>(Maneuver::RelativeDirection::kKeepLeft),
                                "Maneuver::RelativeDirection::kKeepLeft"}};
 
-const std::string& DirectionsLeg_Maneuver_Type_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNone"},
-                                                           {1, "kStart"},
-                                                           {2, "kStartRight"},
-                                                           {3, "kStartLeft"},
-                                                           {4, "kDestination"},
-                                                           {5, "kDestinationRight"},
-                                                           {6, "kDestinationLeft"},
-                                                           {7, "kBecomes"},
-                                                           {8, "kContinue"},
-                                                           {9, "kSlightRight"},
-                                                           {10, "kRight"},
-                                                           {11, "kSharpRight"},
-                                                           {12, "kUturnRight"},
-                                                           {13, "kUturnLeft"},
-                                                           {14, "kSharpLeft"},
-                                                           {15, "kLeft"},
-                                                           {16, "kSlightLeft"},
-                                                           {17, "kRampStraight"},
-                                                           {18, "kRampRight"},
-                                                           {19, "kRampLeft"},
-                                                           {20, "kExitRight"},
-                                                           {21, "kExitLeft"},
-                                                           {22, "kStayStraight"},
-                                                           {23, "kStayRight"},
-                                                           {24, "kStayLeft"},
-                                                           {25, "kMerge"},
-                                                           {26, "kRoundaboutEnter"},
-                                                           {27, "kRoundaboutExit"},
-                                                           {28, "kFerryEnter"},
-                                                           {29, "kFerryExit"},
-                                                           {30, "kTransit"},
-                                                           {31, "kTransitTransfer"},
-                                                           {32, "kTransitRemainOn"},
-                                                           {33, "kTransitConnectionStart"},
-                                                           {34, "kTransitConnectionTransfer"},
-                                                           {35, "kTransitConnectionDestination"},
-                                                           {36, "kPostTransitConnectionDestination"},
-                                                           {37, "kMergeRight"},
-                                                           {38, "kMergeLeft"},
-                                                           {39, "kElevatorEnter"},
-                                                           {40, "kStepsEnter"},
-                                                           {41, "kEscalatorEnter"},
-                                                           {42, "kBuildingEnter"},
-                                                           {43, "kBuildingExit"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error(
-        "Missing DirectionsLeg_Maneuver_Type_Name value in protobuf enum to string");
-  return f->second;
-}
-
-const std::string& DirectionsLeg_Maneuver_CardinalDirection_Name(int v) {
-  static const std::unordered_map<int, std::string> values{{0, "kNorth"}, {1, "kNorthEast"},
-                                                           {2, "kEast"},  {3, "kSouthEast"},
-                                                           {4, "kSouth"}, {5, "kSouthWest"},
-                                                           {6, "kWest"},  {7, "kNorthWest"}};
-  auto f = values.find(v);
-  if (f == values.cend())
-    throw std::runtime_error(
-        "Missing DirectionsLeg_Maneuver_CardinalDirection_Name value in protobuf enum to string");
-  return f->second;
-}
+#ifdef LOGGING_LEVEL_TRACE
 
 const std::string& TrailType_Name(int v) {
   static const std::unordered_map<int, std::string> values{{0, "kNone"},
@@ -113,38 +53,14 @@ const std::string& TrailType_Name(int v) {
     throw std::runtime_error("Missing TrailType_Name value in protobuf enum to string");
   return f->second;
 }
+#endif
 
-} // namespace
+} // namespace detail
 
 namespace valhalla {
 namespace odin {
 
-Maneuver::Maneuver()
-    : type_(DirectionsLeg_Maneuver_Type_kNone), length_(0.0f), time_(0), basic_time_(0),
-      turn_degree_(0), begin_relative_direction_(RelativeDirection::kNone),
-      begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
-      end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
-      end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
-      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
-      internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      travel_mode_(TravelMode::kDrive), vehicle_type_(VehicleType::kCar),
-      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
-      transit_type_(TransitType::kRail), transit_connection_(false), rail_(false), bus_(false),
-      fork_(false), begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false), tee_(false), trail_type_(TrailType::kNone),
-      imminent_verbal_multi_cue_(false), distant_verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true), has_time_restrictions_(false),
-      has_right_traversable_outbound_intersecting_edge_(false),
-      has_left_traversable_outbound_intersecting_edge_(false),
-      bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
-      include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
-      roundabout_exit_count_(0), has_combined_enter_exit_roundabout_(false), roundabout_length_(0.0f),
-      roundabout_exit_length_(0.0f), roundabout_exit_begin_heading_(0),
-      roundabout_exit_turn_degree_(0), roundabout_exit_shape_index_(0),
-      has_collapsed_small_end_ramp_fork_(false), has_collapsed_merge_maneuver_(false),
-      pedestrian_crossing_(false), has_long_street_name_(false), elevator_(false),
-      indoor_steps_(false), escalator_(false), building_enter_(false), building_exit_(false),
-      end_level_ref_("") {
+Maneuver::Maneuver() {
   street_names_ = std::make_unique<StreetNames>();
   begin_street_names_ = std::make_unique<StreetNames>();
   cross_street_names_ = std::make_unique<StreetNames>();
@@ -1298,7 +1214,7 @@ std::string Maneuver::ToString() const {
   man_str += std::to_string(tee_);
 
   man_str += " | trail_type=";
-  man_str += TrailType_Name(static_cast<int>(trail_type_));
+  man_str += detail::TrailType_Name(static_cast<int>(trail_type_));
 
   man_str += " | unnamed_walkway=";
   man_str += std::to_string(unnamed_walkway());
@@ -1422,7 +1338,8 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(turn_degree_);
 
   man_str += delim;
-  man_str += relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
+  man_str +=
+      detail::relative_direction_string.find(static_cast<int>(begin_relative_direction_))->second;
 
   man_str += delim;
   man_str += "DirectionsLeg_Maneuver_CardinalDirection_";
@@ -1536,7 +1453,7 @@ std::string Maneuver::ToParameterString() const {
   man_str += std::to_string(tee_);
 
   man_str += delim;
-  man_str += TrailType_Name(static_cast<int>(trail_type_));
+  man_str += detail::TrailType_Name(static_cast<int>(trail_type_));
 
   man_str += delim;
   man_str += std::to_string(unnamed_walkway());
