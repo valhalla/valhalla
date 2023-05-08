@@ -88,7 +88,9 @@ Costing methods can have several options that can be adjusted to develop the rou
 * Penalty options are fixed costs in seconds that are only added to the path cost. Penalties can influence the route path determination but do not add to the estimated time along the path. For example, add a `toll_booth_penalty` to create route paths that tend to avoid toll booths. Penalties must be in the range of 0.0 seconds to 43200.0 seconds (12 hours), otherwise a default value will be assigned.
 * Factor options are used to multiply the cost along an edge or road section in a way that influences the path to favor or avoid a particular attribute. Factor options do not impact estimated time along the path, though. Factors must be in the range 0.1 to 100000.0, where factors of 1.0 have no influence on cost. Anything outside of this range will be assigned a default value. Use a factor less than 1.0 to attempt to favor paths containing preferred attributes, and a value greater than 1.0 to avoid paths with undesirable attributes. Avoidance factors are more effective than favor factors at influencing a path. A factor's impact also depends on the length of road containing the specified attribute, as longer roads have more impact on the costing than very short roads. For this reason, penalty options tend to be better at influencing paths.
 
-A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`.
+A special costing option is `shortest`, which, when `true`, will solely use distance as cost and disregard all other costs, penalties and factors. It's available for all costing models except `multimodal` & `bikeshare`. 
+
+Another special case is `disable_hierarchy_pruning` costing option. As the name indicates, `disable_hierarchy_pruning = true` will disable hierarchies in routing algorithms, which allows us to find the actual optimal route even in edge cases. For example, together with `shortest = true` they can find the actual shortest route. When `disable_hierarchy_pruning` is `true` and arc distances between source and target are not above the max limit, the actual optimal route will be calculated at the expense of performance. Note that if arc distances between locations exceed the max limit, `disable_hierarchy_pruning` is `true` will not be applied. This costing option is available for all motorized costing models, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. For `bicycle` and `pedestrian` hierarchies are always disabled by default.
 
 ##### Automobile and bus costing options
 
@@ -113,6 +115,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_cost` | A cost applied when encountering an international border. This cost is added to the estimated and elapsed times. The default cost is 600 seconds. |
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 | `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
 | `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
@@ -177,6 +180,7 @@ All of the options described above for autos also apply to motor_scooter costing
 | `use_primary` | A riders's propensity to use primary roads. This is a range of values from 0 to 1, where 0 attempts to avoid primary roads, and 1 indicates the rider is more comfortable riding on primary roads. Based on the `use_primary` factor, roads with certain classifications and higher speeds are penalized in an attempt to avoid them when finding the best path. The default value is 0.5. |
 | `use_hills` | A riders's desire to tackle hills in their routes. This is a range of values from 0 to 1, where 0 attempts to avoid hills and steep grades even if it means a longer (time and distance) path, while 1 indicates the rider does not fear hills and steeper grades. Based on the `use_hills` factor, penalties are applied to roads based on elevation change and grade. These penalties help the path avoid hilly roads in favor of flatter roads or less steep grades where available. Note that it is not always possible to find alternate paths to avoid hills (for example when route locations are in mountainous areas). The default value is 0.5. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 
 ##### Motorcycle costing options -> **BETA**
 Standard costing for travel by motorcycle.  By default, motorcycle costing will default to higher class roads.  The costing model recognizes factors unique to motorcycle travel and offers options for tuning motorcycle routes.
@@ -189,6 +193,7 @@ The following options are available for motorcycle costing:
 | `use_highways` | A riders's propensity to prefer the use of highways. This is a range of values from 0 to 1, where 0 attempts to avoid highways, and values toward 1 indicates the rider prefers highways. The default value is 1.0. |
 | `use_trails` | A riders's desire for adventure in their routes.  This is a range of values from 0 to 1, where 0 will avoid trails, tracks, unclassified or bad surfaces and values towards 1 will tend to avoid major roads and route on secondary roads.  The default value is 0.0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
+| `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
 
 ##### Pedestrian costing options
 
@@ -225,15 +230,8 @@ These options are available for transit costing when the multimodal costing mode
 | `use_bus` | User's desire to use buses. Range of values from 0 (try to avoid buses) to 1 (strong preference for riding buses). |
 | `use_rail` | User's desire to use rail/subway/metro. Range of values from 0 (try to avoid rail) to 1 (strong preference for riding rail).|
 | `use_transfers` |User's desire to favor transfers. Range of values from 0 (try to avoid transfers) to 1 (totally comfortable with transfers).|
-| `filters` | A way to filter for one or more `stops`, `routes`, or `operators`. Filters must contain a list of [Onestop IDs](https://transit.land/documentation/onestop-id-scheme/), which is a unique identifier for Transitland data, and an `action`. <ul><li>`ids`: any number of Onestop IDs (such as o-9q9-bart)</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
+| `filters` | A way to filter for one or more ~~`stops`~~ (TODO: need to re-enable), `routes`, or `operators`. Filters must contain a list of so-called Onestop IDs, which is (supposed to be) a unique identifier for GTFS data, and an `action`. The OneStop ID is simply the feeds's directory name and the object's GTFS ID separated by an underscore, i.e. a route with `route_id: AUR` in `routes.txt` from the feed `NYC` would have the OneStop ID `NYC_AUR`, similar with operators/agencies. <ul><li>`ids`: any number of Onestop IDs</li><li>`action`: either `exclude` to exclude all of the `ids` listed in the filter or `include` to include only the `ids` listed in the filter</li></ul>
 
-###### Filter transit data
-
-When using `filters`, you need to include a [Onestop ID](https://transit.land/documentation/onestop-id-scheme/) to identify the stop, routes, or operators to include or exclude in your query. Depending on how you are interacting with transit data from Transitland, there are different ways of obtaining the Onestop ID.
-
-- Turn-by-Turn API: Query a transit route query and parse the returned JSON maneuver  for `transit_info` to find `operator_onestop_id` and the route `onestop_id`. A `transit_stop` contains the `onestop_id` for the stop.
-- [Mobility Explorer](https://github.com/transitland/mobility-explorer): Click a single route, stop, or operator on the map, or use the drop-down menu to find the Onestop ID for routes and operators. The Onestop ID, among other details, is listed in the sidebar.
-- [Transitland](https://transit.land/): Use the Transitland Datastore API to query directly for stops, routes, and operators using a number of options. For example, you can filter for only [subway routes](http://transit.land/api/v1/routes?vehicle_type=metro) or [bus routes](http://transit.land/api/v1/routes?vehicle_type=bus). See the [Transitland Datastore API documentation](https://transit.land/documentation/datastore/api-endpoints.html) for details.
 
 ##### Sample JSON payloads for multimodal requests with transit
 
@@ -258,7 +256,7 @@ A multimodal request for a route favoring buses and a person walking at a set sp
 A multimodal request with a filter for certain Onestop IDs:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"stops":{"ids":["s-dr5rsq8pqg-8st~nyu&#60;r21n","s-dr5rsr9wyg-14st&#126;unionsq&#60;r20n"],"action":"exclude"},"routes":{"ids":["r-dr5r-r"],"action":"exclude"},"operators":{"ids":["o-dr5r-path"],"action":"include"}}}},"units":"miles"}
+{"locations":[{"lat":40.730930,"lon":-73.991379,"street":"Wanamaker Place"},{"lat":40.749706,"lon":-73.991562,"street":"Penn Plaza"}],"costing":"multimodal","costing_options":{"transit":{"filters":{"routes":{"ids":["NYC_AUR"],"action":"exclude"},"operators":{"ids":["paris_CFG","berlin_VBB"],"action":"include"}}}},"units":"miles"}
 ```
 
 #### Directions options
@@ -452,14 +450,14 @@ A maneuver `transit_info` includes:
 
 | Maneuver transit route item | Description |
 | :--------- | :---------- |
-| `onestop_id` | Global transit route identifier from Transitland. |
+| `onestop_id` | Global transit route identifier. |
 | `short_name` | Short name describing the transit route. For example "N". |
 | `long_name` | Long name describing the transit route. For example "Broadway Express". |
 | `headsign` | The sign on a public transport vehicle that identifies the route destination to passengers. For example "ASTORIA - DITMARS BLVD". |
 | `color` | The numeric color value associated with a transit route. The value for yellow would be "16567306". |
 | `text_color` | The numeric text color value associated with a transit route. The value for black would be "0". |
 | `description` | The description of the the transit route. For example "Trains operate from Ditmars Boulevard, Queens, to Stillwell Avenue, Brooklyn, at all times. N trains in Manhattan operate along Broadway and across the Manhattan Bridge to and from Brooklyn. Trains in Brooklyn operate along 4th Avenue, then through Borough Park to Gravesend. Trains typically operate local in Queens, and either express or local in Manhattan and Brooklyn, depending on the time. Late night trains operate via Whitehall Street, Manhattan. Late night service is local". |
-| `operator_onestop_id` | Global operator/agency identifier from Transitland. |
+| `operator_onestop_id` | Global operator/agency identifier. |
 | `operator_name` | Operator/agency name. For example, "BART", "King County Marine Division", and so on.  Short name is used over long name. |
 | `operator_url` | Operator/agency URL. For example, "http://web.mta.info/". |
 | `transit_stops` | A list of the stops/stations associated with a specific transit route. See below for details. |
@@ -469,7 +467,6 @@ A `transit_stop` includes:
 | Transit stop item | Description |
 | :--------- | :---------- |
 | `type` | Type of stop (simple stop=0; station=1). |
-| `onestop_id` | Global transit stop identifier from Transitland. |
 | `name` | Name of the stop or station. For example "14 St - Union Sq". |
 | `arrival_date_time` | Arrival date and time using the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format (YYYY-MM-DDThh:mm). For example, "2015-12-29T08:06". |
 | `departure_date_time` | Departure date and time using the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format (YYYY-MM-DDThh:mm). For example, "2015-12-29T08:06". |

@@ -200,6 +200,16 @@ public:
   }
 
   /**
+   * Evaluates a basic set of conditions to determine if this node is eligible for contraction.
+   * @return true if the node has at least 2 edges and does not represent a fork, gate or toll booth.
+   */
+  bool can_contract() const {
+    return edge_count() >= 2 && intersection() != IntersectionType::kFork &&
+           type() != NodeType::kGate && type() != NodeType::kTollBooth &&
+           type() != NodeType::kTollGantry && type() != NodeType::kSumpBuster;
+  }
+
+  /**
    * Set the node type.
    * @param  type  node type.
    */
