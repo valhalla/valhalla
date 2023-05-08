@@ -122,7 +122,7 @@ TEST(TimeDepPaths, test_forward_clear_reserved_memory) {
 
 TEST(TimeDepPaths, test_forward_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_astar", 10);
 
   TimeDepForwardTest time_dep(config);
   time_dep.Clear();
@@ -154,7 +154,7 @@ TEST(TimeDepPaths, test_reverse_clear_reserved_memory) {
 
 TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_dijkstras", 10);
 
   TimeDepReverseTest time_dep(config);
   time_dep.Clear();
