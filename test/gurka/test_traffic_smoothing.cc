@@ -381,7 +381,7 @@ TEST_F(RouteWithTraffic, LiveOnButNotUsed) {
         etas.emplace_back(calculate_eta(result));
       }
     }
-    for (int i = 0; i < etas.size() - 1; ++i) {
+    for (size_t i = 0; i < etas.size() - 1; ++i) {
       // Live traffic is not used, algos should return the same ETA.
       EXPECT_EQ(etas[i], etas[i + 1]);
     }
