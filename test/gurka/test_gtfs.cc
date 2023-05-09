@@ -989,3 +989,10 @@ TEST(GtfsExample, isochrones) {
   EXPECT_EQ(within(WaypointToBoostPoint("F"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("1"), polygon), false);
 }
+
+TEST(GtfsExample, status) {
+  std::string req = R"({"verbose": true})";
+  std::string res_string;
+  valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
+  EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
+}
