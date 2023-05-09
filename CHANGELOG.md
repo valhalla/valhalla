@@ -54,6 +54,7 @@
    * CHANGED: pybind11 upgrade for python 3.11 [#4067](https://github.com/valhalla/valhalla/pull/4067)
    * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
+   * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**

@@ -13,7 +13,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
@@ -42,6 +41,7 @@ public:
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
+   * @param  has_time              Whether the request had valid date_time.
    * @param  invariant             Whether invariant time was requested.
    *
    * @return time/distance from all sources to all targets

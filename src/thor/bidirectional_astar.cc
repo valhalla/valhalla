@@ -1275,6 +1275,9 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     }
 
     // recost edges in final path; ignore access restrictions
+    // TODO: actually we should not ignore access restrictions: if the reverse path
+    //   traversed a closed edge due to time restrictions, we could do a mini traversal
+    //   to circumvent the closed edge(s)
     try {
       bool invariant = options.date_time_type() == Options::invariant;
       sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
