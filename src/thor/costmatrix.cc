@@ -28,12 +28,13 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
-inline void
-find_percent_along(const valhalla::Location& location, const GraphId& edge_id, float& percent_along) {
+inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
-      percent_along = static_cast<float>(e.percent_along());
+      return static_cast<float>(e.percent_along());
   }
+
+  throw std::logic_error("Could not find candidate edge used for label");
 }
 } // namespace
 
@@ -789,11 +790,6 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 void CostMatrix::SetSources(GraphReader& graphreader,
                             const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
                             const std::vector<baldr::TimeInfo>& time_infos) {
-  // Allocate edge labels and edge status
-  source_count_ = sources.size();
-  source_edgelabel_.resize(source_count_);
-  source_edgestatus_.resize(source_count_);
-  source_hierarchy_limits_.resize(source_count_);
   // Go through each source location
   uint32_t index = 0;
   Cost empty_cost;
@@ -1019,17 +1015,8 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     Cost new_cost{0.f, 0.f};
     const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
 
-    float source_pct = 0.0f;
-    try {
-      find_percent_along(source, path_edges.front(), source_pct);
-    } catch (...) { throw std::logic_error("Could not find candidate edge used for origin label"); }
-
-    float target_pct = 1.0f;
-    try {
-      find_percent_along(target, path_edges.back(), target_pct);
-    } catch (...) {
-      throw std::logic_error("Could not find candidate edge used for destination label");
-    }
+    float source_pct = find_percent_along(source, path_edges.front());
+    float target_pct = find_percent_along(target, path_edges.back());
 
     // recost edges in final path; ignore access restrictions
     auto& time_info = time_infos[source_idx];
