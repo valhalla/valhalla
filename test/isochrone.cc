@@ -258,7 +258,7 @@ TEST(Isochrones, test_clear_reserved_memory) {
 
 TEST(Isochrones, test_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_dijkstras", 10);
 
   IsochroneTest isochrone(config);
   isochrone.Clear();

@@ -154,7 +154,11 @@ const std::unordered_map<int, std::string> warning_codes = {
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
   {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
-  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"}
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
+  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
+  // 3xx is used when costing options were specified but we had to change them internally for some reason
+  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
+  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
 };
 // clang-format on
 

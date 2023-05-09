@@ -34,7 +34,11 @@ namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceBSSMatrix::TimeDistanceBSSMatrix() : settled_count_(0), current_cost_threshold_(0) {
+TimeDistanceBSSMatrix::TimeDistanceBSSMatrix(const boost::property_tree::ptree& config)
+    : settled_count_(0), current_cost_threshold_(0),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
+                                                      kInitialEdgeLabelCountDijkstras)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 float TimeDistanceBSSMatrix::GetCostThreshold(const float max_matrix_distance) const {
@@ -197,6 +201,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
 
   std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+    edgelabels_.reserve(max_reserved_labels_count_);
     const auto& origin = origins.Get(origin_index);
     std::vector<TimeDistance> one_to_many;
 

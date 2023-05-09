@@ -120,6 +120,14 @@ std::string serializeStatus(Api& request) {
   if (request.status().has_has_live_traffic_case())
     status_doc.AddMember("has_live_traffic",
                          rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+  if (request.status().has_has_transit_tiles_case())
+    status_doc.AddMember("has_transit_tiles",
+                         rapidjson::Value().SetBool(request.status().has_transit_tiles()), alloc);
+  // a 0 changeset indicates there's none, so don't write in the output
+  // TODO: currently this can't be tested as gurka isn't adding changeset IDs to OSM objects (yet)
+  if (request.status().has_osm_changeset_case() && request.status().osm_changeset())
+    status_doc.AddMember("osm_changeset",
+                         rapidjson::Value().SetUint64(request.status().osm_changeset()), alloc);
 
   rapidjson::Document bbox_doc;
   if (request.status().has_bbox_case()) {

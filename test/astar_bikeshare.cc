@@ -362,7 +362,7 @@ TEST(AstarBss, test_clear_reserved_memory) {
 
 TEST(AstarBss, test_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_astar", 10);
 
   AstarBSSTest astar(config);
   astar.Clear();

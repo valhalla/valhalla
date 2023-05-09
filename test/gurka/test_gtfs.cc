@@ -862,6 +862,7 @@ TEST(GtfsExample, route_trip1) {
   // wrap around the next month if it's getting critical
   if (tmrw_int > 27) {
     auto new_month = std::to_string(std::stoul(std::string(&req_time[5], &req_time[7])) + 1);
+    new_month = std::string(2 - std::min(2UL, new_month.length()), '0') + new_month;
     req_time.replace(req_time.find('T') - 5, 2, new_month);
     tmrw_int -= 20;
   }
@@ -987,4 +988,11 @@ TEST(GtfsExample, isochrones) {
   EXPECT_EQ(within(WaypointToBoostPoint("4"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("F"), polygon), true);
   EXPECT_EQ(within(WaypointToBoostPoint("1"), polygon), false);
+}
+
+TEST(GtfsExample, status) {
+  std::string req = R"({"verbose": true})";
+  std::string res_string;
+  valhalla::Api res = gurka::do_action(valhalla::Options::status, map, req, {}, &res_string);
+  EXPECT_NE(res_string.find(R"("has_transit_tiles":true)"), std::string::npos);
 }
