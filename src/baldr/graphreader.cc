@@ -758,7 +758,6 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
         continue;
       }
       if (continuing_edge != nullptr) {
-        LOG_WARN("GraphReader::GetShortcut found multiple potential continuing edges, aborting");
         continuing_edge = directededge + (nodeinfo->edge_count() - i);
         continue;
       }
@@ -769,7 +768,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
 
   // No shortcuts on the local level or transit level.
   if (id.level() >= TileHierarchy::levels().back().level) {
-    LOG_WARN("GraphReader::GetShortcut was called with a lever that doesn't contain shortcuts");
+    LOG_DEBUG("GraphReader::GetShortcut was called with a level that doesn't contain shortcuts");
     return {};
   }
 
@@ -792,7 +791,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // directed edge.
     cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
     if (cont_de == nullptr) {
-      LOG_WARN("GraphReader::GetShortcut found no clear continuing edge");
+      LOG_DEBUG("GraphReader::GetShortcut found no clear continuing edge");
       break;
     }
 
@@ -811,8 +810,8 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // If this edge is itself not the beginning of a shortcut, but we encountered another shortcut
     // it means we must have started the traversal outside a shortcuts internal edges
     if (!directededge->superseded() && shortcut_at_node) {
-      LOG_WARN(
-          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge we arrived on");
+      LOG_DEBUG(
+          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge it arrived on");
       break;
     }
 
