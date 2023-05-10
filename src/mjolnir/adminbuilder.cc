@@ -359,20 +359,21 @@ namespace mjolnir {
 /**
  * Build admins from protocol buffer input.
  */
-void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
+bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files) {
 
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
 
   if (!database) {
-    LOG_INFO("Admin config info not found. Admins will not be created.");
-    return;
+    LOG_ERROR("Admin config info not found. Admins will not be created.");
+    return false;
   }
 
   const filesystem::path parent_dir = filesystem::path(*database).parent_path();
   if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
-    throw std::runtime_error("Can't create parent directory " + parent_dir.string());
+    LOG_ERROR("Can't create parent directory " + parent_dir.string());
+    return false;
   }
 
   // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
@@ -397,7 +398,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + (*database));
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   // loading SpatiaLite as an extension
@@ -418,7 +419,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   /* creating an admin access table
@@ -465,7 +466,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   LOG_INFO("Created admin access table.");
@@ -478,7 +479,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   LOG_INFO("Created admin table.");
@@ -501,7 +502,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   // initialize geos
@@ -596,7 +597,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
+    ;
   }
   LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
 
@@ -606,7 +608,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created spatial index");
 
@@ -616,7 +618,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created Level index");
 
@@ -626,7 +628,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created Drive On Right index");
 
@@ -636,7 +638,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created allow intersection names index");
 
@@ -650,7 +652,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating drive on right column.");
 
@@ -664,7 +666,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating allow intersection names column.");
 
@@ -678,7 +680,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating Parent admin");
 
@@ -698,7 +700,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   for (const auto& access : kCountryAccess) {
@@ -737,12 +739,14 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   sqlite3_close(db_handle);
 
   LOG_INFO("Finished.");
+
+  return true;
 }
 
 } // namespace mjolnir
