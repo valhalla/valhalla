@@ -362,13 +362,6 @@ namespace mjolnir {
 void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files) {
 
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
-
-  // done with the protobuffer library, cant use it again after this
-  OSMPBF::Parser::free();
-
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
 
@@ -377,14 +370,17 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return;
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    filesystem::create_directories(filesystem::path(*database).parent_path());
+  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
+  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    throw std::runtime_error("Can't create parent directory " + parent_dir.string());
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    LOG_INFO("Admin directory not found. Admins will not be created.");
-    return;
-  }
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the PBFParser class
+  OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
+
+  // done with the protobuffer library, cant use it again after this
+  OSMPBF::Parser::free();
 
   if (filesystem::exists(*database)) {
     filesystem::remove(*database);
