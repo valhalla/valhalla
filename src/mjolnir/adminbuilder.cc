@@ -366,7 +366,7 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   auto database = pt.get_optional<std::string>("admin");
 
   if (!database) {
-    LOG_ERROR("Admin config info not found. Admins will not be created.");
+    LOG_WARN("Admin config info not found. Admins will not be created.");
     return false;
   }
 
