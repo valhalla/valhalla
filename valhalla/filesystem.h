@@ -211,7 +211,8 @@ private:
       // entry_->d_reclen =
       // entry_->d_off =
       entry_->d_ino = s.st_ino;
-      strcpy(entry_->d_name, filename.c_str());
+      /* Saving a char* into a std::string */
+      filename = entry_->d_name;
 #ifdef _DIRENT_HAVE_D_NAMLEN
       entry_->d_namlen = filename.string().size();
 #endif
