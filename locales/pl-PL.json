@@ -2137,7 +2137,7 @@
         "1 milę",
         "pół mili",
         "ćwierć mili",
-        "<FEET> ft",
+        "<FEET> stóp",
         "mniej niż 10 stóp"
       ],
       "example_phrases": {
@@ -2160,11 +2160,11 @@
         "mniej niż 10 metrów"
       ],
       "us_customary_lengths": [
-        "<MILES> mi",
+        "<MILES> mil",
         "1 milę",
         "pół mili",
         "ćwierć mili",
-        "<FEET> ft",
+        "<FEET> stóp",
         "mniej niż 10 stóp"
       ],
       "example_phrases": {
@@ -2204,7 +2204,7 @@
     "escalator": {
       "phrases": {
         "0": "Skorzystaj z ruchomych schodów.",
-        "1": "Take the escalator to <LEVEL>."
+        "1": "Skorzystaj z ruchomych schodów na <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2218,7 +2218,7 @@
     "enter_building": {
       "phrases": {
         "0": "Wejdź do budynku.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "1": "Wejdź do budynku i idź dalej na <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "chodnik",
@@ -2238,7 +2238,7 @@
     "exit_building": {
       "phrases": {
         "0": "Opuść budynek.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "1": "Wyjdź z budynku i idź dalej na <STREET_NAMES>."
       },
       "empty_street_name_labels": [
         "chodnik",
