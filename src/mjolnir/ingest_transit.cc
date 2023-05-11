@@ -137,11 +137,13 @@ std::string get_tile_path(const std::string& tile_dir, const GraphId& tile_id) {
 };
 
 // converts service start/end dates of the form (yyyymmdd) into epoch seconds
-uint32_t to_local_epoch_sec(const std::string& dt) {
+uint32_t to_local_pivot_sec(const std::string& dt, bool end_of_day = false) {
   date::local_seconds tp;
   std::istringstream in{dt};
   in >> date::parse("%Y%m%d", tp);
-  return static_cast<uint32_t>(tp.time_since_epoch().count());
+  auto epoch = static_cast<uint32_t>((tp - DateTime::pivot_date_).count());
+  epoch += end_of_day ? kSecondsPerDay - 1 : 0;
+  return epoch;
 };
 
 std::string get_onestop_id_base(const std::string& stop_id, const std::string& feed_name) {
@@ -312,7 +314,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     int node_count = tile.nodes_size();
     for (const auto& child : tile_children) {
       auto child_stop = feed.get_stop(child.second);
-      if (child.first.id == station.id &&
+      if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop->location_type == gtfs::StopLocationType::EntranceExit) {
         setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
                     NodeType::kTransitEgress, false);
@@ -343,7 +345,7 @@ write_stops(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& f
     for (const auto& child : tile_children) {
       auto child_stop = feed.get_stop(child.second);
 
-      if (child.first.id == station.id &&
+      if (child.first.id == station.id && child.first.feed == station.feed &&
           child_stop->location_type == gtfs::StopLocationType::StopOrPlatform) {
         setup_stops(tile, *child_stop, node_id, platform_node_ids, station.feed,
                     NodeType::kMultiUseTransitPlatform, false, prev_id);
@@ -414,7 +416,8 @@ bool write_stop_pair(
     const gtfs::Feed& feed,
     const std::unordered_map<feed_object_t, GraphId>& platform_node_ids,
     unique_transit_t& uniques,
-    const google::protobuf::RepeatedPtrField<valhalla::mjolnir::Transit_Node>& tile_nodes) {
+    const google::protobuf::RepeatedPtrField<valhalla::mjolnir::Transit_Node>& tile_nodes,
+    const std::unordered_map<feed_object_t, size_t>& routes_ids) {
   bool dangles = false;
 
   const auto& tile_tripId = feed_trip.id;
@@ -422,6 +425,7 @@ bool write_stop_pair(
 
   const auto& currTrip = feed.get_trip(tile_tripId);
   const auto& trip_calendar = feed.get_calendar(currTrip->service_id);
+  const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
   if (!currTrip || !trip_calendar) {
     LOG_ERROR("Feed " + feed_trip.feed + ", trip ID" + tile_tripId +
               " can't be found or has no calendar.txt entry, skipping...");
@@ -478,10 +482,9 @@ bool write_stop_pair(
       service_dow->Add(trip_calendar->saturday == gtfs::CalendarAvailability::Available);
       service_dow->Add(trip_calendar->sunday == gtfs::CalendarAvailability::Available);
 
-      const gtfs::CalendarDates& trip_calDates = feed.get_calendar_dates(currTrip->service_id);
       bool had_added_date = false;
       for (const auto& cal_date_item : trip_calDates) {
-        auto d = to_local_epoch_sec(cal_date_item.date.get_raw_date());
+        auto d = to_local_pivot_sec(cal_date_item.date.get_raw_date());
         if (cal_date_item.exception_type == gtfs::CalendarDateException::Added) {
           stop_pair->add_service_added_dates(d);
           had_added_date = true;
@@ -505,8 +508,10 @@ bool write_stop_pair(
         stop_pair->set_shape_id(pbf_shape_it->second);
       }
 
-      stop_pair->set_service_start_date(to_local_epoch_sec(trip_calendar->start_date.get_raw_date()));
-      stop_pair->set_service_end_date(to_local_epoch_sec(trip_calendar->end_date.get_raw_date()));
+      stop_pair->set_service_start_date(to_local_pivot_sec(trip_calendar->start_date.get_raw_date()));
+      // TODO: add a day worth of seconds - 1 to get the last second of that day
+      stop_pair->set_service_end_date(
+          to_local_pivot_sec(trip_calendar->end_date.get_raw_date(), true));
 
       dangles = dangles || !origin_is_in_tile || !dest_is_in_tile;
       stop_pair->set_bikes_allowed(currTrip->bikes_allowed == gtfs::TripAccess::Yes);
@@ -547,15 +552,16 @@ bool write_stop_pair(
         stop_pair->set_destination_graphid(dest_graphid_it->second +
                                            static_cast<uint64_t>(dest_is_generated));
       }
-      auto route_it = tile_info.routes.find({currTrip->route_id, currFeedPath});
 
-      stop_pair->set_route_index(route_it->second);
+      // set the proper route_index which will be referred to later in convert_transit
+      stop_pair->set_route_index(routes_ids.at({currTrip->route_id, currFeedPath}));
 
       // grab the headsign
       stop_pair->set_trip_headsign(currTrip->trip_headsign);
 
       uniques.lock.lock();
-      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size()});
+      // trips should never have ID=0, it messes up the triplegbuilder logic
+      auto inserted = uniques.trips.insert({currTrip->trip_id, uniques.trips.size() + 1});
       stop_pair->set_trip_id(inserted.first->second);
       uniques.lock.unlock();
 
@@ -601,12 +607,15 @@ bool write_stop_pair(
 }
 
 // read routes data from feed
-void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
+std::unordered_map<feed_object_t, size_t>
+write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cache_t& feeds) {
 
   const auto& tile_routeIds = tile_info.routes;
 
-  // loop through all stops inside the tile
+  std::unordered_map<feed_object_t, size_t> routes_ids;
 
+  // loop through all stops inside the tile
+  size_t idx = 0;
   for (const auto& feed_route : tile_routeIds) {
     const auto& tile_routeId = feed_route.first.id;
     const auto& feed = feeds(feed_route.first);
@@ -614,8 +623,9 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     auto currRoute = feed.get_route(tile_routeId);
 
     route->set_name(currRoute->route_short_name);
-    route->set_onestop_id(currRoute->route_id);
-    route->set_operated_by_onestop_id(currRoute->agency_id);
+    route->set_onestop_id(get_onestop_id_base(currRoute->route_id, feed_route.first.feed));
+    route->set_operated_by_onestop_id(
+        get_onestop_id_base(currRoute->agency_id, feed_route.first.feed));
 
     auto currAgency = feed.get_agency(currRoute->agency_id);
     route->set_operated_by_name(currAgency->agency_name);
@@ -629,7 +639,12 @@ void write_routes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     route->set_route_text_color(strtol(currRoute->route_text_color.c_str(), nullptr, 16));
     route->set_vehicle_type(
         (valhalla::mjolnir::Transit_VehicleType)(static_cast<int>(currRoute->route_type)));
+
+    routes_ids.emplace(feed_route.first, idx);
+    idx++;
   }
+
+  return routes_ids;
 }
 
 // grab feed data from feed
@@ -684,7 +699,8 @@ void ingest_tiles(const std::string& gtfs_dir,
       feeds(route.first);
     }
 
-    write_routes(tile, current, feeds);
+    // keep track of the PBF insertion order for the routes to set route_index on the stop_pairs
+    std::unordered_map<feed_object_t, size_t> routes_ids = write_routes(tile, current, feeds);
     write_shapes(tile, current, feeds);
     std::unordered_map<feed_object_t, GraphId> platform_node_ids = write_stops(tile, current, feeds);
 
@@ -695,9 +711,9 @@ void ingest_tiles(const std::string& gtfs_dir,
     for (const auto& trip : current.trips) {
       trip_count++;
 
-      dangles =
-          write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques, tile_nodes) ||
-          dangles;
+      dangles = write_stop_pair(tile, current, trip, feeds(trip), platform_node_ids, uniques,
+                                tile_nodes, routes_ids) ||
+                dangles;
 
       if (trip_count >= pbf_trip_limit) {
         LOG_INFO("Writing " + current_path);

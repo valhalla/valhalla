@@ -12,6 +12,6 @@ The JSON returned from the route query can be drawn on a map and shown as instru
 
 ## Data sources in Turn-by-Turn
 
-Valhalla draws data from OpenStreetMap and from [Transitland](https://transit.land), the open transit data aggregation project. Apps can also query the Transitland API to build maps and analyses that enrich that journey and provide context around Points A and B, as well as the many multimodal transportation options that connect them. Journeys planned by Valhalla and data in Transitland all include Onestop IDs, an open identifier scheme that catalogs transit operators, stops, and routes from around the world.
+Valhalla draws data from OpenStreetMap for the major part of the routing graph and can optionally include elevation data from the TileZen project hosted on the [AWS Open Data](https://registry.opendata.aws/terrain-tiles/) platform, user-provided GTFS feeds, reproducible timezone data, custom historical traffic data, live traffic and incident feeds.
 
 The [source code](https://github.com/valhalla) is open to view and modify, and contributions are welcomed.

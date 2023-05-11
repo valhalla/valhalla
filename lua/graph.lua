@@ -232,7 +232,8 @@ bus = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false"
+["official"] = "false",
+["permit"] = "true"
 }
 
 taxi = {
@@ -244,7 +245,8 @@ taxi = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false"
+["official"] = "false",
+["permit"] = "true"
 }
 
 psv = {
@@ -538,7 +540,8 @@ motor_cycle_node = {
 ["official"] = 0,
 ["public"] = 1024,
 ["restricted"] = 1024,
-["allowed"] = 1024
+["allowed"] = 1024,
+["permit"] = 1024
 }
 
 bus_node = {
@@ -551,6 +554,7 @@ bus_node = {
 ["destination"] = 64,
 ["delivery"] = 0,
 ["official"] = 0,
+["permit"] = 64
 }
 
 taxi_node = {
@@ -562,7 +566,8 @@ taxi_node = {
 ["restricted"] = 32,
 ["destination"] = 32,
 ["delivery"] = 0,
-["official"] = 0
+["official"] = 0,
+["permit"] = 32
 }
 
 truck_node = {

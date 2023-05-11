@@ -13,6 +13,12 @@ set(sources
   dynamiccost.cc
   recost.cc)
 
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
+
 valhalla_module(NAME sif
   SOURCES ${sources}
   HEADERS ${headers}
@@ -20,10 +26,12 @@ valhalla_module(NAME sif
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
   DEPENDS
     valhalla::baldr
     valhalla::proto
