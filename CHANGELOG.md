@@ -3,7 +3,7 @@
 * **Bug Fix**
 * **Enhancement**
 
-## Release Date: 2023-04-14 Valhalla 3.4.0
+## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
    * REMOVED: transitland references and scripts and replace with info for raw GTFS feeds [#4033](https://github.com/valhalla/valhalla/pull/3906)
