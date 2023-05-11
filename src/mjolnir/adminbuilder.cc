@@ -395,6 +395,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                         NULL);
+  // TODO: these blocks are the same like 20 times or so
+  // let's abstract the sqlite commands somewhere
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + (*database));
     sqlite3_close(db_handle);

@@ -135,7 +135,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
 
   // Given map.pbf, BuildAdminFromPBF() creates test/data/admin.sqlite.
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
-  BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+  bool ret = BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+  EXPECT_TRUE(ret);
 
   // Load the sqlite and read the countries/states from the admin table
   std::set<std::string> countries, states;
