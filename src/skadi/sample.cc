@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <limits>
@@ -16,10 +17,10 @@
 #include <sys/stat.h>
 
 #include "baldr/compression_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include "midgard/util.h"
 #include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
@@ -490,7 +491,7 @@ template <class coords_t> std::vector<double> sample::get_all(const coords_t& co
 bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
   // data_source never changes so we do not lock it. it is set only in sample constructor
   auto fpath = cache_->data_source + elev;
-  if (filesystem::exists(fpath))
+  if (std::filesystem::exists(fpath))
     return true;
 
   auto data = cache_item_t::parse_hgt_name(elev);
@@ -502,7 +503,7 @@ bool sample::store(const std::string& elev, const std::vector<char>& raw_data) {
     return false;
 
   // thread-safe by implementation
-  if (!filesystem::save(fpath, raw_data))
+  if (!midgard::save(fpath, raw_data))
     return false;
 
   std::lock_guard<std::mutex> _(cache_lck);
@@ -608,7 +609,7 @@ void sample::cache_initialisation(const std::string& data_source) {
 
   // messy but needed
   while (cache_->data_source.size() &&
-         cache_->data_source.back() == filesystem::path::preferred_separator) {
+         cache_->data_source.back() == std::filesystem::path::preferred_separator) {
     cache_->data_source.pop_back();
   }
 
@@ -620,7 +621,7 @@ void sample::cache_initialisation(const std::string& data_source) {
   cache_->cache.resize(TILE_COUNT);
 
   // check the directory for files that look like what we need
-  auto files = filesystem::get_files(cache_->data_source);
+  auto files = midgard::get_files(cache_->data_source);
   for (const auto& f : files) {
     // make sure its a valid index
     auto data = cache_item_t::parse_hgt_name(f);
