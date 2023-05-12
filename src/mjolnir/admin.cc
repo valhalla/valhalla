@@ -1,8 +1,8 @@
 #include "mjolnir/admin.h"
 #include "baldr/datetime.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 #include <sqlite3.h>
 #include <unordered_map>
 
@@ -16,7 +16,7 @@ sqlite3* GetDBHandle(const std::string& database) {
 
   // Initialize the admin DB (if it exists)
   sqlite3* db_handle = nullptr;
-  if (!database.empty() && filesystem::exists(database)) {
+  if (!database.empty() && std::filesystem::exists(database)) {
     uint32_t ret = sqlite3_open_v2(database.c_str(), &db_handle,
                                    SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nullptr);
     if (ret != SQLITE_OK) {
