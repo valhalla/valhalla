@@ -1,4 +1,4 @@
-#include "filesystem.h"
+#include <filesystem>
 
 #include <cxxopts.hpp>
 
@@ -8,7 +8,7 @@
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 std::vector<std::string> input_files;
 boost::property_tree::ptree pt;
 
@@ -57,8 +57,8 @@ bool ParseArguments(int argc, char* argv[]) {
       rapidjson::read_json(ss, pt);
       return true;
     } else if (result.count("config") &&
-               filesystem::is_regular_file(
-                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+               std::filesystem::is_regular_file(
+                   config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
       return true;
     } else {
