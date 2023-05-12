@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <future>
@@ -30,7 +31,6 @@
 #include "midgard/sequence.h"
 #include "midgard/tiles.h"
 
-#include "filesystem.h"
 #include "just_gtfs/just_gtfs.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
@@ -166,11 +166,11 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
     return tile_map.insert({graphid, tile_transit_info_t{graphid}}).first->second;
   };
 
-  filesystem::recursive_directory_iterator gtfs_feed_itr(gtfs_path);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator gtfs_feed_itr(gtfs_path);
+  std::filesystem::recursive_directory_iterator end_file_itr;
   for (; gtfs_feed_itr != end_file_itr; ++gtfs_feed_itr) {
     const auto& feed_path = gtfs_feed_itr->path();
-    if (filesystem::is_directory(feed_path)) {
+    if (std::filesystem::is_directory(feed_path)) {
       // feed_path has a trailing separator
       const auto feed_name = feed_path.filename().string();
 
@@ -843,7 +843,7 @@ void stitch_tiles(const std::string& transit_dir,
                std::to_string(needed.size()) + " stops");
 
       current_path = tile_path + "." + std::to_string(ext++);
-    } while (filesystem::exists(current_path));
+    } while (std::filesystem::exists(current_path));
   }
 }
 } // namespace
@@ -855,17 +855,17 @@ namespace mjolnir {
 std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
   // remove transit directory if it exists
   std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  if (transit_dir.back() != filesystem::path::preferred_separator) {
-    transit_dir.push_back(filesystem::path::preferred_separator);
+  if (transit_dir.back() != std::filesystem::path::preferred_separator) {
+    transit_dir.push_back(std::filesystem::path::preferred_separator);
   }
-  if (filesystem::exists(transit_dir) && !filesystem::is_empty(transit_dir)) {
+  if (std::filesystem::exists(transit_dir) && !std::filesystem::is_empty(transit_dir)) {
     LOG_WARN("Non-empty " + transit_dir + " will be purged of tiles");
-    filesystem::remove_all(transit_dir);
+    std::filesystem::remove_all(transit_dir);
   }
 
   std::string gtfs_dir = pt.get<std::string>("mjolnir.transit_feeds_dir");
-  if (gtfs_dir.back() != filesystem::path::preferred_separator) {
-    gtfs_dir.push_back(filesystem::path::preferred_separator);
+  if (gtfs_dir.back() != std::filesystem::path::preferred_separator) {
+    gtfs_dir.push_back(std::filesystem::path::preferred_separator);
   }
 
   auto thread_count =
@@ -916,15 +916,15 @@ void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& d
                                                            std::thread::hardware_concurrency()));
   // figure out which transit tiles even exist
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
-  if (transit_dir.back() != filesystem::path::preferred_separator) {
-    transit_dir.push_back(filesystem::path::preferred_separator);
+  if (transit_dir.back() != std::filesystem::path::preferred_separator) {
+    transit_dir.push_back(std::filesystem::path::preferred_separator);
   }
-  filesystem::recursive_directory_iterator transit_file_itr(
+  std::filesystem::recursive_directory_iterator transit_file_itr(
       transit_dir + std::to_string(TileHierarchy::GetTransitLevel().level));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator end_file_itr;
   std::unordered_set<GraphId> all_tiles;
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path()) &&
+    if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
         transit_file_itr->path().extension() == ".pbf") {
       all_tiles.emplace(GraphTile::GetTileId(transit_file_itr->path().string()));
     }
@@ -998,7 +998,7 @@ Transit read_pbf(const std::string& file_name) {
   return transit;
 }
 
-void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
+void write_pbf(const Transit& tile, const std::filesystem::path& transit_tile) {
   // check for empty stop pairs and routes.
   if (tile.stop_pairs_size() == 0 && tile.routes_size() == 0 && tile.shapes_size() == 0) {
     LOG_WARN(transit_tile.string() + " had no data and will not be stored");
@@ -1006,8 +1006,8 @@ void write_pbf(const Transit& tile, const filesystem::path& transit_tile) {
   }
 
   // write pbf to file
-  if (!filesystem::exists(transit_tile.parent_path())) {
-    filesystem::create_directories(transit_tile.parent_path());
+  if (!std::filesystem::exists(transit_tile.parent_path())) {
+    std::filesystem::create_directories(transit_tile.parent_path());
   }
 #if GOOGLE_PROTOBUF_VERSION >= 3001000
   auto size = tile.ByteSizeLong();
