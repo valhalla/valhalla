@@ -17,13 +17,13 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
+#include <filesystem>
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 
 // Structure holding an edge Id and forward flag
@@ -69,8 +69,8 @@ bool ParseArguments(int argc, char* argv[]) {
       rapidjson::read_json(ss, pt);
       return true;
     } else if (result.count("config") &&
-               filesystem::is_regular_file(
-                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+               std::filesystem::is_regular_file(
+                   config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
       return true;
     } else {
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 
   std::ofstream ways_file;
   std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
-                      filesystem::path::preferred_separator + "way_edges.txt";
+                      std::filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
     ways_file << way.first;
