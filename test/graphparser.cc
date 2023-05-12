@@ -1,13 +1,13 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/sequence.h"
 #include "mjolnir/bssbuilder.h"
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/osmnode.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "test.h"
+#include <filesystem>
 
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
@@ -206,12 +206,12 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_TRUE((bike_network & kMcn) && (bike_network & kRcn) && way_75786176.bike_network() == 0)
       << "rcn and mtb not marked on way 75786176.";
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -249,12 +249,12 @@ void RemovableBollards(const std::string& config_file) {
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
                                kBicycleAccess | kMopedAccess | kMotorcycleAccess);
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -301,12 +301,12 @@ void Exits(const std::string& config_file) {
   EXPECT_EQ(osmdata.node_names.name(node.exit_to_index()), "PA441")
       << "node exit_to not set correctly .";
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void Baltimore(const std::string& config_file) {
@@ -429,12 +429,12 @@ void Baltimore(const std::string& config_file) {
       FAIL() << "98040438 restriction test failed.";
   }
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -526,11 +526,11 @@ void Bike(const std::string& config_file) {
   EXPECT_TRUE(way_156539491.moped_forward());
   EXPECT_TRUE(way_156539491.bike_backward());
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -607,12 +607,12 @@ void Bus(const std::string& config_file) {
   EXPECT_FALSE(way_225895737.bus_backward());
   EXPECT_FALSE(way_225895737.bike_backward());
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -657,12 +657,12 @@ void BicycleTrafficSignals(const std::string& config_file) {
       << "Bike rental at a shop not marked as intersection."
   */
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 void DoConfig() {
@@ -821,13 +821,13 @@ TEST(GraphParser, TestImportBssNode) {
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 2), kPedestrianAccess,
                        kBicycleAccess);
 
-  filesystem::remove(ways_file);
-  filesystem::remove(way_nodes_file);
-  filesystem::remove(bss_nodes_file);
-  filesystem::remove(access_file);
-  filesystem::remove(from_restriction_file);
-  filesystem::remove(to_restriction_file);
-  filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(ways_file);
+  std::filesystem::remove(way_nodes_file);
+  std::filesystem::remove(bss_nodes_file);
+  std::filesystem::remove(access_file);
+  std::filesystem::remove(from_restriction_file);
+  std::filesystem::remove(to_restriction_file);
+  std::filesystem::remove(bss_nodes_file);
 }
 
 } // namespace
