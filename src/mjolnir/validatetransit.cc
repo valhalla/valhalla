@@ -17,9 +17,9 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/sequence.h"
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -464,22 +464,22 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
     // Bail if nothing
     auto hierarchy_properties = pt.get_child("mjolnir");
     auto transit_dir = hierarchy_properties.get_optional<std::string>("transit_dir");
-    if (!transit_dir || !filesystem::exists(*transit_dir) ||
-        !filesystem::is_directory(*transit_dir)) {
+    if (!transit_dir || !std::filesystem::exists(*transit_dir) ||
+        !std::filesystem::is_directory(*transit_dir)) {
       LOG_INFO("Transit directory not found. Transit will not be added.");
       return false;
     }
     // Also bail if nothing inside
-    transit_dir->push_back(filesystem::path::preferred_separator);
+    transit_dir->push_back(std::filesystem::path::preferred_separator);
     GraphReader reader(hierarchy_properties);
     auto transit_level = TileHierarchy::GetTransitLevel().level;
-    if (filesystem::is_directory(*transit_dir + std::to_string(transit_level) +
-                                 filesystem::path::preferred_separator)) {
-      filesystem::recursive_directory_iterator transit_file_itr(
-          *transit_dir + std::to_string(transit_level) + filesystem::path::preferred_separator),
+    if (std::filesystem::is_directory(*transit_dir + std::to_string(transit_level) +
+                                      std::filesystem::path::preferred_separator)) {
+      std::filesystem::recursive_directory_iterator transit_file_itr(
+          *transit_dir + std::to_string(transit_level) + std::filesystem::path::preferred_separator),
           end_file_itr;
       for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-        if (filesystem::is_regular_file(transit_file_itr->path()) &&
+        if (std::filesystem::is_regular_file(transit_file_itr->path()) &&
             transit_file_itr->path().extension() == ".gph") {
           auto graph_id = GraphTile::GetTileId(transit_file_itr->path().string());
           GraphId transit_tile_id = GraphId(graph_id.tileid(), graph_id.level() - 1, graph_id.id());
