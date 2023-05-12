@@ -177,13 +177,13 @@ gurka::map map;
 TEST(GtfsExample, WriteGtfs) {
   auto pt = get_config();
   const std::string gtfs_dir =
-      pt.get<std::string>("mjolnir.transit_feeds_dir") + filesystem::path::preferred_separator;
-  filesystem::remove_all(gtfs_dir);
-  filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
-  filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
-  filesystem::create_directories(pt.get<std::string>("mjolnir.tile_dir"));
-  filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir"));
-  filesystem::create_directories(pt.get<std::string>("mjolnir.transit_dir"));
+      pt.get<std::string>("mjolnir.transit_feeds_dir") + std::filesystem::path::preferred_separator;
+  std::filesystem::remove_all(gtfs_dir);
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::remove_all(pt.get<std::string>("mjolnir.transit_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir"));
+  std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_dir"));
 
   auto layout = create_layout();
   auto st1_ll = layout.find("1");
@@ -196,8 +196,8 @@ TEST(GtfsExample, WriteGtfs) {
   std::string f1_path = gtfs_dir + f1_name;
   std::string f2_path = gtfs_dir + f2_name;
   for (const auto& f : {"toronto_1", "toronto_2"}) {
-    filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir") +
-                                   filesystem::path::preferred_separator + f);
+    std::filesystem::create_directories(pt.get<std::string>("mjolnir.transit_feeds_dir") +
+                                        std::filesystem::path::preferred_separator + f);
   }
 
   // write agency.txt
@@ -558,9 +558,9 @@ TEST(GtfsExample, MakeProto) {
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
   valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
   // call the two functions, in main valhalla_ingest-transit it's gonna write protobufs
-  filesystem::recursive_directory_iterator transit_file_itr(
+  std::filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir"));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   std::unordered_set<std::string> stops;
   std::unordered_set<std::string> stop_pairs;
@@ -589,7 +589,7 @@ TEST(GtfsExample, MakeProto) {
   size_t shapes = 0;
   // for each pbf.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path())) {
+    if (std::filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       mjolnir::Transit transit = mjolnir::read_pbf(fname);
 
@@ -735,8 +735,9 @@ TEST(GtfsExample, MakeTile) {
   map = gurka::buildtiles(layout, ways, {}, {}, pt);
 
   // files are already going to be written from
-  filesystem::recursive_directory_iterator transit_file_itr(pt.get<std::string>("mjolnir.tile_dir"));
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator transit_file_itr(
+      pt.get<std::string>("mjolnir.tile_dir"));
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   GraphReader reader(pt.get_child("mjolnir"));
   auto tileids = reader.GetTileSet();
