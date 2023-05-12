@@ -17,11 +17,11 @@
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -53,7 +53,7 @@ Transit read_pbf(const std::string& file_name) {
 Transit read_pbf(const GraphId& id, const std::string& transit_dir, std::string& file_name) {
   std::string fname = GraphTile::FileSuffix(id);
   fname = fname.substr(0, fname.size() - 3) + "pbf";
-  file_name = transit_dir + filesystem::path::preferred_separator + fname;
+  file_name = transit_dir + std::filesystem::path::preferred_separator + fname;
   Transit transit;
   transit = read_pbf(file_name);
   return transit;
@@ -65,14 +65,14 @@ void LogDepartures(const Transit& transit, const GraphId& stopid, std::string& f
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0, slash_found);
 
-  filesystem::recursive_directory_iterator transit_file_itr(directory);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator transit_file_itr(directory);
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   LOG_INFO("Departures:");
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path())) {
+    if (std::filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -229,12 +229,12 @@ void LogSchedule(const std::string& transit_dir,
   std::size_t slash_found = file.find_last_of("/\\");
   std::string directory = file.substr(0, slash_found);
 
-  filesystem::recursive_directory_iterator transit_file_itr(directory);
-  filesystem::recursive_directory_iterator end_file_itr;
+  std::filesystem::recursive_directory_iterator transit_file_itr(directory);
+  std::filesystem::recursive_directory_iterator end_file_itr;
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
-    if (filesystem::is_regular_file(transit_file_itr->path())) {
+    if (std::filesystem::is_regular_file(transit_file_itr->path())) {
       std::string fname = transit_file_itr->path().string();
       std::string ext = transit_file_itr->path().extension().string();
       std::string file_name = fname.substr(0, fname.size() - ext.size());
@@ -400,7 +400,7 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
+    if (!result.count("config") || !std::filesystem::is_regular_file(std::filesystem::path(config))) {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
@@ -425,7 +425,8 @@ int main(int argc, char* argv[]) {
 
   // Bail if no transit dir
   auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
-  if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
+  if (!transit_dir || !std::filesystem::exists(*transit_dir) ||
+      !std::filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found.");
     return 0;
   }
