@@ -27,7 +27,6 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/constants.h"
 #include "midgard/distanceapproximator.h"
@@ -35,6 +34,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -44,7 +44,7 @@ typedef boost::geometry::model::d2::point_xy<double> point_type;
 typedef boost::geometry::model::polygon<point_type> polygon_type;
 typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 
 std::unordered_map<uint32_t, multi_polygon_type>
 GetAdminInfo(sqlite3* db_handle,
@@ -153,7 +153,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   auto database = pt.get_optional<std::string>("admin");
 
   sqlite3* db_handle = nullptr;
-  if (filesystem::exists(*database)) {
+  if (std::filesystem::exists(*database)) {
     sqlite3_stmt* stmt = 0;
     uint32_t ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READONLY, nullptr);
     if (ret != SQLITE_OK) {
@@ -223,8 +223,8 @@ bool ParseArguments(int argc, char* argv[]) {
     }
 
     if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(
+            config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
