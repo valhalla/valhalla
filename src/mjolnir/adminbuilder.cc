@@ -1,9 +1,9 @@
 #include <cstdint>
+#include <filesystem>
 #include <string>
 #include <vector>
 
 #include "baldr/graphconstants.h"
-#include "filesystem.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/adminconstants.h"
 #include "mjolnir/osmpbfparser.h"
@@ -370,8 +370,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     return false;
   }
 
-  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
-  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+  const std::filesystem::path parent_dir = std::filesystem::path(*database).parent_path();
+  if (!std::filesystem::exists(parent_dir) && !std::filesystem::create_directories(parent_dir)) {
     LOG_ERROR("Can't create parent directory " + parent_dir.string());
     return false;
   }
@@ -383,8 +383,8 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
   // done with the protobuffer library, cant use it again after this
   OSMPBF::Parser::free();
 
-  if (filesystem::exists(*database)) {
-    filesystem::remove(*database);
+  if (std::filesystem::exists(*database)) {
+    std::filesystem::remove(*database);
   }
 
   sqlite3* db_handle;
