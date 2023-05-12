@@ -9,8 +9,8 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
+#include <filesystem>
 
 namespace valhalla {
 namespace mjolnir {
@@ -21,7 +21,7 @@ std::deque<baldr::GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
     return {};
 
   auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
+  if (!tile_dir || !std::filesystem::exists(*tile_dir)) {
     LOG_WARN("Tile storage directory does not exist");
     return {};
   }
