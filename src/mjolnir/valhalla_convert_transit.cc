@@ -1,12 +1,12 @@
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
+#include <filesystem>
 
 #include "config.h"
 #include <cxxopts.hpp>
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
 
@@ -42,8 +42,8 @@ bool ParseArguments(int argc, char* argv[]) {
     }
 
     if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(
+            config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
       return true;
     } else {
