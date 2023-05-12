@@ -12,10 +12,10 @@
 #include <thread>
 #include <unistd.h>
 
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "odin/worker.h"
 #include "thor/worker.h"
+#include <filesystem>
 
 using namespace valhalla;
 using namespace prime_server;
@@ -379,9 +379,9 @@ boost::property_tree::ptree make_config(const std::vector<std::string>& whitelis
                                             "centroid",
                                             "status",
                                         }) {
-  auto run_dir = VALHALLA_BUILD_DIR "test" + std::string(1, filesystem::path::preferred_separator) +
-                 "loki_service_tmp";
-  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+  auto run_dir = VALHALLA_BUILD_DIR "test" +
+                 std::string(1, std::filesystem::path::preferred_separator) + "loki_service_tmp";
+  if (!std::filesystem::is_directory(run_dir) && !std::filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
   auto config = test::make_config(run_dir,
