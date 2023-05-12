@@ -2,7 +2,6 @@
 #include "baldr/graphid.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "loki/worker.h"
 #include "midgard/constants.h"
 #include "midgard/encoded.h"
@@ -15,6 +14,7 @@
 #include "thor/worker.h"
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
+#include <filesystem>
 
 #include "gurka.h"
 #include "test.h"
@@ -461,9 +461,9 @@ map buildtiles(const nodelayout& layout,
     throw std::runtime_error("Can't use / for tests, as we need to clean it out first");
   }
 
-  if (filesystem::exists(workdir))
-    filesystem::remove_all(workdir);
-  filesystem::create_directories(workdir);
+  if (std::filesystem::exists(workdir))
+    std::filesystem::remove_all(workdir);
+  std::filesystem::create_directories(workdir);
 
   auto pbf_filename = workdir + "/map.pbf";
   std::cerr << "[          ] generating map PBF at " << pbf_filename << std::endl;
