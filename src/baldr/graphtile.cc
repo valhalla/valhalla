@@ -5,10 +5,10 @@
 #include "baldr/datetime.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
 #include "midgard/tiles.h"
+#include "midgard/util.h"
 
 #include <boost/algorithm/string.hpp>
 #include <chrono>
@@ -16,12 +16,14 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <locale>
 #include <string>
 #include <thread>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -114,7 +116,7 @@ graph_tile_ptr GraphTile::Create(const std::string& tile_dir,
 
   // Open to the end of the file so we can immediately get size
   const std::string file_location =
-      tile_dir + filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
+      tile_dir + std::filesystem::path::preferred_separator + FileSuffix(graphid.Tile_Base());
   std::ifstream file(file_location, std::ios::in | std::ios::binary | std::ios::ate);
   if (file.is_open()) {
     // Read binary file into memory. TODO - protect against failure to allocate memory
@@ -182,14 +184,14 @@ GraphTile::GraphTile() = default;
 void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::string& disk_location) {
   // At first we save tile to a temporary file and then move it
   // so we can avoid cases when another thread could read partially written file.
-  auto dir = filesystem::path(disk_location);
+  auto dir = std::filesystem::path(disk_location);
   dir.replace_filename("");
 
   bool success = true;
-  filesystem::path tmp_location;
-  if (filesystem::create_directories(dir)) {
+  std::filesystem::path tmp_location;
+  if (std::filesystem::create_directories(dir)) {
     // Technically this is a race condition but its super unlikely (famous last words)
-    while (tmp_location.string().empty() || filesystem::exists(tmp_location))
+    while (tmp_location.string().empty() || std::filesystem::exists(tmp_location))
       tmp_location = disk_location + GenerateTmpSuffix();
     std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
     file.write(tile_data.data(), tile_data.size());
@@ -204,7 +206,7 @@ void GraphTile::SaveTileToFile(const std::vector<char>& tile_data, const std::st
   }
 
   if (!success)
-    filesystem::remove(tmp_location);
+    std::filesystem::remove(tmp_location);
 }
 
 void store(const std::string& cache_location,
@@ -217,8 +219,8 @@ void store(const std::string& cache_location,
                                                (tile_getter->gzipped()
                                                     ? valhalla::baldr::SUFFIX_COMPRESSED
                                                     : valhalla::baldr::SUFFIX_NON_COMPRESSED));
-    auto disk_location = cache_location + filesystem::path::preferred_separator + suffix;
-    filesystem::save(disk_location, raw_data);
+    auto disk_location = cache_location + std::filesystem::path::preferred_separator + suffix;
+    save(disk_location, raw_data);
   }
 }
 
@@ -466,7 +468,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
   const size_t tile_id_strlen = max_length + max_length / 3;
   assert(tile_id_strlen % 4 == 0);
 
-  const char separator = is_file_path ? filesystem::path::preferred_separator : '/';
+  const char separator = is_file_path ? std::filesystem::path::preferred_separator : '/';
 
   std::string tile_id_str(tile_id_strlen, '0');
   size_t ind = tile_id_strlen - 1;
@@ -486,7 +488,7 @@ std::string GraphTile::FileSuffix(const GraphId& graphid,
 
 // Get the tile Id given the full path to the file.
 GraphId GraphTile::GetTileId(const std::string& fname) {
-  std::unordered_set<std::string::value_type> allowed{filesystem::path::preferred_separator,
+  std::unordered_set<std::string::value_type> allowed{std::filesystem::path::preferred_separator,
                                                       '0',
                                                       '1',
                                                       '2',
@@ -498,7 +500,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                                       '8',
                                                       '9'};
   // we require slashes
-  auto pos = fname.find_last_of(filesystem::path::preferred_separator);
+  auto pos = fname.find_last_of(std::filesystem::path::preferred_separator);
   if (pos == fname.npos) {
     throw std::runtime_error("Invalid tile path: " + fname);
   }
@@ -509,7 +511,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
       break;
     }
   }
-  allowed.erase(static_cast<std::string::value_type>(filesystem::path::preferred_separator));
+  allowed.erase(static_cast<std::string::value_type>(std::filesystem::path::preferred_separator));
 
   // if you didnt reach the end and it wasnt a dot then this isnt valid
   if (pos != fname.size() && fname[pos] != '.') {
@@ -527,7 +529,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
     }
 
     // if its the last thing or the next one is a separator thats another digit
-    if (pos == 0 || fname[pos - 1] == filesystem::path::preferred_separator) {
+    if (pos == 0 || fname[pos - 1] == std::filesystem::path::preferred_separator) {
       // this is not 3 or 1 digits so its wrong
       auto dist = last - pos;
       if (dist != 3 && dist != 1) {
