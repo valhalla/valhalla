@@ -30,7 +30,7 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
-#include <valhalla/filesystem.h>
+#include <filesystem>
 
 #include <cstdint>
 #include <iterator>
