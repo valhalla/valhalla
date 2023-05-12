@@ -3,8 +3,8 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
 #include "tyr/actor.h"
-#include "valhalla/filesystem.h"
 #include "valhalla/tile_server.h"
+#include <filesystem>
 
 #include <prime_server/prime_server.hpp>
 
@@ -71,10 +71,10 @@ TEST(HttpTiles, test_no_cache_gz) {
 class HttpTilesWithCache : public ::testing::Test {
 protected:
   void SetUp() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
   void TearDown() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
 };
 
