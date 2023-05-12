@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
     }
 
-    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
+    if (!result.count("config") || !std::filesystem::is_regular_file(std::filesystem::path(config))) {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
