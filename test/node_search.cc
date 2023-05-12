@@ -17,10 +17,10 @@
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 
-#include "filesystem.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/graphvalidator.h"
+#include <filesystem>
 
 namespace vj = valhalla::mjolnir;
 
@@ -272,8 +272,8 @@ void graph_builder::write_tiles(uint8_t level) const {
 
 void make_tile() {
   // make sure that all the old tiles are gone before trying to make new ones.
-  if (filesystem::is_directory(test_tile_dir)) {
-    filesystem::remove_all(test_tile_dir);
+  if (std::filesystem::is_directory(test_tile_dir)) {
+    std::filesystem::remove_all(test_tile_dir);
   }
 
   graph_builder builder;
