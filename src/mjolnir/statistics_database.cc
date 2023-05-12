@@ -3,9 +3,9 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -16,8 +16,8 @@ namespace mjolnir {
 
 void statistics::build_db() {
   std::string database = "statistics.sqlite";
-  if (filesystem::exists(database)) {
-    filesystem::remove(database);
+  if (std::filesystem::exists(database)) {
+    std::filesystem::remove(database);
   }
 
   sqlite3* db_handle = nullptr;
