@@ -11,11 +11,11 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
+#include <filesystem>
 
 using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
@@ -200,8 +200,8 @@ void FilterTiles(GraphReader& reader,
       tilebuilder.StoreTileData();
     } else {
       // Remove the tile - all nodes and edges were filtered
-      std::string file_location =
-          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+      std::string file_location = reader.tile_dir() + std::filesystem::path::preferred_separator +
+                                  GraphTile::FileSuffix(tile_id);
       remove(file_location.c_str());
       LOG_INFO("Remove file: " + file_location + " all edges were filtered");
     }
