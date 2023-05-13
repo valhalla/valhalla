@@ -63,7 +63,7 @@ json::MapPtr serialize(const Api& request,
   json->emplace("sources", osrm::waypoints(options.sources()));
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
-  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+  for (auto source_index = 0; source_index < options.sources_size(); ++source_index) {
     time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
                                           options.targets_size()));
     distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
@@ -87,7 +87,7 @@ valhalla output looks like this:
 
 json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
   auto input_locs = json::array({});
-  for (size_t i = 0; i < correlated.size(); i++) {
+  for (auto i = 0; i < correlated.size(); i++) {
     input_locs->emplace_back(json::map({{"lat", json::fixed_t{correlated.Get(i).ll().lat(), 6}},
                                         {"lon", json::fixed_t{correlated.Get(i).ll().lng(), 6}}}));
   }
@@ -133,7 +133,7 @@ json::MapPtr serialize(const Api& request,
 
   if (options.verbose()) {
     json::ArrayPtr matrix = json::array({});
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (auto source_index = 0; source_index < options.sources_size(); ++source_index) {
       matrix->emplace_back(serialize_row(time_distances, source_index * options.targets_size(),
                                          options.targets_size(), source_index, 0, distance_scale));
     }
@@ -148,7 +148,7 @@ json::MapPtr serialize(const Api& request,
     auto time = json::array({});
     auto distance = json::array({});
 
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (auto source_index = 0; source_index < options.sources_size(); ++source_index) {
       time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
                                             options.targets_size()));
       distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),

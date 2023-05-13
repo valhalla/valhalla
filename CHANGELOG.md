@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
 * **Enhancement**
+   * CHANGED: Build Tyr with -Werror [#4130](https://github.com/valhalla/valhalla/pull/4130)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
