@@ -216,7 +216,7 @@ private:
                    filename.string().length() > sizeof entry_->d_name
                        ? filename.string().substr(0, sizeof entry_->d_name - 1).c_str()
                        : filename.c_str(),
-                   sizeof entry_->d_name);
+                   sizeof entry_->d_name - 1);
 #ifdef _DIRENT_HAVE_D_NAMLEN
       entry_->d_namlen = filename.string().size();
 #endif
