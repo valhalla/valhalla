@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * CHANGED: Filesystem with clang tidy problem naive fix [#4104](https://github.com/valhalla/valhalla/pull/4104)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
