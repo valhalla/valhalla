@@ -322,6 +322,10 @@ message Costing {
     bool exclude_tolls = 89;
     bool exclude_highways = 90;
     bool exclude_ferries = 91;
+
+    oneof has_non_network_penalty {
+      float non_network_penalty = 92;
+    }
   }
 
   oneof has_options {

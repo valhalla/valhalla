@@ -29,6 +29,7 @@ constexpr float kDefaultAlleyPenalty = 60.0f; // Seconds
 constexpr float kDefaultGatePenalty = 300.0f; // Seconds
 constexpr float kDefaultBssCost = 120.0f;     // Seconds
 constexpr float kDefaultBssPenalty = 0.0f;    // Seconds
+constexpr float kDefaultNonNetworkPenalty = 0.0f;  // Factor between 0 and 1
 
 // Other options
 constexpr float kDefaultUseRoad = 0.25f;          // Factor between 0 and 1
@@ -205,7 +206,8 @@ constexpr ranged_default_t<float> kAvoidBadSurfacesRange{0.0f, kDefaultAvoidBadS
 
 constexpr ranged_default_t<float> kBSSCostRange{0, kDefaultBssCost, kMaxPenalty};
 constexpr ranged_default_t<float> kBSSPenaltyRange{0, kDefaultBssPenalty, kMaxPenalty};
-
+constexpr ranged_default_t<float> kNonNetworkPenaltyRange{0, kDefaultNonNetworkPenalty,
+                                                                  kMaxPenalty};
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
@@ -385,6 +387,7 @@ public:
   float livingstreet_factor_;      // Factor to use for living streets
   float track_factor_;             // Factor to use tracks
   float avoid_bad_surfaces_;       // Preference of avoiding bad surfaces for the bike type
+  float non_network_factor_;      // Factor to use when the edge is not on a bicycle network
 
   // Average speed (kph) on smooth, flat roads.
   float speed_;
@@ -461,7 +464,7 @@ BicycleCost::BicycleCost(const Costing& costing)
   avoid_bad_surfaces_ = costing_options.avoid_bad_surfaces();
   minimal_surface_penalized_ = kWorstAllowedSurface[static_cast<uint32_t>(type_)];
   worst_allowed_surface_ = avoid_bad_surfaces_ == 1.0f ? minimal_surface_penalized_ : Surface::kPath;
-
+  non_network_factor_ = 1.0f + costing_options.non_network_penalty();
   // Set the surface speed factors for the bicycle type.
   if (type_ == BicycleType::kRoad) {
     surface_speed_factor_ = kRoadSurfaceSpeedFactors;
@@ -664,8 +667,8 @@ Cost BicycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   }
 
   // Favor bicycle networks slightly
-  if (edge->bike_network()) {
-    accommodation_factor *= kBicycleNetworkFactor;
+  if (!edge->bike_network()) {
+    accommodation_factor *= non_network_factor_;
   }
 
   // Create an edge factor based on total stress (sum of accommodation factor and roadway
@@ -876,6 +879,8 @@ void ParseBicycleCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kCycleSpeedRange, json, "/cycling_speed", cycling_speed);
   JSON_PBF_RANGED_DEFAULT(co, kBSSCostRange, json, "/bss_return_cost", bike_share_cost);
   JSON_PBF_RANGED_DEFAULT(co, kBSSPenaltyRange, json, "/bss_return_penalty", bike_share_penalty);
+  JSON_PBF_RANGED_DEFAULT(co, kNonNetworkPenaltyRange, json, "/non_network_penalty", non_network_penalty);
+
 }
 
 cost_ptr_t CreateBicycleCost(const Costing& costing_options) {
