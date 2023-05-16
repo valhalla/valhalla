@@ -45,4 +45,4 @@
 	url = https://github.com/jarro2783/cxxopts.git
 [submodule "third_party/just_gtfs"]
 	path = third_party/just_gtfs
-	url = https://github.com/mapsme/just_gtfs.git
+	url = https://github.com/mesozoic-drones/just_gtfs.git

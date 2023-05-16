@@ -55,28 +55,22 @@ bool ParseArguments(int argc, char* argv[]) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, pt);
+      return true;
     } else if (result.count("config") &&
                filesystem::is_regular_file(
                    config_file_path = filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
-    } else {
-      std::cerr << "Configuration is required\n" << options.help() << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
-      std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
+      std::cerr << "Configuration is required\n" << options.help() << std::endl;
+      return false;
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
   }
 
-  return EXIT_FAILURE;
+  return false;
 }
 
 int main(int argc, char** argv) {
@@ -97,7 +91,9 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+  if (!valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files)) {
+    return EXIT_FAILURE;
+  };
 
   return EXIT_SUCCESS;
 }

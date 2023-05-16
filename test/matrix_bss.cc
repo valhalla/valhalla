@@ -14,7 +14,7 @@
 
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
-#include "thor/costmatrix.h"
+#include "thor/matrix_common.h"
 #include "thor/timedistancebssmatrix.h"
 
 using namespace valhalla;

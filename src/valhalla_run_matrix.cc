@@ -189,7 +189,8 @@ int main(int argc, char* argv[]) {
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status" || kv.first == "max_timedep_distance_matrix") {
+        kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
+        kv.first == "max_distance_disable_hierarchy_culling") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -231,8 +232,8 @@ int main(int argc, char* argv[]) {
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                                max_distance);
+    res = matrix.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
+                                mode_costing, mode, max_distance);
     matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();

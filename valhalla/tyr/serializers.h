@@ -16,7 +16,7 @@
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/thor/costmatrix.h>
+#include <valhalla/thor/matrix_common.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -32,7 +32,8 @@ std::string serializeDirections(Api& request);
  */
 std::string serializeMatrix(const Api& request,
                             const std::vector<thor::TimeDistance>& time_distances,
-                            double distance_scale);
+                            double distance_scale,
+                            thor::MatrixType matrix_type);
 
 /**
  * Turn grid data contours into geojson

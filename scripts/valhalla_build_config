@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from distutils.util import strtobool
 import json
 from typing import List, Union
+
+
+def strtobool(value):
+    lower = str(value).lower()
+    if lower in {'y', 'yes', 't', 'true', 'on', '1'}:
+        return True
+    elif lower in {'n', 'no', 'f', 'false', 'off', '0'}:
+        return False
+    else:
+        raise ValueError('"{}" is not a valid bool value'.format(value))
 
 
 class Optional:
@@ -103,7 +112,10 @@ config = {
         },
         'source_to_target_algorithm': 'select_optimal',
         'service': {'proxy': 'ipc:///tmp/thor'},
-        'max_reserved_labels_count': 1000000,
+        'max_reserved_labels_count_astar': 2000000,
+        'max_reserved_labels_count_bidir_astar': 1000000,
+        'max_reserved_labels_count_dijkstras': 4000000,
+        'max_reserved_labels_count_bidir_dijkstras': 2000000,
         'clear_reserved_memory': False,
         'extended_search': False,
     },
@@ -255,6 +267,7 @@ config = {
         'max_timedep_distance_matrix': 0,
         'max_alternates': 2,
         'max_exclude_polygons_length': 10000,
+        'max_distance_disable_hierarchy_culling': 0,
     },
     'statsd': {
         'host': Optional(str),
@@ -351,7 +364,10 @@ help_text = {
         },
         'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
         'service': {'proxy': 'IPC linux domain socket file location'},
-        'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.',
+        'max_reserved_labels_count_astar': 'Maximum capacity allowed to keep reserved for unidirectional A*.',
+        'max_reserved_labels_count_bidir_astar': 'Maximum capacity allowed to keep reserved for bidirectional A*.',
+        'max_reserved_labels_count_dijkstras': 'Maximum capacity allowed to keep reserved for unidirectional Dijkstras.',
+        'max_reserved_labels_count_bidir_dijkstras': 'Maximum capacity allowed to keep reserved for bidirectional Dijkstras.',
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
     },
@@ -444,7 +460,7 @@ help_text = {
             'max_locations': 'Maximum number of input locations',
             'max_matrix_distance': 'Maximum b-line distance between 2 most distant locations in meters for a matrix',
             'max_matrix_location_pairs': 'Maximum number of routes computed with the matrix, e.g. 2500 = 50:50 or 1:2500',
-            'min_transit_walking_distance': 'TODO: minimum distance you must walk to a station',
+            'min_transit_walking_distance': 'Minimum distance you must walk to the egress of to a station',
             'max_transit_walking_distance': 'Maximum distance allowed for walking when using transit',
         },
         'motor_scooter': {
@@ -522,6 +538,7 @@ help_text = {
         'max_timedep_distance_matrix': 'Maximum b-line distance between 2 most distant locations in meters to allow a time-dependent matrix',
         'max_alternates': 'Maximum number of alternate routes to allow in a request',
         'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
+        'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
     },
     'statsd': {
         'host': 'The statsd host address',

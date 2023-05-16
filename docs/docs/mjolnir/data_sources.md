@@ -11,10 +11,6 @@ All OpenStreetMap data is licensed under the [ODbL](http://opendatacommons.org/l
 
 Please consider donating to the OSM Foundation to help cover the administration and server costs.
 
-## Transitland
-
-[Transitland](https://transit.land/) provides public transit information to Valhalla. This data is connected to the OSM road and path network to provide seamless multimodal routing. A licensing overview of Transitland is provided [here](https://transit.land/an-open-project/). Transit feed license details can be found [here](https://transit.land/feed-registry/).
-
 ## Elevation data
 
 Valhalla uses terrain data for building elevation-influenced routes, such as for bicycles. You can find more about the license and attribution requirements for elevation data [here](https://github.com/tilezen/joerd/blob/master/docs/attribution.md).
