@@ -778,7 +778,7 @@ void BuildTileSet(const std::string& ways_file,
                                  truck_speed, use, static_cast<RoadClass>(edge.attributes.importance),
                                  n, has_signal, has_stop, has_yield,
                                  ((has_stop || has_yield) ? node.minor() : false), restrictions,
-                                 bike_network, edge.attributes.reclass_ferry);
+                                 bike_network, edge.attributes.remove_destonly);
           graphtile.directededges().emplace_back(de);
           DirectedEdge& directededge = graphtile.directededges().back();
           // temporarily set the leaves tile flag to indicate when we need to search the access.bin
@@ -1238,15 +1238,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_WARN("Not reclassifying link graph edges");
   }
 
-  // Reclassify ferry connection edges - use the highway classification cutoff
-  baldr::RoadClass rc = baldr::RoadClass::kPrimary;
-  for (auto& level : TileHierarchy::levels()) {
-    if (level.name == "highway") {
-      rc = level.importance;
-    }
-  }
-  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
-                             static_cast<uint32_t>(rc));
+  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
+  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));

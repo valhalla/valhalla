@@ -54,12 +54,14 @@ struct Edge {
                                //   short enough it may be internal to
                                //   an intersection
     uint64_t driveable_ferry : 1;
-    uint64_t reclass_ferry : 1; // Has edge been reclassified due to
-                                // ferry connection
-    uint64_t turn_channel : 1;  // Link edge should be a turn channel
-    uint64_t way_begin : 1;     // True if first edge of way
-    uint64_t way_end : 1;       // True if last edge of way
-    uint64_t spare : 25;
+    uint64_t reclass_ferry : 1;   // Has edge been reclassified due to
+                                  // ferry connection
+    uint64_t turn_channel : 1;    // Link edge should be a turn channel
+    uint64_t way_begin : 1;       // True if first edge of way
+    uint64_t way_end : 1;         // True if last edge of way
+    uint64_t remove_destonly : 1; // During ferry reclassification we decide to remove dest_only
+                                  // if the reclassified path starts with a dest_only at the ferry
+    uint64_t spare : 24;
   };
   EdgeAttributes attributes;
 
@@ -106,6 +108,7 @@ struct Edge {
     e.attributes.driveable_ferry = (way.ferry() || way.rail()) && (drive_fwd || drive_rev);
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
+    e.attributes.remove_destonly = false;
     e.attributes.has_names =
         (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
          way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
