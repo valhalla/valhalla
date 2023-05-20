@@ -50,10 +50,10 @@ std::string thor_worker_t::matrix(Api& request) {
                                                  mode_costing, mode,
                                                  max_matrix_distance.find(costing)->second,
                                                  options.matrix_locations());
-    return tyr::serializeMatrix(request, time_distances, distance_scale, MatrixType::TimeDist);
+    return tyr::serializeMatrix(request, time_distances, distance_scale, Matrix::TimeDistanceMatrix);
   }
 
-  MatrixType matrix_type = MatrixType::Cost;
+  Matrix::Algorithm matrix_algo = Matrix::CostMatrix;
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
@@ -64,11 +64,11 @@ std::string thor_worker_t::matrix(Api& request) {
           // exceeds some threshold
           if (options.sources().size() <= kCostMatrixThreshold ||
               options.targets().size() <= kCostMatrixThreshold) {
-            matrix_type = MatrixType::TimeDist;
+            matrix_algo = Matrix::TimeDistanceMatrix;
           }
           break;
         case travel_mode_t::kPublicTransit:
-          matrix_type = MatrixType::TimeDist;
+          matrix_algo = Matrix::TimeDistanceMatrix;
           break;
         default:
           break;
@@ -77,31 +77,33 @@ std::string thor_worker_t::matrix(Api& request) {
     case COST_MATRIX:
       break;
     case TIME_DISTANCE_MATRIX:
-      matrix_type = MatrixType::TimeDist;
+      matrix_algo = Matrix::TimeDistanceMatrix;
       break;
   }
 
   // similar to routing: prefer the exact unidirectional algo if not requested otherwise
   // don't use matrix_type, we only need it to set the right warnings for what will be used
   bool has_time =
-      check_matrix_time(request,
-                        options.prioritize_bidirectional() ? MatrixType::Cost : MatrixType::TimeDist);
+      check_matrix_time(request, options.prioritize_bidirectional() ? Matrix::CostMatrix
+                                                                    : Matrix::TimeDistanceMatrix);
   if (has_time && !options.prioritize_bidirectional() && source_to_target_algorithm != COST_MATRIX) {
-    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
+    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale,
+                                Matrix::TimeDistanceMatrix);
   } else if (has_time && options.prioritize_bidirectional() &&
              source_to_target_algorithm != TIME_DISTANCE_MATRIX) {
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
-  } else if (matrix_type == MatrixType::Cost) {
+    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, Matrix::CostMatrix);
+  } else if (matrix_algo == Matrix::CostMatrix) {
     // if this happens, the server config only allows for timedist matrix
     if (has_time && !options.prioritize_bidirectional()) {
       add_warning(request, 301);
     }
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, MatrixType::Cost);
+    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, Matrix::CostMatrix);
   } else {
     if (has_time && options.prioritize_bidirectional()) {
       add_warning(request, 300);
     }
-    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale, MatrixType::TimeDist);
+    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale,
+                                Matrix::TimeDistanceMatrix);
   }
 }
 } // namespace thor

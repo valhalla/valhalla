@@ -1,0 +1,24 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+import public "common.proto";
+
+message Matrix {
+  enum Algorithm {
+    TimeDistanceMatrix = 0;
+    CostMatrix = 1;
+  }
+
+  message TimeDistance {
+    double distance = 1;
+    double time = 2;
+    uint32 from_index = 3;
+    uint32 to_index = 4;
+    string date_time = 5;
+  }
+
+  repeated Location sources = 1;
+  repeated Location targets = 2;
+  repeated TimeDistance time_distances = 3;
+  Algorithm algorithm = 4;
+}

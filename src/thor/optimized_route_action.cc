@@ -31,7 +31,7 @@ void thor_worker_t::optimized_route(Api& request) {
   std::vector<TimeDistance> td =
       costmatrix.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), *reader,
                                 mode_costing, mode, max_matrix_distance.find(costing)->second,
-                                check_matrix_time(request, MatrixType::Cost),
+                                check_matrix_time(request, Matrix::CostMatrix),
                                 options.date_time_type() == Options::invariant);
 
   // Return an error if any locations are totally unreachable

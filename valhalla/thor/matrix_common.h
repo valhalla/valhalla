@@ -8,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include "proto/matrix.pb.h"
 #include <valhalla/baldr/double_bucket_queue.h>
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
@@ -21,8 +22,6 @@
 
 namespace valhalla {
 namespace thor {
-
-enum class MatrixType : bool { TimeDist, Cost };
 
 // Default for time distance matrix is to find all locations
 constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
@@ -106,13 +105,13 @@ inline std::string get_date_time(const std::string& origin_dt,
 
 // return true if any location had a valid time set
 // return false if it doesn't make sense computationally and add warnings accordingly
-inline bool check_matrix_time(Api& request, const MatrixType type) {
+inline bool check_matrix_time(Api& request, const Matrix::Algorithm algo) {
   const auto& options = request.options();
   bool less_sources = options.sources().size() <= options.targets().size();
 
   for (const auto& source : options.sources()) {
     if (!source.date_time().empty()) {
-      if (!less_sources && type == MatrixType::TimeDist) {
+      if (!less_sources && algo == Matrix::TimeDistanceMatrix) {
         add_warning(request, 201);
         return false;
       }
@@ -121,10 +120,10 @@ inline bool check_matrix_time(Api& request, const MatrixType type) {
   }
   for (const auto& target : options.targets()) {
     if (!target.date_time().empty()) {
-      if (less_sources && type == MatrixType::TimeDist) {
+      if (less_sources && algo == Matrix::TimeDistanceMatrix) {
         add_warning(request, 202);
         return false;
-      } else if (type == MatrixType::Cost) {
+      } else if (algo == Matrix::CostMatrix) {
         add_warning(request, 206);
         return false;
       }
