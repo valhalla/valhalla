@@ -182,15 +182,16 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
 // Calculate time and distance from one origin location to many destination
 // locations.
 template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations) {
+std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
+                                                               baldr::GraphReader& graphreader,
+                                                               const float max_matrix_distance,
+                                                               const uint32_t matrix_locations) {
   // Run a series of one to many calls and concatenate the results.
-  const auto& origins = FORWARD ? source_location_list : target_location_list;
-  const auto& destinations = FORWARD ? target_location_list : source_location_list;
+
+  auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
+                          : *request.mutable_options()->mutable_targets();
+  auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
+                               : *request.mutable_options()->mutable_sources();
 
   // Construct adjacency list, edge status, and done set. Set bucket size and
   // cost range based on DynamicCost.
@@ -221,7 +222,7 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        one_to_many = FormTimeDistanceMatrix();
+        one_to_many = FormTimeDistanceMatrix(request);
         break;
       }
 
@@ -248,14 +249,14 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
                                matrix_locations)) {
-          one_to_many = FormTimeDistanceMatrix();
+          one_to_many = FormTimeDistanceMatrix(request);
           break;
         }
       }
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        one_to_many = FormTimeDistanceMatrix();
+        one_to_many = FormTimeDistanceMatrix(request);
         break;
       }
 
@@ -281,19 +282,16 @@ std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix(
   return many_to_many;
 }
 
-template std::vector<TimeDistance> TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::forward, true>(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations);
 template std::vector<TimeDistance>
-TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::reverse, false>(
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations);
+TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
+                                                                   baldr::GraphReader& graphreader,
+                                                                   const float max_matrix_distance,
+                                                                   const uint32_t matrix_locations);
+template std::vector<TimeDistance>
+TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
+                                                                    baldr::GraphReader& graphreader,
+                                                                    const float max_matrix_distance,
+                                                                    const uint32_t matrix_locations);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -538,7 +536,7 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-std::vector<TimeDistance> TimeDistanceBSSMatrix::FormTimeDistanceMatrix() {
+std::vector<TimeDistance> TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request) {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
     td.emplace_back(dest.best_cost.secs, dest.distance);

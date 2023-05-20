@@ -95,15 +95,13 @@ public:
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance>
-  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t mode,
-                 const float max_matrix_distance,
-                 const bool has_time = false,
-                 const bool invariant = false);
+  std::vector<TimeDistance> SourceToTarget(Api& request,
+                                           baldr::GraphReader& graphreader,
+                                           const sif::mode_costing_t& mode_costing,
+                                           const sif::travel_mode_t mode,
+                                           const float max_matrix_distance,
+                                           const bool has_time = false,
+                                           const bool invariant = false);
 
   /**
    * Clear the temporary information generated during time+distance

@@ -188,14 +188,18 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant) {
+std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(Api& request,
+                                                            baldr::GraphReader& graphreader,
+                                                            const float max_matrix_distance,
+                                                            const uint32_t matrix_locations,
+                                                            const bool invariant) {
   uint32_t bucketsize = costing_->UnitSize();
+
+  auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
+                          : *request.mutable_options()->mutable_targets();
+  auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
+                               : *request.mutable_options()->mutable_sources();
+
   auto time_infos = SetTime(origins, graphreader);
 
   // Initialize destinations once for all origins
@@ -227,7 +231,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
+        one_to_many = FormTimeDistanceMatrix(request, graphreader, origin.date_time(),
                                              time_info.timezone_index, GraphId{});
         break;
       }
@@ -252,7 +256,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
-          one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
+          one_to_many = FormTimeDistanceMatrix(request, graphreader, origin.date_time(),
                                                time_info.timezone_index, pred.edgeid());
           break;
         }
@@ -260,7 +264,7 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
+        one_to_many = FormTimeDistanceMatrix(request, graphreader, origin.date_time(),
                                              time_info.timezone_index, pred.edgeid());
         break;
       }
@@ -288,20 +292,18 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
   return many_to_many;
 }
 
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
+template std::vector<TimeDistance>
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
+                                                                baldr::GraphReader& graphreader,
+                                                                const float max_matrix_distance,
+                                                                const uint32_t matrix_locations,
+                                                                const bool invariant);
+template std::vector<TimeDistance>
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
+                                                                 baldr::GraphReader& graphreader,
+                                                                 const float max_matrix_distance,
+                                                                 const uint32_t matrix_locations,
+                                                                 const bool invariant);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -556,15 +558,21 @@ bool TimeDistanceMatrix::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader& reader,
+std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
+                                                                     GraphReader& reader,
                                                                      const std::string& origin_dt,
                                                                      const uint64_t& origin_tz,
                                                                      const GraphId& pred_id) {
   std::vector<TimeDistance> td;
+  uint32_t idx = 0;
+  Matrix matrix;
   for (auto& dest : destinations_) {
+    const uint32_t from_index = idx / request.options().targets().size();
+    const uint32_t to_index = idx % request.options().targets().size();
     auto date_time = get_date_time(origin_dt, origin_tz, pred_id, reader,
                                    static_cast<uint64_t>(dest.best_cost.secs + .5f));
     td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
+    idx++;
   }
   return td;
 }

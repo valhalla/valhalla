@@ -46,14 +46,12 @@ public:
    *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  inline std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t /*mode*/,
-                 const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations) {
+  inline std::vector<TimeDistance> SourceToTarget(Api& request,
+                                                  baldr::GraphReader& graphreader,
+                                                  const sif::mode_costing_t& mode_costing,
+                                                  const sif::travel_mode_t /*mode*/,
+                                                  const float max_matrix_distance,
+                                                  const uint32_t matrix_locations = kAllLocations) {
 
     LOG_INFO("matrix::TimeDistanceBSSMatrix");
 
@@ -61,14 +59,13 @@ public:
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
     bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
 
-    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    const bool forward_search =
+        request.options().sources().size() <= request.options().targets().size();
     if (forward_search) {
-      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
+      return ComputeMatrix<ExpansionType::forward>(request, graphreader, max_matrix_distance,
                                                    matrix_locations);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
+      return ComputeMatrix<ExpansionType::reverse>(request, graphreader, max_matrix_distance,
                                                    matrix_locations);
     }
   };
@@ -153,12 +150,10 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance>
-  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                baldr::GraphReader& graphreader,
-                const float max_matrix_distance,
-                const uint32_t matrix_locations = kAllLocations);
+  std::vector<TimeDistance> ComputeMatrix(Api& request,
+                                          baldr::GraphReader& graphreader,
+                                          const float max_matrix_distance,
+                                          const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -248,9 +243,11 @@ protected:
 
   /**
    * Form a time/distance matrix from the results.
+   *
+   * @param request the request PBF
    * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  std::vector<TimeDistance> FormTimeDistanceMatrix(Api& request);
 };
 
 } // namespace thor

@@ -32,22 +32,20 @@ std::string thor_worker_t::matrix(Api& request) {
 
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
-    return costmatrix_.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), *reader,
-                                      mode_costing, mode, max_matrix_distance.find(costing)->second,
-                                      has_time, options.date_time_type() == Options::invariant);
+    return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                                      max_matrix_distance.find(costing)->second, has_time,
+                                      options.date_time_type() == Options::invariant);
   };
   auto timedistancematrix = [&]() {
-    return time_distance_matrix_.SourceToTarget(*options.mutable_sources(),
-                                                *options.mutable_targets(), *reader, mode_costing,
-                                                mode, max_matrix_distance.find(costing)->second,
+    return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                                                max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations(),
                                                 options.date_time_type() == Options::invariant);
   };
 
   if (costing == "bikeshare") {
     const auto& time_distances =
-        time_distance_bss_matrix_.SourceToTarget(options.sources(), options.targets(), *reader,
-                                                 mode_costing, mode,
+        time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                                  max_matrix_distance.find(costing)->second,
                                                  options.matrix_locations());
     return tyr::serializeMatrix(request, time_distances, distance_scale, Matrix::TimeDistanceMatrix);

@@ -119,15 +119,13 @@ void CostMatrix::clear() {
 
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
-std::vector<TimeDistance> CostMatrix::SourceToTarget(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    baldr::GraphReader& graphreader,
-    const sif::mode_costing_t& mode_costing,
-    const sif::travel_mode_t mode,
-    const float max_matrix_distance,
-    const bool has_time,
-    const bool invariant) {
+std::vector<TimeDistance> CostMatrix::SourceToTarget(Api& request,
+                                                     baldr::GraphReader& graphreader,
+                                                     const sif::mode_costing_t& mode_costing,
+                                                     const sif::travel_mode_t mode,
+                                                     const float max_matrix_distance,
+                                                     const bool has_time,
+                                                     const bool invariant) {
 
   LOG_INFO("matrix::CostMatrix");
 
@@ -135,6 +133,9 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+
+  auto& source_location_list = *request.mutable_options()->mutable_sources();
+  auto& target_location_list = *request.mutable_options()->mutable_targets();
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
