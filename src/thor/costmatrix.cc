@@ -119,13 +119,13 @@ void CostMatrix::clear() {
 
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
-std::vector<TimeDistance> CostMatrix::SourceToTarget(Api& request,
-                                                     baldr::GraphReader& graphreader,
-                                                     const sif::mode_costing_t& mode_costing,
-                                                     const sif::travel_mode_t mode,
-                                                     const float max_matrix_distance,
-                                                     const bool has_time,
-                                                     const bool invariant) {
+void CostMatrix::SourceToTarget(Api& request,
+                                baldr::GraphReader& graphreader,
+                                const sif::mode_costing_t& mode_costing,
+                                const sif::travel_mode_t mode,
+                                const float max_matrix_distance,
+                                const bool has_time,
+                                const bool invariant) {
 
   LOG_INFO("matrix::CostMatrix");
 
@@ -235,20 +235,20 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(Api& request,
   std::vector<TimeDistance> td;
   uint32_t count = 0;
   for (const auto& connection : best_connection_) {
+    Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
     uint32_t target_idx = count % target_location_list.size();
     uint32_t origin_idx = count / target_location_list.size();
-    if (has_time) {
-      auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
-                                     time_infos[origin_idx].timezone_index,
-                                     target_edgelabel_[target_idx].front().edgeid(), graphreader,
-                                     static_cast<uint64_t>(connection.cost.secs + .5f));
-      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance), date_time);
-    } else {
-      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
-    }
+    auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
+                                   time_infos[origin_idx].timezone_index,
+                                   target_edgelabel_[target_idx].front().edgeid(), graphreader,
+                                   static_cast<uint64_t>(connection.cost.secs + .5f));
+    td.set_from_index(origin_idx);
+    td.set_to_index(target_idx);
+    td.set_distance(connection.distance);
+    td.set_time(connection.cost.secs);
+    td.set_date_time(date_time);
     count++;
   }
-  return td;
 }
 
 // Initialize all time distance to "not found". Any locations that

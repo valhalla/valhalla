@@ -10,7 +10,7 @@ message Matrix {
   }
 
   message TimeDistance {
-    double distance = 1;
+    uint32 distance = 1;
     double time = 2;
     uint32 from_index = 3;
     uint32 to_index = 4;

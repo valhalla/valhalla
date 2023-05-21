@@ -46,13 +46,13 @@ public:
    *
    * @return time/distance from all sources to all targets
    */
-  inline std::vector<TimeDistance> SourceToTarget(Api& request,
-                                                  baldr::GraphReader& graphreader,
-                                                  const sif::mode_costing_t& mode_costing,
-                                                  const sif::travel_mode_t mode,
-                                                  const float max_matrix_distance,
-                                                  const uint32_t matrix_locations = kAllLocations,
-                                                  const bool invariant = false) {
+  inline void SourceToTarget(Api& request,
+                             baldr::GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const sif::travel_mode_t mode,
+                             const float max_matrix_distance,
+                             const uint32_t matrix_locations = kAllLocations,
+                             const bool invariant = false) {
 
     LOG_INFO("matrix::TimeDistanceMatrix");
 
@@ -146,11 +146,11 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance> ComputeMatrix(Api& request,
-                                          baldr::GraphReader& graphreader,
-                                          const float max_matrix_distance,
-                                          const uint32_t matrix_locations = kAllLocations,
-                                          const bool invariant = false);
+  void ComputeMatrix(Api& request,
+                     baldr::GraphReader& graphreader,
+                     const float max_matrix_distance,
+                     const uint32_t matrix_locations = kAllLocations,
+                     const bool invariant = false);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -267,14 +267,12 @@ protected:
    * @param origin_dt The origin's date_time string
    * @param origin_tz The origin's timezone index
    * @param pred_id   The destination edge's GraphId
-   *
-   * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix(Api& request,
-                                                   baldr::GraphReader& reader,
-                                                   const std::string& origin_dt,
-                                                   const uint64_t& origin_tz,
-                                                   const baldr::GraphId& pred_id);
+  void FormTimeDistanceMatrix(Api& request,
+                              baldr::GraphReader& reader,
+                              const std::string& origin_dt,
+                              const uint64_t& origin_tz,
+                              const baldr::GraphId& pred_id);
 };
 
 } // namespace thor

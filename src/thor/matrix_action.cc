@@ -27,16 +27,15 @@ std::string thor_worker_t::matrix(Api& request) {
   adjust_scores(options);
   auto costing = parse_costing(request);
 
-  // Distance scaling (miles or km)
-  double distance_scale = (options.units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
-
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
+    request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                       max_matrix_distance.find(costing)->second, has_time,
                                       options.date_time_type() == Options::invariant);
   };
   auto timedistancematrix = [&]() {
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
     return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                                 max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations(),
@@ -44,11 +43,11 @@ std::string thor_worker_t::matrix(Api& request) {
   };
 
   if (costing == "bikeshare") {
-    const auto& time_distances =
-        time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
-                                                 max_matrix_distance.find(costing)->second,
-                                                 options.matrix_locations());
-    return tyr::serializeMatrix(request, time_distances, distance_scale, Matrix::TimeDistanceMatrix);
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
+    time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                                             max_matrix_distance.find(costing)->second,
+                                             options.matrix_locations());
+    return tyr::serializeMatrix(request);
   }
 
   Matrix::Algorithm matrix_algo = Matrix::CostMatrix;
@@ -85,24 +84,23 @@ std::string thor_worker_t::matrix(Api& request) {
       check_matrix_time(request, options.prioritize_bidirectional() ? Matrix::CostMatrix
                                                                     : Matrix::TimeDistanceMatrix);
   if (has_time && !options.prioritize_bidirectional() && source_to_target_algorithm != COST_MATRIX) {
-    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale,
-                                Matrix::TimeDistanceMatrix);
+    timedistancematrix();
   } else if (has_time && options.prioritize_bidirectional() &&
              source_to_target_algorithm != TIME_DISTANCE_MATRIX) {
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, Matrix::CostMatrix);
+    costmatrix(has_time);
   } else if (matrix_algo == Matrix::CostMatrix) {
     // if this happens, the server config only allows for timedist matrix
     if (has_time && !options.prioritize_bidirectional()) {
       add_warning(request, 301);
     }
-    return tyr::serializeMatrix(request, costmatrix(has_time), distance_scale, Matrix::CostMatrix);
+    costmatrix(has_time);
   } else {
     if (has_time && options.prioritize_bidirectional()) {
       add_warning(request, 300);
     }
-    return tyr::serializeMatrix(request, timedistancematrix(), distance_scale,
-                                Matrix::TimeDistanceMatrix);
+    timedistancematrix();
   }
+  return tyr::serializeMatrix(request);
 }
 } // namespace thor
 } // namespace valhalla

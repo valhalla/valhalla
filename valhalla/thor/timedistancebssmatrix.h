@@ -46,12 +46,12 @@ public:
    *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  inline std::vector<TimeDistance> SourceToTarget(Api& request,
-                                                  baldr::GraphReader& graphreader,
-                                                  const sif::mode_costing_t& mode_costing,
-                                                  const sif::travel_mode_t /*mode*/,
-                                                  const float max_matrix_distance,
-                                                  const uint32_t matrix_locations = kAllLocations) {
+  inline void SourceToTarget(Api& request,
+                             baldr::GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const sif::travel_mode_t /*mode*/,
+                             const float max_matrix_distance,
+                             const uint32_t matrix_locations = kAllLocations) {
 
     LOG_INFO("matrix::TimeDistanceBSSMatrix");
 
@@ -150,10 +150,10 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance> ComputeMatrix(Api& request,
-                                          baldr::GraphReader& graphreader,
-                                          const float max_matrix_distance,
-                                          const uint32_t matrix_locations = kAllLocations);
+  void ComputeMatrix(Api& request,
+                     baldr::GraphReader& graphreader,
+                     const float max_matrix_distance,
+                     const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -245,9 +245,8 @@ protected:
    * Form a time/distance matrix from the results.
    *
    * @param request the request PBF
-   * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix(Api& request);
+  void FormTimeDistanceMatrix(Api& request);
 };
 
 } // namespace thor
