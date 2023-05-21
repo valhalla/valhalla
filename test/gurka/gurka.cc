@@ -603,8 +603,6 @@ baldr::GraphId findNode(valhalla::baldr::GraphReader& reader,
 std::string
 do_action(const map& map, valhalla::Api& api, std::shared_ptr<valhalla::baldr::GraphReader> reader) {
   std::cerr << "[          ] Valhalla request is pbf " << std::endl;
-
-  auto format = api.options().format();
   if (!reader)
     reader = test::make_clean_graphreader(map.config.get_child("mjolnir"));
   valhalla::tyr::actor_t actor(map.config, *reader, true);

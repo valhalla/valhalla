@@ -143,10 +143,6 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute the matrix
-  auto format = api->options().format();
-  if (format) {
-    LOG_ERROR("flaj");
-  }
   auto bytes = pimpl->thor_worker.matrix(*api);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
