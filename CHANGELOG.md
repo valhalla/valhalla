@@ -2,6 +2,7 @@
 * **Removed**
 * **Bug Fix**
 * **Enhancement**
+   * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

@@ -17,8 +17,6 @@ message Matrix {
     string date_time = 5;
   }
 
-  repeated Location sources = 1;
-  repeated Location targets = 2;
   repeated TimeDistance time_distances = 3;
   Algorithm algorithm = 4;
 }
