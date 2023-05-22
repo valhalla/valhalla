@@ -198,58 +198,57 @@ TEST(Matrix, test_matrix) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results =
-      cost_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                 *request.mutable_options()->mutable_targets(), reader, mode_costing,
-                                 sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+  cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto tds = request.matrix().time_distances();
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    EXPECT_NEAR(tds[i].distance(), matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
                " to expected value for CostMatrix";
 
-    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+    EXPECT_NEAR(tds[i].time(), matrix_answers[i].time, kThreshold)
         << "result " + std::to_string(i) + "'s time is not close enough" +
                " to expected value for CostMatrix";
   }
+  request.clear_matrix();
 
   CostMatrix cost_matrix_abort_source;
-  results =
-      cost_matrix_abort_source.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                              *request.mutable_options()->mutable_targets(), reader,
-                                              mode_costing, sif::TravelMode::kDrive, 100000.0);
+  cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
+                                          100000.0);
 
+  tds = request.matrix().time_distances();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist < kMaxCost) {
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    if (tds[i].distance() < kMaxCost) {
       ++found;
     }
   }
   EXPECT_EQ(found, 15) << " not the number of results as expected";
+  request.clear_matrix();
 
   CostMatrix cost_matrix_abort_target;
-  results =
-      cost_matrix_abort_target.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                              *request.mutable_options()->mutable_targets(), reader,
-                                              mode_costing, sif::TravelMode::kDrive, 50000.0);
+  cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
+                                          50000.0);
 
+  tds = request.matrix().time_distances();
   found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist < kMaxCost) {
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    if (tds[i].distance() < kMaxCost) {
       ++found;
     }
   }
   EXPECT_EQ(found, 10) << " not the number of results as expected";
+  request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                           *request.mutable_options()->mutable_targets(), reader,
-                                           mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+
+  tds = request.matrix().time_distances();
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    EXPECT_NEAR(tds[i].distance(), matrix_answers[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
                " the expected value for TimeDistMatrix";
 
-    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+    EXPECT_NEAR(tds[i].time(), matrix_answers[i].time, kThreshold)
         << "result " + std::to_string(i) +
                "'s time is not equal to the expected value for TimeDistMatrix";
   }
@@ -286,10 +285,8 @@ TEST(Matrix, test_timedistancematrix_results_sequence) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   TimeDistanceMatrix timedist_matrix;
-  std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                     *request.mutable_options()->mutable_targets(), reader,
-                                     mode_costing, sif::TravelMode::kDrive, 400000.0);
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto& tds = request.matrix().time_distances();
 
   // expected results are the same as `matrix_answers`, but without the last column
   std::vector<TimeDistance> expected_results = {
@@ -297,12 +294,12 @@ TEST(Matrix, test_timedistancematrix_results_sequence) {
       {2311, 2111}, {701, 641},   {0, 0},       {5562, 5177}, {3952, 3707}, {4367, 4107},
   };
 
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_NEAR(results[i].dist, expected_results[i].dist, kThreshold)
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    EXPECT_NEAR(tds[i].distance(), expected_results[i].dist, kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal to" +
                " the expected value for TimeDistMatrix";
 
-    EXPECT_NEAR(results[i].time, expected_results[i].time, kThreshold)
+    EXPECT_NEAR(tds[i].time(), expected_results[i].time, kThreshold)
         << "result " + std::to_string(i) +
                "'s time is not equal to the expected value for TimeDistMatrix";
   }
@@ -325,30 +322,28 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                       *request.mutable_options()->mutable_targets(), reader,
-                                       mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
+  cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto tds = request.matrix().time_distances();
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    EXPECT_EQ(tds[i].distance(), matrix_answers[i].dist)
         << "result " + std::to_string(i) +
                "'s distance is not close enough to expected value for CostMatrix.";
 
-    EXPECT_EQ(results[i].time, matrix_answers[i].time)
+    EXPECT_EQ(tds[i].time(), matrix_answers[i].time)
         << "result " + std::to_string(i) +
                "'s time is not close enough to expected value for CostMatrix.";
   }
+  request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                           *request.mutable_options()->mutable_sources(), reader,
-                                           mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  tds = request.matrix().time_distances();
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    EXPECT_EQ(tds[i].distance(), matrix_answers[i].dist)
         << "result " + std::to_string(i) +
                "'s distance is not equal to the expected value for TimeDistMatrix.";
 
-    EXPECT_EQ(results[i].time, matrix_answers[i].time)
+    EXPECT_EQ(tds[i].time(), matrix_answers[i].time)
         << "result " + std::to_string(i) +
                "'s time is not equal to the expected value for TimeDistMatrix";
   }
@@ -383,14 +378,12 @@ TEST(Matrix, partial_matrix) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   TimeDistanceMatrix timedist_matrix;
-  std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(*request.mutable_options()->mutable_sources(),
-                                     *request.mutable_options()->mutable_targets(), reader,
-                                     mode_costing, sif::TravelMode::kDrive, 400000.0,
-                                     request.options().matrix_locations());
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0,
+                                 request.options().matrix_locations());
+  auto& tds = request.matrix().time_distances();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist > 0) {
+  for (uint32_t i = 0; i < tds.size(); ++i) {
+    if (tds[i].distance() > 0) {
       ++found;
     }
   }
