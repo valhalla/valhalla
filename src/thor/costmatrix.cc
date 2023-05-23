@@ -128,6 +128,7 @@ void CostMatrix::SourceToTarget(Api& request,
                                 const bool invariant) {
 
   LOG_INFO("matrix::CostMatrix");
+  request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
 
   // Set the mode and costing
   mode_ = mode;

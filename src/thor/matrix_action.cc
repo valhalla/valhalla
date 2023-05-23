@@ -29,13 +29,11 @@ std::string thor_worker_t::matrix(Api& request) {
 
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
-    request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                       max_matrix_distance.find(costing)->second, has_time,
                                       options.date_time_type() == Options::invariant);
   };
   auto timedistancematrix = [&]() {
-    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
     return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                                 max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations(),
@@ -43,7 +41,6 @@ std::string thor_worker_t::matrix(Api& request) {
   };
 
   if (costing == "bikeshare") {
-    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
     time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                              max_matrix_distance.find(costing)->second,
                                              options.matrix_locations());

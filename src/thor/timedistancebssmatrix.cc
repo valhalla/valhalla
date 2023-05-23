@@ -200,11 +200,9 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
 
-  std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);
     const auto& origin = origins.Get(origin_index);
-    std::vector<TimeDistance> one_to_many;
 
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
     adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
@@ -222,7 +220,7 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        FormTimeDistanceMatrix(request);
+        FormTimeDistanceMatrix(request, FORWARD, origin_index);
         break;
       }
 
@@ -249,33 +247,20 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred,
                                matrix_locations)) {
-          FormTimeDistanceMatrix(request);
+          FormTimeDistanceMatrix(request, FORWARD, origin_index);
           break;
         }
       }
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        FormTimeDistanceMatrix(request);
+        FormTimeDistanceMatrix(request, FORWARD, origin_index);
         break;
       }
 
       // Expand forward from the end node of the predecessor edge.
       Expand<expansion_direction>(graphreader, pred.endnode(), pred, predindex, false, false,
                                   pred.mode());
-    }
-
-    // Insert one-to-many into many-to-many
-    if (FORWARD) {
-      for (size_t target_index = 0; target_index < destinations.size(); target_index++) {
-        size_t index = origin_index * origins.size() + target_index;
-        many_to_many[index] = one_to_many[target_index];
-      }
-    } else {
-      for (size_t source_index = 0; source_index < destinations.size(); source_index++) {
-        size_t index = source_index * origins.size() + origin_index;
-        many_to_many[index] = one_to_many[source_index];
-      }
     }
     reset();
   }
@@ -535,8 +520,11 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-void TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request) {
-  uint32_t idx = 0;
+void TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request,
+                                                   const bool forward,
+                                                   const uint32_t origin_index) {
+  uint32_t idx = origin_index;
+  // TODO: is this sources or targets? needs more complex logic to set the right order
   for (auto& dest : destinations_) {
     Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
     td.set_from_index(idx / static_cast<uint32_t>(request.options().targets().size()));

@@ -204,6 +204,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+  request.mutable_matrix()->mutable_time_distances()->Reserve(origins.size() * destinations.size());
 
   std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
@@ -231,8 +232,8 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        FormTimeDistanceMatrix(request, graphreader, origin.date_time(), time_info.timezone_index,
-                               GraphId{});
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, GraphId{});
         break;
       }
 
@@ -256,16 +257,16 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
-          FormTimeDistanceMatrix(request, graphreader, origin.date_time(), time_info.timezone_index,
-                                 pred.edgeid());
+          FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                                 time_info.timezone_index, pred.edgeid());
           break;
         }
       }
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        FormTimeDistanceMatrix(request, graphreader, origin.date_time(), time_info.timezone_index,
-                               pred.edgeid());
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, pred.edgeid());
         break;
       }
 
@@ -546,10 +547,13 @@ bool TimeDistanceMatrix::UpdateDestinations(
 // Form the time, distance matrix from the destinations list
 void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
                                                 GraphReader& reader,
+                                                const bool forward,
+                                                const uint32_t origin_index,
                                                 const std::string& origin_dt,
                                                 const uint64_t& origin_tz,
                                                 const GraphId& pred_id) {
-  uint32_t idx = 0;
+  uint32_t idx = origin_index;
+  // TODO: is this sources or targets? needs more complex logic to set the right order
   for (auto& dest : destinations_) {
     Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
     td.set_from_index(idx / static_cast<uint32_t>(request.options().targets().size()));

@@ -55,6 +55,7 @@ public:
                              const bool invariant = false) {
 
     LOG_INFO("matrix::TimeDistanceMatrix");
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
 
     // Set the mode and costing
     mode_ = mode;
@@ -270,6 +271,8 @@ protected:
    */
   void FormTimeDistanceMatrix(Api& request,
                               baldr::GraphReader& reader,
+                              const bool forward,
+                              const uint32_t origin_index,
                               const std::string& origin_dt,
                               const uint64_t& origin_tz,
                               const baldr::GraphId& pred_id);

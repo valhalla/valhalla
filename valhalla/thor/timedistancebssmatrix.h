@@ -54,6 +54,7 @@ public:
                              const uint32_t matrix_locations = kAllLocations) {
 
     LOG_INFO("matrix::TimeDistanceBSSMatrix");
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
 
     // Set the costings
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
@@ -246,7 +247,7 @@ protected:
    *
    * @param request the request PBF
    */
-  void FormTimeDistanceMatrix(Api& request);
+  void FormTimeDistanceMatrix(Api& request, const bool forward, const uint32_t origin_index);
 };
 
 } // namespace thor
