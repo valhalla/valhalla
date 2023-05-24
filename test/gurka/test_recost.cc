@@ -383,7 +383,7 @@ TEST(recosting, all_algorithms) {
         // is there time dependence and in what direction
         auto dt_itr = option.find("/date_time/value");
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
-        auto type_itr = option.find("/date_time/type");
+        [[maybe_unused]] auto type_itr = option.find("/date_time/type");
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
@@ -433,7 +433,9 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::EdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called]([[maybe_unused]] const sif::EdgeLabel& label) -> void {
+    called = true;
+  };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);

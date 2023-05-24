@@ -56,7 +56,7 @@ public:
   }
 #ifdef HAVE_HTTP
   virtual prime_server::worker_t::result_t
-  work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) {
+  work(const std::list<zmq::message_t>&, void*, const std::function<void()>&) override {
     throw std::runtime_error("We arent testing the work method directly");
   }
 #endif

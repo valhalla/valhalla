@@ -379,7 +379,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -411,7 +411,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -475,7 +475,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -541,7 +541,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -611,7 +611,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
 
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -683,7 +683,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -755,7 +755,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -794,7 +794,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -830,7 +830,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -866,7 +866,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -959,7 +959,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
   {
     GraphId node_id = BD_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
-    const NodeInfo* node_info = tile->node(node_id);
+    [[maybe_unused]] const NodeInfo* node_info = tile->node(node_id);
 
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(BD_edge_id.id(), pronunciations);
@@ -967,7 +967,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1014,7 +1014,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1062,7 +1062,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1157,7 +1157,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(pronunciations.size(), 2);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1222,7 +1222,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(pronunciations.size(), 2);
-    for (const auto& sign : signs) {
+    for ([[maybe_unused]] const auto& sign : signs) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);

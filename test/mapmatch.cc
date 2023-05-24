@@ -115,7 +115,7 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
+[[maybe_unused]] std::string output_shape(const valhalla::Api& api) {
   std::stringstream shape;
   for (const auto& r : api.directions().routes()) {
     shape << "new route" << std::endl;
@@ -1036,12 +1036,12 @@ TEST(Mapmatch, test_leg_duration_trimming) {
     EXPECT_EQ(route_api.trip().routes_size(), match_api.trip().routes_size())
         << "Number of routes differs";
 
-    for (size_t i = 0; i < route_api.trip().routes_size(); ++i) {
+    for (int i = 0; i < route_api.trip().routes_size(); ++i) {
       const auto& rlegs = route_api.trip().routes(i).legs();
       const auto& mlegs = match_api.trip().routes(i).legs();
       EXPECT_EQ(rlegs.size(), mlegs.size()) << "Number of legs differs";
-      printf("Route %zu\n", i);
-      for (size_t j = 0; j < rlegs.size(); ++j) {
+      printf("Route %d\n", i);
+      for (int j = 0; j < rlegs.size(); ++j) {
         auto rtime = rlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         auto mtime = mlegs.Get(j).node().rbegin()->cost().elapsed_cost().seconds();
         printf("r: %.2f %s\n", rtime, rlegs.Get(j).shape().c_str());
@@ -1090,7 +1090,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = tester.match(test_cases[i]);
     EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
-    int j = 0, k = 0;
+    int j = 0;
     for (const auto& route : result.trip().routes()) {
       ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +

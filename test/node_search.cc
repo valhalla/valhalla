@@ -41,7 +41,7 @@ struct graph_writer {
   void write_tiles();
 
 private:
-  const uint8_t m_level;
+  [[maybe_unused]] const uint8_t m_level;
   std::unordered_map<vb::GraphId, std::shared_ptr<vj::GraphTileBuilder>> m_builders;
 };
 

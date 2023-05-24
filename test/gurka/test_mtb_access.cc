@@ -13,8 +13,6 @@ protected:
   static gurka::map map;
 
   static void SetUpTestSuite() {
-    constexpr double gridsize = 100;
-
     // A--B
     const std::string ascii_map = R"(A----B----C)";
     const gurka::ways ways = {{"AB",
