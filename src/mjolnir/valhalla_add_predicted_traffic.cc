@@ -19,11 +19,11 @@
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 
 #include "config.h"
 
@@ -35,7 +35,7 @@ namespace bpt = boost::property_tree;
 
 // args
 boost::property_tree::ptree config;
-filesystem::path traffic_tile_dir;
+std::filesystem::path traffic_tile_dir;
 unsigned int num_threads;
 bool summary = false;
 
@@ -164,8 +164,9 @@ void update_tile(const std::string& tile_dir,
                  const GraphId& tile_id,
                  const std::unordered_map<uint32_t, TrafficSpeeds>& speeds,
                  stats& stat) {
-  auto tile_path = tile_dir + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
-  if (!filesystem::exists(tile_path)) {
+  auto tile_path =
+      tile_dir + std::filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+  if (!std::filesystem::exists(tile_path)) {
     LOG_ERROR("No tile at " + tile_path);
     return;
   }
@@ -278,7 +279,7 @@ bool ParseArguments(int argc, char* argv[]) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
     }
-    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
+    traffic_tile_dir = std::filesystem::path(result["traffic_tile_dir"].as<std::string>());
 
     // Read the config file
     if (result.count("inline-config")) {
@@ -286,7 +287,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, config);
     } else if (result.count("config") &&
-               filesystem::is_regular_file(result["config"].as<std::string>())) {
+               std::filesystem::is_regular_file(result["config"].as<std::string>())) {
       rapidjson::read_json(result["config"].as<std::string>(), config);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
@@ -319,11 +320,11 @@ int main(int argc, char** argv) {
 
   // queue up all the work we'll be doing
   std::unordered_map<GraphId, std::vector<std::string>> files_per_tile;
-  for (filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
+  for (std::filesystem::recursive_directory_iterator i(traffic_tile_dir), end; i != end; ++i) {
     if (i->is_regular_file()) {
       // remove any extension
       auto file_name = i->path().string();
-      auto pos = file_name.rfind(filesystem::path::preferred_separator);
+      auto pos = file_name.rfind(std::filesystem::path::preferred_separator);
       file_name = file_name.substr(0, file_name.find('.', pos == std::string::npos ? 0 : pos));
       try {
         // parse it into a tile id and store the file path with it

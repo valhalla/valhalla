@@ -1,23 +1,23 @@
-#include "filesystem.h"
 #include "src/baldr/incident_singleton.h"
 #include "test.h"
+#include <filesystem>
 
 using namespace valhalla;
 
-const std::string scratch_dir = std::string("data") + filesystem::path::preferred_separator +
+const std::string scratch_dir = std::string("data") + std::filesystem::path::preferred_separator +
                                 std::string("incident_loading") +
-                                filesystem::path::preferred_separator;
+                                std::filesystem::path::preferred_separator;
 
 class incident_loading : public testing::Test {
 protected:
   void SetUp() override {
-    filesystem::remove_all(scratch_dir);
-    ASSERT_TRUE(!filesystem::exists(scratch_dir));
-    ASSERT_TRUE(filesystem::create_directories(scratch_dir));
+    std::filesystem::remove_all(scratch_dir);
+    ASSERT_TRUE(!std::filesystem::exists(scratch_dir));
+    ASSERT_TRUE(std::filesystem::create_directories(scratch_dir));
   }
   void TearDown() override {
-    filesystem::remove_all(scratch_dir);
-    ASSERT_TRUE(!filesystem::exists(scratch_dir));
+    std::filesystem::remove_all(scratch_dir);
+    ASSERT_TRUE(!std::filesystem::exists(scratch_dir));
   }
 };
 
@@ -136,8 +136,10 @@ TEST_F(incident_loading, watch) {
     auto snake_eyes_name = scratch_dir + baldr::GraphTile::FileSuffix(snake_eyes, ".pbf");
     baldr::GraphId box_cars{66, 2, 0};
     auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
-    ASSERT_TRUE(filesystem::create_directories(filesystem::path(snake_eyes_name).parent_path()));
-    ASSERT_TRUE(filesystem::create_directories(filesystem::path(box_cars_name).parent_path()));
+    ASSERT_TRUE(
+        std::filesystem::create_directories(std::filesystem::path(snake_eyes_name).parent_path()));
+    ASSERT_TRUE(
+        std::filesystem::create_directories(std::filesystem::path(box_cars_name).parent_path()));
     midgard::sequence<uint64_t> log(log_path, true, 1);
 
     // if its a static tileset we must preload the changelog before the watch function maps the file
@@ -218,7 +220,7 @@ TEST_F(incident_loading, watch) {
           EXPECT_TRUE(test::pbf_equals(snake_eyes_tile, *state->cache[snake_eyes]))
               << " should have all the changes that were made";
           // remove one
-          EXPECT_TRUE(filesystem::remove(snake_eyes_name)) << " couldnt remove file";
+          EXPECT_TRUE(std::filesystem::remove(snake_eyes_name)) << " couldnt remove file";
           // update log
           log[0] = snake_eyes | (static_cast<uint64_t>(time(nullptr)) << 25);
           return false;
@@ -269,7 +271,7 @@ TEST_F(incident_loading, watch) {
           EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
               << " should be equivalent";
           // remove one
-          EXPECT_TRUE(filesystem::remove(snake_eyes_name)) << " couldnt remove file";
+          EXPECT_TRUE(std::filesystem::remove(snake_eyes_name)) << " couldnt remove file";
           // update log
           log[1] = box_cars | (static_cast<uint64_t>(time(nullptr)) << 25);
           return false;
@@ -284,8 +286,8 @@ TEST_F(incident_loading, watch) {
           EXPECT_TRUE(test::pbf_equals(box_cars_tile, *state->cache[box_cars]))
               << " should be equivalent";
           // remove the dir and quit before next update
-          filesystem::remove_all(scratch_dir);
-          EXPECT_TRUE(!filesystem::exists(scratch_dir))
+          std::filesystem::remove_all(scratch_dir);
+          EXPECT_TRUE(!std::filesystem::exists(scratch_dir))
               << " Could not teardown incident loading test dir";
           return true;
         }
@@ -319,7 +321,8 @@ TEST_F(incident_loading, get) {
   // setup some data for it to get
   baldr::GraphId box_cars{66, 2, 0};
   auto box_cars_name = scratch_dir + baldr::GraphTile::FileSuffix(box_cars, ".pbf");
-  ASSERT_TRUE(filesystem::create_directories(filesystem::path(box_cars_name).parent_path()));
+  ASSERT_TRUE(
+      std::filesystem::create_directories(std::filesystem::path(box_cars_name).parent_path()));
   IncidentsTile box_cars_tile;
   auto* loc = box_cars_tile.mutable_locations()->Add();
   loc->set_edge_index(12);

@@ -4,7 +4,7 @@
 #include "config.h"
 #include <cxxopts.hpp>
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -34,8 +34,8 @@ bool ParseArguments(int argc, char* argv[]) {
     }
 
     if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(
+            config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n" << options.help() << "\n\n";

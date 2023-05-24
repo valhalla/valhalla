@@ -465,7 +465,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 int main(int argc, char* argv[]) {
   // args
   std::string json_str, json_file, config;
-  filesystem::path config_file_path;
+  std::filesystem::path config_file_path;
 
   boost::property_tree::ptree pt;
   bool match_test, verbose_lanes;
@@ -512,8 +512,8 @@ int main(int argc, char* argv[]) {
 
     // parse the config
     if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(
+            config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       config = config_file_path.string();
     } else {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";

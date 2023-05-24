@@ -7,10 +7,10 @@
 
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 
 using namespace valhalla::mjolnir;
 
@@ -25,7 +25,7 @@ void list_stages() {
 
 int main(int argc, char** argv) {
   // args
-  filesystem::path config_file_path;
+  std::filesystem::path config_file_path;
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
@@ -72,8 +72,8 @@ int main(int argc, char** argv) {
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, pt);
     } else if (result.count("config") &&
-               filesystem::is_regular_file(
-                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+               std::filesystem::is_regular_file(
+                   config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";

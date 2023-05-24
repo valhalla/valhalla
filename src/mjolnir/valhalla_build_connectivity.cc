@@ -13,13 +13,13 @@
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "config.h"
-#include "filesystem.h"
+#include <filesystem>
 
 using namespace valhalla::baldr;
 
 using namespace valhalla::midgard;
 
-filesystem::path config_file_path;
+std::filesystem::path config_file_path;
 
 struct PPMObject {
   std::string magic_num;
@@ -55,8 +55,8 @@ bool ParseArguments(int argc, char* argv[]) {
     }
 
     if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(
+            config_file_path = std::filesystem::path(result["config"].as<std::string>()))) {
       return true;
     } else {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";

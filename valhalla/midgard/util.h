@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
+#include <fstream>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -9,6 +11,7 @@
 #include <random>
 #include <stdexcept>
 #include <string>
+#include <thread>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
@@ -719,6 +722,83 @@ template <typename numeric_t> bool is_invalid(numeric_t value) {
  */
 template <typename numeric_t> bool is_valid(numeric_t value) {
   return value != invalid<numeric_t>();
+}
+
+struct has_data_impl {
+  template <typename T, typename Data = decltype(std::declval<const T&>().data())>
+  static std::true_type test(int);
+  template <typename...> static std::false_type test(...);
+};
+
+template <typename T> struct has_data : decltype(has_data_impl::test<T>(0)) {};
+
+/**
+ * @brief Saves data to the path.
+ * @attention Will replace the contents in case if fpath already exists. Will create
+ * new directory if directory did not exist before hand.
+ * */
+template <typename Container>
+typename std::enable_if<has_data<Container>::value, bool>::type save(const std::string& fpath,
+                                                                     const Container& data = {}) {
+  if (fpath.empty())
+    return false;
+
+  auto dir = std::filesystem::path(fpath);
+  dir.replace_filename("");
+
+  std::filesystem::path tmp_location;
+  if (!std::filesystem::exists(dir) && !std::filesystem::create_directories(dir))
+    return false;
+
+  auto generate_tmp_suffix = []() -> std::string {
+    std::stringstream ss;
+    ss << ".tmp_" << std::this_thread::get_id() << "_"
+       << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    return ss.str();
+  };
+
+  // Technically this is a race condition but its super unlikely (famous last words)
+  while (tmp_location.string().empty() || std::filesystem::exists(tmp_location))
+    tmp_location = fpath + generate_tmp_suffix();
+
+  std::ofstream file(tmp_location.string(), std::ios::out | std::ios::binary | std::ios::ate);
+  file.write(data.data(), data.size());
+  file.close();
+
+  if (file.fail()) {
+    std::filesystem::remove(tmp_location);
+    return false;
+  }
+
+  if (std::rename(tmp_location.c_str(), fpath.c_str())) {
+    std::filesystem::remove(tmp_location);
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * @brief Returns all regular files from the directory.
+ * @param[in] root_dir Directory to search files in.
+ * @attention Files returned in absolute path form.
+ * @return
+ *  - in case of errors or invalid parameters empty container will be returned.
+ * */
+inline std::vector<std::string> get_files(const std::string& root_dir) {
+  std::vector<std::string> files;
+  for (std::filesystem::recursive_directory_iterator i(root_dir), end; i != end; ++i) {
+    if (i->is_regular_file() || i->is_symlink())
+      files.push_back(i->path().string());
+  }
+
+  return files;
+}
+
+template <typename TP> std::time_t to_time_t(TP tp) {
+  using namespace std::chrono;
+  auto sctp = time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+  return system_clock::to_time_t(sctp);
 }
 
 } // namespace midgard

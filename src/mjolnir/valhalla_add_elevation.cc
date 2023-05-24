@@ -80,7 +80,7 @@ std::pair<std::string, std::vector<std::string>> parse_arguments(int argc, char*
 std::unordered_set<std::string> get_valid_tile_paths(std::vector<std::string>&& tiles) {
   std::unordered_set<std::string> st;
   for (const auto& tile : tiles) {
-    if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
+    if (std::filesystem::exists(tile) && std::filesystem::is_regular_file(tile))
       st.insert(tile);
   }
 
@@ -99,8 +99,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  if (!filesystem::exists(std::get<Input::CONFIG>(params)) ||
-      !filesystem::is_regular_file(std::get<Input::CONFIG>(params))) {
+  if (!std::filesystem::exists(std::get<Input::CONFIG>(params)) ||
+      !std::filesystem::is_regular_file(std::get<Input::CONFIG>(params))) {
     std::cerr << "Fail to parse configuration file\n\n";
     return EXIT_FAILURE;
   }

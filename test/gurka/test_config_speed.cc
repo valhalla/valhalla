@@ -129,9 +129,9 @@ TEST(Standalone, DefaultSpeedConfig) {
     }
   }
 
-  if (!filesystem::create_directories("test/data"))
+  if (!std::filesystem::create_directories("test/data"))
     throw std::runtime_error("couldn't create directories");
-  filesystem::remove("test/data/speed_config.json");
+  std::filesystem::remove("test/data/speed_config.json");
 
   {
     std::ofstream speed_config("test/data/speed_config.json");
@@ -281,9 +281,9 @@ TEST(Standalone, SuburbanSpeedConfig) {
     }
   }
 
-  if (!filesystem::create_directories("test/data"))
+  if (!std::filesystem::create_directories("test/data"))
     throw std::runtime_error("couldn't create directories");
-  filesystem::remove("test/data/speed_config_suburban.json");
+  std::filesystem::remove("test/data/speed_config_suburban.json");
 
   {
     std::ofstream speed_config("test/data/speed_config_suburban.json");

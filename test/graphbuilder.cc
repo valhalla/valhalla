@@ -62,14 +62,14 @@ TEST(GraphBuilder, TestConstructEdges) {
   EXPECT_EQ(tiles[GraphId{6005218}], 3154);
   EXPECT_EQ(tiles[GraphId{6005226}], 8997);
   // This directory should be empty
-  filesystem::remove_all(tile_dir);
+  std::filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, pronunciation_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
-  filesystem::remove_all(tile_dir);
-  EXPECT_TRUE(!filesystem::exists(tile_dir));
+  std::filesystem::remove_all(tile_dir);
+  EXPECT_TRUE(!std::filesystem::exists(tile_dir));
 }
 
 // Test that only a subset of tiles are built when explicitly asked for.
@@ -84,7 +84,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   // Redefine tiles to that we only build a single tile.
   tiles = {{GraphId{5993698}, 0}};
   // This directory should be empty
-  filesystem::remove_all(tile_dir);
+  std::filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
                       from_restriction_file, to_restriction_file, pronunciation_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
@@ -129,12 +129,12 @@ public:
   }
 
   void TearDown() override {
-    filesystem::remove(ways_file);
-    filesystem::remove(way_nodes_file);
-    filesystem::remove(access_file);
-    filesystem::remove(from_restriction_file);
-    filesystem::remove(to_restriction_file);
-    filesystem::remove(bss_file);
+    std::filesystem::remove(ways_file);
+    std::filesystem::remove(way_nodes_file);
+    std::filesystem::remove(access_file);
+    std::filesystem::remove(from_restriction_file);
+    std::filesystem::remove(to_restriction_file);
+    std::filesystem::remove(bss_file);
   }
 };
 

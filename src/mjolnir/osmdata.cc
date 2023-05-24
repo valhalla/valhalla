@@ -5,10 +5,10 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/util.h"
+#include <filesystem>
 
 using namespace valhalla::mjolnir;
 
@@ -517,8 +517,8 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   LOG_INFO("Read OSMData from temp files");
 
   std::string tile_directory = tile_dir;
-  if (tile_directory.back() != filesystem::path::preferred_separator) {
-    tile_directory.push_back(filesystem::path::preferred_separator);
+  if (tile_directory.back() != std::filesystem::path::preferred_separator) {
+    tile_directory.push_back(std::filesystem::path::preferred_separator);
   }
 
   // Open the count file
@@ -602,8 +602,8 @@ void OSMData::add_to_name_map(const uint64_t member_id,
 
 void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (filesystem::exists(fname)) {
-      filesystem::remove(fname);
+    if (std::filesystem::exists(fname)) {
+      std::filesystem::remove(fname);
     }
   };
 

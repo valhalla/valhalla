@@ -6,7 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
 
-#include "filesystem.h"
+#include <filesystem>
 
 #include "baldr/datetime.h"
 #include "baldr/graphconstants.h"
@@ -57,9 +57,9 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // tons of nodes that no edges reference, but we need them because they are the means by which
   // we know what edges connect to a given node from the nodes perspective
 
-  auto start_node_edge_file = filesystem::path(edges_file);
+  auto start_node_edge_file = std::filesystem::path(edges_file);
   start_node_edge_file.replace_filename(start_node_edge_file.filename().string() + ".starts.tmp");
-  auto end_node_edge_file = filesystem::path(edges_file);
+  auto end_node_edge_file = std::filesystem::path(edges_file);
   end_node_edge_file.replace_filename(end_node_edge_file.filename().string() + ".ends.tmp");
   using edge_ends_t = sequence<std::pair<uint32_t, uint32_t>>;
   std::unique_ptr<edge_ends_t> starts(new edge_ends_t(start_node_edge_file.string(), true));
@@ -136,8 +136,8 @@ std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::st
   // clean up tmp files
   starts.reset();
   ends.reset();
-  filesystem::remove(start_node_edge_file);
-  filesystem::remove(end_node_edge_file);
+  std::filesystem::remove(start_node_edge_file);
+  std::filesystem::remove(end_node_edge_file);
 
   LOG_INFO("Finished with " + std::to_string(node_count) + " graph nodes");
   return tiles;

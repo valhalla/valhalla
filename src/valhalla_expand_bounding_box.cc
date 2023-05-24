@@ -6,7 +6,7 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
-#include "filesystem.h"
+#include <filesystem>
 
 namespace bpt = boost::property_tree;
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
       std::stringstream ss;
       ss << result["inline-config"].as<std::string>();
       rapidjson::read_json(ss, pt);
-    } else if (result.count("config") && filesystem::is_regular_file(config_file_path)) {
+    } else if (result.count("config") && std::filesystem::is_regular_file(config_file_path)) {
       rapidjson::read_json(config_file_path, pt);
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";

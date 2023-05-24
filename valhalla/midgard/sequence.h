@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/filesystem.h>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <io.h>
@@ -344,8 +344,8 @@ public:
       return;
     }
 
-    auto tmp_path = filesystem::path(file_name).replace_filename(
-        filesystem::path(file_name).filename().string() + ".tmp");
+    auto tmp_path = std::filesystem::path(file_name).replace_filename(
+        std::filesystem::path(file_name).filename().string() + ".tmp");
     {
       // we need a temporary sequence to merge the sorted subsections into
       sequence<T> output_seq(tmp_path.string(), true);
@@ -383,8 +383,8 @@ public:
     memmap.unmap();
 
     // Move the sorted result back into place
-    filesystem::remove(file_name);
-    filesystem::rename(tmp_path, file_name);
+    std::filesystem::remove(file_name);
+    std::filesystem::rename(tmp_path, file_name);
 
     // Reload the sequence
     sequence<T> reloaded(file_name, false);
@@ -688,7 +688,7 @@ struct tar {
     mm.map(tar_file, s.st_size, POSIX_MADV_NORMAL, readonly);
 
     // determine opposite of preferred path separator (needed to update OS-specific path separator)
-    const char opp_sep = filesystem::path::preferred_separator == '/' ? '\\' : '/';
+    const char opp_sep = std::filesystem::path::preferred_separator == '/' ? '\\' : '/';
 
     // rip through the tar to see whats in it noting that most tars end with 2 empty blocks
     // but we can concatenate tars and get empty blocks in between so we'll just be pretty
@@ -709,7 +709,7 @@ struct tar {
       if (!regular_files_only || (h->typeflag == '0' || h->typeflag == '\0')) {
         // tar doesn't automatically update path separators based on OS, so we need to do it...
         std::string name{h->name};
-        std::replace(name.begin(), name.end(), opp_sep, filesystem::path::preferred_separator);
+        std::replace(name.begin(), name.end(), opp_sep, std::filesystem::path::preferred_separator);
         // the caller may be able to construct the contents via an index header let them try
         if (!tried_index && from_index != nullptr) {
           tried_index = true;

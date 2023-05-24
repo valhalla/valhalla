@@ -243,8 +243,8 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
   const std::string workdir = "test/data/gurka_phonemes_alt_dir";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -1248,8 +1248,8 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
 
   const std::string workdir = "test/data/gurka_phonemes";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 

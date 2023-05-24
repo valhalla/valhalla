@@ -195,7 +195,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
+        std::filesystem::is_regular_file(std::filesystem::path(result["config"].as<std::string>()))) {
       config = result["config"].as<std::string>();
     } else {
       std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";

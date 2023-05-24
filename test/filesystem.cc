@@ -1,5 +1,6 @@
-#include "filesystem.h"
+#include <filesystem>
 
+#include "midgard/util.h"
 #include <algorithm>
 #include <fstream>
 #include <string>
@@ -29,18 +30,18 @@ TEST(Filesystem, exists) {
   // drop a file
   { std::fstream fs(".touched_file", std::ios::out); }
   // check this dir is there
-  ASSERT_TRUE(filesystem::exists(".")) << "the current directory doesnt exist?";
-  ASSERT_TRUE(filesystem::exists(".touched_file")) << "couldn't create a file?";
+  ASSERT_TRUE(std::filesystem::exists(".")) << "the current directory doesnt exist?";
+  ASSERT_TRUE(std::filesystem::exists(".touched_file")) << "couldn't create a file?";
 }
 
 TEST(Filesystem, directory) {
   // todo: any specific reason it was repeated 2 times?
-  ASSERT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
-  ASSERT_TRUE(filesystem::is_directory(".")) << "the current directory isnt a directory?";
+  ASSERT_TRUE(std::filesystem::is_directory(".")) << "the current directory isnt a directory?";
+  ASSERT_TRUE(std::filesystem::is_directory(".")) << "the current directory isnt a directory?";
 }
 
 TEST(Filesystem, regular_file) {
-  ASSERT_TRUE(filesystem::is_regular_file(".touched_file"));
+  ASSERT_TRUE(std::filesystem::is_regular_file(".touched_file"));
 }
 
 void try_mkdir(const std::string& p) {
@@ -49,7 +50,7 @@ void try_mkdir(const std::string& p) {
 
 TEST(Filesystem, recursive_directory_listing) {
   // make a directory tree with these entries
-  std::string s(1, filesystem::path::preferred_separator);
+  std::string s(1, std::filesystem::path::preferred_separator);
   std::vector<std::string> dirs{"foo", "foo" + s + "qux", "foo" + s + "quux"};
   std::vector<std::string> files{"foo" + s + "bar", "foo" + s + "baz",
                                  "foo" + s + "quux" + s + "corge"};
@@ -59,14 +60,14 @@ TEST(Filesystem, recursive_directory_listing) {
     try_mkdir(d.c_str());
   for (const auto& f : files) {
     std::fstream fs(f, std::ios::out);
-    filesystem::path p(f);
+    std::filesystem::path p(f);
     fs.write(p.filename().c_str(), p.filename().string().size());
   }
   // unlike the posix find command the directory iterator doesnt give you access to
   // root or starting directory just the stuff under it so lets pop that off
   dirs.erase(dirs.begin());
   // go get whats there
-  for (filesystem::recursive_directory_iterator i("foo"), end; i != end; ++i) {
+  for (std::filesystem::recursive_directory_iterator i("foo"), end; i != end; ++i) {
     if (i->is_directory()) {
       auto pos = std::remove(dirs.begin(), dirs.end(), i->path().string());
       ASSERT_NE(pos, dirs.end()) << "unexpected directory";
@@ -89,29 +90,29 @@ TEST(Filesystem, recursive_directory_listing) {
   ASSERT_TRUE(files.empty());
 
   // cleanup the stuff we made, 2 tests in one ;o)
-  filesystem::remove_all("foo");
-  ASSERT_TRUE(!filesystem::exists("foo"));
+  std::filesystem::remove_all("foo");
+  ASSERT_TRUE(!std::filesystem::exists("foo"));
 }
 
 TEST(Filesystem, remove_any) {
   // delete non existent thing
-  ASSERT_FALSE(filesystem::remove(".foobar")) << "Deleting nonexistent item should return false";
+  ASSERT_FALSE(std::filesystem::remove(".foobar")) << "Deleting nonexistent item should return false";
 
   // make and delete a file
   { std::fstream fs(".foobar", std::ios::out); }
-  ASSERT_TRUE(filesystem::remove(".foobar"));
-  ASSERT_FALSE(filesystem::exists(".foobar")) << ".foobar file should have been deleted";
+  ASSERT_TRUE(std::filesystem::remove(".foobar"));
+  ASSERT_FALSE(std::filesystem::exists(".foobar")) << ".foobar file should have been deleted";
 
   // make and delete a file
   try_mkdir(".foobar");
-  ASSERT_TRUE(filesystem::remove(".foobar"));
-  ASSERT_FALSE(filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
+  ASSERT_TRUE(std::filesystem::remove(".foobar"));
+  ASSERT_FALSE(std::filesystem::exists(".foobar")) << ".foobar dir should have been deleted";
 }
 
 TEST(Filesystem, parent_path) {
-  std::vector<filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
-                                   {"./f"}, {"foo/bar/f"}};
-  std::vector<filesystem::path> out{
+  std::vector<std::filesystem::path> in{{"/"},   {"/foo/bar"}, {"/foo/../"}, {"/foo/bar/../f"},
+                                        {"./f"}, {"foo/bar/f"}};
+  std::vector<std::filesystem::path> out{
       {""}, {"/foo"}, {"/foo/.."}, {"/foo/bar/.."}, {"."}, {"foo/bar"},
   };
   for (const auto& i : in) {
@@ -121,13 +122,13 @@ TEST(Filesystem, parent_path) {
 }
 
 TEST(Filesystem, extension) {
-  std::vector<filesystem::path>
+  std::vector<std::filesystem::path>
       in{{"/foo/bar.txt"},      {"/foo/bar."},        {"/foo/bar"},         {"/foo/bar.txt/bar.cc"},
          {"/foo/bar.txt/bar."}, {"/foo/bar.txt/bar"}, {"/foo/."},           {"/foo/.."},
          {"/foo/.hidden"},      {"/foo/..bar"},       {"/foo/bar.baz.qux"}, {"..."},
          {"/baz/.foo.bar"}};
-  std::vector<filesystem::path> out{{".txt"}, {"."}, {""},     {".cc"},  {"."}, {""},    {""},
-                                    {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
+  std::vector<std::filesystem::path> out{{".txt"}, {"."}, {""},     {".cc"},  {"."}, {""},    {""},
+                                         {""},     {""},  {".bar"}, {".qux"}, {"."}, {".bar"}};
   for (const auto& i : in) {
     auto a = i.extension();
     ASSERT_EQ(a.string(), out[&i - &in.front()].string()) << "wrong extension";
@@ -168,9 +169,9 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_event.wait(start_race_lock, [&] { return start_race; });
     start_race_mutex.unlock();
 
-    bool success = filesystem::create_directories(nested_subdir);
+    bool success = std::filesystem::create_directories(nested_subdir);
     ASSERT_TRUE(success);
-    ASSERT_TRUE(filesystem::exists(nested_subdir));
+    ASSERT_TRUE(std::filesystem::exists(nested_subdir));
   };
 
   auto remove_folder = [&](bool& ready_flag) {
@@ -184,12 +185,12 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_event.wait(start_lock, [&] { return start_race; });
     start_race_mutex.unlock();
 
-    std::uintmax_t delete_count = filesystem::remove_all(base_subdir);
+    std::uintmax_t delete_count = std::filesystem::remove_all(base_subdir);
     // I've found that two+ threads will claim that they've deleted the same
     // file object. This results in double+ counting and prevents me from
     // asserting anything related to the delete_count. All we can be sure
     // is the following:
-    ASSERT_TRUE(!filesystem::exists(base_subdir));
+    ASSERT_TRUE(!std::filesystem::exists(base_subdir));
   };
 
   const int num_iters = 50;
@@ -219,7 +220,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         threads[i]->join();
       }
 
-      ASSERT_TRUE(filesystem::exists(nested_subdir));
+      ASSERT_TRUE(std::filesystem::exists(nested_subdir));
     }
 
     // populate each subfolder with num_files_per_folder text files.
@@ -265,28 +266,28 @@ TEST(Filesystem, concurrent_folder_create_delete) {
         threads[i]->join();
       }
 
-      ASSERT_TRUE(!filesystem::exists(base_subdir));
+      ASSERT_TRUE(!std::filesystem::exists(base_subdir));
     }
   }
 }
 
 TEST(Filesystem, has_data_member_type) {
-  auto arr = filesystem::has_data<std::array<int, 3>>::value;
+  auto arr = valhalla::midgard::has_data<std::array<int, 3>>::value;
   EXPECT_TRUE(arr);
 
-  auto vc = filesystem::has_data<std::vector<int>>::value;
+  auto vc = valhalla::midgard::has_data<std::vector<int>>::value;
   EXPECT_TRUE(vc);
 
-  auto str = filesystem::has_data<std::string>::value;
+  auto str = valhalla::midgard::has_data<std::string>::value;
   EXPECT_TRUE(str);
 
-  auto umap = filesystem::has_data<std::unordered_map<int, int>>::value;
+  auto umap = valhalla::midgard::has_data<std::unordered_map<int, int>>::value;
   EXPECT_FALSE(umap);
 
-  auto integer = filesystem::has_data<int>::value;
+  auto integer = valhalla::midgard::has_data<int>::value;
   EXPECT_FALSE(integer);
 
-  auto lst = filesystem::has_data<std::list<int>>::value;
+  auto lst = valhalla::midgard::has_data<std::list<int>>::value;
   EXPECT_FALSE(lst);
 }
 
@@ -297,18 +298,18 @@ TEST(Filesystem, save_file_valid_input) {
 
   std::size_t cnt{1};
   for (const auto& test : tests) {
-    EXPECT_TRUE(filesystem::save<std::string>(test));
-    EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+    EXPECT_TRUE(valhalla::midgard::save<std::string>(test));
+    EXPECT_EQ(valhalla::midgard::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 
-  filesystem::remove_all("/tmp/save_file_input/");
+  std::filesystem::remove_all("/tmp/save_file_input/");
 }
 
 TEST(Filesystem, save_file_invalid_input) {
   std::vector<std::string> tests{"", "/etc/", "/tmp/", "/var/"};
 
   for (const auto& test : tests)
-    EXPECT_FALSE(filesystem::save<std::string>(test)) << "FAILED " << test;
+    EXPECT_FALSE(valhalla::midgard::save<std::string>(test)) << "FAILED " << test;
 }
 
 TEST(Filesystem, get_files_valid_input) {
@@ -318,15 +319,15 @@ TEST(Filesystem, get_files_valid_input) {
 
   std::size_t cnt{1};
   for (const auto& test : tests) {
-    EXPECT_TRUE(filesystem::save<std::string>(test));
-    EXPECT_EQ(filesystem::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
+    EXPECT_TRUE(valhalla::midgard::save<std::string>(test));
+    EXPECT_EQ(valhalla::midgard::get_files("/tmp/save_file_input/utrecht_tiles").size(), cnt++);
   }
 
-  if (filesystem::create_directories("/tmp/save_file_invalid"))
-    EXPECT_TRUE(filesystem::get_files("/tmp/save_file_invalid").empty());
+  if (std::filesystem::create_directories("/tmp/save_file_invalid"))
+    EXPECT_TRUE(valhalla::midgard::get_files("/tmp/save_file_invalid").empty());
 
-  filesystem::remove_all("/tmp/save_file_input/");
-  filesystem::remove_all("/tmp/save_file_invalid/");
+  std::filesystem::remove_all("/tmp/save_file_input/");
+  std::filesystem::remove_all("/tmp/save_file_invalid/");
 }
 
 } // namespace
