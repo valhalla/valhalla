@@ -167,6 +167,7 @@ add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BI
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
+add_subdirectory(incidents)
 add_subdirectory(loki)
 add_subdirectory(meili)
 add_subdirectory(midgard)

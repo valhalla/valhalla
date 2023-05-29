@@ -50,7 +50,7 @@ constexpr const char* OSRM_BREAKAGE_EXCEEDED = R"({"code":"BreakageDistanceExcee
 using ve = valhalla_exception_t;
 const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {100, {100, "Failed to parse json request", 400, HTTP_400, OSRM_INVALID_URL, "json_parse_failed"}},
-    {101, {101, "Try a POST or GET request instead", 405, HTTP_405, OSRM_INVALID_URL, "wrong_http_method"}},
+    {101, {101, "Try a POST request instead", 405, HTTP_405, OSRM_INVALID_URL, "wrong_http_method"}},
     {102, {102, "The service is shutting down", 503, HTTP_503, OSRM_SHUTDOWN, "shutting_down"}},
     {103, {103, "Failed to parse pbf request", 400, HTTP_400, OSRM_INVALID_URL, "pbf_parse_failed"}},
     {106, {106, "Try any of", 404, HTTP_404, OSRM_INVALID_SERVICE, "wrong_action"}},
