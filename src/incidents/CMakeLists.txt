@@ -3,7 +3,6 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/incidents/*.h)
 set(sources worker.cc incident_action.cc)
 
 # treat date library as system
-# treat date library as system
 set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
