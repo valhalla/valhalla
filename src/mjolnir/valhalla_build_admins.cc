@@ -91,7 +91,9 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+  if (!valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files)) {
+    return EXIT_FAILURE;
+  };
 
   return EXIT_SUCCESS;
 }

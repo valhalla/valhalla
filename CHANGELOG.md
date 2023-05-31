@@ -1,4 +1,9 @@
-## Release Date: 2023-??-?? Valhalla 3.3.1
+## Release Date: 2022-??-?? Valhalla 3.4.1
+* **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
    * REMOVED: transitland references and scripts and replace with info for raw GTFS feeds [#4033](https://github.com/valhalla/valhalla/pull/3906)
@@ -30,6 +35,7 @@
    * FIXED: Move complex turn restriction check out of can_form_shortcut() [#4047](https://github.com/valhalla/valhalla/pull/4047)
    * FIXED: fix `clear` methods on matrix algorithms and reserve some space for labels with a new config [#4075](https://github.com/valhalla/valhalla/pull/4075)
    * FIXED: fix `valhalla_build_admins` & `valhalla_ways_to_edges` argument parsing [#4097](https://github.com/valhalla/valhalla/pull/4097)
+   * FIXED: fail early in `valhalla_build_admins` if parent directory can't be created, also exit with failure [#4099](https://github.com/valhalla/valhalla/pull/4099)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
@@ -55,6 +61,7 @@
    * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
    * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
+   * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**

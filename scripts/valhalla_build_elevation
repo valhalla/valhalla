@@ -234,7 +234,7 @@ def download(tile: Tile, output_dir, compression: TileCompression):
         # Skip if the file already exists
         return False
 
-    url = f"http://s3.amazonaws.com/elevation-tiles-prod/skadi/{tile.dir}/{tile.name}.gz"
+    url = f"https://elevation-tiles-prod.s3.us-east-1.amazonaws.com/skadi/{tile.dir}/{tile.name}.gz"
 
     LOGGER.info(f"Downloading tile {tile.name}")
     try:
