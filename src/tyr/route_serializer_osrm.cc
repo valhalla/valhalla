@@ -1203,30 +1203,117 @@ json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
   return osrm_man;
 }
 
+// Return a banner component
+json::MapPtr banner_component(const std::string& type, const std::string& text) {
+  auto component = json::map({});
+  component->emplace("type", type);
+  component->emplace("text", text);
+  return component;
+}
+
 // Populate the bannerInstructions record within a step.
+// bannerInstructions are a unified object of maneuvers.name and intersection.lanes
 json::ArrayPtr banner_instructions(const std::string& name,
+                                   const std::string& ref,
+                                   const std::string& dest,
                                    const std::string& maneuver_type,
                                    const std::string& modifier,
                                    const double distance) {
+  // Why is bannerInstructions an array?
+  //
+  // Because there may be multiple similar bannerInstruction objects. Mostly if the 'sub' attribute
+  // is to be added along the current step, a new bannerInstruction is created and  the primary
+  // (and secondary) 'bannerInstruction' is repeated, only with the additional 'sub' attribute
+  // and an updated 'distanceAlongGeometry', which is from where on this banner will be shown.
   auto bannerInstructions = json::array({});
   auto bannerInstruction = json::map({});
-  auto primaryBannerInstruction = json::map({});
-  auto bannerComponents = json::array({});
-  auto bannerComponent = json::map({});
 
-  bannerInstruction->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
+  // How do 'primary' banners work?
+  // Primary banners hold the most important information and supposed to be the large text in a
+  // navigation app. Mostly they are used to show the name of the upcoming road.
+  // TODO: Highway shield information could be added here as well.
+  //
+  // "primary": {
+  //   "components": [
+  //     { "type": "text", "text": "Example Road" },
+  //     { "type": "delimiter", "text": "/" },
+  //     { "type": "text", "text": "B 3"}
+  //   ],
+  //   "type": "turn",
+  //   "modifier": "left",
+  //   "text": "Example Road / B 3"
+  // }
+  auto primaryBannerInstruction = json::map({});
+  auto primaryBannerComponents = json::array({});
+  primaryBannerComponents->emplace_back(std::move(banner_component("text", name)));
+  if (!ref.empty()) {
+    primaryBannerComponents->emplace_back(std::move(banner_component("delimiter", "/")));
+    primaryBannerComponents->emplace_back(std::move(banner_component("text", ref)));
+  }
+  primaryBannerInstruction->emplace("components", std::move(primaryBannerComponents));
   primaryBannerInstruction->emplace("text", name);
   primaryBannerInstruction->emplace("type", maneuver_type);
   if (!modifier.empty()) {
     primaryBannerInstruction->emplace("modifier", modifier);
   }
 
-  std::string bannerComponentType = "text";
-  bannerComponent->emplace("type", bannerComponentType);
-  bannerComponent->emplace("text", name);
-  bannerComponents->emplace_back(std::move(bannerComponent));
-  primaryBannerInstruction->emplace("components", std::move(bannerComponents));
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // banner should be visible. The first banner starts at the beginning.
+  bannerInstruction->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
   bannerInstruction->emplace("primary", std::move(primaryBannerInstruction));
+
+  // How do 'secondary' banners work?
+  // secondary banners hold additional information which is displayed slightly smaller than the
+  // primary information. They are mostly used to show the destination names on street signs.
+  //
+  // "secondary": {
+  //   "components": [
+  //     { "type": "text", "text": "Hamburg" },
+  //     { "type": "text", "text": "/" },
+  //     { "type": "text", "text": "Bremen"}
+  //   ],
+  //   "type": "turn",
+  //   "modifier": "left",
+  //   "text": "Hamburg / Bremen"
+  // }
+  if (!dest.empty()) {
+    auto secondaryBannerInstruction = json::map({});
+    auto secondaryBannerComponents = json::array({});
+    secondaryBannerComponents->emplace_back(std::move(banner_component("text", dest)));
+    secondaryBannerInstruction->emplace("components", std::move(secondaryBannerComponents));
+    secondaryBannerInstruction->emplace("text", dest);
+    // secondaryBannerInstruction->emplace("type", maneuver_type);
+    // if (!modifier.empty()) {
+    //   secondaryBannerInstruction->emplace("modifier", modifier);
+    // }
+    bannerInstruction->emplace("secondary", std::move(secondaryBannerInstruction));
+  }
+
+  // How do 'sub' banners work?
+  // sub BannerInstructions are used to indicate which lane to use when multiple lanes are
+  // available. The lane information can be retrieved much like in the maneuver's intersections.
+  // The new bannerInstruction object's distanceAlongGeometry is determined by the first
+  // intersection which carries the lane information.
+  //
+  // "sub": {
+  //   "components": [
+  //     {
+  //       "active": false,
+  //       "directions": ["left", "straight"],
+  //       "type": "lane",
+  //       "text": ""
+  //     },
+  //     {
+  //       "active_direction": "right",
+  //       "active": true,
+  //       "directions": ["straight", "right"],
+  //       "type": "lane",
+  //       "text": ""
+  //     }
+  //   ],
+  //   "text": ""
+  // }
+
   bannerInstructions->emplace_back(std::move(bannerInstruction));
 
   return bannerInstructions;
@@ -1495,12 +1582,6 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
                                   shape[maneuver.begin_shape_index()],
                                   (options.directions_type() == DirectionsType::instructions)));
 
-      // Add banner instructions if the user requested them
-      if (options.banner_instructions() && prev_step) {
-        prev_step->emplace("bannerInstructions",
-                           banner_instructions(name, mnvr_type, modifier, prev_distance));
-      }
-
       // Add destinations
       const auto& sign = maneuver.sign();
       std::string dest = destinations(sign);
@@ -1513,6 +1594,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
             (prev_maneuver->type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) && prev_step) {
           prev_step->emplace("destinations", dest);
         }
+      }
+
+      // Add banner instructions if the user requested them
+      if (options.banner_instructions() && prev_step) {
+        prev_step->emplace("bannerInstructions",
+                           banner_instructions(name, ref, dest, mnvr_type, modifier, prev_distance));
       }
 
       // Add exits
