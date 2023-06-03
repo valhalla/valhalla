@@ -22,6 +22,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <regex>
 
 using namespace valhalla::midgard;
 
@@ -71,6 +72,14 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
   boost::algorithm::split(tokens, tag_value,
                           std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_off);
+  return tokens;
+}
+
+std::vector<std::string> GetTagTokens(const std::string tag_value, const std::string delim_str) {
+  std::regex regex_str(delim_str);
+  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
+                                                             regex_str, -1),
+                                  std::sregex_token_iterator());
   return tokens;
 }
 
