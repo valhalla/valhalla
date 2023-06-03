@@ -104,11 +104,10 @@ int main(int argc, char** argv) {
       std::bind(&proxy_t::forward,
                 proxy_t(context, "ipc:///tmp/incidents_in", "ipc:///tmp/incidents_out")));
   incident_proxy_thread.detach();
-  std::list<std::thread> indicent_worker_threads;
-  for (size_t i = 0; i < nthreads; ++i) {
-    indicent_worker_threads.emplace_back(valhalla::incidents::run_service, pt);
-    indicent_worker_threads.back().detach();
-  }
+
+  // only allow one thread
+  auto indcident_worker_thread = std::thread(valhalla::incidents::run_service, pt);
+  indcident_worker_thread.detach();
 
   // wait forever (or for interrupt)
   server_thread.join();

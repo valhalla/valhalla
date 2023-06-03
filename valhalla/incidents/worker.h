@@ -12,6 +12,8 @@ const prime_server::headers_t::value_type CORS{"Access-Control-Allow-Origin", "*
 namespace valhalla {
 namespace incidents {
 
+using tile_edges_t = std::unordered_map<uint32_t, std::vector<uint32_t>>;
+
 void run_service(const boost::property_tree::ptree& config);
 
 class incident_worker_t : public service_worker_t {
@@ -28,8 +30,11 @@ public:
 
 protected:
   bool incidents(IncidentsAction action, rapidjson::Document& req);
+  std::vector<baldr::GraphId> update_traffic(const rapidjson::Document& req_doc);
+  unsigned int thread_count;
   boost::property_tree::ptree config;
   std::shared_ptr<baldr::GraphReader> reader;
+  std::vector<tyr::actor_t> actors;
 
 private:
   std::string service_name() const override {

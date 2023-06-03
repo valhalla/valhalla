@@ -38,6 +38,18 @@ namespace incidents {
 incident_worker_t::incident_worker_t(const boost::property_tree::ptree& config_tree,
                                      const std::shared_ptr<baldr::GraphReader>& graph_reader)
     : service_worker_t(config_tree), config(config_tree), reader(graph_reader) {
+
+  // set the available threads and initialize as many actors as needed
+  thread_count =
+      std::max(static_cast<unsigned int>(1),
+               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  LOG_INFO("Running incident action with " + std::to_string(thread_count) + " threads...");
+
+  actors.reserve(thread_count);
+  for (uint32_t i = 0; i < thread_count; i++) {
+    actors.emplace_back(tyr::actor_t(config, false));
+  }
+
   // signal that the worker started successfully
   started();
 }
