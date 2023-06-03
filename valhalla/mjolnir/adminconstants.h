@@ -167,6 +167,14 @@ const std::unordered_map<std::string, std::vector<int>>
                    {"Cymru / Wales",
                     {-1, -1, -1, -1, -1, (kPedestrianAccess | kWheelchairAccess | kBicycleAccess),
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}}};
+
+const std::unordered_map<std::string, std::pair<uint8_t, std::string>>
+    kSupportedLanguages{{"Wales", {4, "cy"}},          {"United Kingdom", {2, "en"}},
+                        {"Ireland", {4, "ga"}},        {"Northern Ireland", {4, "ga"}},
+                        {"Japan", {2, "ja;en"}},       {"Canada", {2, "en;fr"}},
+                        {"Belarus", {2, "ru;be"}},     {"Singapore", {2, "en;zh;ms;ta"}},
+                        {"Saudi Arabia", {2, "ar;en"}}};
+
 } // namespace mjolnir
 } // namespace valhalla
 #endif // VALHALLA_MJOLNIR_ADMINCONSTANTS_H_
