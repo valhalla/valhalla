@@ -1455,8 +1455,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
     // encoded shape for each step (maneuver) in OSRM output.
     auto shape = midgard::decode<std::vector<PointLL>>(leg->shape());
 
-    //#########################################################################
-    // Iterate through maneuvers - convert to OSRM steps
+    // #########################################################################
+    //  Iterate through maneuvers - convert to OSRM steps
     uint32_t maneuver_index = 0;
     uint32_t prev_intersection_count = 0;
     double prev_distance = 0;
@@ -1572,9 +1572,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         modifier = turn_modifier(maneuver, in_brg, out_brg, arrive_maneuver);
       }
 
-      std::string mnvr_type = maneuver_type(maneuver, &etp, depart_maneuver, arrive_maneuver,
-                                            modifier, prev_intersection_count, mode, prev_mode,
-                                            rotary, prev_rotary);
+      std::string mnvr_type =
+          maneuver_type(maneuver, &etp, depart_maneuver, arrive_maneuver, modifier,
+                        prev_intersection_count, mode, prev_mode, rotary, prev_rotary);
 
       // Add OSRM maneuver
       step->emplace("maneuver",
@@ -1653,7 +1653,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    //#########################################################################
+    // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
