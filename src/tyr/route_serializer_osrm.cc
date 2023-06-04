@@ -1245,10 +1245,10 @@ json::ArrayPtr banner_instructions(const std::string& name,
   // }
   auto primaryBannerInstruction = json::map({});
   auto primaryBannerComponents = json::array({});
-  primaryBannerComponents->emplace_back(std::move(banner_component("text", name)));
+  primaryBannerComponents->emplace_back(banner_component("text", name));
   if (!ref.empty()) {
-    primaryBannerComponents->emplace_back(std::move(banner_component("delimiter", "/")));
-    primaryBannerComponents->emplace_back(std::move(banner_component("text", ref)));
+    primaryBannerComponents->emplace_back(banner_component("delimiter", "/"));
+    primaryBannerComponents->emplace_back(banner_component("text", ref));
   }
   primaryBannerInstruction->emplace("components", std::move(primaryBannerComponents));
   primaryBannerInstruction->emplace("text", name);
@@ -1279,7 +1279,7 @@ json::ArrayPtr banner_instructions(const std::string& name,
   if (!dest.empty()) {
     auto secondaryBannerInstruction = json::map({});
     auto secondaryBannerComponents = json::array({});
-    secondaryBannerComponents->emplace_back(std::move(banner_component("text", dest)));
+    secondaryBannerComponents->emplace_back(banner_component("text", dest));
     secondaryBannerInstruction->emplace("components", std::move(secondaryBannerComponents));
     secondaryBannerInstruction->emplace("text", dest);
     // secondaryBannerInstruction->emplace("type", maneuver_type);
