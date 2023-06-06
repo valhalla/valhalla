@@ -44,15 +44,16 @@ std::string GetFormattedTime(uint32_t secs) {
 // Log results
 void LogResults(const bool optimize,
                 const valhalla::Options& options,
-                const google::protobuf::RepeatedPtrField<valhalla::Matrix_TimeDistance>& res) {
+                const valhalla::Matrix& matrix) {
   LOG_INFO("Results:");
   uint32_t idx1 = 0;
   uint32_t idx2 = 0;
   uint32_t nlocs = options.sources_size();
-  for (auto& td : res) {
-    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
-             ": Distance= " + std::to_string(td.distance()) +
-             " Time= " + GetFormattedTime(td.time()) + " secs = " + std::to_string(td.time()));
+  for (uint32_t i; i < matrix.times().size(); i++) {
+    auto distance = matrix.distances().Get(i);
+    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
+             std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
+             " secs = " + std::to_string(distance));
     idx2++;
     if (idx2 == nlocs) {
       idx2 = 0;
@@ -63,9 +64,9 @@ void LogResults(const bool optimize,
     // Optimize the path
     auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
-    costs.reserve(res.size());
-    for (auto& td : res) {
-      costs.push_back(static_cast<float>(td.time()));
+    costs.reserve(matrix.times().size());
+    for (uint32_t i; i < matrix.times().size(); i++) {
+      costs.push_back(static_cast<float>(matrix.times().Get(i)));
     }
 
     Optimizer opt;
@@ -238,7 +239,7 @@ int main(int argc, char* argv[]) {
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, request.matrix().time_distances());
+  LogResults(optimize, options, request.matrix());
 
   // Run with TimeDistanceMatrix
   TimeDistanceMatrix tdm;
@@ -251,7 +252,7 @@ int main(int argc, char* argv[]) {
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, request.matrix().time_distances());
+  LogResults(optimize, options, request.matrix());
 
   // Shutdown protocol buffer library
   google::protobuf::ShutdownProtobufLibrary();

@@ -9,14 +9,10 @@ message Matrix {
     CostMatrix = 1;
   }
 
-  message TimeDistance {
-    uint32 distance = 1;
-    double time = 2;
-    uint32 from_index = 3;
-    uint32 to_index = 4;
-    string date_time = 5;
-  }
-
-  repeated TimeDistance time_distances = 3;
-  Algorithm algorithm = 4;
+  repeated uint32 distances = 2;
+  repeated double times = 3;
+  repeated uint32 from_indices = 4;
+  repeated uint32 to_indices = 5;
+  repeated string date_times = 6;
+  Algorithm algorithm = 7;
 }
