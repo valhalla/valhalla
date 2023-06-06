@@ -33,11 +33,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-bool ends_with(const std::string& str, const std::string& suffix) {
-  return str.size() >= suffix.size() &&
-         0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
-}
-
 // Convenience method to get a number from a string. Uses try/catch in case
 // stoi throws an exception
 int get_number(const std::string& tag, const std::string& value) { // NOLINT
@@ -175,8 +170,6 @@ public:
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
     use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
-    treat_jct_name_suffix_as_fork_ =
-        pt.get<bool>("data_processing.treat_jct_name_suffix_as_fork", false);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
@@ -2093,13 +2086,6 @@ public:
       }
     }
 
-    // See if the name ends with JCT (en or jp)
-    if (treat_jct_name_suffix_as_fork_) {
-      const char* en_jct = "JCT";
-      const char* jp_jct = "ＪＣＴ";
-      n.set_isJCT(ends_with(name_, en_jct) || ends_with(name_, jp_jct));
-    }
-
     // begin name logic
     std::string l = language_;
     ProcessName(name_w_lang_, name_, language_);
@@ -2150,7 +2136,7 @@ public:
                              ref_nt_sampa_, &n);
 
     // Different types of named nodes are tagged as a named intersection
-    n.set_named_intersection(named_junction || named_toll_node || n.isJCT());
+    n.set_named_intersection(named_junction || named_toll_node);
 
     // If way parsing marked it as the beginning or end of a way (dead ends) we'll keep that too
     sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
@@ -6418,9 +6404,6 @@ public:
   // Configuration option indicating whether or not to process the admin iso code keys on the
   // nodes during the parsing phase or to get the admin info from the admin db
   bool use_admin_db_;
-
-  // Ends with jct
-  bool treat_jct_name_suffix_as_fork_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

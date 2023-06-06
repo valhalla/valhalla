@@ -55,8 +55,7 @@ struct OSMNode {
   uint32_t tagged_access_ : 1; // Was access originally tagged?
   uint32_t private_access_ : 1;
   uint32_t cash_only_toll_ : 1;
-  uint32_t is_jct_ : 1;
-  uint32_t spare1_ : 4;
+  uint32_t spare1_ : 5;
 
   // pronunciations / langs
   uint32_t name_lang_index_;
@@ -305,21 +304,6 @@ struct OSMNode {
    */
   bool traffic_signal() const {
     return traffic_signal_;
-  }
-
-  /**
-   * Set is_jct flag. This indicates the name of the
-   * node ends with "JCT" (english) or "ＪＣＴ" (japanese).
-   */
-  void set_isJCT(bool is_jct) {
-    is_jct_ = is_jct;
-  }
-
-  /**
-   * Get the is_jct flag.
-   */
-  bool isJCT() const {
-    return is_jct_;
   }
 
   /**

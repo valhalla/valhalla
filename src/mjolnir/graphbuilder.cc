@@ -550,7 +550,7 @@ void BuildTileSet(const std::string& ways_file,
         //      OR all outbound edges are links and there is only one inbound edge
         bool fork =
             (((bundle.node_edges.size() > 2) && (bundle.driveforward_count > 1)) &&
-             ((bundle.link_count == bundle.node_edges.size()) || (node.isJCT()) ||
+             ((bundle.link_count == bundle.node_edges.size()) ||
               ((node.type() == NodeType::kMotorWayJunction) &&
                ((bundle.link_count == 0) || ((bundle.link_count == bundle.driveforward_count) &&
                                              (bundle.node_edges.size() == bundle.link_count + 1))))));
