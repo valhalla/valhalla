@@ -392,8 +392,8 @@ enum class TaggedValue : uint8_t { // must start at 1 due to nulls
 enum class PronunciationAlphabet : uint8_t {
   kNone = 0,
   kIpa = 1,
-  kXKatakana = 2,
-  kXJeita = 3,
+  kKatakana = 2,
+  kJeita = 3,
   kNtSampa = 4
 };
 // must start at 1 due to nulls

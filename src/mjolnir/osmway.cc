@@ -100,68 +100,399 @@ void OSMWay::set_layer(int8_t layer) {
   layer_ = layer;
 }
 
-void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
-                               const UniqueNames& name_offset_map,
-                               const uint32_t ipa_index,
-                               const uint32_t nt_sampa_index,
-                               const uint32_t katakana_index,
-                               const uint32_t jeita_index,
-                               const size_t name_tokens_size,
-                               const size_t key) const {
+void OSMWay::AddPronunciationsWithLang(std::vector<std::string>& pronunciations,
+                                       const baldr::PronunciationAlphabet verbal_type,
+                                       const std::vector<std::string>& pronunciation_tokens,
+                                       const std::vector<baldr::Language>& pronunciation_langs,
+                                       const std::vector<baldr::Language>& token_langs,
+                                       const size_t token_size,
+                                       const size_t key) const {
 
-  auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens, const size_t key,
+  auto get_pronunciations = [](const std::vector<std::string>& pronunciation_tokens,
+                               const std::vector<baldr::Language>& pronunciation_langs,
+                               const std::map<size_t, size_t> indexMap, const size_t key,
                                const baldr::PronunciationAlphabet verbal_type) {
-    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone), 0,
-                                    static_cast<uint8_t>(verbal_type), static_cast<uint8_t>(key)};
+    linguistic_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone),
+                                    0,
+                                    static_cast<uint8_t>(verbal_type),
+                                    static_cast<uint8_t>(key),
+                                    0,
+                                    0};
     std::string pronunciation;
-    // TODO: We need to address the fact that a name/ref value could of been entered incorrectly
-    // For example, name="XYZ Street;;ABC Street"
-    // name:pronunciation="pronunciation1;pronunciation2;pronunciation3" So we check for
-    // name_tokens_size == pronunciation_tokens.size() and we will not toss the second record in the
-    // vector, but we should as it is blank.  We actually address with blank name in edgeinfo via
-    // tossing the name if GraphTileBuilder::AddName returns 0.  Thought is we could address this now
-    // in GetTagTokens and if we have a mismatch then don't add the pronunciations.  To date no data
-    // has been found as described, but it could happen.  Address this issue with the Language
-    // updates.
-    for (const auto& t : pronunciation_tokens) {
+    for (size_t i = 0; i < pronunciation_tokens.size(); i++) {
+      auto& t = pronunciation_tokens[i];
+
       if (!t.size()) { // pronunciation is blank. skip and increment the index
-        ++header.name_index_;
+        if (indexMap.size() == 0)
+          ++header.name_index_;
         continue;
       }
+      if (indexMap.size() != 0) {
+        auto index = indexMap.find(i);
+        if (index != indexMap.end())
+          header.name_index_ = index->second;
+        else
+          continue;
+      }
+
       header.length_ = t.size();
-      pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) + t);
-      ++header.name_index_;
+      header.language_ = (pronunciation_langs.size() ? static_cast<uint8_t>(pronunciation_langs.at(i))
+                                                     : static_cast<uint8_t>(baldr::Language::kNone));
+      pronunciation.append(
+          std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) + t);
+      if (indexMap.size() == 0)
+        ++header.name_index_;
     }
     return pronunciation;
   };
 
+  bool process = false, found = false;
+  std::map<size_t, size_t> indexMap;
+  size_t k = key;
+
+  if ((pronunciation_langs.size() == 0 && token_langs.size() == 0) ||
+      ((pronunciation_langs.size() != 0 && token_langs.size() == 0) &&
+       (pronunciation_langs.size() <= token_size)))
+    process = true;
+  else {
+    std::pair<std::map<size_t, size_t>::iterator, bool> ret;
+    for (size_t i = 0; i < token_langs.size(); i++) {
+      for (size_t j = 0; j < pronunciation_langs.size(); j++) {
+        if (token_langs[i] == pronunciation_langs[j]) {
+          ret = indexMap.insert(std::make_pair(j, k));
+          if (ret.second == false) // already used
+            continue;
+          else {
+            k++;
+            process = true;
+            found = true;
+            break;
+          }
+        }
+      }
+      if (!found)
+        k++;
+      found = false;
+    }
+  }
+
+  if (process) {
+    pronunciations.emplace_back(
+        get_pronunciations(pronunciation_tokens, pronunciation_langs, indexMap, key, verbal_type));
+  }
+}
+
+void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
+                               const UniqueNames& name_offset_map,
+                               const std::vector<std::pair<std::string, bool>>& default_languages,
+                               const std::vector<baldr::Language> token_langs,
+                               const uint32_t ipa_index,
+                               const uint32_t ipa_lang_index,
+                               const uint32_t nt_sampa_index,
+                               const uint32_t nt_sampa_lang_index,
+                               const uint32_t katakana_index,
+                               const uint32_t katakana_lang_index,
+                               const uint32_t jeita_index,
+                               const uint32_t jeita_lang_index,
+                               const size_t token_size,
+                               const size_t key,
+                               bool diff_names) const {
+
   std::vector<std::string> pronunciation_tokens;
+
   if (ipa_index != 0) {
-    pronunciation_tokens = GetTagTokens(name_offset_map.name(ipa_index));
-    if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size())
-      pronunciations.emplace_back(
-          get_pronunciations(pronunciation_tokens, key, baldr::PronunciationAlphabet::kIpa));
+    std::vector<baldr::Language> pronunciation_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, ipa_index, ipa_lang_index,
+                               pronunciation_tokens, pronunciation_langs, diff_names, true);
+
+    AddPronunciationsWithLang(pronunciations, baldr::PronunciationAlphabet::kIpa,
+                              pronunciation_tokens, pronunciation_langs, token_langs, token_size,
+                              key);
   }
 
   if (nt_sampa_index != 0) {
-    pronunciation_tokens = GetTagTokens(name_offset_map.name(nt_sampa_index));
-    if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size())
-      pronunciations.emplace_back(
-          get_pronunciations(pronunciation_tokens, key, baldr::PronunciationAlphabet::kNtSampa));
+
+    std::vector<baldr::Language> pronunciation_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, nt_sampa_index,
+                               nt_sampa_lang_index, pronunciation_tokens, pronunciation_langs,
+                               diff_names, true);
+
+    AddPronunciationsWithLang(pronunciations, baldr::PronunciationAlphabet::kNtSampa,
+                              pronunciation_tokens, pronunciation_langs, token_langs, token_size,
+                              key);
   }
 
   if (katakana_index != 0) {
-    pronunciation_tokens = GetTagTokens(name_offset_map.name(katakana_index));
-    if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size())
-      pronunciations.emplace_back(
-          get_pronunciations(pronunciation_tokens, key, baldr::PronunciationAlphabet::kXKatakana));
+    std::vector<baldr::Language> pronunciation_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, katakana_index,
+                               katakana_lang_index, pronunciation_tokens, pronunciation_langs,
+                               diff_names, true);
+
+    AddPronunciationsWithLang(pronunciations, baldr::PronunciationAlphabet::kKatakana,
+                              pronunciation_tokens, pronunciation_langs, token_langs, token_size,
+                              key);
   }
 
   if (jeita_index != 0) {
-    pronunciation_tokens = GetTagTokens(name_offset_map.name(jeita_index));
-    if (pronunciation_tokens.size() && name_tokens_size == pronunciation_tokens.size())
-      pronunciations.emplace_back(
-          get_pronunciations(pronunciation_tokens, key, baldr::PronunciationAlphabet::kXJeita));
+    std::vector<baldr::Language> pronunciation_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, jeita_index, jeita_lang_index,
+                               pronunciation_tokens, pronunciation_langs, diff_names, true);
+
+    AddPronunciationsWithLang(pronunciations, baldr::PronunciationAlphabet::kJeita,
+                              pronunciation_tokens, pronunciation_langs, token_langs, token_size,
+                              key);
+  }
+}
+
+void OSMWay::AddLanguages(std::vector<std::string>& languages,
+                          const std::vector<baldr::Language>& token_languages,
+                          const size_t key) const {
+  if (token_languages.size() != 0) {
+    std::string language;
+
+    language_text_header_t header{static_cast<uint8_t>(baldr::Language::kNone),
+                                  static_cast<uint8_t>(key), 0};
+    for (const auto& t : token_languages) {
+
+      if (t != baldr::Language::kNone) {
+        header.language_ = static_cast<uint8_t>(t);
+        language.append(std::string(reinterpret_cast<const char*>(&header), kLanguageHeaderSize));
+      }
+      ++header.name_index_;
+    }
+    languages.emplace_back(language);
+  }
+}
+
+void OSMWay::ProcessNamesPronunciations(
+    const UniqueNames& name_offset_map,
+    const std::vector<std::pair<std::string, bool>>& default_languages,
+    const uint32_t name_index,
+    const uint32_t name_lang_index,
+    std::vector<std::string>& tokens,
+    std::vector<baldr::Language>& token_langs,
+    bool diff_names,
+    bool allow_empty_tokens) {
+
+  std::vector<std::string> token_languages, found_languages, new_sort_order;
+  std::vector<std::pair<std::string, std::string>> updated_token_languages, tokens_w_langs;
+  tokens = GetTagTokens(name_offset_map.name(name_index));
+  token_languages = GetTagTokens(name_offset_map.name(name_lang_index));
+
+  if (default_languages.size() == 0)
+    return;
+
+  bool all_default = false, all_blank = true;
+
+  // todo move this out to builder?
+  if (default_languages.size() > 1) {
+    if (std::find_if(default_languages.begin() + 1, default_languages.end(),
+                     [](const std::pair<std::string, bool>& p) { return p.second == false; }) ==
+        default_languages.end()) {
+      all_default = true;
+    }
+  }
+
+  if (name_index != 0 && name_lang_index == 0) {
+    token_languages.resize(tokens.size());
+    fill(token_languages.begin(), token_languages.end(), "");
+  }
+
+  // remove any entries that are not in our country language list
+  // then sort our names based on the list.
+  if (default_languages.size() &&
+      (tokens.size() == token_languages.size())) { // should always be equal
+    for (size_t i = 0; i < token_languages.size(); i++) {
+      const auto& current_lang = token_languages[i];
+      if (std::find_if(default_languages.begin(), default_languages.end(),
+                       [&current_lang](const std::pair<std::string, bool>& p) {
+                         return p.first == current_lang;
+                       }) != default_languages.end()) {
+        if (!token_languages[i].empty())
+          all_blank = false;
+        if (allow_empty_tokens || !tokens[i].empty()) {
+          updated_token_languages.emplace_back(tokens[i], token_languages[i]);
+          if (!token_languages[i].empty())
+            tokens_w_langs.emplace_back(tokens[i], token_languages[i]);
+        }
+      }
+    }
+
+    std::unordered_map<std::string, uint32_t> lang_sort_order;
+    new_sort_order.emplace_back("");
+
+    for (size_t i = 0; i < default_languages.size(); i++) {
+      if (i != 0)
+        found_languages.emplace_back(default_languages[i].first);
+      lang_sort_order[default_languages[i].first] = i;
+    }
+
+    auto cmp = [&lang_sort_order](const std::pair<std::string, std::string>& p1,
+                                  const std::pair<std::string, std::string>& p2) {
+      return lang_sort_order[p1.second] < lang_sort_order[p2.second];
+    };
+
+    std::stable_sort(updated_token_languages.begin(), updated_token_languages.end(), cmp);
+    std::stable_sort(tokens_w_langs.begin(), tokens_w_langs.end(), cmp);
+
+    std::vector<std::string> multilingual_names, multilingual_names_found, names_w_no_lang,
+        supported_names;
+    std::vector<baldr::Language> multilingual_langs_found, supported_langs;
+
+    for (size_t i = 0; i < updated_token_languages.size(); ++i) {
+
+      const auto& current_lang = updated_token_languages[i].second;
+
+      if (current_lang.empty()) {
+        // multilingual name
+        // name = Place Saint-Pierre - Sint-Pietersplein
+        std::vector<std::string> temp_names = GetTagTokens(updated_token_languages[i].first, " - ");
+        if (temp_names.size() >= 2) {
+          multilingual_names.insert(multilingual_names.end(), temp_names.begin(), temp_names.end());
+          if (!diff_names)
+            names_w_no_lang.insert(names_w_no_lang.end(), temp_names.begin(), temp_names.end());
+        } else {
+          temp_names = GetTagTokens(updated_token_languages[i].first, " / ");
+          if (temp_names.size() >= 2) {
+            multilingual_names.insert(multilingual_names.end(), temp_names.begin(), temp_names.end());
+            if (!diff_names)
+              names_w_no_lang.insert(names_w_no_lang.end(), temp_names.begin(), temp_names.end());
+          } else {
+            const auto& current_token = updated_token_languages[i].first;
+            const auto& it =
+                std::find_if(tokens_w_langs.begin(), tokens_w_langs.end(),
+                             [&current_token](const std::pair<std::string, std::string>& p) {
+                               return p.first == current_token;
+                             });
+            if (it != tokens_w_langs.end()) {
+              new_sort_order.emplace_back(it->second);
+            } else
+              names_w_no_lang.emplace_back(updated_token_languages[i].first);
+          }
+        }
+      } else if (std::find(multilingual_names.begin(), multilingual_names.end(),
+                           updated_token_languages[i].first) != multilingual_names.end()) {
+        multilingual_names_found.emplace_back(updated_token_languages[i].first);
+        multilingual_langs_found.emplace_back(stringLanguage(current_lang));
+        found_languages.erase(std::remove(found_languages.begin(), found_languages.end(),
+                                          current_lang),
+                              found_languages.end());
+        if (!diff_names)
+          names_w_no_lang.erase(std::remove(names_w_no_lang.begin(), names_w_no_lang.end(),
+                                            updated_token_languages[i].first),
+                                names_w_no_lang.end());
+
+      } else if (std::find_if(default_languages.begin(), default_languages.end(),
+                              [&current_lang](const std::pair<std::string, bool>& p) {
+                                return p.first == current_lang;
+                              }) != default_languages.end()) {
+
+        supported_names.emplace_back(updated_token_languages[i].first);
+        supported_langs.emplace_back(stringLanguage(current_lang));
+
+        found_languages.erase(std::remove(found_languages.begin(), found_languages.end(),
+                                          current_lang),
+                              found_languages.end());
+      }
+    }
+    bool multi_names = (multilingual_names_found.size());
+    bool allowed_names = (supported_names.size() != 0);
+
+    if (multi_names || allowed_names) {
+
+      // did we find a name with a language in the name/destination key?  if so we need to redo the
+      // sort order for the keys
+      if (new_sort_order.size() != 1) {
+
+        uint32_t count = 0;
+        lang_sort_order.clear();
+
+        for (const auto& lang : new_sort_order) {
+          lang_sort_order[lang] = count++;
+        }
+
+        for (size_t i = 0; i < default_languages.size(); i++) {
+          if (lang_sort_order.find(default_languages[i].first) == lang_sort_order.end())
+            lang_sort_order[default_languages[i].first] = count++;
+        }
+      }
+
+      tokens.clear();
+      token_langs.clear();
+      if (multi_names) {
+
+        if (!diff_names && names_w_no_lang.size() >= 1 && found_languages.size() == 1) {
+
+          std::vector<std::pair<std::string, std::string>> temp_token_languages;
+          for (size_t i = 0; i < names_w_no_lang.size(); ++i) {
+            temp_token_languages.emplace_back(names_w_no_lang[i], found_languages.at(0));
+          }
+
+          for (size_t i = 0; i < multilingual_names_found.size(); ++i) {
+            temp_token_languages.emplace_back(multilingual_names_found[i],
+                                              to_string(multilingual_langs_found[i]));
+          }
+
+          std::stable_sort(temp_token_languages.begin(), temp_token_languages.end(), cmp);
+
+          for (size_t i = 0; i < temp_token_languages.size(); ++i) {
+            tokens.emplace_back(temp_token_languages[i].first);
+            token_langs.emplace_back(stringLanguage(temp_token_languages[i].second));
+          }
+
+        } else {
+          tokens.insert(tokens.end(), multilingual_names_found.begin(),
+                        multilingual_names_found.end());
+          token_langs.insert(token_langs.end(), multilingual_langs_found.begin(),
+                             multilingual_langs_found.end());
+        }
+      }
+      if (allowed_names) {
+        // assume the lang.
+        if (names_w_no_lang.size() >= 1 && found_languages.size() == 1) {
+          for (size_t i = 0; i < names_w_no_lang.size(); ++i) {
+            tokens.emplace_back(names_w_no_lang.at(i));
+            token_langs.emplace_back(stringLanguage(found_languages.at(0)));
+          }
+
+          for (size_t i = 0; i < supported_names.size(); ++i) {
+            tokens.emplace_back(supported_names[i]);
+            token_langs.emplace_back(supported_langs[i]);
+          }
+          // name key not found but all the langs were found.
+        } else {
+          std::vector<std::pair<std::string, std::string>> temp_token_languages;
+
+          for (size_t i = 0; i < names_w_no_lang.size(); ++i) {
+            temp_token_languages.emplace_back(names_w_no_lang[i], "");
+          }
+
+          for (size_t i = 0; i < supported_names.size(); ++i) {
+            temp_token_languages.emplace_back(supported_names[i], to_string(supported_langs[i]));
+          }
+
+          std::stable_sort(temp_token_languages.begin(), temp_token_languages.end(), cmp);
+
+          for (size_t i = 0; i < temp_token_languages.size(); ++i) {
+            tokens.emplace_back(temp_token_languages[i].first);
+            token_langs.emplace_back(stringLanguage(temp_token_languages[i].second));
+          }
+        }
+      }
+    } else { // bail
+      tokens.clear();
+      token_langs.clear();
+      if ((updated_token_languages.size() > 1 && !all_blank && name_lang_index != 0) ||
+          (default_languages.size() > 2 && all_blank && name_lang_index == 0))
+        all_default = false;
+      for (size_t i = 0; i < updated_token_languages.size(); ++i) {
+        if (updated_token_languages[i].second.empty()) {
+          tokens.emplace_back(updated_token_languages[i].first);
+          if (all_default)
+            token_langs.emplace_back(stringLanguage(default_languages.at(1).first));
+        }
+      }
+    }
   }
 }
 
@@ -169,24 +500,38 @@ void OSMWay::AddPronunciations(std::vector<std::string>& pronunciations,
 void OSMWay::GetNames(const std::string& ref,
                       const UniqueNames& name_offset_map,
                       const OSMPronunciation& pronunciation,
+                      const std::vector<std::pair<std::string, bool>>& default_languages,
+                      const uint32_t ref_index,
+                      const uint32_t ref_lang_index,
+                      const uint32_t name_index,
+                      const uint32_t name_lang_index,
+                      const uint32_t official_name_index,
+                      const uint32_t official_name_lang_index,
+                      const uint32_t alt_name_index,
+                      const uint32_t alt_name_lang_index,
                       uint16_t& types,
                       std::vector<std::string>& names,
-                      std::vector<std::string>& pronunciations) const {
+                      std::vector<std::string>& pronunciations,
+                      std::vector<std::string>& languages,
+                      OSMPronunciation::DiffType type,
+                      bool diff_names) const {
 
   uint16_t location = 0;
   types = 0;
 
   // Process motorway and trunk refs
-  if ((ref_index_ != 0 || !ref.empty()) &&
+  if ((ref_index != 0 || !ref.empty()) &&
       ((static_cast<RoadClass>(road_class_) == RoadClass::kMotorway) ||
        (static_cast<RoadClass>(road_class_) == RoadClass::kTrunk))) {
     std::vector<std::string> tokens;
+    std::vector<baldr::Language> token_langs;
     std::vector<std::string> pronunciation_tokens;
 
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(name_offset_map.name(ref_index_));
+      ProcessNamesPronunciations(name_offset_map, default_languages, ref_index, ref_lang_index,
+                                 tokens, token_langs, diff_names);
     }
 
     for (size_t i = 0; i < tokens.size(); ++i) {
@@ -197,40 +542,168 @@ void OSMWay::GetNames(const std::string& ref,
     names.insert(names.end(), tokens.begin(), tokens.end());
 
     size_t key = names.size() - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
-                      pronunciation.ref_pronunciation_nt_sampa_index(),
-                      pronunciation.ref_pronunciation_katakana_index(),
-                      pronunciation.ref_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.ref_right_pronunciation_ipa_index(),
+                            pronunciation.ref_right_pronunciation_ipa_lang_index(),
+                            pronunciation.ref_right_pronunciation_nt_sampa_index(),
+                            pronunciation.ref_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.ref_right_pronunciation_katakana_index(),
+                            pronunciation.ref_right_pronunciation_katakana_lang_index(),
+                            pronunciation.ref_right_pronunciation_jeita_index(),
+                            pronunciation.ref_right_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.ref_left_pronunciation_ipa_index(),
+                            pronunciation.ref_left_pronunciation_ipa_lang_index(),
+                            pronunciation.ref_left_pronunciation_nt_sampa_index(),
+                            pronunciation.ref_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.ref_left_pronunciation_katakana_index(),
+                            pronunciation.ref_left_pronunciation_katakana_lang_index(),
+                            pronunciation.ref_left_pronunciation_jeita_index(),
+                            pronunciation.ref_left_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_forward_pronunciation_ipa_index(),
+                            pronunciation.name_forward_pronunciation_ipa_lang_index(),
+                            pronunciation.name_forward_pronunciation_nt_sampa_index(),
+                            pronunciation.name_forward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_forward_pronunciation_katakana_index(),
+                            pronunciation.name_forward_pronunciation_katakana_lang_index(),
+                            pronunciation.name_forward_pronunciation_jeita_index(),
+                            pronunciation.name_forward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kBackward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_backward_pronunciation_ipa_index(),
+                            pronunciation.name_backward_pronunciation_ipa_lang_index(),
+                            pronunciation.name_backward_pronunciation_nt_sampa_index(),
+                            pronunciation.name_backward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_backward_pronunciation_katakana_index(),
+                            pronunciation.name_backward_pronunciation_katakana_lang_index(),
+                            pronunciation.name_backward_pronunciation_jeita_index(),
+                            pronunciation.name_backward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.ref_pronunciation_ipa_index(),
+                        pronunciation.ref_pronunciation_ipa_lang_index(),
+                        pronunciation.ref_pronunciation_nt_sampa_index(),
+                        pronunciation.ref_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.ref_pronunciation_katakana_index(),
+                        pronunciation.ref_pronunciation_katakana_lang_index(),
+                        pronunciation.ref_pronunciation_jeita_index(),
+                        pronunciation.ref_pronunciation_jeita_lang_index(), tokens.size(), key,
+                        diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
 
   // TODO int_ref
 
   // Process name
-  if (name_index_ != 0) {
+  if (name_index != 0) {
 
     std::vector<std::string> tokens;
-    tokens = GetTagTokens(name_offset_map.name(name_index_));
+    std::vector<baldr::Language> token_langs;
+    std::vector<std::string> pronunciation_tokens;
+
+    ProcessNamesPronunciations(name_offset_map, default_languages, name_index, name_lang_index,
+                               tokens, token_langs, diff_names);
+
     location += tokens.size();
 
     names.insert(names.end(), tokens.begin(), tokens.end());
 
     size_t key = names.size() - tokens.size();
 
-    AddPronunciations(pronunciations, name_offset_map, pronunciation.name_pronunciation_ipa_index(),
-                      pronunciation.name_pronunciation_nt_sampa_index(),
-                      pronunciation.name_pronunciation_katakana_index(),
-                      pronunciation.name_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_right_pronunciation_ipa_index(),
+                            pronunciation.name_right_pronunciation_ipa_lang_index(),
+                            pronunciation.name_right_pronunciation_nt_sampa_index(),
+                            pronunciation.name_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_right_pronunciation_katakana_index(),
+                            pronunciation.name_right_pronunciation_katakana_lang_index(),
+                            pronunciation.name_right_pronunciation_jeita_index(),
+                            pronunciation.name_right_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_left_pronunciation_ipa_index(),
+                            pronunciation.name_left_pronunciation_ipa_lang_index(),
+                            pronunciation.name_left_pronunciation_nt_sampa_index(),
+                            pronunciation.name_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_left_pronunciation_katakana_index(),
+                            pronunciation.name_left_pronunciation_katakana_lang_index(),
+                            pronunciation.name_left_pronunciation_jeita_index(),
+                            pronunciation.name_left_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_forward_pronunciation_ipa_index(),
+                            pronunciation.name_forward_pronunciation_ipa_lang_index(),
+                            pronunciation.name_forward_pronunciation_nt_sampa_index(),
+                            pronunciation.name_forward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_forward_pronunciation_katakana_index(),
+                            pronunciation.name_forward_pronunciation_katakana_lang_index(),
+                            pronunciation.name_forward_pronunciation_jeita_index(),
+                            pronunciation.name_forward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kBackward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.name_backward_pronunciation_ipa_index(),
+                            pronunciation.name_backward_pronunciation_ipa_lang_index(),
+                            pronunciation.name_backward_pronunciation_nt_sampa_index(),
+                            pronunciation.name_backward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.name_backward_pronunciation_katakana_index(),
+                            pronunciation.name_backward_pronunciation_katakana_lang_index(),
+                            pronunciation.name_backward_pronunciation_jeita_index(),
+                            pronunciation.name_backward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.name_pronunciation_ipa_index(),
+                        pronunciation.name_pronunciation_ipa_lang_index(),
+                        pronunciation.name_pronunciation_nt_sampa_index(),
+                        pronunciation.name_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.name_pronunciation_katakana_index(),
+                        pronunciation.name_pronunciation_katakana_lang_index(),
+                        pronunciation.name_pronunciation_jeita_index(),
+                        pronunciation.name_pronunciation_jeita_lang_index(), tokens.size(), key,
+                        diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
 
   // Process non limited access refs
-  if (ref_index_ != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
+  if (ref_index != 0 && (static_cast<RoadClass>(road_class_) != RoadClass::kMotorway) &&
       (static_cast<RoadClass>(road_class_) != RoadClass::kTrunk)) {
     std::vector<std::string> tokens;
+    std::vector<baldr::Language> token_langs;
 
     if (!ref.empty()) {
       tokens = GetTagTokens(ref); // use updated refs from relations.
     } else {
-      tokens = GetTagTokens(name_offset_map.name(ref_index_));
+
+      ProcessNamesPronunciations(name_offset_map, default_languages, ref_index, ref_lang_index,
+                                 tokens, token_langs, diff_names);
     }
 
     for (size_t i = 0; i < tokens.size(); ++i) {
@@ -241,90 +714,302 @@ void OSMWay::GetNames(const std::string& ref,
     names.insert(names.end(), tokens.begin(), tokens.end());
 
     size_t key = names.size() - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map, pronunciation.ref_pronunciation_ipa_index(),
-                      pronunciation.ref_pronunciation_nt_sampa_index(),
-                      pronunciation.ref_pronunciation_katakana_index(),
-                      pronunciation.ref_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.ref_right_pronunciation_ipa_index(),
+                            pronunciation.ref_right_pronunciation_ipa_lang_index(),
+                            pronunciation.ref_right_pronunciation_nt_sampa_index(),
+                            pronunciation.ref_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.ref_right_pronunciation_katakana_index(),
+                            pronunciation.ref_right_pronunciation_katakana_lang_index(),
+                            pronunciation.ref_right_pronunciation_jeita_index(),
+                            pronunciation.ref_right_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.ref_left_pronunciation_ipa_index(),
+                            pronunciation.ref_left_pronunciation_ipa_lang_index(),
+                            pronunciation.ref_left_pronunciation_nt_sampa_index(),
+                            pronunciation.ref_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.ref_left_pronunciation_katakana_index(),
+                            pronunciation.ref_left_pronunciation_katakana_lang_index(),
+                            pronunciation.ref_left_pronunciation_jeita_index(),
+                            pronunciation.ref_left_pronunciation_jeita_lang_index(), tokens.size(),
+                            key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+        case OSMPronunciation::DiffType::kBackward:
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.ref_pronunciation_ipa_index(),
+                        pronunciation.ref_pronunciation_ipa_lang_index(),
+                        pronunciation.ref_pronunciation_nt_sampa_index(),
+                        pronunciation.ref_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.ref_pronunciation_katakana_index(),
+                        pronunciation.ref_pronunciation_katakana_lang_index(),
+                        pronunciation.ref_pronunciation_jeita_index(),
+                        pronunciation.ref_pronunciation_jeita_lang_index(), tokens.size(), key,
+                        diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
 
   // Process alt_name
-  if (alt_name_index_ != 0 && alt_name_index_ != name_index_) {
+  if (alt_name_index != 0 && alt_name_index != name_index) {
 
     std::vector<std::string> tokens;
-    tokens = GetTagTokens(name_offset_map.name(alt_name_index_));
+    std::vector<baldr::Language> token_langs;
+
+    ProcessNamesPronunciations(name_offset_map, default_languages, alt_name_index,
+                               alt_name_lang_index, tokens, token_langs, diff_names);
     location += tokens.size();
 
     names.insert(names.end(), tokens.begin(), tokens.end());
 
     size_t key = names.size() - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map,
-                      pronunciation.alt_name_pronunciation_ipa_index(),
-                      pronunciation.alt_name_pronunciation_nt_sampa_index(),
-                      pronunciation.alt_name_pronunciation_katakana_index(),
-                      pronunciation.alt_name_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.alt_name_right_pronunciation_ipa_index(),
+                            pronunciation.alt_name_right_pronunciation_ipa_lang_index(),
+                            pronunciation.alt_name_right_pronunciation_nt_sampa_index(),
+                            pronunciation.alt_name_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.alt_name_right_pronunciation_katakana_index(),
+                            pronunciation.alt_name_right_pronunciation_katakana_lang_index(),
+                            pronunciation.alt_name_right_pronunciation_jeita_index(),
+                            pronunciation.alt_name_right_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.alt_name_left_pronunciation_ipa_index(),
+                            pronunciation.alt_name_left_pronunciation_ipa_lang_index(),
+                            pronunciation.alt_name_left_pronunciation_nt_sampa_index(),
+                            pronunciation.alt_name_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.alt_name_left_pronunciation_katakana_index(),
+                            pronunciation.alt_name_left_pronunciation_katakana_lang_index(),
+                            pronunciation.alt_name_left_pronunciation_jeita_index(),
+                            pronunciation.alt_name_left_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.alt_name_forward_pronunciation_ipa_index(),
+                            pronunciation.alt_name_forward_pronunciation_ipa_lang_index(),
+                            pronunciation.alt_name_forward_pronunciation_nt_sampa_index(),
+                            pronunciation.alt_name_forward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.alt_name_forward_pronunciation_katakana_index(),
+                            pronunciation.alt_name_forward_pronunciation_katakana_lang_index(),
+                            pronunciation.alt_name_forward_pronunciation_jeita_index(),
+                            pronunciation.alt_name_forward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kBackward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.alt_name_backward_pronunciation_ipa_index(),
+                            pronunciation.alt_name_backward_pronunciation_ipa_lang_index(),
+                            pronunciation.alt_name_backward_pronunciation_nt_sampa_index(),
+                            pronunciation.alt_name_backward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.alt_name_backward_pronunciation_katakana_index(),
+                            pronunciation.alt_name_backward_pronunciation_katakana_lang_index(),
+                            pronunciation.alt_name_backward_pronunciation_jeita_index(),
+                            pronunciation.alt_name_backward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.alt_name_pronunciation_ipa_index(),
+                        pronunciation.alt_name_pronunciation_ipa_lang_index(),
+                        pronunciation.alt_name_pronunciation_nt_sampa_index(),
+                        pronunciation.alt_name_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.alt_name_pronunciation_katakana_index(),
+                        pronunciation.alt_name_pronunciation_katakana_lang_index(),
+                        pronunciation.alt_name_pronunciation_jeita_index(),
+                        pronunciation.alt_name_pronunciation_jeita_lang_index(), tokens.size(), key,
+                        diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
   // Process official_name
-  if (official_name_index_ != 0 && official_name_index_ != name_index_ &&
-      official_name_index_ != alt_name_index_) {
+  if (official_name_index != 0 && official_name_index != name_index &&
+      official_name_index != alt_name_index) {
 
     std::vector<std::string> tokens;
-    tokens = GetTagTokens(name_offset_map.name(official_name_index_));
+    std::vector<baldr::Language> token_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, official_name_index,
+                               official_name_lang_index, tokens, token_langs, diff_names);
     location += tokens.size();
 
     names.insert(names.end(), tokens.begin(), tokens.end());
 
     size_t key = names.size() - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map,
-                      pronunciation.official_name_pronunciation_ipa_index(),
-                      pronunciation.official_name_pronunciation_nt_sampa_index(),
-                      pronunciation.official_name_pronunciation_katakana_index(),
-                      pronunciation.official_name_pronunciation_jeita_index(), tokens.size(), key);
-  }
-  // Process name_en_
-  // TODO: process country specific names
-  if (name_en_index_ != 0 && name_en_index_ != name_index_ && name_en_index_ != alt_name_index_ &&
-      name_en_index_ != official_name_index_) {
-
-    std::vector<std::string> tokens;
-    tokens = GetTagTokens(name_offset_map.name(name_en_index_));
-    location += tokens.size();
-
-    names.insert(names.end(), tokens.begin(), tokens.end());
-
-    size_t key = names.size() - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map,
-                      pronunciation.name_en_pronunciation_ipa_index(),
-                      pronunciation.name_en_pronunciation_nt_sampa_index(),
-                      pronunciation.name_en_pronunciation_katakana_index(),
-                      pronunciation.name_en_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.official_name_right_pronunciation_ipa_index(),
+                            pronunciation.official_name_right_pronunciation_ipa_lang_index(),
+                            pronunciation.official_name_right_pronunciation_nt_sampa_index(),
+                            pronunciation.official_name_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.official_name_right_pronunciation_katakana_index(),
+                            pronunciation.official_name_right_pronunciation_katakana_lang_index(),
+                            pronunciation.official_name_right_pronunciation_jeita_index(),
+                            pronunciation.official_name_right_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.official_name_left_pronunciation_ipa_index(),
+                            pronunciation.official_name_left_pronunciation_ipa_lang_index(),
+                            pronunciation.official_name_left_pronunciation_nt_sampa_index(),
+                            pronunciation.official_name_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.official_name_left_pronunciation_katakana_index(),
+                            pronunciation.official_name_left_pronunciation_katakana_lang_index(),
+                            pronunciation.official_name_left_pronunciation_jeita_index(),
+                            pronunciation.official_name_left_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.official_name_forward_pronunciation_ipa_index(),
+                            pronunciation.official_name_forward_pronunciation_ipa_lang_index(),
+                            pronunciation.official_name_forward_pronunciation_nt_sampa_index(),
+                            pronunciation.official_name_forward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.official_name_forward_pronunciation_katakana_index(),
+                            pronunciation.official_name_forward_pronunciation_katakana_lang_index(),
+                            pronunciation.official_name_forward_pronunciation_jeita_index(),
+                            pronunciation.official_name_forward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kBackward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.official_name_backward_pronunciation_ipa_index(),
+                            pronunciation.official_name_backward_pronunciation_ipa_lang_index(),
+                            pronunciation.official_name_backward_pronunciation_nt_sampa_index(),
+                            pronunciation.official_name_backward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.official_name_backward_pronunciation_katakana_index(),
+                            pronunciation.official_name_backward_pronunciation_katakana_lang_index(),
+                            pronunciation.official_name_backward_pronunciation_jeita_index(),
+                            pronunciation.official_name_backward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.official_name_pronunciation_ipa_index(),
+                        pronunciation.official_name_pronunciation_ipa_lang_index(),
+                        pronunciation.official_name_pronunciation_nt_sampa_index(),
+                        pronunciation.official_name_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.official_name_pronunciation_katakana_index(),
+                        pronunciation.official_name_pronunciation_katakana_lang_index(),
+                        pronunciation.official_name_pronunciation_jeita_index(),
+                        pronunciation.official_name_pronunciation_jeita_lang_index(), tokens.size(),
+                        key, diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
 }
 
 // Get the tagged names for an edge
 void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
                              const OSMPronunciation& pronunciation,
+                             const std::vector<std::pair<std::string, bool>>& default_languages,
+                             const uint32_t tunnel_name_index,
+                             const uint32_t tunnel_name_lang_index,
                              const size_t& names_size,
                              std::vector<std::string>& names,
-                             std::vector<std::string>& pronunciations) const {
-
-  std::vector<std::string> tokens;
+                             std::vector<std::string>& pronunciations,
+                             std::vector<std::string>& languages,
+                             OSMPronunciation::DiffType type,
+                             bool diff_names) const {
 
   auto encode_tag = [](TaggedValue tag) {
     return std::string(1, static_cast<std::string::value_type>(tag));
   };
-  if (tunnel_name_index_ != 0) {
+  if (tunnel_name_index != 0) {
     // tunnel names
-    auto tokens = GetTagTokens(name_offset_map.name(tunnel_name_index_));
+
+    std::vector<std::string> tokens;
+    std::vector<baldr::Language> token_langs;
+    ProcessNamesPronunciations(name_offset_map, default_languages, tunnel_name_index,
+                               tunnel_name_lang_index, tokens, token_langs, diff_names);
+
     for (const auto& t : tokens) {
       names.emplace_back(encode_tag(TaggedValue::kTunnel) + t);
     }
 
     size_t key = (names_size + names.size()) - tokens.size();
-    AddPronunciations(pronunciations, name_offset_map,
-                      pronunciation.tunnel_name_pronunciation_ipa_index(),
-                      pronunciation.tunnel_name_pronunciation_nt_sampa_index(),
-                      pronunciation.tunnel_name_pronunciation_katakana_index(),
-                      pronunciation.tunnel_name_pronunciation_jeita_index(), tokens.size(), key);
+    if (diff_names) {
+      switch (type) {
+        case OSMPronunciation::DiffType::kRight:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.tunnel_name_right_pronunciation_ipa_index(),
+                            pronunciation.tunnel_name_right_pronunciation_ipa_lang_index(),
+                            pronunciation.tunnel_name_right_pronunciation_nt_sampa_index(),
+                            pronunciation.tunnel_name_right_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.tunnel_name_right_pronunciation_katakana_index(),
+                            pronunciation.tunnel_name_right_pronunciation_katakana_lang_index(),
+                            pronunciation.tunnel_name_right_pronunciation_jeita_index(),
+                            pronunciation.tunnel_name_right_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kLeft:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.tunnel_name_left_pronunciation_ipa_index(),
+                            pronunciation.tunnel_name_left_pronunciation_ipa_lang_index(),
+                            pronunciation.tunnel_name_left_pronunciation_nt_sampa_index(),
+                            pronunciation.tunnel_name_left_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.tunnel_name_left_pronunciation_katakana_index(),
+                            pronunciation.tunnel_name_left_pronunciation_katakana_lang_index(),
+                            pronunciation.tunnel_name_left_pronunciation_jeita_index(),
+                            pronunciation.tunnel_name_left_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kForward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.tunnel_name_forward_pronunciation_ipa_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_ipa_lang_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_nt_sampa_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_katakana_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_katakana_lang_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_jeita_index(),
+                            pronunciation.tunnel_name_forward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+        case OSMPronunciation::DiffType::kBackward:
+          AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                            pronunciation.tunnel_name_backward_pronunciation_ipa_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_ipa_lang_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_nt_sampa_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_nt_sampa_lang_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_katakana_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_katakana_lang_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_jeita_index(),
+                            pronunciation.tunnel_name_backward_pronunciation_jeita_lang_index(),
+                            tokens.size(), key, diff_names);
+          break;
+      }
+    } else {
+      AddPronunciations(pronunciations, name_offset_map, default_languages, token_langs,
+                        pronunciation.tunnel_name_pronunciation_ipa_index(),
+                        pronunciation.tunnel_name_pronunciation_ipa_lang_index(),
+                        pronunciation.tunnel_name_pronunciation_nt_sampa_index(),
+                        pronunciation.tunnel_name_pronunciation_nt_sampa_lang_index(),
+                        pronunciation.tunnel_name_pronunciation_katakana_index(),
+                        pronunciation.tunnel_name_pronunciation_katakana_lang_index(),
+                        pronunciation.tunnel_name_pronunciation_jeita_index(),
+                        pronunciation.tunnel_name_pronunciation_jeita_lang_index(), tokens.size(),
+                        key, diff_names);
+    }
+    AddLanguages(languages, token_langs, key);
   }
 
   if (layer_ != 0) {

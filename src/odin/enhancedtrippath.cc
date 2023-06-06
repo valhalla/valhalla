@@ -31,8 +31,8 @@ constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kKatakana, "kKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kJeita, "kJeita"},
              {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
   auto f = values.find(alphabet);
   if (f == values.cend())

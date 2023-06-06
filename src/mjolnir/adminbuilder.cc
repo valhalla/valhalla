@@ -578,44 +578,41 @@ bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
       sqlite3_bind_null(stmt, 5);
     }
 
-          uint32_t level = admin.admin_level;
-          if (level == 2 || level == 4)
-            sqlite3_bind_int(stmt, 6, admin.drive_on_right);
-          else
-            sqlite3_bind_null(stmt, 6);
+    uint32_t level = admin.admin_level;
+    if (level == 2 || level == 4)
+      sqlite3_bind_int(stmt, 6, admin.drive_on_right);
+    else
+      sqlite3_bind_null(stmt, 6);
 
-          if (level == 2 || level == 4)
-            sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
-          else
-            sqlite3_bind_null(stmt, 7);
+    if (level == 2 || level == 4)
+      sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
+    else
+      sqlite3_bind_null(stmt, 7);
 
-          if (admin.default_language_index) {
-            default_language = admin_data.name_offset_map.name(admin.default_language_index);
-            sqlite3_bind_text(stmt, 8, default_language.c_str(), default_language.length(),
-                              SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 8);
-          }
+    if (admin.default_language_index) {
+      default_language = admin_data.name_offset_map.name(admin.default_language_index);
+      sqlite3_bind_text(stmt, 8, default_language.c_str(), default_language.length(), SQLITE_STATIC);
+    } else {
+      sqlite3_bind_null(stmt, 8);
+    }
 
-          sqlite3_bind_null(stmt, 9);
-          sqlite3_bind_text(stmt, 10, wkt.c_str(), wkt.length(), SQLITE_STATIC);
-          /* performing INSERT INTO */
-          ret = sqlite3_step(stmt);
-          if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-            continue;
-          }
-          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          LOG_ERROR("sqlite3_step() Name: " +
-        		  admin_data.name_offset_map.name(admin.name_index));
-          LOG_ERROR("sqlite3_step() Name:en: " +
-        		  admin_data.name_offset_map.name(admin.name_en_index));
-          LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
-          LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right));
-          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
-                    std::to_string(admin.allow_intersection_names));
-          LOG_ERROR("sqlite3_step() Default Language: " +
-        		  admin_data.name_offset_map.name(admin.default_language_index));
-        }
+    sqlite3_bind_null(stmt, 9);
+    sqlite3_bind_text(stmt, 10, wkt.c_str(), wkt.length(), SQLITE_STATIC);
+    /* performing INSERT INTO */
+    ret = sqlite3_step(stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+      continue;
+    }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR("sqlite3_step() Name: " + admin_data.name_offset_map.name(admin.name_index));
+    LOG_ERROR("sqlite3_step() Name:en: " + admin_data.name_offset_map.name(admin.name_en_index));
+    LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
+    LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right));
+    LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+              std::to_string(admin.allow_intersection_names));
+    LOG_ERROR("sqlite3_step() Default Language: " +
+              admin_data.name_offset_map.name(admin.default_language_index));
+  }
 
   sqlite3_finalize(stmt);
   ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);

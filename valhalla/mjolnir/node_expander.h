@@ -107,8 +107,8 @@ struct Edge {
     e.attributes.reclass_link = false;
     e.attributes.reclass_ferry = false;
     e.attributes.has_names =
-        (way.name_index_ != 0 || way.name_en_index_ != 0 || way.alt_name_index_ != 0 ||
-         way.official_name_index_ != 0 || way.ref_index_ != 0 || way.int_ref_index_ != 0);
+        (way.name_index_ != 0 || way.alt_name_index_ != 0 || way.official_name_index_ != 0 ||
+         way.ref_index_ != 0 || way.int_ref_index_ != 0);
 
     // If this data has turn_channels set and we are not inferring turn channels then we need to
     // use the flag. Otherwise the turn_channel is set in the reclassify links.  Also, an edge can't

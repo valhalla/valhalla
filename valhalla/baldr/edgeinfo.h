@@ -44,6 +44,10 @@ struct NameInfo {
                                    // and GetNamesAndTags until code is ready to actually use it.
   uint32_t spare_ : 2;
 
+  NameInfo(uint32_t name_offset)
+      : name_offset_(name_offset), additional_fields_{}, is_route_num_{}, tagged_{}, spare_{} {
+  }
+
   bool operator==(const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
   }
@@ -54,6 +58,18 @@ struct NameInfo {
   }
 };
 
+// indexes of linguistic attributes in the linguistic map value-tuple
+constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
+constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
+constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
+constexpr size_t kLinguisticHeaderSize = 3;
+constexpr size_t kLanguageHeaderSize = 2;
+
+// Unfortunately a bug was found where we were returning a blank phoneme for a linguistic
+// record where it just contained a language and no phoneme.  Therefore, for now we have
+// to separate languages from phonemes in order to ensure backward compatibility.  If we
+// ever version the tiles, we need to move languages under the linguistic header and delete
+// the language_text_header_t.
 struct linguistic_text_header_t {
   uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
@@ -61,6 +77,12 @@ struct linguistic_text_header_t {
   uint32_t name_index_ : 4; // what name is this pronunciation for
   uint32_t spare_ : 1;
   uint32_t DO_NOT_USE_ : 8; // DONT EVER USE THIS WE DON'T ACTUALLY STORE IT IN THE TEXT LIST
+};
+
+struct language_text_header_t {
+  uint16_t language_ : 8; // this is just the language as we will derive locale by getting admin info
+  uint16_t name_index_ : 4; // what name is this language for
+  uint16_t spare_ : 4;
 };
 
 /**
@@ -152,32 +174,29 @@ public:
    */
   std::vector<std::string> GetNames() const;
 
-  /** Convenience method to get the names and route number flags for an edge.
-   *
-   *  This one does not calculate the types
-   *  Like GetNamesAndTypes but without using memory for the types
-   *
-   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
-   * @return Returns a list (vector) (name, route number flag) pairs
-   */
-  std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
-
   /**
-   * Convenience method to get the names for an edge
-   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
+   * Convenience method to get the non linguistic, tagged names for an edge
    *
    * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues() const;
 
   /**
-   * Convenience method to get the names, route number flags and tag value type for an edge.
+   * Convenience method to get the linguistic names for an edge
+   * @param  type  type of linguistic names we are interested in obtaining.
+   *
+   * @return   Returns a list (vector) of linguistic names.
+   */
+  std::vector<std::string> GetLinguisticTaggedValues(const baldr::TaggedValue type) const;
+
+  /**
+   * Convenience method to get the names and route number flags for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
-   * @return   Returns a list (vector) of name/route number flags/types tuples.
+   * @return   Returns a list (vector) of name/route number pairs.
    */
-  std::vector<std::tuple<std::string, bool, uint8_t>>
-  GetNamesAndTypes(bool include_tagged_names = false) const;
+  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
+                                                             bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get tags of the edge.
@@ -187,11 +206,12 @@ public:
   const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
-   * Convenience method to get a pronunciation map for an edge.
-   * @return   Returns a unordered_map of type/name pairs with a key that references the name
-   * index from GetNamesAndTypes
+   * Convenience method to get a Linguistic map for an edge.
+   * @return   Returns a unordered_map in which the key is a index into the name list from
+   * GetNamesAndTypes and the tuple contains a pronunciation (w/wo a language) or no pronunciation and
+   * just a language
    */
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> GetLinguisticMap() const;
 
   /**
    * Convenience method to get the types for the names.
