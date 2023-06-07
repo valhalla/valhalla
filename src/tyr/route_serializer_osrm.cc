@@ -429,6 +429,54 @@ struct IntersectionEdges {
   }
 };
 
+// Process 'indications' array - add indications from left to right
+json::ArrayPtr lane_indications(std::unique_ptr<valhalla::odin::EnhancedTripLeg_Edge>& prev_edge,
+                                const ::valhalla::TurnLane turn_lane) {
+  uint16_t mask = turn_lane.directions_mask();
+  // Process 'indications' array - add indications from left to right
+  auto indications = json::array({});
+
+  // TODO make map for lane mask to osrm indication string
+
+  // reverse (left u-turn)
+  if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
+    indications->emplace_back(osrmconstants::kModifierUturn);
+  }
+  // sharp_left
+  if (mask & kTurnLaneSharpLeft) {
+    indications->emplace_back(osrmconstants::kModifierSharpLeft);
+  }
+  // left
+  if (mask & kTurnLaneLeft) {
+    indications->emplace_back(osrmconstants::kModifierLeft);
+  }
+  // slight_left
+  if (mask & kTurnLaneSlightLeft) {
+    indications->emplace_back(osrmconstants::kModifierSlightLeft);
+  }
+  // through
+  if (mask & kTurnLaneThrough) {
+    indications->emplace_back(osrmconstants::kModifierStraight);
+  }
+  // slight_right
+  if (mask & kTurnLaneSlightRight) {
+    indications->emplace_back(osrmconstants::kModifierSlightRight);
+  }
+  // right
+  if (mask & kTurnLaneRight) {
+    indications->emplace_back(osrmconstants::kModifierRight);
+  }
+  // sharp_right
+  if (mask & kTurnLaneSharpRight) {
+    indications->emplace_back(osrmconstants::kModifierSharpRight);
+  }
+  // reverse (right u-turn)
+  if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
+    indications->emplace_back(osrmconstants::kModifierUturn);
+  }
+  return indications;
+}
+
 // Add intersections along a step/maneuver.
 json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
                              valhalla::odin::EnhancedTripLeg* etp,
@@ -643,50 +691,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
-
-        // Process 'indications' array - add indications from left to right
-        auto indications = json::array({});
-        uint16_t mask = turn_lane.directions_mask();
-
-        // TODO make map for lane mask to osrm indication string
-
-        // reverse (left u-turn)
-        if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        // sharp_left
-        if (mask & kTurnLaneSharpLeft) {
-          indications->emplace_back(osrmconstants::kModifierSharpLeft);
-        }
-        // left
-        if (mask & kTurnLaneLeft) {
-          indications->emplace_back(osrmconstants::kModifierLeft);
-        }
-        // slight_left
-        if (mask & kTurnLaneSlightLeft) {
-          indications->emplace_back(osrmconstants::kModifierSlightLeft);
-        }
-        // through
-        if (mask & kTurnLaneThrough) {
-          indications->emplace_back(osrmconstants::kModifierStraight);
-        }
-        // slight_right
-        if (mask & kTurnLaneSlightRight) {
-          indications->emplace_back(osrmconstants::kModifierSlightRight);
-        }
-        // right
-        if (mask & kTurnLaneRight) {
-          indications->emplace_back(osrmconstants::kModifierRight);
-        }
-        // sharp_right
-        if (mask & kTurnLaneSharpRight) {
-          indications->emplace_back(osrmconstants::kModifierSharpRight);
-        }
-        // reverse (right u-turn)
-        if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
-          indications->emplace_back(osrmconstants::kModifierUturn);
-        }
-        lane->emplace("indications", std::move(indications));
+        lane->emplace("indications", lane_indications(prev_edge, turn_lane));
         lanes->emplace_back(std::move(lane));
       }
       intersection->emplace("lanes", std::move(lanes));
