@@ -31,9 +31,9 @@ TEST(Signinfo, ExitToTest) {
   std::vector<std::string> pronunciations, languages;
   std::vector<std::pair<std::string, bool>> default_languages;
 
-  bool has_guide = GraphBuilder::CreateSignInfoList(exit_node, way, pronunciation, osmdata,
-                                                    default_languages, signs, pronunciations,
-                                                    languages, fork, forward, true, false);
+  bool has_guide =
+      GraphBuilder::CreateSignInfoList(exit_node, way, pronunciation, osmdata, default_languages,
+                                       signs, pronunciations, languages, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -224,9 +224,9 @@ TEST(Signinfo, ExitToTest) {
   // Add a ref toward guide sign and we should not add a exit number or exit name.  note: using
   // exit_node
   signs.clear();
-  has_guide = GraphBuilder::CreateSignInfoList(exit_node, way2, pronunciation, osmdata,
-                                               default_languages, signs, pronunciations, languages,
-                                               fork, forward, false, true);
+  has_guide =
+      GraphBuilder::CreateSignInfoList(exit_node, way2, pronunciation, osmdata, default_languages,
+                                       signs, pronunciations, languages, fork, forward, false, true);
 
   EXPECT_TRUE(has_guide) << "Guides should not be Exits";
 

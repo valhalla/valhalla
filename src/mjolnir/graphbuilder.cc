@@ -1914,9 +1914,6 @@ bool GraphBuilder::CreateSignInfoList(
     has_toward = true;
     has_guide = is_branch_or_toward;
 
-
-
-
     uint32_t ipa_index =
         pronunciation.destination_pronunciation_ipa_index()
             ? pronunciation.destination_pronunciation_ipa_index()
