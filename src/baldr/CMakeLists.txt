@@ -30,9 +30,14 @@ set(includes
      ${VALHALLA_SOURCE_DIR}/valhalla
      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
+
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
 
 set(sources
     accessrestriction.cc
@@ -50,9 +55,9 @@ set(sources
     graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
-    merge.cc
     nodeinfo.cc
     location.cc
+    merge.cc
     pathlocation.cc
     predictedspeeds.cc
     tilehierarchy.cc
@@ -67,6 +72,7 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
@@ -88,24 +94,21 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-    tz_alt.cpp)
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(openlr.cc PROPERTIES COMPILE_FLAGS "-Werror")
-endif()
+list(APPEND sources_with_warnings
+    tz_alt.cpp)
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
   list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
 endif()
 
 valhalla_module(NAME baldr
   SOURCES
     ${sources}
+  SOURCES_WITH_WARNINGS
+    ${sources_with_warnings}
 
   HEADERS
     ${headers}
@@ -114,6 +117,9 @@ valhalla_module(NAME baldr
       ${includes}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
 
   DEPENDS
     valhalla::midgard

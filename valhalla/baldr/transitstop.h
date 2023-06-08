@@ -33,8 +33,8 @@ public:
   }
 
   /**
-   * Get the TransitLand one stop Id offset for the stop.
-   * @return  Returns the TransitLand one stop Id offset.
+   * Get the one stop Id offset for the stop.
+   * @return  Returns the one stop Id offset.
    */
   uint32_t one_stop_offset() const {
     return one_stop_offset_;
@@ -69,7 +69,7 @@ public:
   }
 
 protected:
-  uint64_t one_stop_offset_ : 24; // TransitLand one stop Id offset.
+  uint64_t one_stop_offset_ : 24; // one stop Id offset.
   uint64_t name_offset_ : 24;     // Stop name offset in the text/name list.
   uint64_t generated_ : 1;
   uint64_t traversability_ : 2;

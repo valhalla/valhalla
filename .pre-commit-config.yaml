@@ -1,5 +1,5 @@
 repos:
-  # C++
+  # liniting c++ and python
   - repo: local
     hooks:
     - id: format
@@ -7,27 +7,3 @@ repos:
       entry: bash ./scripts/format.sh
       language: system
       pass_filenames: false
-
-  # Python formatter
-  - repo: https://github.com/psf/black
-    rev: 22.6.0
-    hooks:
-      - id: black
-        language_version: python3
-        args: ['--line-length=105', '--skip-string-normalization']
-        files: ^(src/bindings/python/|scripts/)
-
-  # Python linter
-  - repo: https://gitlab.com/pycqa/flake8
-    rev: 5.0.4
-    hooks:
-      - id: flake8
-        # E501: ignore line length (black auto-formats)
-        # E731: ignore replace-lambda-with-def warnings
-        # E203: ignore "whitespace before ':'"
-        args: [
-          '--max-line-length=105',
-          '--extend-ignore=E501,E731,E203',
-          '--extend-exclude=src/bindings/python/__init__.py'
-        ]
-        files: ^(src/bindings/python/|scripts/)

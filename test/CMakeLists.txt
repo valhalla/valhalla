@@ -46,12 +46,14 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
     graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
-    list(APPEND tests http_tiles elevation_builder)
+    list(APPEND tests http_tiles)
+    # TODO: fix https://github.com/valhalla/valhalla/issues/3740
+    # list(APPEND tests http_tiles elevation_builder)
   endif()
 endif()
 
@@ -277,18 +279,19 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 set (source "${CMAKE_BINARY_DIR}/test/data/utrecht_tiles")
 set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
-set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
-add_custom_command(
-        TARGET utrecht_tiles POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
-        DEPENDS ${destination}
-        COMMENT "tiles copied from ${source} to ${destination}"
-)
+# TODO: fix https://github.com/valhalla/valhalla/issues/3740
+#set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
+#add_custom_command(
+#        TARGET utrecht_tiles POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
+#        DEPENDS ${destination}
+#        COMMENT "tiles copied from ${source} to ${destination}"
+#)
 
 ## Test run targets
 foreach(test ${tests} ${cost_tests} ${tyr_tests})
@@ -331,7 +334,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar_bss paris_bss_tiles)
+  add_dependencies(run-astar_bikeshare paris_bss_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)

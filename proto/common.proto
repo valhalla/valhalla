@@ -123,19 +123,20 @@ message Location {
   oneof has_preferred_layer {
     int32 preferred_layer = 28;
   }
+  float waiting_secs = 29;                   // waiting period before a new leg starts, e.g. for servicing/loading goods
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
 }
 
 message TransitEgressInfo {
-  string onestop_id = 1;        // Unique transitland ID
+  string onestop_id = 1;        // Unique ID
   string name = 2;              // The name of the egress
   LatLng ll = 3;                // Latitude, longitude of the egress
 }
 
 message TransitStationInfo {
-  string onestop_id = 1;        // Unique transitland ID
+  string onestop_id = 1;        // Unique ID
   string name = 2;              // The name of the station
   LatLng ll = 3;                // Latitude, longitude of the station
 }
@@ -156,13 +157,13 @@ message TransitPlatformInfo {
     kStation = 1;
   }
   Type type = 1;                  // The type of stop (station or simple stop)
-  string onestop_id = 2;          // Unique transitland ID
+  string onestop_id = 2;          // Unique ID
   string name = 3;                // The name of the platform
   string arrival_date_time = 4;   // ISO 8601 arrival date/time YYYY-MM-DDThh:mm
   string departure_date_time = 5; // ISO 8601 departure date/time YYYY-MM-DDThh:mm
   bool assumed_schedule = 6;      // true if the times are based on an assumed schedule
   LatLng ll = 7;                  // Latitude, longitude of the transit stop
-  string station_onestop_id = 8;  // Unique transitland station ID
+  string station_onestop_id = 8;  // Unique station ID
   string station_name = 9;        // The station name of the platform
 }
 

@@ -192,6 +192,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
       return TripLeg_Use_kCuldesacUse;
     case baldr::Use::kLivingStreet:
       return TripLeg_Use_kLivingStreetUse;
+    case baldr::Use::kServiceRoad:
+      return TripLeg_Use_kServiceRoadUse;
     case baldr::Use::kCycleway:
       return TripLeg_Use_kCyclewayUse;
     case baldr::Use::kMountainBike:
@@ -280,6 +282,10 @@ travel_mode_type(const valhalla::DirectionsLeg_Maneuver& maneuver);
 
 inline midgard::PointLL to_ll(const LatLng& ll) {
   return midgard::PointLL{ll.lng(), ll.lat()};
+}
+
+inline midgard::PointLL to_ll(const valhalla::Location& l) {
+  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
 }
 
 inline void from_ll(valhalla::Location* l, const midgard::PointLL& p) {

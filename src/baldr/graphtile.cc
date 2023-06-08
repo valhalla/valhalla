@@ -400,7 +400,7 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   // Associate route and operator Ids
   auto deps = GetTransitDepartures();
   for (auto const& dep : deps) {
-    const auto* t = GetTransitRoute(dep.second->routeid());
+    const auto* t = GetTransitRoute(dep.second->routeindex());
     const auto& route_one_stop = GetName(t->one_stop_offset());
     auto stops = route_one_stops.find(route_one_stop);
     if (stops == route_one_stops.end()) {
@@ -426,8 +426,10 @@ void GraphTile::AssociateOneStopIds(const GraphId& graphid) {
   }
 }
 
-std::string
-GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, bool is_file_path) {
+std::string GraphTile::FileSuffix(const GraphId& graphid,
+                                  const std::string& fname_suffix,
+                                  bool is_file_path,
+                                  const TileLevel* tiles) {
   /*
   if you have a graphid where level == 8 and tileid == 24134109851 you should get:
   8/024/134/109/851.gph since the number of levels is likely to be very small this limits the total
@@ -437,24 +439,27 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   */
 
   // figure the largest id for this level
-  if (graphid.level() >= TileHierarchy::levels().size() &&
-      graphid.level() != TileHierarchy::GetTransitLevel().level) {
+  if ((tiles && tiles->level != graphid.level()) ||
+      (!tiles && graphid.level() >= TileHierarchy::levels().size() &&
+       graphid.level() != TileHierarchy::GetTransitLevel().level)) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid level: " +
                              std::to_string(graphid));
   }
 
   // get the level info
-  const auto& level = graphid.level() == TileHierarchy::GetTransitLevel().level
-                          ? TileHierarchy::GetTransitLevel()
-                          : TileHierarchy::levels()[graphid.level()];
+  const auto& level = tiles ? *tiles
+                            : (graphid.level() == TileHierarchy::GetTransitLevel().level
+                                   ? TileHierarchy::GetTransitLevel()
+                                   : TileHierarchy::levels()[graphid.level()]);
 
   // figure out how many digits in tile-id
-  const auto max_id = level.tiles.ncolumns() * level.tiles.nrows() - 1;
+  const uint32_t max_id = static_cast<uint32_t>(level.tiles.ncolumns() * level.tiles.nrows() - 1);
+
   if (graphid.tileid() > max_id) {
     throw std::runtime_error("Could not compute FileSuffix for GraphId with invalid tile id:" +
                              std::to_string(graphid));
   }
-  size_t max_length = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  size_t max_length = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
   const size_t remainder = max_length % 3;
   if (remainder) {
     max_length += 3 - remainder;
@@ -472,11 +477,11 @@ GraphTile::FileSuffix(const GraphId& graphid, const std::string& fname_suffix, b
   for (uint32_t tile_id = graphid.tileid(); tile_id != 0; tile_id /= 10) {
     tile_id_str[ind--] = '0' + static_cast<char>(tile_id % 10);
     if ((tile_id_strlen - ind) % 4 == 0) {
-      tile_id_str[ind--] = separator;
+      ind--; // skip an additional character to leave space for separators
     }
   }
-  // add missing separators
-  for (size_t sep_ind = 0; sep_ind < ind; sep_ind += 4) {
+  // add separators
+  for (size_t sep_ind = 0; sep_ind < tile_id_strlen; sep_ind += 4) {
     tile_id_str[sep_ind] = separator;
   }
 
@@ -516,7 +521,7 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
   }
 
   // run backwards while you find an allowed char but stop if not 3 digits between slashes
-  std::vector<int> digits;
+  std::vector<uint32_t> digits;
   auto last = pos;
   while (--pos < last) {
     auto c = fname[pos];
@@ -558,8 +563,8 @@ GraphId GraphTile::GetTileId(const std::string& fname) {
                                : TileHierarchy::levels()[level];
 
   // get the number of sub directories that we should have
-  auto max_id = tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1;
-  size_t parts = static_cast<size_t>(std::log10(std::max(1, max_id))) + 1;
+  uint32_t max_id = static_cast<uint32_t>(tile_level.tiles.ncolumns() * tile_level.tiles.nrows() - 1);
+  size_t parts = static_cast<size_t>(std::log10(std::max(1u, max_id))) + 1;
   if (parts % 3 != 0) {
     parts += 3 - (parts % 3);
   }
@@ -630,6 +635,41 @@ iterable_t<const DirectedEdge> GraphTile::GetDirectedEdges(const size_t idx) con
   return iterable_t<const DirectedEdge>{edge, nodeinfo.edge_count()};
 }
 
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const NodeInfo* node) const {
+  if (node < nodes_ || node >= nodes_ + header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo out of bounds: " + std::to_string(header_->graphid()));
+  }
+  const auto* edge_ext = ext_directededges_ + node->edge_index();
+  return iterable_t<const DirectedEdgeExt>{edge_ext, node->edge_count()};
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const GraphId& node) const {
+  if (node.Tile_Base() != header_->graphid() || node.id() >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds: " + std::to_string(node.tileid()) + "," +
+        std::to_string(node.level()) + "," + std::to_string(node.id()) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto* nodeinfo = nodes_ + node.id();
+  return GetDirectedEdgeExts(nodeinfo);
+}
+
+iterable_t<const DirectedEdgeExt> GraphTile::GetDirectedEdgeExts(const size_t idx) const {
+  if (idx >= header_->nodecount()) {
+    throw std::logic_error(
+        std::string(__FILE__) + ":" + std::to_string(__LINE__) +
+        " GraphTile NodeInfo index out of bounds 5: " + std::to_string(header_->graphid().tileid()) +
+        "," + std::to_string(header_->graphid().level()) + "," + std::to_string(idx) +
+        " nodecount= " + std::to_string(header_->nodecount()));
+  }
+  const auto& nodeinfo = nodes_[idx];
+  const auto* edge_ext = ext_directededge(nodeinfo.edge_index());
+  return iterable_t<const DirectedEdgeExt>{edge_ext, nodeinfo.edge_count()};
+}
+
 EdgeInfo GraphTile::edgeinfo(const DirectedEdge* edge) const {
   return EdgeInfo(edgeinfo_ + edge->edgeinfo_offset(), textlist_, textlist_size_);
 }
@@ -669,6 +709,16 @@ GraphTile::GetDirectedEdges(const uint32_t node_index, uint32_t& count, uint32_t
   count = nodeinfo->edge_count();
   edge_index = nodeinfo->edge_index();
   return directededge(nodeinfo->edge_index());
+}
+
+// Get the directed edge extensions outbound from the specified node index.
+const DirectedEdgeExt* GraphTile::GetDirectedEdgeExts(const uint32_t node_index,
+                                                      uint32_t& count,
+                                                      uint32_t& edge_index) const {
+  const NodeInfo* nodeinfo = node(node_index);
+  count = nodeinfo->edge_count();
+  edge_index = nodeinfo->edge_index();
+  return ext_directededge(nodeinfo->edge_index());
 }
 
 // Convenience method to get the names for an edge
@@ -721,7 +771,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -788,7 +838,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -867,7 +917,7 @@ std::vector<LaneConnectivity> GraphTile::GetLaneConnectivity(const uint32_t idx)
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& lc = lane_connectivity_[mid];
@@ -913,7 +963,7 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
@@ -935,37 +985,32 @@ const TransitDeparture* GraphTile::GetNextDeparture(const uint32_t lineid,
   // Iterate through departures until one is found with valid date, dow or
   // calendar date, and does not have a calendar exception.
   for (; found < count && departures_[found].lineid() == lineid; ++found) {
-    // Make sure valid departure time
-    if (departures_[found].type() == kFixedSchedule) {
-      if (departures_[found].departure_time() >= current_time &&
-          GetTransitSchedule(departures_[found].schedule_index())
-              ->IsValid(day, dow, date_before_tile) &&
-          (!wheelchair || departures_[found].wheelchair_accessible()) &&
-          (!bicycle || departures_[found].bicycle_accessible())) {
-        return &departures_[found];
-      }
+    // Make sure it falls within the schedule and departure props are valid
+    const auto& d = departures_[found];
+    if ((wheelchair && !d.wheelchair_accessible()) || (bicycle && !d.bicycle_accessible()) ||
+        !GetTransitSchedule(d.schedule_index())->IsValid(day, dow, date_before_tile)) {
+      continue;
+    }
+
+    if (d.type() == kFixedSchedule) {
+      return &d;
     } else {
-      uint32_t departure_time = departures_[found].departure_time();
-      uint32_t end_time = departures_[found].end_time();
-      uint32_t frequency = departures_[found].frequency();
+      // TODO: this is for now only respecting frequencies.txt exact_times=true, e.g.
+      // auto departure_time = kFrequencySchedule ? d.departure_time() : d.departure_time() +
+      // (d.frequency() * 0.5f);
+      auto departure_time = d.departure_time();
+      const auto end_time = d.end_time();
+      const auto frequency = d.frequency();
+      // make sure the departure time is after the current_time for a frequency based trip
       while (departure_time < current_time && departure_time < end_time) {
         departure_time += frequency;
       }
 
-      if (departure_time >= current_time && departure_time < end_time &&
-          GetTransitSchedule(departures_[found].schedule_index())
-              ->IsValid(day, dow, date_before_tile) &&
-          (!wheelchair || departures_[found].wheelchair_accessible()) &&
-          (!bicycle || departures_[found].bicycle_accessible())) {
-
-        const auto& d = departures_[found];
-        const TransitDeparture* dep =
-            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
-                                 d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
-                                 d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
-                                 d.bicycle_accessible());
-        return dep;
-      }
+      // make a new departure with a guess for departure time          ;
+      return new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
+                                  d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
+                                  d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
+                                  d.bicycle_accessible());
     }
   }
 
@@ -989,7 +1034,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& dep = departures_[mid];
@@ -1026,7 +1071,7 @@ const TransitDeparture* GraphTile::GetTransitDeparture(const uint32_t lineid,
       if (departure_time >= current_time && departure_time < end_time) {
         const auto& d = departures_[found];
         const TransitDeparture* dep =
-            new TransitDeparture(d.lineid(), d.tripid(), d.routeid(), d.blockid(),
+            new TransitDeparture(d.lineid(), d.tripid(), d.routeindex(), d.blockid(),
                                  d.headsign_offset(), departure_time, d.end_time(), d.frequency(),
                                  d.elapsed_time(), d.schedule_index(), d.wheelchair_accessible(),
                                  d.bicycle_accessible());
@@ -1122,7 +1167,7 @@ std::vector<AccessRestriction> GraphTile::GetAccessRestrictions(const uint32_t i
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  int32_t found = count;
+  auto found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& res = access_restrictions_[mid];

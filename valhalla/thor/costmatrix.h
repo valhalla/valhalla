@@ -15,6 +15,8 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
+#include <valhalla/thor/matrix_common.h>
+#include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
@@ -27,19 +29,6 @@ constexpr float kCostThresholdBicycleDivisor =
     56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
 constexpr float kCostThresholdPedestrianDivisor =
     28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-constexpr float kMaxCost = 99999999.9999f;
-
-// Time and Distance structure
-struct TimeDistance {
-  uint32_t time; // Time in seconds
-  uint32_t dist; // Distance in meters
-
-  TimeDistance() : time(0), dist(0) {
-  }
-
-  TimeDistance(const uint32_t secs, const uint32_t meters) : time(secs), dist(meters) {
-  }
-};
 
 /**
  * Status of a location. Tracks remaining locations to be found
@@ -91,7 +80,8 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  CostMatrix();
+  CostMatrix(const boost::property_tree::ptree& config = {});
+
   ~CostMatrix();
 
   /**
@@ -106,12 +96,14 @@ public:
    * @return time/distance from origin index to all other locations
    */
   std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
+                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
                  baldr::GraphReader& graphreader,
                  const sif::mode_costing_t& mode_costing,
-                 const sif::TravelMode mode,
-                 const float max_matrix_distance);
+                 const sif::travel_mode_t mode,
+                 const float max_matrix_distance,
+                 const bool has_time = false,
+                 const bool invariant = false);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -128,6 +120,8 @@ protected:
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
+
+  uint32_t max_reserved_labels_count_;
 
   // Number of source and target locations that can be expanded
   uint32_t source_count_;
@@ -159,6 +153,9 @@ protected:
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
 
+  // when doing timezone differencing a timezone cache speeds up the computation
+  baldr::DateTime::tz_sys_info_cache_t tz_cache_;
+
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
    * for that mode.
@@ -181,7 +178,11 @@ protected:
    * @param  n            Iteration counter.
    * @param  graphreader  Graph reader for accessing routing graph.
    */
-  void ForwardSearch(const uint32_t index, const uint32_t n, baldr::GraphReader& graphreader);
+  void ForwardSearch(const uint32_t index,
+                     const uint32_t n,
+                     baldr::GraphReader& graphreader,
+                     const baldr::TimeInfo& time_info,
+                     const bool invariant);
 
   /**
    * Check if the edge on the forward search connects to a reached edge
@@ -213,7 +214,8 @@ protected:
    * @param  sources       List of source/origin locations.
    */
   void SetSources(baldr::GraphReader& graphreader,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                  const std::vector<baldr::TimeInfo>& time_infos);
 
   /**
    * Set the target/destination locations. Search expands backwards from
@@ -241,6 +243,42 @@ protected:
                           const baldr::DirectedEdge* edge,
                           const sif::BDEdgeLabel& pred,
                           const uint32_t predindex);
+
+  /**
+   * If time awareness was requested for the CostMatrix algorithm, we need
+   * to form the paths the sources & targets generated, and recost them to
+   * update the best connections, before returning the result.
+   * @param   graphreader  Graph tile reader
+   * @param   origins      The source locations
+   * @param   targets      The target locations
+   * @param   time_infos   The time info objects for the sources
+   * @param   invariant    Whether time is invariant
+   */
+  void RecostPaths(baldr::GraphReader& graphreader,
+                   google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
+                   google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
+                   const std::vector<baldr::TimeInfo>& time_infos,
+                   bool invariant);
+
+  /**
+   * Sets the date_time on the origin locations.
+   *
+   * @param origins            the origins (sources or targets)
+   * @param reader             the reader for looking up timezone information
+   * @returns                  time info for each location
+   */
+  std::vector<baldr::TimeInfo>
+  SetOriginTimes(google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
+                 baldr::GraphReader& reader) {
+    // loop over all locations setting the date time with timezone
+    std::vector<baldr::TimeInfo> infos;
+    infos.reserve(origins.size());
+    for (auto& origin : origins) {
+      infos.emplace_back(baldr::TimeInfo::make(origin, reader, &tz_cache_));
+    }
+
+    return infos;
+  };
 
   /**
    * Form a time/distance matrix from the results.

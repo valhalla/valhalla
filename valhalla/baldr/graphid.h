@@ -71,6 +71,15 @@ public:
    * @param value all the various bits rolled into one
    */
   explicit GraphId(const uint64_t value) : value(value) {
+    if (tileid() > kMaxGraphTileId) {
+      throw std::logic_error("Tile id out of valid range");
+    }
+    if (level() > kMaxGraphHierarchy) {
+      throw std::logic_error("Level out of valid range");
+    }
+    if (id() > kMaxGraphId) {
+      throw std::logic_error("Id out of valid range");
+    }
   }
 
   /**
@@ -94,7 +103,7 @@ public:
    * Gets the tile Id.
    * @return   Returns the tile Id.
    */
-  uint32_t tileid() const {
+  inline uint32_t tileid() const {
     return (value & 0x1fffff8) >> 3;
   }
 
@@ -102,7 +111,7 @@ public:
    * Gets the hierarchy level.
    * @return   Returns the level.
    */
-  uint32_t level() const {
+  inline uint32_t level() const {
     return (value & 0x7);
   }
 
@@ -110,7 +119,7 @@ public:
    * Gets the identifier within the hierarchy level.
    * @return   Returns the unique identifier within the level.
    */
-  uint32_t id() const {
+  inline uint32_t id() const {
     return (value & 0x3ffffe000000) >> 25;
   }
 
@@ -139,6 +148,7 @@ public:
    * @return boolean true if the id is valid
    */
   bool Is_Valid() const {
+    // TODO: make this strict it should check the tile hierarchy not bit field widths
     return value != kInvalidGraphId;
   }
 
@@ -155,7 +165,7 @@ public:
    * Returns a value indicating the tile (level and tile id) of the graph Id.
    * @return  Returns a 32 bit value.
    */
-  uint32_t tile_value() const {
+  inline uint32_t tile_value() const {
     return (value & 0x1ffffff);
   }
 

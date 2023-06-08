@@ -8,23 +8,22 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
-                    float matrix_max_distance) {
+                    float max_iso_distance) {
   // see if any locations pairs are unreachable or too far apart
   for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
     for (auto target = source + 1; target != locations.end(); ++target) {
       // check if distance between latlngs exceed max distance limit
       auto path_distance = to_ll(*source).Distance(to_ll(*target));
-      if (path_distance > matrix_max_distance) {
-        throw valhalla_exception_t{154};
+      if (path_distance > max_iso_distance) {
+        throw valhalla_exception_t{154,
+                                   std::to_string(static_cast<size_t>(max_iso_distance)) + " meters"};
       };
     }
   }
 }
+
 } // namespace
 
 namespace valhalla {
@@ -59,6 +58,7 @@ void loki_worker_t::init_isochrones(Api& request) {
 
   parse_costing(request);
 }
+
 void loki_worker_t::isochrones(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);

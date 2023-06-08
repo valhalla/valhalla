@@ -13,12 +13,6 @@ set(sources
   ellipse.cc
   logging.cc)
 
-if ((UNIX OR APPLE) AND ENABLE_SINGLE_FILES_WERROR)
-    set_source_files_properties(
-            ${sources}
-            PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra")
-endif()
-
 valhalla_module(NAME midgard
   SOURCES ${sources}
   HEADERS ${headers}

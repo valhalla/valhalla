@@ -596,7 +596,6 @@ void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
     bool minor = (nodeinfo->transition_index() & kMinor);
     bool stop = (nodeinfo->transition_index() & kStopSign);
     bool yield = (nodeinfo->transition_index() & kYieldSign);
-    bool inbound = false;
     RoadClass rc = directededge.classification();
 
     if (stop || yield) {
@@ -1523,9 +1522,11 @@ void enhance(const boost::property_tree::ptree& pt,
           if (admin_index != 0 && country_iterator != country_access.end() &&
               directededge.use() != Use::kFerry &&
               (directededge.classification() <= RoadClass::kPrimary ||
-               directededge.use() == Use::kTrack || directededge.use() == Use::kFootway ||
-               directededge.use() == Use::kPedestrian || directededge.use() == Use::kBridleway ||
-               directededge.use() == Use::kCycleway || directededge.use() == Use::kPath)) {
+               directededge.use() == Use::kBridleway || directededge.use() == Use::kCycleway ||
+               directededge.use() == Use::kFootway || directededge.use() == Use::kPath ||
+               directededge.use() == Use::kPedestrian ||
+               directededge.use() == Use::kPedestrianCrossing ||
+               directededge.use() == Use::kSidewalk || directededge.use() == Use::kTrack)) {
 
             std::vector<int> access = country_access.at(country_code);
             // leaves tile flag indicates that we have an access record for this edge.
@@ -1619,8 +1620,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update the named flag
-        std::vector<uint8_t> types;
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(types, false);
+        auto names = tilebuilder->edgeinfo(&directededge).GetNames(false);
         directededge.set_named(names.size() > 0);
 
         // Speed assignment
@@ -1631,9 +1631,8 @@ void enhance(const boost::property_tree::ptree& pt,
         uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder->directededge(nodeinfo.edge_index() + k);
-          std::vector<uint8_t> types;
           if (ConsistentNames(country_code, names,
-                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes(types, false))) {
+                              tilebuilder->edgeinfo(&fromedge).GetNames(false))) {
             directededge.set_name_consistency(k, true);
           }
         }

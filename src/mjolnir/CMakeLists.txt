@@ -24,16 +24,26 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/mjolnir/*.h)
 set(sources
   ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
   ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
+  admin.cc
   adminbuilder.cc
+  bssbuilder.cc
   complexrestrictionbuilder.cc
   convert_transit.cc
   countryaccess.cc
+  dataquality.cc
   directededgebuilder.cc
   edgeinfobuilder.cc
+  elevationbuilder.cc
   ferry_connections.cc
+  graphbuilder.cc
+  graphenhancer.cc
   graphfilter.cc
+  graphtilebuilder.cc
+  graphvalidator.cc
+  hierarchybuilder.cc
   ingest_transit.cc
   linkclassification.cc
+  luatagtransform.cc
   node_expander.cc
   osmdata.cc
   osmpbfparser.cc
@@ -41,44 +51,29 @@ set(sources
   osmrestriction.cc
   osmway.cc
   pbfadminparser.cc
+  pbfgraphparser.cc
   restrictionbuilder.cc
   servicedays.cc
+  shortcutbuilder.cc
   speed_assigner.h
   timeparsing.cc
-  util.cc)
-
-set (sources_with_warnings
-  admin.cc
-  bssbuilder.cc
-  dataquality.cc
-  elevationbuilder.cc
-  graphbuilder.cc
-  graphenhancer.cc
-  graphtilebuilder.cc
-  graphvalidator.cc
-  hierarchybuilder.cc
-  luatagtransform.cc
-  pbfgraphparser.cc
-  shortcutbuilder.cc
   transitbuilder.cc
+  util.cc
   validatetransit.cc)
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-          ${sources}
-          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter")
-endif ()
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
 
 valhalla_module(NAME mjolnir
-  SOURCES ${sources} ${sources_with_warnings}
+  SOURCES ${sources}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
       ${PROTOBUF_INCLUDE_DIR}
@@ -86,6 +81,9 @@ valhalla_module(NAME mjolnir
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
   DEPENDS
     valhalla::proto
     valhalla::baldr

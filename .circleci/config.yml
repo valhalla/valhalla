@@ -13,46 +13,32 @@ commands:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: /usr/bin/python3 -m pip install --user requests
-      - run: pip3 install shapely conan
+      - run: pip3 install shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   install_linux_dependencies:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
 
-jobs:    
-  build-docker-images:
-    machine:
-      image: ubuntu-2004:current
-    steps:
-      - checkout
-      - run:
-          name: Build and push Valhalla Docker image
-          command: |
-            if [[ "${CIRCLE_BRANCH}" == "master" ]] || [[ ! -z "${CIRCLE_TAG}" ]]; then
-              BUILD_TAG="${CIRCLE_TAG:-latest}"
-              echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-              docker build --pull --tag valhalla/valhalla:run-${BUILD_TAG} .
-              docker push valhalla/valhalla:run-${BUILD_TAG}
-            fi
-
+jobs:
   lint-build-debug:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
-            if ! ./scripts/needs_ci_run; then
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-debug-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -71,7 +57,7 @@ jobs:
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
             - ~/.conan
@@ -85,22 +71,23 @@ jobs:
 
   build-release:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     resource_class: xlarge
     steps:
       - checkout
-      - install_linux_dependencies
       - run: |
-            if ! ./scripts/needs_ci_run; then
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-x86_64-v2-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
       - run: mkdir build
       - run: |
           cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
@@ -114,7 +101,7 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-v2-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
           paths:
             - ~/.ccache
             - ~/.conan
@@ -126,13 +113,14 @@ jobs:
     resource_class: large
     steps:
       - checkout
-      - install_macos_dependencies
       - run: |
-            if ! ./scripts/needs_ci_run; then
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
       - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_macos_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -156,10 +144,6 @@ workflows:
   version: 2
   build_test_publish:
     jobs:
-      - build-docker-images:
-          filters:
-            tags:
-              only: /.*/
       - lint-build-debug:
           filters:
             tags:

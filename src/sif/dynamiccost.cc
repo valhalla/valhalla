@@ -1,10 +1,12 @@
-#include "sif/dynamiccost.h"
+#include <boost/optional.hpp>
+#include <utility>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
 #include "proto_conversions.h"
 #include "sif/autocost.h"
 #include "sif/bicyclecost.h"
+#include "sif/dynamiccost.h"
 #include "sif/motorcyclecost.h"
 #include "sif/motorscootercost.h"
 #include "sif/nocost.h"
@@ -12,7 +14,6 @@
 #include "sif/transitcost.h"
 #include "sif/truckcost.h"
 #include "worker.h"
-#include <utility>
 
 using namespace valhalla::baldr;
 
@@ -68,6 +69,9 @@ constexpr float kMaxLivingStreetPenalty = 500.f;
 constexpr float kMinLivingStreetFactor = 0.8f;
 constexpr float kMaxLivingStreetFactor = 3.f;
 
+// min factor to apply when use lit
+constexpr float kMinLitFactor = 1.f;
+
 constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
@@ -91,6 +95,7 @@ constexpr float kDefaultUseFerry = 0.5f;         // Default preference of using 
 constexpr float kDefaultUseRailFerry = 0.4f;     // Default preference of using a rail ferry 0-1
 constexpr float kDefaultUseTracks = 0.5f;        // Default preference of using tracks 0-1
 constexpr float kDefaultUseLivingStreets = 0.1f; // Default preference of using living streets 0-1
+constexpr float kDefaultUseLit = 0.f;            // Default preference of using lit ways 0-1
 
 // How much to avoid generic service roads.
 constexpr float kDefaultServiceFactor = 1.0f;
@@ -105,6 +110,8 @@ constexpr ranged_default_t<float> kClosureFactorRange{1.0f, kDefaultClosureFacto
 
 constexpr ranged_default_t<uint32_t> kVehicleSpeedRange{10, baldr::kMaxAssumedSpeed,
                                                         baldr::kMaxSpeedKph};
+constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpeed,
+                                                      baldr::kMaxSpeedKph};
 } // namespace
 
 /*
@@ -129,8 +136,8 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
       service_factor_{kMinFactor, kDefaultServiceFactor, kMaxFactor}, use_tracks_{0.f,
                                                                                   kDefaultUseTracks,
                                                                                   1.f},
-      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, closure_factor_{kClosureFactorRange},
-      exclude_unpaved_(false),
+      use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
+      closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
                                                                                       false} {
 }
@@ -147,14 +154,19 @@ DynamicCost::DynamicCost(const Costing& costing,
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
-      top_speed_(costing.options().top_speed()),
+      top_speed_(costing.options().top_speed()), fixed_speed_(costing.options().fixed_speed()),
       filter_closures_(ignore_closures_ ? false : costing.filter_closures()),
       penalize_uturns_(penalize_uturns) {
   // Parse property tree to get hierarchy limits
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(level));
+    auto h = HierarchyLimits(level);
+    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
+    if (costing.options().disable_hierarchy_pruning()) {
+      h.max_up_transitions = kUnlimitedTransitions;
+    }
+    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
@@ -244,14 +256,6 @@ uint32_t DynamicCost::GetMaxTransferDistanceMM() {
 // the more the mode is favored.
 float DynamicCost::GetModeFactor() {
   return 1.0f;
-}
-
-// This method overrides the max_distance with the max_distance_mm per segment
-// distance. An example is a pure walking route may have a max distance of
-// 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-// meters per segment (e.g. from origin to a transit stop or from the last
-// transit stop to the destination).
-void DynamicCost::UseMaxMultiModalDistance() {
 }
 
 // Gets the hierarchy limits.
@@ -351,6 +355,11 @@ void DynamicCost::set_use_living_streets(float use_living_streets) {
              2.f * (1.f - use_living_streets) * (1.f - kMinLivingStreetFactor));
 }
 
+void DynamicCost::set_use_lit(float use_lit) {
+  unlit_factor_ =
+      use_lit < 0.5f ? kMinLitFactor + 2.f * use_lit : ((kMinLitFactor - 5.f) + 12.f * use_lit);
+}
+
 void ParseBaseCostOptions(const rapidjson::Value& json,
                           Costing* c,
                           const BaseCostingOptionsConfig& cfg) {
@@ -379,6 +388,10 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+
+  // disable hierarchy pruning
+  co->set_disable_hierarchy_pruning(
+      rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);
@@ -454,6 +467,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_RANGED_DEFAULT(co, cfg.use_living_streets_, json, "/use_living_streets",
                           use_living_streets);
 
+  // use_lit
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit);
+
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor);
 
@@ -461,6 +477,9 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hot_, json, "/include_hot", include_hot);
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
+
+  co->set_fixed_speed(
+      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
 }
 
 void ParseCosting(const rapidjson::Document& doc,
@@ -550,7 +569,9 @@ void ParseCosting(const rapidjson::Document& doc,
       sif::ParseNoCostOptions(doc, key, costing);
       break;
     }
-    default: { throw std::logic_error("Unknown costing"); }
+    default: {
+      throw std::logic_error("Unknown costing");
+    }
   }
   costing->set_type(costing_type);
 }

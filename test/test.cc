@@ -310,6 +310,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
+        "max_distance_disable_hierarchy_culling": 0,
         "motor_scooter": {
           "max_distance": 500000.0,
           "max_locations": 50,
@@ -530,7 +531,7 @@ void customize_live_traffic_data(const boost::property_tree::ptree& config,
       return MTAR_ESUCCESS;
     };
     tar.seek = [](mtar_t* /*tar*/, unsigned /*pos*/) -> int { return MTAR_ESUCCESS; };
-    tar.close = [](mtar_t * /*tar*/) -> int { return MTAR_ESUCCESS; };
+    tar.close = [](mtar_t* /*tar*/) -> int { return MTAR_ESUCCESS; };
 
     // Read every speed tile, and update it with fixed speed of `new_speed` km/h (original speeds are
     // 10km/h)

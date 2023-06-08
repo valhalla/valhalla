@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -47,7 +48,7 @@ constexpr uint16_t kMotorcycleAccess = 1024;
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
-constexpr uint32_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
+constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;
 
 // Maximum number of transit records per tile and other max. transit
@@ -105,6 +106,11 @@ constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 // to measure a probe going this slow via stop and go traffic over a long enough
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+
+// Default Fixed Speed. This is the default fixed speed that is assumed.
+// Unless otherwised specified no fixed speed will be assumed and speed will be
+// calculated from costing algorithm.
+constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
 inline bool valid_speed(float speed) {
   return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
@@ -306,12 +312,13 @@ enum class Use : uint8_t {
   kPedestrianCrossing = 32, // cross walks
   kElevator = 33,
   kEscalator = 34,
+  kPlatform = 35,
 
   // Rest/Service Areas
   kRestArea = 30,
   kServiceArea = 31,
 
-  // Other...
+  // Other... currently, either BSS Connection or unspecified service road
   kOther = 40,
 
   // Ferry and rail ferry
@@ -323,9 +330,9 @@ enum class Use : uint8_t {
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
-  kEgressConnection = 52,   // Connection to a egress node
-  kPlatformConnection = 53, // Connection to a platform node
-  kTransitConnection = 54,  // Connection to multi-use transit stop
+  kEgressConnection = 52,   // Connection egress <-> station
+  kPlatformConnection = 53, // Connection station <-> platform
+  kTransitConnection = 54,  // Connection osm <-> egress
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
@@ -585,7 +592,8 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8
+  kDestinationAllowed = 8,
+  kMaxAxles = 9
 };
 
 // Minimum meters offset from start/end of shape for finding heading
@@ -649,7 +657,8 @@ constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+constexpr uint64_t kInvalidSecondsOfWeek =
+    1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };

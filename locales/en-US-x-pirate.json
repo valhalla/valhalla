@@ -1120,7 +1120,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Avast ye, merge."
+          "Merge."
         ],
         "1": [
           "Avast ye, merge to th' port."
@@ -1149,8 +1149,8 @@
       },
       "example_phrases": {
         "0": [
-          "Voyage 1 port.",
-          "Voyage 3 ports."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2006,7 +2006,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Turn port bucko."
+          "Turn left."
         ],
         "1": [
           "Turn starboard onto Flatbush Avenue me hearties."
@@ -2221,8 +2221,8 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
+        "solid ground",
+        "th' bike pirate way",
         "the mountain bike trail",
         "the crosswalk"
       ],
@@ -2241,8 +2241,8 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
+        "solid ground",
+        "th' bike pirate way",
         "the mountain bike trail",
         "the crosswalk"
       ],

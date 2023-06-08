@@ -10,6 +10,7 @@
 
 filesystem::path config_file_path;
 std::vector<std::string> input_files;
+boost::property_tree::ptree pt;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -26,6 +27,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
     // clang-format on
 
@@ -49,19 +51,26 @@ bool ParseArguments(int argc, char* argv[]) {
       return false;
     }
 
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
+    if (result.count("inline-config")) {
+      std::stringstream ss;
+      ss << result["inline-config"].as<std::string>();
+      rapidjson::read_json(ss, pt);
+      return true;
+    } else if (result.count("config") &&
+               filesystem::is_regular_file(
+                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
+      rapidjson::read_json(config_file_path.string(), pt);
       return true;
     } else {
-      std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
+      std::cerr << "Configuration is required\n" << options.help() << std::endl;
+      return false;
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
   }
 
-  return EXIT_FAILURE;
+  return false;
 }
 
 int main(int argc, char** argv) {
@@ -71,12 +80,10 @@ int main(int argc, char** argv) {
   }
 
   // check what type of input we are getting
-  boost::property_tree::ptree pt;
   rapidjson::read_json(config_file_path.string(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -84,7 +91,9 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files);
+  if (!valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files)) {
+    return EXIT_FAILURE;
+  };
 
   return EXIT_SUCCESS;
 }

@@ -223,24 +223,23 @@ TEST(SkadiService, test_requests) {
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(context, config.get<std::string>("httpd.service.listen"),
-                       [&request, &request_str]() {
-                         // we dont have any more requests so bail
-                         if (request == requests.cend())
-                           return std::make_pair<const void*, size_t>(nullptr, 0);
-                         // get the string of bytes to send formatted for http protocol
-                         request_str = request->to_string();
-                         ++request;
-                         return std::make_pair<const void*, size_t>(request_str.c_str(),
-                                                                    request_str.size());
-                       },
-                       [&request](const void* data, size_t size) {
-                         auto response =
-                             http_response_t::from_string(static_cast<const char*>(data), size);
-                         EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
-                         return request != requests.cend();
-                       },
-                       1);
+  http_client_t client(
+      context, config.get<std::string>("httpd.service.listen"),
+      [&request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend())
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&request](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
+        return request != requests.cend();
+      },
+      1);
 
   // make this whole thing bail if it doesnt finish fast
   alarm(120);

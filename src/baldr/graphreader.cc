@@ -41,7 +41,8 @@ tile_gone_error_t::tile_gone_error_t(std::string prefix, baldr::GraphId edgeid)
                          std::to_string(edgeid.Tile_Base())) {
 }
 
-GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt) {
+GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& pt,
+                                            bool traffic_readonly) {
   // A lambda for loading the contents of a graph tile tar from an index file
   bool traffic_from_index = false;
   auto index_loader = [this, &traffic_from_index](const std::string& filename,
@@ -53,12 +54,11 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
 
     // get the info
     decltype(midgard::tar::contents) contents;
-    auto entry_size = sizeof(tile_index_entry);
     auto entries = midgard::iterable_t<tile_index_entry>(reinterpret_cast<tile_index_entry*>(
                                                              const_cast<char*>(index_begin)),
                                                          size / sizeof(tile_index_entry));
     for (const auto& entry : entries) {
-      auto inserted = contents.insert(
+      contents.insert(
           std::make_pair(std::to_string(entry.tile_id),
                          std::make_pair(const_cast<char*>(file_begin + entry.offset), entry.size)));
       if (!traffic_from_index) {
@@ -82,7 +82,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       // TODO: use the "scan" to iterate over tar
-      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, index_loader));
+      archive.reset(new midgard::tar(pt.get<std::string>("tile_extract"), true, true, index_loader));
       // map files to graph ids
       if (tiles.empty()) {
         for (const auto& c : archive->contents) {
@@ -124,8 +124,8 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
     try {
       // load the tar
       traffic_from_index = true;
-      traffic_archive.reset(
-          new midgard::tar(pt.get<std::string>("traffic_extract"), true, index_loader));
+      traffic_archive.reset(new midgard::tar(pt.get<std::string>("traffic_extract"), traffic_readonly,
+                                             true, index_loader));
       if (traffic_tiles.empty()) {
         LOG_WARN(
             "Traffic extract contained no index file, expect degraded performance for tile (re-)loading.");
@@ -183,7 +183,7 @@ void FlatTileCache::Reserve(size_t tile_size) {
 
 // Checks if tile exists in the cache.
 bool FlatTileCache::Contains(const GraphId& graphid) const {
-  return get_index(graphid) != -1;
+  return is_valid(get_index(graphid));
 }
 
 // Lets you know if the cache is too large.
@@ -206,7 +206,7 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
-  if (index == -1)
+  if (is_invalid(index))
     return nullptr;
   return cache_[index];
 }
@@ -473,8 +473,9 @@ TileCache* TileCacheFactory::createTileCache(const boost::property_tree::ptree& 
 
 // Constructor using separate tile files
 GraphReader::GraphReader(const boost::property_tree::ptree& pt,
-                         std::unique_ptr<tile_getter_t>&& tile_getter)
-    : tile_extract_(new tile_extract_t(pt)),
+                         std::unique_ptr<tile_getter_t>&& tile_getter,
+                         bool traffic_readonly)
+    : tile_extract_(new tile_extract_t(pt, traffic_readonly)),
       tile_dir_(tile_extract_->tiles.empty() ? pt.get<std::string>("tile_dir", "") : ""),
       tile_getter_(std::move(tile_getter)),
       max_concurrent_users_(pt.get<size_t>("max_concurrent_reader_users", 1)),
@@ -744,28 +745,30 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
   // Lambda to get continuing edge at a node. Skips the specified edge Id
   // transition edges, shortcut edges, and transit connections. Returns
   // nullptr if more than one edge remains or no continuing edge is found.
-  auto continuing_edge = [](const graph_tile_ptr& tile, const GraphId& edgeid,
-                            const NodeInfo* nodeinfo) {
+  bool shortcut_at_node = false;
+  auto continuing_edge = [&shortcut_at_node](const graph_tile_ptr& tile, const GraphId& edgeid,
+                                             const NodeInfo* nodeinfo) {
     uint32_t idx = nodeinfo->edge_index();
-    const DirectedEdge* continuing_edge = static_cast<const DirectedEdge*>(nullptr);
+    const DirectedEdge* continuing_edge = nullptr;
     const DirectedEdge* directededge = tile->directededge(idx);
+    shortcut_at_node = false;
     for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++, idx++) {
-      if (idx == edgeid.id() || directededge->is_shortcut() ||
-          directededge->use() == Use::kTransitConnection ||
-          directededge->use() == Use::kEgressConnection ||
-          directededge->use() == Use::kPlatformConnection) {
+      shortcut_at_node = shortcut_at_node || directededge->is_shortcut();
+      if (idx == edgeid.id() || !directededge->can_form_shortcut()) {
         continue;
       }
       if (continuing_edge != nullptr) {
-        return static_cast<const DirectedEdge*>(nullptr);
+        continuing_edge = directededge + (nodeinfo->edge_count() - i);
+        continue;
       }
       continuing_edge = directededge;
     }
-    return continuing_edge;
+    return continuing_edge == directededge ? nullptr : continuing_edge;
   };
 
   // No shortcuts on the local level or transit level.
   if (id.level() >= TileHierarchy::levels().back().level) {
+    LOG_DEBUG("GraphReader::GetShortcut was called with a level that doesn't contain shortcuts");
     return {};
   }
 
@@ -788,7 +791,8 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // directed edge.
     cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
     if (cont_de == nullptr) {
-      return {};
+      LOG_DEBUG("GraphReader::GetShortcut found no clear continuing edge");
+      break;
     }
 
     // Get the end node and end node tile
@@ -802,9 +806,18 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     uint32_t idx = node->edge_index() + cont_de->opp_index();
     edgeid = {endnode.tileid(), endnode.level(), idx};
     directededge = tile->directededge(edgeid);
+
+    // If this edge is itself not the beginning of a shortcut, but we encountered another shortcut
+    // it means we must have started the traversal outside a shortcuts internal edges
+    if (!directededge->superseded() && shortcut_at_node) {
+      LOG_DEBUG(
+          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge it arrived on");
+      break;
+    }
+
     if (directededge->superseded()) {
       // Get the shortcut edge Id that supersedes this edge
-      uint32_t idx = node->edge_index() + (directededge->superseded() - 1);
+      uint32_t idx = node->edge_index() + directededge->superseded_idx() - 1;
       return GraphId(endnode.tileid(), endnode.level(), idx);
     }
   }
@@ -1000,7 +1013,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
-  const auto metadata_index = incident_location.metadata_index();
+  const int64_t metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(metadata_index) + " but total incident metadata of " +

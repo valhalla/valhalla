@@ -41,15 +41,18 @@ class TestBuildElevation(unittest.TestCase):
                  }
             ]
         }
-        gj_fp = TILE_DIR.joinpath('test.geojson')
+        gj_dir = TILE_DIR.joinpath("test_build_elevation")
+        gj_dir.mkdir(exist_ok=True)
+        gj_fp = gj_dir.joinpath('test_build_elevation.geojson')
         with open(gj_fp, 'w') as f:
             json.dump(gj, f)
 
-        tiles = valhalla_build_elevation.get_tiles_with_geojson(gj_fp.parent)
+        tiles = valhalla_build_elevation.get_tiles_with_geojson(gj_dir)
         self.assertEqual(len(tiles), 8)
         self.assertNotIn(Tile("N03E003.hgt", "N03"), tiles)
 
         gj_fp.unlink()
+        gj_dir.rmdir()
 
     def test_get_tiles_with_bbox(self):
         bbox = "0.90,0.12,3.56,3.12"

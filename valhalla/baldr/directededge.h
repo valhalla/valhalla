@@ -565,6 +565,17 @@ public:
   }
 
   /**
+   * Evaluates a basic set of conditions to determine if this directed edge is a valid potential
+   * member of a shortcut. This is used while forming and resolving shortcuts.
+   * @return true if the edge is not a shortcut, not related to transit and not under construction
+   */
+  bool can_form_shortcut() const {
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
+  }
+
+  /**
    * Sets the specialized use type of this edge.
    * @param  use  Use of this edge.
    */
@@ -1076,6 +1087,29 @@ public:
     return superseded_;
   }
 
+#ifdef _WIN32
+  // TODO: Workaround for missing strings.h on Windows. Replace with platform independent
+  //       std::countr_zero in C++20 (see https://en.cppreference.com/w/cpp/numeric/countr_zero).
+  int ffs(int mask) const {
+    if (0 == mask)
+      return 0;
+
+    int idx;
+    for (idx = 1; !(mask & 1); ++idx)
+      mask >>= 1;
+    return idx;
+  }
+#endif
+
+  /**
+   * Unlike superseded(), this does not return the raw mask but the shortcut index
+   * that was originally passed to set_superseded().
+   * @return  Returns the index of the set bit in the superseded mask.
+   */
+  uint32_t superseded_idx() const {
+    return ffs(superseded_);
+  }
+
   /**
    * Set the mask for whether this edge is superseded by a shortcut edge.
    * Superseded edges can be skipped unless downward transitions are allowed.
@@ -1123,6 +1157,20 @@ public:
    */
   bool bss_connection() const {
     return bss_connection_;
+  }
+
+  /**
+   * Set the flag indicating whether the edge is lit
+   * @param lit the edge's lit state
+   */
+  void set_lit(const bool lit);
+
+  /**
+   * Is the edge lit?
+   * @return Returns the edge's lit state
+   */
+  bool lit() const {
+    return lit_;
   }
 
   /**
@@ -1192,7 +1240,8 @@ protected:
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
-  uint64_t spare4_ : 5;
+  uint64_t lit_ : 1;            // Is the edge lit?
+  uint64_t spare4_ : 4;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

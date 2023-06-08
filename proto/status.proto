@@ -3,6 +3,7 @@ option optimize_for = LITE_RUNTIME;
 package valhalla;
 
 message Status {
+  // oneof's are only returned on verbose=true
   oneof has_has_tiles {
     bool has_tiles = 1;
   }
@@ -18,10 +19,13 @@ message Status {
   oneof has_bbox {
     string bbox = 5;
   }
-  oneof has_version {
-    string version = 6;
+  string version = 6;
+  uint32 tileset_last_modified = 7;
+  repeated string available_actions = 8;
+  oneof has_has_transit_tiles {
+    bool has_transit_tiles = 9;
   }
-  oneof has_tileset_last_modified {
-    uint32 tileset_last_modified = 7;
+  oneof has_osm_changeset {
+    uint64 osm_changeset = 10;
   }
 }

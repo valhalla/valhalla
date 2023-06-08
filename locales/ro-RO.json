@@ -45,7 +45,7 @@
         "alee",
         "pistă pentru biciclete",
         "traseu pentru ciclism montan",
-        "the crosswalk"
+        "trecerea de pietoni"
       ],
       "relative_directions": [
         "stânga",
@@ -85,7 +85,7 @@
         "alee",
         "pistă pentru biciclete",
         "traseu pentru ciclism montan",
-        "the crosswalk"
+        "trecerea de pietoni"
       ],
       "relative_directions": [
         "stânga",
@@ -143,7 +143,7 @@
         "alee",
         "pistă pentru biciclete",
         "traseu pentru ciclism montan",
-        "the crosswalk"
+        "trecerea de pietoni"
       ],
       "example_phrases": {
         "0": [
@@ -175,7 +175,7 @@
         "alee",
         "pistă pentru biciclete",
         "traseu pentru ciclism montan",
-        "the crosswalk"
+        "trecerea de pietoni"
       ],
       "metric_lengths": [
         "<KILOMETERS> kilometri",
@@ -2221,9 +2221,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2241,9 +2241,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "alee",
+        "pistă de biciclete",
+        "traseu pentru ciclism montan",
         "the crosswalk"
       ],
       "example_phrases": {

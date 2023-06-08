@@ -10,208 +10,345 @@
 #include "mjolnir/pbfadminparser.h"
 #include "mjolnir/util.h"
 
-#include "config.h"
-
-/* Need to know which geos version we have to work out which headers to include */
-#include <geos/version.h>
-
-#define USE_UNSTABLE_GEOS_CPP_API
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-#include <geos/geom/CoordinateArraySequence.h>
-#else
-#include <geos/geom/CoordinateSequenceFactory.h>
-#endif
-#include <geos/geom/Geometry.h>
-#include <geos/geom/GeometryFactory.h>
-#include <geos/geom/LineString.h>
-#include <geos/geom/LinearRing.h>
-#include <geos/geom/MultiLineString.h>
-#include <geos/geom/MultiPolygon.h>
-#include <geos/geom/Point.h>
-#include <geos/geom/Polygon.h>
-#include <geos/io/WKTReader.h>
-#include <geos/io/WKTWriter.h>
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-#include <geos/operation/linemerge/LineMerger.h>
-#else
-#include <geos/opLinemerge.h>
-#endif
-#include <geos/util/GEOSException.h>
-
-#include <boost/optional.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+#include <boost/geometry/geometries/register/point.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace geos::geom;
-using namespace geos::io;
-using namespace geos::util;
-using namespace geos::operation::linemerge;
+#include <geos_c.h>
+
+BOOST_GEOMETRY_REGISTER_POINT_2D(valhalla::midgard::PointLL,
+                                 double,
+                                 boost::geometry::cs::geographic<boost::geometry::degree>,
+                                 first,
+                                 second);
+using ring_t = boost::geometry::model::ring<valhalla::midgard::PointLL>;
+using polygon_t = boost::geometry::model::polygon<valhalla::midgard::PointLL>;
+using multipolygon_t = boost::geometry::model::multi_polygon<polygon_t>;
 
 // For OSM pbf reader
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
-
 using namespace valhalla::midgard;
 
 namespace {
 
-struct polygondata {
-  Polygon* polygon;
-  LinearRing* ring;
-  double area;
-  int iscontained;
-  unsigned containedbyid;
+/**
+ * a simple singleton to wrap geos setup and tear down as well as conversion to and from boost types
+ */
+struct geos_helper_t {
+  static const geos_helper_t& get() {
+    static geos_helper_t singleton;
+    return singleton;
+  }
+  template <typename striped_container_t>
+  static GEOSGeometry* from_striped_container(const striped_container_t& coords) {
+    // sadly we dont layout the memory in parallel arrays so we have to copy to geos
+    GEOSCoordSequence* geos_coords = GEOSCoordSeq_create(coords.size(), 2);
+    for (unsigned int i = 0; i < static_cast<unsigned int>(coords.size()); ++i) {
+      GEOSCoordSeq_setX(geos_coords, i, coords[i].first);
+      GEOSCoordSeq_setY(geos_coords, i, coords[i].second);
+    }
+    return GEOSGeom_createLinearRing(geos_coords);
+  }
+  template <typename striped_container_t>
+  static striped_container_t to_striped_container(const GEOSGeometry* geometry) {
+    // sadly we dont layout the memory in parallel arrays so we have to copy from geos
+    auto* coords = GEOSGeom_getCoordSeq(geometry);
+    unsigned int coords_size;
+    GEOSCoordSeq_getSize(coords, &coords_size);
+    striped_container_t container;
+    container.resize(coords_size);
+    for (unsigned int i = 0; i < coords_size; ++i) {
+      GEOSCoordSeq_getX(coords, i, &container[i].first);
+      GEOSCoordSeq_getY(coords, i, &container[i].second);
+    }
+    return container;
+  }
+
+protected:
+  static void message_handler(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    vprintf(fmt, ap);
+    va_end(ap);
+  }
+  geos_helper_t() {
+    initGEOS(message_handler, message_handler);
+  }
+  ~geos_helper_t() {
+    finishGEOS();
+  }
 };
 
-int polygondata_comparearea(const void* vp1, const void* vp2) {
-  const polygondata* p1 = (const polygondata*)vp1;
-  const polygondata* p2 = (const polygondata*)vp2;
+/**
+ * Temporarily convert to a less convenient geos representation in c to get access to a working
+ * buffer implementation and then back to boost geometry
+ * @param ring   to buffer to fix self intersections
+ * @param rings  any resulting rings are output here
+ * @param inners if some kind of self intersection should cause inners to be created we push them here
+ */
+void buffer_ring(const ring_t& ring, std::vector<ring_t>& rings, std::vector<ring_t>& inners) {
+  // for collecting polygons
+  auto add = [&](auto* geos_poly) {
+    rings.emplace_back(geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly)));
+    for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
+      auto* inner = GEOSGetInteriorRingN(geos_poly, i);
+      inners.push_back(geos_helper_t::to_striped_container<ring_t>(inner));
+    }
+  };
 
-  if (p1->area == p2->area) {
-    return 0;
+  auto* outer_ring = geos_helper_t::from_striped_container(ring);
+  auto* geos_poly = GEOSGeom_createPolygon(outer_ring, nullptr, 0);
+  auto* buffered = GEOSBuffer(geos_poly, 0, 8);
+  GEOSNormalize(buffered);
+  auto geom_type = GEOSGeomTypeId(buffered);
+  switch (geom_type) {
+    case GEOS_POLYGON: {
+      add(buffered);
+      break;
+    }
+    case GEOS_MULTIPOLYGON: {
+      for (int i = 0; i < GEOSGetNumGeometries(buffered); ++i) {
+        auto* geom = GEOSGetGeometryN(buffered, i);
+        if (GEOSGeomTypeId(geom) != GEOS_POLYGON)
+          throw std::runtime_error("Unusable geometry type after buffering");
+        add(geom);
+      }
+      break;
+    }
+    default:
+      throw std::runtime_error("Unusable geometry type after buffering");
   }
-  if (p1->area > p2->area) {
-    return -1;
-  }
-  return 1;
+  GEOSGeom_destroy(geos_poly);
+  GEOSGeom_destroy(buffered);
 }
 
-std::vector<std::string> GetWkts(std::unique_ptr<Geometry>& mline) {
-  std::vector<std::string> wkts;
+/**
+ * @param polygon       to buffer to fix self intersections
+ * @param multipolygon  any resulting polygons are output here
+ */
+void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
+  // for collecting polygons
+  auto add = [&](auto* geos_poly) {
+    auto& poly = *multipolygon.emplace(multipolygon.end());
+    poly.outer() = geos_helper_t::to_striped_container<ring_t>(GEOSGetExteriorRing(geos_poly));
+    for (int i = 0; i < GEOSGetNumInteriorRings(geos_poly); ++i) {
+      auto* inner = GEOSGetInteriorRingN(geos_poly, i);
+      poly.inners().push_back(geos_helper_t::to_striped_container<ring_t>(inner));
+    }
+  };
 
-#if 3 == GEOS_VERSION_MAJOR && 6 <= GEOS_VERSION_MINOR
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
-
-  LineMerger merger;
-  merger.add(mline.get());
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  std::vector<std::unique_ptr<LineString>> merged(merger.getMergedLineStrings());
-#else
-  std::unique_ptr<std::vector<LineString*>> merged(merger.getMergedLineStrings());
-#endif
-  WKTWriter writer;
-
-  // Procces ways into lines or simple polygon list
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  polygondata* polys = new polygondata[merged.size()];
-#else
-  polygondata* polys = new polygondata[merged->size()];
-#endif
-
-  unsigned totalpolys = 0;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 9
-  for (unsigned i = 0; i < merged.size(); ++i) {
-    std::unique_ptr<LineString> pline(merged[i].release());
-#else
-  for (unsigned i = 0; i < merged->size(); ++i) {
-    std::unique_ptr<LineString> pline((*merged)[i]);
-#endif
-    if (pline->getNumPoints() > 3 && pline->isClosed()) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      polys[totalpolys].polygon =
-          gf->createPolygon(gf->createLinearRing(pline->getCoordinates())).release();
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates()).release();
-#else
-      polys[totalpolys].polygon = gf->createPolygon(gf->createLinearRing(pline->getCoordinates()), 0);
-      polys[totalpolys].ring = gf->createLinearRing(pline->getCoordinates());
-#endif
-      polys[totalpolys].area = polys[totalpolys].polygon->getArea();
-      polys[totalpolys].iscontained = 0;
-      polys[totalpolys].containedbyid = 0;
-      if (polys[totalpolys].area > 0.0) {
-        totalpolys++;
-      } else {
-        delete (polys[totalpolys].polygon);
-        delete (polys[totalpolys].ring);
+  auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
+  std::vector<GEOSGeometry*> inner_rings;
+  inner_rings.reserve(polygon.inners().size());
+  for (const auto& inner : polygon.inners())
+    inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
+  auto* buffered = GEOSBuffer(geos_poly, 0, 8);
+  GEOSNormalize(buffered);
+  auto geom_type = GEOSGeomTypeId(buffered);
+  switch (geom_type) {
+    case GEOS_POLYGON: {
+      add(buffered);
+      break;
+    }
+    case GEOS_MULTIPOLYGON: {
+      for (int i = 0; i < GEOSGetNumGeometries(buffered); ++i) {
+        auto* geom = GEOSGetGeometryN(buffered, i);
+        if (GEOSGeomTypeId(geom) != GEOS_POLYGON)
+          throw std::runtime_error("Unusable geometry type after buffering");
+        add(geom);
       }
+      break;
+    }
+    default:
+      throw std::runtime_error("Unusable geometry type after buffering");
+  }
+  GEOSGeom_destroy(geos_poly);
+  GEOSGeom_destroy(buffered);
+}
+
+/**
+ * Build a look up of ring segments for a given admin either for outers or inners
+ * The look up can then be used to merge the segments together into connected rings
+ * If a given admin is incomplete (in that its missing members) the function will throw
+ * @param admin_data   used to look up ways shape (nodes)
+ * @param admin        the admin for which we are building the lookup
+ * @param name         the name of the admin handy for error reporting
+ * @param outer        whether or not we should build a lookup for outers or inners
+ * @param lines        ring segments that are built as output to be later connected together
+ * @param line_lookup  a look up to find ring segments to help in connecting them together
+ * @return true if all the members of the relation had corresponding geometry
+ */
+bool to_segments(const OSMAdminData& admin_data,
+                 const OSMAdmin& admin,
+                 const std::string& name,
+                 bool outer,
+                 std::vector<ring_t>& lines,
+                 std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup) {
+  // get all the individual members of the admin relation merged into one ring
+  auto role_itr = admin.roles.begin();
+  for (const auto memberid : admin.ways) {
+    // skip roles we arent interested in
+    if (*(role_itr++) != outer)
+      continue;
+
+    // A relation may be included in an extract but it's members may not
+    // Example:  PA extract can contain an NY relation but wont have all its members
+    auto w_itr = admin_data.way_map.find(memberid);
+    if (w_itr == admin_data.way_map.end()) {
+      LOG_WARN(name + " (" + std::to_string(admin.id) + ") is missing way member " +
+               std::to_string(memberid));
+      return false;
+    }
+
+    // build the line geom
+    ring_t coords;
+    for (const auto node_id : w_itr->second) {
+      // although unlikely, we could have the way but not all the nodes
+      auto n_itr = admin_data.shape_map.find(node_id);
+      if (n_itr == admin_data.shape_map.end()) {
+        LOG_WARN(name + " (" + std::to_string(admin.id) + ") with way member " +
+                 std::to_string(memberid) + " is missing node " + std::to_string(node_id));
+        return false;
+      }
+      coords.push_back(n_itr->second);
+    }
+
+    // remember how to find this line
+    if (!coords.empty()) {
+      line_lookup.insert({coords.front(), lines.size()});
+      line_lookup.insert({coords.back(), lines.size()});
+      lines.push_back(std::move(coords));
+    }
+  }
+  return true;
+}
+
+/**
+ * Converts a series of a linestrings into one or more polygons (rings) by connecting contiguous
+ * ones until a ring is formed
+ * @param admin_info  a simple pair that has the admins name and relation id, useful for logging
+ * @param lines       the line segments we need to merge into rings
+ * @param line_lookup a multi map that lets one easily find a line segment by its first or last point
+ * @param rings       a place to put the finally formed rings
+ * @param inners      a place to put any inners that occur from self intersection corrections
+ * @return zero or more rings
+ */
+void to_rings(const std::pair<std::string, uint64_t>& admin_info,
+              std::vector<ring_t>& lines,
+              std::unordered_multimap<valhalla::midgard::PointLL, size_t>& line_lookup,
+              std::vector<ring_t>& rings,
+              std::vector<ring_t>& inners) {
+
+  // keep going while we have threads to pull
+  while (!line_lookup.empty()) {
+    // start connecting the first line we have to adjacent ones
+    ring_t ring;
+    for (auto line_itr = line_lookup.begin(); line_itr != line_lookup.end();
+         line_itr = line_lookup.find(ring.back())) {
+      // grab the line segment to add
+      auto line_index = line_itr->second;
+      auto& line = lines[line_index];
+      // we can add this line in the forward direction
+      if ((ring.empty() && line_itr->first == line.front()) ||
+          (!ring.empty() && ring.back() == line.front())) {
+        ring.insert(ring.end(), std::make_move_iterator(line.begin() + !ring.empty()),
+                    std::make_move_iterator(line.end()));
+      } // have to add this segment backwards
+      else {
+        ring.insert(ring.end(), std::make_move_iterator(line.rbegin() + !ring.empty()),
+                    std::make_move_iterator(line.rend()));
+      }
+
+      // done with this segment and its other end
+      line_lookup.erase(line_itr);
+      line_itr = line_lookup.find(ring.back());
+      while (line_itr != line_lookup.end() && line_itr->second != line_index)
+        ++line_itr;
+      assert(line_itr != line_lookup.end());
+      line_lookup.erase(line_itr);
+    }
+
+    // degenerate rings are ignored, unconnected rings or missing relation members cause this
+    if (ring.size() < 4 || ring.front() != ring.back()) {
+      LOG_WARN("Degenerate ring for " + admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") " + " near lat,lon " + std::to_string(ring.back().y()) + "," +
+               std::to_string(ring.back().x()));
+      continue;
+    }
+
+    // otherwise we try to make sure the ring is not self intersecting etc and correct it if it is
+    multipolygon_t buffered;
+    buffer_ring(ring, rings, inners);
+  }
+}
+
+struct polygon_data {
+  polygon_t polygon;
+  polygon_t::inner_container_type postponed_inners;
+  double area;
+  bool operator<(const polygon_data& p) const {
+    return area < p.area;
+  }
+};
+
+/**
+ * Takes outer and inner rings and combines them first into polygons and finally into a multipolygon
+ * @param admin_info  a simple pair of name and relation id used for logging
+ * @param outers      outer rings of polygons
+ * @param inners      inner rings of polygons
+ * @return the multipolygon of the combined outer and inner rings
+ */
+multipolygon_t to_multipolygon(const std::pair<std::string, uint64_t>& admin_info,
+                               std::vector<ring_t>& outers,
+                               std::vector<ring_t>& inners) {
+  // Associate an area with each outer so we can
+  std::vector<polygon_data> polys;
+  for (auto& outer : outers) {
+    polygon_data pd{};
+    pd.polygon.outer() = std::move(outer);
+    pd.area = boost::geometry::area(pd.polygon);
+    polys.emplace_back(std::move(pd));
+  }
+
+  // sort ascending by area
+  std::sort(polys.begin(), polys.end());
+
+  // here we try to figure out which polygon to assign each inner to
+  // thankfully it seems second order enclaves arent a problem to worry about in practice
+  // previously this mess existed but thankfully no more:
+  // https://en.wikipedia.org/wiki/India%E2%80%93Bangladesh_enclaves
+  // additionally it seems like the second order enclaves that do still exists (NL and AE)
+  // are mapped such that they are outers that live inside the inners (basically multipolygon)
+  for (const auto& inner : inners) {
+    auto area = boost::geometry::area(inner);
+    bool found = false;
+    for (auto& poly : polys) {
+      // is this the smallest polygon that can contain this inner?
+      if (poly.area > area && boost::geometry::covered_by(inner, poly.polygon)) {
+        poly.postponed_inners.emplace_back(std::move(inner));
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      LOG_WARN("Inner with no outer " + admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") " + " near lat,lon " + std::to_string(inner.front().y()) + "," +
+               std::to_string(inner.front().x()));
     }
   }
 
-  if (totalpolys) {
-    qsort(polys, totalpolys, sizeof(polygondata), polygondata_comparearea);
-
-    for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
-        continue;
-      }
-
-      for (unsigned j = i + 1; j < totalpolys; ++j) {
-        // Does polygon[i] contain the smaller polygon[j]?
-        if (polys[j].containedbyid == 0 && polys[i].polygon->contains(polys[j].polygon)) {
-          // are we in a [i] contains [k] contains [j] situation
-          // which would actually make j top level
-          bool istoplevelafterall = false;
-          for (unsigned k = i + 1; k < j; ++k) {
-            if (polys[k].iscontained && polys[k].containedbyid == i &&
-                polys[k].polygon->contains(polys[j].polygon)) {
-              istoplevelafterall = true;
-              break;
-            }
-          }
-          if (istoplevelafterall) {
-            polys[j].iscontained = 1;
-            polys[j].containedbyid = i;
-          }
-        }
-      }
-    }
-    // polys now is a list of polygons tagged with which ones are inside each other
-
-    // List of polygons for multipolygon
-    std::unique_ptr<std::vector<Geometry*>> polygons(new std::vector<Geometry*>);
-
-    // For each top level polygon create a new polygon including any holes
-    for (unsigned i = 0; i < totalpolys; ++i) {
-      if (polys[i].iscontained != 0) {
-        continue;
-      }
-
-      // List of holes for this top level polygon
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      std::unique_ptr<std::vector<LinearRing*>> interior(new std::vector<LinearRing*>);
-#else
-      std::unique_ptr<std::vector<Geometry*>> interior(new std::vector<Geometry*>);
-#endif
-      for (unsigned j = i + 1; j < totalpolys; ++j) {
-        if (polys[j].iscontained == 1 && polys[j].containedbyid == i) {
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-          interior->push_back(polys[j].ring);
-#else
-          interior->push_back(polys[j].ring);
-#endif
-        }
-      }
-
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#else
-      Polygon* poly(gf->createPolygon(polys[i].ring, interior.release()));
-#endif
-      poly->normalize();
-      polygons->push_back(poly);
-    }
-
-    // Make a multipolygon
-    std::unique_ptr<Geometry> multipoly(gf->createMultiPolygon(polygons.release()));
-    if (!multipoly->isValid()) {
-      multipoly = std::unique_ptr<Geometry>(multipoly->buffer(0));
-    }
-    multipoly->normalize();
-
-    if (multipoly->isValid()) {
-      wkts.push_back(writer.write(multipoly.get()));
-    }
+  // Make a simple container of multiple polygons
+  multipolygon_t multipolygon;
+  multipolygon.reserve(polys.size());
+  for (auto& poly : polys) {
+    multipolygon_t buffered;
+    poly.polygon.inners().swap(poly.postponed_inners);
+    buffer_polygon(poly.polygon, multipolygon);
   }
-
-  for (unsigned i = 0; i < totalpolys; ++i) {
-    delete (polys[i].polygon);
-  }
-
-  delete[](polys);
-
-  return wkts;
+  return multipolygon;
 }
 
 } // anonymous namespace
@@ -222,32 +359,29 @@ namespace mjolnir {
 /**
  * Build admins from protocol buffer input.
  */
-void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
+bool BuildAdminFromPBF(const boost::property_tree::ptree& pt,
                        const std::vector<std::string>& input_files) {
-
-  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
-  // relations are defined within the PBFParser class
-  OSMAdminData osm_admin_data = PBFAdminParser::Parse(pt, input_files);
-
-  // done with the protobuffer library, cant use it again after this
-  OSMPBF::Parser::free();
 
   // Bail if bad path
   auto database = pt.get_optional<std::string>("admin");
 
   if (!database) {
-    LOG_INFO("Admin config info not found. Admins will not be created.");
-    return;
+    LOG_ERROR("Admin config info not found. Admins will not be created.");
+    return false;
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    filesystem::create_directories(filesystem::path(*database).parent_path());
+  const filesystem::path parent_dir = filesystem::path(*database).parent_path();
+  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    LOG_ERROR("Can't create parent directory " + parent_dir.string());
+    return false;
   }
 
-  if (!filesystem::exists(filesystem::path(*database).parent_path())) {
-    LOG_INFO("Admin directory not found. Admins will not be created.");
-    return;
-  }
+  // Read the OSM protocol buffer file. Callbacks for nodes, ways, and
+  // relations are defined within the PBFParser class
+  OSMAdminData admin_data = PBFAdminParser::Parse(pt, input_files);
+
+  // done with the protobuffer library, cant use it again after this
+  OSMPBF::Parser::free();
 
   if (filesystem::exists(*database)) {
     filesystem::remove(*database);
@@ -261,10 +395,12 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
 
   ret = sqlite3_open_v2((*database).c_str(), &db_handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                         NULL);
+  // TODO: these blocks are the same like 20 times or so
+  // let's abstract the sqlite commands somewhere
   if (ret != SQLITE_OK) {
     LOG_ERROR("cannot open " + (*database));
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   // loading SpatiaLite as an extension
@@ -285,7 +421,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   /* creating an admin access table
@@ -332,7 +468,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   LOG_INFO("Created admin access table.");
@@ -345,7 +481,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   LOG_INFO("Created admin table.");
@@ -368,117 +504,94 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
+  // initialize geos
+  geos_helper_t::get();
+
+  // for each admin area (relation)
   uint32_t count = 0;
-  bool has_data;
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 6
-  auto gf = GeometryFactory::create();
-#else
-  std::unique_ptr<GeometryFactory> gf(new GeometryFactory());
-#endif
+  for (const auto& admin : admin_data.admins) {
+    std::pair<std::string, uint64_t> admin_info(admin_data.name_offset_map.name(admin.name_index),
+                                                admin.id);
+    LOG_DEBUG("Building admin: " + admin_info.first);
 
-  try {
+    // do inners and outers separately
+    bool complete = true;
+    std::array<std::vector<ring_t>, 2> outers_inners;
+    for (bool outer : {true, false}) {
+      // grab the ring segments and a lookup to find them when connecting them
+      std::vector<ring_t> lines;
+      std::unordered_multimap<valhalla::midgard::PointLL, size_t> line_lookup;
+      if (!to_segments(admin_data, admin, admin_info.first, outer, lines, line_lookup)) {
+        complete = false;
+        break;
+      }
+      // connect them into a series of one or more rings
+      to_rings(admin_info, lines, line_lookup, outers_inners[!outer], outers_inners[1]);
+    }
 
-    for (const auto& admin : osm_admin_data.admins_) {
+    // if we didn't have a complete relation (ie some members were missing) we bail
+    if (!complete || outers_inners.front().empty()) {
+      LOG_WARN(admin_info.first + " (" + std::to_string(admin_info.second) +
+               ") is degenerate and will be skipped");
+      continue;
+    }
 
-      std::unique_ptr<Geometry> geom;
-      std::unique_ptr<std::vector<Geometry*>> lines(new std::vector<Geometry*>);
-      has_data = true;
+    // convert the rings into multipolygons
+    auto multipolygon = to_multipolygon(admin_info, outers_inners.front(), outers_inners.back());
 
-      for (const auto memberid : admin.ways()) {
+    // convert that into wkt format so we can put it into sqlite
+    std::stringstream ss;
+    ss << std::setprecision(7) << boost::geometry::wkt(multipolygon);
+    auto wkt = ss.str();
+    if (wkt.empty())
+      continue;
 
-        auto itr = osm_admin_data.way_map.find(memberid);
+    // load it into sqlite
+    count++;
+    sqlite3_reset(stmt);
+    sqlite3_clear_bindings(stmt);
+    sqlite3_bind_int(stmt, 1, admin.admin_level);
 
-        // A relation may be included in an extract but it's members may not.
-        // Example:  PA extract can contain a NY relation.
-        if (itr == osm_admin_data.way_map.end()) {
-          has_data = false;
-          break;
-        }
+    std::string iso;
+    if (admin.iso_code_index) {
+      iso = admin_data.name_offset_map.name(admin.iso_code_index);
+      sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
+    } else {
+      sqlite3_bind_null(stmt, 2);
+    }
 
-#if GEOS_VERSION_MAJOR == 3 && GEOS_VERSION_MINOR >= 8
-        auto coords = std::unique_ptr<CoordinateArraySequence>(new CoordinateArraySequence);
-#else
-        std::unique_ptr<CoordinateSequence> coords(
-            gf->getCoordinateSequenceFactory()->create((size_t)0, (size_t)2));
-#endif
+    sqlite3_bind_null(stmt, 3);
 
-        for (const auto ref_id : itr->second) {
+    sqlite3_bind_text(stmt, 4, admin_info.first.c_str(), admin_info.first.length(), SQLITE_STATIC);
 
-          const PointLL ll = osm_admin_data.shape_map.at(ref_id);
+    std::string name_en;
+    if (admin.name_en_index) {
+      name_en = admin_data.name_offset_map.name(admin.name_en_index);
+      sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
+    } else {
+      sqlite3_bind_null(stmt, 5);
+    }
 
-          Coordinate c;
-          c.x = ll.lng();
-          c.y = ll.lat();
-          coords->add(c, 0);
-        }
+    sqlite3_bind_int(stmt, 6, admin.drive_on_right);
+    sqlite3_bind_int(stmt, 7, admin.allow_intersection_names);
+    sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
 
-        if (coords->getSize() > 1) {
-          geom = std::unique_ptr<Geometry>(gf->createLineString(coords.release()));
-          lines->push_back(geom.release());
-        }
-
-      } // member loop
-
-      if (has_data) {
-
-        std::unique_ptr<Geometry> mline(gf->createMultiLineString(lines.release()));
-        std::vector<std::string> wkts = GetWkts(mline);
-        std::string name;
-        std::string name_en;
-        std::string iso;
-
-        for (const auto& wkt : wkts) {
-
-          count++;
-          sqlite3_reset(stmt);
-          sqlite3_clear_bindings(stmt);
-          sqlite3_bind_int(stmt, 1, admin.admin_level());
-
-          if (admin.iso_code_index()) {
-            iso = osm_admin_data.name_offset_map.name(admin.iso_code_index());
-            sqlite3_bind_text(stmt, 2, iso.c_str(), iso.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 2);
-          }
-
-          sqlite3_bind_null(stmt, 3);
-
-          name = osm_admin_data.name_offset_map.name(admin.name_index());
-          sqlite3_bind_text(stmt, 4, name.c_str(), name.length(), SQLITE_STATIC);
-
-          if (admin.name_en_index()) {
-            name_en = osm_admin_data.name_offset_map.name(admin.name_en_index());
-            sqlite3_bind_text(stmt, 5, name_en.c_str(), name_en.length(), SQLITE_STATIC);
-          } else {
-            sqlite3_bind_null(stmt, 5);
-          }
-
-          sqlite3_bind_int(stmt, 6, admin.drive_on_right());
-          sqlite3_bind_int(stmt, 7, admin.allow_intersection_names());
-          sqlite3_bind_text(stmt, 8, wkt.c_str(), wkt.length(), SQLITE_STATIC);
-          /* performing INSERT INTO */
-          ret = sqlite3_step(stmt);
-          if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-            continue;
-          }
-          LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
-          LOG_ERROR("sqlite3_step() Name: " +
-                    osm_admin_data.name_offset_map.name(admin.name_index()));
-          LOG_ERROR("sqlite3_step() Name:en: " +
-                    osm_admin_data.name_offset_map.name(admin.name_en_index()));
-          LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level()));
-          LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right()));
-          LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
-                    std::to_string(admin.allow_intersection_names()));
-        }
-      } // has data
-    }   // admins
-  } catch (std::exception& e) {
-    LOG_ERROR("Standard exception processing relation: " + std::string(e.what()));
-  } catch (...) { LOG_ERROR("Exception caught processing relations."); }
+    /* performing INSERT INTO */
+    ret = sqlite3_step(stmt);
+    if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
+      continue;
+    }
+    LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db_handle)));
+    LOG_ERROR("sqlite3_step() Name: " + admin_data.name_offset_map.name(admin.name_index));
+    LOG_ERROR("sqlite3_step() Name:en: " + admin_data.name_offset_map.name(admin.name_en_index));
+    LOG_ERROR("sqlite3_step() Admin Level: " + std::to_string(admin.admin_level));
+    LOG_ERROR("sqlite3_step() Drive on Right: " + std::to_string(admin.drive_on_right));
+    LOG_ERROR("sqlite3_step() Allow Intersection Names: " +
+              std::to_string(admin.allow_intersection_names));
+  }
 
   sqlite3_finalize(stmt);
   ret = sqlite3_exec(db_handle, "COMMIT", NULL, NULL, &err_msg);
@@ -486,7 +599,8 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
+    ;
   }
   LOG_INFO("Inserted " + std::to_string(count) + " admin areas");
 
@@ -496,7 +610,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created spatial index");
 
@@ -506,7 +620,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created Level index");
 
@@ -516,7 +630,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created Drive On Right index");
 
@@ -526,7 +640,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Created allow intersection names index");
 
@@ -540,7 +654,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating drive on right column.");
 
@@ -554,7 +668,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating allow intersection names column.");
 
@@ -568,7 +682,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
   LOG_INFO("Done updating Parent admin");
 
@@ -588,7 +702,7 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   for (const auto& access : kCountryAccess) {
@@ -627,12 +741,14 @@ void BuildAdminFromPBF(const boost::property_tree::ptree& pt,
     LOG_ERROR("Error: " + std::string(err_msg));
     sqlite3_free(err_msg);
     sqlite3_close(db_handle);
-    return;
+    return false;
   }
 
   sqlite3_close(db_handle);
 
   LOG_INFO("Finished.");
+
+  return true;
 }
 
 } // namespace mjolnir

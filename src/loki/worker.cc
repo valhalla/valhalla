@@ -31,7 +31,7 @@ using namespace valhalla::loki;
 namespace valhalla {
 namespace loki {
 void loki_worker_t::parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
-                                    boost::optional<valhalla_exception_t> required_exception) {
+                                    std::optional<valhalla_exception_t> required_exception) {
   if (locations->size()) {
     for (auto& location : *locations) {
       if (!location.has_minimum_reachability_case())
@@ -184,8 +184,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   for (const auto& kv : config.get_child("service_limits")) {
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" ||
-        kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "skadi" || kv.first == "status") {
+        kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
+        kv.first == "max_exclude_polygons_length" ||
+        kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
+        kv.first == "status") {
       continue;
     }
     if (kv.first != "trace") {
@@ -244,6 +246,10 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   max_trace_alternates_shape = config.get<size_t>("service_limits.trace.max_alternates_shape");
   max_alternates = config.get<unsigned int>("service_limits.max_alternates");
   allow_verbose = config.get<bool>("service_limits.status.allow_verbose", false);
+  max_timedep_dist_matrix = config.get<size_t>("service_limits.max_timedep_distance_matrix", 0);
+  // assign max_distance_disable_hierarchy_culling
+  max_distance_disable_hierarchy_culling =
+      config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
 
   // signal that the worker started successfully
   started();
@@ -259,6 +265,54 @@ void loki_worker_t::cleanup() {
 void loki_worker_t::set_interrupt(const std::function<void()>* interrupt_function) {
   interrupt = interrupt_function;
   reader->SetInterrupt(interrupt);
+}
+
+// Check if total arc distance exceeds the max distance limit for disable_hierarchy_pruning.
+// If true, add a warning and set the disable_hierarchy_pruning costing option to false.
+void loki_worker_t::check_hierarchy_distance(Api& request) {
+  auto& options = *request.mutable_options();
+  // Bail early if the mode of travel is not vehicular.
+  // Bike and pedestrian don't use hierarchies anyway.
+  if (options.costing_type() == Costing_Type_bicycle ||
+      options.costing_type() == Costing_Type_pedestrian) {
+    return;
+  }
+
+  // If disable_hierarchy_pruning is not true, skip the rest.
+  auto costing_options = options.mutable_costings()->find(options.costing_type());
+  if (!costing_options->second.options().disable_hierarchy_pruning()) {
+    return;
+  }
+
+  // For route action check if total distances between locations exceed the max limit.
+  // For matrix action, check every pair of source and target.
+  bool max_distance_exceeded = false;
+  if (request.options().action() == Options_Action_sources_to_targets) {
+    for (auto& source : *options.mutable_sources()) {
+      for (auto& target : *options.mutable_targets()) {
+        if (to_ll(source).Distance(to_ll(target)) > max_distance_disable_hierarchy_culling) {
+          max_distance_exceeded = true;
+          break;
+        }
+      }
+    }
+  } else {
+    auto locations = options.locations();
+    float arc_distance = 0.0f;
+    for (auto source = locations.begin(); source != locations.end() - 1; ++source) {
+      arc_distance += to_ll(*source).Distance(to_ll(*(source + 1)));
+      if (arc_distance > max_distance_disable_hierarchy_culling) {
+        max_distance_exceeded = true;
+        break;
+      }
+    }
+  }
+
+  // Turn off disable_hierarchy_pruning and add a warning if max limit exceeded.
+  if (max_distance_exceeded) {
+    add_warning(request, 205);
+    costing_options->second.mutable_options()->set_disable_hierarchy_pruning(false);
+  }
 }
 
 #ifdef HAVE_HTTP

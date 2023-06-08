@@ -89,7 +89,8 @@ void build_pbf(const nodelayout& node_locations,
                const nodes& nodes,
                const relations& relations,
                const std::string& filename,
-               const uint64_t initial_osm_id = 0);
+               const uint64_t initial_osm_id = 0,
+               const bool strict = true);
 
 /**
  * Extract list of edge names from route result.
@@ -121,6 +122,24 @@ map buildtiles(const nodelayout& layout,
                const std::string& workdir,
                const std::unordered_map<std::string, std::string>& config_options = {
                    {"mjolnir.concurrency", "1"}});
+
+/**
+ * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,
+ * and builds a set of Valhalla tiles for it.
+ *
+ * @param layout the locations of all the nodes
+ * @param ways the way definitions (which nodes are connected, and their properties
+ * @param nodes properties on any of the defined nodes
+ * @param relations OSM relations that related nodes and ways together
+ * @param config fully fledged valhalla config, the mjolnir section is used to build tiles
+ * @return a map object that contains the Valhalla config (to pass to GraphReader) and node layout
+ *         (for converting node names to coordinates)
+ */
+map buildtiles(const nodelayout& layout,
+               const ways& ways,
+               const nodes& nodes,
+               const relations& relations,
+               const boost::property_tree::ptree& config);
 
 /**
  * Finds a directed edge in the generated map.  Helpful because the IDs assigned
@@ -186,6 +205,17 @@ valhalla::Api do_action(const valhalla::Options::Action& action,
                         std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
                         std::string* json = nullptr,
                         const std::string& stop_type = "break",
+                        std::string* request_json = nullptr);
+
+// overload for /sources_to_targets
+valhalla::Api do_action(const valhalla::Options::Action& action,
+                        const map& map,
+                        const std::vector<std::string>& sources,
+                        const std::vector<std::string>& targets,
+                        const std::string& costing,
+                        const std::unordered_map<std::string, std::string>& options = {},
+                        std::shared_ptr<valhalla::baldr::GraphReader> reader = {},
+                        std::string* response = nullptr,
                         std::string* request_json = nullptr);
 
 /* Returns the raw_result formatted as a JSON document in the given format.

@@ -5,7 +5,7 @@
 #include "idtable.h"
 #include "midgard/logging.h"
 #include "mjolnir/luatagtransform.h"
-#include "mjolnir/osmadmin.h"
+#include "mjolnir/osmadmindata.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 
@@ -67,7 +67,7 @@ public:
       shape_.set(node);
     }
 
-    osm_admin_data_.way_map.emplace(osmid, std::list<uint64_t>(nodes.begin(), nodes.end()));
+    osm_admin_data_.way_map.emplace(osmid, nodes);
   }
 
   virtual void relation_callback(const uint64_t osmid,
@@ -84,38 +84,37 @@ public:
     for (const auto& tag : results) {
       // TODO:  Store multiple all the names
       if (tag.first == "name" && !tag.second.empty()) {
-        admin.set_name_index(osm_admin_data_.name_offset_map.index(tag.second));
+        admin.name_index = osm_admin_data_.name_offset_map.index(tag.second);
       } else if (tag.first == "name:en" && !tag.second.empty()) {
-        admin.set_name_en_index(osm_admin_data_.name_offset_map.index(tag.second));
+        admin.name_en_index = osm_admin_data_.name_offset_map.index(tag.second);
       } else if (tag.first == "admin_level") {
-        admin.set_admin_level(std::stoi(tag.second));
+        admin.admin_level = std::stoi(tag.second);
       } else if (tag.first == "drive_on_right") {
-        admin.set_drive_on_right(tag.second == "true" ? true : false);
+        admin.drive_on_right = tag.second == "true" ? true : false;
       } else if (tag.first == "allow_intersection_names") {
-        admin.set_allow_intersection_names(tag.second == "true" ? true : false);
+        admin.allow_intersection_names = tag.second == "true" ? true : false;
       } else if (tag.first == "iso_code" && !tag.second.empty()) {
-        admin.set_iso_code_index(osm_admin_data_.name_offset_map.index(tag.second));
+        admin.iso_code_index = osm_admin_data_.name_offset_map.index(tag.second);
       }
     }
 
-    std::list<uint64_t> member_ids;
-
+    admin.ways.reserve(members.size());
+    admin.roles.reserve(members.size());
     for (const auto& member : members) {
 
       if (member.member_type == OSMPBF::Relation::MemberType::Relation_MemberType_WAY) {
         members_.set(member.member_id);
-        member_ids.push_back(member.member_id);
+        admin.ways.push_back(member.member_id);
+        admin.roles.push_back(member.role != "inner"); // assume outer
         ++osm_admin_data_.osm_way_count;
       }
     }
 
-    if (admin.name_index() == admin.name_en_index()) {
-      admin.set_name_en_index(0);
+    if (admin.name_index == admin.name_en_index) {
+      admin.name_en_index = 0;
     }
 
-    admin.set_ways(member_ids);
-
-    osm_admin_data_.admins_.push_back(std::move(admin));
+    osm_admin_data_.admins.push_back(std::move(admin));
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
@@ -165,7 +164,7 @@ OSMAdminData PBFAdminParser::Parse(const boost::property_tree::ptree& pt,
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
-  LOG_INFO("Finished with " + std::to_string(osmdata.admins_.size()) +
+  LOG_INFO("Finished with " + std::to_string(osmdata.admins.size()) +
            " admin polygons comprised of " + std::to_string(osmdata.osm_way_count) + " ways");
 
   // Parse the ways.
