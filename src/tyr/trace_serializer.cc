@@ -134,7 +134,7 @@ void serialize_edges(const AttributesController& controller,
         writer("travel_mode", to_string(edge.travel_mode()));
       }
       if (controller(kEdgeNodeId) && edge.has_osmid_case()) {
-        edge_map->emplace("node_id", static_cast<uint64_t>(edge.osmid()));
+        writer("node_id", static_cast<uint64_t>(edge.osmid()));
       }
       if (controller(kEdgeVehicleType) && edge.travel_mode() == valhalla::kDrive) {
         writer("vehicle_type", to_string(edge.vehicle_type()));
@@ -323,8 +323,12 @@ void serialize_edges(const AttributesController& controller,
           writer.set_precision(3);
           writer("transition_time", node.cost().transition_cost().seconds());
         }
-        if (controller(kNodeNodeId) && node.has_osmid_case()) {
-          end_node_map->emplace("node_id", static_cast<uint64_t>(node.osmid()));
+        if (controller(kNodeNodeId)) {
+          if (node.has_osmid_case()) {
+            writer("node_id", static_cast<uint64_t>(node.osmid()));
+          }else if (edge.has_end_osmid_case()) {
+            writer("node_id", static_cast<uint64_t>(edge.end_osmid()));
+          }
         }
 
         // TODO transit info at node

@@ -180,6 +180,10 @@ message TripLeg {
     oneof has_osmid {
       uint64 osmid = 54;
     }
+
+    oneof has_end_osmid {
+        uint64 end_osmid = 55;
+    }
   }
 
   message IntersectingEdge {

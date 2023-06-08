@@ -1092,7 +1092,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_way_id(edgeinfo.wayid());
   }
 
-  // Set node id (OSM nod id) if requested
+  // Set node id (OSM node id) if requested
   if (controller.attributes.at(kEdgeNodeId) && start_tile->has_osmids_for_nodes()) {
     trip_edge->set_osmid(start_tile->osmid_for_node(start_node_idx));
   }
@@ -1574,6 +1574,7 @@ void TripLegBuilder::Build(
       trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
     }
 
+    // Set node id (OSM node id) if requested
     if (controller.attributes.at(kNodeNodeId) && start_tile->has_osmids_for_nodes()) {
       trip_node->set_osmid(start_tile->osmid_for_node(startnode));
     }
@@ -1721,6 +1722,11 @@ void TripLegBuilder::Build(
     SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
+
+    // set the endNode ID if requested (look for it in the end_node_tile)
+    if (controller.attributes.at(kNodeNodeId) && end_node_tile->has_osmids_for_nodes()) {
+      trip_edge->set_end_osmid(end_node_tile->osmid_for_node(directededge->endnode()));
+    }
 
     // Set begin shape index if requested
     if (controller(kEdgeBeginShapeIndex)) {
