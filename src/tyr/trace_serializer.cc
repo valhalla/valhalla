@@ -326,7 +326,7 @@ void serialize_edges(const AttributesController& controller,
         if (controller(kNodeNodeId)) {
           if (node.has_osmid_case()) {
             writer("node_id", static_cast<uint64_t>(node.osmid()));
-          }else if (edge.has_end_osmid_case()) {
+          } else if (edge.has_end_osmid_case()) {
             writer("node_id", static_cast<uint64_t>(edge.end_osmid()));
           }
         }
