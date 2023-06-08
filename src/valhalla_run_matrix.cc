@@ -49,7 +49,7 @@ void LogResults(const bool optimize,
   uint32_t idx1 = 0;
   uint32_t idx2 = 0;
   uint32_t nlocs = options.sources_size();
-  for (uint32_t i; i < matrix.times().size(); i++) {
+  for (uint32_t i = 0; i < matrix.times().size(); i++) {
     auto distance = matrix.distances().Get(i);
     LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
              std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
@@ -65,8 +65,8 @@ void LogResults(const bool optimize,
     auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
     costs.reserve(matrix.times().size());
-    for (uint32_t i; i < matrix.times().size(); i++) {
-      costs.push_back(static_cast<float>(matrix.times().Get(i)));
+    for (const auto& time : matrix.times()) {
+      costs.push_back(time);
     }
 
     Optimizer opt;
