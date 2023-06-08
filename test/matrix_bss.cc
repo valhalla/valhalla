@@ -138,8 +138,8 @@ public:
         int route_length = legs.begin()->summary().length() * 1000;
 
         size_t m_result_idx = i * t_size + j;
-        int matrix_time = matrix_request.matrix().time_distances()[m_result_idx].time();
-        int matrix_length = matrix_request.matrix().time_distances()[m_result_idx].distance();
+        int matrix_time = matrix_request.matrix().times()[m_result_idx];
+        int matrix_length = matrix_request.matrix().distances()[m_result_idx];
 
         EXPECT_NEAR(matrix_time, route_time, kTimeThreshold);
         EXPECT_NEAR(matrix_length, route_length, route_length * kDistancePercentThreshold);

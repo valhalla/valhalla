@@ -56,23 +56,6 @@ struct Destination {
   }
 };
 
-// Time and Distance structure
-struct TimeDistance {
-  uint32_t time; // Time in seconds
-  uint32_t dist; // Distance in meters
-  std::string date_time;
-
-  TimeDistance() : time(0), dist(0), date_time("") {
-  }
-
-  TimeDistance(const uint32_t secs, const uint32_t meters) : time(secs), dist(meters), date_time("") {
-  }
-
-  TimeDistance(const uint32_t secs, const uint32_t meters, std::string date_time)
-      : time(secs), dist(meters), date_time(date_time) {
-  }
-};
-
 // Will return a destination's date_time string
 inline std::string get_date_time(const std::string& origin_dt,
                                  const uint64_t& origin_tz,
@@ -132,6 +115,14 @@ inline bool check_matrix_time(Api& request, const Matrix::Algorithm algo) {
   }
 
   return false;
+}
+
+// resizes all PBF sequences except for date_times
+inline void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
+  matrix.mutable_from_indices()->Resize(size, 0U);
+  matrix.mutable_to_indices()->Resize(size, 0U);
+  matrix.mutable_distances()->Resize(size, 0U);
+  matrix.mutable_times()->Resize(size, 0U);
 }
 
 } // namespace thor

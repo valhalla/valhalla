@@ -172,10 +172,12 @@ const auto test_request_osrm = R"({
     "costing":"auto"
   })";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
-                                            {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
-                                            {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
-                                            {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
+std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213},
+                                                     {4163, 3838}, {1519, 1398}, {1808, 1638},
+                                                     {2061, 1951}, {3944, 3639}, {2311, 2111},
+                                                     {701, 641},   {0, 0},       {2821, 2626},
+                                                     {5562, 5177}, {3952, 3707}, {4367, 4107},
+                                                     {1825, 1680}};
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -199,13 +201,13 @@ TEST(Matrix, test_matrix) {
 
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto tds = request.matrix().time_distances();
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    EXPECT_NEAR(tds[i].distance(), matrix_answers[i].dist, kThreshold)
+  auto matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
                " to expected value for CostMatrix";
 
-    EXPECT_NEAR(tds[i].time(), matrix_answers[i].time, kThreshold)
+    EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
         << "result " + std::to_string(i) + "'s time is not close enough" +
                " to expected value for CostMatrix";
   }
@@ -215,10 +217,10 @@ TEST(Matrix, test_matrix) {
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           100000.0);
 
-  tds = request.matrix().time_distances();
+  matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    if (tds[i].distance() < kMaxCost) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
   }
@@ -229,10 +231,10 @@ TEST(Matrix, test_matrix) {
   cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
                                           50000.0);
 
-  tds = request.matrix().time_distances();
+  matrix = request.matrix();
   found = 0;
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    if (tds[i].distance() < kMaxCost) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
   }
@@ -242,15 +244,14 @@ TEST(Matrix, test_matrix) {
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
 
-  tds = request.matrix().time_distances();
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    EXPECT_NEAR(tds[i].distance(), matrix_answers[i].dist, kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal to" +
-               " the expected value for TimeDistMatrix";
+  matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal" +
+               " to expected value for TDMatrix";
 
-    EXPECT_NEAR(tds[i].time(), matrix_answers[i].time, kThreshold)
-        << "result " + std::to_string(i) +
-               "'s time is not equal to the expected value for TimeDistMatrix";
+    EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
+        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
   }
 }
 
@@ -286,22 +287,21 @@ TEST(Matrix, test_timedistancematrix_results_sequence) {
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto& tds = request.matrix().time_distances();
+  auto& matrix = request.matrix();
 
   // expected results are the same as `matrix_answers`, but without the last column
-  std::vector<TimeDistance> expected_results = {
+  std::vector<std::vector<uint32_t>> expected_results = {
       {28, 28},     {2027, 1837}, {2403, 2213}, {1519, 1398}, {1808, 1638}, {2061, 1951},
       {2311, 2111}, {701, 641},   {0, 0},       {5562, 5177}, {3952, 3707}, {4367, 4107},
   };
 
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    EXPECT_NEAR(tds[i].distance(), expected_results[i].dist, kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal to" +
-               " the expected value for TimeDistMatrix";
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal" +
+               " to expected value for TDMatrix";
 
-    EXPECT_NEAR(tds[i].time(), expected_results[i].time, kThreshold)
-        << "result " + std::to_string(i) +
-               "'s time is not equal to the expected value for TimeDistMatrix";
+    EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
+        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
   }
 }
 
@@ -323,13 +323,13 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto tds = request.matrix().time_distances();
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    EXPECT_EQ(tds[i].distance(), matrix_answers[i].dist)
+  auto matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_EQ(matrix.distances()[i], matrix_answers[i][1])
         << "result " + std::to_string(i) +
                "'s distance is not close enough to expected value for CostMatrix.";
 
-    EXPECT_EQ(tds[i].time(), matrix_answers[i].time)
+    EXPECT_EQ(matrix.times()[i], matrix_answers[i][0])
         << "result " + std::to_string(i) +
                "'s time is not close enough to expected value for CostMatrix.";
   }
@@ -337,13 +337,13 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  tds = request.matrix().time_distances();
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    EXPECT_EQ(tds[i].distance(), matrix_answers[i].dist)
+  matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_EQ(matrix.distances()[i], matrix_answers[i][1])
         << "result " + std::to_string(i) +
                "'s distance is not equal to the expected value for TimeDistMatrix.";
 
-    EXPECT_EQ(tds[i].time(), matrix_answers[i].time)
+    EXPECT_EQ(matrix.times()[i], matrix_answers[i][0])
         << "result " + std::to_string(i) +
                "'s time is not equal to the expected value for TimeDistMatrix";
   }
@@ -380,10 +380,10 @@ TEST(Matrix, partial_matrix) {
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0,
                                  request.options().matrix_locations());
-  auto& tds = request.matrix().time_distances();
+  auto& matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < tds.size(); ++i) {
-    if (tds[i].distance() > 0) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] > 0) {
       ++found;
     }
   }

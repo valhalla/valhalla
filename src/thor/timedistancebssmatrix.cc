@@ -199,6 +199,8 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+  // reserve the PBF vectors
+  reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size());
 
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);
@@ -523,15 +525,16 @@ bool TimeDistanceBSSMatrix::UpdateDestinations(
 void TimeDistanceBSSMatrix::FormTimeDistanceMatrix(Api& request,
                                                    const bool forward,
                                                    const uint32_t origin_index) {
-  uint32_t idx = origin_index;
-  // TODO: is this sources or targets? needs more complex logic to set the right order
-  for (auto& dest : destinations_) {
-    Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
-    td.set_from_index(idx / static_cast<uint32_t>(request.options().targets().size()));
-    td.set_to_index(idx % static_cast<uint32_t>(request.options().targets().size()));
-    td.set_distance(dest.distance);
-    td.set_time(dest.best_cost.secs);
-    idx++;
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  for (uint32_t i = 0; i < destinations_.size(); i++) {
+    auto& dest = destinations_[i];
+    float time = dest.best_cost.secs + .5f;
+    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
+                           : (i * request.options().targets().size()) + origin_index;
+    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
+    matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
+    matrix.mutable_distances()->Set(pbf_idx, dest.distance);
+    matrix.mutable_times()->Set(pbf_idx, time);
   }
 }
 

@@ -40,7 +40,7 @@ void thor_worker_t::optimized_route(Api& request) {
   // Set time costs to send to Optimizer.
   std::vector<float> time_costs;
   bool reachable = true;
-  const auto tds = request.matrix().time_distances();
+  const auto tds = request.matrix().times();
   for (size_t i = 0; i < tds.size(); ++i) {
     // If any location is completely unreachable then we cant have a connected path
     if (i % correlated.size() == 0) {
@@ -49,9 +49,9 @@ void thor_worker_t::optimized_route(Api& request) {
       };
       reachable = false;
     }
-    reachable = reachable || tds[i].time() != kMaxCost;
+    reachable = reachable || tds.Get(i) != kMaxCost;
     // Keep the times for the reordering
-    time_costs.emplace_back(static_cast<float>(tds[i].time()));
+    time_costs.emplace_back(static_cast<float>(tds.Get(i)));
   }
 
   Optimizer optimizer;

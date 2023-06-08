@@ -13,14 +13,12 @@ using namespace valhalla::thor;
 namespace {
 
 json::ArrayPtr
-serialize_duration(const google::protobuf::RepeatedPtrField<valhalla::Matrix_TimeDistance>& tds,
-                   size_t start_td,
-                   const size_t td_count) {
+serialize_duration(const valhalla::Matrix& matrix, size_t start_td, const size_t td_count) {
   auto time = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for time in matrix result
-    if (tds[i].time() != kMaxCost) {
-      time->emplace_back(static_cast<uint64_t>(tds[i].time()));
+    if (matrix.times()[i] != kMaxCost) {
+      time->emplace_back(static_cast<uint64_t>(matrix.times()[i]));
     } else {
       time->emplace_back(static_cast<std::nullptr_t>(nullptr));
     }
@@ -28,18 +26,17 @@ serialize_duration(const google::protobuf::RepeatedPtrField<valhalla::Matrix_Tim
   return time;
 }
 
-json::ArrayPtr
-serialize_distance(const google::protobuf::RepeatedPtrField<valhalla::Matrix_TimeDistance>& tds,
-                   size_t start_td,
-                   const size_t td_count,
-                   const size_t /* source_index */,
-                   const size_t /* target_index */,
-                   double distance_scale) {
+json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
+                                  size_t start_td,
+                                  const size_t td_count,
+                                  const size_t /* source_index */,
+                                  const size_t /* target_index */,
+                                  double distance_scale) {
   auto distance = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance in matrix result
-    if (tds[i].time() != kMaxCost) {
-      distance->emplace_back(json::fixed_t{tds[i].distance() * distance_scale, 3});
+    if (matrix.times()[i] != kMaxCost) {
+      distance->emplace_back(json::fixed_t{matrix.distances()[i] * distance_scale, 3});
     } else {
       distance->emplace_back(static_cast<std::nullptr_t>(nullptr));
     }
@@ -64,12 +61,11 @@ std::string serialize(const Api& request, double distance_scale) {
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
   for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-    time->emplace_back(serialize_duration(request.matrix().time_distances(),
-                                          source_index * options.targets_size(),
+    time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                           options.targets_size()));
-    distance->emplace_back(
-        serialize_distance(request.matrix().time_distances(), source_index * options.targets_size(),
-                           options.targets_size(), source_index, 0, distance_scale));
+    distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
+                                              options.targets_size(), source_index, 0,
+                                              distance_scale));
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
@@ -97,25 +93,26 @@ json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Loca
   return input_locs;
 }
 
-json::ArrayPtr
-serialize_row(const google::protobuf::RepeatedPtrField<valhalla::Matrix_TimeDistance>& tds,
-              size_t start_td,
-              const size_t td_count,
-              const size_t source_index,
-              const size_t target_index,
-              double distance_scale) {
+json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
+                             size_t start_td,
+                             const size_t td_count,
+                             const size_t source_index,
+                             const size_t target_index,
+                             double distance_scale) {
   auto row = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance & time in matrix
     // result
     json::MapPtr map;
-    if (tds[i].time() != kMaxCost) {
+    const auto time = matrix.times()[i];
+    const auto& date_time = matrix.date_times()[i];
+    if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                       {"time", static_cast<uint64_t>(tds[i].time())},
-                       {"distance", json::fixed_t{tds[i].distance() * distance_scale, 3}}});
-      if (!tds[i].date_time().empty()) {
-        map->emplace("date_time", tds[i].date_time());
+                       {"time", static_cast<uint64_t>(time)},
+                       {"distance", json::fixed_t{matrix.distances()[i] * distance_scale, 3}}});
+      if (!date_time.empty()) {
+        map->emplace("date_time", date_time);
       }
     } else {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
@@ -135,8 +132,7 @@ std::string serialize(const Api& request, double distance_scale) {
   if (options.verbose()) {
     json::ArrayPtr matrix = json::array({});
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-      matrix->emplace_back(serialize_row(request.matrix().time_distances(),
-                                         source_index * options.targets_size(),
+      matrix->emplace_back(serialize_row(request.matrix(), source_index * options.targets_size(),
                                          options.targets_size(), source_index, 0, distance_scale));
     }
 
@@ -151,11 +147,10 @@ std::string serialize(const Api& request, double distance_scale) {
     auto distance = json::array({});
 
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-      time->emplace_back(serialize_duration(request.matrix().time_distances(),
-                                            source_index * options.targets_size(),
+      time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                             options.targets_size()));
       distance->emplace_back(
-          serialize_distance(request.matrix().time_distances(), source_index * options.targets_size(),
+          serialize_distance(request.matrix(), source_index * options.targets_size(),
                              options.targets_size(), source_index, 0, distance_scale));
     }
     matrix->emplace("distances", distance);

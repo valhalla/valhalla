@@ -200,20 +200,22 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
   auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
                                : *request.mutable_options()->mutable_sources();
 
+  size_t num_elements = origins.size() * destinations.size();
   auto time_infos = SetTime(origins, graphreader);
+  // thanks to protobuf not handling strings well, we have to collect those
+  std::vector<std::string> out_date_times(num_elements);
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
-  request.mutable_matrix()->mutable_time_distances()->Reserve(origins.size() * destinations.size());
+  // reserve the PBF vectors
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
 
-  std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
     edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
     const auto& time_info = time_infos[origin_index];
 
-    std::vector<TimeDistance> one_to_many;
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
     // Construct adjacency list. Set bucket size and cost range based on DynamicCost.
@@ -233,7 +235,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, GraphId{});
+                               time_info.timezone_index, GraphId{}, out_date_times);
         break;
       }
 
@@ -258,7 +260,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
           FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                                 time_info.timezone_index, pred.edgeid());
+                                 time_info.timezone_index, pred.edgeid(), out_date_times);
           break;
         }
       }
@@ -266,7 +268,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, pred.edgeid());
+                               time_info.timezone_index, pred.edgeid(), out_date_times);
         break;
       }
 
@@ -276,6 +278,12 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     }
 
     reset();
+  }
+
+  // amend the date_time strings
+  for (auto& date_time : out_date_times) {
+    auto* pbf_dt = request.mutable_matrix()->mutable_date_times()->Add();
+    *pbf_dt = date_time;
   }
 }
 
@@ -551,20 +559,26 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
                                                 const uint32_t origin_index,
                                                 const std::string& origin_dt,
                                                 const uint64_t& origin_tz,
-                                                const GraphId& pred_id) {
-  uint32_t idx = origin_index;
-  // TODO: is this sources or targets? needs more complex logic to set the right order
-  for (auto& dest : destinations_) {
-    Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
-    td.set_from_index(idx / static_cast<uint32_t>(request.options().targets().size()));
-    td.set_to_index(idx % static_cast<uint32_t>(request.options().targets().size()));
-    td.set_distance(dest.distance);
-    td.set_time(dest.best_cost.secs);
+                                                const GraphId& pred_id,
+                                                std::vector<std::string>& out_date_times) {
+  // when it's forward, origin_index will be the source_index
+  // when it's reverse, origin_index will be the target_index
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  for (uint32_t i = 0; i < destinations_.size(); i++) {
+    auto& dest = destinations_[i];
+    float time = dest.best_cost.secs + .5f;
+    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
+                           : (i * request.options().targets().size()) + origin_index;
+    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
+    matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
+    matrix.mutable_distances()->Set(pbf_idx, dest.distance);
+    matrix.mutable_times()->Set(pbf_idx, time);
 
-    auto date_time = get_date_time(origin_dt, origin_tz, pred_id, reader,
-                                   static_cast<uint64_t>(dest.best_cost.secs + .5f));
-    td.set_date_time(date_time);
-    idx++;
+    // this logic doesn't work with string repeated fields, gotta collect them
+    // and process them later
+    auto date_time =
+        get_date_time(origin_dt, origin_tz, pred_id, reader, static_cast<uint64_t>(time));
+    out_date_times[pbf_idx] = date_time;
   }
 }
 

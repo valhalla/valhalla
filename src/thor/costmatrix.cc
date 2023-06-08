@@ -232,22 +232,24 @@ void CostMatrix::SourceToTarget(Api& request,
     RecostPaths(graphreader, source_location_list, target_location_list, time_infos, invariant);
   }
 
-  // Form the time, distance matrix from the destinations list
-  std::vector<TimeDistance> td;
+  // Form the matrix PBF output
   uint32_t count = 0;
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  reserve_pbf_arrays(matrix, best_connection_.size());
   for (const auto& connection : best_connection_) {
-    Matrix::TimeDistance& td = *request.mutable_matrix()->mutable_time_distances()->Add();
     uint32_t target_idx = count % target_location_list.size();
     uint32_t origin_idx = count / target_location_list.size();
+    float time = connection.cost.secs + .5f;
     auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
                                    time_infos[origin_idx].timezone_index,
                                    target_edgelabel_[target_idx].front().edgeid(), graphreader,
-                                   static_cast<uint64_t>(connection.cost.secs + .5f));
-    td.set_from_index(origin_idx);
-    td.set_to_index(target_idx);
-    td.set_distance(connection.distance);
-    td.set_time(connection.cost.secs);
-    td.set_date_time(date_time);
+                                   static_cast<uint64_t>(time));
+    matrix.mutable_from_indices()->Set(count, origin_idx);
+    matrix.mutable_to_indices()->Set(count, target_idx);
+    matrix.mutable_distances()->Set(count, connection.distance);
+    matrix.mutable_times()->Set(count, time);
+    auto* pbf_date_time = matrix.mutable_date_times()->Add();
+    *pbf_date_time = date_time;
     count++;
   }
 }

@@ -275,7 +275,8 @@ protected:
                               const uint32_t origin_index,
                               const std::string& origin_dt,
                               const uint64_t& origin_tz,
-                              const baldr::GraphId& pred_id);
+                              const baldr::GraphId& pred_id,
+                              std::vector<std::string>& out_date_times);
 };
 
 } // namespace thor
