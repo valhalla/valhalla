@@ -3,7 +3,7 @@
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
 * **Enhancement**
-   * UPDATED: French translations, thanks to @xlqian [#4157](https://github.com/valhalla/valhalla/pull/4157)
+   * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
