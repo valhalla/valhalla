@@ -13,7 +13,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
@@ -28,7 +27,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceMatrix();
+  TimeDistanceMatrix(const boost::property_tree::ptree& config = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -42,6 +41,7 @@ public:
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
+   * @param  has_time              Whether the request had valid date_time.
    * @param  invariant             Whether invariant time was requested.
    *
    * @return time/distance from all sources to all targets
@@ -55,6 +55,9 @@ public:
                  const float max_matrix_distance,
                  const uint32_t matrix_locations = kAllLocations,
                  const bool invariant = false) {
+
+    LOG_INFO("matrix::TimeDistanceMatrix");
+
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
@@ -76,6 +79,11 @@ public:
    * matrix construction.
    */
   inline void clear() {
+    auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+    if (edgelabels_.size() > reservation) {
+      edgelabels_.resize(max_reserved_labels_count_);
+      edgelabels_.shrink_to_fit();
+    }
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -88,6 +96,9 @@ protected:
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
+
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;
@@ -108,7 +119,7 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  sif::TravelMode mode_;
+  sif::travel_mode_t mode_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
@@ -117,12 +128,13 @@ protected:
    * Reset all origin-specific information
    */
   inline void reset() {
-    // Clear the edge labels and destination list
-    edgelabels_.clear();
     // Clear the per-origin information
     for (auto& dest : destinations_) {
       dest.reset();
     }
+
+    // Clear the edge labels
+    edgelabels_.clear();
 
     // Clear elements from the adjacency list
     adjacencylist_.clear();
@@ -229,6 +241,7 @@ protected:
                           const baldr::DirectedEdge* edge,
                           const graph_tile_ptr& tile,
                           const sif::EdgeLabel& pred,
+                          const baldr::TimeInfo& time_info,
                           const uint32_t matrix_locations);
 
   /**

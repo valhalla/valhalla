@@ -48,12 +48,13 @@ public:
   void set_interrupt(const std::function<void()>* interrupt) override;
 
 protected:
-  void parse_locations(
-      google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
-      boost::optional<valhalla_exception_t> required_exception = valhalla_exception_t{110});
+  void parse_locations(google::protobuf::RepeatedPtrField<valhalla::Location>* locations,
+                       std::optional<valhalla_exception_t> required_exception = valhalla_exception_t{
+                           110});
   void parse_trace(Api& request);
   void parse_costing(Api& request, bool allow_none = false);
   void locations_from_shape(Api& request);
+  void check_hierarchy_distance(Api& request);
 
   void init_locate(Api& request);
   void init_route(Api& request);
@@ -103,6 +104,9 @@ protected:
   float min_resample;
   unsigned int max_alternates;
   bool allow_verbose;
+
+  // add max_distance_disable_hierarchy_culling
+  float max_distance_disable_hierarchy_culling;
 
 private:
   std::string service_name() const override {

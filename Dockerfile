@@ -1,5 +1,5 @@
 ####################################################################
-FROM ubuntu:20.04 as builder 
+FROM ubuntu:22.04 as builder 
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
@@ -12,16 +12,17 @@ ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-g
 WORKDIR /usr/local/src/valhalla
 COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-linux-deps.sh
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
+RUN rm -rf /var/lib/apt/lists/*
 
 # get the code into the right place and prepare to build it
-ADD . /usr/local/src/valhalla
-RUN ls
+ADD . .
+RUN ls -la
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
 # upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN pip install --upgrade conan
+RUN pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
@@ -42,15 +43,18 @@ RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 RUN rm -f valhalla_*.debug
 RUN strip --strip-debug --strip-unneeded valhalla_* || true
 RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla.cpython-38-x86_64-linux-gnu.so
+RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-FROM ubuntu:20.04 as runner
+FROM ubuntu:22.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
+
+# github packaging niceties
+LABEL org.opencontainers.image.description = "Open Source Routing Engine for OpenStreetMap and Other Datasources"
+LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
+
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/bin/prime_* /usr/bin/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libprime* /usr/lib/x86_64-linux-gnu/
 COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
@@ -58,11 +62,11 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libcurl4 libczmq4 libluajit-5.1-2 \
-      libprotobuf-lite17 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3.8-minimal python3-distutils python-is-python3 \
+      libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      curl gdb locales parallel python3.10-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && \
     cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
     rm -rf /var/lib/apt/lists/* && \
     \
     # python smoke test
-    python3 -c "import valhalla,sys; print (sys.version, valhalla)"
+    python3 -c "import valhalla,sys; print(sys.version, valhalla)"

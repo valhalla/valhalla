@@ -88,7 +88,10 @@
     "service": {
       "proxy": "ipc:///tmp/thor"
     },
-    "max_reserved_labels_count": 1000000,
+    "max_reserved_labels_count_astar": 2000000,
+    "max_reserved_labels_count_bidir_astar": 1000000,
+    "max_reserved_labels_count_dijkstras": 4000000,
+    "max_reserved_labels_count_bidir_dijkstras": 2000000,
     "extended_search": false
   },
   "odin": {
@@ -269,7 +272,8 @@
     "max_radius": 200,
     "max_timedep_distance": 500000,
     "max_alternates": 2,
-    "max_exclude_polygons_length": 10000
+    "max_exclude_polygons_length": 10000,
+    "max_distance_disable_hierarchy_culling": 0
   },
   "statsd": {
     "port": 8125,

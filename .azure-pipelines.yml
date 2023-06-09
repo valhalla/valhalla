@@ -7,7 +7,10 @@
 
 # No wildcards allowed for file patterns...
 # skip draft PR's, skip all commits except for PRs to master
-trigger: none
+trigger:
+  branches:
+    include:
+      - master
 pr:
   branches:
     include:
@@ -17,7 +20,6 @@ pr:
       - README.md
       - CHANGELOG.md
       - bench/
-      - docker/
       - docs/
       - run_route_scripts/
       - test/
@@ -26,12 +28,12 @@ pr:
   drafts: false
 
 jobs:
-  - job: VS2019
-    displayName: 'Windows 2019 | VS2019'
+  - job: VS2022
+    displayName: 'Windows 2022 | VS2022'
     timeoutInMinutes: 120
 
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'windows-2022'
 
     variables:
       BUILD_CFG: 'Release'
@@ -39,7 +41,7 @@ jobs:
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: '2022.08.15'
+      VCPKG_REF: '45b0e4b'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
@@ -114,7 +116,7 @@ jobs:
         displayName: 'Download Ninja'
 
       - script: |
-          pip install conan
+          pip install "conan<2.0.0"
         displayName: Install conan
 
       - script: |
@@ -124,7 +126,7 @@ jobs:
           popd
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
-          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DLUA_INCLUDE_DIR=%VCPKG_DIR%\installed\%TRIPLET%-windows\include\luajit -DLUA_LIBRARIES=%VCPKG_DIR%\installed\%TRIPLET%-windows\lib\lua51.lib"
+          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF
         env:
           CONAN_USER_HOME: $(CONAN_HOME)
         displayName: 'Run CMake to configure build'

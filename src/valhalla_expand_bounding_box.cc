@@ -1,12 +1,12 @@
-#include "baldr/graphreader.h"
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
+#include <string>
 
 #include <boost/property_tree/ptree.hpp>
 #include <cxxopts.hpp>
-#include <string>
 
+#include "baldr/graphreader.h"
+#include "baldr/rapidjson_utils.h"
 #include "config.h"
+#include "filesystem.h"
 
 namespace bpt = boost::property_tree;
 
@@ -55,8 +55,7 @@ int main(int argc, char** argv) {
     }
 
     // configure logging
-    boost::optional<boost::property_tree::ptree&> logging_subtree =
-        pt.get_child_optional("mjolnir.logging");
+    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
     if (logging_subtree) {
       auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                                      std::unordered_map<std::string, std::string>>(

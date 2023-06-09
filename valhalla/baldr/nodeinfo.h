@@ -200,6 +200,16 @@ public:
   }
 
   /**
+   * Evaluates a basic set of conditions to determine if this node is eligible for contraction.
+   * @return true if the node has at least 2 edges and does not represent a fork, gate or toll booth.
+   */
+  bool can_contract() const {
+    return edge_count() >= 2 && intersection() != IntersectionType::kFork &&
+           type() != NodeType::kGate && type() != NodeType::kTollBooth &&
+           type() != NodeType::kTollGantry && type() != NodeType::kSumpBuster;
+  }
+
+  /**
    * Set the node type.
    * @param  type  node type.
    */
@@ -358,11 +368,13 @@ public:
 
   /**
    * Get the connecting way id for a transit stop (stored in headings_ while transit data
-   * is connected to the road network.
+   * is connected to the road network). Returns 0 if unset or if used for lon lat
    * @return Returns the connecting way id for a transit stop.
    */
   uint64_t connecting_wayid() const {
-    return headings_;
+    // if the last bit is unset this is a wayid (or unset or headings) for transit in/egress. we
+    // return 0 for the way id if a connection point (lon, lat) was encoded here instead
+    return headings_ >> 63 ? 0 : headings_;
   }
 
   /**
@@ -370,6 +382,23 @@ public:
    * @param  wayid  Connecting wayid.
    */
   void set_connecting_wayid(const uint64_t wayid);
+
+  /**
+   * Get the connection point location to be used for associating this transit station to the road
+   * network or an invalid point if it is unset
+   * @return the connection point or an invalid lon lat
+   */
+  midgard::PointLL connecting_point() const {
+    // if the last bit is set this is a connection point for transit in/egress
+    return headings_ >> 63 ? midgard::PointLL(headings_) : midgard::PointLL();
+  }
+
+  /**
+   * Sets the connection point location to be used for associating this transit in/egress to the road
+   * network
+   * @param p the location where the in/egress should connect to the road network
+   */
+  void set_connecting_point(const midgard::PointLL& p);
 
   /**
    * Get the heading of the local edge given its local index. Supports
@@ -472,9 +501,12 @@ protected:
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
   uint64_t spare2_ : 17;
 
-  // Headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to nearest 2 degrees)
-  // for all other levels. Connecting way Id (for transit level) while data build occurs.
-  // Need to keep this in NodeInfo since it is used in map-matching.
+  // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
+  // nearest 2 degrees)for all other levels.
+  // Sadly we need to keep this for now because its used in map matching, otherwise we could remove it
+  // Also for transit levels (while building data only) it can be used for either the connecting way
+  // id for matching the connection point of the station to the edge or an encoded lon lat pair for
+  // the exact connection point. If the highest bit is set its a lon lat otherwise its a way id
   uint64_t headings_;
 };
 

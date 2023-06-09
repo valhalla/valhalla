@@ -93,7 +93,7 @@ bool WalkTransitLines(const GraphId& n_graphId,
       // are we on the same trip from the previous edge?
       if (departure && !visited && (tripid == 0 || departure->tripid() == tripid)) {
 
-        const TransitRoute* route = endnodetile->GetTransitRoute(departure->routeid());
+        const TransitRoute* route = endnodetile->GetTransitRoute(departure->routeindex());
         // are we on the correct route?
         if (endnodetile->GetName(route->one_stop_offset()) == route_name) {
           visited_map.emplace(edgeid, departure->departure_time());

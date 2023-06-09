@@ -309,6 +309,8 @@ message Costing {
     }
     uint32 fixed_speed = 80;
     uint32 axle_count = 81;
+    float use_lit = 82;
+    bool disable_hierarchy_pruning = 83;
   }
 
   oneof has_options {
@@ -391,6 +393,7 @@ message Options {
   oneof has_range {
     bool range = 10;                                               // Used in /height if the range between points should be serialized  [default = false]
   }
+  // verbose needs to stay oneof, so that matrix serializer can default to true
   oneof has_verbose {
     bool verbose = 11;                                             // Used in /locate & /status request to give back extensive information [default = false]
   }
@@ -464,7 +467,7 @@ message Options {
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
+    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   }
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
@@ -475,8 +478,8 @@ message Options {
   repeated ExpansionProperties expansion_properties = 51;          // The array keys (ExpansionTypes enum) to return in the /expansions's GeoJSON "properties"
   PbfFieldSelector pbf_field_selector = 52;                        // Which pbf fields to include in the pbf format response
   bool reverse = 53;                                               // should the isochrone expansion be done in the reverse direction, ignored for multimodal isochrones
-  uint32 matrix_locations = 54;                                    // Number of matrix locations found that will trigger an early exit from
-                                                                   // a one to many or many to one time distance matrix. Does not affect
-                                                                   // sources_to_targets when either sources or targets has more than 1 location
+  oneof has_matrix_locations {                                     // Number of matrix locations found that will trigger an early exit from
+    uint32 matrix_locations = 54;                                  // a one to many or many to one time distance matrix. Does not affect
+  }                                                                // sources_to_targets when either sources or targets has more than 1 location
                                                                    // or when CostMatrix is the selected matrix mode.
 }

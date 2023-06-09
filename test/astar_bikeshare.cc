@@ -1,13 +1,12 @@
-#include "test.h"
+#include <algorithm> // std::copy
+#include <optional>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include "loki/worker.h"
 #include "odin/worker.h"
+#include "test.h"
 #include "thor/worker.h"
-
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
-
-#include <algorithm> // std::copy
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR
@@ -59,7 +58,7 @@ void test_request(const std::string& request,
                   // We mark only the maneuvers that are RentBike and ReturnBike
                   const std::map<size_t, BssManeuverType>& expected_bss_maneuver,
                   const std::map<size_t, std::string>& expected_bss_ref = {},
-                  const boost::optional<const std::string&>& expected_shape = {}) {
+                  const std::optional<std::string>& expected_shape = {}) {
 
   route_tester tester;
   auto response = tester.test(request);
@@ -363,7 +362,7 @@ TEST(AstarBss, test_clear_reserved_memory) {
 
 TEST(AstarBss, test_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_astar", 10);
 
   AstarBSSTest astar(config);
   astar.Clear();

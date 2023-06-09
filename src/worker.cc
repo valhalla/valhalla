@@ -17,6 +17,7 @@
 #include "thor/worker.h"
 #include "worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
@@ -67,7 +68,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {124, {124, "No edge/node costing provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "costing_required"}},
     {125, {125, "No costing method found", 400, HTTP_400, OSRM_INVALID_OPTIONS, "wrong_costing"}},
     {126, {126, "No shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_required"}},
-    {127, {127, "Recostings require both name and costing parameters", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {127, {127, "Recostings require a valid costing parameter", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {128, {128, "Recostings require a unique 'name' field for each recosting", 400, HTTP_400, OSRM_INVALID_OPTIONS, "no_recosting_duplicate_names"}},
     {130, {130, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, "location_parse_failed"}},
     {131, {131, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, "source_parse_failed"}},
     {132, {132, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, "target_parse_failed"}},
@@ -151,6 +153,12 @@ const std::unordered_map<int, std::string> warning_codes = {
   {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
+  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
+  // 3xx is used when costing options were specified but we had to change them internally for some reason
+  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
+  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
 };
 // clang-format on
 
@@ -921,7 +929,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
@@ -929,12 +943,17 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
   if (recostings && recostings->IsArray()) {
+    // make sure we only have unique recosting names in the end
+    std::unordered_set<std::string> names;
+    names.reserve(recostings->GetArray().Size());
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
       sif::ParseCosting(doc, key, options.add_recostings());
       if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
+      } else if (!names.insert(options.recostings().rbegin()->name()).second) {
+        throw valhalla_exception_t{128};
       }
     }
     // TODO: throw if not all names are unique?
@@ -973,7 +992,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
@@ -982,13 +1001,20 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_exclude_polygons();
-    try {
-      for (const auto& req_poly : rings_req->GetArray()) {
-        auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly);
-      }
-    } catch (...) { throw valhalla_exception_t{137}; }
+    if (!rings_req->IsArray()) {
+      add_warning(api, 204);
+    } else {
+      auto* rings_pbf = options.mutable_exclude_polygons();
+      try {
+        for (const auto& req_poly : rings_req->GetArray()) {
+          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+            continue;
+          }
+          auto* ring = rings_pbf->Add();
+          parse_ring(ring, req_poly);
+        }
+      } catch (...) { throw valhalla_exception_t{137}; }
+    }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {

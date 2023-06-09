@@ -165,8 +165,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      config.get_child_optional("loki.logging");
+  auto logging_subtree = config.get_child_optional("loki.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -180,11 +179,14 @@ int main(int argc, char** argv) {
     worker_concurrency = std::stoul(argv[2]);
   }
 
+  uint32_t request_timeout = config.get<uint32_t>("httpd.service.timeout_seconds");
+
   // setup the cluster within this process
   zmq::context_t context;
   std::thread server_thread =
-      std::thread(std::bind(&http_server_t::serve, http_server_t(context, listen, loki_proxy + "_in",
-                                                                 loopback, interrupt, true)));
+      std::thread(std::bind(&http_server_t::serve,
+                            http_server_t(context, listen, loki_proxy + "_in", loopback, interrupt,
+                                          true, DEFAULT_MAX_REQUEST_SIZE, request_timeout)));
 
   // loki layer
   std::thread loki_proxy_thread(

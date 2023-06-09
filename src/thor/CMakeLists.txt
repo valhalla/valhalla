@@ -1,7 +1,11 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
-  alternates.cc
+    alternates.cc
+    triplegbuilder.cc
+    worker.cc)
+
+set(sources_with_warnings
   astar_bss.cc
   bidirectional_astar.cc
   centroid.cc
@@ -22,34 +26,30 @@ set(sources
   timedistancebssmatrix.cc
   trace_attributes_action.cc
   trace_route_action.cc
-  triplegbuilder.cc
   triplegbuilder_utils.h
-  unidirectional_astar.cc
-  worker.cc)
+  unidirectional_astar.cc)
 
-if (UNIX AND NOT APPLE AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    alternates.cc
-    attributes_controller.cc
-    triplegbuilder.cc
-    worker.cc
-  PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif ()
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
 
 valhalla_module(NAME thor
   SOURCES ${sources}
+  SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
   DEPENDS
     valhalla::proto
     valhalla::sif

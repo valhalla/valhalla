@@ -30,9 +30,14 @@ set(includes
      ${VALHALLA_SOURCE_DIR}/valhalla
      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
+
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
 
 set(sources
     accessrestriction.cc
@@ -45,6 +50,9 @@ set(sources
     directededge.cc
     edgeinfo.cc
     graphid.cc
+    graphreader.cc
+    graphtile.cc
+    graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
     nodeinfo.cc
@@ -64,17 +72,13 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
     verbal_text_formatter_us_co.cc
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
-
-set (sources_with_warnings
-    graphreader.cc
-    graphtile.cc
-    graphtileheader.cc)
 
 list(APPEND sources
     #basic timezone stuff
@@ -95,23 +99,15 @@ list(APPEND sources
 list(APPEND sources_with_warnings
     tz_alt.cpp)
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-          ${sources}
-          PROPERTIES COMPILE_FLAGS "-Werror -Wall -Wextra -Wno-unused-parameter")
-endif()
-
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
   list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
 endif()
 
 valhalla_module(NAME baldr
   SOURCES
     ${sources}
+  SOURCES_WITH_WARNINGS
     ${sources_with_warnings}
 
   HEADERS
@@ -121,6 +117,9 @@ valhalla_module(NAME baldr
       ${includes}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
 
   DEPENDS
     valhalla::midgard

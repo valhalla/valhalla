@@ -12,8 +12,22 @@
 #include <unordered_map>
 #include <vector>
 
+// date emits a warning otherwise for C++17, see
+// https://github.com/valhalla/valhalla/pull/3878#issuecomment-1365487437
+#define HAS_UNCAUGHT_EXCEPTIONS 1
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 #include <date/date.h>
 #include <date/tz.h>
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
+#endif
 
 #include <valhalla/baldr/graphconstants.h>
 #include <valhalla/baldr/nodeinfo.h>

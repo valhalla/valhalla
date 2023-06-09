@@ -1,7 +1,3 @@
-#include "baldr/rapidjson_utils.h"
-#include <boost/format.hpp>
-#include <boost/optional.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
@@ -10,10 +6,13 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
+#include "baldr/rapidjson_utils.h"
+#include <boost/format.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
+#include "config.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "odin/directionsbuilder.h"
@@ -152,8 +151,7 @@ int main(int argc, char* argv[]) {
   rapidjson::read_json(config.c_str(), pt);
 
   // configure logging
-  boost::optional<boost::property_tree::ptree&> logging_subtree =
-      pt.get_child_optional("thor.logging");
+  auto logging_subtree = pt.get_child_optional("thor.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -191,7 +189,8 @@ int main(int argc, char* argv[]) {
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
         kv.first == "trace" || kv.first == "isochrone" || kv.first == "centroid" ||
         kv.first == "max_alternates" || kv.first == "max_exclude_polygons_length" ||
-        kv.first == "status" || kv.first == "max_timedep_distance_matrix") {
+        kv.first == "status" || kv.first == "max_timedep_distance_matrix" ||
+        kv.first == "max_distance_disable_hierarchy_culling") {
       continue;
     }
     max_matrix_distance.emplace(kv.first,
@@ -233,8 +232,8 @@ int main(int argc, char* argv[]) {
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
     res.clear();
-    res = matrix.SourceToTarget(options.sources(), options.targets(), reader, mode_costing, mode,
-                                max_distance);
+    res = matrix.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
+                                mode_costing, mode, max_distance);
     matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
