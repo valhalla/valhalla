@@ -11,6 +11,7 @@ const prime_server::headers_t::value_type CORS{"Access-Control-Allow-Origin", "*
 
 namespace valhalla {
 namespace incidents {
+enum IncidentsAction { NONE = 0, UPDATE = 1, DELETE = 2, RESET = 3, GEOJSON = 4 };
 
 using tile_edges_t = std::unordered_map<uint32_t, std::vector<uint32_t>>;
 
@@ -18,7 +19,6 @@ void run_service(const boost::property_tree::ptree& config);
 
 class incident_worker_t : public service_worker_t {
 public:
-  enum IncidentsAction { NONE = 0, UPDATE = 1, DELETE = 2, RESET = 3 };
   incident_worker_t(const boost::property_tree::ptree& config,
                     const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
@@ -29,8 +29,8 @@ public:
   void set_interrupt(const std::function<void()>* interrupt) override;
 
 protected:
-  bool incidents(IncidentsAction action, rapidjson::Document& req);
-  std::vector<baldr::GraphId> update_traffic(const rapidjson::Document& req_doc);
+  std::string incidents(IncidentsAction action, rapidjson::Document& req);
+  std::vector<std::vector<vb::GraphId>> get_matched_edges(const rapidjson::Document& req_doc);
   unsigned int thread_count;
   boost::property_tree::ptree config;
   std::shared_ptr<baldr::GraphReader> reader;
@@ -42,11 +42,17 @@ private:
   }
 
   prime_server::worker_t::result_t
-  to_incident_response(bool success, prime_server::http_request_info_t& request_info) const {
-    prime_server::headers_t headers{CORS, worker::JSON_MIME};
+  to_incident_response(const std::string& data,
+                       prime_server::http_request_info_t& request_info) const {
+    prime_server::headers_t headers{CORS};
+    auto status_code = 204U;
+    if (!data.empty()) {
+      headers.emplace(worker::JSON_MIME);
+      status_code = 200U;
+    }
     prime_server::worker_t::result_t result{false, std::list<std::string>(), ""};
-    auto status_code = success ? 204U : 400U;
-    prime_server::http_response_t response(status_code, "", "", headers);
+    auto status_code = data.empty() ? 204U : 200U;
+    prime_server::http_response_t response(status_code, "OK", data, headers);
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
     return result;

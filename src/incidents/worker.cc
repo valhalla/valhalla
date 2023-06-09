@@ -40,9 +40,11 @@ incident_worker_t::incident_worker_t(const boost::property_tree::ptree& config_t
     : service_worker_t(config_tree), config(config_tree), reader(graph_reader) {
 
   // set the available threads and initialize as many actors as needed
-  thread_count =
-      std::max(static_cast<unsigned int>(1),
-               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  // thread_count =
+  //    std::max(static_cast<unsigned int>(1),
+  //             config.get<unsigned int>("mjolnir.concurrency",
+  //             std::thread::hardware_concurrency()));
+  thread_count = 1;
   LOG_INFO("Running incident action with " + std::to_string(thread_count) + " threads...");
 
   actors.reserve(thread_count);
@@ -88,8 +90,10 @@ worker_t::result_t incident_worker_t::work(const std::list<zmq::message_t>& job,
       action = IncidentsAction::DELETE;
     } else if (http_request.path == "/reset") {
       action = IncidentsAction::RESET;
+    } else if (http_request.path == "/geojson") {
+      action = IncidentsAction::GEOJSON;
     } else {
-      throw valhalla_exception_t{106, "/update, /delete, /reset"};
+      throw valhalla_exception_t{106, "/update, /delete, /reset, /geojson"};
     }
     result = to_incident_response(incident_worker_t::incidents(action, document), info);
 

@@ -89,9 +89,6 @@ int main(int argc, char** argv) {
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
     valhalla::midgard::logging::Configure(logging_config);
   }
-  auto nthreads =
-      std::max(static_cast<std::uint32_t>(1),
-               pt.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   // setup the server & proxy within this process
   zmq::context_t context;
