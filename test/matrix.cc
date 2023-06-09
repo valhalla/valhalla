@@ -169,7 +169,8 @@ const auto test_request_osrm = R"({
       {"lat":52.103105,"lon":5.081005},
       {"lat":52.094273,"lon":5.075254}
     ],
-    "costing":"auto"
+    "costing":"auto",
+    "format": "osrm"
   })";
 
 // clang-format off
@@ -178,6 +179,23 @@ std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837},
                                                      {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
                                                      {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
 // clang-format on
+
+void check_osrm_response(std::string& res, std::string& algo) {
+  rapidjson::Document res_doc;
+  res_doc.Parse(res);
+
+  ASSERT_FALSE(res_doc.HasParseError());
+
+  std::string status = "Ok";
+  EXPECT_EQ(res_doc["code"].GetString(), status) << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["algorithm"].GetString(), algo) << "Didn't work for " + algo;
+
+  EXPECT_NEAR(res_doc["distances"].GetArray()[0][0].GetDouble(), 28, 1) << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["durations"].GetArray()[0][0].GetInt64(), 28) << "Didn't work for " + algo;
+  EXPECT_NEAR(res_doc["distances"].GetArray()[3][3].GetDouble(), 1680, 1)
+      << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["durations"].GetArray()[3][3].GetInt64(), 1825) << "Didn't work for " + algo;
+}
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -358,8 +376,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
   }
 }
 
-// TODO: it was commented before. Why?
-TEST(Matrix, DISABLED_test_matrix_osrm) {
+TEST(Matrix, test_matrix_osrm) {
   loki_worker_t loki_worker(config);
 
   Api request;
@@ -376,30 +393,15 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
 
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  auto matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
-    EXPECT_EQ(matrix.distances()[i], matrix_answers[i][1])
-        << "result " + std::to_string(i) +
-               "'s distance is not close enough to expected value for CostMatrix.";
-
-    EXPECT_EQ(matrix.times()[i], matrix_answers[i][0])
-        << "result " + std::to_string(i) +
-               "'s time is not close enough to expected value for CostMatrix.";
-  }
-  request.clear_matrix();
+  auto json_res = tyr::serializeMatrix(request);
+  std::string algo = "costmatrix";
+  check_osrm_response(json_res, algo);
 
   TimeDistanceMatrix timedist_matrix;
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
-    EXPECT_EQ(matrix.distances()[i], matrix_answers[i][1])
-        << "result " + std::to_string(i) +
-               "'s distance is not equal to the expected value for TimeDistMatrix.";
-
-    EXPECT_EQ(matrix.times()[i], matrix_answers[i][0])
-        << "result " + std::to_string(i) +
-               "'s time is not equal to the expected value for TimeDistMatrix";
-  }
+  json_res = tyr::serializeMatrix(request);
+  algo = "timedistancematrix";
+  check_osrm_response(json_res, algo);
 }
 
 const auto test_request_partial = R"({

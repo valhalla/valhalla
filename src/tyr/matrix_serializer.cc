@@ -48,7 +48,7 @@ json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
 namespace osrm_serializers {
 
 // Serialize route response in OSRM compatible format.
-std::string serialize(const Api& request, double distance_scale) {
+std::string serialize(const Api& request) {
   auto json = json::map({});
   auto time = json::array({});
   auto distance = json::array({});
@@ -64,8 +64,7 @@ std::string serialize(const Api& request, double distance_scale) {
     time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                           options.targets_size()));
     distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
-                                              options.targets_size(), source_index, 0,
-                                              distance_scale));
+                                              options.targets_size(), source_index, 0, 1.0));
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
@@ -185,7 +184,7 @@ std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
   switch (request.options().format()) {
     case Options_Format_osrm:
-      return osrm_serializers::serialize(request, distance_scale);
+      return osrm_serializers::serialize(request);
     case Options_Format_json:
       return valhalla_serializers::serialize(request, distance_scale);
     case Options_Format_pbf:
