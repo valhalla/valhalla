@@ -1,6 +1,6 @@
 file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/incidents/*.h)
 
-set(sources worker.cc incident_action.cc edge_matcher.cc)
+set(sources worker.cc incident_action.cc edge_matcher.cc utils.cc)
 
 # treat date library as system
 set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
