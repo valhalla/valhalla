@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 import json
+import multiprocessing as mp
 from typing import List, Union
 
 
@@ -30,7 +31,7 @@ config = {
         'user_agent': Optional(str),
         'tile_url': Optional(str),
         'tile_url_gz': Optional(bool),
-        'concurrency': Optional(int),
+        'concurrency': mp.cpu_count(),
         'tile_dir': '/data/valhalla',
         'tile_extract': '/data/valhalla/tiles.tar',
         'traffic_extract': '/data/valhalla/traffic.tar',
@@ -288,7 +289,7 @@ help_text = {
         'user_agent': 'User-Agent http header to request single tiles',
         'tile_url': 'Http location to read tiles from if they are not found in the tile_dir, e.g.: http://your_valhalla_tile_server_host:8000/some/Optional/path/{tilePath}?some=Optional&query=params. Valhalla will look for the {tilePath} portion of the url and fill this out with a given tile path when it make a request for that tile',
         'tile_url_gz': 'Whether or not to request for compressed tiles',
-        'concurrency': 'How many threads to use in the concurrent parts of tile building',
+        'concurrency': 'How many threads to use in the concurrently running executables or parts of executables. Default all.',
         'tile_dir': 'Location to read/write tiles to/from',
         'tile_extract': 'Location to read tiles from tar',
         'traffic_extract': 'Location to read traffic from tar',
