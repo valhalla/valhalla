@@ -25,10 +25,11 @@ public:
    *  produce small unused/unreferenced holes in those arrays but avoids the problem of having to
    *  offset all the ids. We could also avoid wasting space by offsetting all the things, we'll have
    *  to see which is easier than the other
-   * @param pt   Property tree containing the hierarchy configuration
+   * @param pt          Property tree containing the hierarchy configuration
+   * @param num_threads the number of threads to use
    *             and other configuration needed to build transit.
    */
-  static void Build(const boost::property_tree::ptree& pt);
+  static void Build(const boost::property_tree::ptree& pt, uint32_t num_threads);
 };
 
 } // namespace mjolnir

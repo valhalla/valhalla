@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
   // args
   filesystem::path config_file_path;
   bpt::ptree config;
+  uint32_t num_threads = 0;
 
   try {
     // clang-format off
@@ -91,7 +92,8 @@ int main(int argc, char** argv) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -152,10 +154,13 @@ int main(int argc, char** argv) {
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // spawn threads to modify the tiles
-  auto concurrency =
+  num_threads =
+      num_threads ||
       std::max(static_cast<unsigned int>(1),
                config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  std::vector<std::shared_ptr<std::thread>> threads(concurrency);
+  LOG_INFO("Assigning speeds with " + std::to_string(num_threads) + " threads.");
+
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::list<std::promise<std::pair<size_t, size_t>>> results;
   std::mutex lock;
   for (auto& thread : threads) {

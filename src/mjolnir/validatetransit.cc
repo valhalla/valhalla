@@ -449,14 +449,13 @@ void ParseLogFile(const std::string& filename) {
 // Enhance the local level of the graph
 bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
                                const std::unordered_set<GraphId>& tiles,
-                               const std::vector<OneStopTest>& onestoptests) {
+                               const std::vector<OneStopTest>& onestoptests,
+                               uint32_t num_threads) {
 
-  unsigned int thread_count =
-      std::max(static_cast<unsigned int>(1), std::thread::hardware_concurrency());
+  num_threads = num_threads || std::max(1U, std::thread::hardware_concurrency());
   auto t1 = std::chrono::high_resolution_clock::now();
 
   std::unordered_set<GraphId> all_tiles;
-  LOG_INFO("Validating transit network.");
   boost::property_tree::ptree local_pt = pt;
 
   // if we called validate from valhalla_validate_transit then tiles is empty....go get the tiles.
@@ -505,7 +504,7 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
   }
 
   // A place to hold worker threads and their results
-  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -514,7 +513,8 @@ bool ValidateTransit::Validate(const boost::property_tree::ptree& pt,
   std::list<std::promise<validate_stats>> results;
 
   // Start the threads, divvy up the work
-  LOG_INFO("Validating " + std::to_string(all_tiles.size()) + " transit tiles...");
+  LOG_INFO("Validating " + std::to_string(all_tiles.size()) + " transit tiles with " +
+           std::to_string(num_threads) + " threads.");
   size_t floor = all_tiles.size() / threads.size();
   size_t at_ceiling = all_tiles.size() - (threads.size() * floor);
   std::unordered_set<GraphId>::const_iterator tile_start, tile_end = all_tiles.begin();

@@ -577,7 +577,8 @@ namespace mjolnir {
  * */
 void BssBuilder::Build(const boost::property_tree::ptree& pt,
                        const OSMData& osmdata,
-                       const std::string& bss_nodes_bin) {
+                       const std::string& bss_nodes_bin,
+                       uint32_t num_threads) {
 
   if (!pt.get<bool>("mjolnir.import_bike_share_stations", false)) {
     return;
@@ -613,17 +614,16 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
     bss_by_tile[tile_id].push_back(node);
   }
 
-  size_t nb_threads =
-      std::max(static_cast<uint32_t>(1),
-               pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  std::vector<std::shared_ptr<std::thread>> threads(nb_threads);
+  num_threads = num_threads || std::max(1U, pt.get<uint32_t>("mjolnir.concurrency",
+                                                             std::thread::hardware_concurrency()));
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
 
   // Start the threads
   LOG_INFO("Adding " + std::to_string(osm_nodes.size()) + " bike share stations to " +
-           std::to_string(bss_by_tile.size()) + " local graphs with " + std::to_string(nb_threads) +
+           std::to_string(bss_by_tile.size()) + " local graphs with " + std::to_string(num_threads) +
            " thread(s)");
 
   std::vector<BSSConnection> all;

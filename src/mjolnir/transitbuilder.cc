@@ -530,7 +530,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Add transit to the graph
-void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
+void TransitBuilder::Build(const boost::property_tree::ptree& pt, uint32_t num_threads) {
 
   auto t1 = std::chrono::high_resolution_clock::now();
   std::unordered_set<GraphId> tiles;
@@ -598,8 +598,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
 
   // A place to hold worker threads and their results
   std::vector<std::shared_ptr<std::thread>> threads(
-      std::max(static_cast<uint32_t>(1),
-               pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+      num_threads ||
+      std::max(1U, pt.get<uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency())));
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;
@@ -608,7 +608,8 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   std::list<std::promise<builder_stats>> results;
 
   // Start the threads, divvy up the work
-  LOG_INFO("Adding " + std::to_string(tiles.size()) + " transit tiles to the local graph...");
+  LOG_INFO("Adding " + std::to_string(tiles.size()) + " transit tiles to the local graph with " +
+           std::to_string(num_threads) + " threads.");
   size_t floor = tiles.size() / threads.size();
   size_t at_ceiling = tiles.size() - (threads.size() * floor);
   std::unordered_set<GraphId>::const_iterator tile_start, tile_end = tiles.begin();

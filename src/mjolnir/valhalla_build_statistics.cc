@@ -36,6 +36,7 @@ using namespace valhalla::baldr;
 using namespace valhalla::mjolnir;
 
 filesystem::path config_file_path;
+uint32_t num_threads = 0;
 
 namespace {
 
@@ -499,7 +500,7 @@ void build(const boost::property_tree::ptree& pt,
 }
 } // namespace
 
-void BuildStatistics(const boost::property_tree::ptree& pt) {
+void BuildStatistics(const boost::property_tree::ptree& pt, uint32_t nthreads) {
 
   // Graph tile properties
   auto tile_properties = pt.get_child("mjolnir");
@@ -540,9 +541,8 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
   LOG_INFO("Gathering information about the tiles in " + pt.get<std::string>("mjolnir.tile_dir"));
 
   // Setup threads
-  std::vector<std::shared_ptr<std::thread>> threads(
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency())));
+  std::vector<std::shared_ptr<std::thread>> threads(nthreads);
+  LOG_INFO("Buildings statistics with " + std::to_string(nthreads) + " threads...");
 
   // Setup promises
   std::list<std::promise<statistics>> results;
@@ -581,7 +581,8 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -628,7 +629,11 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(loggin_config);
   }
 
-  BuildStatistics(pt);
+  num_threads =
+      num_threads ||
+      std::max(1U, pt.get<unsigned int>("concurrency", std::thread::hardware_concurrency()));
+
+  BuildStatistics(pt, num_threads);
 
   return EXIT_SUCCESS;
 }

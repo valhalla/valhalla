@@ -48,12 +48,14 @@ public:
    * @param pt            property tree containing the hierarchy configuration
    * @param all_tiles     unordered set of all the transit tiles.
    * @param onestoptests  list of origin and destinations to test
+   * @param num_threads   Amount of threads to use
    *
    * @return  did everything pass?
    */
   static bool Validate(const boost::property_tree::ptree& pt,
                        const std::unordered_set<baldr::GraphId>& all_tiles,
-                       const std::vector<OneStopTest>& onestoptests);
+                       const std::vector<OneStopTest>& onestoptests,
+                       uint32_t num_threads);
 };
 
 } // namespace mjolnir

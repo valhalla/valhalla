@@ -1,9 +1,8 @@
 ## Release Date: 2022-??-?? Valhalla 3.4.1
 * **Removed**
-   * REMOVED: -j arg from valhalla_add_predicted_traffic [#4151](https://github.com/valhalla/valhalla/pull/4151)
 * **Bug Fix**
 * **Enhancement**
-   * CHANGED: make "mjolnir.concurrency" non-optional in the config generator and default to all threads [#4151](https://github.com/valhalla/valhalla/pull/4151)
+   * CHANGED: let all executables in mjolnir have a -j flag for concurrency and prefer that over the config's value [#4151](https://github.com/valhalla/valhalla/pull/4151)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

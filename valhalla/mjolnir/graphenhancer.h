@@ -18,10 +18,12 @@ public:
    * @param pt          property tree containing the hierarchy configuration
    * @param osmdata     OSM data used to enhance the turn lanes.
    * @param access_file where to store the access tags so they are not in memory
+   * @param num_threads the number of threads to use
    */
   static void Enhance(const boost::property_tree::ptree& pt,
                       const OSMData& osmdata,
-                      const std::string& access_file);
+                      const std::string& access_file,
+                      uint32_t num_threads);
 };
 
 } // namespace mjolnir

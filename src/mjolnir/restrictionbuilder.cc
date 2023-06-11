@@ -726,7 +726,8 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
                                const std::string& complex_from_restrictions_file,
-                               const std::string& complex_to_restrictions_file) {
+                               const std::string& complex_to_restrictions_file,
+                               uint32_t num_threads) {
 
   boost::property_tree::ptree hierarchy_properties = pt.get_child("mjolnir");
   GraphReader reader(hierarchy_properties);
@@ -746,13 +747,14 @@ void RestrictionBuilder::Build(const boost::property_tree::ptree& pt,
     // A place to hold worker threads and their results, exceptions or otherwise
 
     std::vector<std::shared_ptr<std::thread>> threads(
-        std::max(static_cast<unsigned int>(1),
-                 pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+        num_threads || std::max(1U, pt.get<unsigned int>("mjolnir.concurrency",
+                                                         std::thread::hardware_concurrency())));
     // Hold the results (DataQuality/stats) for the threads
     std::vector<std::promise<Result>> promises(threads.size());
 
     // Start the threads
-    LOG_INFO("Adding Restrictions at level " + std::to_string(tl->level));
+    LOG_INFO("Adding Restrictions at level " + std::to_string(tl->level) + " with " +
+             std::to_string(num_threads) + " threads");
     for (size_t i = 0; i < threads.size(); ++i) {
       threads[i].reset(new std::thread(build, std::cref(complex_from_restrictions_file),
                                        std::cref(complex_to_restrictions_file),

@@ -21,21 +21,25 @@ namespace mjolnir {
  * @brief Processes the data from 'select_transit_tiles' into GraphTiles, adding the data into the
  * valhalla graph.
  *
- * @param pt Property tree containing the hierarchy configuration
- *             and other configuration needed to build transit.
+ * @param pt          Property tree containing the hierarchy configuration
+ *                    and other configuration needed to build transit.
+ * @param num_threads the number of threads to use.
  * @return std::list<baldr::GraphId> dangling tiles that contain stop_pairs that go inter-tiles
  */
-std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt);
+std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt, uint32_t num_threads);
 
 /**
  * @brief Processes transit routes that go through multiple tiles and stitches the graphs that are
  * connected.
  *
- * @param pt Property tree containing the hierarchy configuration
- *             and other configuration needed to build transit.
+ * @param pt          Property tree containing the hierarchy configuration
+ *                    and other configuration needed to build transit.
+ * @param num_threads the number of threads to use.
  * @param dangling_tiles tiles where routes go past its boundaries
  */
-void stitch_transit(const boost::property_tree::ptree& pt, std::list<baldr::GraphId>& dangling_tiles);
+void stitch_transit(const boost::property_tree::ptree& pt,
+                    std::list<baldr::GraphId>& dangling_tiles,
+                    uint32_t num_threads);
 
 /**
  * @brief Get a protobuf file and create a Valhalla Transit tile according to its data

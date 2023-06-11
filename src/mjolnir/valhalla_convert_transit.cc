@@ -9,6 +9,7 @@
 filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
+uint32_t num_threads;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -23,8 +24,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("target_directory", "Path to write transit tiles", cxxopts::value<std::string>())
-      ("test_file", "file where tests are written", cxxopts::value<std::string>());
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
 
     options.parse_positional({"target_directory", "test_file"});
     // clang-format on
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   }
 
   LOG_INFO("Building transit network.");
-  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
-  valhalla::mjolnir::ValidateTransit::Validate(pt, all_tiles, onestoptests);
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt, num_threads);
+  valhalla::mjolnir::ValidateTransit::Validate(pt, all_tiles, onestoptests, num_threads);
   return 0;
 }

@@ -19,10 +19,12 @@ public:
    * @param pt                             property tree containing the hierarchy configuration
    * @param complex_from_restriction_file  where to grab the complex from restrictions
    * @param complex_to_restriction_file    where to grab the complex to restrictions
+   * @param num_threads                    number of threads to use
    */
   static void Build(const boost::property_tree::ptree& pt,
                     const std::string& complex_from_restriction_file,
-                    const std::string& complex_to_restriction_file);
+                    const std::string& complex_to_restriction_file,
+                    uint32_t num_threads);
 };
 
 } // namespace mjolnir

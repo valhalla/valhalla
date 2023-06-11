@@ -5,6 +5,7 @@
 #include <cxxopts.hpp>
 
 filesystem::path config_file_path;
+uint32_t num_threads;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -18,7 +19,8 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -60,10 +62,10 @@ int main(int argc, char** argv) {
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
-  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt, num_threads);
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
+  valhalla::mjolnir::stitch_transit(pt, dangling_tiles, num_threads);
 
   return 0;
 }

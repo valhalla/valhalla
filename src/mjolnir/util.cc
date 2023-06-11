@@ -176,7 +176,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage,
                     const BuildStage end_stage,
-                    const bool release_osmpbf_memory) {
+                    const bool release_osmpbf_memory,
+                    uint32_t num_threads) {
   auto remove_temp_file = [](const std::string& fname) {
     if (filesystem::exists(fname)) {
       filesystem::remove(fname);
@@ -321,7 +322,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, pronunciation_bin, tiles);
+                        cr_to_bin, pronunciation_bin, tiles, num_threads);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -332,7 +333,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kEnhance) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
-    GraphEnhancer::Enhance(config, osm_data, access_bin);
+    GraphEnhancer::Enhance(config, osm_data, access_bin, num_threads);
   }
 
   // Perform optional edge filtering (remove edges and nodes for specific access modes)
@@ -342,7 +343,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Add transit
   if (start_stage <= BuildStage::kTransit && BuildStage::kTransit <= end_stage) {
-    TransitBuilder::Build(config);
+    TransitBuilder::Build(config, num_threads);
   }
 
   // Build bike share stations
@@ -350,7 +351,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kBss) {
       osm_data.read_from_unique_names_file(tile_dir);
     }
-    BssBuilder::Build(config, osm_data, bss_nodes_bin);
+    BssBuilder::Build(config, osm_data, bss_nodes_bin, num_threads);
   }
 
   // Builds additional hierarchies if specified within config file. Connections
@@ -377,7 +378,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Add elevation to the tiles
   if (start_stage <= BuildStage::kElevation && BuildStage::kElevation <= end_stage) {
-    ElevationBuilder::Build(config);
+    ElevationBuilder::Build(config, {}, num_threads);
   }
 
   // Build the Complex Restrictions
@@ -385,12 +386,12 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   // elevation into the tiles reads each tile and serializes the data to "builders"
   // within the tile. However, there is no serialization currently available for complex restrictions.
   if (start_stage <= BuildStage::kRestrictions && BuildStage::kRestrictions <= end_stage) {
-    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin);
+    RestrictionBuilder::Build(config, cr_from_bin, cr_to_bin, num_threads);
   }
 
   // Validate the graph and add information that cannot be added until full graph is formed.
   if (start_stage <= BuildStage::kValidate && BuildStage::kValidate <= end_stage) {
-    GraphValidator::Validate(config);
+    GraphValidator::Validate(config, num_threads);
   }
 
   // Cleanup bin files

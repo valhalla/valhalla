@@ -18,11 +18,13 @@ public:
   /**
    * @brief Add elevation information to the graph tiles.
    * param[in] config Config file to set ElevationBuilder properties
+   * param[in] threads Amount of threads.
    * param[in] tile_ids Sequence of valhalla tile ids to build elevation tiles for.
    * @attention It is considered that tiles are from the directory specified in config file.
    */
   static void Build(const boost::property_tree::ptree& config,
-                    std::deque<baldr::GraphId> tile_ids = {});
+                    const std::deque<baldr::GraphId> tile_ids = {},
+                    const uint32_t num_threads = 0);
 };
 
 } // namespace mjolnir

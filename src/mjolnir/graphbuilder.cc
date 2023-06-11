@@ -1227,7 +1227,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::string& pronunciation_file,
-                         const std::map<GraphId, size_t>& tiles) {
+                         const std::map<GraphId, size_t>& tiles,
+                         uint32_t num_threads) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
   DataQuality stats;
@@ -1247,13 +1248,13 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   }
   ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file,
                              static_cast<uint32_t>(rc));
-  unsigned int threads =
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  num_threads =
+      num_threads ||
+      std::max(1U, pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
+  BuildLocalTiles(num_threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, pronunciation_file,
                   tiles, tile_dir, stats, pt);
   stats.LogStatistics();

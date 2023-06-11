@@ -36,7 +36,7 @@ namespace bpt = boost::property_tree;
 // args
 boost::property_tree::ptree config;
 filesystem::path traffic_tile_dir;
-unsigned int num_threads;
+unsigned int num_threads = 0;
 bool summary = false;
 
 namespace {
@@ -253,7 +253,7 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<unsigned int>(num_threads))
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
@@ -337,6 +337,11 @@ int main(int argc, char** argv) {
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
+  // if not specified by user, take the config (defaults to all)
+  std::uint32_t num_threads =
+      num_threads ||
+      std::max(static_cast<std::uint32_t>(1),
+               config.get<std::uint32_t>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 

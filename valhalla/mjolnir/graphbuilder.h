@@ -47,7 +47,8 @@ public:
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
                     const std::string& pronunciation_file,
-                    const std::map<baldr::GraphId, size_t>& tiles);
+                    const std::map<baldr::GraphId, size_t>& tiles,
+                    uint32_t num_threads = 0);
 
   static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
                                                      const std::string& ways_file,

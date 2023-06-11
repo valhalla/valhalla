@@ -1752,13 +1752,14 @@ namespace mjolnir {
 // Enhance the local level of the graph
 void GraphEnhancer::Enhance(const boost::property_tree::ptree& pt,
                             const OSMData& osmdata,
-                            const std::string& access_file) {
-  LOG_INFO("Enhancing local graph...");
-
+                            const std::string& access_file,
+                            uint32_t num_threads) {
   // A place to hold worker threads and their results, exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+      num_threads ||
+      std::max(1U, pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+
+  LOG_INFO("Enhancing local graph with " + std::to_string(num_threads) + " threads.");
 
   // A place to hold the results of those threads, exceptions or otherwise
   std::list<std::promise<enhancer_stats>> results;

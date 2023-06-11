@@ -1215,7 +1215,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
 namespace valhalla {
 namespace mjolnir {
 
-std::unordered_set<GraphId> convert_transit(const ptree& pt) {
+std::unordered_set<GraphId> convert_transit(const ptree& pt, uint32_t num_threads) {
 
   // figure out which transit tiles even exist
   filesystem::recursive_directory_iterator transit_file_itr(
@@ -1231,10 +1231,10 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     }
   }
 
-  auto thread_count =
-      pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
-                                                           std::thread::hardware_concurrency()));
-  LOG_INFO("Building transit network.");
+  num_threads = num_threads || pt.get<unsigned int>("mjolnir.concurrency",
+                                                    std::max(static_cast<unsigned int>(1),
+                                                             std::thread::hardware_concurrency()));
+  LOG_INFO("Converting transit tiles with " + std::to_string(num_threads) + " threads.");
 
   auto t1 = std::chrono::high_resolution_clock::now();
   if (!all_tiles.size()) {
@@ -1249,7 +1249,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   // and populate tiles
 
   // A place to hold worker threads and their results
-  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
   // An atomic object we can use to do the synchronization
   std::mutex lock;

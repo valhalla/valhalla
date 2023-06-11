@@ -852,7 +852,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // thread and call ingest_tiles
-std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
+std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt, uint32_t num_threads) {
   // remove transit directory if it exists
   std::string transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   if (transit_dir.back() != filesystem::path::preferred_separator) {
@@ -868,19 +868,19 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
     gtfs_dir.push_back(filesystem::path::preferred_separator);
   }
 
-  auto thread_count =
-      pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
-                                                           std::thread::hardware_concurrency()));
+  num_threads =
+      num_threads ||
+      pt.get<unsigned int>("mjolnir.concurrency", std::max(1U, std::thread::hardware_concurrency()));
   // go get information about what transit tiles we should be fetching
   LOG_INFO("Tiling GTFS Feeds");
   auto tiles = select_transit_tiles(gtfs_dir);
 
   LOG_INFO("Writing " + std::to_string(tiles.size()) + " transit pbf tiles with " +
-           std::to_string(thread_count) + " threads...");
+           std::to_string(num_threads) + " threads...");
 
   // schedule some work
   unique_transit_t uniques;
-  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::list<GraphId>>> promises(threads.size());
 
   auto pbf_trip_limit = pt.get<uint32_t>("mjolnir.transit_pbf_limit");
@@ -909,11 +909,12 @@ std::list<GraphId> ingest_transit(const boost::property_tree::ptree& pt) {
 }
 
 // thread and call stitch_tiles
-void stitch_transit(const boost::property_tree::ptree& pt, std::list<GraphId>& dangling_tiles) {
+void stitch_transit(const boost::property_tree::ptree& pt,
+                    std::list<GraphId>& dangling_tiles,
+                    uint32_t num_threads) {
 
   auto thread_count =
-      pt.get<unsigned int>("mjolnir.concurrency", std::max(static_cast<unsigned int>(1),
-                                                           std::thread::hardware_concurrency()));
+      pt.get<unsigned int>("mjolnir.concurrency", std::max(1U, std::thread::hardware_concurrency()));
   // figure out which transit tiles even exist
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
   if (transit_dir.back() != filesystem::path::preferred_separator) {

@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
   boost::property_tree::ptree pt;
+  uint32_t num_threads = 0;
 
   try {
 
@@ -48,7 +49,8 @@ int main(int argc, char** argv) {
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("s,start", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value("initialize"))
       ("e,end", "End stage of the build pipeline", cxxopts::value<std::string>()->default_value("cleanup"))
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files))
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     options.parse_positional({"input_files"});
@@ -127,7 +129,7 @@ int main(int argc, char** argv) {
   }
 
   // Build some tiles!
-  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
+  if (build_tile_set(pt, input_files, start_stage, end_stage, num_threads)) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

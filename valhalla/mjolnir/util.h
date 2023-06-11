@@ -144,6 +144,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle);
  * @param start_stage   Starting stage of the pipeline to run
  * @param end_stage     End stage of the pipeline to run
  * @param release_osmpbf_memory Free PBF parsing libs after use.  Saves RAM, but makes libprotobuf
+ * @param num_threads The amount of threads to use.
  * unusable afterwards.  Set to false if you need to perform protobuf operations after building tiles.
  * @return Returns true if no errors occur, false if an error occurs.
  */
@@ -151,7 +152,8 @@ bool build_tile_set(const ptree& config,
                     const std::vector<std::string>& input_files,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate,
-                    const bool release_osmpbf_memory = true);
+                    const bool release_osmpbf_memory = true,
+                    uint32_t num_threads = 0);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with

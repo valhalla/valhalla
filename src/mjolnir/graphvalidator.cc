@@ -537,8 +537,7 @@ void bin_tweeners(const std::string& tile_dir,
 namespace valhalla {
 namespace mjolnir {
 
-void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
-  LOG_INFO("Validating, finishing and binning tiles...");
+void GraphValidator::Validate(const boost::property_tree::ptree& pt, uint32_t num_threads) {
   auto hierarchy_properties = pt.get_child("mjolnir");
   std::string tile_dir = hierarchy_properties.get<std::string>("tile_dir");
 
@@ -562,8 +561,10 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
 
   // Setup threads
   std::vector<std::shared_ptr<std::thread>> threads(
-      std::max(static_cast<unsigned int>(1),
-               pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+      num_threads ||
+      std::max(1U, pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency())));
+  LOG_INFO("Validating, finishing and binning tiles with " + std::to_string(num_threads) +
+           " threads.");
 
   // Setup promises
   std::list<
@@ -600,7 +601,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
   LOG_INFO("Finished");
 
   // run a pass to add the edges that binned to tweener tiles
-  LOG_INFO("Binning inter-tile edges...");
+  LOG_INFO("Binning inter-tile edges with " + std::to_string(num_threads) + " threads.");
   auto start = tweeners.begin();
   auto end = tweeners.end();
   for (auto& thread : threads) {
