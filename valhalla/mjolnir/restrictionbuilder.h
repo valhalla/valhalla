@@ -24,7 +24,7 @@ public:
   static void Build(const boost::property_tree::ptree& pt,
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
-                    uint32_t num_threads);
+                    uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

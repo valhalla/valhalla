@@ -21,7 +21,7 @@ public:
   static void Build(const boost::property_tree::ptree& pt,
                     const OSMData& osmdata,
                     const std::string& bss_nodes_bin,
-                    uint32_t num_threads);
+                    uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

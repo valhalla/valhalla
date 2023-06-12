@@ -24,7 +24,7 @@ public:
    */
   static void Build(const boost::property_tree::ptree& config,
                     const std::deque<baldr::GraphId> tile_ids = {},
-                    const uint32_t num_threads = 0);
+                    const uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

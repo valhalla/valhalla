@@ -17,7 +17,7 @@ public:
   /**
    * Validate the graph tiles.
    */
-  static void Validate(const boost::property_tree::ptree& pt, uint32_t num_threads);
+  static void Validate(const boost::property_tree::ptree& pt, uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

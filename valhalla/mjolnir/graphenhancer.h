@@ -23,7 +23,7 @@ public:
   static void Enhance(const boost::property_tree::ptree& pt,
                       const OSMData& osmdata,
                       const std::string& access_file,
-                      uint32_t num_threads);
+                      uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

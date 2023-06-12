@@ -29,7 +29,7 @@ public:
    * @param num_threads the number of threads to use
    *             and other configuration needed to build transit.
    */
-  static void Build(const boost::property_tree::ptree& pt, uint32_t num_threads);
+  static void Build(const boost::property_tree::ptree& pt, uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

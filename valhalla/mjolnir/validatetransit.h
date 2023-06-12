@@ -55,7 +55,7 @@ public:
   static bool Validate(const boost::property_tree::ptree& pt,
                        const std::unordered_set<baldr::GraphId>& all_tiles,
                        const std::vector<OneStopTest>& onestoptests,
-                       uint32_t num_threads);
+                       uint32_t num_threads = 0U);
 };
 
 } // namespace mjolnir

@@ -153,7 +153,7 @@ bool build_tile_set(const ptree& config,
                     const BuildStage start_stage = BuildStage::kInitialize,
                     const BuildStage end_stage = BuildStage::kValidate,
                     const bool release_osmpbf_memory = true,
-                    uint32_t num_threads = 0);
+                    uint32_t num_threads = 0U);
 
 // The tile manifest is a JSON-serializable index of tiles to be processed during the build stage of
 // valhalla_build_tiles'. It can be used to distribute shard keys when building tiles with

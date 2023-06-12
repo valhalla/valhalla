@@ -553,10 +553,10 @@ TEST(GtfsExample, MakeProto) {
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
-  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt, 0U);
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  valhalla::mjolnir::stitch_transit(pt, dangling_tiles, 0U);
+  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
   // call the two functions, in main valhalla_ingest-transit it's gonna write protobufs
   filesystem::recursive_directory_iterator transit_file_itr(
       pt.get<std::string>("mjolnir.transit_dir"));
@@ -729,7 +729,7 @@ TEST(GtfsExample, MakeTile) {
   bool date_before_tile = false;
 
   // this creates routable transit tiles but doesnt connect them to the rest of the graph
-  auto all_tiles = valhalla::mjolnir::convert_transit(pt, 0U);
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
 
   // now we have to build the tiles again to get the transit tiles connected to the regular graph
   map = gurka::buildtiles(layout, ways, {}, {}, pt);

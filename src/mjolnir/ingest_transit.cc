@@ -913,7 +913,8 @@ void stitch_transit(const boost::property_tree::ptree& pt,
                     std::list<GraphId>& dangling_tiles,
                     uint32_t num_threads) {
 
-  auto thread_count =
+  num_threads =
+      num_threads ||
       pt.get<unsigned int>("mjolnir.concurrency", std::max(1U, std::thread::hardware_concurrency()));
   // figure out which transit tiles even exist
   auto transit_dir = pt.get<std::string>("mjolnir.transit_dir");
@@ -932,10 +933,10 @@ void stitch_transit(const boost::property_tree::ptree& pt,
   }
 
   LOG_INFO("Stitching " + std::to_string(dangling_tiles.size()) + " transit tiles with " +
-           std::to_string(thread_count) + " threads...");
+           std::to_string(num_threads) + " threads...");
 
   // figure out where the work should go
-  std::vector<std::shared_ptr<std::thread>> threads(thread_count);
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
 
   // make let them rip
   std::mutex lock;

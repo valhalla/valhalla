@@ -18,6 +18,6 @@ namespace mjolnir {
  * @return std::unordered_set<baldr::GraphId> all tiles created
  */
 std::unordered_set<baldr::GraphId> convert_transit(const boost::property_tree::ptree& pt,
-                                                   uint32_t num_threads);
+                                                   uint32_t num_threads = 0U);
 } // namespace mjolnir
 } // namespace valhalla

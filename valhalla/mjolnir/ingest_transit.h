@@ -26,7 +26,8 @@ namespace mjolnir {
  * @param num_threads the number of threads to use.
  * @return std::list<baldr::GraphId> dangling tiles that contain stop_pairs that go inter-tiles
  */
-std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt, uint32_t num_threads);
+std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt,
+                                         uint32_t num_threads = 0U);
 
 /**
  * @brief Processes transit routes that go through multiple tiles and stitches the graphs that are
@@ -39,7 +40,7 @@ std::list<baldr::GraphId> ingest_transit(const boost::property_tree::ptree& pt, 
  */
 void stitch_transit(const boost::property_tree::ptree& pt,
                     std::list<baldr::GraphId>& dangling_tiles,
-                    uint32_t num_threads);
+                    uint32_t num_threads = 0U);
 
 /**
  * @brief Get a protobuf file and create a Valhalla Transit tile according to its data
