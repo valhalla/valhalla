@@ -321,7 +321,7 @@ void make_tile() {
   boost::property_tree::ptree conf;
   rapidjson::read_json(json, conf);
 
-  vj::GraphValidator::Validate(conf);
+  vj::GraphValidator::Validate(conf, 0U);
 }
 
 TEST(Search, test_single_node) {
