@@ -5,7 +5,7 @@
 #include <cxxopts.hpp>
 
 filesystem::path config_file_path;
-uint32_t num_threads;
+uint32_t num_threads = 0;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {

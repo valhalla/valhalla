@@ -19,6 +19,7 @@
 using namespace valhalla::mjolnir;
 
 filesystem::path config_file_path;
+uint32_t num_threads = 0;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -33,7 +34,8 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -98,7 +100,7 @@ int main(int argc, char** argv) {
       std::sort(onestoptests.begin(), onestoptests.end());
       // Validate transit
       std::unordered_set<valhalla::baldr::GraphId> all_tiles;
-      if (!ValidateTransit::Validate(pt, all_tiles, onestoptests)) {
+      if (!ValidateTransit::Validate(pt, all_tiles, onestoptests, num_threads)) {
         return EXIT_FAILURE;
       }
     } else if (build_validate == "build") {

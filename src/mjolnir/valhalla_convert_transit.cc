@@ -9,7 +9,7 @@
 filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
-uint32_t num_threads;
+uint32_t num_threads = 0;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
