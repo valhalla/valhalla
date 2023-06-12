@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "baldr/transitdeparture.h"
 #include "midgard/logging.h"
 

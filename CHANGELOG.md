@@ -1,6 +1,7 @@
 ## Release Date: 2022-??-?? Valhalla 3.4.1
 * **Removed**
 * **Bug Fix**
+   * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
 * **Enhancement**
    * CHANGED: let all executables in mjolnir have a -j flag for concurrency and prefer that over the config's value [#4151](https://github.com/valhalla/valhalla/pull/4151)
 
