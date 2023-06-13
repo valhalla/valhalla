@@ -215,7 +215,6 @@ TEST(Standalone, ReclassifyFerryConnectionRouteModes) {
     };
   }
 }
-
 TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
   // for these values of 'highway' tag edge class is upgraded in order to connect ferry to a
   // high-class road
@@ -229,12 +228,14 @@ TEST_P(FerryTest, ReclassifyFerryConnectionPerMode) {
 TEST(Standalone, ReclassifyFerryUntagDestOnly) {
   // access=customers should be untagged if it's present on connecting edge(s)
   // see https://github.com/valhalla/valhalla/issues/3941#issuecomment-1407713742
-  // EF is destonly -> should untag DE, EF, but not BC and take the faster path
-  // GH is not destonly -> shouldn't untag any destonly and take the detour
+  // CD is destonly -> should untag BC, CD and take the faster path
+  // EF is not destonly -> shouldn't untag FG and take the detour
+
+  // the X is bcs of https://github.com/valhalla/valhalla/issues/4164
   const std::string ascii_map = R"(
-    A--B--C--D--E--F------G--H--I--J--K
-             |  |            |  |
-             L--M            N--O
+    A--B--C--D------E--F-X-G--H--M
+       |  |            |   |
+       I--J            K---L
   )";
 
   std::map<std::string, std::string> trunk = {{"highway", "trunk"}};
@@ -246,12 +247,10 @@ TEST(Standalone, ReclassifyFerryUntagDestOnly) {
 
   const gurka::ways ways = {
       {"AB", trunk},
-      {"BC", destonly}, // should stay destonly as next is not destonly
-      {"CD", not_destonly},
-      {"DE", destonly},
-      {"DLME", not_destonly},
-      {"EF", destonly},
-      {"FG",
+      {"BC", destonly}, // destonly should be removed when building the graph
+      {"BIJC", not_destonly},
+      {"CD", destonly},
+      {"DE",
        {{"motor_vehicle", "yes"},
         {"motorcar", "yes"},
         {"bicycle", "yes"},
@@ -261,40 +260,44 @@ TEST(Standalone, ReclassifyFerryUntagDestOnly) {
         {"taxi", "yes"},
         {"motorcycle", "yes"},
         {"route", "ferry"}}},
+      {"EF", not_destonly},
+      {"FX", destonly}, // should stay destonly and low-class bcs connecting edge isn't and this will
+                        // be penalized
+      {"XG", destonly}, // should stay destonly and low-class bcs connecting edge isn't and this will
+                        // be penalized
+      {"FKLG", not_destonly},
       {"GH", not_destonly},
-      {"HI", destonly}, // should stay destonly as connecting edge isn't destonly
-      {"HNOI", not_destonly},
-      {"IJ", not_destonly},
-      {"JK", trunk},
+      {"HM", trunk},
   };
 
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 1000);
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_reclassify_destonly");
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
-  // see if right edges were untagged
-  const std::vector<std::pair<std::string, std::string>> untagged_edges = {{"D", "E"}, {"E", "F"}};
-  for (const auto& node_pairs : untagged_edges) {
-    std::string a, b;
-    std::tie(a, b) = node_pairs;
-    auto edge = gurka::findEdgeByNodes(reader, layout, a, b);
-    EXPECT_FALSE(std::get<1>(edge)->destonly()) << "Edge " + a + b + " is destonly";
+  // see if BC was untagged and upclassed
+  auto tagged = gurka::findEdge(reader, layout, "BC", "C");
+  EXPECT_FALSE(std::get<1>(tagged)->destonly()) << "Edge BC shouldn't be destonly";
+  EXPECT_TRUE(std::get<1>(tagged)->classification() == valhalla::baldr::RoadClass::kPrimary);
+
+  // see if FX & XG are still tagged and low class
+  const std::vector<std::pair<std::string, std::string>>& edges = {{"FX", "X"}, {"XG", "G"}};
+  for (const auto& edge : edges) {
+    std::string way, end_node;
+    std::tie(way, end_node) = edge;
+    auto untagged = gurka::findEdge(reader, layout, way, end_node);
+    EXPECT_TRUE(std::get<1>(untagged)->destonly()) << "Edge " + way + " should be destonly";
+    EXPECT_FALSE(std::get<1>(untagged)->classification() == valhalla::baldr::RoadClass::kPrimary);
   }
 
-  // see if right edges are still tagged
-  const std::vector<std::pair<std::string, std::string>> tagged_edges = {{"B", "C"}, {"H", "I"}};
-  for (const auto& node_pairs : tagged_edges) {
-    std::string a, b;
-    std::tie(a, b) = node_pairs;
-    auto edge = gurka::findEdgeByNodes(reader, layout, a, b);
-    EXPECT_TRUE(std::get<1>(edge)->destonly()) << "Edge " + a + b + " is not destonly";
-  }
+  // see if FKLG is upclassed
+  auto upclassed = gurka::findEdge(reader, layout, "FKLG", "G");
+  EXPECT_TRUE(std::get<1>(upclassed)->classification() == valhalla::baldr::RoadClass::kPrimary);
 
   // we expect to take the shorter route on the left and the detour on the right
-  for (const auto& mode : {"auto", "motorcycle", "taxi", "bus", "hov", "truck"}) {
-    auto res = gurka::do_action(valhalla::Options::route, map, {"A", "K"}, mode);
-    gurka::assert::raw::expect_path(res,
-                                    {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HNOI", "IJ", "JK"});
+  for (const std::string& mode : {"auto", "motorcycle", "taxi", "bus", "hov", "truck"}) {
+    auto res = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, mode);
+    gurka::assert::raw::expect_path(res, {"AB", "BC", "CD", "DE", "EF", "FKLG", "GH", "HM"},
+                                    mode + " failed.");
   }
 }
 

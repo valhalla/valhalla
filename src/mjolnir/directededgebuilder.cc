@@ -53,7 +53,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   set_truck_route(way.truck_route());
 
   // Set destination only to true if the remove_destonly is set to false and either destination only
-  // or no thru traffic is set. remove_destonly can be set to true when reclassifying ferries.
+  // or no thru traffic is set. remove_destonly is set for reclassified paths due to ferries.
   set_dest_only(!remove_destonly && (way.destination_only() || way.no_thru_traffic()));
   if (remove_destonly && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");

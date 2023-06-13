@@ -61,7 +61,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   uint16_t overall_access_before = baldr::kVehicularAccess;
   uint16_t overall_access_after = 0;
   // find accessible paths for as many modes as we can but stop if we can't find any more
-  while (overall_access_before != overall_access_after) {
+  // or found all modes in the first round
+  while ((overall_access_after != baldr::kVehicularAccess) &&
+         (overall_access_before != overall_access_after)) {
     overall_access_before = overall_access_after;
 
     // which modes do we still have to find a path for?
@@ -80,7 +82,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // Add node to list of node labels, set the node status and add
     // to the adjacency set
     uint32_t nodelabel_index = 0;
-    node_labels.emplace_back(0.0f, node_idx, node_idx, first_edge_destonly, first_edge_destonly);
+    node_labels.emplace_back(0.0f, node_idx, node_idx, first_edge_destonly);
     node_status[node_idx] = {kTemporary, nodelabel_index};
     adjset.push({0.0f, nodelabel_index});
     nodelabel_index++;
@@ -89,6 +91,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // is reached
     uint32_t n = 0;
     uint32_t label_idx = 0;
+    uint32_t last_label_idx = 0;
     while (!adjset.empty()) {
       // Get the next node from the adjacency list/priority queue. Gets its
       // current cost and index
@@ -180,11 +183,11 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           }
         }
 
+        // Get the last label index to form the path
+        last_label_idx = nodelabel_index;
+
         // Add to the node labels and adjacency set. Skip if this is a loop.
-        const bool remove_destonly =
-            first_edge_destonly ? (pred_destonly && w.destination_only()) : false;
-        node_labels.emplace_back(cost, endnode, expand_node_idx, w.destination_only(),
-                                 remove_destonly);
+        node_labels.emplace_back(cost, endnode, expand_node_idx, w.destination_only());
         node_status[endnode] = {kTemporary, nodelabel_index};
         adjset.push({cost, nodelabel_index});
         nodelabel_index++;
@@ -203,7 +206,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge between this node and the predecessor
-      const NodeLabel& node_lab = node_labels[label_idx];
+      const NodeLabel& node_lab = node_labels[last_label_idx];
       uint32_t idx = node_lab.node_index;
       uint32_t pred_node = node_lab.pred_node_index;
       auto expand_node_itr = nodes[idx];
@@ -221,7 +224,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           if (update_edge.attributes.importance > kFerryUpClass) {
             update_edge.attributes.importance = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
-            update_edge.attributes.remove_destonly = node_lab.remove_dest_only;
             element = update_edge;
             edge_count++;
           }
@@ -232,7 +234,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       if (pred_node == node_idx) {
         break;
       }
-      label_idx = node_status[pred_node].index;
+
+      last_label_idx = node_status[pred_node].index;
     }
     // update the overall mode access with the previous path
     overall_access_after |= path_access;
@@ -367,7 +370,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         sequence<Edge>::iterator element = edges[edge.second];
         auto update_edge = *element;
         update_edge.attributes.importance = kFerryUpClass;
-        update_edge.attributes.remove_destonly = remove_destonly;
+        update_edge.attributes.reclass_ferry = remove_destonly;
         element = update_edge;
         total_count++;
       }

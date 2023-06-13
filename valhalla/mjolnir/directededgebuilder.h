@@ -34,7 +34,7 @@ public:
    * @param  restrictions    Mask of simple turn restrictions at the end node
    *                         of this directed edge.
    * @param  bike_network    Mask of bike_networks from relations.
-   * @param  remove_destonly Drop dest_only attribution if necessary for ferry connections
+   * @param  remove_destonly Drop dest_only attribution for reclassified ferry paths
    */
   DirectedEdgeBuilder(const OSMWay& way,
                       const baldr::GraphId& endnode,

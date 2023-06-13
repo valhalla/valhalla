@@ -40,10 +40,9 @@ struct NodeLabel {
   uint32_t node_index;
   uint32_t pred_node_index;
   bool dest_only;
-  bool remove_dest_only;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p, const bool d, const bool r)
-      : cost(c), node_index(n), pred_node_index(p), dest_only(d), remove_dest_only(r) {
+  NodeLabel(const float c, const uint32_t n, const uint32_t p, const bool d)
+      : cost(c), node_index(n), pred_node_index(p), dest_only(d) {
   }
 };
 
