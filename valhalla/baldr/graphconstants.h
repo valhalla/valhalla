@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <unordered_map>
