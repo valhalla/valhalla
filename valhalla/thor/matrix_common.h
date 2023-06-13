@@ -123,6 +123,7 @@ inline void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
   matrix.mutable_to_indices()->Resize(size, 0U);
   matrix.mutable_distances()->Resize(size, 0U);
   matrix.mutable_times()->Resize(size, 0U);
+  matrix.mutable_date_times()->Reserve(size);
 }
 
 } // namespace thor
