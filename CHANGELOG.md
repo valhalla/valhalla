@@ -1,6 +1,7 @@
 ## Release Date: 2022-??-?? Valhalla 3.4.1
 * **Removed**
 * **Bug Fix**
+   * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
 * **Enhancement**
 
