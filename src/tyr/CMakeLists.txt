@@ -4,16 +4,16 @@ set(sources
   actor.cc
   height_serializer.cc
   isochrone_serializer.cc
-  serializers.cc
-  transit_available_serializer.cc)
-
-set(sources_with_warnings
   locate_serializer.cc
   matrix_serializer.cc
   route_serializer.cc
+  serializers.cc
+  trace_serializer.cc
+  transit_available_serializer.cc)
+
+set(sources_with_warnings
   route_serializer_osrm.cc
-  route_serializer_valhalla.cc
-  trace_serializer.cc)
+  route_serializer_valhalla.cc)
 
 # treat date library as system
 set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)

@@ -74,7 +74,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
         // historical traffic information
         auto predicted_speeds = json::array({});
         if (directed_edge->has_predicted_speed()) {
-          for (auto sec = 0; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecPerMinute) {
+          for (auto sec = 0u; sec < midgard::kSecondsPerWeek; sec += 5 * midgard::kSecondsPerMinute) {
             predicted_speeds->emplace_back(
                 static_cast<uint64_t>(tile->GetSpeed(directed_edge, kPredictedFlowMask, sec)));
           }

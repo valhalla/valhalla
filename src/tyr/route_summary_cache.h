@@ -94,11 +94,11 @@ public:
     // A route/leg/maneuver may go on/off the same named road many times.
     // Combine the distances for same named roads - store in a NamedSegment.
     route_leg_segs_by_dist.reserve(routes.size());
-    for (size_t i = 0; i < routes.size(); i++) {
+    for (auto i = 0; i < routes.size(); i++) {
       const DirectionsRoute& route = routes.Get(i);
       std::vector<std::vector<NamedSegment>> leg_segs_by_dist;
       leg_segs_by_dist.reserve(route.legs_size());
-      for (size_t j = 0; j < route.legs_size(); j++) {
+      for (auto j = 0; j < route.legs_size(); j++) {
         const DirectionsLeg& leg = route.legs(j);
         std::unordered_map<std::string, std::pair<uint32_t, float>> maneuver_summary_map;
         maneuver_summary_map.reserve(leg.maneuver_size());
