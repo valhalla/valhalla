@@ -431,8 +431,8 @@ struct IntersectionEdges {
 
 // Process 'indications' array - add indications from left to right
 json::ArrayPtr lane_indications(std::unique_ptr<valhalla::odin::EnhancedTripLeg_Edge>& prev_edge,
-                                const ::valhalla::TurnLane turn_lane) {
-  uint16_t mask = turn_lane.directions_mask();
+                                const valhalla::TurnLane* turn_lane) {
+  uint16_t mask = turn_lane->directions_mask();
   // Process 'indications' array - add indications from left to right
   auto indications = json::array({});
 
@@ -691,7 +691,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
-        lane->emplace("indications", lane_indications(prev_edge, turn_lane));
+        lane->emplace("indications", lane_indications(prev_edge, &turn_lane));
         lanes->emplace_back(std::move(lane));
       }
       intersection->emplace("lanes", std::move(lanes));
@@ -1289,10 +1289,6 @@ json::ArrayPtr banner_instructions(const std::string& name,
     secondaryBannerComponents->emplace_back(banner_component("text", dest));
     secondaryBannerInstruction->emplace("components", std::move(secondaryBannerComponents));
     secondaryBannerInstruction->emplace("text", dest);
-    // secondaryBannerInstruction->emplace("type", maneuver_type);
-    // if (!modifier.empty()) {
-    //   secondaryBannerInstruction->emplace("modifier", modifier);
-    // }
     bannerInstruction->emplace("secondary", std::move(secondaryBannerInstruction));
   }
 
@@ -1301,6 +1297,8 @@ json::ArrayPtr banner_instructions(const std::string& name,
   // available. The lane information can be retrieved much like in the maneuver's intersections.
   // The new bannerInstruction object's distanceAlongGeometry is determined by the first
   // intersection which carries the lane information.
+  //
+  // This is very similar to the lane indication of the last intersection(s).
   //
   // "sub": {
   //   "components": [
@@ -1343,7 +1341,7 @@ json::ArrayPtr banner_instructions(const std::string& name,
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
         }
-        lane->emplace("directions", lane_indications(edge, turn_lane));
+        lane->emplace("directions", lane_indications(edge, &turn_lane));
         lanes->emplace_back(std::move(lane));
       }
     }
