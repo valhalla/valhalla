@@ -1221,6 +1221,8 @@ json::MapPtr banner_component(const std::string& type, const std::string& text) 
 json::ArrayPtr banner_instructions(const std::string& name,
                                    const std::string& ref,
                                    const std::string& dest,
+                                   const valhalla::DirectionsLeg::Maneuver* maneuver,
+                                   valhalla::odin::EnhancedTripLeg* etp,
                                    const std::string& maneuver_type,
                                    const std::string& modifier,
                                    const double distance) {
@@ -1318,6 +1320,46 @@ json::ArrayPtr banner_instructions(const std::string& name,
   //   ],
   //   "text": ""
   // }
+  double disance_along_geometry = distance;
+  json::ArrayPtr lanes = nullptr;
+  for (uint32_t i = maneuver->end_path_index(); i >= maneuver->begin_path_index(); i--) {
+    auto edge = etp->GetPrevEdge(i);
+
+    // We only care about the lanes directly before the end of the maneuver
+    if (edge && (edge->turn_lanes_size() == 0)) {
+      break;
+    }
+    // Process turn lanes - which are stored on the previous edge to the node
+    // Check if there is an active turn lane
+    // Verify that turn lanes are not non-directional
+    if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
+        !edge->HasNonDirectionalTurnLane()) {
+      disance_along_geometry -= units_to_meters(edge->GetLength(Options::kilometers), true);
+      lanes = json::array({});
+      for (const auto& turn_lane : edge->turn_lanes()) {
+        auto lane = banner_component("lane", "");
+        lane->emplace("active", turn_lane.state() == TurnLane::kActive);
+        // Add active_direction for a valid & active lanes
+        if (turn_lane.state() != TurnLane::kInvalid) {
+          lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
+        }
+        lane->emplace("directions", lane_indications(edge, turn_lane));
+        lanes->emplace_back(std::move(lane));
+      }
+    }
+
+    if (lanes != nullptr) {
+      // ToDo: create additional bannerInstruction if disance_along_geometry is far from beginning
+      auto subBannerInstruction = json::map({});
+      subBannerInstruction->emplace("components", std::move(lanes));
+      std::string empty_str = "";
+      subBannerInstruction->emplace("text", empty_str);
+      // ToDo: move this as distanceAlongGeometry into cloned bannerInstruction
+      subBannerInstruction->emplace("ToDo:distanceAlongGeometry",
+                                    json::fixed_t{disance_along_geometry, 3});
+      bannerInstruction->emplace("sub", std::move(subBannerInstruction));
+    }
+  }
 
   bannerInstructions->emplace_back(std::move(bannerInstruction));
 
@@ -1604,7 +1646,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // Add banner instructions if the user requested them
       if (options.banner_instructions() && prev_step) {
         prev_step->emplace("bannerInstructions",
-                           banner_instructions(name, ref, dest, mnvr_type, modifier, prev_distance));
+                           banner_instructions(name, ref, dest, prev_maneuver, &etp, mnvr_type,
+                                               modifier, prev_distance));
       }
 
       // Add exits
