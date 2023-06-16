@@ -1217,12 +1217,11 @@ json::MapPtr banner_component(const std::string& type, const std::string& text) 
 }
 
 // Populate the bannerInstructions record within a step.
-// bannerInstructions are a unified object of maneuvers.name and intersection.lanes
-json::ArrayPtr banner_instructions(std::string& name,
+// bannerInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
+json::ArrayPtr banner_instructions(std::string& main_banner,
                                    const std::string& ref,
                                    const std::string& dest,
                                    const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
-                                   const valhalla::DirectionsLeg_Maneuver* maneuver,
                                    valhalla::odin::EnhancedTripLeg* etp,
                                    const std::string& maneuver_type,
                                    const std::string& modifier,
@@ -1238,7 +1237,7 @@ json::ArrayPtr banner_instructions(std::string& name,
 
   // How do 'primary' banners work?
   // Primary banners hold the most important information and supposed to be the large text in a
-  // navigation app. Mostly they are used to show the name of the upcoming road.
+  // navigation app. Mostly they are used to show the main_banner of the upcoming road.
   // TODO: Highway shield information could be added here as well.
   //
   // "primary": {
@@ -1253,16 +1252,13 @@ json::ArrayPtr banner_instructions(std::string& name,
   // }
   auto primaryBannerInstruction = json::map({});
   auto primaryBannerComponents = json::array({});
-  if (name.empty()) {
-    name = maneuver->text_instruction();
-  }
-  primaryBannerComponents->emplace_back(banner_component("text", name));
+  primaryBannerComponents->emplace_back(banner_component("text", main_banner));
   if (!ref.empty()) {
     primaryBannerComponents->emplace_back(banner_component("delimiter", "/"));
     primaryBannerComponents->emplace_back(banner_component("text", ref));
   }
   primaryBannerInstruction->emplace("components", std::move(primaryBannerComponents));
-  primaryBannerInstruction->emplace("text", name);
+  primaryBannerInstruction->emplace("text", main_banner);
   primaryBannerInstruction->emplace("type", maneuver_type);
   if (!modifier.empty()) {
     primaryBannerInstruction->emplace("modifier", modifier);
@@ -1362,24 +1358,6 @@ json::ArrayPtr banner_instructions(std::string& name,
     }
   }
 
-  bannerInstructions->emplace_back(std::move(bannerInstruction));
-
-  return bannerInstructions;
-}
-
-json::ArrayPtr arrive_banner_instructions(const std::string& text_instruction,
-                                          const double distance) {
-  auto bannerInstructions = json::array({});
-  auto bannerInstruction = json::map({});
-  auto primaryBannerInstruction = json::map({});
-  auto primaryBannerComponents = json::array({});
-  primaryBannerComponents->emplace_back(banner_component("text", text_instruction));
-  primaryBannerInstruction->emplace("components", std::move(primaryBannerComponents));
-  primaryBannerInstruction->emplace("text", text_instruction);
-  primaryBannerInstruction->emplace("type", std::string("arrrive"));
-
-  bannerInstruction->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
-  bannerInstruction->emplace("primary", std::move(primaryBannerInstruction));
   bannerInstructions->emplace_back(std::move(bannerInstruction));
 
   return bannerInstructions;
@@ -1664,17 +1642,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
       // Add banner instructions if the user requested them
       if (options.banner_instructions()) {
+        std::string main_banner = name;
+        if (name.empty() || arrive_maneuver) {
+          main_banner = maneuver.text_instruction();
+        }
         if (prev_step) {
           prev_step->emplace("bannerInstructions",
-                             banner_instructions(name, ref, dest, prev_maneuver, &maneuver, &etp,
+                             banner_instructions(main_banner, ref, dest, prev_maneuver, &etp,
                                                  mnvr_type, modifier, prev_distance));
         }
         if (arrive_maneuver) {
-          prev_step->erase("bannerInstructions");
-          prev_step->emplace("bannerInstructions",
-                             arrive_banner_instructions(maneuver.text_instruction(), prev_distance));
           step->emplace("bannerInstructions",
-                        arrive_banner_instructions(maneuver.text_instruction(), distance));
+                        banner_instructions(main_banner, ref, dest, prev_maneuver, &etp,
+                                            mnvr_type, modifier, distance));
         }
       }
 
