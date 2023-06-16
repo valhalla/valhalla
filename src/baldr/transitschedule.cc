@@ -1,5 +1,6 @@
-#include "baldr/transitschedule.h"
+#include <stdexcept>
 
+#include "baldr/transitschedule.h"
 #include "midgard/logging.h"
 
 namespace valhalla {

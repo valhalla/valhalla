@@ -20,7 +20,7 @@ std::vector<vm::PointLL> get_lng_lat(const std::vector<vb::GraphId>& edge_ids,
                                      vb::GraphReader& reader) {
   std::vector<vm::PointLL> coords(edge_ids.size() + 1ULL);
   vb::graph_tile_ptr tile;
-  const vb::DirectedEdge* current_de;
+  const vb::DirectedEdge* current_de = nullptr;
   for (const auto edge_id : edge_ids) {
     tile = reader.GetGraphTile(edge_id);
     current_de = reader.directededge(edge_id, tile);
@@ -47,7 +47,7 @@ std::string serialize_geojson(const std::vector<std::vector<vb::GraphId>>& all_e
     writer("type", "LineString");
     writer.start_array("coordinates");
 
-    for (const auto coord : get_lng_lat(openlr_edge_ids, reader)) {
+    for (const auto& coord : get_lng_lat(openlr_edge_ids, reader)) {
       writer.start_array(); // single coordinate
       writer(coord.lng());
       writer(coord.lat());
@@ -65,6 +65,8 @@ std::string serialize_geojson(const std::vector<std::vector<vb::GraphId>>& all_e
 
   writer.end_array();  // features
   writer.end_object(); // FeatureCollection
+
+  return writer.get_buffer();
 }
 } // namespace
 
@@ -79,13 +81,15 @@ std::string incident_worker_t::incidents(IncidentsAction action, rapidjson::Docu
     case IncidentsAction::UPDATE:
     case IncidentsAction::DELETE:
     case IncidentsAction::RESET:
-      return "";
+      break;
     case IncidentsAction::GEOJSON:
       return serialize_geojson(edge_ids, *reader);
     default:
       LOG_ERROR("Can't be!");
       break;
   }
+
+  return "";
 }
 } // namespace incidents
 } // namespace valhalla

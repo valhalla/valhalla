@@ -30,7 +30,7 @@ public:
 
 protected:
   std::string incidents(IncidentsAction action, rapidjson::Document& req);
-  std::vector<std::vector<vb::GraphId>> get_matched_edges(const rapidjson::Document& req_doc);
+  std::vector<std::vector<baldr::GraphId>> get_matched_edges(const rapidjson::Document& req_doc);
   unsigned int thread_count;
   boost::property_tree::ptree config;
   std::shared_ptr<baldr::GraphReader> reader;
@@ -51,7 +51,6 @@ private:
       status_code = 200U;
     }
     prime_server::worker_t::result_t result{false, std::list<std::string>(), ""};
-    auto status_code = data.empty() ? 204U : 200U;
     prime_server::http_response_t response(status_code, "OK", data, headers);
     response.from_info(request_info);
     result.messages.emplace_back(response.to_string());
