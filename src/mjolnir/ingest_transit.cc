@@ -102,7 +102,7 @@ struct feed_cache_t {
     }
 
     auto inserted = cache.insert({feed_object.feed, gtfs::Feed(gtfs_dir + feed_object.feed)});
-    inserted.first->second.read_feed();
+    inserted.first->second.read_feed(true);
     return inserted.first->second;
   }
 };
@@ -176,7 +176,7 @@ std::priority_queue<tile_transit_info_t> select_transit_tiles(const std::string&
 
       LOG_INFO("Loading " + feed_name);
       gtfs::Feed feed(feed_path.string());
-      feed.read_feed();
+      feed.read_feed(true);
       LOG_INFO("Done loading, now parsing " + feed_name);
 
       const auto& stops = feed.get_stops();
