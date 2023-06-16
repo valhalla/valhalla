@@ -5,6 +5,7 @@
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
+   * ENHANCED: sped up the transit gtfs ingestion process by sorting the feeds before querying them, forked just_gtfs to accomplish it [#4167](https://github.com/valhalla/valhalla/pull/4167)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
@@ -91,7 +92,7 @@
    * ADDED: Added has_toll, has_higway, has_ferry tags to summary field of a leg and route and a highway tag to a maneuver if it includes a highway. [#3815](https://github.com/valhalla/valhalla/issues/3815)
    * ADDED: Add time info to sources_to_targets [#3795](https://github.com/valhalla/valhalla/pull/3795)
    * ADDED: "available_actions" to the /status response [#3836](https://github.com/valhalla/valhalla/pull/3836)
-   * ADDED: "waiting" field on input/output intermediate break(_through) locations to respect services times [#3849](https://github.com/valhalla/valhalla/pull/3849)
+   * ADDED: "waiting" field on input/output intermediate break(\_through) locations to respect services times [#3849](https://github.com/valhalla/valhalla/pull/3849)
    * ADDED: --bbox & --geojson-dir options to valhalla_build_extract to only archive a subset of tiles [#3856](https://github.com/valhalla/valhalla/pull/3856)
    * CHANGED: Replace unstable c++ geos API with a mix of geos' c api and boost::geometry for admin building [#3683](https://github.com/valhalla/valhalla/pull/3683)
    * ADDED: optional write-access to traffic extract from GraphReader [#3876](https://github.com/valhalla/valhalla/pull/3876)
