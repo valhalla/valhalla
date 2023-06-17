@@ -21,7 +21,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 boost::property_tree::ptree config;
-std::vector<std::string> tiles;
 
 /*
  * This tool downloads elevations from remote storage for each provided tile.
@@ -33,37 +32,8 @@ std::vector<std::string> tiles;
  * - tiles - stays for the path to a tile file.
  * */
 
-std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
-                                 const std::vector<std::string>& tiles) {
-  if (tiles.empty())
-    return {};
-
-  // deduplicate
-  std::unordered_set<std::string> tiles_set(tiles.begin(), tiles.end());
-
-  auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
-    LOG_WARN("Tile storage directory does not exist");
-    return {};
-  }
-
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
-  std::for_each(std::begin(tiles_set), std::end(tiles_set), [&](const auto& tile) {
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
-    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
-    if (!reader.DoesTileExist(local_tile_id)) {
-      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
-      return;
-    }
-
-    tilequeue.push_back(tile_id);
-  });
-
-  return tilequeue;
-}
-
-bool parse_arguments(int argc, char** argv) {
+int main(int argc, char** argv) {
+  std::vector<std::string> tiles;
 
   try {
     // clang-format off
@@ -101,28 +71,20 @@ bool parse_arguments(int argc, char** argv) {
 
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
-      return false;
+      return EXIT_FAILURE;
     } else {
-      for (const auto& tile : tiles) {
+      for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
         if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
           return true;
       }
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
-      return false;
+      return EXIT_FAILURE;
     }
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
-  }
-
-  return true;
-}
-
-int main(int argc, char** argv) {
-  if (!parse_arguments(argc, argv)) {
     return EXIT_FAILURE;
-  };
+  }
 
   auto tile_ids = get_tile_ids(config, tiles);
   if (tile_ids.empty()) {

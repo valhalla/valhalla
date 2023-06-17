@@ -16,9 +16,12 @@ namespace valhalla {
 namespace baldr {
 
 std::deque<baldr::GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
-                                        const std::unordered_set<std::string>& tiles) {
+                                        const std::vector<std::string>& tiles) {
   if (tiles.empty())
     return {};
+
+  // deduplicate
+  std::unordered_set<std::string> tiles_set(tiles.begin(), tiles.end());
 
   auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
   if (!tile_dir || !filesystem::exists(*tile_dir)) {
@@ -28,7 +31,7 @@ std::deque<baldr::GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
 
   std::deque<baldr::GraphId> tilequeue;
   baldr::GraphReader reader(pt.get_child("mjolnir"));
-  std::for_each(std::begin(tiles), std::end(tiles), [&](const auto& tile) {
+  std::for_each(std::begin(tiles_set), std::end(tiles_set), [&](const auto& tile) {
     auto tile_id = baldr::GraphTile::GetTileId(*tile_dir + tile);
     baldr::GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
     if (!reader.DoesTileExist(local_tile_id)) {
