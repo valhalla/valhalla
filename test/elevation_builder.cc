@@ -9,14 +9,14 @@
 #include <prime_server/prime_server.hpp>
 
 #include "baldr/curl_tilegetter.h"
+#include "baldr/graph_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/pointll.h"
 #include "midgard/sequence.h"
 #include "mjolnir/elevationbuilder.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/util.h"
-#include "mjolnir/valhalla_add_elevation_utils.h"
+#include "mjolnir/util.h
 #include "pixels.h"
 #include "skadi/sample.h"
 #include "tile_server.h"
