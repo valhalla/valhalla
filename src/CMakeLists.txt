@@ -192,6 +192,7 @@ set(valhalla_src
     worker.cc
     filesystem.cc
     proto_conversions.cc
+    argparse_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
@@ -237,7 +238,8 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   PRIVATE
-    ${libvalhalla_include_directories})
+    ${libvalhalla_include_directories}
+    ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)  # only for argparse_utils.h
 
 target_link_libraries(valhalla
   PUBLIC

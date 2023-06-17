@@ -10,6 +10,7 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "config.h"
@@ -82,16 +83,18 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
+  const std::string program = "valhalla_run_matrix";
   // args
-  std::string json_str, config;
+  std::string json_str;
   uint32_t iterations;
+  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_run_matrix",
-      "valhalla_run_matrix " VALHALLA_VERSION "\n\n"
-      "valhalla_run_matrix is a command line test tool for time+distance matrix routing.\n"
+      program,
+      program + VALHALLA_VERSION + "\n\n"
+      "a command line test tool for time+distance matrix routing.\n"
       "Use the -j option for specifying source to target locations.");
 
     options.add_options()
@@ -106,58 +109,32 @@ int main(int argc, char* argv[]) {
         "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
         "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
       ("m,multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>()->default_value("1"))
-      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_run_matrix " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
 
     if (!result.count("json")) {
-      std::cerr << "A JSON format request must be present."
-                << "\n";
-      return EXIT_FAILURE;
+      throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
     }
     json_str = result["json"].as<std::string>();
 
     iterations = result["multi-run"].as<uint32_t>();
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
   Api request;
   ParseApi(json_str, valhalla::Options::sources_to_targets, request);
   auto& options = *request.mutable_options();
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  auto logging_subtree = pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));

@@ -14,15 +14,13 @@
 #include "config.h"
 #include "mjolnir/elevationbuilder.h"
 
+#include "../argparse_utils.h"
+
 namespace opt = cxxopts;
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
-
-boost::property_tree::ptree config;
-std::vector<std::string> tiles;
-uint32_t num_threads = 0;
 
 /*
  * This tool downloads elevations from remote storage for each provided tile.
@@ -65,60 +63,57 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
 }
 
 bool parse_arguments(int argc, char** argv) {
+}
+
+int main(int argc, char** argv) {
+  const std::string program = "valhalla_add_elevation";
+  // args
+  boost::property_tree::ptree config;
+  std::vector<std::string> tiles;
 
   try {
     // clang-format off
     opt::Options options(
-        "help",
-        " Usage: valhalla_add_elevation [options]\n"
-        "valhalla_add_elevation is a tool for loading elevations for a provided tile. "
+        program,
+        program + VALHALLA_VERSION + "\n\n"
+        "a tool for loading elevations for a provided tile. "
         "The service checks if required elevations stored locally if they are not "
-        "it tries to establish connection to the remote storage(based on the information from configuration file)"
+        "it tries to establish connection to the remote storage (based on the information from configuration file)"
         "and loads required elevations.\n");
 
     options.add_options()
       ("h,help", "Print usage")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the configuration file.",  opt::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("t,tiles", "Tiles to add elevations to", opt::value<std::vector<std::string>>(tiles))
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", opt::value<uint32_t>(num_threads));
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", opt::value<uint32_t>());
     // clang-format on
 
-    auto result = options.parse(argc, argv);
-
-    if (result.count("config") && filesystem::is_regular_file(result["config"].as<std::string>())) {
-      rapidjson::read_json(result["config"].as<std::string>(), config);
-    } else {
-      std::cerr << "Configuration is required\n\n"
-                << "\n\n";
-      return false;
-    }
-
-    if (num_threads) {
-      config.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    const auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
 
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
-      return false;
+      return EXIT_FAILURE;
     } else {
       for (const auto& tile : tiles) {
         if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
           return true;
       }
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
-      return false;
+      return EXIT_FAILURE;
     }
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
+    return EXIT_FAILURE;
   }
 
-  return true;
-}
-
-int main(int argc, char** argv) {
   if (!parse_arguments(argc, argv)) {
     return EXIT_FAILURE;
   };

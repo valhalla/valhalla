@@ -39,6 +39,7 @@
 #include "proto/options.pb.h"
 #include "proto/trip.pb.h"
 
+#include "argparse_utils.h"
 #include "config.h"
 
 using namespace valhalla::midgard;
@@ -463,9 +464,9 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  const std::string program = "valhalla_run_route";
   // args
-  std::string json_str, json_file, config;
-  filesystem::path config_file_path;
+  std::string json_str, json_file;
 
   boost::property_tree::ptree pt;
   bool match_test, verbose_lanes;
@@ -475,9 +476,9 @@ int main(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_run_route",
-      "valhalla_run_route " VALHALLA_VERSION "\n\n"
-      "valhalla_run_route is a command line test tool for shortest path routing.\n"
+      program,
+      program + VALHALLA_VERSION + "\n\n"
+      "a command line test tool for shortest path routing.\n"
       "Use the -j option for specifying the locations and costing method and options.");
 
     options.add_options()
@@ -495,39 +496,13 @@ int main(int argc, char* argv[]) {
       ("match-test", "Test RouteMatcher with resulting shape.", cxxopts::value<bool>(match_test)->default_value("false"))
       ("multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>(iterations)->default_value("1"))
       ("verbose-lanes", "Include verbose lanes output in DirectionsTest.", cxxopts::value<bool>(verbose_lanes)->default_value("false"))
-      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_run_route " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    // parse the config
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      config = config_file_path.string();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-    rapidjson::read_json(config.c_str(), pt);
-
-    // configure logging
-    auto logging_subtree = pt.get_child_optional("thor.logging");
-    if (logging_subtree) {
-      auto logging_config = valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                                     std::unordered_map<std::string, std::string>>(
-          logging_subtree.get());
-      valhalla::midgard::logging::Configure(logging_config);
-    }
 
     if (iterations > 1) {
       multi_run = true;
@@ -541,11 +516,14 @@ int main(int argc, char* argv[]) {
     } else if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else {
-      std::cerr << "Either json or json-file args must be set." << std::endl;
-      return EXIT_FAILURE;
+      throw cxxopts::OptionException("Either json or json-file args must be set.");
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << std::endl;
     return EXIT_FAILURE;
   }
 

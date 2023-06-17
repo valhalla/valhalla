@@ -16,18 +16,21 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/validatetransit.h"
 
+#include "../argparse_utils.h"
+
 using namespace valhalla::mjolnir;
 
-filesystem::path config_file_path;
-uint32_t num_threads = 0;
+int main(int argc, char** argv) {
+  const std::string program = "valhalla_validate_transit";
+  // args
+  boost::property_tree::ptree pt;
 
-bool ParseArguments(int argc, char* argv[]) {
   try {
     // clang-format off
     cxxopts::Options options(
-        "valhalla_validate_transit",
-        "valhalla_validate_transit " VALHALLA_VERSION "\n\n"
-        "valhalla_validate_transit is a program that validates the transit graph and \n"
+        program,
+        program + VALHALLA_VERSION + "\n\n"
+        "a program that validates the transit graph and \n"
         "schedule at a particular time.  It will not use the route tiles at all. It \n"
         "will only use the transit tiles.\n\n");
 
@@ -35,58 +38,20 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      exit(0);
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_validate_transit " << VALHALLA_VERSION << "\n";
-      exit(0);
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-
-    return false;
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
-  }
-
-  return EXIT_FAILURE;
-}
-
-int main(int argc, char** argv) {
-
-  if (!ParseArguments(argc, argv)) {
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
-  }
-
-  // check what type of input we are getting
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
-  if (num_threads) {
-    pt.put<unsigned int>("mjolnir.concurrency", num_threads);
-  }
-
-  // configure logging
-  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    return EXIT_FAILURE;
   }
 
   std::string testfile, build_validate;
