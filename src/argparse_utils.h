@@ -5,6 +5,7 @@
 #include <valhalla/config.h>
 #include <valhalla/filesystem.h>
 #include <valhalla/midgard/logging.h>
+#include <valhalla/midgard/util.h>
 
 /**
  * Parses common command line arguments across executables. It
