@@ -32,39 +32,6 @@ using namespace valhalla::mjolnir;
  * - tiles - stays for the path to a tile file.
  * */
 
-std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
-                                 const std::vector<std::string>& tiles) {
-  if (tiles.empty())
-    return {};
-
-  // deduplicate
-  std::unordered_set<std::string> tiles_set(tiles.begin(), tiles.end());
-
-  auto tile_dir = pt.get_optional<std::string>("mjolnir.tile_dir");
-  if (!tile_dir || !filesystem::exists(*tile_dir)) {
-    LOG_WARN("Tile storage directory does not exist");
-    return {};
-  }
-
-  std::deque<GraphId> tilequeue;
-  GraphReader reader(pt.get_child("mjolnir"));
-  std::for_each(std::begin(tiles_set), std::end(tiles_set), [&](const auto& tile) {
-    auto tile_id = GraphTile::GetTileId(*tile_dir + tile);
-    GraphId local_tile_id(tile_id.tileid(), tile_id.level(), tile_id.id());
-    if (!reader.DoesTileExist(local_tile_id)) {
-      LOG_WARN("Provided tile doesn't belong to the tile directory from config file");
-      return;
-    }
-
-    tilequeue.push_back(tile_id);
-  });
-
-  return tilequeue;
-}
-
-bool parse_arguments(int argc, char** argv) {
-}
-
 int main(int argc, char** argv) {
   const std::string program = "valhalla_add_elevation";
   // args
@@ -113,10 +80,6 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-
-  if (!parse_arguments(argc, argv)) {
-    return EXIT_FAILURE;
-  };
 
   auto tile_ids = get_tile_ids(config, tiles);
   if (tile_ids.empty()) {
