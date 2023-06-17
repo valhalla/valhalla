@@ -69,7 +69,7 @@ bool parse_common_args(const std::string& program,
                                                            std::thread::hardware_concurrency()));
     pt.put<uint32_t>("mjolnir.concurrency", num_threads);
 
-    LOG_INFO("Running " + program + " with " + std::to_string(num_threads) + " threads.");
+    LOG_INFO("Running " + program + " with " + std::to_string(num_threads) + " thread(s).");
   }
 
   return true;

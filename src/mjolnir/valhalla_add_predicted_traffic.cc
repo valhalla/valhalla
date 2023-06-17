@@ -271,11 +271,11 @@ int main(int argc, char** argv) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
     }
-    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
+    traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
-  } catch (cxxopts::OptionException& e) {
+  } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
