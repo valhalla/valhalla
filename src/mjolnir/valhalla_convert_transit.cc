@@ -9,6 +9,7 @@
 filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
+uint32_t num_threads = 0;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -23,6 +24,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads))
       ("target_directory", "Path to write transit tiles", cxxopts::value<std::string>())
       ("test_file", "file where tests are written", cxxopts::value<std::string>());
 
@@ -50,6 +52,10 @@ bool ParseArguments(int argc, char* argv[]) {
       std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
     }
 
+    if (num_threads) {
+      pt.put<unsigned int>("mjolnir.concurrency", num_threads);
+    }
+
     if (result.count("target_directory")) {
       pt.get_child("mjolnir").erase("transit_dir");
       pt.add("mjolnir.transit_dir", result["target_directory"].as<std::string>());
@@ -61,11 +67,6 @@ bool ParseArguments(int argc, char* argv[]) {
       testfile = result["test_file"].as<std::string>();
       onestoptests = valhalla::mjolnir::ParseTestFile(testfile);
       std::sort(onestoptests.begin(), onestoptests.end());
-    }
-
-    if (result.count("target_directory")) {
-      pt.get_child("mjolnir").erase("tile_dir");
-      pt.add("mjolnir.tile_dir", result["target_directory"].as<std::string>());
     }
 
   } catch (cxxopts::OptionException& e) {

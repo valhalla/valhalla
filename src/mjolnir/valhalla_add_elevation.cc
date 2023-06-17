@@ -94,6 +94,10 @@ bool parse_arguments(int argc, char** argv) {
       return false;
     }
 
+    if (num_threads) {
+      config.put<unsigned int>("mjolnir.concurrency", num_threads);
+    }
+
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
       return false;

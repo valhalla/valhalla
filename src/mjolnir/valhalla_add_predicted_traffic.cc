@@ -253,7 +253,7 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads))
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
@@ -291,6 +291,10 @@ bool ParseArguments(int argc, char* argv[]) {
     } else {
       std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
       return false;
+    }
+
+    if (num_threads) {
+      config.put<unsigned int>("mjolnir.concurrency", num_threads);
     }
 
     return true;

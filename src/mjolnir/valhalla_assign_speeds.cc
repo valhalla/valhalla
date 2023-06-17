@@ -79,6 +79,7 @@ int main(int argc, char** argv) {
   // args
   filesystem::path config_file_path;
   bpt::ptree config;
+  uint32_t num_threads = 0;
 
   try {
     // clang-format off
@@ -91,13 +92,14 @@ int main(int argc, char** argv) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
     // clang-format on
 
     auto result = options.parse(argc, argv);
 
     if (result.count("version")) {
-      std::cout << "pbfadminbuilder " << VALHALLA_VERSION << "\n";
+      std::cout << "valhalla_assign_speeds " << VALHALLA_VERSION << "\n";
       return EXIT_SUCCESS;
     }
 
@@ -118,6 +120,10 @@ int main(int argc, char** argv) {
     } else {
       std::cerr << "Configuration is required\n" << options.help() << std::endl;
       return EXIT_FAILURE;
+    }
+
+    if (num_threads) {
+      config.put<unsigned int>("mjolnir.concurrency", num_threads);
     }
 
     if (!result.count("config")) {
