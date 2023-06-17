@@ -123,13 +123,12 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   };
 
-  boost::property_tree::ptree pt;
-  auto tile_ids = get_tile_ids(pt, tiles);
+  auto tile_ids = get_tile_ids(config, tiles);
   if (tile_ids.empty()) {
     std::cerr << "Failed to load tiles\n\n";
     return EXIT_FAILURE;
   }
 
-  ElevationBuilder::Build(pt, tile_ids);
+  ElevationBuilder::Build(config, tile_ids);
   return EXIT_SUCCESS;
 }
