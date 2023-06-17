@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     // input files are positional
     if (!result.count("input_files")) {
-      throw cxxopts::OptionException("Input file is required");
+      throw cxxopts::OptionException("Input file is required\n\n" + options.help());
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;

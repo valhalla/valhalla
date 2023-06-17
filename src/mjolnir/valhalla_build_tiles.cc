@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 
     if (!result.count("input_files") && start_stage <= BuildStage::kParseNodes &&
         end_stage >= BuildStage::kParseWays) {
-      throw cxxopts::OptionException("Input file is required" + options.help() + "\n\n");
+      throw cxxopts::OptionException("Input file is required\n\n" + options.help() + "\n\n");
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;

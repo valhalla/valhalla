@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
       return EXIT_SUCCESS;
 
     if (!result.count("input_files")) {
-      throw cxxopts::OptionException("Input file is required\n\n" + options.help() + "\n\n");
+      throw cxxopts::OptionException("Input file is required\n\n" + options.help());
     }
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
