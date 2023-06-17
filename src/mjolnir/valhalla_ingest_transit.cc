@@ -5,7 +5,7 @@
 #include <cxxopts.hpp>
 
 filesystem::path config_file_path;
-uint32_t num_threads = 0;
+boost::property_tree::ptree pt;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -20,7 +20,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -38,30 +38,31 @@ bool ParseArguments(int argc, char* argv[]) {
     if (result.count("config") &&
         filesystem::is_regular_file(config_file_path =
                                         filesystem::path(result["config"].as<std::string>()))) {
-      return true;
+      rapidjson::read_json(config_file_path.string(), pt);
     } else {
       std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
+      return false;
     }
+
+    pt.put<uint32_t>("mjolnir.concurrency",
+                     result.count("concurrency")
+                         ? result["concurrency"].as<uint32_t>()
+                         : pt.get<uint32_t>("mjolnir.concurrency",
+                                            std::thread::hardware_concurrency()));
+
+    return true;
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
   }
 
-  return EXIT_FAILURE;
+  return false;
 }
 
 int main(int argc, char** argv) {
 
   if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
-  }
-
-  // args and config file loading
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
-  if (num_threads) {
-    pt.put<unsigned int>("mjolnir.concurrency", num_threads);
   }
 
   // spawn threads to download all the tiles returning a list of

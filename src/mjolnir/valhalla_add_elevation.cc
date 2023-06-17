@@ -22,7 +22,6 @@ using namespace valhalla::mjolnir;
 
 boost::property_tree::ptree config;
 std::vector<std::string> tiles;
-uint32_t num_threads = 0;
 
 /*
  * This tool downloads elevations from remote storage for each provided tile.
@@ -81,7 +80,7 @@ bool parse_arguments(int argc, char** argv) {
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the configuration file.",  opt::value<std::string>())
       ("t,tiles", "Tiles to add elevations to", opt::value<std::vector<std::string>>(tiles))
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", opt::value<uint32_t>(num_threads));
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", opt::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -94,9 +93,11 @@ bool parse_arguments(int argc, char** argv) {
       return false;
     }
 
-    if (num_threads) {
-      config.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    config.put<uint32_t>("mjolnir.concurrency",
+                         result.count("concurrency")
+                             ? result["concurrency"].as<uint32_t>()
+                             : config.get<uint32_t>("mjolnir.concurrency",
+                                                    std::thread::hardware_concurrency()));
 
     if (!result.count("tiles")) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";

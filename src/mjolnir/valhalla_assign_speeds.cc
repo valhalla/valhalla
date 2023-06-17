@@ -79,7 +79,6 @@ int main(int argc, char** argv) {
   // args
   filesystem::path config_file_path;
   bpt::ptree config;
-  uint32_t num_threads = 0;
 
   try {
     // clang-format off
@@ -93,7 +92,7 @@ int main(int argc, char** argv) {
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -122,9 +121,11 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
 
-    if (num_threads) {
-      config.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    config.put<uint32_t>("mjolnir.concurrency",
+                         result.count("concurrency")
+                             ? result["concurrency"].as<uint32_t>()
+                             : config.get<uint32_t>("mjolnir.concurrency",
+                                                    std::thread::hardware_concurrency()));
 
     if (!result.count("config")) {
       std::cout << "You must provide a config for loading and modifying tiles.\n";
@@ -158,9 +159,7 @@ int main(int argc, char** argv) {
   std::shuffle(tilequeue.begin(), tilequeue.end(), std::mt19937(3));
 
   // spawn threads to modify the tiles
-  auto concurrency =
-      std::max(static_cast<unsigned int>(1),
-               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+  auto concurrency = std::max(1U, config.get<uint32_t>("mjolnir.concurrency"));
   std::vector<std::shared_ptr<std::thread>> threads(concurrency);
   std::list<std::promise<std::pair<size_t, size_t>>> results;
   std::mutex lock;

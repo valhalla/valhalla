@@ -9,7 +9,6 @@
 filesystem::path config_file_path;
 boost::property_tree::ptree pt;
 std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
-uint32_t num_threads = 0;
 
 bool ParseArguments(int argc, char* argv[]) {
   try {
@@ -24,7 +23,7 @@ bool ParseArguments(int argc, char* argv[]) {
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads))
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>())
       ("target_directory", "Path to write transit tiles", cxxopts::value<std::string>())
       ("test_file", "file where tests are written", cxxopts::value<std::string>());
 
@@ -47,14 +46,16 @@ bool ParseArguments(int argc, char* argv[]) {
         filesystem::is_regular_file(config_file_path =
                                         filesystem::path(result["config"].as<std::string>()))) {
       rapidjson::read_json(config_file_path.string(), pt);
-      return true;
     } else {
       std::cerr << "Configuration file is required\n" << options.help() << "\n\n";
+      return false;
     }
 
-    if (num_threads) {
-      pt.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    pt.put<uint32_t>("mjolnir.concurrency",
+                     result.count("concurrency")
+                         ? result["concurrency"].as<uint32_t>()
+                         : pt.get<uint32_t>("mjolnir.concurrency",
+                                            std::thread::hardware_concurrency()));
 
     if (result.count("target_directory")) {
       pt.get_child("mjolnir").erase("transit_dir");
@@ -69,6 +70,7 @@ bool ParseArguments(int argc, char* argv[]) {
       std::sort(onestoptests.begin(), onestoptests.end());
     }
 
+    return true;
   } catch (cxxopts::OptionException& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
@@ -79,7 +81,7 @@ bool ParseArguments(int argc, char* argv[]) {
               << std::endl;
   }
 
-  return EXIT_FAILURE;
+  return false;
 }
 
 int main(int argc, char** argv) {

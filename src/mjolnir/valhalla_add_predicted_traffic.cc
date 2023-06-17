@@ -36,7 +36,6 @@ namespace bpt = boost::property_tree;
 // args
 boost::property_tree::ptree config;
 filesystem::path traffic_tile_dir;
-unsigned int num_threads;
 bool summary = false;
 
 namespace {
@@ -253,11 +252,11 @@ bool ParseArguments(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads))
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>())
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
-      ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
+      ("t,traffic-tile-dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"traffic-tile-dir"});
@@ -274,11 +273,11 @@ bool ParseArguments(int argc, char* argv[]) {
       exit(0);
     }
 
-    if (!result.count("traffic_tile_dir")) {
+    if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
     }
-    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
+    traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
 
     // Read the config file
     if (result.count("inline-config")) {
@@ -293,9 +292,11 @@ bool ParseArguments(int argc, char* argv[]) {
       return false;
     }
 
-    if (num_threads) {
-      config.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    config.put<uint32_t>("mjolnir.concurrency",
+                         result.count("concurrency")
+                             ? result["concurrency"].as<uint32_t>()
+                             : config.get<uint32_t>("mjolnir.concurrency",
+                                                    std::thread::hardware_concurrency()));
 
     return true;
   } catch (cxxopts::OptionException& e) {
@@ -341,10 +342,9 @@ int main(int argc, char** argv) {
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
+  auto num_threads = std::max(1U, config.get<uint32_t>("mjolnir.concurrency"));
   LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
-
-  std::cout << traffic_tile_dir << std::endl;
 
   LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();

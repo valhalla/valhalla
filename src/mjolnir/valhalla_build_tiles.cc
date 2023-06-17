@@ -30,7 +30,6 @@ int main(int argc, char** argv) {
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
   boost::property_tree::ptree pt;
-  uint32_t num_threads = 0;
 
   try {
 
@@ -50,7 +49,7 @@ int main(int argc, char** argv) {
       ("s,start", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value("initialize"))
       ("e,end", "End stage of the build pipeline", cxxopts::value<std::string>()->default_value("cleanup"))
       ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files))
-      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>(num_threads));
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     options.parse_positional({"input_files"});
@@ -82,9 +81,11 @@ int main(int argc, char** argv) {
       return EXIT_FAILURE;
     }
 
-    if (num_threads) {
-      pt.put<unsigned int>("mjolnir.concurrency", num_threads);
-    }
+    pt.put<uint32_t>("mjolnir.concurrency",
+                     result.count("concurrency")
+                         ? result["concurrency"].as<uint32_t>()
+                         : pt.get<uint32_t>("mjolnir.concurrency",
+                                            std::thread::hardware_concurrency()));
 
     // configure logging
     auto logging_subtree = pt.get_child_optional("mjolnir.logging");
