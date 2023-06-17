@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
-      ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
+      ("t,traffic-tile-dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"traffic-tile-dir"});
@@ -267,7 +267,7 @@ int main(int argc, char** argv) {
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
-    if (!result.count("traffic_tile_dir")) {
+    if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
     }
@@ -311,8 +311,6 @@ int main(int argc, char** argv) {
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
   std::vector<std::shared_ptr<std::thread>> threads(config.get<uint32_t>("mjolnir.concurrency"));
-
-  std::cout << traffic_tile_dir << std::endl;
 
   LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();
