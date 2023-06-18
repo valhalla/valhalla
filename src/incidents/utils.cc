@@ -12,9 +12,9 @@ namespace incidents {
 
 // process the locate output
 void get_locate_req(Api& request,
-                    const vb::OpenLR::LocationReferencePoint& lrp,
+                    const baldr::OpenLR::LocationReferencePoint& lrp,
                     const bool flip_bearing) {
-  const auto bearing = flip_bearing ? (static_cast<uint32_t>(lrp.bearing) + 180UL) % 360UL
+  const auto bearing = flip_bearing ? (static_cast<uint32_t>(lrp.bearing) + 180UL) % 360U
                                     : static_cast<uint32_t>(lrp.bearing);
 
   auto* loc = request.mutable_options()->mutable_locations()->Add();
@@ -40,12 +40,12 @@ void get_route_req(Api& request,
     loc->set_radius(0);
     if (use_bearing) {
       loc->set_heading(std::get<1>(pt));
-      loc->set_heading_tolerance(20UL);
+      loc->set_heading_tolerance(20U);
     }
   }
 
   if (flip_bearing && use_bearing) {
-    const auto bearing = (std::get<1>(b_pt) + 180UL) % 360UL;
+    const auto bearing = (std::get<1>(b_pt) + 180U) % 360U;
     request.mutable_options()->mutable_locations(1)->set_heading(bearing);
   }
 }

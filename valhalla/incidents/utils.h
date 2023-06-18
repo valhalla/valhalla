@@ -2,11 +2,21 @@
 #define __VALHALLA_INCIDENTS_UTILS_H__
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/openlr.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/api.pb.h>
 
 namespace valhalla {
 namespace incidents {
+
+struct OpenLrEdges {
+  uint32_t first_node_offset; // offset from the first edge's start node in m
+  uint32_t last_node_offset;  // offset from the last edge's end node in m
+  std::vector<baldr::GraphId> edge_ids;
+
+  OpenLrEdges() : first_node_offset(0), last_node_offset(0) {
+  }
+};
 
 struct RankEdge {
   // keep the attributes from /locate
@@ -18,7 +28,7 @@ struct RankEdge {
 
   // used for ranking
   uint8_t frc_diff;
-  uint32_t dist_diff;
+  uint32_t dist_diff; // that's the distance between LRP & /locate correlated point
   uint16_t heading_diff;
 
   RankEdge(baldr::GraphId id, uint32_t l, float pct, double lng, double lat)

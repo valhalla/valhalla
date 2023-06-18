@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <prime_server/prime_server.hpp>
 
+#include <valhalla/incidents/utils.h>
 #include <valhalla/tyr/actor.h>
 #include <valhalla/worker.h>
 
@@ -30,7 +31,7 @@ public:
 
 protected:
   std::string incidents(IncidentsAction action, rapidjson::Document& req);
-  std::vector<std::vector<baldr::GraphId>> get_matched_edges(const rapidjson::Document& req_doc);
+  void get_matched_edges(const rapidjson::Document& req_doc, std::vector<OpenLrEdges>& edge_ids);
   unsigned int thread_count;
   boost::property_tree::ptree config;
   std::shared_ptr<baldr::GraphReader> reader;
