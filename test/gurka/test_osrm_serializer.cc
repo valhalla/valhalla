@@ -518,3 +518,44 @@ TEST(Standalone, HeadingNumberAutoRoute) {
   }
   // clang-format on
 }
+
+TEST(Standalone, BannerInstructions) {
+  const std::string ascii_map = R"(
+    D
+    |
+    B---C
+    |
+    A
+  )";
+
+  const gurka::ways ways = {
+      {"AB",
+       {{"highway", "primary"},
+        {"lanes", "2"},
+        {"oneway", "yes"},
+        {"turn:lanes", "straight|right"},
+        {"destination:lanes", "D|C"}}},
+      {"BC", {{"highway", "primary"}}},
+      {"BD", {{"highway", "primary"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {0, 0});
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_banner_instructions");
+
+  auto from = "A";
+  auto to = "C";
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+  auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
+
+  // Validate that each step has bannerInstructions
+  for (int step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
+    ASSERT_TRUE(json["routes"][0]["legs"][0]["steps"][step].HasMember("bannerInstructions"));
+  }
+}
