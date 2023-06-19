@@ -1653,8 +1653,8 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         }
         if (arrive_maneuver) {
           step->emplace("bannerInstructions",
-                        banner_instructions(main_banner, ref, dest, prev_maneuver, &etp,
-                                            mnvr_type, modifier, distance));
+                        banner_instructions(main_banner, ref, dest, prev_maneuver, &etp, mnvr_type,
+                                            modifier, distance));
         }
       }
 
