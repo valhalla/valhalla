@@ -30,7 +30,6 @@ void get_locate_req(Api& request,
 void get_route_req(Api& request,
                    const std::pair<vm::PointLL, uint32_t>&& a_pt,
                    const std::pair<vm::PointLL, uint32_t>&& b_pt,
-                   const bool flip_bearing,
                    const bool use_bearing) {
 
   for (const auto& pt : {a_pt, b_pt}) {
@@ -44,9 +43,9 @@ void get_route_req(Api& request,
     }
   }
 
-  if (flip_bearing && use_bearing) {
-    const auto bearing = (std::get<1>(b_pt) + 180U) % 360U;
-    request.mutable_options()->mutable_locations(1)->set_heading(bearing);
+  if (use_bearing) {
+    request.mutable_options()->mutable_locations(0)->set_heading(std::get<1>(a_pt));
+    request.mutable_options()->mutable_locations(0)->set_heading_tolerance(20);
   }
 }
 

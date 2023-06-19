@@ -12,7 +12,14 @@ const prime_server::headers_t::value_type CORS{"Access-Control-Allow-Origin", "*
 
 namespace valhalla {
 namespace incidents {
-enum IncidentsAction { NONE = 0, UPDATE = 1, DELETE = 2, RESET = 3, GEOJSON = 4 };
+enum IncidentsAction {
+  NONE = 0,
+  UPDATE = 1,
+  DELETE = 2,
+  RESET = 3,
+  GEOJSON_MATCHES = 4,
+  GEOJSON_OPENLR = 5
+};
 
 using tile_edges_t = std::unordered_map<uint32_t, std::vector<uint32_t>>;
 
@@ -20,8 +27,7 @@ void run_service(const boost::property_tree::ptree& config);
 
 class incident_worker_t : public service_worker_t {
 public:
-  incident_worker_t(const boost::property_tree::ptree& config,
-                    const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
+  incident_worker_t(const boost::property_tree::ptree& config);
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
                                                 const std::function<void()>& interrupt) override;

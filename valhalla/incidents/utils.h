@@ -10,8 +10,8 @@ namespace valhalla {
 namespace incidents {
 
 struct OpenLrEdges {
-  uint32_t first_node_offset; // offset from the first edge's start node in m
-  uint32_t last_node_offset;  // offset from the last edge's end node in m
+  float first_node_offset; // offset from the first edge's start node in m
+  float last_node_offset;  // offset from the last edge's end node in m
   std::vector<baldr::GraphId> edge_ids;
 
   OpenLrEdges() : first_node_offset(0), last_node_offset(0) {
@@ -47,13 +47,11 @@ void get_locate_req(Api& request,
  * @param request the request to be mutated
  * @param a_pt    the start point & LRP bearing
  * @param b_pt    the destination point & LRP bearing
- * @param flip_bearing if this is the last segment we'll flip the destination's bearing
  * @param use_bearing whether we even want to use the bearing
  */
 void get_route_req(Api& request,
                    const std::pair<midgard::PointLL, uint32_t>&& a_pt,
                    const std::pair<midgard::PointLL, uint32_t>&& b_pt,
-                   const bool flip_bearing,
                    const bool use_bearing);
 
 } // namespace incidents
