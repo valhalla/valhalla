@@ -535,7 +535,7 @@ TEST(Standalone, BannerInstructions) {
          {"lanes", "2"},
          {"turn:lanes", "through|through;right"}}},
        {"BC", {{"highway", "primary"}, {"name", "Broadway Course"}, {"destination", "Destiny Town"}}},
-       {"CD", {{"name", "Course Drive"}, {"highway", "primary"}}},
+       {"CD", {{"name", "Course Drive"}, {"highway", "primary"}, {"ref", "R2"}}},
        {"BX", {{"highway", "primary"}}},
        {"CY", {{"highway", "primary"}}}};
 
@@ -605,6 +605,16 @@ TEST(Standalone, BannerInstructions) {
   EXPECT_STREQ(primary_1["type"].GetString(), "turn");
   EXPECT_STREQ(primary_1["modifier"].GetString(), "left");
   EXPECT_STREQ(primary_1["text"].GetString(), "Course Drive");
+  ASSERT_TRUE(primary_1.HasMember("components"));
+  ASSERT_TRUE(primary_1["components"].IsArray());
+  EXPECT_EQ(primary_1["components"].GetArray().Size(), 3);
+  ASSERT_TRUE(primary_1["components"][0].IsObject());
+  EXPECT_STREQ(primary_1["components"][0]["type"].GetString(), "text");
+  EXPECT_STREQ(primary_1["components"][0]["text"].GetString(), "Course Drive");
+  EXPECT_STREQ(primary_1["components"][1]["type"].GetString(), "delimiter");
+  EXPECT_STREQ(primary_1["components"][1]["text"].GetString(), "/");
+  EXPECT_STREQ(primary_1["components"][2]["type"].GetString(), "text");
+  EXPECT_STREQ(primary_1["components"][2]["text"].GetString(), "R2");
 
   // validate third step's primary instructions
   auto primary_2 = steps[2]["bannerInstructions"][0]["primary"].GetObject();
