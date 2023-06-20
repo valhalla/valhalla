@@ -521,29 +521,29 @@ TEST(Standalone, HeadingNumberAutoRoute) {
 
 TEST(Standalone, BannerInstructions) {
   const std::string ascii_map = R"(
-    D
-    |
+    X   D
+    |   |
     B---C
-    |
-    A
+    |   |
+    A   Y
   )";
 
-  const gurka::ways ways = {
-      {"AB",
-       {{"highway", "primary"},
-        {"lanes", "2"},
-        {"oneway", "yes"},
-        {"turn:lanes", "straight|right"},
-        {"destination:lanes", "D|C"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"BD", {{"highway", "primary"}}},
-  };
+  const gurka::ways ways =
+      {{"AB",
+        {{"name", "Alley Broadway"},
+         {"highway", "primary"},
+         {"lanes", "2"},
+         {"turn:lanes", "through|through;right"}}},
+       {"BC", {{"highway", "primary"}, {"name", "Broadway Course"}, {"destination", "Destiny Town"}}},
+       {"CD", {{"name", "Course Drive"}, {"highway", "primary"}}},
+       {"BX", {{"highway", "primary"}}},
+       {"CY", {{"highway", "primary"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100, {0, 0});
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_banner_instructions");
 
   auto from = "A";
-  auto to = "C";
+  auto to = "D";
   const std::string& request =
       (boost::format(
            R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
@@ -553,9 +553,61 @@ TEST(Standalone, BannerInstructions) {
   auto result = gurka::do_action(valhalla::Options::route, map, request);
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // Validate that each step has bannerInstructions
+  // Validate that each step has bannerInstructions with primary
   for (int step = 0; step < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++step) {
-    ASSERT_TRUE(json["routes"][0]["legs"][0]["steps"][step].HasMember("bannerInstructions"));
+    ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
+    ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
+    EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
+    ASSERT_TRUE(steps[step]["bannerInstructions"][0].HasMember("primary"));
+    ASSERT_TRUE(steps[step]["bannerInstructions"][0]["primary"].HasMember("type"));
+    ASSERT_TRUE(steps[step]["bannerInstructions"][0]["primary"].HasMember("text"));
   }
+
+  // validate first step's primary instructions
+  auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
+  EXPECT_STREQ(primary_0["type"].GetString(), "turn");
+  EXPECT_STREQ(primary_0["modifier"].GetString(), "right");
+  EXPECT_STREQ(primary_0["text"].GetString(), "Broadway Course");
+
+  // validate the first step's secondary instructions
+  ASSERT_TRUE(steps[0]["bannerInstructions"][0].HasMember("secondary"));
+  auto secondary_0 = steps[0]["bannerInstructions"][0]["secondary"].GetObject();
+  ASSERT_TRUE(secondary_0.HasMember("text"));
+  EXPECT_STREQ(secondary_0["text"].GetString(), "Destiny Town");
+  ASSERT_TRUE(secondary_0.HasMember("components"));
+  ASSERT_TRUE(secondary_0["components"].IsArray());
+  EXPECT_EQ(secondary_0["components"].GetArray().Size(), 1);
+  ASSERT_TRUE(secondary_0["components"][0].IsObject());
+  EXPECT_STREQ(secondary_0["components"][0]["type"].GetString(), "text");
+  EXPECT_STREQ(secondary_0["components"][0]["text"].GetString(), "Destiny Town");
+
+  // validate the first step's sub instructions
+  ASSERT_TRUE(steps[0]["bannerInstructions"][0].HasMember("sub"));
+  auto sub_0 = steps[0]["bannerInstructions"][0]["sub"].GetObject();
+  ASSERT_TRUE(sub_0.HasMember("components"));
+  ASSERT_TRUE(sub_0["components"].IsArray());
+  EXPECT_EQ(sub_0["components"].GetArray().Size(), 2);
+  for (int component = 0; component < sub_0["components"].GetArray().Size(); ++component) {
+    EXPECT_STREQ(sub_0["components"][component]["type"].GetString(), "lane");
+    ASSERT_TRUE(sub_0["components"][component]["directions"].IsArray());
+  }
+  EXPECT_STREQ(sub_0["components"][0]["directions"][0].GetString(), "straight");
+  ASSERT_FALSE(sub_0["components"][0]["active"].GetBool());
+  EXPECT_STREQ(sub_0["components"][1]["directions"][0].GetString(), "straight");
+  EXPECT_STREQ(sub_0["components"][1]["directions"][1].GetString(), "right");
+  EXPECT_STREQ(sub_0["components"][1]["active_direction"].GetString(), "right");
+  ASSERT_TRUE(sub_0["components"][1]["active"].GetBool());
+
+  // validate second step's primary instructions
+  auto primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
+  EXPECT_STREQ(primary_1["type"].GetString(), "turn");
+  EXPECT_STREQ(primary_1["modifier"].GetString(), "left");
+  EXPECT_STREQ(primary_1["text"].GetString(), "Course Drive");
+
+  // validate third step's primary instructions
+  auto primary_2 = steps[2]["bannerInstructions"][0]["primary"].GetObject();
+  EXPECT_STREQ(primary_2["type"].GetString(), "arrive");
+  EXPECT_STREQ(primary_2["text"].GetString(), "You have arrived at your destination.");
 }
