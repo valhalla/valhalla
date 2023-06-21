@@ -16,7 +16,7 @@ namespace valhalla {
 namespace baldr {
 
 std::deque<baldr::GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
-                                        const std::vector<std::string>& tiles) {
+                                        const std::unordered_set<std::string>& tiles) {
   if (tiles.empty())
     return {};
 

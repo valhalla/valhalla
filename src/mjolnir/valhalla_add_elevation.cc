@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
       std::cerr << "Tile file is required\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     } else {
-      for (const auto& tile : tiles) {
+      for (const auto& tile : result["concurrency"].as<std::vector<std::string>>()) {
         if (filesystem::exists(tile) && filesystem::is_regular_file(tile))
           return true;
       }
@@ -81,7 +81,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  auto tile_ids = get_tile_ids(config, tiles);
+  // pass the deduplicated tiles
+  auto tile_ids = get_tile_ids(config, std::unordered_set<std::string>(tiles.begin(), tiles.end()));
   if (tile_ids.empty()) {
     std::cerr << "Failed to load tiles\n\n";
     return EXIT_FAILURE;
