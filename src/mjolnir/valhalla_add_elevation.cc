@@ -86,7 +86,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  auto tile_ids = get_tile_ids(config, tiles);
+  // pass the deduplicated tiles
+  auto tile_ids = get_tile_ids(config, std::unordered_set<std::string>(tiles.begin(), tiles.end()));
   if (tile_ids.empty()) {
     std::cerr << "Failed to load tiles\n\n";
     return EXIT_FAILURE;
