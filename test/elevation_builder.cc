@@ -228,6 +228,7 @@ TEST(ElevationBuilder, get_tile_ids) {
   // check if config contains tile_dir
   EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
 
+  // TODO: I don't understand what the following lines have to do with anything?
   // check if config contains elevation dir
   config.erase("additional_data.elevation");
   EXPECT_TRUE(valhalla::mjolnir::get_tile_ids(config, {"/0/003/196.gph"}).empty());
