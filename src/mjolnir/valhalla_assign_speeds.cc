@@ -1,4 +1,4 @@
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "config.h"
@@ -77,7 +77,7 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_assign_speeds";
+  const auto program = file_stem(__FILE__);
   // args
   bpt::ptree config;
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "Modifies default speeds based on provided configuration.\n");
 
     options.add_options()

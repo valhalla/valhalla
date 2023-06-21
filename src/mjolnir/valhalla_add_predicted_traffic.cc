@@ -26,7 +26,7 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
@@ -238,7 +238,7 @@ void update_tiles(
 } // anonymous namespace
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_add_elevation";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree config;
   filesystem::path traffic_tile_dir;
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
 
     options.add_options()

@@ -14,7 +14,7 @@
 #include "config.h"
 #include "mjolnir/elevationbuilder.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 namespace opt = cxxopts;
 
@@ -33,7 +33,7 @@ using namespace valhalla::mjolnir;
  * */
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_add_elevation";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree config;
   std::vector<std::string> tiles;
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     // clang-format off
     opt::Options options(
         program,
-        program + VALHALLA_VERSION + "\n\n"
+        std::string(program) + " " + VALHALLA_VERSION + "\n\n"
         "a tool for loading elevations for a provided tile. "
         "The service checks if required elevations stored locally if they are not "
         "it tries to establish connection to the remote storage (based on the information from configuration file)"

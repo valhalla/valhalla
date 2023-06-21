@@ -192,7 +192,6 @@ set(valhalla_src
     worker.cc
     filesystem.cc
     proto_conversions.cc
-    argparse_utils.h
     ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
@@ -230,6 +229,7 @@ endif()
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
+    ${VALHALLA_SOURCE_DIR}/src      # For private headers in /src
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers

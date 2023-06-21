@@ -162,7 +162,7 @@ std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const std::string program = "valhalla_path_comparison";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
 
@@ -170,7 +170,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a simple command line dev tool for comparing the cost between "
       "two routes.\n"
       "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");

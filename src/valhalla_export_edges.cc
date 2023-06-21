@@ -142,7 +142,7 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
-  const std::string program = "valhalla_export_edges";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   std::string bbox;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a simple command line test tool which\n"
       "dumps information about each graph edge.\n\n");
 

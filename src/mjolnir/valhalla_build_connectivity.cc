@@ -15,7 +15,7 @@
 #include "config.h"
 #include "filesystem.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::baldr;
 
@@ -45,14 +45,14 @@ struct RGB {
 
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_build_connectivity";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   try {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_build_connectivity is a program that creates a PPM image file representing\n"
       "the connectivity between tiles.\n\n");
 

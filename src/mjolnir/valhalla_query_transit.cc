@@ -23,7 +23,7 @@
 #include "mjolnir/servicedays.h"
 #include "valhalla/proto/transit.pb.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -363,7 +363,7 @@ GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
-  const std::string program = "valhalla_query_transit";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   double o_lng, o_lat, d_lng, d_lat;
@@ -374,7 +374,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a simple command line test tool to log transit stop info.\n\n");
 
     options.add_options()

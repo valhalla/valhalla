@@ -7,6 +7,17 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
+// returns a (const char*)'s path's filename without the file extension, e.g.
+// /home/valhalla/valhalla_add_elevation.cc -> valhalla_add_elevation
+std::string file_stem(const char* path) {
+  auto basename = filesystem::path(path).filename().string();
+  if (basename.length() <= 3) {
+    return "";
+  }
+  basename.erase(basename.length() - 3);
+  return basename;
+}
+
 /**
  * Parses common command line arguments across executables. It
  * - alters the config ptree and sets the concurrency config, where it favors the command line arg,
@@ -29,14 +40,13 @@ bool parse_common_args(const std::string& program,
                        boost::property_tree::ptree& pt,
                        const std::string& log,
                        const bool use_threads = false) {
-
   if (result.count("help")) {
     std::cout << opts.help() << "\n";
     return false;
   }
 
   if (result.count("version")) {
-    std::cout << program << " " << VALHALLA_VERSION << "\n";
+    std::cout << std::string(program) << " " << VALHALLA_VERSION << "\n";
     return false;
   }
 
@@ -69,7 +79,8 @@ bool parse_common_args(const std::string& program,
                                                            std::thread::hardware_concurrency()));
     pt.put<uint32_t>("mjolnir.concurrency", num_threads);
 
-    LOG_INFO("Running " + program + " with " + std::to_string(num_threads) + " thread(s).");
+    LOG_INFO("Running " + std::string(program) + " with " + std::to_string(num_threads) +
+             " thread(s).");
   }
 
   return true;

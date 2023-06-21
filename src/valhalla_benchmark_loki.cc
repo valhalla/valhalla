@@ -123,7 +123,7 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 }
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_benchmark_loki";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   size_t batch, isolated, radius;
@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a program that does location searches on tiled route data.\n"
       "To run it use a valid config file to let it know where the tiled route data \n"
       "is. The input is simply a text file of one location per line\n\n");

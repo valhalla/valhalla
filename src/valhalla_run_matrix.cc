@@ -83,7 +83,7 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
-  const std::string program = "valhalla_run_matrix";
+  const auto program = file_stem(__FILE__);
   // args
   std::string json_str;
   uint32_t iterations;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a command line test tool for time+distance matrix routing.\n"
       "Use the -j option for specifying source to target locations.");
 

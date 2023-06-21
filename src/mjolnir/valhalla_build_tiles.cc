@@ -12,7 +12,7 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::mjolnir;
 
@@ -26,7 +26,7 @@ void list_stages() {
 }
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_build_tiles";
+  const auto program = file_stem(__FILE__);
   // args
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
     cxxopts::Options options(
         program,
-        program + VALHALLA_VERSION +
+        program + " " + VALHALLA_VERSION +
             "\n\n"
             "a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
 

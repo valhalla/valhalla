@@ -13,7 +13,7 @@
 namespace bpt = boost::property_tree;
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_expand_bounding_box";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   std::string bbox;
@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "Finds all the nodes in the bounding box and then expands \n"
       "the bounding box by the shape of the edges that leave the nodes.\n\n");
 

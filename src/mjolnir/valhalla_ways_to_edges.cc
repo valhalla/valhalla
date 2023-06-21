@@ -19,7 +19,7 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
@@ -36,7 +36,7 @@ struct EdgeAndDirection {
 // Main application to create a list wayids and directed edges belonging
 // to ways that are driveable.
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_ways_to_edges";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
 
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a program that creates a list of edges for each auto-driveable OSM way.\n\n");
 
     options.add_options()

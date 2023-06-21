@@ -6,10 +6,10 @@
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_convert_transit";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
   std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "a program that reads protobuf files and creates Level 3 Transit Tiles."
       "\n\n");
 

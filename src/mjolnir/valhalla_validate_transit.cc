@@ -16,12 +16,12 @@
 #include "mjolnir/graphbuilder.h"
 #include "mjolnir/validatetransit.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::mjolnir;
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_validate_transit";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
 
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
         program,
-        program + VALHALLA_VERSION + "\n\n"
+        program + " " + VALHALLA_VERSION + "\n\n"
         "a program that validates the transit graph and \n"
         "schedule at a particular time.  It will not use the route tiles at all. It \n"
         "will only use the transit tiles.\n\n");

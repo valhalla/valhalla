@@ -8,10 +8,10 @@
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_build_admins";
+  const auto program = file_stem(__FILE__);
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree pt;
@@ -20,7 +20,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_build_admins is a program that creates a administrative SQLite database from \n"
       "one or multiple osm.pbf files. The admin db is used during graph building to enrich \n"
       "nodes and edges."

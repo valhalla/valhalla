@@ -30,7 +30,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -571,7 +571,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 }
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_build_statistics";
+  const auto program = file_stem(__FILE__);
   // args
   boost::property_tree::ptree pt;
 
@@ -579,7 +579,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_build_statistics is a program that builds a statistics database.\n\n");
 
     options.add_options()

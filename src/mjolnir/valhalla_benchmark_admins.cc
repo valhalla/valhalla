@@ -36,7 +36,7 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 
-#include "../argparse_utils.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -198,7 +198,7 @@ void Benchmark(const boost::property_tree::ptree& pt) {
 }
 
 int main(int argc, char** argv) {
-  const std::string program = "valhalla_benchmark_admins";
+  const auto program = file_stem(__FILE__);
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree config;
@@ -207,7 +207,7 @@ int main(int argc, char** argv) {
     // clang-format off
     cxxopts::Options options(
       program,
-      program + VALHALLA_VERSION + "\n\n"
+      program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_benchmark_admins is a program to time the admin queries\n");
 
     options.add_options()
