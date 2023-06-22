@@ -42,7 +42,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
                       sequence<Edge>& edges,
                       sequence<Node>& nodes,
                       const bool inbound,
-                      const uint32_t rc) {
+                      const bool first_edge_destonly) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
@@ -61,7 +61,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   uint16_t overall_access_before = baldr::kVehicularAccess;
   uint16_t overall_access_after = 0;
   // find accessible paths for as many modes as we can but stop if we can't find any more
-  while (overall_access_before != overall_access_after) {
+  // or found all modes in the first round
+  while ((overall_access_after != baldr::kVehicularAccess) &&
+         (overall_access_before != overall_access_after)) {
     overall_access_before = overall_access_after;
 
     // which modes do we still have to find a path for?
@@ -80,7 +82,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // Add node to list of node labels, set the node status and add
     // to the adjacency set
     uint32_t nodelabel_index = 0;
-    node_labels.emplace_back(0.0f, node_idx, node_idx);
+    node_labels.emplace_back(0.0f, node_idx, node_idx, first_edge_destonly);
     node_status[node_idx] = {kTemporary, nodelabel_index};
     adjset.push({0.0f, nodelabel_index});
     nodelabel_index++;
@@ -89,6 +91,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // is reached
     uint32_t n = 0;
     uint32_t label_idx = 0;
+    uint32_t last_label_idx = 0;
     while (!adjset.empty()) {
       // Get the next node from the adjacency list/priority queue. Gets its
       // current cost and index
@@ -96,6 +99,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       float current_cost = expand_node.first;
       label_idx = expand_node.second;
       uint32_t expand_node_idx = node_labels[label_idx].node_index;
+      const bool pred_destonly = node_labels[label_idx].dest_only;
       adjset.pop();
 
       // Skip if already labeled - this can happen if an edge is already in
@@ -112,7 +116,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       // Have seen cases where the immediate connections are high class roads
       // but then there are service roads (lanes) immediately after (like
       // Twawwassen Terminal near Vancouver,BC)
-      if (n > 400 && GetBestNonFerryClass(expanded_bundle.node_edges) <= rc) {
+      if (n > 400 && GetBestNonFerryClass(expanded_bundle.node_edges) <= kFerryUpClass) {
         break;
       }
       n++;
@@ -162,9 +166,12 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           continue;
         }
 
-        // Get cost - need the length and speed of the edge; Use a penalty if an edge is
-        // destination_only and calculate it in the cost
-        float penalty = w.destination_only() ? 300 : 0;
+        // if the first edge was destonly and the previous edge was as well, add no penalty
+        float penalty =
+            (first_edge_destonly ? (!pred_destonly && w.destination_only()) : w.destination_only())
+                ? 300
+                : 0;
+        // Get cost - need the length and speed of the edge;
         auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
         float cost = current_cost + ((valhalla::midgard::length(shape) * 3.6f) / w.speed()) + penalty;
 
@@ -176,8 +183,11 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           }
         }
 
+        // Get the last label index to form the path
+        last_label_idx = nodelabel_index;
+
         // Add to the node labels and adjacency set. Skip if this is a loop.
-        node_labels.emplace_back(cost, endnode, expand_node_idx);
+        node_labels.emplace_back(cost, endnode, expand_node_idx, w.destination_only());
         node_status[endnode] = {kTemporary, nodelabel_index};
         adjset.push({cost, nodelabel_index});
         nodelabel_index++;
@@ -196,8 +206,9 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge between this node and the predecessor
-      uint32_t idx = node_labels[label_idx].node_index;
-      uint32_t pred_node = node_labels[label_idx].pred_node_index;
+      const NodeLabel& node_lab = node_labels[last_label_idx];
+      uint32_t idx = node_lab.node_index;
+      uint32_t pred_node = node_lab.pred_node_index;
       auto expand_node_itr = nodes[idx];
       auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
       for (auto& edge : bundle2.node_edges) {
@@ -210,8 +221,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           } else if ((forward && !inbound) || (!forward && inbound)) {
             path_access &= update_edge.fwd_access;
           }
-          if (update_edge.attributes.importance > rc) {
-            update_edge.attributes.importance = rc;
+          if (update_edge.attributes.importance > kFerryUpClass) {
+            update_edge.attributes.importance = kFerryUpClass;
             update_edge.attributes.reclass_ferry = true;
             element = update_edge;
             edge_count++;
@@ -223,7 +234,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       if (pred_node == node_idx) {
         break;
       }
-      label_idx = node_status[pred_node].index;
+
+      last_label_idx = node_status[pred_node].index;
     }
     // update the overall mode access with the previous path
     overall_access_after |= path_access;
@@ -290,8 +302,7 @@ bool ShortFerry(const uint32_t node_index,
 void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
-                                const std::string& edges_file,
-                                const uint32_t rc) {
+                                const std::string& edges_file) {
   LOG_INFO("Reclassifying ferry connection graph edges...");
 
   sequence<OSMWay> ways(ways_file, false);
@@ -311,7 +322,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
-        GetBestNonFerryClass(bundle.node_edges) > rc &&
+        GetBestNonFerryClass(bundle.node_edges) > kFerryUpClass &&
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
@@ -329,6 +340,11 @@ void ReclassifyFerryConnections(const std::string& ways_file,
                                     ? edge.first.targetnode_
                                     : edge.first.sourcenode_;
 
+        // if the non-ferry edge connecting on land is dest_only, we will unset dest_only
+        // for all ways encountered during the expansion, to counteract a popular mapping
+        // error, see https://github.com/valhalla/valhalla/issues/3942
+        const bool remove_destonly = (*ways[edge.first.wayindex_]).destination_only();
+
         // Check if edge is oneway towards the ferry or outbound from the
         // ferry. If edge is drivable both ways we need to expand it twice-
         // once with a driveable path towards the ferry and once with a
@@ -337,15 +353,15 @@ void ReclassifyFerryConnections(const std::string& ways_file,
           // Driveable in both directions - get an inbound path and an
           // outbound path.
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, true, rc);
+                                      nodes, true, remove_destonly);
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, false, rc);
+                                      nodes, false, remove_destonly);
         } else {
           // Check if oneway inbound to the ferry
           bool inbound =
               (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
           total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, inbound, rc);
+                                      nodes, inbound, remove_destonly);
         }
         ferry_endpoint_count++;
 
@@ -353,7 +369,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         // we do not immediately determine we hit the specified classification
         sequence<Edge>::iterator element = edges[edge.second];
         auto update_edge = *element;
-        update_edge.attributes.importance = rc;
+        update_edge.attributes.importance = kFerryUpClass;
+        update_edge.attributes.reclass_ferry = remove_destonly;
         element = update_edge;
         total_count++;
       }
