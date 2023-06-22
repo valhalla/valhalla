@@ -638,7 +638,8 @@ public:
     *flow_sources = kNoFlowMask;
 
     // TODO: Make this configurable if possible and contribute the changes
-    constexpr double LIVE_SPEED_FADE = 0.;
+    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
