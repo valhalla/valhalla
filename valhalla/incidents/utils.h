@@ -21,7 +21,7 @@ struct OpenLrEdges {
 struct RankEdge {
   // keep the attributes from /locate
   baldr::GraphId graph_id;
-  uint32_t length;
+  float length;
   float percent_along;
   double corr_lon;
   double corr_lat;
@@ -31,7 +31,7 @@ struct RankEdge {
   uint32_t dist_diff; // that's the distance between LRP & /locate correlated point
   uint16_t heading_diff;
 
-  RankEdge(baldr::GraphId id, uint32_t l, float pct, double lng, double lat)
+  RankEdge(baldr::GraphId id, float l, float pct, double lng, double lat)
       : graph_id(id), length(l), percent_along(pct), corr_lon(lng), corr_lat(lat) {
   }
 };
@@ -53,6 +53,8 @@ void get_route_req(Api& request,
                    const std::pair<midgard::PointLL, uint32_t>&& a_pt,
                    const std::pair<midgard::PointLL, uint32_t>&& b_pt,
                    const bool use_bearing);
+
+void print_route(const valhalla::TripLeg& res);
 
 } // namespace incidents
 } // namespace valhalla

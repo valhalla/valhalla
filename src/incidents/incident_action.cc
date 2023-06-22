@@ -60,14 +60,12 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdges>& openlr
       if (first_p == pts.begin() && openlr_edges.first_node_offset) {
         const auto& next_p = *(first_p + 1);
         auto dist = first_p->Distance(next_p);
-        std::cout << dist << std::endl;
         coord =
             first_p->PointAlongSegment(next_p, static_cast<double>(openlr_edges.first_node_offset));
       } else if (first_p == (pts.end() - 1) && openlr_edges.last_node_offset) {
         const auto next_p = (first_p - 1);
         const auto& fp = *first_p;
         auto dist = next_p->Distance(fp);
-        std::cout << dist << std::endl;
         coord = next_p->PointAlongSegment(fp, static_cast<double>(openlr_edges.last_node_offset));
       }
       writer.start_array(); // single coordinate
