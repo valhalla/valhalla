@@ -2205,6 +2205,29 @@ TEST(RouteSerializerOsrm, testserializeAnnotationsSpeedLimits) {
   assert_json_equality(serialized_to_json, expected_json);
 }
 
+TEST(RouteSerializerOsrm, testlaneIndications) {
+  TripLeg_Edge edge;
+  auto etp = std::make_unique<valhalla::odin::EnhancedTripLeg_Edge>(&edge);
+
+  TurnLane* lane_1 = edge.add_turn_lanes();
+  lane_1->set_directions_mask(kTurnLaneReverse | kTurnLaneSharpLeft);
+
+  TurnLane* lane_2 = edge.add_turn_lanes();
+  lane_2->set_directions_mask(kTurnLaneThrough | kTurnLaneRight | kTurnLaneSharpRight);
+
+  json::ArrayPtr indications_1 = lane_indications(etp, lane_1);
+  json::ArrayPtr indications_2 = lane_indications(etp, lane_2);
+
+  ASSERT_EQ(indications_1->size(), 2);
+  ASSERT_STREQ(boost::get<std::string>(indications_1->at(0)).c_str(), "uturn");
+  ASSERT_STREQ(boost::get<std::string>(indications_1->at(1)).c_str(), "sharp left");
+
+  ASSERT_EQ(indications_2->size(), 3);
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(0)).c_str(), "straight");
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(1)).c_str(), "right");
+  ASSERT_STREQ(boost::get<std::string>(indications_2->at(2)).c_str(), "sharp right");
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
