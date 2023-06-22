@@ -27,9 +27,9 @@ struct testable_singleton : public incident_singleton_t {
       : incident_singleton_t(config,
                              {},
                              [initialize](boost::property_tree::ptree,
-                                         std::unordered_set<valhalla::baldr::GraphId>,
-                                         std::shared_ptr<state_t> state,
-                                         std::function<bool(size_t)>) {
+                                          std::unordered_set<valhalla::baldr::GraphId>,
+                                          std::shared_ptr<state_t> state,
+                                          std::function<bool(size_t)>) {
                                state->initialized.store(initialize);
                                state->signal.notify_one();
                              }) {
