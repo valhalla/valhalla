@@ -64,7 +64,7 @@ TEST(GridTraversal, TestGridTraversal) {
   assert_equal_squares(
       grid.Traverse({0.3, 0.25}, {0.98, 0.83}),
       std::vector<std::pair<int, int>>{{0, 0}, {1, 0}, {1, 1}, {2, 1}, {2, 2}},
-      "It should intersect sqaures from SQUARE(0 0) to SQUARE(2 2) in the lower side way");
+      "It should intersect squares from SQUARE(0 0) to SQUARE(2 2) in the lower side way");
 
   assert_equal_squares(grid.Traverse({-1, 0.1}, {2, 0.1}),
                        std::vector<std::pair<int, int>>{{0, 0}, {1, 0}, {2, 0}},

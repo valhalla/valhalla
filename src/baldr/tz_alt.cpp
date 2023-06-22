@@ -527,7 +527,7 @@ bool
 native_to_standard_timezone_name(const std::string& native_tz_name,
                                  std::string& standard_tz_name)
 {
-    // TOOD! Need be a case insensitive compare?
+    // TODO! Need be a case insensitive compare?
     if (native_tz_name == "UTC")
     {
         standard_tz_name = "Etc/UTC";
@@ -2831,8 +2831,8 @@ static
 std::unique_ptr<CURL, curl_deleter>
 curl_init()
 {
-    static const auto curl_is_now_initiailized = curl_global();
-    (void)curl_is_now_initiailized;
+    static const auto curl_is_now_initialized = curl_global();
+    (void)curl_is_now_initialized;
     return std::unique_ptr<CURL, curl_deleter>{::curl_easy_init()};
 }
 

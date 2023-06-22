@@ -103,7 +103,7 @@ void recover(bool cache) {
           continue;
         }
 
-        // check if the shape matches approximatly
+        // check if the shape matches approximately
         for (size_t k = 0; k < shortcut_shape.size(); ++k) {
           if (!shortcut_shape[k].ApproximatelyEqual(recovered_shape[k])) {
             //            FAIL() << "edge shape points are not equal: " +

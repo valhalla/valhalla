@@ -128,7 +128,7 @@ TEST(Standalone, NotThruPruning) {
     }
   });
 
-  // trival path test.  uses time dep forward A*
+  // trivial path test.  uses time dep forward A*
   auto result = gurka::do_action(valhalla::Options::route, map, {"4", "6"}, "auto");
   gurka::assert::raw::expect_path(result, {"TS", "RS", "HKNR", "HKNR", "HKNR", "FH", "FG", "IG",
                                            "HIJ", "HKNR", "HKNR", "HKNR", "RS", "SYT", "SYT"});

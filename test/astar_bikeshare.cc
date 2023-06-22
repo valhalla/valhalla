@@ -305,7 +305,7 @@ TEST(AstarBss, test_Truck) {
 //    (pedestrian way) ------------------------------>
 //
 // Since BSS connections are created over both Pedestrian mode and Bicycle mode, user should be able
-// to turn back the bike right on the cyclelane, change the travel mode and coninue his journey way on
+// to turn back the bike right on the cyclelane, change the travel mode and continue his journey way on
 // the pedestrian way.
 TEST(AstarBss, test_BSSConnections_on_Pedestrian_and_Bicycle) {
   std::string request =

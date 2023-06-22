@@ -34,7 +34,7 @@ TEST(Tiles, TestBase) {
   EXPECT_EQ(ll.lng(), -179);
   EXPECT_EQ(ll.lat(), -90);
 
-  // right bottm
+  // right bottom
   ll = tiles.Base(359);
   EXPECT_EQ(ll.lng(), 179);
   EXPECT_EQ(ll.lat(), -90);
@@ -342,7 +342,7 @@ TEST(Tiles, test_random_linestring) {
     auto answer = t.Intersect(linestring);
     for (const auto& tile : answer)
       for (auto sub : tile.second)
-        ASSERT_LE(sub, 24) << "Non-existant bin!";
+        ASSERT_LE(sub, 24) << "Non-existent bin!";
   }
 }
 

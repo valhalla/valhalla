@@ -23,7 +23,7 @@
 #include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
-// srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
+// srtmgl1 holds 1x1 degree tiles but oversamples the edge of the tile
 // by .5 seconds on all sides. that means that the center of pixel 0 is
 // located at the tiles lat,lon (which is important for bilinear filtering)
 // it also means that there are 3601 pixels per row and per column
@@ -303,7 +303,7 @@ struct cache_t {
   }
 
   // no need for synchronization as size is constant(set in constructor
-  // and never change after thatn)
+  // and never change after that)
   std::size_t size() const noexcept {
     return cache.size();
   }

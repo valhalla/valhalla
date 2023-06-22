@@ -91,7 +91,7 @@ TEST(DoubleBucketQueue, RC4FloatPrecisionErrors) {
 }
 
 /**
-   void TestDecreseCost() {
+   void TestDecreaseCost() {
    std::vector<uint32_t> costs = { 67, 325, 25, 466, 1000, 100005, 758, 167,
    258, 16442, 278, 111111000 };
    std::vector<uint32_t> expectedorder = costs;

@@ -74,7 +74,7 @@ TEST(Queue, SimpleTestQueue) {
 
   queue.push(Label(1, 1));
   EXPECT_EQ(queue.top(), Label(1, 1)) << "top should be changed now";
-  EXPECT_EQ(queue.size(), 2) << "the old lable 1 should be replaced so size should be 2";
+  EXPECT_EQ(queue.size(), 2) << "the old label 1 should be replaced so size should be 2";
 
   queue.pop();
   EXPECT_EQ(queue.top(), Label(2, 2)) << "<2, 2> should be popped";
