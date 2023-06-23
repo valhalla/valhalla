@@ -73,12 +73,11 @@ rank_edges(const std::optional<rapidjson::GenericArray<false, rapidjson::Value>>
   for (const auto& edge : *edges) {
     // don't look at node-snapped edges which are obviously not part of it
     if (lrp_order == LRPOrder::FIRST) {
-      auto bearing = edge["percent_along"].GetFloat();
       if (!(edge["percent_along"].GetFloat() < 0.99999f))
         continue;
       lrp_bearing = lrp.bearing;
     } else {
-      auto bearing = edge["percent_along"].GetFloat();
+
       if (!(edge["percent_along"].GetFloat() > 0.00001f))
         continue;
       // normalize the heading to 0 <= heading <= 360
