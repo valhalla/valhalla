@@ -3,6 +3,7 @@
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
+   * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: sped up the transit gtfs ingestion process by sorting the feeds before querying them, forked just_gtfs to accomplish it [#4167](https://github.com/valhalla/valhalla/pull/4167)
