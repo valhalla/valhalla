@@ -383,7 +383,7 @@ float get_stop_pair_dist(const gtfs::Stop& stop_connect,
 
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
-  for (;trip_shape.first != trip_shape.second; ++trip_shape.first) {
+  for (; trip_shape.first != trip_shape.second; ++trip_shape.first) {
     auto currOrigin = *trip_shape.first;
     auto currDest = *std::next(trip_shape.first);
     // TODO: we can use the trip_shape.shape_dist_traveled here too and early exit if it's there
@@ -438,7 +438,7 @@ bool write_stop_pair(
 
   // already sorted by stop_sequence
   auto tile_stopTimes = feed.get_stop_times_for_trip(tile_tripId);
-  for (;tile_stopTimes.first < tile_stopTimes.second - 1; ++tile_stopTimes.first) {
+  for (; tile_stopTimes.first < tile_stopTimes.second - 1; ++tile_stopTimes.first) {
     const auto& origin_stopTime = *tile_stopTimes.first;
     const auto& origin_stopId = origin_stopTime.stop_id;
     const auto& origin_stop = feed.get_stop(origin_stopId);
@@ -482,7 +482,7 @@ bool write_stop_pair(
       service_dow->Add(trip_calendar.sunday == gtfs::CalendarAvailability::Available);
 
       bool had_added_date = false;
-      for (;trip_calDates.first != trip_calDates.second; ++trip_calDates.first) {
+      for (; trip_calDates.first != trip_calDates.second; ++trip_calDates.first) {
         auto d = to_local_pivot_sec(trip_calDates.first->date.get_raw_date());
         if (trip_calDates.first->exception_type == gtfs::CalendarDateException::Added) {
           stop_pair->add_service_added_dates(d);
@@ -656,7 +656,7 @@ void write_shapes(Transit& tile, const tile_transit_info_t& tile_info, feed_cach
     auto currShape = feed.get_shape(tile_shape);
     shape->set_shape_id(feed_shape.second);
     std::vector<PointLL> trip_shape;
-    for (;currShape.first != currShape.second; ++currShape.first) {
+    for (; currShape.first != currShape.second; ++currShape.first) {
       trip_shape.emplace_back(PointLL(currShape.first->shape_pt_lon, currShape.first->shape_pt_lat));
     }
     shape->set_encoded_shape(encode7(trip_shape));
