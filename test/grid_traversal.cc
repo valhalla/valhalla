@@ -31,7 +31,7 @@ std::string result_to_str(const std::vector<std::pair<int, int>>& result) {
 
 void assert_equal_squares(const std::vector<std::pair<int, int>>& got,
                           const std::vector<std::pair<int, int>>& expected,
-                          const std::string& msg) {
+                          const std::string& /*msg*/) {
 
   ASSERT_EQ(got, expected) << "got: " << result_to_str(got)
                            << " expected: " << result_to_str(expected);
