@@ -239,7 +239,7 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
   auto tile = reader->GetGraphTile(tile_id);
 
-  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
+  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run successfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
@@ -500,7 +500,7 @@ TEST(Astar, test_oneway_wrong_way) {
 
   try {
     auto response = tester.test(request);
-    FAIL() << "Expectd exception!";
+    FAIL() << "Expected exception!";
   } catch (const std::exception& e) {
     EXPECT_EQ(std::string(e.what()), "No path could be found for input");
   } catch (...) { FAIL() << "Wrong exception type"; }

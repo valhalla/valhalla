@@ -471,7 +471,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // TODO Is there a shortcut that supersedes our u-turn?
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
-    // Expand the uturn possiblity
+    // Expand the uturn possibility
     disable_uturn =
         ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
                                          uturn_meta, shortcuts, tile, offset_time) ||
@@ -1365,7 +1365,7 @@ bool IsBridgingEdgeRestricted(GraphReader& graphreader,
     // Check for double u-turn. It might happen in the following case:
     // forward and reverse searches traverse edges that belong to the same complex
     // restriction. Then forward/reverse search reaches last edge and due to the
-    // restriction can't go futher and make a u-turn. After that forward and reverse
+    // restriction can't go further and make a u-turn. After that forward and reverse
     // searches meet at some edge and compose double u-turn.
     if (std::find(patch_path.begin(), patch_path.end(), next_rev_pred.opp_edgeid()) !=
         patch_path.end())

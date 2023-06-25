@@ -18,7 +18,7 @@ This request provides detailed information about specific streets and intersecti
 
 There is an option to name your request. You can do this by adding and `id` key to your request. The `id` is returned with the response so a user could match to the corresponding request.
 
-Because the locate service is designed to work in tandem with the route service API, the inputs for the two APIs are identical. For detailed options regarding specifiying locations, costing models, costing options, directions options please see the relevant sections in the [routing API docs](../turn-by-turn/api-reference.md#inputs-of-a-route)
+Because the locate service is designed to work in tandem with the route service API, the inputs for the two APIs are identical. For detailed options regarding specifying locations, costing models, costing options, directions options please see the relevant sections in the [routing API docs](../turn-by-turn/api-reference.md#inputs-of-a-route)
 
 ### Other request options
 

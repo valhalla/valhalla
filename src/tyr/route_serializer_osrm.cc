@@ -1766,7 +1766,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
 
     valhalla::IncidentsTile::Metadata meta;
     meta.set_id(
-        // Set a large id that excercises the uint64 serialization
+        // Set a large id that exercises the uint64 serialization
         18446744073709551615u);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);
