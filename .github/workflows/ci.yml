@@ -1,13 +1,12 @@
-name: Valhalla Changelog Validation
+name: GitHub CI
 on: [pull_request]
 
 jobs:
-  build:
-    name: Changelog Validation
+  changelog:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Validate
+      - name: Validate changelog
         shell: bash
         run: |
           # we dont enforce this on a draft
