@@ -6,6 +6,7 @@
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
+   * ADDED: CI runs a spell check on the PR to detect spelling mistakes [#4179](https://github.com/valhalla/valhalla/pull/4179)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

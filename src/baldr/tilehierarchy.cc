@@ -127,10 +127,10 @@ GraphId TileHierarchy::parent(const GraphId& child_tile_id) {
   auto parent_level = child_tile_id.level() - 1;
   const auto& parent_tiling = get_tiling(parent_level);
   const auto& child_tiling = get_tiling(child_tile_id.level());
-  // grab just off of the childs corner to avoid edge cases
+  // grab just off of the child's corner to avoid edge cases
   auto corner = child_tiling.Base(child_tile_id.tileid()) +
                 midgard::VectorXY<double>{parent_tiling.TileSize() / 2, parent_tiling.TileSize() / 2};
-  // pick the parent from the childs coordinate
+  // pick the parent from the child's coordinate
   auto parent_tile_index = parent_tiling.TileId(corner);
   return GraphId(parent_tile_index, parent_level, 0);
 }

@@ -1744,7 +1744,7 @@ using namespace osrm_serializers;
 
 /// Assert equality of two json documents
 //
-// TODO Improve the diffed view of mis-matching documents
+// TODO Improve the diffed view of mismatching documents
 void assert_json_equality(const rapidjson::Document& doc1, const rapidjson::Document& doc2) {
   if (doc1 != doc2) {
     ASSERT_STREQ(rapidjson::serialize(doc1).c_str(), rapidjson::serialize(doc2).c_str());

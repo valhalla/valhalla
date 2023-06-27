@@ -1,13 +1,12 @@
-name: Valhalla Changelog Validation
+name: GitHub CI
 on: [pull_request]
 
 jobs:
-  build:
-    name: Changelog Validation
+  changelog:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Validate
+      - name: Validate changelog
         shell: bash
         run: |
           # we dont enforce this on a draft
@@ -32,3 +31,13 @@ jobs:
           fi
 
           #TODO: validate changelog line format
+
+  spell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Spell-check
+        uses: crate-ci/typos@master
+        with:
+          config: ./.github/workflows/typos.toml

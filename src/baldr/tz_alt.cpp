@@ -2944,12 +2944,12 @@ remove_folder_and_subfolders(const std::string& folder)
     from.assign(folder.begin(), folder.end());
     from.push_back('\0');
     from.push_back('\0');
-    SHFILEOPSTRUCT fo{}; // Zero initialize.
-    fo.wFunc = FO_DELETE;
-    fo.pFrom = from.data();
-    fo.fFlags = FOF_NO_UI;
-    int ret = SHFileOperation(&fo);
-    if (ret == 0 && !fo.fAnyOperationsAborted)
+    SHFILEOPSTRUCT file_op{}; // Zero initialize.
+    file_op.wFunc = FO_DELETE;
+    file_op.pFrom = from.data();
+    file_op.fFlags = FOF_NO_UI;
+    int ret = SHFileOperation(&file_op);
+    if (ret == 0 && !file_op.fAnyOperationsAborted)
         return true;
     return false;
 #    endif  // !USE_SHELL_API
