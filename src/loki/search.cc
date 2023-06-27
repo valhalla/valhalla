@@ -57,6 +57,13 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   auto* node = reader.GetEndNode(opp, tile);
   if (!node)
     return false;
+	
+  // nothing to filter if it is a minor road
+  // since motorway = 0 and service = 7, higher number means smaller road class
+  uint32_t road_class = static_cast<uint32_t>(opp->classification());
+  if (road_class > location.street_side_cutoff_)
+  	  return false;
+	
   // if its on the right side and you drive on the right OR if its not on the right and you dont drive
   // on the right THEN its the same side that you drive on
   bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
