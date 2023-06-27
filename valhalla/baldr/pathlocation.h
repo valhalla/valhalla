@@ -193,7 +193,8 @@ public:
 
     SearchFilter search_filter = SearchFilter();
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
-               loc.minimum_reachability(), loc.radius(), side, valhalla::RoadClass::kServiceOther, search_filter);
+               loc.minimum_reachability(), loc.radius(), side, valhalla::RoadClass::kServiceOther,
+               search_filter);
 
     l.name_ = loc.name();
     l.street_ = loc.street();
