@@ -169,7 +169,7 @@ public:
    * @param   y   y (or lat)
    * @param   x   x (or lng)
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
-   *          outside the bounding box of the tiling sytem).
+   *          outside the bounding box of the tiling system).
    */
   int32_t TileId(const typename coord_t::first_type y, const typename coord_t::first_type x) const {
     // Return -1 if totally outside the extent.

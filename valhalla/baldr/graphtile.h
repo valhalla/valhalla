@@ -495,7 +495,7 @@ public:
    * @param   current_time      Current time (seconds from midnight).
    * @param   day               Days since the tile creation date.
    * @param   dow               Day of week (see graphconstants.h)
-   * @param   date_before_tile  Is the date that was inputed before
+   * @param   date_before_tile  Is the date that was input before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
    * @param   bicycle           Only find departures with bicycle access if true
@@ -584,7 +584,7 @@ public:
                                                        const uint32_t access) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  column the bin's column
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
@@ -592,7 +592,7 @@ public:
   midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */

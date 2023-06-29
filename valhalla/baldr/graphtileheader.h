@@ -656,7 +656,7 @@ protected:
   // On x86 based systems the compiler will only pad to 32bits
   // This made tiles incompatibilte between x64 and x86 platforms
   // To fix it we insert spare in the right places so that its the same as what
-  // the compiler automatically does on an 64bit system but makes 32bit sysems
+  // the compiler automatically does on an 64bit system but makes 32bit systems
   // see the layout of the structure that way as well. This way both platforms agree
   // that the x64 implementation, which is what we generally use to build tiles,
   // is the correct implementation

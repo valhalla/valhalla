@@ -13,7 +13,7 @@ the `POST` request body.
 
 URL Parameter            | Description                                                                                                                        | Default
 ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------
-`mode`                   | Transport mode of the sequence. Possible modes are: `auto`, `bycicle`, `pedestrian` and `multimodal`.                              | `multimodal`
+`mode`                   | Transport mode of the sequence. Possible modes are: `auto`, `bicycle`, `pedestrian` and `multimodal`.                              | `multimodal`
 `search_radius`          | A numeric value in range `[0, 100]` to specify a radius (in meters) within which to search road candidates for each measurement.   | 40
 
 * Specifying a transport mode can limit the type of roads to match
