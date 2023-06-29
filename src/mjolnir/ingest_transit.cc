@@ -432,6 +432,10 @@ bool write_stop_pair(
     return false;
   }
 
+  uint8_t dow_mask = gtfs::availability(trip_calendar);
+
+  auto currFrequencies = feed.get_frequencies(currTrip.trip_id);
+
   // get the gtfs shape and our pbf shape_id if present
   auto currShape = feed.get_shape(currTrip.shape_id);
   auto pbf_shape_it = tile_info.shapes.find({currTrip.shape_id, feed_trip.feed});
@@ -473,18 +477,18 @@ bool write_stop_pair(
 
       // add information from calendar.txt and calendar_dates.txt
       auto* service_dow = stop_pair->mutable_service_days_of_week();
-      service_dow->Add(trip_calendar.monday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.tuesday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.wednesday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.thursday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.friday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.saturday == gtfs::CalendarAvailability::Available);
-      service_dow->Add(trip_calendar.sunday == gtfs::CalendarAvailability::Available);
+      service_dow->Add(gtfs::Monday & dow_mask);
+      service_dow->Add(gtfs::Tuesday & dow_mask);
+      service_dow->Add(gtfs::Wednesday & dow_mask);
+      service_dow->Add(gtfs::Thursday & dow_mask);
+      service_dow->Add(gtfs::Friday & dow_mask);
+      service_dow->Add(gtfs::Saturday & dow_mask);
+      service_dow->Add(gtfs::Sunday & dow_mask);
 
       bool had_added_date = false;
-      for (; trip_calDates.first != trip_calDates.second; ++trip_calDates.first) {
-        auto d = to_local_pivot_sec(trip_calDates.first->date.get_raw_date());
-        if (trip_calDates.first->exception_type == gtfs::CalendarDateException::Added) {
+      for (auto cal_itr = trip_calDates.first; cal_itr != trip_calDates.second; ++cal_itr) {
+        auto d = to_local_pivot_sec(cal_itr->date.get_raw_date());
+        if (cal_itr->exception_type == gtfs::CalendarDateException::Added) {
           stop_pair->add_service_added_dates(d);
           had_added_date = true;
         } else
@@ -493,7 +497,7 @@ bool write_stop_pair(
 
       // this shouldn't happen, but let's make sure it doesn't
       // in convert_transit we'll check if there was a valid date for this service and skip if not
-      if (!service_dow->size() && !had_added_date) {
+      if (!dow_mask && !had_added_date) {
         LOG_WARN("Service ID " + currTrip.service_id +
                  " has no valid calendar or calendar_dates entry, skipping...");
         tile.mutable_stop_pairs()->RemoveLast();
@@ -567,7 +571,6 @@ bool write_stop_pair(
       stop_pair->set_wheelchair_accessible(currTrip.wheelchair_accessible == gtfs::TripAccess::Yes);
 
       // get frequency info
-      auto currFrequencies = feed.get_frequencies(currTrip.trip_id);
       if (currFrequencies.first != currFrequencies.second) {
         auto num_frequencies = std::distance(currFrequencies.first, currFrequencies.second);
         if (num_frequencies > 1) {
