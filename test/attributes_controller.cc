@@ -9,7 +9,7 @@ using namespace valhalla::baldr;
 
 namespace {
 
-TEST(AttrController, TestCtorDefautAttributes) {
+TEST(AttrController, TestCtorDefaultAttributes) {
   AttributesController controller;
   EXPECT_EQ(controller.attributes, AttributesController::kDefaultAttributes);
 }

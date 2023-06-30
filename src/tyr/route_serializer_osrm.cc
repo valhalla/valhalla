@@ -1744,7 +1744,7 @@ using namespace osrm_serializers;
 
 /// Assert equality of two json documents
 //
-// TODO Improve the diffed view of mis-matching documents
+// TODO Improve the diffed view of mismatching documents
 void assert_json_equality(const rapidjson::Document& doc1, const rapidjson::Document& doc2) {
   if (doc1 != doc2) {
     ASSERT_STREQ(rapidjson::serialize(doc1).c_str(), rapidjson::serialize(doc2).c_str());
@@ -1766,7 +1766,7 @@ TEST(RouteSerializerOsrm, testserializeIncidents) {
 
     valhalla::IncidentsTile::Metadata meta;
     meta.set_id(
-        // Set a large id that excercises the uint64 serialization
+        // Set a large id that exercises the uint64 serialization
         18446744073709551615u);
     uint64_t creation_time = 1597241829;
     meta.set_creation_time(creation_time);

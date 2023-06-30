@@ -21,7 +21,7 @@ def get_post_bodies(filename):
       yield post_body
 
 def initialize(args_,response_count_):
-  # for persistant connections
+  # for persistent connections
   global session
   session = requests.Session()
   # so each process knows the options provided
