@@ -372,7 +372,7 @@ float get_stop_pair_dist(const gtfs::Stop& stop_connect,
   // check which segment would belong to which tile
   if (pointStopTime.shape_dist_traveled > 0) {
     return pointStopTime.shape_dist_traveled;
-  } else if (std::distance(trip_shape.first, trip_shape.second) == 0) {
+  } else if (trip_shape.first == trip_shape.second) {
     return 0.f;
   }
 
@@ -383,7 +383,7 @@ float get_stop_pair_dist(const gtfs::Stop& stop_connect,
 
   PointLL stopPoint = PointLL(stop_connect.stop_lon, stop_connect.stop_lat);
   projector_t project(stopPoint);
-  for (; trip_shape.first != trip_shape.second; ++trip_shape.first) {
+  for (; trip_shape.first < trip_shape.second - 1; ++trip_shape.first) {
     auto currOrigin = *trip_shape.first;
     auto currDest = *std::next(trip_shape.first);
     // TODO: we can use the trip_shape.shape_dist_traveled here too and early exit if it's there
