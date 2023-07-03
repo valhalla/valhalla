@@ -1,0 +1,35 @@
+syntax = "proto3";
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+// Statistics are modelled off of the statsd API
+
+// the type of statistic we are recording
+enum StatisticType {
+  count = 0;
+  gauge = 1;
+  timing = 2;
+  set = 3;
+}
+
+// The key for a statistic regarding the running of the service should be of the form:
+// action.worker_name.metric so that we can tell what type of request it was and where in the pipeline it happened
+
+message Statistic {
+  string key = 1;          // the key/name of the statistic
+  double value = 2;        // the value of the statistic
+  float frequency = 3;     // how often to report the statistic [0-1]
+  StatisticType type = 4;  // what type is it
+}
+
+message CodedDescription {
+  string description = 1;
+  uint64 code = 2;
+}
+
+message Info {
+  repeated Statistic statistics = 1;      // stats that we collect during request processing
+  repeated CodedDescription errors = 2;   // errors that occured during request processing
+  repeated CodedDescription warnings = 3; // warnings that occured during request processing
+  bool is_service = 4;                    // was this a service request/response rather than a direct call to the library
+}

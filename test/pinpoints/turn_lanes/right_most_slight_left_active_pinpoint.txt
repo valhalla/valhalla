@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":37.772610,"lon":-122.419289,"street":"Otis Street"},{"lat":37.771091,"lon":-122.420265,"street":"Otis Street"}],"costing":"auto","units":"miles"}'

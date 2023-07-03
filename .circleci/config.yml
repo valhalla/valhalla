@@ -1,0 +1,158 @@
+version: 2.1
+
+executors:
+  macos:
+    macos:
+      xcode: 13.4.1
+    environment:
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      CXXFLAGS: -DGEOS_INLINE
+
+commands:
+  install_macos_dependencies:
+    steps:
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: /usr/bin/python3 -m pip install --user requests
+      - run: pip3 install shapely "conan<2.0.0"
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
+  install_linux_dependencies:
+    steps:
+      - run: sudo bash ./scripts/install-linux-deps.sh
+
+jobs:
+  lint-build-debug:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: |
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
+      - run: mkdir build
+      - run: |
+          # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
+          cd build \
+            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
+                -DLOGGING_LEVEL=INFO \
+                -DENABLE_PYTHON_BINDINGS=On
+      - run: python3 ./scripts/valhalla_build_config
+      - run: make -C build -j8
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
+      # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
+      # for follow-up fixes
+      - save_cache:
+          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+            - ~/.conan
+      - run: scripts/clang-tidy-only-diff.sh 4
+      - run: sudo make -C build install
+      - run: make -C build package
+      - run: |
+          # Note: run (compile) tests and make code coverage report.
+          make -C build -j8 coverage
+      - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
+
+  build-release:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: |
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_linux_dependencies
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+                -DLOGGING_LEVEL=TRACE \
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+      - run: make -C build -j8
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j8 tests
+      # leaks in glibc we cant control for
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
+      - save_cache:
+          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+            - ~/.conan
+      - run: sudo make -C build install
+      - run: make -C build package
+
+  build-osx:
+    executor: macos
+    resource_class: large
+    steps:
+      - checkout
+      - run: |
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_macos_dependencies
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-macos-{{ checksum "conanfile.txt" }}
+      - run: mkdir -p build
+      - run: cd build && cmake ..
+      - run: make -C build -j8
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j8 tests
+      - run: make -C build -j8 check
+      - run: make -C build -j8 benchmarks
+      - run: make -C build run-benchmarks
+      - save_cache:
+          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+            - ~/.conan
+
+workflows:
+  version: 2
+  build_test_publish:
+    jobs:
+      - lint-build-debug:
+          filters:
+            tags:
+              ignore: /.*/
+      - build-release:
+          filters:
+            tags:
+              ignore: /.*/
+      - build-osx:
+          filters:
+            tags:
+              ignore: /.*/

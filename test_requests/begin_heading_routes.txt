@@ -1,0 +1,5 @@
+-j '{"locations":[{"lat":46.075554,"lon":18.228754,"street":"Perczel Miklós utca"},{"lat":46.075974,"lon":18.229111,"street":"Városház köz"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":46.075630,"lon":18.229683,"street":"Perczel Miklós utca"},{"lat":46.076073,"lon":18.229927,"street":"Boltív köz"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.229658,"lon":6.796059,"street":"Adlerstraße"},{"lat":51.229989,"lon":6.796032,"street":"Schirmerstraße"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":51.365643,"lon":6.943426,"street":"Graf-Zeppelin-Straße"},{"lat":51.365675,"lon":6.943582,"street":"Gellertweg"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":39.380570,"lon":-76.460139,"street":"Honeygo Boulevard"},{"lat":39.379376,"lon":-76.457822,"street":"MD 43"}],"costing":"auto","units":"miles"}'

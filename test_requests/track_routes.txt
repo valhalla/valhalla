@@ -1,0 +1,8 @@
+-j '{"locations":[{"lat":40.39137135347045,"lon":-78.61387923359871,"type":"break"},{"lat":40.3706453254661,"lon":-78.59044745564461,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.3706453254661,"lon":-78.59044745564461,"type":"break"},{"lat":40.39137135347045,"lon":-78.61387923359871,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.37662841404851,"lon":-78.58903124928474,"type":"break"},{"lat":40.36184954784227,"lon":-78.57139304280281,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.36184954784227,"lon":-78.57139304280281,"type":"break"},{"lat":40.37662841404851,"lon":-78.58903124928474,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.65327829741545,"lon":-76.33168078958987,"type":"break"},{"lat":40.65235037640587,"lon":-76.34631492197514,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.65235037640587,"lon":-76.34631492197514,"type":"break"},{"lat":40.65327829741545,"lon":-76.33168078958987,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.5535915114367,"lon":-76.54119685292244,"type":"break"},{"lat":40.574065576217464,"lon":-76.51132777333258,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'
+-j '{"locations":[{"lat":40.574065576217464,"lon":-76.51132777333258,"type":"break"},{"lat":40.5535915114367,"lon":-76.54119685292244,"type":"break"}],"costing":"auto","directions_options":{"units":"miles"}}'

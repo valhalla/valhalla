@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.520050,"lon":-78.396637,"street":"Chestnut Avenue"},{"lat":40.516129,"lon":-78.394173,"street":"7th Avenue"}],"costing":"auto","units":"miles"}'

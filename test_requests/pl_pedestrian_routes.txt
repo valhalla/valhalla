@@ -1,0 +1,4 @@
+-j '{"locations":[{"lat":54.26287,"lon":18.62818},{"lat":54.26178,"lon":18.63581}],"costing":"pedestrian"}'
+-j '{"locations":[{"lat":54.26178,"lon":18.63581},{"lat":54.26287,"lon":18.62818}],"costing":"pedestrian"}'
+-j '{"locations":[{"lat":54.26287,"lon":18.62818},{"lat":54.26311,"lon":18.62769}],"costing":"pedestrian"}'
+-j '{"locations":[{"lat":54.26311,"lon":18.62769},{"lat":54.26287,"lon":18.62818}],"costing":"pedestrian"}'

@@ -1,0 +1,6 @@
+#!/usr/bin/env python3
+
+# TODO: write a small python exe which can extract openLR base64 string to
+#   JSON array file.
+
+# import lxml

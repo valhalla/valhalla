@@ -1,0 +1,6 @@
+-j '{"locations":[{"lat":16.384245,"lon":120.517128,"street":"208"},{"lat":16.385538,"lon":120.516861,"street":"208"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.282242,"lon":-76.659195,"street":"West Chocolate Avenue"},{"lat":40.279373,"lon":-76.663582,"street":"US 422"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.799229,"lon":-73.468132,"street":"Sunnyside Boulevard"},{"lat":40.799580,"lon":-73.470741,"street":"Sunnyside Boulevard"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.648800,"lon":-73.976547,"street":"East 5th Street"},{"lat":40.647732,"lon":-73.974312,"street":"Caton Avenue"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":40.045902,"lon":-76.297455,"street":"New Holland Avenue"},{"lat":40.044231,"lon":-76.298088,"street":"North Plum Street"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":39.943272,"lon":-76.087372,"street":"Georgetown Road"},{"lat":39.935886,"lon":-76.075653,"street":"Georgetown Road"}],"costing":"auto","units":"miles"}'

@@ -1,0 +1,2 @@
+-j '{"locations":[{"lat":35.657715,"lon":139.701645,"street":"246"},{"lat":35.659237,"lon":139.705063,"street":"246"}],"costing":"auto","units":"miles"}'
+-j '{"locations":[{"lat":35.657715,"lon":139.701645,"street":"246"},{"lat":35.658638,"lon":139.706970,"street":""}],"costing":"auto","units":"miles"}'

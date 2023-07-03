@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.021908,"lon":-76.192703,"street":"Hartman Bridge Road"},{"lat":40.022945,"lon":-76.197060,"name":"Burger King"}],"costing":"auto","directions_options":{"units":"miles"}}'

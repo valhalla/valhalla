@@ -1,0 +1,11 @@
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"pedestrian","date_time":{"type":1,"value":"2018-05-13T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"bicycle","date_time":{"type":1,"value":"2018-05-13T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"bicycle","date_time":{"type":1,"value":"2018-05-13T19:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"bicycle","date_time":{"type":1,"value":"2018-05-14T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"truck","date_time":{"type":1,"value":"2018-05-13T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"truck","date_time":{"type":1,"value":"2018-05-13T19:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"truck","date_time":{"type":1,"value":"2018-05-14T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"auto","date_time":{"type":1,"value":"2018-05-13T17:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"auto","date_time":{"type":1,"value":"2018-05-13T19:14"}}'
+-j '{"locations":[{"lat":40.71835519823214,"lon":-73.99010449658817,"type":"break"},{"lat":40.72136384343179,"lon":-73.98817330609745,"type":"break"}],"costing":"auto","date_time":{"type":1,"value":"2018-05-14T17:14"}}'
+

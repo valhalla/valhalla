@@ -1,0 +1,1 @@
+-j '{"locations":[{"lat":40.021908,"lon":-76.192703,"street":"Hartman Bridge Road"},{"lat":40.027081,"lon":-76.215187,"name":"Old Mill Stream Campground"}],"costing":"auto","directions_options":{"units":"miles"}}'
