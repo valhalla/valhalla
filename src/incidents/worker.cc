@@ -37,7 +37,7 @@ namespace valhalla {
 namespace incidents {
 incident_worker_t::incident_worker_t(const boost::property_tree::ptree& config_tree)
     : service_worker_t(config_tree), config(config_tree),
-      reader(std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))) {
+      reader(std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"), nullptr, false)) {
 
   // set the available threads and initialize as many actors as needed
   // thread_count =

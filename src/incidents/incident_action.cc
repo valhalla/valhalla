@@ -144,6 +144,12 @@ std::string serialize_geojson_openlr(rapidjson::Document& req_doc) {
 
   return writer.get_buffer();
 }
+
+// void write_traffic(std::vector<vi::OpenLrEdges>& openlrs_edges, vb::GraphReader& reader) {
+// TODO: Maybe inherit the GraphReader to
+//  - initialize the map to put the edges in by tile + level, maybe
+//  - be able to write to the traffic tar
+//}
 } // namespace
 
 namespace valhalla {

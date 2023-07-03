@@ -47,6 +47,8 @@ All endpoints take the same parameters: an array of base64-encoded OpenLR string
 To build the Docker image:
 
 ```
+# clone and fetch all submodules
+git clone --recurse-submodules https://gitlab.solvertech.cz/gis-ops/incidents
 docker build -t solvertech/valhalla-incidents:latest .
 ```
 
