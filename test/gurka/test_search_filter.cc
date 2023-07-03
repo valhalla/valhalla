@@ -18,7 +18,7 @@ protected:
     constexpr double gridsize = 100;
 
     // remark: without admin database, left-side driving is the
-	// default driving side.
+    // default driving side.
     const std::string ascii_map = R"(
     B---------C
     |   2   8 |
