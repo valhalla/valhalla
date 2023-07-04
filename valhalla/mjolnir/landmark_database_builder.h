@@ -28,7 +28,10 @@ public:
   bool insertLandmark(const std::string& name, const std::string& type, 
                       const std::string& longitude, const std::string& latitude);
   bool createSpatialIndex();
+  bool getLandmarksInBoundingBox(std::vector<std::pair<std::string, std::string>> *landmarks, 
+       const std::string& minLat, const std::string& minLong, const std::string& maxLat, const std::string& maxLong);
   void closeDatabase();
+  bool testSelectQuery();
 
 private:
   sqlite3* db;

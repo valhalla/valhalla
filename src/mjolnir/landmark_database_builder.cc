@@ -65,9 +65,8 @@ bool LandmarkDatabase::createLandmarkTable() {
 bool LandmarkDatabase::insertLandmark(const std::string& name, const std::string& type, 
                                       const std::string& longitude, const std::string& latitude) {
   sql = "INSERT INTO landmarks (name, type, geom) ";
-  // sql += "VALUES (?, ?, CastToPoint(GeomFromText(?, 4326)))";
-  // sql += "VALUES (?, ?, CastToPoint(MakePoint(-74.044548, 40.689253, 4326)))";
-  sql += "VALUES (?, ?, CastToPoint(MakePoint(?, ?, 4326)))";
+  // sql += "VALUES (?, ?, CastToPoint(MakePoint(?, ?, 4326)))";
+  sql += "VALUES (?, ?, CastToPoint(ST_GeomFromText('POINT(? ?)', 4326)))";
 
   ret = sqlite3_prepare_v2(db, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
@@ -123,6 +122,60 @@ bool LandmarkDatabase::createSpatialIndex() {
     return false;
   }
   LOG_INFO("Created spatial index");
+  return true;
+}
+
+static int test_callback(void *data, int argc, char **argv, char **azColName){
+   fprintf(stderr, "%s: \n", (const char*)data);
+   
+   for(int i = 0; i<argc; i++){
+      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+   }
+   
+   printf("\n");
+   return 0;
+}
+
+bool LandmarkDatabase::testSelectQuery() {
+  sql = "SELECT name, type FROM landmarks where name = 'Eiffel Tower'";
+
+  const char* data = "Callback function called";
+  ret = sqlite3_exec(db, sql.c_str(), test_callback, (void*)data, &err_msg);
+  
+  if( ret != SQLITE_OK ) {
+    fprintf(stderr, "SQL error: %s\n", err_msg);
+    sqlite3_free(err_msg);
+    return false;
+  } else {
+    fprintf(stdout, "Operation done successfully\n");
+  }
+  return true;
+}
+
+int boundingBoxQueryCallback(void* data, int argc, char** argv, char** /* columnNames */) {
+  std::vector<std::pair<std::string, std::string>>* results = 
+    static_cast<std::vector<std::pair<std::string, std::string>>*>(data);
+
+  results->push_back(std::make_pair(argv[0], argv[1]));
+
+  return 0;
+}
+
+bool LandmarkDatabase::getLandmarksInBoundingBox(std::vector<std::pair<std::string, std::string>> *landmarks, 
+      const std::string& minLat, const std::string& minLong, const std::string& maxLat, const std::string& maxLong) {
+  sql  = "SELECT name, type FROM landmarks WHERE ST_Covers(BuildMbr(" +
+                      minLong + ", " + minLat + ", " + maxLong + ", " + maxLat + "), geom)";
+
+  int ret = sqlite3_exec(db, sql.c_str(), boundingBoxQueryCallback, landmarks, &err_msg);
+
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return false;
+  }
+
+  LOG_INFO("Executed bounding box query");
   return true;
 }
 
