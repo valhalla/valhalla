@@ -142,7 +142,7 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
   std::string bbox;

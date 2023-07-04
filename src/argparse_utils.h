@@ -7,17 +7,6 @@
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
 
-// returns a (const char*)'s path's filename without the file extension, e.g.
-// /home/valhalla/valhalla_add_elevation.cc -> valhalla_add_elevation
-std::string file_stem(const char* path) {
-  auto basename = filesystem::path(path).filename().string();
-  if (basename.length() <= 3) {
-    return "";
-  }
-  basename.erase(basename.length() - 3);
-  return basename;
-}
-
 /**
  * Parses common command line arguments across executables. It
  * - alters the config ptree and sets the concurrency config, where it favors the command line arg,

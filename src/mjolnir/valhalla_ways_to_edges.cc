@@ -36,7 +36,7 @@ struct EdgeAndDirection {
 // Main application to create a list wayids and directed edges belonging
 // to ways that are driveable.
 int main(int argc, char** argv) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
 

@@ -238,7 +238,7 @@ void update_tiles(
 } // anonymous namespace
 
 int main(int argc, char** argv) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree config;
   filesystem::path traffic_tile_dir;

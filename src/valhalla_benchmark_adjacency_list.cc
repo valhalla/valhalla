@@ -105,7 +105,7 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 }
 
 int main(int argc, char* argv[]) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
 

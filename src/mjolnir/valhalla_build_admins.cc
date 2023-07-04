@@ -11,7 +11,7 @@
 #include "argparse_utils.h"
 
 int main(int argc, char** argv) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
   boost::property_tree::ptree pt;

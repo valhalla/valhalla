@@ -77,7 +77,7 @@ void assign(const boost::property_tree::ptree& config,
 }
 
 int main(int argc, char** argv) {
-  const auto program = file_stem(__FILE__);
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
   bpt::ptree config;
 
