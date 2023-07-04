@@ -6,6 +6,8 @@
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
+   * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
+   * CHANGED: moved the argparse boilerplate code to a private header which all programs can share [#4169](https://github.com/valhalla/valhalla/pull/4169)
    * ADDED: CI runs a spell check on the PR to detect spelling mistakes [#4179](https://github.com/valhalla/valhalla/pull/4179)
    * ADDED: `preferred_side_cutoff` parameter for locations [#4182](https://github.com/valhalla/valhalla/pull/4182)
    * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
