@@ -370,6 +370,13 @@ void parse_location(valhalla::Location* location,
   if (street_side_max_distance) {
     location->set_street_side_max_distance(*street_side_max_distance);
   }
+  auto street_side_cutoff = rapidjson::get_optional<std::string>(r_loc, "/street_side_cutoff");
+  if (street_side_cutoff) {
+    valhalla::RoadClass cutoff_street_side;
+    if (RoadClass_Enum_Parse(*street_side_cutoff, &cutoff_street_side)) {
+      location->set_street_side_cutoff(cutoff_street_side);
+    }
+  }
 
   boost::optional<bool> exclude_closures;
   // is it json?
