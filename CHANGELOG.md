@@ -8,6 +8,7 @@
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * ADDED: CI runs a spell check on the PR to detect spelling mistakes [#4179](https://github.com/valhalla/valhalla/pull/4179)
    * ADDED: `preferred_side_cutoff` parameter for locations [#4182](https://github.com/valhalla/valhalla/pull/4182)
+   * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

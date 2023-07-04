@@ -30,10 +30,7 @@ std::string serializeDirections(Api& request);
 /**
  * Turn a time distance matrix into json that one can look up location pair results from
  */
-std::string serializeMatrix(const Api& request,
-                            const std::vector<thor::TimeDistance>& time_distances,
-                            double distance_scale,
-                            thor::MatrixType matrix_type);
+std::string serializeMatrix(Api& request);
 
 /**
  * Turn grid data contours into geojson

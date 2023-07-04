@@ -13,12 +13,12 @@ using namespace valhalla::thor;
 namespace {
 
 json::ArrayPtr
-serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const size_t td_count) {
+serialize_duration(const valhalla::Matrix& matrix, size_t start_td, const size_t td_count) {
   auto time = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for time in matrix result
-    if (tds[i].time != kMaxCost) {
-      time->emplace_back(static_cast<uint64_t>(tds[i].time));
+    if (matrix.times()[i] != kMaxCost) {
+      time->emplace_back(static_cast<uint64_t>(matrix.times()[i]));
     } else {
       time->emplace_back(static_cast<std::nullptr_t>(nullptr));
     }
@@ -26,7 +26,7 @@ serialize_duration(const std::vector<TimeDistance>& tds, size_t start_td, const 
   return time;
 }
 
-json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
+json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
                                   size_t start_td,
                                   const size_t td_count,
                                   const size_t /* source_index */,
@@ -35,8 +35,8 @@ json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
   auto distance = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance in matrix result
-    if (tds[i].time != kMaxCost) {
-      distance->emplace_back(json::fixed_t{tds[i].dist * distance_scale, 3});
+    if (matrix.times()[i] != kMaxCost) {
+      distance->emplace_back(json::fixed_t{matrix.distances()[i] * distance_scale, 3});
     } else {
       distance->emplace_back(static_cast<std::nullptr_t>(nullptr));
     }
@@ -48,10 +48,7 @@ json::ArrayPtr serialize_distance(const std::vector<TimeDistance>& tds,
 namespace osrm_serializers {
 
 // Serialize route response in OSRM compatible format.
-json::MapPtr serialize(const Api& request,
-                       const std::vector<TimeDistance>& time_distances,
-                       double distance_scale,
-                       MatrixType matrix_type) {
+std::string serialize(const Api& request) {
   auto json = json::map({});
   auto time = json::array({});
   auto distance = json::array({});
@@ -64,17 +61,18 @@ json::MapPtr serialize(const Api& request,
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
   for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-    time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
+    time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                           options.targets_size()));
-    distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
-                                              options.targets_size(), source_index, 0,
-                                              distance_scale));
+    distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
+                                              options.targets_size(), source_index, 0, 1.0));
   }
   json->emplace("durations", time);
   json->emplace("distances", distance);
-  json->emplace("algorithm",
-                std::string(matrix_type == MatrixType::Cost ? "costmatrix" : "timedistancematrix"));
-  return json;
+  json->emplace("algorithm", MatrixAlgoToString(request.matrix().algorithm()));
+
+  std::stringstream ss;
+  ss << *json;
+  return ss.str();
 }
 } // namespace osrm_serializers
 
@@ -94,7 +92,7 @@ json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Loca
   return input_locs;
 }
 
-json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
+json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
                              size_t start_td,
                              const size_t td_count,
                              const size_t source_index,
@@ -105,13 +103,15 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
     // check to make sure a route was found; if not, return null for distance & time in matrix
     // result
     json::MapPtr map;
-    if (tds[i].time != kMaxCost) {
+    const auto time = matrix.times()[i];
+    const auto& date_time = matrix.date_times()[i];
+    if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
-                       {"time", static_cast<uint64_t>(tds[i].time)},
-                       {"distance", json::fixed_t{tds[i].dist * distance_scale, 3}}});
-      if (!tds[i].date_time.empty()) {
-        map->emplace("date_time", tds[i].date_time);
+                       {"time", static_cast<uint64_t>(time)},
+                       {"distance", json::fixed_t{matrix.distances()[i] * distance_scale, 3}}});
+      if (!date_time.empty()) {
+        map->emplace("date_time", date_time);
       }
     } else {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
@@ -124,17 +124,14 @@ json::ArrayPtr serialize_row(const std::vector<TimeDistance>& tds,
   return row;
 }
 
-json::MapPtr serialize(const Api& request,
-                       const std::vector<TimeDistance>& time_distances,
-                       double distance_scale,
-                       MatrixType matrix_type) {
+std::string serialize(const Api& request, double distance_scale) {
   auto json = json::map({});
   const auto& options = request.options();
 
   if (options.verbose()) {
     json::ArrayPtr matrix = json::array({});
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-      matrix->emplace_back(serialize_row(time_distances, source_index * options.targets_size(),
+      matrix->emplace_back(serialize_row(request.matrix(), source_index * options.targets_size(),
                                          options.targets_size(), source_index, 0, distance_scale));
     }
 
@@ -149,11 +146,11 @@ json::MapPtr serialize(const Api& request,
     auto distance = json::array({});
 
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
-      time->emplace_back(serialize_duration(time_distances, source_index * options.targets_size(),
+      time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                             options.targets_size()));
-      distance->emplace_back(serialize_distance(time_distances, source_index * options.targets_size(),
-                                                options.targets_size(), source_index, 0,
-                                                distance_scale));
+      distance->emplace_back(
+          serialize_distance(request.matrix(), source_index * options.targets_size(),
+                             options.targets_size(), source_index, 0, distance_scale));
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
@@ -162,8 +159,7 @@ json::MapPtr serialize(const Api& request,
   }
 
   json->emplace("units", Options_Units_Enum_Name(options.units()));
-  json->emplace("algorithm",
-                std::string(matrix_type == MatrixType::Cost ? "costmatrix" : "timedistancematrix"));
+  json->emplace("algorithm", MatrixAlgoToString(request.matrix().algorithm()));
 
   if (options.has_id_case()) {
     json->emplace("id", options.id());
@@ -174,26 +170,28 @@ json::MapPtr serialize(const Api& request,
     json->emplace("warnings", valhalla::tyr::serializeWarnings(request));
   }
 
-  return json;
+  std::stringstream ss;
+  ss << *json;
+  return ss.str();
 }
 } // namespace valhalla_serializers
 
 namespace valhalla {
 namespace tyr {
 
-std::string serializeMatrix(const Api& request,
-                            const std::vector<TimeDistance>& time_distances,
-                            double distance_scale,
-                            MatrixType matrix_type) {
-
-  auto json =
-      request.options().format() == Options::osrm
-          ? osrm_serializers::serialize(request, time_distances, distance_scale, matrix_type)
-          : valhalla_serializers::serialize(request, time_distances, distance_scale, matrix_type);
-
-  std::stringstream ss;
-  ss << *json;
-  return ss.str();
+std::string serializeMatrix(Api& request) {
+  auto format = request.options().format();
+  double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
+  switch (request.options().format()) {
+    case Options_Format_osrm:
+      return osrm_serializers::serialize(request);
+    case Options_Format_json:
+      return valhalla_serializers::serialize(request, distance_scale);
+    case Options_Format_pbf:
+      return serializePbf(request);
+    default:
+      throw;
+  }
 }
 
 } // namespace tyr

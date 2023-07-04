@@ -10,7 +10,8 @@ set(protobuf_descriptors
   transit.proto
   transit_fetch.proto
   incidents.proto
-  status.proto)
+  status.proto
+  matrix.proto)
 
 if(ENABLE_DATA_TOOLS)
   # Only mjolnir needs the OSM PBF descriptors
