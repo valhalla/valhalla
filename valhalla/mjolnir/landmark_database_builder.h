@@ -20,35 +20,16 @@
 
 namespace valhalla {
 namespace mjolnir {
-struct Landmark {
-public:
-  void initialize(const std::string& name, const std::string& type,
-                  double latitude, double longitude) {
-    _name = name;
-    _type = type;
-    _latitude = latitude;
-    _longitude = longitude;
-  }
-  std::string get_name();
-  std::string get_type();
-  std::string get_latitude();
-  std::string get_longitude();
-
-private:
-  std::string _name;
-  std::string _type;
-  double _latitude;
-  double _longitude;
-};
-
 struct LandmarkDatabase {
 public:
   LandmarkDatabase(std::string& db_name) : db(nullptr), database(db_name) {}
   bool openDatabase();
   bool createLandmarkTable();
-  bool insertLandmark(Landmark& landmark);
+  bool insertLandmark(const std::string& name, const std::string& type, 
+                      const std::string& longitude, const std::string& latitude);
   bool createSpatialIndex();
   void closeDatabase();
+
 private:
   sqlite3* db;
   sqlite3_stmt* stmt;

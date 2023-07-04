@@ -17,12 +17,12 @@ TEST(LandmarkTest, TestBuildLandmarkStorage) {
   ASSERT_TRUE(db.openDatabase());
   ASSERT_TRUE(db.createLandmarkTable());
 
-  Landmark landmark1, landmark2;
-  landmark1.initialize("Statue of Liberty", "Monument", 40.689253, -74.044548);
-  landmark2.initialize("Eiffel Tower", "Monument", 48.858370, 2.294481);
+  // Landmark landmark1, landmark2;
+  // landmark1.initialize("Statue of Liberty", "Monument", -74.044548, 40.689253);
+  // landmark2.initialize("Eiffel Tower", "Monument", 2.294481, 48.858370);
 
-  ASSERT_TRUE(db.insertLandmark(landmark1));
-  ASSERT_TRUE(db.insertLandmark(landmark2));
+  ASSERT_TRUE(db.insertLandmark("Statue of Liberty", "Monument", "-74.044548", "40.689253"));
+  ASSERT_TRUE(db.insertLandmark("Eiffel Tower", "Monument", "2.294481", "48.858370"));
   
   ASSERT_TRUE(db.createSpatialIndex());
 
