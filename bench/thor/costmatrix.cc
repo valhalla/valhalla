@@ -80,7 +80,8 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
     locations.emplace_back(midgard::PointLL{lng_distribution(gen), lat_distribution(gen)});
   }
 
-  Options options;
+  Api request;
+  auto& options = *request.mutable_options();
   options.set_costing_type(Costing::auto_);
   rapidjson::Document doc;
   sif::ParseCosting(doc, "/costing_options", options);
@@ -88,25 +89,21 @@ static void BM_UtrechtCostMatrix(benchmark::State& state) {
   auto costs = sif::CostFactory().CreateModeCosting(options, mode);
   auto cost = costs[static_cast<size_t>(mode)];
 
+  auto& sources = *options.mutable_sources();
   const auto projections = loki::Search(locations, reader, cost);
   if (projections.size() == 0) {
     throw std::runtime_error("Found no matching locations");
   }
-
-  google::protobuf::RepeatedPtrField<valhalla::Location> sources;
-
   for (const auto& projection : projections) {
     auto* p = sources.Add();
     baldr::PathLocation::toPBF(projection.second, p, reader);
   }
 
-  std::size_t result_size = 0;
-
   thor::CostMatrix matrix;
   for (auto _ : state) {
-    auto result = matrix.SourceToTarget(sources, sources, reader, costs, mode, 100000.);
+    matrix.SourceToTarget(request, reader, costs, mode, 100000.);
     matrix.clear();
-    result_size += result.size();
+    request.clear_matrix();
   }
   state.counters["Routes"] = benchmark::Counter(size, benchmark::Counter::kIsIterationInvariantRate);
 }

@@ -10,6 +10,7 @@
    * CHANGED: moved the argparse boilerplate code to a private header which all programs can share [#4169](https://github.com/valhalla/valhalla/pull/4169)
    * ADDED: CI runs a spell check on the PR to detect spelling mistakes [#4179](https://github.com/valhalla/valhalla/pull/4179)
    * ADDED: `preferred_side_cutoff` parameter for locations [#4182](https://github.com/valhalla/valhalla/pull/4182)
+   * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
