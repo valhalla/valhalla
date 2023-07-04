@@ -9,7 +9,6 @@
 #include <prime_server/prime_server.hpp>
 
 #include "baldr/curl_tilegetter.h"
-#include "baldr/graph_utils.h"
 #include "baldr/tilehierarchy.h"
 #include "filesystem.h"
 #include "midgard/pointll.h"
