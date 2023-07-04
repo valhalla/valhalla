@@ -105,7 +105,7 @@ bool LandmarkDatabase::insertLandmark(const std::string& name, const std::string
   LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db)));
   LOG_ERROR("sqlite3_step() Name: " + name);
   LOG_ERROR("sqlite3_step() Type: " + type);
-  LOG_ERROR("sqlite3_step() longitute: " + longitude);
+  LOG_ERROR("sqlite3_step() longitude: " + longitude);
   LOG_ERROR("sqlite3_step() Latitude: " + latitude);
 
   sqlite3_finalize(stmt);
