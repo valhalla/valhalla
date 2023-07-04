@@ -72,7 +72,7 @@ gurka::map ServiceRoadsTest::service_streets_map = {};
 TEST_F(ServiceRoadsTest, test_default_value) {
   for (const auto& c : costing)
     if (c == "motor_scooter" || c == "pedestrian")
-      // For current exmple and with these costings route is not affected
+      // For current example and with these costings route is not affected
       validate_path(gurka::do_action(valhalla::Options::route, service_streets_map, {"1", "2"}, c),
                     {"AB", "BE", "EF"});
     else

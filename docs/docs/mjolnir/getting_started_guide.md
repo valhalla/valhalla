@@ -1,6 +1,6 @@
 # Mjolnir: Getting started guide
 
-The mjolnir library is essentially a set of applications, data structures and alogrithms which deal with things like: parsing OpenStreetMap data extracts, cutting routable "graph" tiles, generating tile hierarchies and testing for data deficiencies.
+The mjolnir library is essentially a set of applications, data structures and algorithms which deal with things like: parsing OpenStreetMap data extracts, cutting routable "graph" tiles, generating tile hierarchies and testing for data deficiencies.
 
 If you would like to create your own routing tiles, this guilde will help you get started.  
 

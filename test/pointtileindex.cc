@@ -113,7 +113,7 @@ TEST(PointTileIndex, Intermediate) {
   {
     std::vector<PointLL> points_enhanced(points);
     size_t circle_pt_idx = points_enhanced.size();
-    std::unordered_set<size_t> circle_pt_indicies;
+    std::unordered_set<size_t> circle_pt_indices;
 
     // add a bunch of points tightly circled around the origin
     int num_circle_pts = 100;
@@ -122,7 +122,7 @@ TEST(PointTileIndex, Intermediate) {
       double x = std::cos(radians), y = std::sin(radians);
       constexpr double len = 1e-7;
       points_enhanced.emplace_back(PointLL{len * x, len * y});
-      circle_pt_indicies.insert(circle_pt_idx++);
+      circle_pt_indices.insert(circle_pt_idx++);
     }
 
     // a tighter tiling width this time
@@ -134,8 +134,8 @@ TEST(PointTileIndex, Intermediate) {
     near_pts = index.get_points_near(origin_pt);
     EXPECT_EQ(near_pts.size(), num_circle_pts + 1);
 
-    circle_pt_indicies.insert(origin_idx);
-    EXPECT_EQ(near_pts, circle_pt_indicies);
+    circle_pt_indices.insert(origin_idx);
+    EXPECT_EQ(near_pts, circle_pt_indices);
   }
 
   //--------------------------------------------------------

@@ -714,7 +714,7 @@ struct tar {
         if (!tried_index && from_index != nullptr) {
           tried_index = true;
           contents = from_index(name, position, mm.get(), size);
-          // if it was able to intialize from an index we bail
+          // if it was able to initialize from an index we bail
           if (!contents.empty()) {
             return;
           }

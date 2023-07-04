@@ -84,7 +84,7 @@ uint32_t days_from_pivot_date(const date::local_seconds& seconds);
 /**
  * Get the iso date and time from the current date and time.
  * @param   time_zone        Timezone.
- * @return  Returns the formated date 2015-05-06.
+ * @return  Returns the formatted date 2015-05-06.
  */
 std::string iso_date_time(const date::time_zone* time_zone);
 
@@ -138,7 +138,7 @@ void seconds_to_date(const uint64_t origin_seconds,
 /**
  * Get utc formatted timestamp, skip using zoned times since we have utc special case
  * @param seconds since epoch in UTC zone
- * @return formated string like: 2020-08-12T14:17:09Z
+ * @return formatted string like: 2020-08-12T14:17:09Z
  */
 inline std::string seconds_to_date_utc(const uint64_t seconds) {
   std::stringstream ss;

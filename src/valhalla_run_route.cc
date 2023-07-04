@@ -69,14 +69,14 @@ class PathStatistics {
   uint32_t trip_time;
   float trip_dist;
   float arc_dist;
-  uint32_t manuevers;
+  uint32_t maneuvers;
   double elapsed_cost_seconds;
   double elapsed_cost_cost;
 
 public:
   PathStatistics(std::pair<float, float> p1, std::pair<float, float> p2)
       : origin(p1), destination(p2), success("false"), passes(0), runtime(), trip_time(), trip_dist(),
-        arc_dist(), manuevers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
+        arc_dist(), maneuvers(), elapsed_cost_seconds(0), elapsed_cost_cost(0) {
   }
 
   void setSuccess(std::string s) {
@@ -97,8 +97,8 @@ public:
   void setArcDist(float d) {
     arc_dist = d;
   }
-  void setManuevers(uint32_t n) {
-    manuevers = n;
+  void setManeuvers(uint32_t n) {
+    maneuvers = n;
   }
   void setElapsedCostSeconds(double secs) {
     elapsed_cost_seconds = secs;
@@ -110,7 +110,7 @@ public:
     valhalla::midgard::logging::Log((boost::format("%f,%f,%f,%f,%s,%d,%d,%d,%f,%f,%d,%f,%f") %
                                      origin.first % origin.second % destination.first %
                                      destination.second % success % passes % runtime % trip_time %
-                                     trip_dist % arc_dist % manuevers % elapsed_cost_seconds %
+                                     trip_dist % arc_dist % maneuvers % elapsed_cost_seconds %
                                      elapsed_cost_cost)
                                         .str(),
                                     " [STATISTICS] ");
@@ -455,7 +455,7 @@ valhalla::DirectionsLeg DirectionsTest(valhalla::Api& api,
   }
   data.setTripTime(trip_directions.summary().time());
   data.setTripDist(trip_directions.summary().length());
-  data.setManuevers(trip_directions.maneuver_size());
+  data.setManeuvers(trip_directions.maneuver_size());
   data.setElapsedCostSeconds(etl.node().rbegin()->cost().elapsed_cost().seconds());
   data.setElapsedCostCost(etl.node().rbegin()->cost().elapsed_cost().cost());
 

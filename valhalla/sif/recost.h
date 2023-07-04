@@ -18,7 +18,7 @@ using LabelCallback = std::function<void(const EdgeLabel& label)>;
  * Will take a sequence of edges and create the set of edge labels that would represent it
  * Allows for the caller to essentially re-compute the costing of a given path
  *
- * @param reader            used to get access to graph data. modifyable because its got a cache
+ * @param reader            used to get access to graph data. modifiable because its got a cache
  * @param costing           single costing object to be used for costing/access computations
  * @param edge_cb           the callback used to get each edge in the path
  * @param label_cb          the callback used to emit each label in the path

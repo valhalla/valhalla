@@ -201,7 +201,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
-   * Initalize destinations for all origins.
+   * Initialize destinations for all origins.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */

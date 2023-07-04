@@ -418,7 +418,7 @@ Tiles<coord_t>::Intersect(const container_t& linestring) const {
     if (ds == 0) {
       set_pixel(ix0, iy0);
     }
-    // if not the next most likley thing is adjacent cells
+    // if not the next most likely thing is adjacent cells
     else if (ds == 1) {
       set_pixel(ix0, iy0);
       set_pixel(ix1, iy1);

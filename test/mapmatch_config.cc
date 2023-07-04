@@ -33,12 +33,12 @@ TEST(MapmatchConfig, check_read_all_params) {
   config.Read(fake_config);
 
   // check candidate search params
-  const auto& candiate_search = config.candidate_search;
-  EXPECT_EQ(candiate_search.search_radius_meters, 10.f);
-  EXPECT_TRUE(candiate_search.is_search_radius_customizable);
-  EXPECT_EQ(candiate_search.max_search_radius_meters, 500.f);
-  EXPECT_EQ(candiate_search.grid_size, 100);
-  EXPECT_EQ(candiate_search.cache_size, 100500);
+  const auto& candidate_search = config.candidate_search;
+  EXPECT_EQ(candidate_search.search_radius_meters, 10.f);
+  EXPECT_TRUE(candidate_search.is_search_radius_customizable);
+  EXPECT_EQ(candidate_search.max_search_radius_meters, 500.f);
+  EXPECT_EQ(candidate_search.grid_size, 100);
+  EXPECT_EQ(candidate_search.cache_size, 100500);
 
   // check transition params
   const auto& transition = config.transition_cost;

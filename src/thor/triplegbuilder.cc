@@ -731,7 +731,7 @@ void AddIntersectingEdges(const AttributesController& controller,
   for (uint32_t idx1 = 0; idx1 < node->edge_count(); ++idx1, intersecting_edge++) {
 
     // Skip shortcut edges AND the opposing edge of the previous edge in the path AND
-    // the current edge in the path AND the superceded edge of the current edge in the path
+    // the current edge in the path AND the superseded edge of the current edge in the path
     // if the current edge in the path is a shortcut
     if (intersecting_edge->is_shortcut() ||
         intersecting_edge->localedgeidx() == prior_opp_local_index ||

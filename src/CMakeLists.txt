@@ -37,7 +37,7 @@ set(LIBCXX_COMPILE_FLAGS "")
 set(LIBCXX_LINK_FLAGS "")
 set(LIBCXX_LIBRARIES "")
 
-# Inlclude build macros for updating configuration variables
+# Include build macros for updating configuration variables
 include(HandleLibcxxFlags)
 
 ## Define libvalhalla sub-modules as OBJECT libraries

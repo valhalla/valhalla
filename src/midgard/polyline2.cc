@@ -254,7 +254,7 @@ void DouglasPeucker(container_t& polyline,
     size_t j = e - 1, k = 0;
     coord_t tmp;
     for (auto i = std::prev(end); i != start; --i, --j) {
-      // special points we dont want to generalize no matter what take precidence
+      // special points we dont want to generalize no matter what take precedence
       if (exclusions.find(j) != exclusions.end()) {
         itr = i;
         dmax = epsilon;
