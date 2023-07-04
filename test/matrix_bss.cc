@@ -114,10 +114,8 @@ public:
     ParseApi(make_matrix_request(sources, targets), Options::sources_to_targets, matrix_request);
     loki_worker.matrix(matrix_request);
 
-    auto matrix_results =
-        timedist_matrix_bss.SourceToTarget(matrix_request.options().sources(),
-                                           matrix_request.options().targets(), reader, mode_costing,
-                                           sif::TravelMode::kPedestrian, 400000.0);
+    timedist_matrix_bss.SourceToTarget(matrix_request, reader, mode_costing,
+                                       sif::TravelMode::kPedestrian, 400000.0);
 
     auto s_size = sources.size();
     auto t_size = targets.size();
@@ -140,8 +138,8 @@ public:
         int route_length = legs.begin()->summary().length() * 1000;
 
         size_t m_result_idx = i * t_size + j;
-        int matrix_time = matrix_results[m_result_idx].time;
-        int matrix_length = matrix_results[m_result_idx].dist;
+        int matrix_time = matrix_request.matrix().times()[m_result_idx];
+        int matrix_length = matrix_request.matrix().distances()[m_result_idx];
 
         EXPECT_NEAR(matrix_time, route_time, kTimeThreshold);
         EXPECT_NEAR(matrix_length, route_length, route_length * kDistancePercentThreshold);
