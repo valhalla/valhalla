@@ -90,8 +90,8 @@ struct OSMNode {
   }
 
   /**
-   * Sets the OSM node Id. Ensures the Id does not exceed the maximum allowed based on
-   * ths OSMNode structure.
+   * Sets the OSM node Id.
+   *
    * @param id Node Id.
    */
   void set_id(const uint64_t id) {

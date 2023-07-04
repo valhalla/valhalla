@@ -14,7 +14,7 @@ Valhalla uses dynamic, run-time costing when computing route paths and can consi
 
 #### Costing Interface
 
-Costing methods have access to all attributes of an edge (road section between 2 intersections) to form the cost along the edge and when transitoning between edges. Within Sif, costing methods are created by deriving a class from the base dynamic costing class or one of the existing costing classes. Each costing method must override 3 different methods to create the unique costing logic:
+Costing methods have access to all attributes of an edge (road section between 2 intersections) to form the cost along the edge and when transitioning between edges. Within Sif, costing methods are created by deriving a class from the base dynamic costing class or one of the existing costing classes. Each costing method must override 3 different methods to create the unique costing logic:
 
 	virtual bool Allowed(const baldr::NodeInfo* node) const = 0;
 Checks if access is allowed for the provided node. For example, node access can be restricted for specific modes of travel if bollards are present.

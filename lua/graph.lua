@@ -789,7 +789,7 @@ function normalize_measurement(measurement)
     -- more complicated case, try some Lua patterns. they're almost like regular
     -- expressions, so there'll probably be some unintended consequences!
     --
-    -- because we want to parse compount expressions such as 3ft6in, then we use
+    -- because we want to parse compound expressions such as 3ft6in, then we use
     -- an accumulator to sum up each term in meters. this has the unintended
     -- side-effect that 10m6ft would also be valid... but whatever.
     local sum = 0

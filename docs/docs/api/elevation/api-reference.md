@@ -21,7 +21,7 @@ By default, all height values are returned as integer values. This works fine fo
 
 | Height precision | Description |
 | :--------- | :----------- |
-| `height_precision` | Specifies the precision (number of decimal places) of all returned height values. Values of `0`, `1`, or `2` are admissable. Defaults to 0 (integer precision). Any other value will result in integer precision (0 decimal places).
+| `height_precision` | Specifies the precision (number of decimal places) of all returned height values. Values of `0`, `1`, or `2` are admissible. Defaults to 0 (integer precision). Any other value will result in integer precision (0 decimal places).
 
 ### Use a shape list for input locations
 

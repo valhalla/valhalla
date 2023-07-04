@@ -11,7 +11,7 @@ mock_parser.add_argument = MagicMock()
 class TestBuildConfig(unittest.TestCase):
     def test_add_leaf_types(self):
         # test all data types, except for bool & list
-        # they have costum lambdas we can't test this way
+        # they have custom lambdas we can't test this way
         help_text = {
             "str": "string",
             "int": "integer",

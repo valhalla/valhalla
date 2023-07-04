@@ -657,7 +657,7 @@ public:
                                                 const TravelMode travel_mode,
                                                 IntersectingEdgeCounts& xedge_counts);
 
-  bool HasFowardIntersectingEdge(uint32_t from_heading);
+  bool HasForwardIntersectingEdge(uint32_t from_heading);
 
   bool HasForwardTraversableIntersectingEdge(uint32_t from_heading, const TravelMode travel_mode);
 

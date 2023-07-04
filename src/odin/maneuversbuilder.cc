@@ -1630,7 +1630,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   // Process Turn Channel
   else if (none_type_allowed && maneuver.turn_channel()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
-    LOG_TRACE("ManeuverType=TURN_CHANNNEL");
+    LOG_TRACE("ManeuverType=TURN_CHANNEL");
   }
   // Process exit
   // if maneuver is ramp

@@ -111,7 +111,7 @@ protected:
       return {};
     }
 
-    // hand back something that isnt modifyable
+    // hand back something that isnt modifiable
     return std::const_pointer_cast<const valhalla::IncidentsTile>(tile);
   }
 
@@ -176,7 +176,7 @@ protected:
    * equal to the timestamp of the last scan that was performed will be read into the incident cache.
    * Tiles which are in the cache but were not found on the disk in the last scan will b epurged as
    * they have been removed from the log. If a static tileset was provided any tiles which are found
-   * in the log but are nto part of the tileset will be ignored. When the timestamp for the last check
+   * in the log but are not part of the tileset will be ignored. When the timestamp for the last check
    * is older than a timestamp for a given file that file is replaced with whatever its contents are
    * on disk.
    *

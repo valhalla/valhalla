@@ -622,10 +622,10 @@ int main(int argc, char** argv) {
   // configure logging
   auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
-    auto loggin_config =
+    auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(loggin_config);
+    valhalla::midgard::logging::Configure(logging_config);
   }
 
   BuildStatistics(pt);

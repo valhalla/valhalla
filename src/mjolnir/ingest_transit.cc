@@ -285,7 +285,7 @@ void setup_stops(Transit& tile,
     // when this platform is not generated, we can use its actual given id verbatim because thats how
     // other gtfs entities will refer to it. however when it is generated we must use its parents id
     // and not the generated one because the references in the feed have no idea that we are doing
-    // the generation of new ideas for non-existant platforms
+    // the generation of new ideas for non-existent platforms
     platform_node_ids[{tile_stop.stop_id, feed_name}] = node_id;
   }
   node_id++;

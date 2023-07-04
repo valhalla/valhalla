@@ -57,7 +57,7 @@ bool side_filter(const PathLocation::PathEdge& edge, const Location& location, G
   auto* node = reader.GetEndNode(opp, tile);
   if (!node)
     return false;
-  // if its on the right side and you drive on the rigth OR if its not on the right and you dont drive
+  // if its on the right side and you drive on the right OR if its not on the right and you dont drive
   // on the right THEN its the same side that you drive on
   bool same = node->drive_on_right() == (edge.sos == PathLocation::SideOfStreet::RIGHT);
   // and then if you were asking for the same and it was the same OR if you were asking for opposite

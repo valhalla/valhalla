@@ -534,7 +534,7 @@ void parse_locations(const rapidjson::Document& doc,
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
   catch (const valhalla_exception_t& e) {
     throw e;
-  } // generic execptions and other stuff get a generic message
+  } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
   }

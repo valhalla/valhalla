@@ -12,9 +12,9 @@ PWD = Path(os.path.dirname(os.path.abspath(__file__)))
 
 def has_cyrillic(text):
     """
-    This is ensuring that the given text contains cyrllic characters
+    This is ensuring that the given text contains Cyrillic characters
     :param text:  The text to validate
-    :return: Returns true if there are cyrillic characters
+    :return: Returns true if there are Cyrillic characters
     """
     # Note: The character range includes the entire Cyrillic script range including the extended
     #       Cyrillic alphabet (e.g. ё, Є, ў)
