@@ -10,6 +10,7 @@
 
 #include "baldr/json.h"
 #include "midgard/logging.h"
+#include "configuration.h"
 
 #include "midgard/util.h"
 #include "odin/directionsbuilder.h"
@@ -106,7 +107,8 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
   return result;
 }
 
-void run_service(const boost::property_tree::ptree& config) {
+void run_service() {
+  auto config = valhalla::config::GetConfig();
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
                         config.get<unsigned int>("httpd.service.shutting_seconds", 1));

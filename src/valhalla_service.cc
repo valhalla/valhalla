@@ -11,9 +11,6 @@
 #include <thread>
 #include <unordered_set>
 
-#include "baldr/rapidjson_utils.h"
-#include <boost/property_tree/ptree.hpp>
-
 #ifdef HAVE_HTTP
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
@@ -21,6 +18,7 @@ using namespace prime_server;
 #endif
 
 #include "midgard/logging.h"
+#include "configuration.h"
 
 #include "loki/worker.h"
 #include "odin/worker.h"
@@ -44,8 +42,8 @@ int main(int argc, char** argv) {
   // config file
   // TODO: validate the config
   std::string config_file(argv[1]);
-  boost::property_tree::ptree config;
-  rapidjson::read_json(config_file, config);
+  valhalla::config::Configure(config_file);
+  boost::property_tree::ptree config = valhalla::config::GetConfig();
 
   // one shot direct request mode
   if (argc == 4) {

@@ -186,6 +186,7 @@ set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
     ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/configuration.h
     )
 
 set(valhalla_src
