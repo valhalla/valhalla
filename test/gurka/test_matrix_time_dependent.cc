@@ -30,7 +30,7 @@ void update_traffic_on_edges(baldr::GraphReader& reader,
 void check_matrix(const rapidjson::Document& result,
                   const std::vector<float>& exp_dists,
                   bool valid_traffic,
-                  MatrixType matrix_type) {
+                  Matrix::Algorithm matrix_type) {
   size_t i = 0;
   for (const auto& origin_row : result["sources_to_targets"].GetArray()) {
     auto origin_td = origin_row.GetArray();
@@ -46,7 +46,7 @@ void check_matrix(const rapidjson::Document& result,
     }
   }
   const std::string algo = result["algorithm"].GetString();
-  const std::string exp_algo = matrix_type == MatrixType::Cost ? "costmatrix" : "timedistancematrix";
+  const std::string exp_algo = MatrixAlgoToString(matrix_type);
   EXPECT_EQ(algo, exp_algo);
 }
 } // namespace
@@ -124,7 +124,7 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
   res_doc.Parse(res.c_str());
 
   // we expect to take the motorways, residential path is 2.8f
-  check_matrix(res_doc, {0.0f, 3.2f, 3.2f, 0.0f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 3.2f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
 }
 
 TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
@@ -138,7 +138,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
                                  options, nullptr, &res);
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, MatrixType::TimeDist);
+  check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
@@ -150,7 +150,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
-  check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, MatrixType::TimeDist);
+  check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
@@ -160,7 +160,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"L"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {2.8f, 0.0f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {2.8f, 0.0f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings(0).code(), 201);
 
@@ -170,7 +170,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"1"}, {"1", "2"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 0.2f}, true, MatrixType::TimeDist);
+  check_matrix(res_doc, {0.0f, 0.2f}, true, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
@@ -186,7 +186,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
                                  options, nullptr, &res);
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
@@ -199,7 +199,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
                             nullptr, &res);
   res_doc.Parse(res.c_str());
   // the second origin can't respect time (no historical data)
-  check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 2.8f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // forward tree, source & target within a single edge
@@ -210,7 +210,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"1"}, {"1", "2"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 0.2f}, true, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 0.2f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // bidir matrix allows less targets than sources and date_time on the sources
@@ -222,7 +222,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 2.8f}, true, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 2.8f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // we don't support date_time on the targets
@@ -236,7 +236,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   // TODO: there's still a bug in CostMatrix which chooses the wrong correlated edges:
   // https://github.com/valhalla/valhalla/issues/3803
   // this should really take the longer route since it's not using traffic here
-  check_matrix(res_doc, {0.0f, 2.8f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 2.8f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings(0).code(), 206);
 }
@@ -268,7 +268,7 @@ TEST_F(MatrixTest, TDSources) {
   auto result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E"}, "auto", options,
                                  nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 3.2f}, true, MatrixType::TimeDist);
+  check_matrix(res_doc, {0.0f, 3.2f}, true, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // more targets than sources with date_time.type = 2 are disallowed
@@ -277,7 +277,7 @@ TEST_F(MatrixTest, TDSources) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E"}, {"E", "L"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 3.2f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
   ASSERT_EQ(result.info().warnings().size(), 1);
 
@@ -289,7 +289,7 @@ TEST_F(MatrixTest, TDSources) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 3.2f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
   ASSERT_EQ(result.info().warnings().size(), 1);
 }
@@ -303,7 +303,7 @@ TEST_F(MatrixTest, TDTargets) {
   auto result = gurka::do_action(Options::sources_to_targets, map, {"E"}, {"E", "L"}, "auto", options,
                                  nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 2.8f}, true, MatrixType::TimeDist);
+  check_matrix(res_doc, {0.0f, 2.8f}, true, Matrix::TimeDistanceMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
 
   // more sources than targets with date_time.type = 1 are disallowed
@@ -312,7 +312,7 @@ TEST_F(MatrixTest, TDTargets) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 3.2f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 201);
 
@@ -322,7 +322,7 @@ TEST_F(MatrixTest, TDTargets) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E"}, {"E", "L"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_matrix(res_doc, {0.0f, 3.2f}, false, MatrixType::Cost);
+  check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
 }
