@@ -37,15 +37,11 @@ void get_route_req(Api& request,
     loc->mutable_ll()->set_lng(std::get<0>(pt).lng());
     loc->mutable_ll()->set_lat(std::get<0>(pt).lat());
     loc->set_radius(0);
-    if (use_bearing) {
-      loc->set_heading(std::get<1>(pt));
-      loc->set_heading_tolerance(20U);
-    }
   }
 
   if (use_bearing) {
     request.mutable_options()->mutable_locations(0)->set_heading(std::get<1>(a_pt));
-    request.mutable_options()->mutable_locations(0)->set_heading_tolerance(20);
+    request.mutable_options()->mutable_locations(0)->set_heading_tolerance(20U);
   }
 }
 

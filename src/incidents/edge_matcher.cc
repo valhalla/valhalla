@@ -137,7 +137,7 @@ rank_edges(const std::optional<rapidjson::GenericArray<false, rapidjson::Value>>
  * IDs of the edges
  *
  * @param actor the Actor instance to do the map matching
- * @param edge_ids fill in the vector of edge ids
+ * @param openlr_edges fill in the vector of edge ids
  * @param a_ranked the start LRP's vector of ranked edges by /locate
  * @param b_ranked the destination LRP's vector of ranked edges by /locate
  * @param a_lrp the start LRP object
@@ -147,7 +147,7 @@ rank_edges(const std::optional<rapidjson::GenericArray<false, rapidjson::Value>>
  *
  */
 void match_lrps(valhalla::tyr::actor_t& actor,
-                vi::OpenLrEdges& openlr_edges,
+                std::vector<vi::OpenLrEdge>& openlr_edges,
                 const std::vector<vi::RankEdge>& a_ranked,
                 const std::vector<vi::RankEdge>& b_ranked,
                 const vb::OpenLR::LocationReferencePoint& a_lrp,
@@ -174,7 +174,7 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           continue;
         }
 
-        openlr_edges.edge_ids.push_back(start_cand.graph_id);
+        openlr_edges.emplace_back(start_cand.graph_id);
         return;
       }
 
@@ -203,7 +203,6 @@ void match_lrps(valhalla::tyr::actor_t& actor,
         actor.act(trace_req);
         const auto& trace_trip_leg = trace_req.trip().routes(0).legs(0);
         const auto& shape_pts = vm::decode<std::vector<vm::PointLL>>(trace_trip_leg.shape());
-        openlr_edges.edge_ids.reserve(shape_pts.size() - 1);
 
         // collect all the traversed edge IDs
         for (int i = 1; i < trace_trip_leg.node().size(); i++) {
@@ -211,15 +210,15 @@ void match_lrps(valhalla::tyr::actor_t& actor,
             continue;
           }
           const auto& node = trace_trip_leg.node(i - 1);
-          openlr_edges.edge_ids.emplace_back(vb::GraphId(node.edge().id()));
+          openlr_edges.emplace_back(vb::GraphId(node.edge().id()));
         }
 
-        if (!(openlr_edges.edge_ids[0] == start_cand.graph_id)) {
+        if (!(openlr_edges[0].edge_id == start_cand.graph_id)) {
           auto node = trace_trip_leg.node().begin();
           while (!(node->edge().length_km() > 0.001f)) {
             // _somehow_ the map matching can return irrelevant edges in the beginning
             // skip those until we find the right one
-            openlr_edges.edge_ids.erase(openlr_edges.edge_ids.begin());
+            openlr_edges.erase(openlr_edges.begin());
             node++;
             continue;
           }
@@ -236,7 +235,7 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           while (true) {
             // remove the previous edge's id from the vector, expensive but shouldn't be many elements
             // and a rather rare situation hopefully (skipping an entire edge)
-            openlr_edges.edge_ids.erase(openlr_edges.edge_ids.begin());
+            openlr_edges.erase(openlr_edges.begin());
 
             // if we're finally beyond the poff we know we found the right edge, so break
             poff_edge_offset += node->edge().length_km() * vm::kMetersPerKm;
@@ -253,17 +252,15 @@ void match_lrps(valhalla::tyr::actor_t& actor,
             }
           }
         }
-        // save the first_node_offset (as 0.0 - 1.0 percent_along)
-        const auto first_node_offset = static_cast<double>(poff_edge_offset) - poff_meters;
-        assert(first_node_offset >= 0.);
-        openlr_edges.first_node_offset =
-            (start_edge_length - static_cast<float>(first_node_offset)) / start_edge_length;
+        // save the first_node_offset (as 1/255th of length)
+        const auto first_edge_offset = poff_edge_offset - static_cast<float>(poff_meters);
+        assert(first_edge_offset >= 0.f);
+        openlr_edges.front().first_node_offset =
+            static_cast<uint8_t>((start_edge_length - first_edge_offset) / start_edge_length * 255.f);
 
         // save the noff as distance in absolute meters
         // calculate the real offset from the end of the last edge to the openlr.noff
-        // TODO: are we sure we wouldn't match an edge that's outgoing instead of incoming
-        // with a percent_along of 1.0, then it'd end up in a negative edge_offset and hit the assert
-        // further down
+        // TODO: should we really take the /locate result here or rather the matched path's?
         auto noff_edge_offset = end_cand.length * end_cand.percent_along;
         auto end_edge_length = end_cand.length;
         // skip the last edge as long as the edge_offset is smaller than poff
@@ -273,7 +270,7 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           while (true) {
             // remove the previous edge's id from the vector, expensive but shouldn't be many elements
             // and a rather rare situation hopefully (skipping an entire edge)
-            openlr_edges.edge_ids.pop_back();
+            openlr_edges.pop_back();
 
             // if we're finally beyond the noff we know we found the right edge, so break
             noff_edge_offset += node->edge().length_km() * vm::kMetersPerKm;
@@ -290,14 +287,14 @@ void match_lrps(valhalla::tyr::actor_t& actor,
             }
           }
         }
-        // save the first_node_offset (as 0.0 - 1.0 percent_along)
-        const auto last_node_offset = static_cast<double>(noff_edge_offset) - noff_meters;
-        assert(last_node_offset >= 0.);
-        openlr_edges.last_node_offset =
-            (end_edge_length - static_cast<float>(last_node_offset)) / end_edge_length;
+        // save the last_node_offset (as 1/255th of length)
+        const auto last_edge_offset = noff_edge_offset - static_cast<float>(noff_meters);
+        assert(last_edge_offset >= 0.f);
+        openlr_edges.back().last_node_offset =
+            static_cast<uint8_t>(last_edge_offset / end_edge_length * 255.f);
 
         // quick sanity check
-        assert((first_node_offset + last_node_offset) < static_cast<float>(a_lrp.distance));
+        assert((first_edge_offset + last_edge_offset) < static_cast<float>(a_lrp.distance));
         return;
       }
     }
@@ -307,24 +304,25 @@ void match_lrps(valhalla::tyr::actor_t& actor,
 void match_edges(valhalla::tyr::actor_t& actor,
                  rapidjson::Value::ConstValueIterator openlr_start,
                  rapidjson::Value::ConstValueIterator openlr_end,
-                 std::promise<std::vector<vi::OpenLrEdges>>& result) {
+                 std::promise<std::vector<vi::OpenLrEdge>>& result) {
 
-  auto remove_id_dups = [](std::vector<vb::GraphId>& edge_ids) {
+  auto remove_id_dups = [](std::vector<vi::OpenLrEdge>& edge_ids) {
     auto last = std::unique(edge_ids.begin(), edge_ids.end());
     edge_ids.erase(last, edge_ids.end());
   };
 
-  std::vector<vi::OpenLrEdges> openlrs_edges;
-  openlrs_edges.reserve(openlr_end - openlr_start);
+  // assume 20 edges per openlr segment
+  std::vector<vi::OpenLrEdge> openlrs_edges;
+  openlrs_edges.reserve((openlr_end - openlr_start) * 20);
   for (; openlr_start != openlr_end; openlr_start++) {
     const auto openlr = vb::OpenLR::OpenLr(openlr_start->GetString(), true);
-
-    const auto segment_count = openlr.lrps.size() - 1ULL;
+    const auto segment_count = openlr.lrps.size() - 1U;
     if (segment_count > 1) {
       LOG_WARN("Received " + std::to_string(segment_count) + " segments");
     }
 
-    vi::OpenLrEdges openlr_edges;
+    std::vector<vi::OpenLrEdge> local_edges;
+    local_edges.reserve(20);
     for (size_t i = 0; i < segment_count; i++) {
       // first the origin
       const auto a_lrp = openlr.lrps[i];
@@ -344,24 +342,26 @@ void match_edges(valhalla::tyr::actor_t& actor,
       const auto b_ranked =
           rank_edges(b_res.GetArray()[0]["edges"].GetArray(), b_lrp, LRPOrder::LAST);
 
-      const auto size_before = openlr_edges.edge_ids.size();
-      double poff_meter = i == 0 ? (static_cast<double>(openlr.poff) / 256.) * a_lrp.distance : 0.;
+      const auto size_before = local_edges.size();
+      double poff_meter = i == 0 ? (static_cast<double>(openlr.poff) / 255.) * a_lrp.distance : 0.;
       uint32_t noff_meter =
-          i == (segment_count - 1) ? (static_cast<double>(openlr.noff) / 256.f) * a_lrp.distance : 0.;
+          i == (segment_count - 1) ? (static_cast<double>(openlr.noff) / 255.) * a_lrp.distance : 0.;
 
-      // try with heading filter if the first try wasn't successful
-      match_lrps(actor, openlr_edges, a_ranked, b_ranked, a_lrp, b_lrp, poff_meter, noff_meter, true);
-      if (openlr_edges.edge_ids.size() == size_before) {
+      // try without heading filter if the first try wasn't successful
+      match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp, poff_meter, noff_meter, true);
+      if (local_edges.size() == size_before) {
         LOG_WARN("1st match attempt didn't work for openlr " +
                  std::string(openlr_start->GetString()));
-        match_lrps(actor, openlr_edges, a_ranked, b_ranked, a_lrp, b_lrp, poff_meter, noff_meter,
+        match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp, poff_meter, noff_meter,
                    false);
       }
 
       // collect the ids; if there are none, it's an error
-      if (openlr_edges.edge_ids.size() != size_before) {
-        remove_id_dups(openlr_edges.edge_ids);
-        openlrs_edges.emplace_back(std::move(openlr_edges));
+      if (local_edges.size() != size_before) {
+        local_edges.shrink_to_fit();
+        local_edges.back().is_last = true;
+        remove_id_dups(local_edges);
+        openlrs_edges.insert(openlrs_edges.end(), local_edges.begin(), local_edges.end());
         continue;
       }
 
@@ -369,54 +369,21 @@ void match_edges(valhalla::tyr::actor_t& actor,
     }
   }
 
+  openlrs_edges.shrink_to_fit();
   result.set_value(std::move(openlrs_edges));
 }
-
-// auto a_i_limit = a_ranked.size() - 1ULL;
-// auto b_i_limit = b_ranked.size() - 1ULL;
-// while (true) {
-
-// do the map matching and return if we're within 60 m shape length
-
-// we go through the 2 vectors by comparing in a way of
-// a0 + b0
-// a1 + b0
-// a0 + b1
-// a1 + b1 etc
-// if (a_i == a_i_limit && b_i == b_i_limit) {
-//   // if we got here, we can't find a path between any combination of a & b
-//   return {};
-// } else if (a_i == a_i_limit) {
-//   // if a is done
-//   b_i++;
-// } else if (b_i == b_i_limit) {
-//   // if b is done
-//   a_i++;
-// } else if (a_i == b_i) {
-//   // first increment a -> a1 + b0
-//   a_i++;
-// } else if (a_i == (b_i + 1U)) {
-//   // if a is 1 further, decrement a and increment b -> a0 + b1
-//   b_i++;
-//   a_i--;
-// } else if (b_i == (a_i + 1U)) {
-//   // if b is 1 further, increment a -> a1 + b1
-//   a_i++;
-// }
-// }
 } // namespace
 
 namespace valhalla {
 namespace incidents {
 
 // matches the OpenLR entries to a list of edge Graph IDs
-void incident_worker_t::get_matched_edges(const rapidjson::Document& req_doc,
-                                          std::vector<vi::OpenLrEdges>& openlrs_edges) {
+std::vector<OpenLrEdge> incident_worker_t::get_matched_edges(const rapidjson::Document& req_doc) {
   // A place to hold worker threads and their results, be they exceptions or otherwise
   std::vector<std::shared_ptr<std::thread>> threads(thread_count);
 
   // Holds a vector of GraphId's for each openlr segment
-  std::vector<std::promise<std::vector<vi::OpenLrEdges>>> results(threads.size());
+  std::vector<std::promise<std::vector<vi::OpenLrEdge>>> results(threads.size());
 
   // Divvy up the work
   const auto& openlrs_enc = req_doc.GetArray();
@@ -446,6 +413,7 @@ void incident_worker_t::get_matched_edges(const rapidjson::Document& req_doc,
     thread->join();
   }
 
+  std::vector<OpenLrEdge> openlrs_edges;
   for (auto& promise : results) {
     try {
       const auto& ids = promise.get_future().get();
@@ -454,6 +422,8 @@ void incident_worker_t::get_matched_edges(const rapidjson::Document& req_doc,
       // TODO: throw further up the chain?
     }
   }
+
+  return openlrs_edges;
 }
 
 } // namespace incidents

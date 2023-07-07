@@ -2,19 +2,28 @@
 #define __VALHALLA_INCIDENTS_UTILS_H__
 
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/openlr.h>
 #include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/traffictile.h>
 #include <valhalla/proto/api.pb.h>
 
 namespace valhalla {
 namespace incidents {
 
-struct OpenLrEdges {
-  float first_node_offset; // offset from the first edge's start node in m
-  float last_node_offset;  // offset from the last edge's end node in m
-  std::vector<baldr::GraphId> edge_ids;
+struct OpenLrEdge {
+  baldr::GraphId edge_id;
+  uint8_t first_node_offset; // offset from edge start in 1/255th steps
+  uint8_t last_node_offset;  // offset from edge start in 1/255th steps
+  bool is_last;              // if it's the last edge for an openlr, will be embedded in a vector
 
-  OpenLrEdges() : first_node_offset(0), last_node_offset(0) {
+  OpenLrEdge() = delete;
+  OpenLrEdge(const baldr::GraphId i)
+      : edge_id(i), first_node_offset(0), last_node_offset(0), is_last(false) {
+  }
+
+  bool operator==(const OpenLrEdge& rhs) {
+    return edge_id == rhs.edge_id;
   }
 };
 
@@ -33,6 +42,14 @@ struct RankEdge {
 
   RankEdge(baldr::GraphId id, float l, float pct, double lng, double lat)
       : graph_id(id), length(l), percent_along(pct), corr_lon(lng), corr_lat(lat) {
+  }
+};
+
+class GraphReaderIncidents : public baldr::GraphReader {
+public:
+  using baldr::GraphReader::tile_extract_;
+  explicit GraphReaderIncidents(const boost::property_tree::ptree& pt)
+      : baldr::GraphReader(pt, nullptr, true) {
   }
 };
 

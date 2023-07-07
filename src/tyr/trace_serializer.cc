@@ -58,10 +58,6 @@ void serialize_edges(const AttributesController& controller,
     if (trip_path.node(i - 1).has_edge()) {
       const auto& edge = trip_path.node(i - 1).edge();
 
-      if (edge.id() == 2185037514826) {
-        std::cout << " fasd" << std::endl;
-      }
-
       writer.start_object();
       if (controller(kEdgeTruckRoute)) {
         writer("truck_route", static_cast<bool>(edge.truck_route()));

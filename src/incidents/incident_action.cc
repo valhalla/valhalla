@@ -1,7 +1,5 @@
 #include <valhalla/baldr/graphid.h>
-#include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/rapidjson_utils.h>
-#include <valhalla/incidents/edge_matcher.h>
 #include <valhalla/incidents/worker.h>
 
 namespace vb = valhalla::baldr;
@@ -16,16 +14,24 @@ static const std::unordered_map<vi::IncidentsAction, std::string> endpoint_to_st
      {vi::IncidentsAction::GEOJSON_MATCHES, "/geojson/matches"},
      {vi::IncidentsAction::GEOJSON_OPENLR, "/geojson/openlr"}};
 
-std::vector<vm::PointLL> get_lng_lat(const vi::OpenLrEdges& openlr_edges, vb::GraphReader& reader) {
+std::vector<vm::PointLL> get_lng_lat(std::vector<vi::OpenLrEdge>::const_iterator& openlr_edge,
+                                     vi::GraphReaderIncidents& reader,
+                                     std::vector<vi::OpenLrEdge>::const_iterator end) {
   std::vector<vm::PointLL> coords;
-  coords.reserve((openlr_edges.edge_ids.size() + 1ULL));
 
   vb::graph_tile_ptr tile;
   const vb::DirectedEdge* current_de = nullptr;
-  for (const auto edge_id : openlr_edges.edge_ids) {
-    tile = reader.GetGraphTile(edge_id, tile);
-    current_de = reader.directededge(edge_id, tile);
+  // could be there's only one edge for a whole openlr
+  bool first_edge = true;
+  while (!openlr_edge->is_last || first_edge) {
+    if (openlr_edge == end) {
+      break;
+    }
+    tile = reader.GetGraphTile(openlr_edge->edge_id, tile);
+    current_de = reader.directededge(openlr_edge->edge_id, tile);
     coords.emplace_back(tile->get_node_ll(reader.GetBeginNodeId(current_de, tile)));
+    openlr_edge++;
+    first_edge = false;
   }
   // append the last coordinate
   tile = reader.GetGraphTile(current_de->endnode());
@@ -34,8 +40,8 @@ std::vector<vm::PointLL> get_lng_lat(const vi::OpenLrEdges& openlr_edges, vb::Gr
   return coords;
 }
 
-std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdges>& openlrs_edges,
-                                      vb::GraphReader& reader) {
+std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs_edges,
+                                      vi::GraphReaderIncidents& reader) {
   rapidjson::writer_wrapper_t writer(32768); // reserve 32 kb
   writer.start_object();
   writer("type", "FeatureCollection");
@@ -43,37 +49,45 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdges>& openlr
 
   writer.set_precision(6);
 
-  for (const auto& openlr_edges : openlrs_edges) {
+  auto write_coord = [](rapidjson::writer_wrapper_t& writer, const vm::PointLL coord) {
+    writer.start_array(); // single coordinate
+    writer(coord.lng());
+    writer(coord.lat());
+    writer.end_array(); // single coordinate
+  };
+
+  auto openlr_begin = openlrs_edges.begin();
+  auto openlr_end = openlr_begin;
+  while (openlr_end != openlrs_edges.end()) {
     writer.start_object(); // single feature
     writer("type", "Feature");
     writer.start_object("geometry");
     writer("type", "LineString");
     writer.start_array("coordinates");
 
-    const auto pts = get_lng_lat(openlr_edges, reader);
+    // will increment openlr_end to the last coord for an openlr segment
+    auto pts = get_lng_lat(openlr_end, reader, openlrs_edges.end());
+    assert(pts.size() >= 2U);
+
+    // handle first and last points
+    if (openlr_begin->first_node_offset) {
+      auto& pt = pts.front();
+      pt = pt.PointAlongSegment(pts[1], static_cast<double>(openlr_begin->first_node_offset) / 255.);
+    }
+    if (openlr_end->last_node_offset != 255) {
+      auto& pt = pts[pts.size() - 2];
+      pt = pt.PointAlongSegment(pts.back(), static_cast<double>(openlr_end->last_node_offset) / 255.);
+    }
+
+    // write all the points and sum up the total distance
     float distance = 0.f;
     auto first_p = pts.begin();
     for (; first_p != pts.end(); first_p++) {
-      vm::PointLL coord{first_p->lng(), first_p->lat()};
-
-      // first & last coordinate need to respect the offsets
-      if (first_p == pts.begin() && openlr_edges.first_node_offset) {
-        const auto& next_p = *(first_p + 1);
-        coord =
-            first_p->PointAlongSegment(next_p, static_cast<double>(openlr_edges.first_node_offset));
-      } else if (first_p == (pts.end() - 1) && openlr_edges.last_node_offset) {
-        const auto next_p = (first_p - 1);
-        const auto& fp = *first_p;
-        coord = next_p->PointAlongSegment(fp, static_cast<double>(openlr_edges.last_node_offset));
-      }
-      writer.start_array(); // single coordinate
-      writer(coord.lng());
-      writer(coord.lat());
-      writer.end_array(); // single coordinate
+      write_coord(writer, *first_p);
 
       // record the total distance
       if (first_p != (pts.end() - 1)) {
-        distance += coord.Distance(*(first_p + 1));
+        distance += first_p->Distance(*(first_p + 1));
       }
     }
 
@@ -84,6 +98,9 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdges>& openlr
     writer("distance", distance);
     writer.end_object(); // properties
     writer.end_object(); // single feature
+
+    // increment to get past the last point of the previous openlr segment
+    openlr_begin = openlr_end;
   }
 
   writer.end_array();  // features
@@ -131,9 +148,9 @@ std::string serialize_geojson_openlr(rapidjson::Document& req_doc) {
     writer("distance", static_cast<float>(distance));
     writer("openlr", openlr_binary.GetString());
     writer("poff",
-           (static_cast<float>(openlr.poff) / 256.f) * static_cast<float>(openlr.getLength()));
+           (static_cast<float>(openlr.poff) / 255.f) * static_cast<float>(openlr.getLength()));
     writer("noff",
-           (static_cast<float>(openlr.noff) / 256.f) * static_cast<float>(openlr.getLength()));
+           (static_cast<float>(openlr.noff) / 255.f) * static_cast<float>(openlr.getLength()));
 
     writer.end_object(); // properties
     writer.end_object(); // single feature
@@ -144,12 +161,6 @@ std::string serialize_geojson_openlr(rapidjson::Document& req_doc) {
 
   return writer.get_buffer();
 }
-
-// void write_traffic(std::vector<vi::OpenLrEdges>& openlrs_edges, vb::GraphReader& reader) {
-// TODO: Maybe inherit the GraphReader to
-//  - initialize the map to put the edges in by tile + level, maybe
-//  - be able to write to the traffic tar
-//}
 } // namespace
 
 namespace valhalla {
@@ -158,19 +169,15 @@ namespace incidents {
 std::string incident_worker_t::incidents(IncidentsAction action, rapidjson::Document& req) {
   LOG_WARN(endpoint_to_string.at(action) + " request");
 
-  std::vector<OpenLrEdges> openlr_edges;
-  openlr_edges.reserve(req.GetArray().Size());
-
   switch (action) {
     case IncidentsAction::UPDATE:
     case IncidentsAction::DELETE:
     case IncidentsAction::RESET:
       // write to the tar
-      get_matched_edges(req, openlr_edges);
+      write_traffic(get_matched_edges(req));
       break;
     case IncidentsAction::GEOJSON_MATCHES:
-      get_matched_edges(req, openlr_edges);
-      return serialize_geojson_matches(openlr_edges, *reader);
+      return serialize_geojson_matches(get_matched_edges(req), *reader);
     case IncidentsAction::GEOJSON_OPENLR:
       return serialize_geojson_openlr(req);
     default:

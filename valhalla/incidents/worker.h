@@ -37,10 +37,12 @@ public:
 
 protected:
   std::string incidents(IncidentsAction action, rapidjson::Document& req);
-  void get_matched_edges(const rapidjson::Document& req_doc, std::vector<OpenLrEdges>& edge_ids);
+  std::vector<OpenLrEdge> get_matched_edges(const rapidjson::Document& req_doc);
+  void write_traffic(std::vector<OpenLrEdge>&& openlrs_edges);
+
   unsigned int thread_count;
   boost::property_tree::ptree config;
-  std::shared_ptr<baldr::GraphReader> reader;
+  std::shared_ptr<GraphReaderIncidents> reader;
   std::vector<tyr::actor_t> actors;
 
 private:
