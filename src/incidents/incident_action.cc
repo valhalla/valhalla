@@ -22,16 +22,18 @@ std::vector<vm::PointLL> get_lng_lat(std::vector<vi::OpenLrEdge>::const_iterator
   vb::graph_tile_ptr tile;
   const vb::DirectedEdge* current_de = nullptr;
   // could be there's only one edge for a whole openlr
-  bool first_edge = true;
-  while (!openlr_edge->is_last || first_edge) {
+  while (true) {
     if (openlr_edge == end) {
       break;
     }
     tile = reader.GetGraphTile(openlr_edge->edge_id, tile);
     current_de = reader.directededge(openlr_edge->edge_id, tile);
     coords.emplace_back(tile->get_node_ll(reader.GetBeginNodeId(current_de, tile)));
-    openlr_edge++;
-    first_edge = false;
+    if (!openlr_edge->is_last) {
+      openlr_edge++;
+    } else {
+      break;
+    }
   }
   // append the last coordinate
   tile = reader.GetGraphTile(current_de->endnode());
@@ -100,6 +102,7 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
     writer.end_object(); // single feature
 
     // increment to get past the last point of the previous openlr segment
+    openlr_end++;
     openlr_begin = openlr_end;
   }
 

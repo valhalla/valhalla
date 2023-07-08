@@ -168,13 +168,16 @@ void match_lrps(valhalla::tyr::actor_t& actor,
       // trivial, so we can return with that single ID
       if (start_cand.graph_id == end_cand.graph_id) {
         const auto start_offset = static_cast<float>(start_cand.length) * start_cand.percent_along;
-        const auto actual_length =
-            (static_cast<float>(end_cand.length) * end_cand.percent_along) - start_offset;
-        if (actual_length <= 0.f || !is_within_limit(static_cast<uint32_t>(actual_length))) {
+        // same edge, so percent_along is in route direction
+        const auto end_offset = static_cast<float>(end_cand.length) * end_cand.percent_along;
+        const auto actual_length = end_offset - start_offset;
+        if (actual_length <= 0.f || !is_within_limit(static_cast<uint32_t>(start_cand.length))) {
           continue;
         }
 
-        openlr_edges.emplace_back(start_cand.graph_id);
+        openlr_edges.emplace_back(start_cand.graph_id,
+                                  static_cast<uint8_t>(start_offset / start_cand.length * 255.f),
+                                  static_cast<uint8_t>(end_offset / end_cand.length * 255.f), true);
         return;
       }
 

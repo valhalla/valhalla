@@ -21,6 +21,9 @@ struct OpenLrEdge {
   OpenLrEdge(const baldr::GraphId i)
       : edge_id(i), first_node_offset(0), last_node_offset(0), is_last(false) {
   }
+  OpenLrEdge(const baldr::GraphId i, const uint8_t f, const uint8_t e, const bool l)
+      : edge_id(i), first_node_offset(f), last_node_offset(e), is_last(l) {
+  }
 
   bool operator==(const OpenLrEdge& rhs) {
     return edge_id == rhs.edge_id;
