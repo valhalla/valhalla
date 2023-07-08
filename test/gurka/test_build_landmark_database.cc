@@ -11,40 +11,49 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-TEST(LandmarkTest, TestBuildLandmarkStorage) {
-  std::string db_name = "landmarks.db";
-  LandmarkDatabase db(db_name);
-  db.open_readwrite_database();
+TEST(LandmarkDatabaseTest, TestDatabaseWithAccessMode) {
+  std::string db_name = "landmarks-test-access-mode.db";
 
-  // std::string db_name = "landmarks-v4.db";
-  // LandmarkDatabase db(db_name);
+  LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
 
-  // ASSERT_TRUE(db.openDatabase());
-  // ASSERT_TRUE(db.createLandmarkTable());
+  EXPECT_TRUE(db.insert_landmark("aaa", "bbb", 0., 0.));
 
-  // NOTE: should insert same landmarks only once
+  LandmarkDatabase readwrite_db(db_name, AccessMode::ReadWrite);
 
-  // ASSERT_TRUE(db.insertLandmark("Statue of Liberty", "Monument", "-74.044548", "40.689253"));
-  // ASSERT_TRUE(db.insertLandmark("Eiffel Tower", "Monument", "2.294481", "48.858370"));
-  // ASSERT_TRUE(db.insertLandmark("A", "pseudo", "5", "5"));
-  // ASSERT_TRUE(db.insertLandmark("B", "pseudo", "6", "6"));
+  EXPECT_TRUE(readwrite_db.create_landmarks_table());
+  EXPECT_TRUE(readwrite_db.insert_landmark("hello", "world", 0., 0.));
+
+  LandmarkDatabase readonly_db(db_name, AccessMode::ReadOnly);
   
-  // ASSERT_TRUE(db.createSpatialIndex());
+  EXPECT_FALSE(readonly_db.insert_landmark("ccc", "ddd", 0., 0.));
+  EXPECT_FALSE(readonly_db.test_create_test_table());
+}
 
-  // std::vector<std::pair<std::string, std::string>> landmarks = {};
-  // const std::string minLat = "0";
-  // const std::string maxLat = "0";
-  // const std::string minLong = "0";
-  // const std::string maxLong = "0";
+TEST(LandmarkDatabaseTest, TestBoundingBoxQuery) {
+  std::string db_name = "landmarks-test-v2.db";
 
-  // ASSERT_TRUE(db.testSelectQuery());
+  // NOTE: should create db and insert data only once
+  // LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
 
-  // // ASSERT_TRUE(db.getLandmarksInBoundingBox(&landmarks, minLat, minLong, maxLat, maxLong));
+  // ASSERT_TRUE(db.insert_landmark("Statue of Liberty", "Monument", -74.044548, 40.689253));
+  // ASSERT_TRUE(db.insert_landmark("Eiffel Tower", "Monument", 2.294481, 48.858370));
+  // ASSERT_TRUE(db.insert_landmark("A", "pseudo", 5., 5.));
+  // ASSERT_TRUE(db.insert_landmark("B", "pseudo", 10., 10.));
 
-  // LOG_INFO(std::to_string(landmarks.size()));
-  // for (auto landmark: landmarks) {
-  //   LOG_INFO("name: " + landmark.first + ", type: " + landmark.second);
-  // }
+  LandmarkDatabase db(db_name, AccessMode::ReadOnly);
 
-  // db.closeDatabase();
+  std::vector<std::pair<std::string, std::string>> landmarks = {};
+  const double minLat = 0.;
+  const double maxLat = 1.;
+  const double minLong = 0.;
+  const double maxLong = 1.;
+
+  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, minLat, minLong, maxLat, maxLong));
+
+  LOG_INFO(std::to_string(landmarks.size()));
+  for (auto landmark: landmarks) {
+    LOG_INFO("name: " + landmark.first + ", type: " + landmark.second);
+  }
+
+  EXPECT_TRUE(db.test_select_all());
 }

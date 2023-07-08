@@ -20,26 +20,52 @@
 
 namespace valhalla {
 namespace mjolnir {
+enum class AccessMode {
+  ReadWriteCreate,
+  ReadOnly,
+  ReadWrite
+};
+
 struct LandmarkDatabase {
 public:
-  LandmarkDatabase(std::string& db_name) : db(nullptr), database(db_name) {    
-    if (!create_database()) { return; }
-    if (!create_landmarks_table()) { return; } 
-    if (!create_spatial_index()) { return; }
-
-    LOG_INFO("Successfully set up landmark database");
+  LandmarkDatabase(std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly) 
+    : db(nullptr), database(db_name), access_mode_(access_mode) { 
+    if (!connect_database()) {
+      LOG_ERROR("cannot connect to database");
+    }
   }
   ~LandmarkDatabase() {
     close_database();
   }
 
-  bool open_readwrite_database();
   bool insert_landmark(const std::string& name, const std::string& type, 
-                      const std::string& longitude, const std::string& latitude);
+                      const double longitude, const double latitude);
   
   bool get_landmarks_in_bounding_box(std::vector<std::pair<std::string, std::string>> *landmarks, 
-       const std::string& minLat, const std::string& minLong, const std::string& maxLat, const std::string& maxLong);
+       const double minLat, const double minLong, const double maxLat, const double maxLong);
   bool test_select_query();
+  bool test_select_all();
+
+  bool open_database();
+  bool create_landmarks_table();
+  bool create_spatial_index();
+  void close_database();
+  bool connect_database();
+
+  bool test_create_test_table() {
+    sql = "CREATE TABLE test_table (id TEXT, email TEXT)";
+
+    ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+    if (ret != SQLITE_OK) {
+      LOG_ERROR("Error: " + std::string(err_msg));
+      sqlite3_free(err_msg);
+      sqlite3_close(db);
+      return false;
+    }
+
+    LOG_INFO("Created test table");
+    return true;
+  }
 
 private:
   sqlite3* db;
@@ -48,11 +74,8 @@ private:
   char* err_msg = NULL;
   std::string sql;
   std::string database;
-
-  bool create_database();
-  bool create_landmarks_table();
-  bool create_spatial_index();
-  void close_database();
+  AccessMode access_mode_;
+  int open_flags = 0;
 };
 
 }
