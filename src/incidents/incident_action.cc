@@ -150,6 +150,7 @@ std::string serialize_geojson_openlr(rapidjson::Document& req_doc) {
     }
     writer("distance", static_cast<float>(distance));
     writer("openlr", openlr_binary.GetString());
+    writer("lrps", openlr.lrps.size());
     writer("poff",
            (static_cast<float>(openlr.poff) / 255.f) * static_cast<float>(openlr.getLength()));
     writer("noff",

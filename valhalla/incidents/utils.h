@@ -13,18 +13,18 @@ namespace incidents {
 
 struct OpenLrEdge {
   baldr::GraphId edge_id;
+  uint32_t length;           // the full edge length
   uint8_t first_node_offset; // offset from edge start in 1/255th steps
   uint8_t last_node_offset;  // offset from edge start in 1/255th steps
-  bool is_last;              // if it's the last edge for an openlr, will be embedded in a vector
+  bool is_last;              // if it's the last edge for an openlr, so we can plot them as GeoJSON
 
+  // only allow this constructor: is_last will be set after initially collecting all edges
   OpenLrEdge() = delete;
-  OpenLrEdge(const baldr::GraphId i)
-      : edge_id(i), first_node_offset(0), last_node_offset(0), is_last(false) {
-  }
-  OpenLrEdge(const baldr::GraphId i, const uint8_t f, const uint8_t e, const bool l)
-      : edge_id(i), first_node_offset(f), last_node_offset(e), is_last(l) {
+  OpenLrEdge(const baldr::GraphId i, const uint32_t le, const uint8_t f, const uint8_t e)
+      : edge_id(i), length(le), first_node_offset(f), last_node_offset(e) {
   }
 
+  // for sorting purposes
   bool operator==(const OpenLrEdge& rhs) {
     return edge_id == rhs.edge_id;
   }

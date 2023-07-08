@@ -175,9 +175,9 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           continue;
         }
 
-        openlr_edges.emplace_back(start_cand.graph_id,
-                                  static_cast<uint8_t>(start_offset / start_cand.length * 255.f),
-                                  static_cast<uint8_t>(end_offset / end_cand.length * 255.f), true);
+        openlr_edges.emplace_back(start_cand.graph_id, start_cand.length,
+                                  static_cast<uint8_t>(start_cand.percent_along * 255.f),
+                                  static_cast<uint8_t>(end_cand.percent_along * 255.f));
         return;
       }
 
@@ -197,6 +197,8 @@ void match_lrps(valhalla::tyr::actor_t& actor,
       const auto& route_nav_leg = route_req.directions().routes(0).legs(0);
       const auto& route_trip_leg = route_req.trip().routes(0).legs(0);
 
+      vi::print_route(route_trip_leg);
+
       if (is_within_limit(
               static_cast<uint32_t>(route_nav_leg.summary().length() * vm::kMetersPerKm))) {
 
@@ -207,13 +209,20 @@ void match_lrps(valhalla::tyr::actor_t& actor,
         const auto& trace_trip_leg = trace_req.trip().routes(0).legs(0);
         const auto& shape_pts = vm::decode<std::vector<vm::PointLL>>(trace_trip_leg.shape());
 
+        vi::print_route(trace_trip_leg);
+
         // collect all the traversed edge IDs
         for (int i = 1; i < trace_trip_leg.node().size(); i++) {
           if (!trace_trip_leg.node(i - 1).has_edge()) {
             continue;
           }
           const auto& node = trace_trip_leg.node(i - 1);
-          openlr_edges.emplace_back(vb::GraphId(node.edge().id()));
+
+          // first & last edge have only partial length_km, amend with /locate results
+
+          openlr_edges.emplace_back(vb::GraphId(node.edge().id()),
+                                    static_cast<uint32_t>(node.edge().length_km() *
+                                                          vm::kMetersPerKm));
         }
 
         if (!(openlr_edges[0].edge_id == start_cand.graph_id)) {
@@ -360,15 +369,92 @@ void match_edges(valhalla::tyr::actor_t& actor,
       }
 
       // collect the ids; if there are none, it's an error
-      if (local_edges.size() != size_before) {
-        local_edges.shrink_to_fit();
-        local_edges.back().is_last = true;
-        remove_id_dups(local_edges);
-        openlrs_edges.insert(openlrs_edges.end(), local_edges.begin(), local_edges.end());
-        continue;
+      if (local_edges.size() == size_before) {
+        LOG_ERROR("2nd match attempt didn't work for openlr " +
+                  std::string(openlr_start->GetString()));
       }
+    }
+    // after all segments processed we want to do the noff - poff stuff
 
-      LOG_ERROR("2nd match attempt didn't work for openlr " + std::string(openlr_start->GetString()));
+    // save the poff as distance in absolute meters
+    // calculate the real offset from the start of the first edge to the openlr.poff
+    auto poff_edge_offset = local_edges.front().length;
+
+    auto poff_edge_offset = start_cand.length - (start_cand.length * start_cand.percent_along);
+    auto start_edge_length = start_cand.length;
+    // skip the first edge as long as the edge_offset is smaller than poff
+    if (static_cast<double>(poff_edge_offset) < poff_meters) {
+      auto node = trace_trip_leg.node().begin();
+      node++; // increment to get to the next edge
+      while (true) {
+        // remove the previous edge's id from the vector, expensive but shouldn't be many elements
+        // and a rather rare situation hopefully (skipping an entire edge)
+        openlr_edges.erase(openlr_edges.begin());
+
+        // if we're finally beyond the poff we know we found the right edge, so break
+        poff_edge_offset += node->edge().length_km() * vm::kMetersPerKm;
+        if (poff_edge_offset > poff_meters) {
+          start_edge_length = node->edge().length_km() * vm::kMetersPerKm;
+          break;
+        }
+
+        // if at this point there's no nodes left, that means we already looked at the
+        // last segment just before, this shouldn't happen
+        node++;
+        if (node == trace_trip_leg.node().end()) {
+          throw std::runtime_error("The OpenLR's poff was larger than the entire matched length");
+        }
+      }
+    }
+    // save the first_node_offset (as 1/255th of length)
+    const auto first_edge_offset = poff_edge_offset - static_cast<float>(poff_meters);
+    assert(first_edge_offset >= 0.f);
+    openlr_edges.front().first_node_offset =
+        static_cast<uint8_t>((start_edge_length - first_edge_offset) / start_edge_length * 255.f);
+
+    // save the noff as distance in absolute meters
+    // calculate the real offset from the end of the last edge to the openlr.noff
+    // TODO: should we really take the /locate result here or rather the matched path's?
+    auto noff_edge_offset = end_cand.length * end_cand.percent_along;
+    auto end_edge_length = end_cand.length;
+    // skip the last edge as long as the edge_offset is smaller than poff
+    if (noff_edge_offset < noff_meters) {
+      auto node = trace_trip_leg.node().rbegin();
+      node++; // increment to get to the next last edge
+      while (true) {
+        // remove the previous edge's id from the vector, expensive but shouldn't be many elements
+        // and a rather rare situation hopefully (skipping an entire edge)
+        openlr_edges.pop_back();
+
+        // if we're finally beyond the noff we know we found the right edge, so break
+        noff_edge_offset += node->edge().length_km() * vm::kMetersPerKm;
+        if (noff_edge_offset > noff_meters) {
+          end_edge_length = node->edge().length_km() * vm::kMetersPerKm;
+          break;
+        }
+
+        // if at this point there's no nodes left, that means we already looked at the
+        // last segment just before, this shouldn't happen
+        node++;
+        if (node == trace_trip_leg.node().rend()) {
+          throw std::runtime_error("The OpenLR's noff was larger than the entire matched length");
+        }
+      }
+    }
+    // save the last_node_offset (as 1/255th of length)
+    const auto last_edge_offset = noff_edge_offset - static_cast<float>(noff_meters);
+    assert(last_edge_offset >= 0.f);
+    openlr_edges.back().last_node_offset =
+        static_cast<uint8_t>(last_edge_offset / end_edge_length * 255.f);
+
+    // quick sanity check
+    assert((first_edge_offset + last_edge_offset) < static_cast<float>(a_lrp.distance));
+
+    remove_id_dups(local_edges);
+    std::move(local_edges.begin(), local_edges.end(), std::back_inserter(openlrs_edges));
+
+    if (openlrs_edges.size()) {
+      openlrs_edges.back().is_last = true;
     }
   }
 
