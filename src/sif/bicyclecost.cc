@@ -396,7 +396,7 @@ public:
   Surface minimal_surface_penalized_;
   Surface worst_allowed_surface_;
 
-  // Cycle lane accomodation factors
+  // Cycle lane accommodation factors
   float cyclelane_factor_[8];
   float path_cyclelane_factor_[4];
 

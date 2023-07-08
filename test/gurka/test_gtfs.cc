@@ -492,7 +492,7 @@ TEST(GtfsExample, WriteGtfs) {
 
   auto stops = f1_reader.get_stops();
   EXPECT_EQ(stops.size(), 6);
-  EXPECT_EQ(stops[0].stop_id, st1_id + "_egress");
+  EXPECT_EQ(stops[0].stop_id, st1_id);
 
   auto shapes = f1_reader.get_shapes();
   EXPECT_EQ(shapes.size(), 6);

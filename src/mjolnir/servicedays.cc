@@ -150,7 +150,7 @@ uint64_t remove_service_day(const uint64_t& days,
 
   if (start_date <= removed_date && removed_date <= enddate) {
     uint32_t length = static_cast<uint32_t>((removed_date - start_date).count());
-    return ~((~days) | (static_cast<uint64_t>(1) << length));
+    return days & ~(static_cast<uint64_t>(1) << length);
   }
   return days;
 }

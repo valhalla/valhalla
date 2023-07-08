@@ -50,6 +50,7 @@ markdown_extensions:
 
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
+edit_uri: edit/master/docs/docs/
 site_url: https://valhalla.github.io/valhalla
 docs_dir: docs
 nav:

@@ -260,7 +260,7 @@ void validate(const boost::property_tree::ptree& pt,
     }
   }
 
-  std::set<std::string> failures;
+  std::unordered_set<std::string> failures;
   for (auto p = failed_tests.begin(); p != failed_tests.end(); ++p) {
     bool bfound = false;
     auto tests = passed_tests.equal_range(p->first);
