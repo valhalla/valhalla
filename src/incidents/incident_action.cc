@@ -51,28 +51,38 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
 
   writer.set_precision(6);
 
-  auto write_coord = [](rapidjson::writer_wrapper_t& writer, const vm::PointLL coord) {
-    writer.start_array(); // single coordinate
-    writer(coord.lng());
-    writer(coord.lat());
-    writer.end_array(); // single coordinate
-  };
-
+  vb::graph_tile_ptr tile;
   auto openlr_begin = openlrs_edges.begin();
   auto openlr_end = openlr_begin;
-  while (openlr_end != openlrs_edges.end()) {
+  do {
     writer.start_object(); // single feature
     writer("type", "Feature");
     writer.start_object("geometry");
     writer("type", "LineString");
     writer.start_array("coordinates");
 
-    // will increment openlr_end to the last coord for an openlr segment
-    auto pts = get_lng_lat(openlr_end, reader, openlrs_edges.end());
+    std::vector<vm::PointLL> pts;
+    // find the next occurrence of is_last = true
+    openlr_end = std::find_if(openlr_begin, openlrs_edges.end(),
+                              [](const vi::OpenLrEdge& edge) { return edge.is_last; });
+    for (; openlr_begin != (openlr_end + 1); openlr_begin++) {
+      // auto* de = reader.directededge(openlr_begin->edge_id, tile);
+      auto* de = reader.directededge(openlr_begin->edge_id, tile);
+      auto ei = tile->edgeinfo(de);
+      auto shp = ei.shape();
+      if (!de->forward()) {
+        std::reverse(shp.begin(), shp.end());
+      }
+      std::copy(shp.begin(), shp.end(), std::back_inserter(pts));
+    }
     assert(pts.size() >= 2U);
 
+    // remove all those duplicate points we introduced just now
+    auto last = std::unique(pts.begin(), pts.end());
+    pts.erase(last, pts.end());
+
     // handle first and last points
-    if (openlr_begin->breakpoint1) {
+    if (openlr_begin->breakpoint1 != 255) {
       auto& pt = pts.front();
       pt = pt.PointAlongSegment(pts[1], static_cast<double>(openlr_begin->breakpoint1) / 255.);
     }
@@ -82,30 +92,25 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
           pt.PointAlongSegment(pts.back(), static_cast<double>(openlr_end->breakpoint2) / 255.);
     }
 
-    // write all the points and sum up the total distance
-    float distance = 0.f;
-    auto first_p = pts.begin();
-    for (; first_p != pts.end(); first_p++) {
-      write_coord(writer, *first_p);
-
-      // record the total distance
-      if (first_p != (pts.end() - 1)) {
-        distance += first_p->Distance(*(first_p + 1));
-      }
+    for (const auto& pt : pts) {
+      writer.start_array(); // single coordinate
+      writer(pt.lng());
+      writer(pt.lat());
+      writer.end_array(); // single coordinate
     }
 
     writer.end_array();  // coordinates
     writer.end_object(); // geometry
 
     writer.start_object("properties");
-    writer("distance", distance);
+    writer("distance", static_cast<uint64_t>(vm::length(pts)));
     writer.end_object(); // properties
     writer.end_object(); // single feature
 
     // increment to get past the last point of the previous openlr segment
     openlr_end++;
     openlr_begin = openlr_end;
-  }
+  } while (openlr_end != openlrs_edges.end());
 
   writer.end_array();  // features
   writer.end_object(); // FeatureCollection
