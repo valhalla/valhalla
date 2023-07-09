@@ -121,7 +121,7 @@ message TripLeg {
 
   message Edge {
     repeated StreetName name = 1;           // street names
-    float length_km = 2;           // km
+    float length_km = 2;           // the traversed edge length (i.e. for start/end edge)
     float speed = 3;               // km/h
     RoadClass road_class = 4;
     uint32 begin_heading = 5;      // 0-359
@@ -176,6 +176,7 @@ message TripLeg {
     SacScale sac_scale = 51;
     bool shoulder = 52;
     bool indoor = 53;
+    float total_length_km = 54;  // the total edge length
   }
 
   message IntersectingEdge {

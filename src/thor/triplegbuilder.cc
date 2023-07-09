@@ -1696,6 +1696,7 @@ void TripLegBuilder::Build(
       float km =
           std::max(directededge->length() * kKmPerMeter * (trim_end_pct - trim_start_pct), 0.0f);
       trip_edge->set_length_km(km);
+      trip_edge->set_total_length_km(directededge->length() * kKmPerMeter);
     }
 
     // How long on this edge?
