@@ -72,13 +72,14 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
     assert(pts.size() >= 2U);
 
     // handle first and last points
-    if (openlr_begin->first_node_offset) {
+    if (openlr_begin->breakpoint1) {
       auto& pt = pts.front();
-      pt = pt.PointAlongSegment(pts[1], static_cast<double>(openlr_begin->first_node_offset) / 255.);
+      pt = pt.PointAlongSegment(pts[1], static_cast<double>(openlr_begin->breakpoint1) / 255.);
     }
-    if (openlr_end->last_node_offset != 255) {
+    if (openlr_end->breakpoint2 != 255) {
       auto& pt = pts[pts.size() - 2];
-      pt = pt.PointAlongSegment(pts.back(), static_cast<double>(openlr_end->last_node_offset) / 255.);
+      pts.back() =
+          pt.PointAlongSegment(pts.back(), static_cast<double>(openlr_end->breakpoint2) / 255.);
     }
 
     // write all the points and sum up the total distance
@@ -148,13 +149,14 @@ std::string serialize_geojson_openlr(rapidjson::Document& req_doc) {
         distance += lrp.distance;
       }
     }
-    writer("distance", static_cast<float>(distance));
+
+    auto poff = (static_cast<float>(openlr.poff) / 255.f) * static_cast<float>(openlr.getLength());
+    auto noff = (static_cast<float>(openlr.noff) / 255.f) * static_cast<float>(openlr.getLength());
+    writer("distance", static_cast<float>(distance) - noff - poff);
     writer("openlr", openlr_binary.GetString());
     writer("lrps", openlr.lrps.size());
-    writer("poff",
-           (static_cast<float>(openlr.poff) / 255.f) * static_cast<float>(openlr.getLength()));
-    writer("noff",
-           (static_cast<float>(openlr.noff) / 255.f) * static_cast<float>(openlr.getLength()));
+    writer("poff", poff);
+    writer("noff", noff);
 
     writer.end_object(); // properties
     writer.end_object(); // single feature

@@ -36,7 +36,7 @@ void get_route_req(Api& request,
     auto* loc = request.mutable_options()->mutable_locations()->Add();
     loc->mutable_ll()->set_lng(std::get<0>(pt).lng());
     loc->mutable_ll()->set_lat(std::get<0>(pt).lat());
-    loc->set_radius(0);
+    loc->set_radius(5);
   }
 
   if (use_bearing) {

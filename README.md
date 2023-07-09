@@ -31,6 +31,8 @@ These endpoints return GeoJSON and are very useful for debugging:
 - `/geojson/matches`: Returns the exact geometry of the edges which will be updated
 - `/geojson/openlr`: Returns the interpolated line between a OpenLR's linear reference points
 
+**NOTE**, we included `./scripts/incident_xml_parser.py` to produce a payload from XML files (requires `lxml` Python package to be installed). `./scripts/incident_xml_parser.py -h` for options.
+
 #### POST request
 
 All endpoints take the same parameters: an array of base64-encoded OpenLR strings, e.g. 

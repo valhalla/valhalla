@@ -23,23 +23,23 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges) {
   uint32_t count = 0;
   for (const auto& openlr_edge : openlrs_edges) {
     baldr::TrafficSpeed traffic_speed{};
-    if (openlr_edge.first_node_offset && openlr_edge.last_node_offset != 255) {
+    if (openlr_edge.breakpoint1 && openlr_edge.breakpoint2 != 255) {
       // must be a single-edge openlr segment not even covering a full edge
-      traffic_speed.breakpoint1 = openlr_edge.first_node_offset;
+      traffic_speed.breakpoint1 = openlr_edge.breakpoint1;
       traffic_speed.encoded_speed1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
       traffic_speed.encoded_speed2 = 0;
-      traffic_speed.breakpoint2 = openlr_edge.last_node_offset;
+      traffic_speed.breakpoint2 = openlr_edge.breakpoint2;
       traffic_speed.encoded_speed3 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
-    } else if (openlr_edge.first_node_offset) {
+    } else if (openlr_edge.breakpoint1) {
       // for the first edge of an openlr segment
-      traffic_speed.breakpoint1 = openlr_edge.first_node_offset;
+      traffic_speed.breakpoint1 = openlr_edge.breakpoint1;
       traffic_speed.encoded_speed1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
       traffic_speed.encoded_speed2 = 0;
       traffic_speed.breakpoint2 = 255;
       traffic_speed.encoded_speed3 = 0;
-    } else if (openlr_edge.last_node_offset != 255) {
+    } else if (openlr_edge.breakpoint2 != 255) {
       // for the last edge of an openlr segment
-      traffic_speed.breakpoint1 = openlr_edge.last_node_offset;
+      traffic_speed.breakpoint1 = openlr_edge.breakpoint2;
       traffic_speed.encoded_speed1 = 0;
       traffic_speed.encoded_speed2 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
       traffic_speed.breakpoint2 = 255;

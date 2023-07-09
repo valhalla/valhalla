@@ -146,17 +146,20 @@ rank_edges(const std::optional<rapidjson::GenericArray<false, rapidjson::Value>>
  * @param use_heading whether or not to use the bearing as fallback (it's more complex)
  *
  */
-void match_lrps(valhalla::tyr::actor_t& actor,
-                std::vector<vi::OpenLrEdge>& openlr_edges,
-                const std::vector<vi::RankEdge>& a_ranked,
-                const std::vector<vi::RankEdge>& b_ranked,
-                const vb::OpenLR::LocationReferencePoint& a_lrp,
-                const vb::OpenLR::LocationReferencePoint& b_lrp,
-                const bool use_heading = false) {
+float match_lrps(valhalla::tyr::actor_t& actor,
+                 std::vector<vi::OpenLrEdge>& openlr_edges,
+                 const std::vector<vi::RankEdge>& a_ranked,
+                 const std::vector<vi::RankEdge>& b_ranked,
+                 const vb::OpenLR::LocationReferencePoint& a_lrp,
+                 const vb::OpenLR::LocationReferencePoint& b_lrp,
+                 const std::string& openlr_string,
+                 const bool use_heading = false) {
   auto is_within_limit = [&a_lrp](uint32_t route_dist) -> bool {
     const auto limit = a_lrp.distance < 1000.0 ? 60 : 100;
     return std::abs(static_cast<int>(a_lrp.distance - static_cast<int>(route_dist))) <= limit;
   };
+
+  auto min_encountered_dist = std::numeric_limits<float>::max();
 
   for (auto a = 0U; a < a_ranked.size(); a++) {
     const auto& start_cand = a_ranked[a];
@@ -173,10 +176,11 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           continue;
         }
 
-        openlr_edges.emplace_back(start_cand.graph_id, start_cand.length,
-                                  static_cast<uint8_t>(start_cand.percent_along * 255.f),
+        auto b1 = start_offset == 0.f ? static_cast<uint8_t>(255)
+                                      : static_cast<uint8_t>(start_cand.percent_along * 255.f);
+        openlr_edges.emplace_back(start_cand.graph_id, start_cand.length, b1,
                                   static_cast<uint8_t>(end_cand.percent_along * 255.f));
-        return;
+        return actual_length;
       }
 
       const auto start_cand_ll = vm::PointLL{start_cand.corr_lon, start_cand.corr_lat};
@@ -188,26 +192,40 @@ void match_lrps(valhalla::tyr::actor_t& actor,
                         std::make_pair(start_cand_ll, static_cast<uint32_t>(a_lrp.bearing)),
                         std::make_pair(end_cand_ll, static_cast<uint32_t>(b_lrp.bearing)),
                         use_heading);
-      actor.act(route_req);
+      try {
+        actor.act(route_req);
+      } catch (valhalla::valhalla_exception_t& e) {
+        LOG_ERROR("[valhalla] " + openlr_string + " : routing failed with " + std::string(e.what()));
+        continue;
+      }
 
       // see if it we were matching the length difference and return the edge IDs accordingly
       // reminder: offsets don't play a role when comparing distances, so LRPs are fine!
       const auto& route_nav_leg = route_req.directions().routes(0).legs(0);
       const auto& route_trip_leg = route_req.trip().routes(0).legs(0);
 
-      vi::print_route(route_trip_leg);
+      // vi::print_route(route_trip_leg);
 
-      if (is_within_limit(
-              static_cast<uint32_t>(route_nav_leg.summary().length() * vm::kMetersPerKm))) {
+      // record the minimum calculated distance so we know approx what was going on
+      auto route_dist = route_nav_leg.summary().length() * vm::kMetersPerKm;
+      min_encountered_dist = std::min(min_encountered_dist, route_dist);
+
+      if (is_within_limit(static_cast<uint32_t>(route_dist))) {
 
         // request trace_attributes and pull out all edge IDs
         valhalla::Api trace_req = get_trace_base_req();
         trace_req.mutable_options()->set_encoded_polyline(route_trip_leg.shape());
-        actor.act(trace_req);
+        try {
+          actor.act(trace_req);
+        } catch (valhalla::valhalla_exception_t& e) {
+          LOG_ERROR("[valhalla] " + openlr_string + " : Map Matching failed with " +
+                    std::string(e.what()));
+          continue;
+        }
         const auto& trace_trip_leg = trace_req.trip().routes(0).legs(0);
         const auto& shape_pts = vm::decode<std::vector<vm::PointLL>>(trace_trip_leg.shape());
 
-        vi::print_route(trace_trip_leg);
+        // vi::print_route(trace_trip_leg);
 
         // collect all the traversed edge IDs
         for (int i = 1; i < trace_trip_leg.node().size(); i++) {
@@ -221,14 +239,16 @@ void match_lrps(valhalla::tyr::actor_t& actor,
           if (matched_length != total_length) {
             // if this happens it has got to be the first or last edge
             // else smth is really wrong with map matching
-            // this only happens for TomTom/OSM combo
+            // this should only happen for TomTom/OSM combo
             if (!(i == 1 || i == (trace_trip_leg.node().size() - 1))) {
-              throw std::runtime_error("WTF: Edge 'index' " + std::to_string(i) + " had an offset!");
+              throw std::runtime_error("[valhalla] " + openlr_string + " : WTF: Edge 'index' " +
+                                       std::to_string(i) + " had an offset!");
             }
           }
-          auto default_offset = static_cast<uint8_t>(matched_length / total_length * 255.f);
+          // this is valid for both the first & last edge
+          auto breakpoint = static_cast<uint8_t>(matched_length / total_length * 255.f);
           openlr_edges.emplace_back(vb::GraphId(node.edge().id()), total_length * vm::kMetersPerKm,
-                                    default_offset, default_offset);
+                                    breakpoint, breakpoint);
         }
 
         // _somehow_ the map matching can return irrelevant edges in the beginning
@@ -243,9 +263,18 @@ void match_lrps(valhalla::tyr::actor_t& actor,
             continue;
           }
         }
+
+        // if we made it this far and there's still edges left, we have succeeded
+        if (openlr_edges.size()) {
+          return route_dist;
+        }
+        LOG_WARN("[valhalla] " + openlr_string +
+                 " : matching succeeded, but removing irrelevant edges removed all edges.");
       }
     }
   }
+
+  return min_encountered_dist;
 }
 
 void match_edges(valhalla::tyr::actor_t& actor,
@@ -257,17 +286,24 @@ void match_edges(valhalla::tyr::actor_t& actor,
   std::vector<vi::OpenLrEdge> openlrs_edges;
   openlrs_edges.reserve((openlr_end - openlr_start) * 20);
   for (; openlr_start != openlr_end; openlr_start++) {
+
+    // wrap this into a huge try/except block, and log out errors
     const auto openlr = vb::OpenLR::OpenLr(openlr_start->GetString(), true);
     const auto segment_count = openlr.lrps.size() - 1U;
-    if (segment_count > 1) {
-      LOG_WARN("Received " + std::to_string(segment_count) + " segments");
-    }
 
     // get the poff/noff; NOTE: this has a 255th resolution
     auto poff_meter =
         static_cast<float>(openlr.getLength() * (static_cast<double>(openlr.poff) / 255.));
     auto noff_meter =
         static_cast<float>(openlr.getLength() * (static_cast<double>(openlr.noff) / 255.));
+
+    // sanity check the poff/noff, apparently they can sum up to more than the entire length
+    // which is bullshit and TomTom's fault
+    if (poff_meter + noff_meter > openlr.getLength()) {
+      LOG_ERROR("[TomTom] " + std::string(openlr_start->GetString()) +
+                " : poff + noff is larger than the openLR length");
+      continue;
+    }
 
     std::vector<vi::OpenLrEdge> local_edges;
     local_edges.reserve(20);
@@ -293,29 +329,38 @@ void match_edges(valhalla::tyr::actor_t& actor,
       const auto size_before = local_edges.size();
 
       // try without heading filter if the first try wasn't successful
-      match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp, true);
+      auto min_dist = match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp,
+                                 openlr_start->GetString(), true);
       if (local_edges.size() == size_before) {
-        LOG_WARN("1st match attempt didn't work for openlr " +
-                 std::string(openlr_start->GetString()));
-        match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp, false);
-      }
+        auto dist_diff = std::fabs(a_lrp.distance - static_cast<double>(min_dist));
+        LOG_WARN("[valhalla] " + std::string(openlr_start->GetString()) +
+                 " : 1st match attempt didn't work with a min distance diff of " +
+                 std::to_string(dist_diff));
 
-      // collect the ids; if there are none, it's an error
-      if (local_edges.size() == size_before) {
-        LOG_ERROR("2nd match attempt didn't work for openlr " +
-                  std::string(openlr_start->GetString()));
+        // 2nd try, if not successful, it's an error
+        min_dist = match_lrps(actor, local_edges, a_ranked, b_ranked, a_lrp, b_lrp,
+                              openlr_start->GetString(), false);
+        if (local_edges.size() == size_before) {
+          auto dist_diff = std::fabs(a_lrp.distance - static_cast<double>(min_dist));
+          LOG_ERROR("[valhalla] " + std::string(openlr_start->GetString()) +
+                    " : 2nd match attempt didn't work with a min distance diff of " +
+                    std::to_string(dist_diff));
+        }
       }
     }
 
     // remove duplicates
     auto last = std::unique(local_edges.begin(), local_edges.end());
     local_edges.erase(last, local_edges.end());
+    if (!local_edges.size()) {
+      LOG_ERROR("[valhalla] " + std::string(openlr_start->GetString()) +
+                " : no edges left after removing duplicates.");
+      continue;
+    }
 
-    // deal with poff/noff; for first/last edge we already took note above in case the LRPs
-    // are not snapped to nodes
+    // deal with poff/noff and (maybe) set the breakpoint(s) of the the first & last edge
     auto first_edge = local_edges.begin();
-    auto first_edge_poff =
-        static_cast<float>(first_edge->first_node_offset) / 255.f * first_edge->length;
+    auto first_edge_poff = static_cast<float>(first_edge->breakpoint1) / 255.f * first_edge->length;
     if (first_edge_poff < poff_meter) {
       first_edge++;
       uint32_t delete_count = 0;
@@ -330,18 +375,19 @@ void match_edges(valhalla::tyr::actor_t& actor,
         // if at this point there's no nodes left, that means we already looked at the
         // last segment just before, this shouldn't happen
         if (first_edge == local_edges.end()) {
-          throw std::runtime_error("The OpenLR's poff was larger than the entire matched length");
+          throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
+                                   " : poff was larger than the entire matched length");
         }
       }
       // remove the skipped edges, invalidates first_edge
       local_edges.erase(local_edges.begin(), local_edges.begin() + delete_count);
     }
-    local_edges.front().first_node_offset = static_cast<uint8_t>(
+    local_edges.front().breakpoint1 = static_cast<uint8_t>(
         ((local_edges.front().length - (first_edge_poff - poff_meter)) / local_edges.front().length) *
         255.f);
 
     auto last_edge = local_edges.rbegin();
-    auto last_edge_noff = static_cast<float>(last_edge->last_node_offset) / 255.f * last_edge->length;
+    auto last_edge_noff = static_cast<float>(last_edge->breakpoint2) / 255.f * last_edge->length;
     if (last_edge_noff < noff_meter) {
       last_edge++;
       uint32_t delete_count = 0;
@@ -356,7 +402,8 @@ void match_edges(valhalla::tyr::actor_t& actor,
         // if at this point there's no nodes left, that means we already looked at the
         // last segment just before, this shouldn't happen
         if (last_edge == local_edges.rend()) {
-          throw std::runtime_error("The OpenLR's noff was larger than the entire matched length");
+          throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
+                                   " : noff was larger than the entire matched length");
         }
       }
       // remove the skipped edges
@@ -364,7 +411,7 @@ void match_edges(valhalla::tyr::actor_t& actor,
         local_edges.pop_back();
       }
     }
-    local_edges.back().last_node_offset =
+    local_edges.back().breakpoint2 =
         static_cast<uint8_t>(((last_edge_noff - noff_meter) / local_edges.back().length) * 255.f);
 
     // insert into the outer vector

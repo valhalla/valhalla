@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  auto logging_subtree = pt.get_child_optional("loki.logging");
+  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
