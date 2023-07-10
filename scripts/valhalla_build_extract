@@ -22,8 +22,10 @@ INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
 INDEX_FILE = "index.bin"
 # skip the first 40 bytes of the tile header
 GRAPHTILE_SKIP_BYTES = struct.calcsize('<Q2f16cQ')
-TRAFFIC_HEADER_SIZE = struct.calcsize('<2Q4I')
+TRAFFIC_HEADER_FORMAT = '<2Q4I'
+TRAFFIC_HEADER_SIZE = struct.calcsize(TRAFFIC_HEADER_FORMAT)
 TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
+TRAFFIC_VERSION = 3
 
 Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
 TILE_SIZES = {0: 4, 1: 1, 2: 0.25, 3: 0.25}
@@ -296,11 +298,27 @@ def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path
             b.readinto(tile_header)
             b.close()
 
-            # create the traffic tile
-            traffic_size = TRAFFIC_HEADER_SIZE + TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
-            tar_traffic.addfile(get_tar_info(tile_in.name, traffic_size), BytesIO(b'\0' * traffic_size))
+            # create the traffic header
+            header_bytes = struct.pack(
+                TRAFFIC_HEADER_FORMAT,
+                get_tile_id(tile_in.name),  # numerical tile_id
+                0,  # timestamp
+                tile_header.directededgecount_,  # edge count
+                TRAFFIC_VERSION,  # tile version
+                0,  # spare2
+                0,  # spare3
+            )
 
-            LOGGER.debug(f"Tile {tile_in.name} has {tile_header.directededgecount_} directed edges")
+            # create the traffic tile
+            traffic_size = TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
+            tar_traffic.addfile(
+                get_tar_info(tile_in.name, len(header_bytes) + traffic_size),
+                BytesIO(header_bytes + b'\0' * traffic_size),
+            )
+
+            LOGGER.debug(
+                f"Traffic tile {tile_in.name} has {tile_header.directededgecount_} directed edges"
+            )
 
     write_index_to_tar(traffic_fp)
 
