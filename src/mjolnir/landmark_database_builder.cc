@@ -1,7 +1,7 @@
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
-#include <iostream>
 
 #include "baldr/graphconstants.h"
 #include "filesystem.h"
@@ -33,11 +33,17 @@ bool LandmarkDatabase::connect_database() {
       return false;
   }
 
-  if (!LandmarkDatabase::open_database()) { return false; }
+  if (!LandmarkDatabase::open_database()) {
+    return false;
+  }
 
   if (access_mode_ == AccessMode::ReadWriteCreate) {
-    if (!create_landmarks_table()) { return false; }
-    if (!create_spatial_index()) { return false; }
+    if (!create_landmarks_table()) {
+      return false;
+    }
+    if (!create_spatial_index()) {
+      return false;
+    }
     LOG_INFO("Created database and landmarks table");
   }
 
@@ -52,10 +58,30 @@ bool LandmarkDatabase::open_database() {
     sqlite3_close(db);
     return false;
   }
-  // loading SpatiaLite as an extension
-  auto db_conn = make_spatialite_cache(db);
 
-  LOG_INFO("Opened database and loaded Spatialite extension");
+  // loading SpatiaLite as an extension
+  // auto db_conn = make_spatialite_cache(db);
+  // LOG_INFO("Opened database and loaded Spatialite extension");
+
+  // ret = sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, nullptr);
+  ret = sqlite3_enable_load_extension(db, 1);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("cannot enable load extension");
+    sqlite3_close(db);
+    return false;
+  }
+
+  sql = "SELECT load_extension('mod_spatialite')";
+  ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return false;
+  }
+
+  LOG_INFO("Loaded spatialite extension");
+
   return true;
 }
 
@@ -77,7 +103,7 @@ bool LandmarkDatabase::create_landmarks_table() {
   /* creating a POINT Geometry column */
   sql = "SELECT AddGeometryColumn('landmarks', ";
   sql += "'geom', 4326, 'POINT', 2)";
-  
+
   ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
   if (ret != SQLITE_OK) {
     LOG_ERROR("Error: " + std::string(err_msg));
@@ -103,10 +129,12 @@ bool LandmarkDatabase::create_spatial_index() {
   return true;
 }
 
-bool LandmarkDatabase::insert_landmark(const std::string& name, const std::string& type, 
-                                      const double longitude, const double latitude) {
+bool LandmarkDatabase::insert_landmark(const std::string& name,
+                                       const std::string& type,
+                                       const double longitude,
+                                       const double latitude) {
   sql = "INSERT INTO landmarks (name, type, geom) ";
-  sql += "VALUES (?, ?, CastToPoint(MakePoint(?, ?, 4326)))";
+  sql += "VALUES (?, ?, MakePoint(?, ?, 4326))";
   // sql += "VALUES (?, ?, CastToPoint(ST_GeomFromText('POINT(? ?)', 4326)))";
 
   ret = sqlite3_prepare_v2(db, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
@@ -137,9 +165,6 @@ bool LandmarkDatabase::insert_landmark(const std::string& name, const std::strin
 
   LOG_INFO(sqlite3_expanded_sql(stmt));
 
-  // sqlite3_bind_text(stmt, 3, longitude.c_str(), longitude.length(), SQLITE_STATIC);
-  // sqlite3_bind_text(stmt, 4, latitude.c_str(), latitude.length(), SQLITE_STATIC);
-
   /* performing INSERT INTO */
   ret = sqlite3_step(stmt);
   if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
@@ -158,34 +183,14 @@ bool LandmarkDatabase::insert_landmark(const std::string& name, const std::strin
   return false;
 }
 
-int bounding_box_query_callback(void* data, int argc, char** argv, char** /* columnNames */) {
-  std::vector<std::pair<std::string, std::string>>* results = 
-    static_cast<std::vector<std::pair<std::string, std::string>>*>(data);
+bool LandmarkDatabase::get_landmarks_in_bounding_box(
+    std::vector<Landmark>* landmarks,
+    const double minLat,
+    const double minLong,
+    const double maxLat,
+    const double maxLong) {
+  sql = "SELECT name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
 
-  results->push_back(std::make_pair(argv[0], argv[1]));
-
-  return 0;
-}
-
-bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<std::pair<std::string, std::string>> *landmarks, 
-      const double minLat, const double minLong, const double maxLat, const double maxLong) {
-  // sql  = "SELECT name, type FROM landmarks WHERE ST_Covers(BuildMbr(" +
-  //                     minLong + ", " + minLat + ", " + maxLong + ", " + maxLat + "), geom)";
-
-  // int ret = sqlite3_exec(db, sql.c_str(), bounding_box_query_callback, landmarks, &err_msg);
-
-  // if (ret != SQLITE_OK) {
-  //   LOG_ERROR("Error: " + std::string(err_msg));
-  //   sqlite3_free(err_msg);
-  //   sqlite3_close(db);
-  //   return false;
-  // }
-
-  // LOG_INFO("Executed bounding box query");
-  // return true;
-
-  sql = "SELECT name, type FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
-  
   ret = sqlite3_prepare_v2(db, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
     LOG_ERROR("SQL error: " + sql);
@@ -197,17 +202,19 @@ bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<std::pair<std::
   sqlite3_reset(stmt);
   sqlite3_clear_bindings(stmt);
 
-  sqlite3_bind_double(stmt, 3, minLong);
-  sqlite3_bind_double(stmt, 4, minLat);
-  sqlite3_bind_double(stmt, 1, maxLong);
-  sqlite3_bind_double(stmt, 2, maxLat);
+  sqlite3_bind_double(stmt, 1, minLong);
+  sqlite3_bind_double(stmt, 2, minLat);
+  sqlite3_bind_double(stmt, 3, maxLong);
+  sqlite3_bind_double(stmt, 4, maxLat);
 
   LOG_INFO(sqlite3_expanded_sql(stmt));
 
   while (sqlite3_step(stmt) == SQLITE_ROW) {
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
     const char* type = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
-    landmarks->emplace_back(std::make_pair(std::string(name), std::string(type)));
+    double lng = sqlite3_column_double(stmt, 2);
+    double lat = sqlite3_column_double(stmt, 3);
+    landmarks->emplace_back(Landmark{name, type, lng, lat});
   }
 
   ret = sqlite3_finalize(stmt);
@@ -225,15 +232,15 @@ void LandmarkDatabase::close_database() {
   LOG_INFO("Closed database");
 }
 
-static int test_callback(void *data, int argc, char **argv, char **azColName){
-   fprintf(stderr, "%s: \n", (const char*)data);
-   
-   for(int i = 0; i<argc; i++){
-      printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-   }
-   
-   printf("\n");
-   return 0;
+static int test_callback(void* data, int argc, char** argv, char** azColName) {
+  fprintf(stderr, "%s: \n", (const char*)data);
+
+  for (int i = 0; i < argc; i++) {
+    printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+  }
+
+  printf("\n");
+  return 0;
 }
 
 bool LandmarkDatabase::test_select_query() {
@@ -241,8 +248,8 @@ bool LandmarkDatabase::test_select_query() {
 
   const char* data = "Callback function called";
   ret = sqlite3_exec(db, sql.c_str(), test_callback, (void*)data, &err_msg);
-  
-  if( ret != SQLITE_OK ) {
+
+  if (ret != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", err_msg);
     sqlite3_free(err_msg);
     return false;
@@ -257,8 +264,8 @@ bool LandmarkDatabase::test_select_all() {
 
   const char* data = "Callback function called";
   ret = sqlite3_exec(db, sql.c_str(), test_callback, (void*)data, &err_msg);
-  
-  if( ret != SQLITE_OK ) {
+
+  if (ret != SQLITE_OK) {
     fprintf(stderr, "SQL error: %s\n", err_msg);
     sqlite3_free(err_msg);
     return false;

@@ -26,6 +26,13 @@ enum class AccessMode {
   ReadWrite
 };
 
+struct Landmark {
+  std::string name;
+  std::string type;
+  double lng;
+  double lat;
+};
+
 struct LandmarkDatabase {
 public:
   LandmarkDatabase(std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly) 
@@ -41,7 +48,7 @@ public:
   bool insert_landmark(const std::string& name, const std::string& type, 
                       const double longitude, const double latitude);
   
-  bool get_landmarks_in_bounding_box(std::vector<std::pair<std::string, std::string>> *landmarks, 
+  bool get_landmarks_in_bounding_box(std::vector<Landmark> *landmarks, 
        const double minLat, const double minLong, const double maxLat, const double maxLong);
   bool test_select_query();
   bool test_select_all();

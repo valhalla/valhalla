@@ -30,30 +30,32 @@ TEST(LandmarkDatabaseTest, TestDatabaseWithAccessMode) {
 }
 
 TEST(LandmarkDatabaseTest, TestBoundingBoxQuery) {
-  std::string db_name = "landmarks-test-v2.db";
+  std::string db_name = "landmarks.db";
 
-  // NOTE: should create db and insert data only once
-  // LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
+  // NOTE: should create db and insert data only once!
+  LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
 
-  // ASSERT_TRUE(db.insert_landmark("Statue of Liberty", "Monument", -74.044548, 40.689253));
-  // ASSERT_TRUE(db.insert_landmark("Eiffel Tower", "Monument", 2.294481, 48.858370));
-  // ASSERT_TRUE(db.insert_landmark("A", "pseudo", 5., 5.));
-  // ASSERT_TRUE(db.insert_landmark("B", "pseudo", 10., 10.));
+  ASSERT_TRUE(db.insert_landmark("Statue of Liberty", "Monument", -74.044548, 40.689253));
+  ASSERT_TRUE(db.insert_landmark("Eiffel Tower", "Monument", 2.294481, 48.858370));
+  ASSERT_TRUE(db.insert_landmark("A", "pseudo", 5., 5.));
+  ASSERT_TRUE(db.insert_landmark("B", "pseudo", 10., 10.));
+  
+  // LandmarkDatabase db(db_name, AccessMode::ReadOnly);
 
-  LandmarkDatabase db(db_name, AccessMode::ReadOnly);
+  EXPECT_TRUE(db.test_select_all());
 
-  std::vector<std::pair<std::string, std::string>> landmarks = {};
+  std::vector<Landmark> landmarks = {};
   const double minLat = 0.;
-  const double maxLat = 1.;
+  const double maxLat = 10.;
   const double minLong = 0.;
-  const double maxLong = 1.;
+  const double maxLong = 10.;
 
   ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, minLat, minLong, maxLat, maxLong));
 
-  LOG_INFO(std::to_string(landmarks.size()));
+  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (auto landmark: landmarks) {
-    LOG_INFO("name: " + landmark.first + ", type: " + landmark.second);
+    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + "longitude: " + 
+        std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
-
-  EXPECT_TRUE(db.test_select_all());
+  // selected rows should only include A and B
 }
