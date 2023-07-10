@@ -9,7 +9,7 @@ namespace valhalla {
 namespace odin {
 
 #ifdef HAVE_HTTP
-void run_service(const boost::property_tree::ptree& config);
+void run_service();
 #endif
 
 class odin_worker_t : public service_worker_t {

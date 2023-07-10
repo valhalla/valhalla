@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   rapidjson::read_json(config_file, config);
 
   // run the service worker
-  valhalla::odin::run_service(config);
+  valhalla::odin::run_service();
 
   return 0;
 }

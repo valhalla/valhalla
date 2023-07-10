@@ -109,6 +109,7 @@ odin_worker_t::work(const std::list<zmq::message_t>& job,
 
 void run_service() {
   auto config = valhalla::config::GetConfig();
+
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
                         config.get<unsigned int>("httpd.service.shutting_seconds", 1));

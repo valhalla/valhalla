@@ -1,3 +1,6 @@
+#ifndef VALHALLA_CONFIGURATION_H_
+#define VALHALLA_CONFIGURATION_H_
+
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <string>
@@ -8,38 +11,33 @@ namespace config {
 class Configuration {
 protected:
   Configuration() = delete;
-  Configuration(const std::string& path) : path_(path) {
-    rapidjson::read_json(path, config_);
-  }
+  Configuration(const std::string& config_file);
 
   boost::property_tree::ptree config_;
-  std::string path_;
+  std::string config_file_;
 
 public:
   Configuration(Configuration const&) = delete;
   void operator=(const Configuration&) = delete;
 
-  static Configuration& GetInstance(const std::string& path = "") {
-    static Configuration instance(path);
+  static Configuration& GetInstance(const std::string& config_file = "") {
+    static Configuration instance(config_file);
     return instance;
   }
 
-  std::string GetPath() const {
-    return path_;
+  const std::string& GetConfigFile() const {
+    return config_file_;
   }
 
-  boost::property_tree::ptree GetConfig() const {
+  const boost::property_tree::ptree& GetConfig() const {
     return config_;
   }
 };
 
-void Configure(const std::string& path){
-  Configuration::GetInstance(path);
-}
-
-boost::property_tree::ptree GetConfig() {
-  return Configuration::GetInstance().GetConfig();
-}
+void Configure(const std::string& config_file);
+const boost::property_tree::ptree& GetConfig();
 
 } // namespace config
 } // namespace valhalla
+
+#endif
