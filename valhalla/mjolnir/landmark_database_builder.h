@@ -20,11 +20,7 @@
 
 namespace valhalla {
 namespace mjolnir {
-enum class AccessMode {
-  ReadWriteCreate,
-  ReadOnly,
-  ReadWrite
-};
+enum class AccessMode { ReadWriteCreate, ReadOnly, ReadWrite };
 
 struct Landmark {
   std::string name;
@@ -35,8 +31,8 @@ struct Landmark {
 
 struct LandmarkDatabase {
 public:
-  LandmarkDatabase(std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly) 
-    : db(nullptr), database(db_name), access_mode_(access_mode) { 
+  LandmarkDatabase(std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly)
+      : db(nullptr), database(db_name), access_mode_(access_mode) {
     if (!connect_database()) {
       LOG_ERROR("cannot connect to database");
     }
@@ -45,11 +41,16 @@ public:
     close_database();
   }
 
-  bool insert_landmark(const std::string& name, const std::string& type, 
-                      const double longitude, const double latitude);
-  
-  bool get_landmarks_in_bounding_box(std::vector<Landmark> *landmarks, 
-       const double minLat, const double minLong, const double maxLat, const double maxLong);
+  bool insert_landmark(const std::string& name,
+                       const std::string& type,
+                       const double longitude,
+                       const double latitude);
+
+  bool get_landmarks_in_bounding_box(std::vector<Landmark>* landmarks,
+                                     const double minLat,
+                                     const double minLong,
+                                     const double maxLat,
+                                     const double maxLong);
   bool test_select_query();
   bool test_select_all();
 
@@ -85,6 +86,6 @@ private:
   int open_flags = 0;
 };
 
-}
+} // namespace mjolnir
 
-}
+} // namespace valhalla

@@ -183,13 +183,13 @@ bool LandmarkDatabase::insert_landmark(const std::string& name,
   return false;
 }
 
-bool LandmarkDatabase::get_landmarks_in_bounding_box(
-    std::vector<Landmark>* landmarks,
-    const double minLat,
-    const double minLong,
-    const double maxLat,
-    const double maxLong) {
-  sql = "SELECT name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
+bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<Landmark>* landmarks,
+                                                     const double minLat,
+                                                     const double minLong,
+                                                     const double maxLat,
+                                                     const double maxLong) {
+  sql =
+      "SELECT name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
 
   ret = sqlite3_prepare_v2(db, sql.c_str(), strlen(sql.c_str()), &stmt, NULL);
   if (ret != SQLITE_OK) {
