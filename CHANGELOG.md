@@ -12,6 +12,7 @@
    * ADDED: `preferred_side_cutoff` parameter for locations [#4182](https://github.com/valhalla/valhalla/pull/4182)
    * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
    * CHANGED: sped up the transit gtfs ingestion process by sorting the feeds before querying them and avoiding copying their structures. forked just_gtfs into the valhalla org to accomplish it [#4167](https://github.com/valhalla/valhalla/pull/4167)
+   * CHANGED: write traffic tile headers in `valhalla_build_extract` [#4195](https://github.com/valhalla/valhalla/pull/4195)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
