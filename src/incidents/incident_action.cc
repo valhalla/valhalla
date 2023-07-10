@@ -178,14 +178,12 @@ namespace valhalla {
 namespace incidents {
 
 std::string incident_worker_t::incidents(IncidentsAction action, rapidjson::Document& req) {
-  LOG_WARN(endpoint_to_string.at(action) + " request");
-
   switch (action) {
     case IncidentsAction::UPDATE:
     case IncidentsAction::DELETE:
     case IncidentsAction::RESET:
       // write to the tar
-      write_traffic(get_matched_edges(req));
+      write_traffic(get_matched_edges(req), action);
       break;
     case IncidentsAction::GEOJSON_MATCHES:
       return serialize_geojson_matches(get_matched_edges(req), *reader);

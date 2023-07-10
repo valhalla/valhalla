@@ -38,7 +38,7 @@ public:
 protected:
   std::string incidents(IncidentsAction action, rapidjson::Document& req);
   std::vector<OpenLrEdge> get_matched_edges(const rapidjson::Document& req_doc);
-  void write_traffic(std::vector<OpenLrEdge>&& openlrs_edges);
+  void write_traffic(std::vector<OpenLrEdge>&& openlrs_edges, const IncidentsAction action);
 
   unsigned int thread_count;
   boost::property_tree::ptree config;

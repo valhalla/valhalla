@@ -52,7 +52,7 @@ class GraphReaderIncidents : public baldr::GraphReader {
 public:
   using baldr::GraphReader::tile_extract_;
   explicit GraphReaderIncidents(const boost::property_tree::ptree& pt)
-      : baldr::GraphReader(pt, nullptr, true) {
+      : baldr::GraphReader(pt, nullptr, false) {
   }
 };
 
