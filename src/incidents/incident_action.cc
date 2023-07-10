@@ -179,9 +179,14 @@ namespace incidents {
 
 std::string incident_worker_t::incidents(IncidentsAction action, rapidjson::Document& req) {
   switch (action) {
+    case IncidentsAction::RESET:
+      if (req.GetArray().Size()) {
+        write_traffic(get_matched_edges(req), action);
+      } else {
+        write_traffic({}, action);
+      }
     case IncidentsAction::UPDATE:
     case IncidentsAction::DELETE:
-    case IncidentsAction::RESET:
       // write to the tar
       write_traffic(get_matched_edges(req), action);
       break;

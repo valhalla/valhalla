@@ -4,13 +4,30 @@
 namespace vb = valhalla::baldr;
 namespace vi = valhalla::incidents;
 
+constexpr auto HEADER_SIZE = sizeof(valhalla::baldr::TrafficTileHeader);
+constexpr auto TRAFFIC_SIZE = sizeof(valhalla::baldr::TrafficSpeed);
+
 namespace valhalla {
 namespace incidents {
 
 // handles the multithreaded traffic writing
 void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
                                       const IncidentsAction action) {
-  const auto header_size = sizeof(baldr::TrafficTileHeader);
+
+  if (action == IncidentsAction::RESET) {
+    for (const auto& tile : reader->tile_extract_->traffic_tiles) {
+      auto edge_count = (tile.second.second - HEADER_SIZE) / TRAFFIC_SIZE;
+      auto base_pos = tile.second.first + HEADER_SIZE;
+      for (int i = 0; i < edge_count; i++) {
+        *reinterpret_cast<baldr::TrafficSpeed*>(base_pos + (i * TRAFFIC_SIZE)) =
+            baldr::TrafficSpeed();
+      }
+    }
+  }
+
+  if (!openlrs_edges.size()) {
+    return;
+  }
 
   std::sort(openlrs_edges.begin(), openlrs_edges.end(), [](const OpenLrEdge& a, const OpenLrEdge& b) {
     // This ordering means when we iterate over this list, it'll be
@@ -22,32 +39,15 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
     return a.edge_id.level() < b.edge_id.level();
   });
 
-  // TODO: reset the entire tar file if action == RESET before updating the matched edges
-  if (action == IncidentsAction::RESET) {
-    for (const auto& tile : reader->tile_extract_->traffic_tiles) {
-      *(tile.second.first + header_size) = (tile.second.second - header_size) * '\0';
-    }
-  }
-
   uint32_t count = 0;
   auto openlr_begin = openlrs_edges.begin();
   auto tile_id = baldr::GraphId{};
   char* tile_data = nullptr;
 
   for (; openlr_begin != openlrs_edges.end(); openlr_begin++) {
+    // invalid speed is default for /delete
     baldr::TrafficSpeed traffic_speed{};
-    if (action == IncidentsAction::DELETE) {
-      traffic_speed = baldr::TrafficSpeed{baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                          baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                          baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                          baldr::UNKNOWN_TRAFFIC_SPEED_RAW,
-                                          255U,
-                                          255U,
-                                          0,
-                                          0,
-                                          0,
-                                          false};
-    } else if (action == IncidentsAction::UPDATE) {
+    if (action != IncidentsAction::DELETE) {
       if (openlr_begin->breakpoint1 != 255 && openlr_begin->breakpoint2 != 255) {
         // must be a single-edge openlr segment not even covering a full edge
         traffic_speed.breakpoint1 = openlr_begin->breakpoint1;
@@ -80,11 +80,11 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
       auto tile_offset =
           reader->tile_extract_->traffic_tiles.find(openlr_begin->edge_id.Tile_Base())->second;
 
-      tile_data = tile_offset.first + sizeof(baldr::TrafficTileHeader);
+      tile_data = tile_offset.first + HEADER_SIZE;
       tile_id = current_tile_id;
     }
 
-    auto edge_position = tile_data + (openlr_begin->edge_id.id() * sizeof(baldr::TrafficSpeed));
+    auto edge_position = tile_data + (openlr_begin->edge_id.id() * TRAFFIC_SIZE);
     *reinterpret_cast<baldr::TrafficSpeed*>(edge_position) = traffic_speed;
   }
 }

@@ -42,6 +42,7 @@ static valhalla::Api get_route_base_req() {
       &(*base_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
   costing->mutable_options()->set_shortest(true);
   costing->mutable_options()->set_maneuver_penalty(0.f);
+  costing->mutable_options()->set_ignore_closures(true);
 
   return base_request;
 }
