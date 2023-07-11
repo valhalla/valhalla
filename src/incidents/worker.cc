@@ -40,11 +40,9 @@ incident_worker_t::incident_worker_t(const boost::property_tree::ptree& config_t
       reader(std::make_shared<GraphReaderIncidents>(config.get_child("mjolnir"))) {
 
   // set the available threads and initialize as many actors as needed
-  // thread_count =
-  //    std::max(static_cast<unsigned int>(1),
-  //             config.get<unsigned int>("mjolnir.concurrency",
-  //             std::thread::hardware_concurrency()));
-  thread_count = 12;
+  thread_count =
+      std::max(static_cast<unsigned int>(1),
+               config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   LOG_INFO("Running incident action with " + std::to_string(thread_count) + " threads...");
 
   actors.reserve(thread_count);

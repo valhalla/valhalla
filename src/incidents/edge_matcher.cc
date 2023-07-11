@@ -41,7 +41,6 @@ static valhalla::Api get_route_base_req() {
   valhalla::Costing* costing =
       &(*base_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
   costing->mutable_options()->set_shortest(true);
-  costing->mutable_options()->set_maneuver_penalty(0.f);
   costing->mutable_options()->set_ignore_closures(true);
 
   return base_request;
@@ -50,8 +49,8 @@ static valhalla::Api get_route_base_req() {
 static valhalla::Api get_trace_base_req() {
   valhalla::Api base_request;
   base_request.mutable_options()->set_action(valhalla::Options::trace_attributes);
-  // base_request.mutable_options()->set_format(valhalla::Options_Format_pbf);
   base_request.mutable_options()->set_costing_type(valhalla::Costing::auto_);
+  // base_request.mutable_options()->set_format(valhalla::Options_Format_pbf);
   base_request.mutable_options()->set_shape_match(valhalla::ShapeMatch::edge_walk);
   base_request.mutable_options()->set_filter_action(valhalla::FilterAction::include);
   base_request.mutable_options()->add_filter_attributes("edge.id");
@@ -59,6 +58,10 @@ static valhalla::Api get_trace_base_req() {
   base_request.mutable_options()->add_filter_attributes("shape");
   base_request.mutable_options()->add_filter_attributes("edge.begin_shape_index");
   base_request.mutable_options()->add_filter_attributes("edge.end_shape_index");
+  valhalla::Costing* costing =
+      &(*base_request.mutable_options()->mutable_costings())[valhalla::Costing::auto_];
+  costing->mutable_options()->set_shortest(true);
+  costing->mutable_options()->set_ignore_closures(true);
 
   return base_request;
 }
@@ -246,8 +249,8 @@ float match_lrps(valhalla::tyr::actor_t& actor,
             // else smth is really wrong with map matching
             // this should only happen for TomTom/OSM combo
             if (!(i == 1 || i == (trace_trip_leg.node().size() - 1))) {
-              throw std::runtime_error("[valhalla] " + openlr_string + " : WTF: Edge 'index' " +
-                                       std::to_string(i) + " had an offset!");
+              LOG_ERROR("[valhalla] " + openlr_string + " : WTF: Edge 'index' " + std::to_string(i) +
+                        " had an offset!");
             }
           }
 
@@ -388,6 +391,7 @@ void match_edges(valhalla::tyr::actor_t& actor,
             LOG_ERROR("[tomtom] " + std::string(openlr_start->GetString()) +
                       " : poff was larger than the entire first "
                       "OpenLR segment! Why have a full segment if you'll just skip it completely?!");
+            poff_meter = poff_meter - first_edge_poff;
             break;
           }
         }
@@ -418,6 +422,7 @@ void match_edges(valhalla::tyr::actor_t& actor,
             LOG_ERROR("[tomtom] " + std::string(openlr_start->GetString()) +
                       " : poff was larger than the entire first "
                       "OpenLR segment! Why have a full segment if you'll just skip it completely?!");
+            noff_meter = noff_meter - last_edge_noff;
             break;
           }
         }
