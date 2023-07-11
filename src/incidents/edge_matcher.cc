@@ -385,8 +385,10 @@ void match_edges(valhalla::tyr::actor_t& actor,
           // if at this point there's no nodes left, that means we already looked at the
           // last segment just before, this shouldn't happen
           if (first_edge == local_edges.end()) {
-            throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
-                                     " : poff was larger than the entire matched length");
+            LOG_ERROR("[tomtom] " + std::string(openlr_start->GetString()) +
+                      " : poff was larger than the entire first "
+                      "OpenLR segment! Why have a full segment if you'll just skip it completely?!");
+            break;
           }
         }
         // remove the skipped edges, invalidates first_edge
@@ -413,8 +415,10 @@ void match_edges(valhalla::tyr::actor_t& actor,
           // if at this point there's no nodes left, that means we already looked at the
           // last segment just before, this shouldn't happen
           if (last_edge == local_edges.rend()) {
-            throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
-                                     " : noff was larger than the entire matched length");
+            LOG_ERROR("[tomtom] " + std::string(openlr_start->GetString()) +
+                      " : poff was larger than the entire first "
+                      "OpenLR segment! Why have a full segment if you'll just skip it completely?!");
+            break;
           }
         }
         // remove the skipped edges
@@ -426,11 +430,9 @@ void match_edges(valhalla::tyr::actor_t& actor,
           std::max(local_edges.back().length - (last_edge_noff - noff_meter), 0.f);
     }
 
-    // insert into the outer vector
-    std::move(local_edges.begin(), local_edges.end(), std::back_inserter(openlrs_edges));
-
-    if (openlrs_edges.size()) {
-      openlrs_edges.back().is_last = true;
+    if (local_edges.size()) {
+      local_edges.back().is_last = true;
+      std::move(local_edges.begin(), local_edges.end(), std::back_inserter(openlrs_edges));
     }
   }
 
