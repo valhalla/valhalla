@@ -430,16 +430,13 @@ struct IntersectionEdges {
 };
 
 // Process 'indications' array - add indications from left to right
-json::ArrayPtr lane_indications(std::unique_ptr<valhalla::odin::EnhancedTripLeg_Edge>& prev_edge,
-                                const valhalla::TurnLane* turn_lane) {
-  uint16_t mask = turn_lane->directions_mask();
-  // Process 'indications' array - add indications from left to right
+json::ArrayPtr lane_indications(const bool drive_on_right, const uint16_t mask) {
   auto indications = json::array({});
 
   // TODO make map for lane mask to osrm indication string
 
   // reverse (left u-turn)
-  if (mask & kTurnLaneReverse && prev_edge->drive_on_right()) {
+  if (mask & kTurnLaneReverse && drive_on_right) {
     indications->emplace_back(osrmconstants::kModifierUturn);
   }
   // sharp_left
@@ -471,7 +468,7 @@ json::ArrayPtr lane_indications(std::unique_ptr<valhalla::odin::EnhancedTripLeg_
     indications->emplace_back(osrmconstants::kModifierSharpRight);
   }
   // reverse (right u-turn)
-  if (mask & kTurnLaneReverse && !prev_edge->drive_on_right()) {
+  if (mask & kTurnLaneReverse && !drive_on_right) {
     indications->emplace_back(osrmconstants::kModifierUturn);
   }
   return indications;
@@ -691,7 +688,8 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("valid_indication", turn_lane_direction(turn_lane.active_direction()));
         }
-        lane->emplace("indications", lane_indications(prev_edge, &turn_lane));
+        lane->emplace("indications",
+                      lane_indications(prev_edge->drive_on_right(), turn_lane.directions_mask()));
         lanes->emplace_back(std::move(lane));
       }
       intersection->emplace("lanes", std::move(lanes));
@@ -1280,7 +1278,8 @@ json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* pre
         if (turn_lane.state() != TurnLane::kInvalid) {
           lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
         }
-        lane->emplace("directions", lane_indications(edge, &turn_lane));
+        lane->emplace("directions",
+                      lane_indications(edge->drive_on_right(), turn_lane.directions_mask()));
         lanes->emplace_back(std::move(lane));
       }
     }
@@ -2206,17 +2205,9 @@ TEST(RouteSerializerOsrm, testserializeAnnotationsSpeedLimits) {
 }
 
 TEST(RouteSerializerOsrm, testlaneIndications) {
-  TripLeg_Edge edge;
-  auto etp = std::make_unique<valhalla::odin::EnhancedTripLeg_Edge>(&edge);
-
-  TurnLane* lane_1 = edge.add_turn_lanes();
-  lane_1->set_directions_mask(kTurnLaneReverse | kTurnLaneSharpLeft);
-
-  TurnLane* lane_2 = edge.add_turn_lanes();
-  lane_2->set_directions_mask(kTurnLaneThrough | kTurnLaneRight | kTurnLaneSharpRight);
-
-  json::ArrayPtr indications_1 = lane_indications(etp, lane_1);
-  json::ArrayPtr indications_2 = lane_indications(etp, lane_2);
+  json::ArrayPtr indications_1 = lane_indications(true, kTurnLaneReverse | kTurnLaneSharpLeft);
+  json::ArrayPtr indications_2 =
+      lane_indications(true, kTurnLaneThrough | kTurnLaneRight | kTurnLaneSharpRight);
 
   ASSERT_EQ(indications_1->size(), 2);
   ASSERT_STREQ(boost::get<std::string>(indications_1->at(0)).c_str(), "uturn");
