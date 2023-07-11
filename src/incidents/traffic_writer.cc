@@ -10,7 +10,7 @@ constexpr auto TRAFFIC_SIZE = sizeof(valhalla::baldr::TrafficSpeed);
 namespace valhalla {
 namespace incidents {
 
-// handles the multithreaded traffic writing
+// handles the traffic writing
 void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
                                       const IncidentsAction action) {
 
@@ -45,33 +45,47 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
   char* tile_data = nullptr;
 
   for (; openlr_begin != openlrs_edges.end(); openlr_begin++) {
-    // invalid speed is default for /delete
-    baldr::TrafficSpeed traffic_speed{};
+    uint8_t b1 = 0, b2 = 0;
+    uint8_t s1 = 0, s2 = 0, s3 = 0;
+
+    // only record actual data for /update & /reset
     if (action != IncidentsAction::DELETE) {
-      if (openlr_begin->breakpoint1 != 255 && openlr_begin->breakpoint2 != 255) {
+      auto poff = openlr_begin->poff_start_offset;
+      auto noff = openlr_begin->noff_start_offset;
+      auto length = openlr_begin->length;
+      if (poff && noff) {
         // must be a single-edge openlr segment not even covering a full edge
-        traffic_speed.breakpoint1 = openlr_begin->breakpoint1;
-        traffic_speed.encoded_speed1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
-        traffic_speed.encoded_speed2 = 0;
-        traffic_speed.breakpoint2 = openlr_begin->breakpoint2;
-        traffic_speed.encoded_speed3 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
-      } else if (openlr_begin->breakpoint1 != 255) {
-        // for the first edge of an openlr segment
-        traffic_speed.breakpoint1 = openlr_begin->breakpoint1;
-        traffic_speed.encoded_speed1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
-        traffic_speed.encoded_speed2 = 0;
-        traffic_speed.breakpoint2 = 255;
-        traffic_speed.encoded_speed3 = 0;
-      } else if (openlr_begin->breakpoint2 != 255) {
-        // for the last edge of an openlr segment
-        traffic_speed.breakpoint1 = openlr_begin->breakpoint2;
-        traffic_speed.encoded_speed1 = 0;
-        traffic_speed.encoded_speed2 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
-        traffic_speed.breakpoint2 = 255;
-        traffic_speed.encoded_speed3 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
+        // x----b1=====b2----x
+        //   s1     s2    s3
+        s1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
+        b1 = static_cast<uint8_t>((poff / length) * 255.f);
+        s2 = 0;
+        b2 = static_cast<uint8_t>(((length - noff) / length) * 255.f);
+        s3 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
+      } else if (poff) {
+        // either the starting edge or poff of a trivial openlr
+        // x----b1===========x(---)
+        //   s1       s2/s3
+        s1 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
+        b1 = static_cast<uint8_t>((poff / length) * 255.f);
+        s2 = 0;
+        b2 = 255;
+        s3 = 0;
+      } else if (noff) {
+        // either the last edge or noff of a trivial openlr
+        // x====b1-----------x(---)
+        //   s1       s2/s3
+        s1 = 0;
+        b1 = static_cast<uint8_t>(((length - noff) / length) * 255.f);
+        s2 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
+        b2 = 255;
+        s3 = vb::UNKNOWN_TRAFFIC_SPEED_RAW;
       } else {
-        traffic_speed.breakpoint1 = 255;
-        traffic_speed.encoded_speed1 = 0;
+        s1 = 0;
+        b1 = 255;
+        s2 = 0;
+        b2 = 255;
+        s3 = 0;
       }
     }
 
@@ -85,7 +99,8 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
     }
 
     auto edge_position = tile_data + (openlr_begin->edge_id.id() * TRAFFIC_SIZE);
-    *reinterpret_cast<baldr::TrafficSpeed*>(edge_position) = traffic_speed;
+    *reinterpret_cast<baldr::TrafficSpeed*>(edge_position) =
+        baldr::TrafficSpeed{0, s1, s2, s3, b1, b2, 0, 0, 0, false};
   }
 }
 } // namespace incidents

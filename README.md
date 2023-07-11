@@ -26,9 +26,9 @@ The most important configuration requirements are:
 - `/delete`: **removes** traffic entries for all matched edges, so they won't be considered "closed" anymore
 - `/reset`: **updates** the passed traffic entries (if any) and **removes** all other entries, i.e. a combination of `/update` and `/delete`
 
-These endpoints return GeoJSON and are very useful for debugging:
+These endpoints return GeoJSON and are very useful for debugging/QC'ing:
 
-- `/geojson/matches`: Returns the exact geometry of the edges which will be updated
+- `/geojson/matches`: Returns the exact geometry of the edge parts which will be updated
 - `/geojson/openlr`: Returns the interpolated line between a OpenLR's linear reference points
 
 **NOTE**, we included `./scripts/incident_xml_parser.py` to produce a payload from XML files (requires `lxml` Python package to be installed). `./scripts/incident_xml_parser.py -h` for options.

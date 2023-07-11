@@ -13,15 +13,20 @@ namespace incidents {
 
 struct OpenLrEdge {
   baldr::GraphId edge_id;
-  float length;        // the full edge length
-  uint8_t breakpoint1; // analogous to TrafficEdge breakpoints
-  uint8_t breakpoint2; // analogous to TrafficEdge breakpoints
-  bool is_last;        // if it's the last edge for an openlr, so we can plot them as GeoJSON
+  float length;            // the full edge length
+  float poff_start_offset; // meter offset of poff in positiv direction of openlr, 0 is no offset
+  float noff_start_offset; // meter offset of noff in negative direction of openlr, 0 is no offset
+  bool is_last;            // if it's the last edge for an openlr, so we can plot them as GeoJSON
 
   // only allow this constructor: is_last will be set after initially collecting all edges
   OpenLrEdge() = delete;
-  OpenLrEdge(const baldr::GraphId i, const uint32_t le, const uint8_t b1, const uint8_t b2)
-      : edge_id(i), length(le), breakpoint1(b1), breakpoint2(b2), is_last(false) {
+  OpenLrEdge(const baldr::GraphId i, const float le, const float po, const float no)
+      : edge_id(i), length(le), poff_start_offset(po), noff_start_offset(no), is_last(false) {
+  }
+
+  // for this constructor, poff_start_offset is temporarilly used as "matched_length"
+  OpenLrEdge(const baldr::GraphId i, const float le, const float po)
+      : edge_id(i), length(le), poff_start_offset(po), noff_start_offset(0.f), is_last(false) {
   }
 
   // for sorting purposes

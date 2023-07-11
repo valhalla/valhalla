@@ -65,6 +65,10 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
     // find the next occurrence of is_last = true
     openlr_end = std::find_if(openlr_begin, openlrs_edges.end(),
                               [](const vi::OpenLrEdge& edge) { return edge.is_last; });
+
+    // save first point's poff_start_offset before incrementing openlr_begin
+    const auto poff_start_offset = openlr_begin->poff_start_offset;
+    const auto first_edge_length = openlr_begin->length;
     for (; openlr_begin != (openlr_end + 1); openlr_begin++) {
       // auto* de = reader.directededge(openlr_begin->edge_id, tile);
       auto* de = reader.directededge(openlr_begin->edge_id, tile);
@@ -81,15 +85,18 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
     auto last = std::unique(pts.begin(), pts.end());
     pts.erase(last, pts.end());
 
-    // handle first and last points
-    if (openlr_begin->breakpoint1 != 255) {
+    // handle first edge or start of trivial edge
+    if (poff_start_offset) {
       auto& pt = pts.front();
-      pt = pt.PointAlongSegment(pts[1], static_cast<double>(openlr_begin->breakpoint1) / 255.);
+      pt = pt.PointAlongSegment(pts[1], static_cast<double>(poff_start_offset / first_edge_length));
     }
-    if (openlr_end->breakpoint2 != 255) {
+    // handle last edge or end of trivial edge
+    if (openlr_end->is_last && openlr_end->noff_start_offset) {
       auto& pt = pts[pts.size() - 2];
       pts.back() =
-          pt.PointAlongSegment(pts.back(), static_cast<double>(openlr_end->breakpoint2) / 255.);
+          pt.PointAlongSegment(pts.back(), static_cast<double>(
+                                               (openlr_end->length - openlr_end->noff_start_offset) /
+                                               openlr_end->length));
     }
 
     for (const auto& pt : pts) {

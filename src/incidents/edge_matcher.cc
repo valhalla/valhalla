@@ -155,9 +155,9 @@ float match_lrps(valhalla::tyr::actor_t& actor,
                  const vb::OpenLR::LocationReferencePoint& b_lrp,
                  const std::string& openlr_string,
                  const bool use_heading = false) {
-  auto is_within_limit = [&a_lrp](uint32_t route_dist) -> bool {
+  auto is_within_limit = [&a_lrp](float route_dist) -> bool {
     const auto limit = a_lrp.distance < 1000.0 ? 60 : 100;
-    return std::abs(static_cast<int>(a_lrp.distance - static_cast<int>(route_dist))) <= limit;
+    return std::abs(static_cast<int>(a_lrp.distance - static_cast<double>(route_dist))) <= limit;
   };
 
   auto min_encountered_dist = std::numeric_limits<float>::max();
@@ -169,18 +169,16 @@ float match_lrps(valhalla::tyr::actor_t& actor,
 
       // trivial, so we can return with that single ID
       if (start_cand.graph_id == end_cand.graph_id) {
-        const auto start_offset = static_cast<float>(start_cand.length) * start_cand.percent_along;
+        const auto start_offset = start_cand.length * start_cand.percent_along;
         // same edge, so percent_along is in route direction
-        const auto end_offset = static_cast<float>(end_cand.length) * end_cand.percent_along;
+        const auto end_offset = end_cand.length * end_cand.percent_along;
         const auto actual_length = end_offset - start_offset;
-        if (actual_length <= 0.f || !is_within_limit(static_cast<uint32_t>(start_cand.length))) {
+        if (actual_length <= 0.f || !is_within_limit(start_cand.length)) {
           continue;
         }
 
-        auto b1 = start_offset == 0.f ? static_cast<uint8_t>(255)
-                                      : static_cast<uint8_t>(start_cand.percent_along * 255.f);
-        openlr_edges.emplace_back(start_cand.graph_id, start_cand.length, b1,
-                                  static_cast<uint8_t>(end_cand.percent_along * 255.f));
+        openlr_edges.emplace_back(start_cand.graph_id, start_cand.length, start_offset,
+                                  end_cand.length - end_offset);
         return actual_length;
       }
 
@@ -211,7 +209,7 @@ float match_lrps(valhalla::tyr::actor_t& actor,
       auto route_dist = route_nav_leg.summary().length() * vm::kMetersPerKm;
       min_encountered_dist = std::min(min_encountered_dist, route_dist);
 
-      if (is_within_limit(static_cast<uint32_t>(route_dist))) {
+      if (is_within_limit(route_dist)) {
 
         // request trace_attributes and pull out all edge IDs
         valhalla::Api trace_req = get_trace_base_req();
@@ -229,9 +227,15 @@ float match_lrps(valhalla::tyr::actor_t& actor,
         // vi::print_route(trace_trip_leg);
 
         // collect all the traversed edge IDs
+        std::vector<float> matched_lengths;
         for (int i = 1; i < trace_trip_leg.node().size(); i++) {
           const auto& node = trace_trip_leg.node(i - 1);
           if (!node.has_edge()) {
+            continue;
+          } else if (node.edge().length_km() < 0.001f) {
+            // https://github.com/valhalla/valhalla/issues/4193
+            // Whole logic here assumes that only happens at node snaps
+            // skip those until we find the right one
             continue;
           }
           // first & last edge can have partial length_km
@@ -246,26 +250,26 @@ float match_lrps(valhalla::tyr::actor_t& actor,
                                        std::to_string(i) + " had an offset!");
             }
           }
-          // this is valid for both the first & last edge
-          auto breakpoint = static_cast<uint8_t>(matched_length / total_length * 255.f);
+
+          matched_lengths.push_back(matched_length * vm::kMetersPerKm);
           openlr_edges.emplace_back(vb::GraphId(node.edge().id()), total_length * vm::kMetersPerKm,
-                                    breakpoint, breakpoint);
+                                    0.f, 0.f);
         }
 
-        // _somehow_ the map matching can return irrelevant edges in the beginning
-        // TODO: make it reproduceable and file a bug!
-        // Whole logic here assumes that only happens at node snaps
-        // skip those until we find the right one
-        if (!(openlr_edges[0].edge_id == start_cand.graph_id)) {
-          auto node = trace_trip_leg.node().begin();
-          while (!(node->edge().length_km() > 0.001f)) {
-            openlr_edges.erase(openlr_edges.begin());
-            node++;
-            continue;
-          }
-        }
+        // now that we have the list of edges, handle first & last edges' offsets properly
+        auto& first_edge = openlr_edges.front();
+        first_edge.poff_start_offset = first_edge.length - matched_lengths.front();
+        first_edge.noff_start_offset = 0.f;
+
+        auto& last_edge = openlr_edges.back();
+        last_edge.noff_start_offset = last_edge.length - matched_lengths.back();
+        last_edge.poff_start_offset = 0.f;
 
         // if we made it this far and there's still edges left, we have succeeded
+        if (openlr_edges.size() == 1) {
+          LOG_WARN("[valhalla] " + openlr_string +
+                   " : Detected trivial route which wasn't caught by the trivial route handler!");
+        }
         if (openlr_edges.size()) {
           return route_dist;
         }
@@ -350,7 +354,7 @@ void match_edges(valhalla::tyr::actor_t& actor,
       }
     }
 
-    // remove duplicates
+    // remove duplicate edge IDs
     auto last = std::unique(local_edges.begin(), local_edges.end());
     local_edges.erase(last, local_edges.end());
     if (!local_edges.size()) {
@@ -359,61 +363,68 @@ void match_edges(valhalla::tyr::actor_t& actor,
       continue;
     }
 
-    // deal with poff/noff and (maybe) set the breakpoint(s) of the the first & last edge
-    auto first_edge = local_edges.begin();
-    auto first_edge_poff = static_cast<float>(first_edge->breakpoint1) / 255.f * first_edge->length;
-    if (first_edge_poff < poff_meter) {
-      first_edge++;
-      uint32_t delete_count = 0;
-      // we're skipping entire edges at the front until we're past the poff
-      while (true) {
-        delete_count++;
-        first_edge_poff += first_edge->length;
-        if (first_edge_poff > poff_meter) {
-          break;
-        }
-        first_edge++;
-        // if at this point there's no nodes left, that means we already looked at the
-        // last segment just before, this shouldn't happen
-        if (first_edge == local_edges.end()) {
-          throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
-                                   " : poff was larger than the entire matched length");
-        }
-      }
-      // remove the skipped edges, invalidates first_edge
-      local_edges.erase(local_edges.begin(), local_edges.begin() + delete_count);
-    }
-    local_edges.front().breakpoint1 = static_cast<uint8_t>(
-        ((local_edges.front().length - (first_edge_poff - poff_meter)) / local_edges.front().length) *
-        255.f);
+    // openlr offsets have a big-ish inaccuracy, allow up to 2 m snapping resolution
+    // this makes sure we rather erase 1-2 edges too many than too few
+    auto a_smaller_b = [](const float a, const float b) { return (a - (b + 2.f)) > 0; };
 
-    auto last_edge = local_edges.rbegin();
-    auto last_edge_noff = static_cast<float>(last_edge->breakpoint2) / 255.f * last_edge->length;
-    if (last_edge_noff < noff_meter) {
-      last_edge++;
-      uint32_t delete_count = 0;
-      // we're skipping entire edges at the front until we're past the poff
-      while (true) {
-        delete_count++;
-        last_edge_noff += last_edge->length;
-        if (last_edge_noff > noff_meter) {
-          break;
+    // deal with poff/noff
+    if (poff_meter) {
+      auto first_edge = local_edges.begin();
+      auto first_edge_poff = first_edge->length - first_edge->poff_start_offset;
+      if (!a_smaller_b(first_edge_poff, poff_meter)) {
+        first_edge++;
+        uint32_t delete_count = 0;
+        // we're skipping entire edges at the front until we're past the poff
+        while (true) {
+          delete_count++;
+          first_edge_poff += first_edge->length;
+          if (a_smaller_b(first_edge_poff, poff_meter)) {
+            break;
+          }
+          first_edge++;
+          // if at this point there's no nodes left, that means we already looked at the
+          // last segment just before, this shouldn't happen
+          if (first_edge == local_edges.end()) {
+            throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
+                                     " : poff was larger than the entire matched length");
+          }
         }
-        last_edge++;
-        // if at this point there's no nodes left, that means we already looked at the
-        // last segment just before, this shouldn't happen
-        if (last_edge == local_edges.rend()) {
-          throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
-                                   " : noff was larger than the entire matched length");
-        }
+        // remove the skipped edges, invalidates first_edge
+        local_edges.erase(local_edges.begin(), local_edges.begin() + delete_count);
       }
-      // remove the skipped edges
-      for (uint32_t i = 0; i < delete_count; i++) {
-        local_edges.pop_back();
-      }
+      local_edges.front().poff_start_offset =
+          std::max(local_edges.front().length - (first_edge_poff - poff_meter), 0.f);
     }
-    local_edges.back().breakpoint2 =
-        static_cast<uint8_t>(((last_edge_noff - noff_meter) / local_edges.back().length) * 255.f);
+
+    if (noff_meter) {
+      auto last_edge = local_edges.rbegin();
+      auto last_edge_noff = last_edge->length - last_edge->noff_start_offset;
+      if (!a_smaller_b(last_edge_noff, noff_meter)) {
+        last_edge++;
+        uint32_t delete_count = 0;
+        // we're skipping entire edges at the front until we're past the poff
+        while (true) {
+          delete_count++;
+          last_edge_noff += last_edge->length;
+          if (a_smaller_b(last_edge_noff, noff_meter)) {
+            break;
+          }
+          last_edge++;
+          // if at this point there's no nodes left, that means we already looked at the
+          // last segment just before, this shouldn't happen
+          if (last_edge == local_edges.rend()) {
+            throw std::runtime_error("[valhalla] " + std::string(openlr_start->GetString()) +
+                                     " : noff was larger than the entire matched length");
+          }
+        }
+        // remove the skipped edges
+        for (uint32_t i = 0; i < delete_count; i++) {
+          local_edges.pop_back();
+        }
+      }
+      local_edges.back().noff_start_offset =
+          std::max(local_edges.back().length - (last_edge_noff - noff_meter), 0.f);
+    }
 
     // insert into the outer vector
     std::move(local_edges.begin(), local_edges.end(), std::back_inserter(openlrs_edges));
