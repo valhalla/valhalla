@@ -14,34 +14,6 @@ static const std::unordered_map<vi::IncidentsAction, std::string> endpoint_to_st
      {vi::IncidentsAction::GEOJSON_MATCHES, "/geojson/matches"},
      {vi::IncidentsAction::GEOJSON_OPENLR, "/geojson/openlr"}};
 
-std::vector<vm::PointLL> get_lng_lat(std::vector<vi::OpenLrEdge>::const_iterator& openlr_edge,
-                                     vi::GraphReaderIncidents& reader,
-                                     std::vector<vi::OpenLrEdge>::const_iterator end) {
-  std::vector<vm::PointLL> coords;
-
-  vb::graph_tile_ptr tile;
-  const vb::DirectedEdge* current_de = nullptr;
-  // could be there's only one edge for a whole openlr
-  while (true) {
-    if (openlr_edge == end) {
-      break;
-    }
-    tile = reader.GetGraphTile(openlr_edge->edge_id, tile);
-    current_de = reader.directededge(openlr_edge->edge_id, tile);
-    coords.emplace_back(tile->get_node_ll(reader.GetBeginNodeId(current_de, tile)));
-    if (!openlr_edge->is_last) {
-      openlr_edge++;
-    } else {
-      break;
-    }
-  }
-  // append the last coordinate
-  tile = reader.GetGraphTile(current_de->endnode());
-  coords.emplace_back(tile->get_node_ll(current_de->endnode()));
-
-  return coords;
-}
-
 std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs_edges,
                                       vi::GraphReaderIncidents& reader) {
   rapidjson::writer_wrapper_t writer(32768); // reserve 32 kb
@@ -192,6 +164,7 @@ std::string incident_worker_t::incidents(IncidentsAction action, rapidjson::Docu
       } else {
         write_traffic({}, action);
       }
+      break;
     case IncidentsAction::UPDATE:
     case IncidentsAction::DELETE:
       // write to the tar

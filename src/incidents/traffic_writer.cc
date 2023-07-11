@@ -18,7 +18,7 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
     for (const auto& tile : reader->tile_extract_->traffic_tiles) {
       auto edge_count = (tile.second.second - HEADER_SIZE) / TRAFFIC_SIZE;
       auto base_pos = tile.second.first + HEADER_SIZE;
-      for (int i = 0; i < edge_count; i++) {
+      for (uint32_t i = 0; i < edge_count; i++) {
         *reinterpret_cast<baldr::TrafficSpeed*>(base_pos + (i * TRAFFIC_SIZE)) =
             baldr::TrafficSpeed();
       }
@@ -39,7 +39,6 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
     return a.edge_id.level() < b.edge_id.level();
   });
 
-  uint32_t count = 0;
   auto openlr_begin = openlrs_edges.begin();
   auto tile_id = baldr::GraphId{};
   char* tile_data = nullptr;
