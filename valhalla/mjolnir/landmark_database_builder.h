@@ -55,6 +55,8 @@ public:
 protected:
   sqlite3* db;
   sqlite3_stmt* stmt;
+  sqlite3_stmt* insert_stmt;
+  sqlite3_stmt* bounding_box_stmt;
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
@@ -68,6 +70,8 @@ protected:
   bool create_spatial_index();
   void close_database();
   bool connect_database();
+  bool prepare_insert_stmt();
+  bool prepare_bounding_box_stmt();
 };
 
 } // namespace mjolnir
