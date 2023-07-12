@@ -51,31 +51,8 @@ public:
                                      const double minLong,
                                      const double maxLat,
                                      const double maxLong);
-  bool test_select_query();
-  bool test_select_all();
 
-  bool open_database();
-  bool create_landmarks_table();
-  bool create_spatial_index();
-  void close_database();
-  bool connect_database();
-
-  bool test_create_test_table() {
-    sql = "CREATE TABLE test_table (id TEXT, email TEXT)";
-
-    ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
-    if (ret != SQLITE_OK) {
-      LOG_ERROR("Error: " + std::string(err_msg));
-      sqlite3_free(err_msg);
-      sqlite3_close(db);
-      return false;
-    }
-
-    LOG_INFO("Created test table");
-    return true;
-  }
-
-private:
+protected:
   sqlite3* db;
   sqlite3_stmt* stmt;
   uint32_t ret;
@@ -84,6 +61,13 @@ private:
   std::string database;
   AccessMode access_mode_;
   int open_flags = 0;
+  std::shared_ptr<void> db_conn;
+
+  bool open_database();
+  bool create_landmarks_table();
+  bool create_spatial_index();
+  void close_database();
+  bool connect_database();
 };
 
 } // namespace mjolnir

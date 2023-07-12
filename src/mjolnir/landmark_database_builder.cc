@@ -60,27 +60,8 @@ bool LandmarkDatabase::open_database() {
   }
 
   // loading SpatiaLite as an extension
-  // auto db_conn = make_spatialite_cache(db);
-  // LOG_INFO("Opened database and loaded Spatialite extension");
-
-  // ret = sqlite3_db_config(db, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION, 1, nullptr);
-  ret = sqlite3_enable_load_extension(db, 1);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("cannot enable load extension");
-    sqlite3_close(db);
-    return false;
-  }
-
-  sql = "SELECT load_extension('mod_spatialite')";
-  ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
-  if (ret != SQLITE_OK) {
-    LOG_ERROR("Error: " + std::string(err_msg));
-    sqlite3_free(err_msg);
-    sqlite3_close(db);
-    return false;
-  }
-
-  LOG_INFO("Loaded spatialite extension");
+  db_conn = make_spatialite_cache(db);
+  LOG_INFO("Opened database and loaded Spatialite extension");
 
   return true;
 }
@@ -230,49 +211,6 @@ bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<Landmark>* land
 void LandmarkDatabase::close_database() {
   sqlite3_close(db);
   LOG_INFO("Closed database");
-}
-
-static int test_callback(void* data, int argc, char** argv, char** azColName) {
-  fprintf(stderr, "%s: \n", (const char*)data);
-
-  for (int i = 0; i < argc; i++) {
-    printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-  }
-
-  printf("\n");
-  return 0;
-}
-
-bool LandmarkDatabase::test_select_query() {
-  sql = "SELECT name, type FROM landmarks where name = 'Eiffel Tower'";
-
-  const char* data = "Callback function called";
-  ret = sqlite3_exec(db, sql.c_str(), test_callback, (void*)data, &err_msg);
-
-  if (ret != SQLITE_OK) {
-    fprintf(stderr, "SQL error: %s\n", err_msg);
-    sqlite3_free(err_msg);
-    return false;
-  } else {
-    fprintf(stdout, "Operation done successfully\n");
-  }
-  return true;
-}
-
-bool LandmarkDatabase::test_select_all() {
-  sql = "SELECT name, type, X(geom), Y(geom) FROM landmarks";
-
-  const char* data = "Callback function called";
-  ret = sqlite3_exec(db, sql.c_str(), test_callback, (void*)data, &err_msg);
-
-  if (ret != SQLITE_OK) {
-    fprintf(stderr, "SQL error: %s\n", err_msg);
-    sqlite3_free(err_msg);
-    return false;
-  } else {
-    fprintf(stdout, "Operation done successfully\n");
-  }
-  return true;
 }
 
 } // end namespace mjolnir
