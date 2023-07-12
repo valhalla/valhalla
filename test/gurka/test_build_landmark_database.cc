@@ -19,10 +19,10 @@ protected:
   static void SetUpTestSuite() {
     LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
 
-    ASSERT_TRUE(db.insert_landmark("Statue of Liberty", "Monument", -74.044548, 40.689253));
-    ASSERT_TRUE(db.insert_landmark("Eiffel Tower", "Monument", 2.294481, 48.858370));
-    ASSERT_TRUE(db.insert_landmark("A", "pseudo", 5., 5.));
-    ASSERT_TRUE(db.insert_landmark("B", "pseudo", 10., 10.));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"Eiffel Tower", "Monument", 2.294481, 48.858370}));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"A", "pseudo", 5., 5.}));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"B", "pseudo", 10., 10.}));
   }
 
   static void TearDownTestSuite() {
@@ -38,18 +38,24 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
   LandmarkDatabase db(db_name, AccessMode::ReadOnly);
 
   std::vector<Landmark> landmarks = {};
-  const double minLat = 0.;
-  const double maxLat = 10.;
-  const double minLong = 0.;
-  const double maxLong = 10.;
+  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, 0, 0, 10, 10));
 
-  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, minLat, minLong, maxLat, maxLong));
-
-  EXPECT_EQ(landmarks.size(), 2); // landmarks should only have A and B
+  EXPECT_EQ(landmarks.size(), 2); // A and B
   
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + "longitude: " +
+    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
+  }
+
+  landmarks.clear();
+  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, 0, 0, 50, 50));
+
+  EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
+
+  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
+  for (const auto& landmark : landmarks) {
+    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + ", longitude: " +
              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 }

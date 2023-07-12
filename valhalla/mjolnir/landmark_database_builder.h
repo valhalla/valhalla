@@ -38,13 +38,13 @@ public:
     }
   }
   ~LandmarkDatabase() {
+    if (did_inserts && !vacuum_analyze()) {
+      LOG_ERROR("cannot do vacuum and analyze");
+    }
     close_database();
   }
 
-  bool insert_landmark(const std::string& name,
-                       const std::string& type,
-                       const double longitude,
-                       const double latitude);
+  bool insert_landmark(const Landmark& landmark);
 
   bool get_landmarks_in_bounding_box(std::vector<Landmark>* landmarks,
                                      const double minLat,
@@ -64,6 +64,7 @@ protected:
   AccessMode access_mode_;
   int open_flags = 0;
   std::shared_ptr<void> db_conn;
+  bool did_inserts = false;
 
   bool open_database();
   bool create_landmarks_table();
@@ -72,6 +73,7 @@ protected:
   bool connect_database();
   bool prepare_insert_stmt();
   bool prepare_bounding_box_stmt();
+  bool vacuum_analyze();
 };
 
 } // namespace mjolnir

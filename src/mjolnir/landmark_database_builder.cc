@@ -44,7 +44,6 @@ bool LandmarkDatabase::connect_database() {
     if (!create_spatial_index()) {
       return false;
     }
-    LOG_INFO("Created database and landmarks table");
   }
 
   if (!prepare_insert_stmt()) {
@@ -54,7 +53,6 @@ bool LandmarkDatabase::connect_database() {
     return false;
   }
 
-  LOG_INFO("Successfully connected to database");
   return true;
 }
 
@@ -68,7 +66,7 @@ bool LandmarkDatabase::open_database() {
 
   // loading SpatiaLite as an extension
   db_conn = make_spatialite_cache(db);
-  LOG_INFO("Opened database and loaded Spatialite extension");
+  LOG_INFO("opened database and loaded Spatialite extension");
 
   return true;
 }
@@ -86,7 +84,7 @@ bool LandmarkDatabase::create_landmarks_table() {
     return false;
   }
 
-  LOG_INFO("Created landmarks table");
+  LOG_INFO("created landmarks table");
 
   /* creating a POINT Geometry column */
   sql = "SELECT AddGeometryColumn('landmarks', ";
@@ -100,7 +98,7 @@ bool LandmarkDatabase::create_landmarks_table() {
     return false;
   }
 
-  LOG_INFO("Added geometry column");
+  LOG_INFO("added geometry column");
   return true;
 }
 
@@ -113,7 +111,7 @@ bool LandmarkDatabase::create_spatial_index() {
     sqlite3_close(db);
     return false;
   }
-  LOG_INFO("Created spatial index");
+  LOG_INFO("created spatial index");
   return true;
 }
 
@@ -134,41 +132,39 @@ inline bool LandmarkDatabase::prepare_insert_stmt() {
   return true;
 }
 
-bool LandmarkDatabase::insert_landmark(const std::string& name,
-                                       const std::string& type,
-                                       const double longitude,
-                                       const double latitude) {
+bool LandmarkDatabase::insert_landmark(const Landmark& landmark) {
   sqlite3_reset(insert_stmt);
   sqlite3_clear_bindings(insert_stmt);
 
-  if (name != "") {
-    sqlite3_bind_text(insert_stmt, 1, name.c_str(), name.length(), SQLITE_STATIC);
+  if (landmark.name != "") {
+    sqlite3_bind_text(insert_stmt, 1, landmark.name.c_str(), landmark.name.length(), SQLITE_STATIC);
   } else {
     sqlite3_bind_null(insert_stmt, 1);
   }
 
-  if (type != "") {
-    sqlite3_bind_text(insert_stmt, 2, type.c_str(), type.length(), SQLITE_STATIC);
+  if (landmark.type != "") {
+    sqlite3_bind_text(insert_stmt, 2, landmark.type.c_str(), landmark.type.length(), SQLITE_STATIC);
   } else {
     sqlite3_bind_null(insert_stmt, 2);
   }
 
-  sqlite3_bind_double(insert_stmt, 3, longitude);
-  sqlite3_bind_double(insert_stmt, 4, latitude);
+  sqlite3_bind_double(insert_stmt, 3, landmark.lng);
+  sqlite3_bind_double(insert_stmt, 4, landmark.lat);
 
   LOG_INFO(sqlite3_expanded_sql(insert_stmt));
 
   ret = sqlite3_step(insert_stmt);
   if (ret == SQLITE_DONE || ret == SQLITE_ROW) {
-    LOG_INFO("Inserted landmark");
+    LOG_INFO("inserted landmark");
+    did_inserts = true;
     return true;
   }
 
   LOG_ERROR("sqlite3_step() error: " + std::string(sqlite3_errmsg(db)));
-  LOG_ERROR("sqlite3_step() Name: " + name);
-  LOG_ERROR("sqlite3_step() Type: " + type);
-  LOG_ERROR("sqlite3_step() longitude: " + std::to_string(longitude));
-  LOG_ERROR("sqlite3_step() Latitude: " + std::to_string(latitude));
+  LOG_ERROR("sqlite3_step() Name: " + landmark.name);
+  LOG_ERROR("sqlite3_step() Type: " + landmark.type);
+  LOG_ERROR("sqlite3_step() longitude: " + std::to_string(landmark.lng));
+  LOG_ERROR("sqlite3_step() Latitude: " + std::to_string(landmark.lat));
 
   return false;
 }
@@ -226,7 +222,31 @@ bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<Landmark>* land
 
 void LandmarkDatabase::close_database() {
   sqlite3_close(db);
-  LOG_INFO("Closed database");
+  LOG_INFO("closed database");
+}
+
+// reclaim unused space, and optimize/update index
+bool LandmarkDatabase::vacuum_analyze() {
+  sql = "VACUUM";
+  ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return false;
+  }
+
+  sql = "ANALYZE";
+  ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);
+  if (ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(err_msg));
+    sqlite3_free(err_msg);
+    sqlite3_close(db);
+    return false;
+  }
+
+  LOG_INFO("done vacuum and analyze");
+  return true;
 }
 
 } // end namespace mjolnir
