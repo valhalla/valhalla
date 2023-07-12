@@ -72,7 +72,7 @@ These are the available filter keys. Review their [descriptions](#outputs-of-tra
 ```
 // Edge filter Keys
 edge.names
-edge.length  # can also set source/trace_percent_along
+edge.length  # can also set source/target_percent_along
 edge.speed
 edge.road_class
 edge.begin_heading
