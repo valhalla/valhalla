@@ -31,7 +31,7 @@ struct Landmark {
 
 struct LandmarkDatabase {
 public:
-  LandmarkDatabase(std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly)
+  LandmarkDatabase(const std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly)
       : db(nullptr), database(db_name), access_mode_(access_mode) {
     if (!connect_database()) {
       LOG_ERROR("cannot connect to database");
@@ -58,7 +58,7 @@ protected:
   uint32_t ret;
   char* err_msg = NULL;
   std::string sql;
-  std::string database;
+  const std::string database;
   AccessMode access_mode_;
   int open_flags = 0;
   std::shared_ptr<void> db_conn;
