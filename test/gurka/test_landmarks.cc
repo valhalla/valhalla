@@ -16,7 +16,7 @@ const std::filesystem::path file_path = db_name;
 class LandmarkDatabaseTest : public ::testing::Test {
 protected:
   static void SetUpTestSuite() {
-    LandmarkDatabase db(db_name, AccessMode::ReadWriteCreate);
+    LandmarkDatabase db(db_name, false);
 
     ASSERT_TRUE(db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
     ASSERT_TRUE(db.insert_landmark(Landmark{"Eiffel Tower", "Monument", 2.294481, 48.858370}));
@@ -34,7 +34,7 @@ protected:
 };
 
 TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
-  LandmarkDatabase db(db_name, AccessMode::ReadOnly);
+  LandmarkDatabase db(db_name, true);
 
   std::vector<Landmark> landmarks = {};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10); });

@@ -1,11 +1,10 @@
 #pragma once
 
-//#include <boost/property_tree/ptree.hpp>
+#include "filesystem.h"
 #include "mjolnir/util.h"
 
 namespace valhalla {
 namespace mjolnir {
-enum class AccessMode { ReadWriteCreate, ReadOnly, ReadWrite };
 
 struct Landmark {
   std::string name;
@@ -16,12 +15,23 @@ struct Landmark {
 
 struct LandmarkDatabase {
 public:
-  LandmarkDatabase(const std::string& db_name, AccessMode access_mode = AccessMode::ReadOnly)
-      : db(nullptr), database(db_name), access_mode_(access_mode) {
-    if (!connect_database()) {
-      LOG_ERROR("cannot connect to database");
+  LandmarkDatabase(const std::string& db_name, bool read_only) : db(nullptr), database(db_name) {
+    if (!filesystem::exists(database)) {
+      if (read_only) {
+        throw std::runtime_error("invalid option");
+      }
+      open_flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
+      if (!connect_database()) {
+        LOG_ERROR("cannot connect to database");
+      }
+    } else {
+      open_flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+      if (!connect_database()) {
+        LOG_ERROR("cannot connect to database");
+      }
     }
   }
+
   ~LandmarkDatabase() {
     if (did_inserts && !vacuum_analyze()) {
       LOG_ERROR("cannot do vacuum and analyze");
@@ -45,7 +55,6 @@ protected:
   char* err_msg = NULL;
   std::string sql;
   const std::string database;
-  AccessMode access_mode_;
   int open_flags = 0;
   std::shared_ptr<void> db_conn;
   bool did_inserts = false;

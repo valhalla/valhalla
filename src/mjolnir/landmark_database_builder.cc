@@ -1,29 +1,14 @@
-//#include <boost/property_tree/ptree.hpp>
 #include "mjolnir/landmark_database_builder.h"
 #include "mjolnir/util.h"
+
 namespace valhalla {
 namespace mjolnir {
 bool LandmarkDatabase::connect_database() {
-  switch (access_mode_) {
-    case AccessMode::ReadWriteCreate:
-      open_flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-      break;
-    case AccessMode::ReadOnly:
-      open_flags = SQLITE_OPEN_READONLY;
-      break;
-    case AccessMode::ReadWrite:
-      open_flags = SQLITE_OPEN_READWRITE;
-      break;
-    default:
-      LOG_ERROR("invalid access mode");
-      return false;
-  }
-
   if (!open_database()) {
     return false;
   }
 
-  if (access_mode_ == AccessMode::ReadWriteCreate) {
+  if (open_flags == (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)) {
     if (!create_landmarks_table()) {
       return false;
     }
