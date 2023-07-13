@@ -1215,22 +1215,30 @@ json::MapPtr banner_component(const std::string& type, const std::string& text) 
 }
 
 // Primary banners hold the most important information and supposed to be the large text in a
-// navigation app. Mostly they are used to show the main_banner of the upcoming road.
+// navigation app. Mostly they are used to show the primary_banner of the upcoming road.
 // TODO: Highway shield information could be added here as well.
-json::MapPtr primary_banner_instruction(const std::string& main_banner,
+json::MapPtr primary_banner_instruction(const std::string& primary_text,
                                         const std::string& ref,
+                                        const std::string& exit,
                                         const std::string& maneuver_type,
                                         const std::string& modifier) {
   json::MapPtr instruction = json::map({});
   json::ArrayPtr components = json::array({});
-  components->emplace_back(banner_component("text", main_banner));
+
+  if (!exit.empty()) {
+    components->emplace_back(banner_component("exit", "Exit"));
+    components->emplace_back(banner_component("exit-number", exit));
+  }
+  components->emplace_back(banner_component("text", primary_text));
   if (!ref.empty()) {
     components->emplace_back(banner_component("delimiter", "/"));
     components->emplace_back(banner_component("text", ref));
   }
   instruction->emplace("components", std::move(components));
-  instruction->emplace("text", main_banner);
-  instruction->emplace("type", maneuver_type);
+  instruction->emplace("text", primary_text);
+  if (!maneuver_type.empty()) {
+    instruction->emplace("type", maneuver_type);
+  }
   if (!modifier.empty()) {
     instruction->emplace("modifier", modifier);
   }
@@ -1239,12 +1247,12 @@ json::MapPtr primary_banner_instruction(const std::string& main_banner,
 
 // Secondary banners hold additional information which is displayed slightly smaller than the
 // primary information. They are mostly used to show the destination names on street signs.
-json::MapPtr secondary_banner_instruction(const std::string& dest) {
+json::MapPtr secondary_banner_instruction(const std::string& secondary_text) {
   json::MapPtr instruction = json::map({});
   json::ArrayPtr components = json::array({});
-  components->emplace_back(banner_component("text", dest));
+  components->emplace_back(banner_component("text", secondary_text));
   instruction->emplace("components", std::move(components));
-  instruction->emplace("text", dest);
+  instruction->emplace("text", secondary_text);
   return instruction;
 }
 
@@ -1258,30 +1266,26 @@ json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* pre
                                     valhalla::odin::EnhancedTripLeg* etp) {
   json::MapPtr instruction = nullptr;
   json::ArrayPtr lanes = nullptr;
-  for (uint32_t i = prev_maneuver->end_path_index(); i >= prev_maneuver->begin_path_index(); i--) {
-    auto edge = etp->GetPrevEdge(i);
 
-    // We only care about the lanes directly before the end of the maneuver
-    if (edge && (edge->turn_lanes_size() == 0)) {
-      break;
-    }
-    // Process turn lanes - which are stored on the previous edge to the node
-    // Check if there is an active turn lane
-    // Verify that turn lanes are not non-directional
-    if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
-        !edge->HasNonDirectionalTurnLane()) {
-      lanes = json::array({});
-      for (const auto& turn_lane : edge->turn_lanes()) {
-        auto lane = banner_component("lane", "");
-        lane->emplace("active", turn_lane.state() == TurnLane::kActive);
-        // Add active_direction for a valid & active lanes
-        if (turn_lane.state() != TurnLane::kInvalid) {
-          lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
-        }
-        lane->emplace("directions",
-                      lane_indications(edge->drive_on_right(), turn_lane.directions_mask()));
-        lanes->emplace_back(std::move(lane));
+  // We only care about the lanes directly before the end of the maneuver
+  auto edge = etp->GetPrevEdge(prev_maneuver->end_path_index());
+
+  // Process turn lanes - which are stored on the previous edge to the node
+  // Check if there is an active turn lane
+  // Verify that turn lanes are not non-directional
+  if (edge && (edge->turn_lanes_size() > 0) && edge->HasActiveTurnLane() &&
+      !edge->HasNonDirectionalTurnLane()) {
+    lanes = json::array({});
+    for (const auto& turn_lane : edge->turn_lanes()) {
+      auto lane = banner_component("lane", "");
+      lane->emplace("active", turn_lane.state() == TurnLane::kActive);
+      // Add active_direction for a valid & active lanes
+      if (turn_lane.state() != TurnLane::kInvalid) {
+        lane->emplace("active_direction", turn_lane_direction(turn_lane.active_direction()));
       }
+      lane->emplace("directions",
+                    lane_indications(edge->drive_on_right(), turn_lane.directions_mask()));
+      lanes->emplace_back(std::move(lane));
     }
   }
 
@@ -1296,13 +1300,16 @@ json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* pre
 
 // Populate the bannerInstructions within a step.
 // bannerInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
-json::ArrayPtr banner_instructions(const std::string& main_banner,
-                                   const std::string& ref,
+json::ArrayPtr banner_instructions(const std::string& name,
                                    const std::string& dest,
+                                   const std::string& ref,
                                    const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                   const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                   const bool arrive_maneuver,
                                    valhalla::odin::EnhancedTripLeg* etp,
                                    const std::string& maneuver_type,
                                    const std::string& modifier,
+                                   const std::string& exit,
                                    const double distance) {
   // bannerInstructions is an array, because there may be multiple similar banner instruction
   // objects. Mostly if the 'sub' attribute is to be added along the current step, a new
@@ -1312,14 +1319,31 @@ json::ArrayPtr banner_instructions(const std::string& main_banner,
   json::ArrayPtr banner_instructions_array = json::array({});
   json::MapPtr banner_instruction_main = json::map({});
 
+  std::string primary_text = name;
+  std::string secondary_text = dest;
+  std::string ref_ = ref;
+
+  // Find a suitable primary_text and secondary_text
+  if (primary_text.empty() && !secondary_text.empty()) {
+    primary_text = secondary_text;
+    secondary_text = std::string("");
+  }
+  if (primary_text.empty() && !ref_.empty()) {
+    primary_text = ref_;
+    ref_ = std::string("");
+  }
+  if (arrive_maneuver || primary_text.empty()) {
+    primary_text = maneuver.text_instruction();
+  }
+
   // distanceAlongGeometry is the distance along the current step from where on this
   // banner should be visible. The first banner starts at the beginning.
   banner_instruction_main->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
-  banner_instruction_main->emplace("primary", primary_banner_instruction(main_banner, ref,
+  banner_instruction_main->emplace("primary", primary_banner_instruction(primary_text, ref_, exit,
                                                                          maneuver_type, modifier));
 
-  if (!dest.empty()) {
-    banner_instruction_main->emplace("secondary", secondary_banner_instruction(dest));
+  if (!secondary_text.empty()) {
+    banner_instruction_main->emplace("secondary", secondary_banner_instruction(secondary_text));
   }
 
   json::MapPtr sub_banner = sub_banner_instruction(prev_maneuver, etp);
@@ -1329,12 +1353,13 @@ json::ArrayPtr banner_instructions(const std::string& main_banner,
     if (distance > 400) {
       banner_instruction_with_sub = json::map({});
       banner_instruction_with_sub->emplace("sub", std::move(sub_banner));
-      if (!dest.empty()) {
-        banner_instruction_with_sub->emplace("secondary", secondary_banner_instruction(dest));
+      if (!secondary_text.empty()) {
+        banner_instruction_with_sub->emplace("secondary",
+                                             secondary_banner_instruction(secondary_text));
       }
       banner_instruction_with_sub->emplace("primary",
-                                           primary_banner_instruction(main_banner, ref, maneuver_type,
-                                                                      modifier));
+                                           primary_banner_instruction(primary_text, ref_, exit,
+                                                                      maneuver_type, modifier));
       banner_instruction_with_sub->emplace("distanceAlongGeometry", json::fixed_t{400, 3});
     } else {
       banner_instruction_main->emplace("sub", std::move(sub_banner));
@@ -1627,28 +1652,25 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         }
       }
 
-      // Add banner instructions if the user requested them
-      if (options.banner_instructions()) {
-        std::string main_banner = name;
-        if (name.empty() || arrive_maneuver) {
-          main_banner = maneuver.text_instruction();
-        }
-        if (prev_step) {
-          prev_step->emplace("bannerInstructions",
-                             banner_instructions(main_banner, ref, dest, prev_maneuver, &etp,
-                                                 mnvr_type, modifier, prev_distance));
-        }
-        if (arrive_maneuver) {
-          step->emplace("bannerInstructions",
-                        banner_instructions(main_banner, ref, dest, prev_maneuver, &etp, mnvr_type,
-                                            modifier, distance));
-        }
-      }
-
       // Add exits
       std::string ex = exits(sign);
       if (!ex.empty()) {
         step->emplace("exits", ex);
+      }
+
+      // Add banner instructions if the user requested them
+      if (options.banner_instructions()) {
+        if (prev_step) {
+          prev_step->emplace("bannerInstructions",
+                             banner_instructions(name, dest, ref, prev_maneuver, maneuver,
+                                                 arrive_maneuver, &etp, mnvr_type, modifier, ex,
+                                                 prev_distance));
+        }
+        if (arrive_maneuver) {
+          step->emplace("bannerInstructions", banner_instructions(name, dest, ref, prev_maneuver,
+                                                                  maneuver, arrive_maneuver, &etp,
+                                                                  mnvr_type, modifier, ex, distance));
+        }
       }
 
       // Add junction_name if not the start maneuver
