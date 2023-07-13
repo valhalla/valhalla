@@ -19,8 +19,6 @@ void LandmarkDatabase::connect_database() {
   if (!prepare_insert_stmt() || !prepare_bounding_box_stmt()) {
     throw std::runtime_error("Failed to prepare statements");
   }
-
-  return;
 }
 
 bool LandmarkDatabase::open_database() {
@@ -214,6 +212,12 @@ bool LandmarkDatabase::vacuum_analyze() {
 
   LOG_INFO("done vacuum and analyze");
   return true;
+}
+
+void LandmarkDatabase::release_prepared_stmt() {
+  sqlite3_finalize(insert_stmt);
+  sqlite3_finalize(bounding_box_stmt);
+  LOG_INFO("released prepared statements");
 }
 
 } // end namespace mjolnir

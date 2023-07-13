@@ -32,6 +32,7 @@ public:
     if (did_inserts && !vacuum_analyze()) {
       LOG_ERROR("cannot do vacuum and analyze");
     }
+    release_prepared_stmt();
     close_database();
   }
 
@@ -44,7 +45,6 @@ public:
 
 protected:
   sqlite3* db;
-  sqlite3_stmt* stmt;
   sqlite3_stmt* insert_stmt;
   sqlite3_stmt* bounding_box_stmt;
   uint32_t ret;
@@ -63,6 +63,7 @@ protected:
   bool prepare_insert_stmt();
   bool prepare_bounding_box_stmt();
   bool vacuum_analyze();
+  void release_prepared_stmt();
 };
 
 } // namespace mjolnir
