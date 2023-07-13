@@ -3,28 +3,24 @@
 
 namespace valhalla {
 namespace mjolnir {
-bool LandmarkDatabase::connect_database() {
+void LandmarkDatabase::connect_database() {
   if (!open_database()) {
-    return false;
+    throw std::runtime_error("Cannot open database");
+    return;
   }
 
   if (open_flags == (SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE)) {
-    if (!create_landmarks_table()) {
-      return false;
-    }
-    if (!create_spatial_index()) {
-      return false;
+    if (!create_landmarks_table() || !create_spatial_index()) {
+      throw std::runtime_error("Cannot create landmarks table or spatial index");
+      return;
     }
   }
 
-  if (!prepare_insert_stmt()) {
-    return false;
-  }
-  if (!prepare_bounding_box_stmt()) {
-    return false;
+  if (!prepare_insert_stmt() || !prepare_bounding_box_stmt()) {
+    throw std::runtime_error("Failed to prepare statements");
   }
 
-  return true;
+  return;
 }
 
 bool LandmarkDatabase::open_database() {

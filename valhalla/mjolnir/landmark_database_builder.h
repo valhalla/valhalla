@@ -21,14 +21,10 @@ public:
         throw std::runtime_error("invalid option");
       }
       open_flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
-      if (!connect_database()) {
-        LOG_ERROR("cannot connect to database");
-      }
+      connect_database();
     } else {
       open_flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
-      if (!connect_database()) {
-        LOG_ERROR("cannot connect to database");
-      }
+      connect_database();
     }
   }
 
@@ -63,7 +59,7 @@ protected:
   bool create_landmarks_table();
   bool create_spatial_index();
   void close_database();
-  bool connect_database();
+  void connect_database();
   bool prepare_insert_stmt();
   bool prepare_bounding_box_stmt();
   bool vacuum_analyze();
