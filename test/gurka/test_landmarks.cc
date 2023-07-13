@@ -37,8 +37,10 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
   LandmarkDatabase db(db_name, AccessMode::ReadOnly);
 
   std::vector<Landmark> landmarks = {};
-  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, 0, 0, 10, 10));
-
+  EXPECT_NO_THROW({
+    landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10);
+  });
+  
   EXPECT_EQ(landmarks.size(), 2); // A and B
   
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
@@ -48,7 +50,9 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
   }
 
   landmarks.clear();
-  ASSERT_TRUE(db.get_landmarks_in_bounding_box(&landmarks, 0, 0, 50, 50));
+  EXPECT_NO_THROW({
+    landmarks = db.get_landmarks_in_bounding_box(0, 0, 50, 50);
+  });
 
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 

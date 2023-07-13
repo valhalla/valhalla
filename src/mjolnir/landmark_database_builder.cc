@@ -171,11 +171,12 @@ bool LandmarkDatabase::prepare_bounding_box_stmt() {
   return true;
 }
 
-bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<Landmark>* landmarks,
-                                                     const double minLat,
-                                                     const double minLong,
-                                                     const double maxLat,
-                                                     const double maxLong) {
+std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const double minLat,
+                                                                      const double minLong,
+                                                                      const double maxLat,
+                                                                      const double maxLong) {
+  std::vector<Landmark> landmarks;
+
   sqlite3_reset(bounding_box_stmt);
   sqlite3_clear_bindings(bounding_box_stmt);
 
@@ -186,32 +187,32 @@ bool LandmarkDatabase::get_landmarks_in_bounding_box(std::vector<Landmark>* land
 
   LOG_INFO(sqlite3_expanded_sql(bounding_box_stmt));
 
-  ret = sqlite3_step(bounding_box_stmt);
+  int ret = sqlite3_step(bounding_box_stmt);
   while (ret == SQLITE_ROW) {
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
     const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
-    landmarks->emplace_back(Landmark{name, type, lng, lat});
+    landmarks.emplace_back(Landmark{name, type, lng, lat});
 
     ret = sqlite3_step(bounding_box_stmt);
   }
 
-  if (ret == SQLITE_DONE || SQLITE_OK) {
-    return true;
+  if (ret != SQLITE_DONE && ret != SQLITE_OK) {
+    LOG_ERROR("Error: " + std::string(sqlite3_errmsg(db)));
+    sqlite3_close(db);
+    throw std::runtime_error("Failed to retrieve landmarks in bounding box");
   }
 
-  LOG_ERROR("Error: " + std::string(sqlite3_errmsg(db)));
-  sqlite3_close(db);
-  return false;
+  return landmarks;
 }
+
 
 void LandmarkDatabase::close_database() {
   sqlite3_close(db);
   LOG_INFO("closed database");
 }
 
-// reclaim unused space, and optimize/update index
 bool LandmarkDatabase::vacuum_analyze() {
   sql = "VACUUM";
   ret = sqlite3_exec(db, sql.c_str(), NULL, NULL, &err_msg);

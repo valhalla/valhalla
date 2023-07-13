@@ -31,11 +31,10 @@ public:
 
   bool insert_landmark(const Landmark& landmark);
 
-  bool get_landmarks_in_bounding_box(std::vector<Landmark>* landmarks,
-                                     const double minLat,
-                                     const double minLong,
-                                     const double maxLat,
-                                     const double maxLong);
+  std::vector<Landmark> get_landmarks_in_bounding_box(const double minLat,
+                                                      const double minLong,
+                                                      const double maxLat,
+                                                      const double maxLong);
 
 protected:
   sqlite3* db;
