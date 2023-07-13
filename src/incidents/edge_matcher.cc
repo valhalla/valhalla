@@ -322,6 +322,11 @@ void match_edges(valhalla::tyr::actor_t& actor,
       vi::get_locate_req(a_locate_req, a_lrp, false);
       rapidjson::Document a_res;
       a_res.Parse(actor.act(a_locate_req));
+      if (a_res.GetArray()[0]["edges"].IsNull()) {
+        LOG_ERROR("[valhalla] " + std::string(openlr_start->GetString()) +
+                  " : No edges found for 1st LRP of segment " + std::to_string(i));
+        continue;
+      }
       const auto a_ranked =
           rank_edges(a_res.GetArray()[0]["edges"].GetArray(), a_lrp, LRPOrder::FIRST);
 
@@ -331,6 +336,11 @@ void match_edges(valhalla::tyr::actor_t& actor,
       vi::get_locate_req(b_locate_req, b_lrp, true);
       rapidjson::Document b_res;
       b_res.Parse(actor.act(b_locate_req));
+      if (b_res.GetArray()[0]["edges"].IsNull()) {
+        LOG_ERROR("[valhalla] " + std::string(openlr_start->GetString()) +
+                  " : No edges found for 2nd LRP of segment " + std::to_string(i));
+        continue;
+      }
       const auto b_ranked =
           rank_edges(b_res.GetArray()[0]["edges"].GetArray(), b_lrp, LRPOrder::LAST);
 
