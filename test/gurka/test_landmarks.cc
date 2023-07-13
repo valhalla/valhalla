@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <filesystem>
+#include <gtest/gtest.h>
 
 #include "gurka.h"
 #include "mjolnir/landmark_database_builder.h"
@@ -37,12 +37,10 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
   LandmarkDatabase db(db_name, AccessMode::ReadOnly);
 
   std::vector<Landmark> landmarks = {};
-  EXPECT_NO_THROW({
-    landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10);
-  });
-  
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10); });
+
   EXPECT_EQ(landmarks.size(), 2); // A and B
-  
+
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
     LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + ", longitude: " +
@@ -50,9 +48,7 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
   }
 
   landmarks.clear();
-  EXPECT_NO_THROW({
-    landmarks = db.get_landmarks_in_bounding_box(0, 0, 50, 50);
-  });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 50, 50); });
 
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 

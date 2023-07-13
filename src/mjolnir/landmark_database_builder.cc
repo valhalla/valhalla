@@ -207,7 +207,6 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   return landmarks;
 }
 
-
 void LandmarkDatabase::close_database() {
   sqlite3_close(db);
   LOG_INFO("closed database");
