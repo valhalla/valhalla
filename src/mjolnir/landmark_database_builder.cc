@@ -19,7 +19,7 @@ bool LandmarkDatabase::connect_database() {
       return false;
   }
 
-  if (!LandmarkDatabase::open_database()) {
+  if (!open_database()) {
     return false;
   }
 
