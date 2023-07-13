@@ -2,6 +2,15 @@
 #include "filesystem.h"
 #include "mjolnir/util.h"
 
+#include "admin_lua_proc.h"
+#include "mjolnir/luatagtransform.h"
+#include <boost/property_tree/ptree.hpp>
+#include "mjolnir/osmadmindata.h"
+#include "mjolnir/osmpbfparser.h"
+#include <boost/algorithm/string.hpp>
+
+#include <utility>
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -165,6 +174,79 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
                              pimpl->last_error());
   }
 
+  return landmarks;
+}
+
+// Task 2: parse landmarks
+// anonymous namespace?
+struct landmark_callback : public OSMPBF::Callback {
+public:
+  landmark_callback(std::vector<Landmark>& landmarks) : landmarks_(landmarks) {}
+  virtual ~landmark_callback() {}
+
+  virtual void
+  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+    // Check if it is in the list of nodes used by ways ?
+    // no lua ?
+    Landmark landmark;
+
+    for (const auto& tag: tags) {
+      if (tag.first == "amenity" && !tag.second.empty()) {
+        landmark.type = tag.second;
+      }
+      if (tag.first == "name" && !tag.second.empty()) {
+        landmark.name = tag.second;
+      }
+      landmark.lng = lng;
+      landmark.lat = lat;
+    }
+
+    landmarks_.push_back(std::move(landmark));
+  }
+
+  virtual void changeset_callback(const uint64_t changeset_id) override {
+    //osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
+  }
+  
+  virtual void way_callback(const uint64_t osmid,
+                            const OSMPBF::Tags& /*tags*/,
+                            const std::vector<uint64_t>& nodes) override {
+    LOG_WARN("way callback shouldn't be called!");
+  }
+
+  virtual void relation_callback(const uint64_t osmid,
+                                 const OSMPBF::Tags& tags,
+                                 const std::vector<OSMPBF::Member>& members) {
+    LOG_WARN("relation callback shouldn't be called!");
+  }
+
+  std::vector<Landmark>& landmarks_;
+}
+
+std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& input_files) {
+  std::vector<Landmark> landmarks{};
+  landmark_callback callback(landmarks);
+
+  LOG_INFO("Parsing files...");
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  // Parse nodes.
+  LOG_INFO("Parsing nodes...");
+  for (auto& file_handle : file_handles) {
+    OSMPBF::Parser::parse(file_handle,
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
+                                                        OSMPBF::Interest::CHANGESETS),
+                          callback);
+  }
+  
   return landmarks;
 }
 

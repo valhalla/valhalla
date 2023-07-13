@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
+
 namespace valhalla {
 namespace mjolnir {
 
@@ -27,6 +29,11 @@ protected:
   struct db_pimpl;
   std::shared_ptr<db_pimpl> pimpl;
 };
+
+class LandmarkParser {
+public:
+  static std::vector<Landmark> Parse(const std::vector<std::string>& input_files);
+}
 
 } // namespace mjolnir
 
