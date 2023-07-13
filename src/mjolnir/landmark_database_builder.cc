@@ -1,20 +1,6 @@
-#include <cstdint>
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "baldr/graphconstants.h"
-#include "filesystem.h"
+//#include <boost/property_tree/ptree.hpp>
 #include "mjolnir/landmark_database_builder.h"
 #include "mjolnir/util.h"
-
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/geometries.hpp>
-#include <boost/geometry/geometries/register/point.hpp>
-#include <boost/property_tree/ptree.hpp>
-
-#include <geos_c.h>
-
 namespace valhalla {
 namespace mjolnir {
 bool LandmarkDatabase::connect_database() {
