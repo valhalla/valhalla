@@ -159,7 +159,6 @@ void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
 
   if (landmark.type != LandmarkType::NA) {
     sqlite3_bind_int(insert_stmt, 2, static_cast<int>(landmark.type));
-    // sqlite3_bind_int(insert_stmt, 2, landmark.type);
   } else {
     sqlite3_bind_null(insert_stmt, 2);
   }
@@ -192,10 +191,9 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
   int ret = sqlite3_step(bounding_box_stmt);
   while (ret == SQLITE_ROW) {
-    LandmarkType type = LandmarkType::NA;
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
-    // const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
-    // LandmarkType type = sqlite3_column_int(bounding_box_stmt, 1);
+
+    LandmarkType type = LandmarkType::NA;
     if (sqlite3_column_type(bounding_box_stmt, 1) != SQLITE_NULL) {
       type = static_cast<LandmarkType>(sqlite3_column_int(bounding_box_stmt, 1));
     }
@@ -262,8 +260,10 @@ public:
   std::vector<Landmark>& landmarks_;
 };
 
-std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& input_files) {
+bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files) {
+  // parse nodes in pbf to get landmarks
   std::vector<Landmark> landmarks{};
+
   landmark_callback callback(landmarks);
 
   LOG_INFO("Parsing files...");
@@ -285,12 +285,7 @@ std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& inpu
                           callback);
   }
 
-  return landmarks;
-}
-
-bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files) {
-  auto landmarks = LandmarkParser::Parse(input_files);
-
+  // store landmarks in database
   LandmarkDatabase db(landmark_db, false);
 
   for (const auto& landmark : landmarks) {

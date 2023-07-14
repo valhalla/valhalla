@@ -13,6 +13,35 @@ using namespace valhalla::mjolnir;
 const std::string db_name = "landmarks.db";
 const std::filesystem::path file_path = db_name;
 
+namespace {
+valhalla::gurka::map BuildPBF(const std::string& workdir) {
+  const std::string ascii_map = R"(
+      A-------B------C
+    )";
+
+  const gurka::nodes nodes = {
+      {"A", {{"name", ""}, {"amenity", "parking"}}},
+      {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
+  };
+
+  const gurka::ways ways = {
+      {"AB", {}},
+      {"BC", {}},
+  };
+
+  constexpr double gridsize = 100000;
+  auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+
+  auto pbf_filename = workdir + "/map.pbf";
+  detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
+
+  valhalla::gurka::map result;
+  result.nodes = node_layout;
+  return result;
+}
+} // namespace
+
 class LandmarkDatabaseTest : public ::testing::Test {
 protected:
   static void SetUpTestSuite() {
@@ -55,59 +84,7 @@ TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
 
-namespace {
-valhalla::gurka::map BuildPBF(const std::string& workdir) {
-  const std::string ascii_map = R"(
-      A-------B------C
-    )";
-
-  const gurka::nodes nodes = {
-      {"A", {{"name", ""}, {"amenity", "parking"}}},
-      {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
-      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
-  };
-
-  const gurka::ways ways = {
-      {"AB", {}},
-      {"BC", {}},
-  };
-
-  constexpr double gridsize = 100000;
-  auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-
-  auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
-
-  valhalla::gurka::map result;
-  result.nodes = node_layout;
-  return result;
-}
-} // namespace
-
-TEST(LandmarkTest, TestParseLandmark) {
-  const std::string workdir = "test/data/landmark";
-
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
-    EXPECT_TRUE(created);
-  }
-
-  valhalla::gurka::map landmark_map = BuildPBF(workdir);
-
-  std::vector<std::string> input_files = {workdir + "/map.pbf"};
-  auto landmarks = LandmarkParser::Parse(input_files);
-
-  EXPECT_EQ(landmarks.size(), 3);
-
-  EXPECT_TRUE(landmarks[0].type == LandmarkType::parking);
-  EXPECT_TRUE(landmarks[0].name.empty());
-  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
-  EXPECT_TRUE(landmarks[1].name == "hai di lao");
-  EXPECT_TRUE(landmarks[2].type == LandmarkType::NA);
-  EXPECT_TRUE(landmarks[2].name == "ke ji lu");
-}
-
-TEST(LandmarkTest, TestParseAndStoreLandmarks) {
+TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
   // parse and store
   const std::string workdir = "test/data/landmark";
 
@@ -129,10 +106,17 @@ TEST(LandmarkTest, TestParseAndStoreLandmarks) {
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 0, 20); });
   EXPECT_EQ(landmarks.size(), 3);
 
-  // remove test database
-  if (std::filesystem::remove(file_path)) {
-    LOG_INFO("database deleted successfully");
-  } else {
-    LOG_ERROR("error deleting database");
+  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
+  for (const auto& landmark : landmarks) {
+    LOG_INFO("name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<unsigned int>(landmark.type)) + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
+
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::parking);
+  EXPECT_TRUE(landmarks[0].name.empty());
+  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
+  EXPECT_TRUE(landmarks[1].name == "hai di lao");
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::NA);
+  EXPECT_TRUE(landmarks[2].name == "ke ji lu");
 }

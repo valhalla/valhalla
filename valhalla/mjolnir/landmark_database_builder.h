@@ -9,7 +9,7 @@
 namespace valhalla {
 namespace mjolnir {
 
-// most 15 popular landmark types
+// 15 most popular landmark types
 enum class LandmarkType : uint8_t {
   NA = 0,
   parking = 1,
@@ -48,12 +48,6 @@ public:
 protected:
   struct db_pimpl;
   std::shared_ptr<db_pimpl> pimpl;
-};
-
-// class?
-struct LandmarkParser {
-public:
-  static std::vector<Landmark> Parse(const std::vector<std::string>& input_files);
 };
 
 bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files);
