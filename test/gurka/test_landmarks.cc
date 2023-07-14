@@ -37,14 +37,15 @@ protected:
 TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   LandmarkDatabase db(db_name, true);
 
-  std::vector<Landmark> landmarks = {};
+  std::vector<Landmark> landmarks{};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10); });
 
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + ", longitude: " +
+    LOG_INFO("name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<unsigned int>(landmark.type)) + ", longitude: " +
              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 
@@ -52,12 +53,6 @@ TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 50, 50); });
 
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
-
-  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + landmark.name + ", type: " + landmark.type + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
 }
 
 namespace {
@@ -104,11 +99,11 @@ TEST(LandmarkTest, TestParseLandmark) {
 
   EXPECT_EQ(landmarks.size(), 3);
 
-  EXPECT_TRUE(landmarks[0].type == "parking");
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::parking);
   EXPECT_TRUE(landmarks[0].name.empty());
-  EXPECT_TRUE(landmarks[1].type == "restaurant");
+  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
   EXPECT_TRUE(landmarks[1].name == "hai di lao");
-  EXPECT_TRUE(landmarks[2].type.empty());
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::NA);
   EXPECT_TRUE(landmarks[2].name == "ke ji lu");
 }
 

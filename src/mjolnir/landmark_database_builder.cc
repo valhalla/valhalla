@@ -10,6 +10,33 @@ namespace mjolnir {
 =======
 const std::string landmark_db = "landmarks.db";
 
+static const std::unordered_map<std::string, LandmarkType> str_type_map = {
+    {"parking", LandmarkType::parking},
+    {"bench", LandmarkType::bench},
+    {"parking_space", LandmarkType::parking_space},
+    {"place_of_worship", LandmarkType::place_of_worship},
+    {"restaurant", LandmarkType::restaurant},
+    {"waste_basket", LandmarkType::waste_basket},
+    {"bicycle_parking", LandmarkType::bicycle_parking},
+    {"fast_food", LandmarkType::fast_food},
+    {"cafe", LandmarkType::cafe},
+    {"fuel", LandmarkType::fuel},
+    {"shelter", LandmarkType::shelter},
+    {"recycling", LandmarkType::recycling},
+    {"toilets", LandmarkType::toilets},
+    {"bank", LandmarkType::bank},
+    {"pharmacy", LandmarkType::pharmacy},
+};
+
+LandmarkType string_to_landmark_type(const std::string& landmark_type_str) {
+  auto it = str_type_map.find(landmark_type_str);
+  if (it != str_type_map.end()) {
+    return it->second;
+  }
+  // default value if landmark type is not found or empty
+  return LandmarkType::NA;
+}
+
 void LandmarkDatabase::connect_database() {
   if (!open_database()) {
     throw std::runtime_error("Cannot open database");
@@ -130,8 +157,9 @@ void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
     sqlite3_bind_null(insert_stmt, 1);
   }
 
-  if (landmark.type != "") {
-    sqlite3_bind_text(insert_stmt, 2, landmark.type.c_str(), landmark.type.length(), SQLITE_STATIC);
+  if (landmark.type != LandmarkType::NA) {
+    sqlite3_bind_int(insert_stmt, 2, static_cast<int>(landmark.type));
+    // sqlite3_bind_int(insert_stmt, 2, landmark.type);
   } else {
     sqlite3_bind_null(insert_stmt, 2);
   }
@@ -164,12 +192,18 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
   int ret = sqlite3_step(bounding_box_stmt);
   while (ret == SQLITE_ROW) {
+    LandmarkType type = LandmarkType::NA;
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
-    const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
+    // const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
+    // LandmarkType type = sqlite3_column_int(bounding_box_stmt, 1);
+    if (sqlite3_column_type(bounding_box_stmt, 1) != SQLITE_NULL) {
+      type = static_cast<LandmarkType>(sqlite3_column_int(bounding_box_stmt, 1));
+    }
+
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
 
-    landmarks.emplace_back(Landmark{name ? name : "", type ? type : "", lng, lat});
+    landmarks.emplace_back(Landmark{name ? name : "", type, lng, lat});
 
     ret = sqlite3_step(bounding_box_stmt);
   }
@@ -196,8 +230,9 @@ public:
     Landmark landmark;
 
     for (const auto& tag : tags) {
-      if (tag.first == "amenity" && !tag.second.empty()) {
-        landmark.type = tag.second;
+      if (tag.first == "amenity") {
+        // if amenity is empty will return LandmarkType::NA
+        landmark.type = string_to_landmark_type(tag.second);
       }
       if (tag.first == "name" && !tag.second.empty()) {
         landmark.name = tag.second;
