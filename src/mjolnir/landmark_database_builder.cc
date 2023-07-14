@@ -174,15 +174,17 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 // anonymous namespace?
 struct landmark_callback : public OSMPBF::Callback {
 public:
-  landmark_callback(std::vector<Landmark>& landmarks) : landmarks_(landmarks) {}
-  virtual ~landmark_callback() {}
+  landmark_callback(std::vector<Landmark>& landmarks) : landmarks_(landmarks) {
+  }
+  virtual ~landmark_callback() {
+  }
 
   virtual void
   node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
     // Check if it is in the list of nodes used by ways ?
     Landmark landmark;
 
-    for (const auto& tag: tags) {
+    for (const auto& tag : tags) {
       if (tag.first == "amenity" && !tag.second.empty()) {
         landmark.type = tag.second;
       }
@@ -197,9 +199,9 @@ public:
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
-    //osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
+    // osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
   }
-  
+
   virtual void way_callback(const uint64_t osmid,
                             const OSMPBF::Tags& /*tags*/,
                             const std::vector<uint64_t>& nodes) override {
@@ -237,7 +239,7 @@ std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& inpu
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
   }
-  
+
   return landmarks;
 }
 

@@ -61,34 +61,33 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
 }
 
 namespace {
-  valhalla::gurka::map BuildPBF(const std::string& workdir) {
-    const std::string ascii_map = R"(
+valhalla::gurka::map BuildPBF(const std::string& workdir) {
+  const std::string ascii_map = R"(
       A-------B------C
     )";
 
-    const gurka::nodes nodes = {
+  const gurka::nodes nodes = {
       {"A", {{"name", ""}, {"amenity", "parking"}}},
       {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
       {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
-    };
+  };
 
-    const gurka::ways ways = {
+  const gurka::ways ways = {
       {"AB", {}},
       {"BC", {}},
-    };
+  };
 
-    constexpr double gridsize = 100000;
-    auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  constexpr double gridsize = 100000;
+  auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
-    auto pbf_filename = workdir + "/map.pbf";
-    detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
+  auto pbf_filename = workdir + "/map.pbf";
+  detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
 
-    valhalla::gurka::map result;
-    result.nodes = node_layout;
-    return result;
-  }
+  valhalla::gurka::map result;
+  result.nodes = node_layout;
+  return result;
 }
-
+} // namespace
 
 TEST(LandmarkParserTest, TestParseLandmark) {
   const std::string workdir = "test/data/landmark";
