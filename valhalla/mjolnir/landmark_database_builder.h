@@ -1,7 +1,8 @@
 #pragma once
 
-#include "filesystem.h"
-#include "mjolnir/util.h"
+#include <string>
+#include <memory>
+#include <vector>
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,7 +17,6 @@ struct Landmark {
 struct LandmarkDatabase {
 public:
   LandmarkDatabase(const std::string& db_name, bool read_only);
-  ~LandmarkDatabase();
   void insert_landmark(const Landmark& landmark);
   std::vector<Landmark> get_landmarks_in_bounding_box(const double minLat,
                                                       const double minLong,
@@ -25,13 +25,7 @@ public:
 
 protected:
   struct db_pimpl;
-  std::unique_ptr<db_pimpl> pimpl;
-
-  sqlite3* db;
-  sqlite3_stmt* insert_stmt;
-  sqlite3_stmt* bounding_box_stmt;
-  std::shared_ptr<void> spatial_lite;
-  bool did_inserts = false;
+  std::shared_ptr<db_pimpl> pimpl;
 };
 
 } // namespace mjolnir
