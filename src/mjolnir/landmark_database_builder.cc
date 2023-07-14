@@ -192,7 +192,7 @@ public:
   }
 
   virtual void
-  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
     Landmark landmark;
 
     for (const auto& tag : tags) {
@@ -212,15 +212,15 @@ public:
   virtual void changeset_callback(const uint64_t changeset_id) override {
   }
 
-  virtual void way_callback(const uint64_t osmid,
+  virtual void way_callback(const uint64_t /*osmid*/,
                             const OSMPBF::Tags& /*tags*/,
-                            const std::vector<uint64_t>& nodes) override {
+                            const std::vector<uint64_t>& /*nodes*/) override {
     LOG_WARN("way callback shouldn't be called!");
   }
 
-  virtual void relation_callback(const uint64_t osmid,
-                                 const OSMPBF::Tags& tags,
-                                 const std::vector<OSMPBF::Member>& members) override {
+  virtual void relation_callback(const uint64_t /*osmid*/,
+                                 const OSMPBF::Tags& /*tags*/,
+                                 const std::vector<OSMPBF::Member>& /*members*/) override {
     LOG_WARN("relation callback shouldn't be called!");
   }
 
