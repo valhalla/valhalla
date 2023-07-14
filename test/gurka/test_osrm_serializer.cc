@@ -522,34 +522,37 @@ TEST(Standalone, HeadingNumberAutoRoute) {
 TEST(Standalone, BannerInstructions) {
   const std::string ascii_map = R"(
     A-------------1-B---X
-                    |
-                    2
-                    |
-    Y---------------C---D
-                    Z
+                     \
+                      \-2
+                        |
+    Y-------------------C---D
+                        Z
   )";
 
-  const gurka::ways ways =
-      {{"A1", {{"name", "Alley Broadway"}, {"highway", "primary"}}},
-       {"1B",
-        {{"name", "Alley Broadway"},
-         {"highway", "primary"},
-         {"lanes", "2"},
-         {"turn:lanes", "through|through;right"}}},
-       {"B2", {{"name", "Broadway Course"}, {"highway", "primary"}, {"destination", "Destiny Town"}}},
-       {"2C",
-        {{"name", "Broadway Course"},
-         {"highway", "primary"},
-         {"destination", "Destiny Town"},
-         {"lanes", "2"},
-         {"turn:lanes", "left|right"}}},
-       {"CD", {{"name", "Course Drive"}, {"highway", "primary"}, {"ref", "R2"}}},
-       {"BX", {{"highway", "primary"}}},
-       {"CY", {{"highway", "primary"}}},
-       {"CZ", {{"highway", "primary"}}}};
-
+  const gurka::ways ways = {{"A1", {{"name", "Alley Broadway"}, {"highway", "motorway"}}},
+                            {"1B",
+                             {{"name", "Alley Broadway"},
+                              {"highway", "motorway"},
+                              {"lanes", "2"},
+                              {"turn:lanes", "through|through;slight_right"}}},
+                            {"B2",
+                             {{"name", "Broadway Course"},
+                              {"highway", "motorway_link"},
+                              {"destination", "Destiny Town"}}},
+                            {"2C",
+                             {{"name", "Broadway Course"},
+                              {"highway", "motorway_link"},
+                              {"destination", "Destiny Town"},
+                              {"lanes", "2"},
+                              {"turn:lanes", "left|right"}}},
+                            {"CD", {{"name", "Course Drive"}, {"highway", "primary"}, {"ref", "R2"}}},
+                            {"BX", {{"highway", "motorway"}}},
+                            {"CY", {{"highway", "primary"}}},
+                            {"CZ", {{"highway", "primary"}}}};
+  const gurka::nodes nodes = {{"B", {{"highway", "motorway_junction"}, {"ref", "10"}}}};
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50, {0, 0});
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_banner_instructions");
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/osrm_serializer_banner_instructions");
 
   auto from = "A";
   auto to = "D";
@@ -575,6 +578,8 @@ TEST(Standalone, BannerInstructions) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("text"));
+      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
+      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
     }
   }
 
@@ -586,15 +591,27 @@ TEST(Standalone, BannerInstructions) {
 
   // validate first step's first bannerInstructions' primary instructions
   // "primary": {
-  //   "type": "turn",
-  //   "modifier": "right",
+  //   "type": "off ramp",
+  //   "modifier": "slight_right",
   //   "text": "Broadway Course",
-  //   "components": [{"text": "Broadway Course","type": "text"}]
+  //   "components": [
+  //     {"text": "Exit","type": "text"},
+  //     {"text": "10","type": "exit-number"},
+  //     {"text": "Broadway Course","type": "text"}
+  //   ]
   // },
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
-  EXPECT_STREQ(primary_0["type"].GetString(), "turn");
-  EXPECT_STREQ(primary_0["modifier"].GetString(), "right");
+  EXPECT_STREQ(primary_0["type"].GetString(), "off ramp");
+  EXPECT_STREQ(primary_0["modifier"].GetString(), "slight right");
   EXPECT_STREQ(primary_0["text"].GetString(), "Broadway Course");
+  EXPECT_STREQ(primary_0["text"].GetString(), "Broadway Course");
+  EXPECT_EQ(primary_0["components"].GetArray().Size(), 3);
+  EXPECT_STREQ(primary_0["components"][0]["type"].GetString(), "exit");
+  EXPECT_STREQ(primary_0["components"][0]["text"].GetString(), "Exit");
+  EXPECT_STREQ(primary_0["components"][1]["type"].GetString(), "exit-number");
+  EXPECT_STREQ(primary_0["components"][1]["text"].GetString(), "10");
+  EXPECT_STREQ(primary_0["components"][2]["type"].GetString(), "text");
+  EXPECT_STREQ(primary_0["components"][2]["text"].GetString(), "Broadway Course");
 
   // validate the first step's secondary instructions
   // "secondary": {
@@ -626,10 +643,10 @@ TEST(Standalone, BannerInstructions) {
   //       "type": "lane"
   //     },
   //     {
-  //       "active_direction": "right",
+  //       "active_direction": "slight right",
   //       "active": true,
   //       "text": "",
-  //       "directions": ["straight","right"],
+  //       "directions": ["straight","slight right"],
   //       "type": "lane"
   //     }
   //   ]
@@ -650,13 +667,14 @@ TEST(Standalone, BannerInstructions) {
   EXPECT_STREQ(sub_0["components"][0]["directions"][0].GetString(), "straight");
   ASSERT_FALSE(sub_0["components"][0]["active"].GetBool());
   EXPECT_STREQ(sub_0["components"][1]["directions"][0].GetString(), "straight");
-  EXPECT_STREQ(sub_0["components"][1]["directions"][1].GetString(), "right");
-  EXPECT_STREQ(sub_0["components"][1]["active_direction"].GetString(), "right");
+  EXPECT_STREQ(sub_0["components"][1]["directions"][1].GetString(), "slight right");
+  EXPECT_STREQ(sub_0["components"][1]["active_direction"].GetString(), "slight right");
   ASSERT_TRUE(sub_0["components"][1]["active"].GetBool());
 
   // validate second step's primary instructions
   EXPECT_EQ(steps[1]["bannerInstructions"].GetArray().Size(), 1);
-  ASSERT_EQ(steps[1]["bannerInstructions"][0]["distanceAlongGeometry"].GetFloat(), 200);
+  EXPECT_GT(steps[1]["bannerInstructions"][0]["distanceAlongGeometry"].GetFloat(), 310);
+  EXPECT_LT(steps[1]["bannerInstructions"][0]["distanceAlongGeometry"].GetFloat(), 340);
   auto primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
   EXPECT_STREQ(primary_1["type"].GetString(), "turn");
   EXPECT_STREQ(primary_1["modifier"].GetString(), "left");
