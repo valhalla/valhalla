@@ -1094,7 +1094,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Set node id (OSM node id) if requested
   if (controller.attributes.at(kEdgeNodeId) && start_tile->has_osmids_for_nodes()) {
-    trip_edge->set_osmid(start_tile->osmid_for_node(start_node_idx));
+    trip_edge->set_osmid(trip_node->osmid());
   }
 
   // Set weighted grade if requested
@@ -1510,6 +1510,10 @@ void TripLegBuilder::Build(
 
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
+	// Edge start node is the end node of the opposing edge of the current edge
+	// TODO: we only need this node if there is a discontinuity in the edges
+	// i.e. we 'teleport' from one edge to another due to an infeasibility
+	GraphId edgestartnode = graphtile->directededge(graphtile->node(directededge->endnode())->edge_index() + directededge->opp_index())->endnode();
     graphreader.GetGraphTile(startnode, start_tile);
     if (start_tile == nullptr) {
       throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
@@ -1576,7 +1580,7 @@ void TripLegBuilder::Build(
 
     // Set node id (OSM node id) if requested
     if (controller.attributes.at(kNodeNodeId) && start_tile->has_osmids_for_nodes()) {
-      trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+      trip_node->set_osmid(start_tile->osmid_for_node(edgestartnode));
     }
 
     // Add multi modal stuff

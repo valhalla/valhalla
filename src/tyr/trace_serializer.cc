@@ -324,10 +324,10 @@ void serialize_edges(const AttributesController& controller,
           writer("transition_time", node.cost().transition_cost().seconds());
         }
         if (controller(kNodeNodeId)) {
-          if (node.has_osmid_case()) {
-            writer("node_id", static_cast<uint64_t>(node.osmid()));
-          } else if (edge.has_end_osmid_case()) {
+          if (edge.has_end_osmid_case()) {
             writer("node_id", static_cast<uint64_t>(edge.end_osmid()));
+          } else if (node.has_osmid_case()) {
+            writer("node_id", static_cast<uint64_t>(node.osmid()));
           }
         }
 
