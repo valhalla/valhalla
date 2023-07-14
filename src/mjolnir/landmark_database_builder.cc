@@ -220,7 +220,7 @@ public:
 
   virtual void relation_callback(const uint64_t osmid,
                                  const OSMPBF::Tags& tags,
-                                 const std::vector<OSMPBF::Member>& members) {
+                                 const std::vector<OSMPBF::Member>& members) override {
     LOG_WARN("relation callback shouldn't be called!");
   }
 
