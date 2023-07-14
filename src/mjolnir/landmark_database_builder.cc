@@ -1,7 +1,6 @@
 #include "mjolnir/landmark_database_builder.h"
-#include "mjolnir/util.h"
 #include "filesystem.h"
-
+#include "mjolnir/util.h"
 
 namespace valhalla {
 namespace mjolnir {
@@ -16,7 +15,7 @@ struct LandmarkDatabase::db_pimpl {
   std::shared_ptr<void> spatial_lite;
   bool vacuum_analyze = false;
 
-  db_pimpl(const std::string& db_name, bool read_only): insert_stmt(nullptr) {
+  db_pimpl(const std::string& db_name, bool read_only) : insert_stmt(nullptr) {
     // figure out if we need to create it or can just open it up
     auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
     if (!filesystem::exists(db_name)) {
@@ -38,7 +37,8 @@ struct LandmarkDatabase::db_pimpl {
     char* err_msg = nullptr;
     if (flags & SQLITE_OPEN_CREATE) {
       // make the table
-      const char* table = "SELECT InitSpatialMetaData(1); CREATE TABLE IF NOT EXISTS landmarks (name TEXT, type TEXT)";
+      const char* table =
+          "SELECT InitSpatialMetaData(1); CREATE TABLE IF NOT EXISTS landmarks (name TEXT, type TEXT)";
       ret = sqlite3_exec(db, table, NULL, NULL, &err_msg);
       if (ret != SQLITE_OK) {
         sqlite3_free(err_msg);
@@ -62,20 +62,24 @@ struct LandmarkDatabase::db_pimpl {
       }
 
       // prep the insert statement
-      const char* insert = "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
+      const char* insert =
+          "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
       ret = sqlite3_prepare_v2(db, insert, strlen(insert), &insert_stmt, NULL);
       if (ret != SQLITE_OK)
-        throw std::runtime_error("Sqlite prepared insert statement error: " + std::string(sqlite3_errmsg(db)));
+        throw std::runtime_error("Sqlite prepared insert statement error: " +
+                                 std::string(sqlite3_errmsg(db)));
     }
 
     // prep the select statement
-    const char* select = "SELECT name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
+    const char* select =
+        "SELECT name, type, X(geom), Y(geom) FROM landmarks WHERE ST_Covers(BuildMbr(?, ?, ?, ?, 4326), geom)";
     ret = sqlite3_prepare_v2(db, select, strlen(select), &bounding_box_stmt, NULL);
     if (ret != SQLITE_OK) {
-      throw std::runtime_error("Sqlite prepared select statement error: " + std::string(sqlite3_errmsg(db)));
+      throw std::runtime_error("Sqlite prepared select statement error: " +
+                               std::string(sqlite3_errmsg(db)));
     }
   }
-  ~db_pimpl(){
+  ~db_pimpl() {
     char* err_msg = nullptr;
     if (vacuum_analyze && sqlite3_exec(db, "VACUUM", NULL, NULL, &err_msg) != SQLITE_OK) {
       sqlite3_free(err_msg);
@@ -96,7 +100,8 @@ struct LandmarkDatabase::db_pimpl {
   }
 };
 
-LandmarkDatabase::LandmarkDatabase(const std::string& db_name, bool read_only): pimpl(new db_pimpl(db_name, read_only)) {
+LandmarkDatabase::LandmarkDatabase(const std::string& db_name, bool read_only)
+    : pimpl(new db_pimpl(db_name, read_only)) {
 }
 
 void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
@@ -156,7 +161,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   }
 
   if (ret != SQLITE_DONE && ret != SQLITE_OK) {
-    throw std::runtime_error("Sqlite could not query landmarks in bounding box: " + pimpl->last_error());
+    throw std::runtime_error("Sqlite could not query landmarks in bounding box: " +
+                             pimpl->last_error());
   }
 
   return landmarks;

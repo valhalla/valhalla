@@ -18,7 +18,8 @@ protected:
   static void SetUpTestSuite() {
     LandmarkDatabase db(db_name, false);
 
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
+    ASSERT_NO_THROW(
+        db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", "Monument", 2.294481, 48.858370}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", "pseudo", 5., 5.}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", "pseudo", 10., 10.}));
