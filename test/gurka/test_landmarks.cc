@@ -59,3 +59,56 @@ TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 }
+
+namespace {
+  valhalla::gurka::map BuildPBF(const std::string& workdir) {
+    const std::string ascii_map = R"(
+      A-------B------C
+    )";
+
+    const gurka::nodes nodes = {
+      {"A", {{"name", ""}, {"amenity", "parking"}}},
+      {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
+    };
+
+    const gurka::ways ways = {
+      {"AB", {}},
+      {"BC", {}},
+    };
+
+    constexpr double gridsize = 100000;
+    auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+
+    auto pbf_filename = workdir + "/map.pbf";
+    detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
+
+    valhalla::gurka::map result;
+    result.nodes = node_layout;
+    return result;
+  }
+}
+
+
+TEST(LandmarkParserTest, TestParseLandmark) {
+  const std::string workdir = "test/data/landmark";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  valhalla::gurka::map landmark_map = BuildPBF(workdir);
+
+  std::vector<std::string> input_files = {workdir + "/map.pbf"};
+  auto landmarks = LandmarkParser::Parse(input_files);
+
+  EXPECT_EQ(landmarks.size(), 3);
+
+  EXPECT_TRUE(landmarks[0].type == "parking");
+  EXPECT_TRUE(landmarks[0].name.empty());
+  EXPECT_TRUE(landmarks[1].type == "restaurant");
+  EXPECT_TRUE(landmarks[1].name == "hai di lao");
+  EXPECT_TRUE(landmarks[2].type.empty());
+  EXPECT_TRUE(landmarks[2].name == "ke ji lu");
+}

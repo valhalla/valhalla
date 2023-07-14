@@ -2,14 +2,7 @@
 #include "filesystem.h"
 #include "mjolnir/util.h"
 
-#include "admin_lua_proc.h"
-#include "mjolnir/luatagtransform.h"
-#include <boost/property_tree/ptree.hpp>
-#include "mjolnir/osmadmindata.h"
 #include "mjolnir/osmpbfparser.h"
-#include <boost/algorithm/string.hpp>
-
-#include <utility>
 
 namespace valhalla {
 namespace mjolnir {
@@ -187,7 +180,6 @@ public:
   virtual void
   node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
     // Check if it is in the list of nodes used by ways ?
-    // no lua ?
     Landmark landmark;
 
     for (const auto& tag: tags) {
@@ -221,7 +213,7 @@ public:
   }
 
   std::vector<Landmark>& landmarks_;
-}
+};
 
 std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& input_files) {
   std::vector<Landmark> landmarks{};
@@ -238,7 +230,6 @@ std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& inpu
     }
   }
 
-  // Parse nodes.
   LOG_INFO("Parsing nodes...");
   for (auto& file_handle : file_handles) {
     OSMPBF::Parser::parse(file_handle,
