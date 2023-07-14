@@ -6,7 +6,6 @@
 
 namespace valhalla {
 namespace mjolnir {
-
 struct Landmark {
   std::string name;
   std::string type;
@@ -33,6 +32,8 @@ struct LandmarkParser {
 public:
   static std::vector<Landmark> Parse(const std::vector<std::string>& input_files);
 };
+
+bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files);
 
 } // namespace mjolnir
 

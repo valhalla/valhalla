@@ -34,7 +34,7 @@ protected:
   }
 };
 
-TEST_F(LandmarkDatabaseTest, TestBoundingBoxQuery) {
+TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   LandmarkDatabase db(db_name, true);
 
   std::vector<Landmark> landmarks = {};
@@ -89,7 +89,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 }
 } // namespace
 
-TEST(LandmarkParserTest, TestParseLandmark) {
+TEST(LandmarkTest, TestParseLandmark) {
   const std::string workdir = "test/data/landmark";
 
   if (!filesystem::exists(workdir)) {
@@ -110,4 +110,34 @@ TEST(LandmarkParserTest, TestParseLandmark) {
   EXPECT_TRUE(landmarks[1].name == "hai di lao");
   EXPECT_TRUE(landmarks[2].type.empty());
   EXPECT_TRUE(landmarks[2].name == "ke ji lu");
+}
+
+TEST(LandmarkTest, TestParseAndStoreLandmarks) {
+  // parse and store
+  const std::string workdir = "test/data/landmark";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  valhalla::gurka::map landmark_map = BuildPBF(workdir);
+
+  std::vector<std::string> input_files = {workdir + "/map.pbf"};
+
+  EXPECT_TRUE(BuildLandmarkFromPBF(input_files));
+
+  // check
+  std::vector<Landmark> landmarks{};
+  LandmarkDatabase db(db_name, true);
+
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 0, 20); });
+  EXPECT_EQ(landmarks.size(), 3);
+
+  // remove test database
+  if (std::filesystem::remove(file_path)) {
+    LOG_INFO("database deleted successfully");
+  } else {
+    LOG_ERROR("error deleting database");
+  }
 }

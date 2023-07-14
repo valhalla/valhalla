@@ -6,6 +6,16 @@
 
 namespace valhalla {
 namespace mjolnir {
+<<<<<<< HEAD
+=======
+const std::string landmark_db = "landmarks.db";
+
+void LandmarkDatabase::connect_database() {
+  if (!open_database()) {
+    throw std::runtime_error("Cannot open database");
+    return;
+  }
+>>>>>>> 5bb48a1b9 (add BuildLandmarkFromPBF function: parse landmarks from pbf and store them in database)
 
 // TODO: this can be a utility and be more generic with a few more options, we could make the prepared
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
@@ -158,7 +168,9 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
     const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
-    landmarks.emplace_back(Landmark{name, type, lng, lat});
+
+    landmarks.emplace_back(Landmark{name ? name : "", type ? type : "", lng, lat});
+
     ret = sqlite3_step(bounding_box_stmt);
   }
 
@@ -181,7 +193,6 @@ public:
 
   virtual void
   node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
-    // Check if it is in the list of nodes used by ways ?
     Landmark landmark;
 
     for (const auto& tag : tags) {
@@ -199,7 +210,6 @@ public:
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
-    // osm_admin_data_.max_changeset_id_ = std::max(osm_admin_data_.max_changeset_id_, changeset_id);
   }
 
   virtual void way_callback(const uint64_t osmid,
@@ -241,6 +251,21 @@ std::vector<Landmark> LandmarkParser::Parse(const std::vector<std::string>& inpu
   }
 
   return landmarks;
+}
+
+bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files) {
+  auto landmarks = LandmarkParser::Parse(input_files);
+
+  LandmarkDatabase db(landmark_db, false);
+
+  for (const auto& landmark : landmarks) {
+    if (!db.insert_landmark(landmark)) {
+      LOG_ERROR("cannot insert landmark");
+      return false;
+    }
+  }
+
+  return true;
 }
 
 } // end namespace mjolnir
