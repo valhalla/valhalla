@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include "gurka.h"
-#include "mjolnir/landmark_database_builder.h"
+#include "mjolnir/landmark_builder.h"
 #include "test/test.h"
 
 using namespace valhalla;
@@ -47,20 +47,11 @@ protected:
   static void SetUpTestSuite() {
     LandmarkDatabase db(db_name, false);
 
-<<<<<<< HEAD
     ASSERT_NO_THROW(
-        db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", "Monument", 2.294481, 48.858370}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", "pseudo", 5., 5.}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", "pseudo", 10., 10.}));
-=======
-    ASSERT_TRUE(db.insert_landmark(
-        Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
-    ASSERT_TRUE(
-        db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
-    ASSERT_TRUE(db.insert_landmark(Landmark{"A", LandmarkType::bank, 5., 5.}));
-    ASSERT_TRUE(db.insert_landmark(Landmark{"B", LandmarkType::null, 10., 10.}));
->>>>>>> 89eace22a (update LandmarkType to include only obvious landmarks for vehicle routing)
+        db.insert_landmark(Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", LandmarkType::bank, 5., 5.}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::null, 10., 10.}));
   }
 
   static void TearDownTestSuite() {
