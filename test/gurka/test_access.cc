@@ -570,3 +570,52 @@ TEST(Standalone, RouteOnPrivateAccess) {
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG"});
   }
 }
+
+
+TEST(Standalone, AccessMotorVehicle) {
+  constexpr double gridsize_metres = 10;
+
+  const std::string ascii_map = R"(
+          A--B--C-D-E
+                |   |
+                F   |
+                |   |
+                H---G
+    )";
+
+  const gurka::ways ways = {
+      {"ABCDE", {{"highway", "primary"}, {"motor_vehicle:forward", "yes"}, {"motor_vehicle:backward", "yes"}}},
+      {"CFH", {{"highway", "primary"}, {"motor_vehicle:forward", "no"}, {"motor_vehicle:backward", "yes"}}},
+      {"HG", {{"highway", "primary"}, {"motor_vehicle:forward", "yes"}, {"motor_vehicle:backward", "yes"}}},
+      {"EG", {{"highway", "primary"}, {"motor_vehicle:forward", "yes"}, {"motor_vehicle:backward", "no"}}},
+  };
+
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_motor_vehicle", build_config);
+  for (auto& c : costing) {
+    // no problem forward for everyone
+    auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, c);
+    gurka::assert::raw::expect_path(result, {"ABCDE", "EG"});
+
+    // reverse the motor vehicles need to go around
+    result = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, c);
+    if (c == "bicycle" || c == "pedestrian")
+      gurka::assert::raw::expect_path(result, {"ABCDE", "EG"});
+    else
+      gurka::assert::raw::expect_path(result, {"HG","CFH","ABCDE"});
+
+    // no problem reverse for everyone
+    result = gurka::do_action(valhalla::Options::route, map, {"G", "F"}, c);
+    gurka::assert::raw::expect_path(result, {"HG", "CFH"});
+
+    // forward the motor vehicles need to go around
+    result = gurka::do_action(valhalla::Options::route, map, {"F", "G"}, c);
+    if (c == "bicycle" || c == "pedestrian")
+      gurka::assert::raw::expect_path(result, {"CFH", "HG"});
+    else
+      gurka::assert::raw::expect_path(result, {"CFH","ABCDE","EG"});
+  }
+}
