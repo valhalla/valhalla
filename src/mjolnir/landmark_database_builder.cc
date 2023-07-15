@@ -6,43 +6,7 @@
 
 namespace valhalla {
 namespace mjolnir {
-<<<<<<< HEAD
-=======
 const std::string landmark_db = "landmarks.db";
-
-static const std::unordered_map<std::string, LandmarkType> str_type_map = {
-    {"parking", LandmarkType::parking},
-    {"bench", LandmarkType::bench},
-    {"parking_space", LandmarkType::parking_space},
-    {"place_of_worship", LandmarkType::place_of_worship},
-    {"restaurant", LandmarkType::restaurant},
-    {"waste_basket", LandmarkType::waste_basket},
-    {"bicycle_parking", LandmarkType::bicycle_parking},
-    {"fast_food", LandmarkType::fast_food},
-    {"cafe", LandmarkType::cafe},
-    {"fuel", LandmarkType::fuel},
-    {"shelter", LandmarkType::shelter},
-    {"recycling", LandmarkType::recycling},
-    {"toilets", LandmarkType::toilets},
-    {"bank", LandmarkType::bank},
-    {"pharmacy", LandmarkType::pharmacy},
-};
-
-LandmarkType string_to_landmark_type(const std::string& landmark_type_str) {
-  auto it = str_type_map.find(landmark_type_str);
-  if (it != str_type_map.end()) {
-    return it->second;
-  }
-  // default value if landmark type is not found or empty
-  return LandmarkType::NA;
-}
-
-void LandmarkDatabase::connect_database() {
-  if (!open_database()) {
-    throw std::runtime_error("Cannot open database");
-    return;
-  }
->>>>>>> 5bb48a1b9 (add BuildLandmarkFromPBF function: parse landmarks from pbf and store them in database)
 
 // TODO: this can be a utility and be more generic with a few more options, we could make the prepared
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
@@ -157,7 +121,7 @@ void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
     sqlite3_bind_null(insert_stmt, 1);
   }
 
-  if (landmark.type != LandmarkType::NA) {
+  if (landmark.type != LandmarkType::null) {
     sqlite3_bind_int(insert_stmt, 2, static_cast<int>(landmark.type));
   } else {
     sqlite3_bind_null(insert_stmt, 2);
@@ -193,7 +157,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   while (ret == SQLITE_ROW) {
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
 
-    LandmarkType type = LandmarkType::NA;
+    LandmarkType type = LandmarkType::null;
     if (sqlite3_column_type(bounding_box_stmt, 1) != SQLITE_NULL) {
       type = static_cast<LandmarkType>(sqlite3_column_int(bounding_box_stmt, 1));
     }
@@ -229,7 +193,7 @@ public:
 
     for (const auto& tag : tags) {
       if (tag.first == "amenity") {
-        // if amenity is empty will return LandmarkType::NA
+        // if amenity is empty will return LandmarkType::null
         landmark.type = string_to_landmark_type(tag.second);
       }
       if (tag.first == "name" && !tag.second.empty()) {

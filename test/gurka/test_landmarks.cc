@@ -20,7 +20,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
     )";
 
   const gurka::nodes nodes = {
-      {"A", {{"name", ""}, {"amenity", "parking"}}},
+      {"A", {{"name", ""}, {"amenity", "university"}}},
       {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
       {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
   };
@@ -47,11 +47,20 @@ protected:
   static void SetUpTestSuite() {
     LandmarkDatabase db(db_name, false);
 
+<<<<<<< HEAD
     ASSERT_NO_THROW(
         db.insert_landmark(Landmark{"Statue of Liberty", "Monument", -74.044548, 40.689253}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", "Monument", 2.294481, 48.858370}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", "pseudo", 5., 5.}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", "pseudo", 10., 10.}));
+=======
+    ASSERT_TRUE(db.insert_landmark(
+        Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
+    ASSERT_TRUE(
+        db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"A", LandmarkType::bank, 5., 5.}));
+    ASSERT_TRUE(db.insert_landmark(Landmark{"B", LandmarkType::null, 10., 10.}));
+>>>>>>> 89eace22a (update LandmarkType to include only obvious landmarks for vehicle routing)
   }
 
   static void TearDownTestSuite() {
@@ -113,10 +122,10 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 
-  EXPECT_TRUE(landmarks[0].type == LandmarkType::parking);
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::university);
   EXPECT_TRUE(landmarks[0].name.empty());
   EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
   EXPECT_TRUE(landmarks[1].name == "hai di lao");
-  EXPECT_TRUE(landmarks[2].type == LandmarkType::NA);
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::null);
   EXPECT_TRUE(landmarks[2].name == "ke ji lu");
 }
