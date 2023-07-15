@@ -119,7 +119,7 @@ protected:
   std::shared_ptr<db_pimpl> pimpl;
 };
 
-bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files);
+bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name);
 
 } // namespace mjolnir
 

@@ -181,7 +181,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 // anonymous namespace?
 struct landmark_callback : public OSMPBF::Callback {
 public:
-  landmark_callback(std::vector<Landmark>& landmarks) : landmarks_(landmarks) {
+  landmark_callback(LandmarkDatabase& db) : db_(db) {
   }
   virtual ~landmark_callback() {
   }
@@ -201,8 +201,8 @@ public:
       landmark.lng = lng;
       landmark.lat = lat;
     }
-
-    landmarks_.push_back(std::move(landmark));
+    // insert parsed landmark directly into database
+    db_.insert_landmark(landmark);
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
@@ -220,14 +220,14 @@ public:
     LOG_WARN("relation callback shouldn't be called!");
   }
 
-  std::vector<Landmark>& landmarks_;
+  LandmarkDatabase& db_;
 };
 
-bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files) {
+bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name) {
   // parse nodes in pbf to get landmarks
-  std::vector<Landmark> landmarks{};
+  LandmarkDatabase db(db_name, false);
 
-  landmark_callback callback(landmarks);
+  landmark_callback callback(db);
 
   LOG_INFO("Parsing files...");
   // hold open all the files so that if something else (like diff application)
@@ -240,22 +240,12 @@ bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files) {
     }
   }
 
-  LOG_INFO("Parsing nodes...");
+  LOG_INFO("Parsing nodes and storing landmarks...");
   for (auto& file_handle : file_handles) {
     OSMPBF::Parser::parse(file_handle,
                           static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
                                                         OSMPBF::Interest::CHANGESETS),
                           callback);
-  }
-
-  // store landmarks in database
-  LandmarkDatabase db(landmark_db, false);
-
-  for (const auto& landmark : landmarks) {
-    if (!db.insert_landmark(landmark)) {
-      LOG_ERROR("cannot insert landmark");
-      return false;
-    }
   }
 
   return true;

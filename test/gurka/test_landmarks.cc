@@ -97,7 +97,7 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
 
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-  EXPECT_TRUE(BuildLandmarkFromPBF(input_files));
+  EXPECT_TRUE(BuildLandmarkFromPBF(input_files, db_name));
 
   // check
   std::vector<Landmark> landmarks{};
