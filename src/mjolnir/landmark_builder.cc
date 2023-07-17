@@ -3,6 +3,52 @@
 
 #include "mjolnir/osmpbfparser.h"
 
+namespace {
+struct landmark_callback : public OSMPBF::Callback {
+public:
+  landmark_callback(valhalla::mjolnir::LandmarkDatabase& db) : db_(db) {
+  }
+  virtual ~landmark_callback() {
+  }
+
+  virtual void
+  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
+    valhalla::mjolnir::Landmark landmark;
+
+    for (const auto& tag : tags) {
+      if (tag.first == "amenity") {
+        // if amenity is empty will return LandmarkType::null
+        landmark.type = valhalla::mjolnir::string_to_landmark_type(tag.second);
+      }
+      if (tag.first == "name" && !tag.second.empty()) {
+        landmark.name = tag.second;
+      }
+      landmark.lng = lng;
+      landmark.lat = lat;
+    }
+    // insert parsed landmark directly into database
+    db_.insert_landmark(landmark);
+  }
+
+  virtual void changeset_callback(const uint64_t changeset_id) override {
+  }
+
+  virtual void way_callback(const uint64_t /*osmid*/,
+                            const OSMPBF::Tags& /*tags*/,
+                            const std::vector<uint64_t>& /*nodes*/) override {
+    LOG_WARN("way callback shouldn't be called!");
+  }
+
+  virtual void relation_callback(const uint64_t /*osmid*/,
+                                 const OSMPBF::Tags& /*tags*/,
+                                 const std::vector<OSMPBF::Member>& /*members*/) override {
+    LOG_WARN("relation callback shouldn't be called!");
+  }
+
+  valhalla::mjolnir::LandmarkDatabase& db_;
+};
+} // namespace
+
 namespace valhalla {
 namespace mjolnir {
 const std::string landmark_db = "landmarks.db";
