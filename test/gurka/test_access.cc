@@ -572,7 +572,6 @@ TEST(Standalone, RouteOnPrivateAccess) {
   }
 }
 
-
 TEST(Standalone, AccessForwardBackward) {
   constexpr double gridsize_metres = 10;
 
@@ -586,9 +585,23 @@ TEST(Standalone, AccessForwardBackward) {
 
   const gurka::ways ways = {
       {"ABCDE", {{"highway", "primary"}}},
-      {"CFH", {{"highway", "primary"}, {"motor_vehicle:forward", "no"}, {"motor_vehicle:backward", "yes"}, {"foot:forward", "no"}, {"foot:backward", "yes"}, {"bicycle:forward", "no"}, {"bicycle:backward", "yes"}}},
+      {"CFH",
+       {{"highway", "primary"},
+        {"motor_vehicle:forward", "no"},
+        {"motor_vehicle:backward", "yes"},
+        {"foot:forward", "no"},
+        {"foot:backward", "yes"},
+        {"bicycle:forward", "no"},
+        {"bicycle:backward", "yes"}}},
       {"HG", {{"highway", "primary"}}},
-      {"EG", {{"highway", "primary"}, {"motor_vehicle:forward", "yes"}, {"motor_vehicle:backward", "no"}, {"foot:forward", "yes"}, {"foot:backward", "no"}, {"bicycle:forward", "yes"}, {"bicycle:backward", "no"}}},
+      {"EG",
+       {{"highway", "primary"},
+        {"motor_vehicle:forward", "yes"},
+        {"motor_vehicle:backward", "no"},
+        {"foot:forward", "yes"},
+        {"foot:backward", "no"},
+        {"bicycle:forward", "yes"},
+        {"bicycle:backward", "no"}}},
   };
 
   const auto layout =
@@ -603,7 +616,7 @@ TEST(Standalone, AccessForwardBackward) {
 
     // reverse need to go around
     result = gurka::do_action(valhalla::Options::route, map, {"G", "D"}, c);
-    gurka::assert::raw::expect_path(result, {"HG","CFH","ABCDE"});
+    gurka::assert::raw::expect_path(result, {"HG", "CFH", "ABCDE"});
 
     // no problem reverse for everyone
     result = gurka::do_action(valhalla::Options::route, map, {"G", "F"}, c);
@@ -611,6 +624,6 @@ TEST(Standalone, AccessForwardBackward) {
 
     // forward need to go around
     result = gurka::do_action(valhalla::Options::route, map, {"F", "G"}, c);
-    gurka::assert::raw::expect_path(result, {"CFH","ABCDE","EG"});
+    gurka::assert::raw::expect_path(result, {"CFH", "ABCDE", "EG"});
   }
 }
