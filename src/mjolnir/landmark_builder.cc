@@ -1,7 +1,7 @@
 #include "mjolnir/landmark_builder.h"
-#include "mjolnir/util.h"
-
+#include "filesystem.h"
 #include "mjolnir/osmpbfparser.h"
+#include "mjolnir/util.h"
 
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
@@ -62,8 +62,6 @@ public:
 
 namespace valhalla {
 namespace mjolnir {
-const std::string landmark_db = "landmarks.db";
-
 // TODO: this can be a utility and be more generic with a few more options, we could make the prepared
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
 //  use sqlite can make use of this utility class. for now its ok to be specific to landmarks though
@@ -78,6 +76,7 @@ struct LandmarkDatabase::db_pimpl {
     // figure out if we need to create it or can just open it up
     auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
     if (!filesystem::exists(db_name)) {
+      LOG_INFO("database doesn't exist: " + db_name);
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
       flags |= SQLITE_OPEN_CREATE;
@@ -119,7 +118,9 @@ struct LandmarkDatabase::db_pimpl {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite spatial index creation error: " + std::string(err_msg));
       }
+    }
 
+    if (flags & SQLITE_OPEN_READWRITE) {
       // prep the insert statement
       const char* insert =
           "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
@@ -233,52 +234,6 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
   return landmarks;
 }
-
-// Task 2: parse landmarks
-// anonymous namespace?
-struct landmark_callback : public OSMPBF::Callback {
-public:
-  landmark_callback(LandmarkDatabase& db) : db_(db) {
-  }
-  virtual ~landmark_callback() {
-  }
-
-  virtual void
-  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
-    Landmark landmark;
-
-    for (const auto& tag : tags) {
-      if (tag.first == "amenity") {
-        // if amenity is empty will return LandmarkType::null
-        landmark.type = string_to_landmark_type(tag.second);
-      }
-      if (tag.first == "name" && !tag.second.empty()) {
-        landmark.name = tag.second;
-      }
-      landmark.lng = lng;
-      landmark.lat = lat;
-    }
-    // insert parsed landmark directly into database
-    db_.insert_landmark(landmark);
-  }
-
-  virtual void changeset_callback(const uint64_t changeset_id) override {
-  }
-
-  virtual void way_callback(const uint64_t /*osmid*/,
-                            const OSMPBF::Tags& /*tags*/,
-                            const std::vector<uint64_t>& /*nodes*/) override {
-    LOG_WARN("way callback shouldn't be called!");
-  }
-
-  virtual void relation_callback(const uint64_t /*osmid*/,
-                                 const OSMPBF::Tags& /*tags*/,
-                                 const std::vector<OSMPBF::Member>& /*members*/) override {
-    LOG_WARN("relation callback shouldn't be called!");
-  }
-
-  LandmarkDatabase& db_;
-};
 
 bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name) {
   // parse nodes in pbf to get landmarks

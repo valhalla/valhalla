@@ -59,11 +59,12 @@ protected:
   static void SetUpTestSuite() {
     LandmarkDatabase db(db_name, false);
 
+    ASSERT_NO_THROW(db.insert_landmark(
+        Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
     ASSERT_NO_THROW(
-        db.insert_landmark(Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
+        db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", LandmarkType::bank, 40., 40.}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::null, 30., 30.}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::fire_station, 30., 30.}));
   }
 
   static void TearDownTestSuite() {
