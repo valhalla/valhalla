@@ -180,7 +180,13 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  find_package(Protobuf REQUIRED)
+  # CONFIG mode is required for new abseil protobuf builds, which uses the protobuf-provided
+  # CMake configuration instead of CMake internal one: they're not looking for abseil:
+  # https://github.com/valhalla/valhalla/issues/4173#issuecomment-1638067950
+  # However, when doing this, newer protobuf versions require a protobuf_MODULE_COMPATIBLE
+  # to be able to see the protobuf_generate_cpp() CMake function
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+  find_package(Protobuf REQUIRED CONFIG)
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
