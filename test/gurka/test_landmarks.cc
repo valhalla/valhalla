@@ -16,8 +16,8 @@ const std::filesystem::path file_path = db_name;
 namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
-      A   B   C   D   E
       a-----b-----c---d
+      A   B   C   D   E
     )";
 
   const gurka::nodes nodes = {
@@ -115,7 +115,7 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
   std::vector<Landmark> landmarks{};
   LandmarkDatabase db(db_name, true);
 
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 0, 30); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(-5, 0, 0, 10); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
