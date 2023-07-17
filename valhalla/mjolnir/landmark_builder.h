@@ -8,7 +8,7 @@
 #include <unordered_map>
 namespace valhalla {
 namespace mjolnir {
-static const std::string default_landmark_name = "null";
+static const std::string default_landmark_name = "";
 
 // obvious landmark types for vehicle routing
 enum class LandmarkType : uint8_t {
@@ -102,8 +102,8 @@ inline std::string landmark_type_to_string(LandmarkType t) {
 struct Landmark {
   std::string name = default_landmark_name;
   LandmarkType type = LandmarkType::null;
-  double lng = 0;
-  double lat = 0;
+  double lng;
+  double lat;
 };
 
 struct LandmarkDatabase {
