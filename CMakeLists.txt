@@ -187,6 +187,11 @@ if(NOT Protobuf_FOUND)
   # to be able to see the protobuf_generate_cpp() CMake function
   set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
   find_package(Protobuf REQUIRED CONFIG)
+  # Also, this is a band-aid, only works when the package manager actually installed
+  # protobuf CMake config files
+  if (NOT Protobuf_FOUND)
+    find_package(Protobuf REQUIRED)
+  endif()
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
