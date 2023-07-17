@@ -16,21 +16,33 @@ const std::filesystem::path file_path = db_name;
 namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
-      A-------B------C
+      A   B   C   D   E
+      a-----b-----c---d
     )";
 
   const gurka::nodes nodes = {
-      {"A", {{"name", ""}, {"amenity", "university"}}},
-      {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
-      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}},
+      {"A", {{"landmark", "yes"}, {"name", ""}, {"amenity", "university"}}},
+      {"B", {{"landmark", "yes"}, {"name", "hai di lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"landmark", "yes"}, {"name", "ke ji lu"}, {"amenity", ""}}}, // no amenity, log error
+      {"D", {{"landmark", "yes"}, {"name", "wan da"}, {"amenity", "cinema"}}},
+      {"E",
+       {{"landmark", "yes"},
+        {"name", "zhong lou"},
+        {"amenity", "monument"}}}, // not in list, shouldn't be stored
+      // non-landmark nodes
+      {"a", {{"landmark", "no"}, {"name", "gong ce"}, {"amenity", "toilet"}}},
+      {"b", {{"landmark", ""}, {"name", ""}, {"amenity", "trash_can"}}},
+      {"c", {{"name", "hua yuan"}, {"amenity", ""}}},
+      {"d", {{"name", ""}, {"amenity", ""}}},
   };
 
   const gurka::ways ways = {
-      {"AB", {}},
-      {"BC", {}},
+      {"ab", {}},
+      {"bc", {}},
+      {"cd", {}},
   };
 
-  constexpr double gridsize = 100000;
+  constexpr double gridsize = 10000;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
   auto pbf_filename = workdir + "/map.pbf";
@@ -50,8 +62,8 @@ protected:
     ASSERT_NO_THROW(
         db.insert_landmark(Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
     ASSERT_NO_THROW(db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", LandmarkType::bank, 5., 5.}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::null, 10., 10.}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", LandmarkType::bank, 40., 40.}));
+    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::null, 30., 30.}));
   }
 
   static void TearDownTestSuite() {
@@ -67,7 +79,7 @@ TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   LandmarkDatabase db(db_name, true);
 
   std::vector<Landmark> landmarks{};
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 10, 10); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(30, 30, 40, 40); });
 
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
@@ -103,8 +115,8 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
   std::vector<Landmark> landmarks{};
   LandmarkDatabase db(db_name, true);
 
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 0, 20); });
-  EXPECT_EQ(landmarks.size(), 3);
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 0, 30); });
+  EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
@@ -113,10 +125,10 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 
-  EXPECT_TRUE(landmarks[0].type == LandmarkType::university);
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::university); // A
   EXPECT_TRUE(landmarks[0].name == default_landmark_name);
-  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
+  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant); // B
   EXPECT_TRUE(landmarks[1].name == "hai di lao");
-  EXPECT_TRUE(landmarks[2].type == LandmarkType::null);
-  EXPECT_TRUE(landmarks[2].name == "ke ji lu");
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::cinema); // D
+  EXPECT_TRUE(landmarks[2].name == "wan da");
 }

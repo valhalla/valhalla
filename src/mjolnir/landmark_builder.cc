@@ -12,22 +12,33 @@ public:
   }
 
   virtual void
-  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
-    valhalla::mjolnir::Landmark landmark;
+  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
+    // parse "landmark" nodes only
+    auto iter = tags.find("landmark");
+    if (iter != tags.cend() && iter->second == "yes") {
+      valhalla::mjolnir::Landmark landmark;
 
-    for (const auto& tag : tags) {
-      if (tag.first == "amenity") {
-        // if amenity is empty will return LandmarkType::null
-        landmark.type = valhalla::mjolnir::string_to_landmark_type(tag.second);
+      for (const auto& tag : tags) {
+        if (tag.first == "amenity") {
+          if (tag.second.empty()) {
+            LOG_ERROR("found landmark node without amenity value, osmid: " + std::to_string(osmid));
+            return;
+          }
+          // store landmark nodes that belong to LandmarkType only
+          landmark.type = valhalla::mjolnir::string_to_landmark_type(tag.second);
+          if (landmark.type == valhalla::mjolnir::LandmarkType::null) {
+            return;
+          }
+        }
+        if (tag.first == "name" && !tag.second.empty()) {
+          landmark.name = tag.second;
+        }
+        landmark.lng = lng;
+        landmark.lat = lat;
       }
-      if (tag.first == "name" && !tag.second.empty()) {
-        landmark.name = tag.second;
-      }
-      landmark.lng = lng;
-      landmark.lat = lat;
+      // insert parsed landmark directly into database
+      db_.insert_landmark(landmark);
     }
-    // insert parsed landmark directly into database
-    db_.insert_landmark(landmark);
   }
 
   virtual void changeset_callback(const uint64_t changeset_id) override {
