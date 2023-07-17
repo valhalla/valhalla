@@ -1114,7 +1114,6 @@ function filter_tags_generic(kv)
     kv["motorcycle_forward"] = "true"
   end
 
-
   --check the oneway-ness and traversability against the direction of the geom
   if ((kv["oneway"] == "yes" and kv["oneway:bicycle"] == "no") or kv["bicycle:backward"] == "yes" or kv["bicycle:backward"] == "no") then
     kv["bike_backward"] = "true"

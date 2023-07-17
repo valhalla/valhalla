@@ -596,11 +596,6 @@ TEST(Standalone, AccessForwardBackward) {
   auto map =
       gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_access_motor_vehicle", build_config);
 
-  auto cfg = test::make_config("test/data/gurka_access_motor_vehicle", build_config);
-  baldr::GraphReader r(cfg.get_child("mjolnir"));
-  auto first = gurka::findEdgeByNodes(r, layout, "C", "E");
-  auto second = gurka::findEdgeByNodes(r, layout, "E", "G");
-
   for (auto& c : costing) {
     // no problem forward for everyone
     auto result = gurka::do_action(valhalla::Options::route, map, {"D", "G"}, c);
