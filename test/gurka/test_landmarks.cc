@@ -114,7 +114,7 @@ TEST_F(LandmarkDatabaseTest, TestParseAndStoreLandmarks) {
   }
 
   EXPECT_TRUE(landmarks[0].type == LandmarkType::university);
-  EXPECT_TRUE(landmarks[0].name.empty());
+  EXPECT_TRUE(landmarks[0].name == default_landmark_name);
   EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant);
   EXPECT_TRUE(landmarks[1].name == "hai di lao");
   EXPECT_TRUE(landmarks[2].type == LandmarkType::null);
