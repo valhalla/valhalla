@@ -6,36 +6,31 @@
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
 public:
-  landmark_callback(valhalla::mjolnir::LandmarkDatabase& db) : db_(db) {
+  landmark_callback(valhalla::mjolnir::LandmarkDatabase& db) : db_(db) { // db name only
   }
   virtual ~landmark_callback() {
   }
 
   virtual void
-  node_callback(const uint64_t osmid, double lng, double lat, const OSMPBF::Tags& tags) override {
-    // parse "landmark" nodes only
-    auto iter = tags.find("landmark");
-    if (iter != tags.cend() && iter->second == "yes") {
-      valhalla::mjolnir::Landmark landmark;
+  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
+    valhalla::mjolnir::Landmark landmark;
 
-      for (const auto& tag : tags) {
-        if (tag.first == "amenity") {
-          if (tag.second.empty()) {
-            LOG_ERROR("found landmark node without amenity value, osmid: " + std::to_string(osmid));
-            return;
-          }
-          // store landmark nodes that belong to LandmarkType only
-          landmark.type = valhalla::mjolnir::string_to_landmark_type(tag.second);
-          if (landmark.type == valhalla::mjolnir::LandmarkType::null) {
-            return;
-          }
-        }
-        if (tag.first == "name" && !tag.second.empty()) {
-          landmark.name = tag.second;
-        }
-        landmark.lng = lng;
-        landmark.lat = lat;
+    auto iter = tags.find("amenity");
+    if (iter != tags.cend() && !iter->second.empty()) {
+      // store landmark nodes that belong to LandmarkType only
+      landmark.type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+      if (landmark.type == valhalla::mjolnir::LandmarkType::null) {
+        return;
       }
+
+      auto it = tags.find("name");
+      if (it != tags.cend() && !it->second.empty()) {
+        landmark.name = it->second;
+      }
+      
+      landmark.lng = lng;
+      landmark.lat = lat;
+
       // insert parsed landmark directly into database
       db_.insert_landmark(landmark);
     }
@@ -255,8 +250,7 @@ bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std
   LOG_INFO("Parsing nodes and storing landmarks...");
   for (auto& file_handle : file_handles) {
     OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES |
-                                                        OSMPBF::Interest::CHANGESETS),
+                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                           callback);
   }
 

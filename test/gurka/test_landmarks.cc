@@ -21,25 +21,22 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
     )";
 
   const gurka::nodes nodes = {
-      {"A", {{"landmark", "yes"}, {"name", ""}, {"amenity", "university"}}},
-      {"B", {{"landmark", "yes"}, {"name", "hai di lao"}, {"amenity", "restaurant"}}},
-      {"C", {{"landmark", "yes"}, {"name", "ke ji lu"}, {"amenity", ""}}}, // no amenity, log error
-      {"D", {{"landmark", "yes"}, {"name", "wan da"}, {"amenity", "cinema"}}},
-      {"E",
-       {{"landmark", "yes"},
-        {"name", "zhong lou"},
-        {"amenity", "monument"}}}, // not in list, shouldn't be stored
+      {"A", {{"name", ""}, {"amenity", "university"}}},
+      {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}}, // no amenity, shouldn't be stored
+      {"D", {{"name", "wan da"}, {"amenity", "cinema"}}},
+      {"E", {{"name", "zhong lou"}, {"amenity", "monument"}}}, // not in list, shouldn't be stored
       // non-landmark nodes
-      {"a", {{"landmark", "no"}, {"name", "gong ce"}, {"amenity", "toilet"}}},
-      {"b", {{"landmark", ""}, {"name", ""}, {"amenity", "trash_can"}}},
-      {"c", {{"name", "hua yuan"}, {"amenity", ""}}},
+      {"a", {{"name", "gong ce"}, {"amenity", ""}}},
+      {"b", {{"name", "la ji tong"}}},
+      {"c", {{"name", "hua yuan"}}},
       {"d", {{"name", ""}, {"amenity", ""}}},
   };
 
   const gurka::ways ways = {
-      {"ab", {}},
-      {"bc", {}},
-      {"cd", {}},
+      {"ab", {{"highway", "residential"}}},
+      {"bc", {{"highway", "motorway"}}},
+      {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
   };
 
   constexpr double gridsize = 10000;
