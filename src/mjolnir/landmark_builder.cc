@@ -6,7 +6,7 @@
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
 public:
-  landmark_callback(valhalla::mjolnir::LandmarkDatabase& db) : db_(db) { // db name only
+  landmark_callback(const std::string& db_name) : db_(db_name, false) {
   }
   virtual ~landmark_callback() {
   }
@@ -27,7 +27,7 @@ public:
       if (it != tags.cend() && !it->second.empty()) {
         landmark.name = it->second;
       }
-      
+
       landmark.lng = lng;
       landmark.lat = lat;
 
@@ -51,7 +51,7 @@ public:
     LOG_WARN("relation callback shouldn't be called!");
   }
 
-  valhalla::mjolnir::LandmarkDatabase& db_;
+  valhalla::mjolnir::LandmarkDatabase db_;
 };
 } // namespace
 
@@ -71,7 +71,7 @@ struct LandmarkDatabase::db_pimpl {
     // figure out if we need to create it or can just open it up
     auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
     if (!filesystem::exists(db_name)) {
-      LOG_INFO("database doesn't exist: " + db_name);
+      LOG_INFO("database doesn't exist: " + db_name + ", creating now");
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
       flags |= SQLITE_OPEN_CREATE;
@@ -232,9 +232,9 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
 bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name) {
   // parse nodes in pbf to get landmarks
-  LandmarkDatabase db(db_name, false);
+  // LandmarkDatabase db(db_name, false);
 
-  landmark_callback callback(db);
+  landmark_callback callback(db_name);
 
   LOG_INFO("Parsing files...");
   // hold open all the files so that if something else (like diff application)
