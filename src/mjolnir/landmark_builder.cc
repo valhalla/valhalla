@@ -232,8 +232,6 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
 bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name) {
   // parse nodes in pbf to get landmarks
-  // LandmarkDatabase db(db_name, false);
-
   landmark_callback callback(db_name);
 
   LOG_INFO("Parsing files...");
@@ -249,8 +247,7 @@ bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std
 
   LOG_INFO("Parsing nodes and storing landmarks...");
   for (auto& file_handle : file_handles) {
-    OSMPBF::Parser::parse(file_handle,
-                          static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                           callback);
   }
 
