@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_build_landmarks is a program that builds a SQLite database to store landmarks from \n"
-      "one or multiple osm.pbf files. The landmark db is used during graph building to faciliate navigation."
+      "one or multiple osm.pbf files. The landmark db is used during graph building to facilitate navigation."
       "\n\n");
 
     options.add_options()
