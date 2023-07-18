@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
+#include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <unordered_map>
+
 namespace valhalla {
 namespace mjolnir {
 static const std::string default_landmark_name = "";
@@ -120,7 +122,8 @@ protected:
   std::shared_ptr<db_pimpl> pimpl;
 };
 
-bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name);
+bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
+                          const std::vector<std::string>& input_files);
 
 } // namespace mjolnir
 

@@ -2,6 +2,7 @@
 #include "filesystem.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
+#include <boost/property_tree/ptree.hpp>
 
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
@@ -230,8 +231,23 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   return landmarks;
 }
 
-bool BuildLandmarkFromPBF(const std::vector<std::string>& input_files, const std::string& db_name) {
-  // parse nodes in pbf to get landmarks
+bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
+                          const std::vector<std::string>& input_files) {
+  // parse config to get landmark database
+  auto db = pt.get_optional<std::string>("landmarks");
+  if (!db) {
+    LOG_ERROR("Landmarks config info not found. Landmarks builder will not be created.");
+    return false;
+  }
+
+  const filesystem::path parent_dir = filesystem::path(*db).parent_path();
+  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+    LOG_ERROR("Can't create parent directory " + parent_dir.string());
+    return false;
+  }
+
+  // parse pbf to get landmark nodes
+  const std::string db_name = pt.get<std::string>("landmarks");
   landmark_callback callback(db_name);
 
   LOG_INFO("Parsing files...");
