@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <vector>
 
 #include "gurka.h"
 #include "mjolnir/landmark_builder.h"
@@ -11,8 +12,14 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-const std::string db_name_test1 = "landmarks.db";
-const std::filesystem::path file_path_test1 = db_name_test1;
+static const std::string db_path_test_build_database = "landmarks.db";
+
+static const std::string workdir_test_parse_landmarks = "../data/landmarks";
+static const std::string db_path_test_parse_landmarks =
+    workdir_test_parse_landmarks + "/landmarks.sqlite";
+
+static const std::vector<std::filesystem::path> db_paths{db_path_test_build_database,
+                                                         db_path_test_parse_landmarks};
 
 namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
@@ -52,29 +59,32 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 }
 } // namespace
 
-class LandmarkDatabaseTest : public ::testing::Test {
+class LandmarkTest : public ::testing::Test {
 protected:
-  static void SetUpTestSuite() { // build database and insert some test points
-    LandmarkDatabase db(db_name_test1, false);
-
-    ASSERT_NO_THROW(
-        db.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
-    ASSERT_NO_THROW(db.insert_landmark("Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370));
-    ASSERT_NO_THROW(db.insert_landmark("A", LandmarkType::bank, 40., 40.));
-    ASSERT_NO_THROW(db.insert_landmark("B", LandmarkType::fire_station, 30., 30.));
-  }
-
-  static void TearDownTestSuite() { // delete database
-    if (std::filesystem::remove(file_path_test1)) {
-      LOG_INFO("database deleted successfully");
-    } else {
-      LOG_ERROR("error deleting database");
+  static void TearDownTestSuite() { // delete all databases
+    for (auto db_path : db_paths) {
+      LOG_INFO("deleting database: " + db_path.string());
+      if (!std::filesystem::remove(db_path)) {
+        LOG_ERROR("error deleting database");
+      }
     }
   }
 };
 
-TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
-  LandmarkDatabase db(db_name_test1, true);
+TEST_F(LandmarkTest, TestBuildDatabase) {
+  // insert test data
+  {
+    LandmarkDatabase db_ini(db_path_test_build_database, false);
+
+    ASSERT_NO_THROW(
+        db_ini.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
+    ASSERT_NO_THROW(db_ini.insert_landmark("Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370));
+    ASSERT_NO_THROW(db_ini.insert_landmark("A", LandmarkType::bank, 40., 40.));
+    ASSERT_NO_THROW(db_ini.insert_landmark("B", LandmarkType::fire_station, 30., 30.));
+  }
+
+  // test
+  LandmarkDatabase db(db_path_test_build_database, true);
 
   std::vector<Landmark> landmarks{};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(30, 30, 40, 40); });
@@ -95,26 +105,24 @@ TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
 
-TEST(LandmarkTest, TestParseAndStoreLandmarks) {
-  const std::string workdir = "test/data/landmarks";
-
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+TEST_F(LandmarkTest, TestParseLandmarks) {
+  if (!filesystem::exists(workdir_test_parse_landmarks)) {
+    bool created = filesystem::create_directories(workdir_test_parse_landmarks);
     EXPECT_TRUE(created);
   }
 
   // parse and store
-  valhalla::gurka::map landmark_map = BuildPBF(workdir);
+  valhalla::gurka::map landmark_map = BuildPBF(workdir_test_parse_landmarks);
   boost::property_tree::ptree& pt = landmark_map.config;
-  pt.put("mjolnir.landmarks", workdir + "/landmarks.sqlite");
+  pt.put("mjolnir.landmarks", db_path_test_parse_landmarks);
 
-  std::vector<std::string> input_files = {workdir + "/map.pbf"};
+  std::vector<std::string> input_files = {workdir_test_parse_landmarks + "/map.pbf"};
 
   EXPECT_TRUE(BuildLandmarkFromPBF(pt.get_child("mjolnir"), input_files));
 
   // check
   std::vector<Landmark> landmarks{};
-  LandmarkDatabase db(workdir + "/landmarks.sqlite", true);
+  LandmarkDatabase db(db_path_test_parse_landmarks, true);
 
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(-5, 0, 0, 10); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
@@ -133,12 +141,4 @@ TEST(LandmarkTest, TestParseAndStoreLandmarks) {
   EXPECT_TRUE(std::get<0>(landmarks[1]) == "hai di lao");
   EXPECT_TRUE(std::get<1>(landmarks[2]) == LandmarkType::cinema); // D
   EXPECT_TRUE(std::get<0>(landmarks[2]) == "wan da");
-
-  // delete file
-  const std::filesystem::path database_path = workdir + "/landmarks.sqlite";
-  if (std::filesystem::remove(database_path)) {
-    LOG_INFO("database deleted successfully");
-  } else {
-    LOG_ERROR("error deleting database");
-  }
 }
