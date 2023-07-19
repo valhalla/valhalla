@@ -57,12 +57,11 @@ protected:
   static void SetUpTestSuite() { // build database and insert some test points
     LandmarkDatabase db(db_name_test1, false);
 
-    ASSERT_NO_THROW(db.insert_landmark(
-        Landmark{"Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253}));
     ASSERT_NO_THROW(
-        db.insert_landmark(Landmark{"Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"A", LandmarkType::bank, 40., 40.}));
-    ASSERT_NO_THROW(db.insert_landmark(Landmark{"B", LandmarkType::fire_station, 30., 30.}));
+        db.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
+    ASSERT_NO_THROW(db.insert_landmark("Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370));
+    ASSERT_NO_THROW(db.insert_landmark("A", LandmarkType::bank, 40., 40.));
+    ASSERT_NO_THROW(db.insert_landmark("B", LandmarkType::fire_station, 30., 30.));
   }
 
   static void TearDownTestSuite() { // delete database
@@ -84,9 +83,10 @@ TEST_F(LandmarkDatabaseTest, TestBuildDatabase) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<unsigned int>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
+    LOG_INFO("name: " + std::get<0>(landmark) +
+             ", type: " + std::to_string(static_cast<uint8_t>(std::get<1>(landmark))) +
+             ", longitude: " + std::to_string(std::get<2>(landmark)) +
+             ", latitude: " + std::to_string(std::get<3>(landmark)));
   }
 
   landmarks.clear();
@@ -121,17 +121,18 @@ TEST(LandmarkTest, TestParseAndStoreLandmarks) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<unsigned int>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
+    LOG_INFO("name: " + std::get<0>(landmark) +
+             ", type: " + std::to_string(static_cast<uint8_t>(std::get<1>(landmark))) +
+             ", longitude: " + std::to_string(std::get<2>(landmark)) +
+             ", latitude: " + std::to_string(std::get<3>(landmark)));
   }
 
-  EXPECT_TRUE(landmarks[0].type == LandmarkType::university); // A
-  EXPECT_TRUE(landmarks[0].name == default_landmark_name);
-  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant); // B
-  EXPECT_TRUE(landmarks[1].name == "hai di lao");
-  EXPECT_TRUE(landmarks[2].type == LandmarkType::cinema); // D
-  EXPECT_TRUE(landmarks[2].name == "wan da");
+  EXPECT_TRUE(std::get<1>(landmarks[0]) == LandmarkType::university); // A
+  EXPECT_TRUE(std::get<0>(landmarks[0]) == default_landmark_name);
+  EXPECT_TRUE(std::get<1>(landmarks[1]) == LandmarkType::restaurant); // B
+  EXPECT_TRUE(std::get<0>(landmarks[1]) == "hai di lao");
+  EXPECT_TRUE(std::get<1>(landmarks[2]) == LandmarkType::cinema); // D
+  EXPECT_TRUE(std::get<0>(landmarks[2]) == "wan da");
 
   // delete file
   const std::filesystem::path database_path = workdir + "/landmarks.sqlite";

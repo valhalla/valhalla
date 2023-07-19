@@ -3,6 +3,7 @@
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 #include <boost/property_tree/ptree.hpp>
+#include <tuple>
 
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
@@ -14,26 +15,22 @@ public:
 
   virtual void
   node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
-    valhalla::mjolnir::Landmark landmark;
-
     auto iter = tags.find("amenity");
     if (iter != tags.cend() && !iter->second.empty()) {
       // store landmark nodes that belong to LandmarkType only
-      landmark.type = valhalla::mjolnir::string_to_landmark_type(iter->second);
-      if (landmark.type == valhalla::mjolnir::LandmarkType::null) {
+      auto type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+      if (type == valhalla::mjolnir::LandmarkType::null) {
         return;
       }
 
+      std::string name = "";
       auto it = tags.find("name");
       if (it != tags.cend() && !it->second.empty()) {
-        landmark.name = it->second;
+        name = it->second;
       }
 
-      landmark.lng = lng;
-      landmark.lat = lat;
-
       // insert parsed landmark directly into database
-      db_.insert_landmark(landmark);
+      db_.insert_landmark(name, type, lng, lat);
     }
   }
 
@@ -160,7 +157,10 @@ LandmarkDatabase::LandmarkDatabase(const std::string& db_name, bool read_only)
     : pimpl(new db_pimpl(db_name, read_only)) {
 }
 
-void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
+void LandmarkDatabase::insert_landmark(const std::string& name,
+                                       const LandmarkType& type,
+                                       const double lng,
+                                       const double lat) {
   auto* insert_stmt = pimpl->insert_stmt;
   if (!insert_stmt)
     throw std::logic_error("Sqlite database connection is read-only");
@@ -168,20 +168,10 @@ void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
   sqlite3_reset(insert_stmt);
   sqlite3_clear_bindings(insert_stmt);
 
-  if (landmark.name != "") {
-    sqlite3_bind_text(insert_stmt, 1, landmark.name.c_str(), landmark.name.length(), SQLITE_STATIC);
-  } else {
-    sqlite3_bind_null(insert_stmt, 1);
-  }
-
-  if (landmark.type != LandmarkType::null) {
-    sqlite3_bind_int(insert_stmt, 2, static_cast<int>(landmark.type));
-  } else {
-    sqlite3_bind_null(insert_stmt, 2);
-  }
-
-  sqlite3_bind_double(insert_stmt, 3, landmark.lng);
-  sqlite3_bind_double(insert_stmt, 4, landmark.lat);
+  sqlite3_bind_text(insert_stmt, 1, name.c_str(), name.length(), SQLITE_STATIC);
+  sqlite3_bind_int(insert_stmt, 2, static_cast<int>(type));
+  sqlite3_bind_double(insert_stmt, 3, lng);
+  sqlite3_bind_double(insert_stmt, 4, lat);
 
   LOG_TRACE(sqlite3_expanded_sql(insert_stmt));
   if (sqlite3_step(insert_stmt) != SQLITE_DONE)
@@ -218,7 +208,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
 
-    landmarks.emplace_back(Landmark{name ? name : "", type, lng, lat});
+    landmarks.emplace_back(std::make_tuple(name, type, lng, lat));
 
     ret = sqlite3_step(bounding_box_stmt);
   }
