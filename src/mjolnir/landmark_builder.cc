@@ -1,8 +1,10 @@
 #include "mjolnir/landmark_builder.h"
 #include "filesystem.h"
+
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
 #include <boost/property_tree/ptree.hpp>
+#include <filesystem>
 #include <tuple>
 
 namespace {
@@ -17,11 +19,10 @@ public:
   node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
     auto iter = tags.find("amenity");
     if (iter != tags.cend() && !iter->second.empty()) {
-      // store landmark nodes that belong to LandmarkType only
-      auto type = valhalla::mjolnir::string_to_landmark_type(iter->second);
-      if (type == valhalla::mjolnir::LandmarkType::null) {
-        return;
-      }
+      valhalla::mjolnir::LandmarkType type = static_cast<valhalla::mjolnir::LandmarkType>(0);
+      try {
+        type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+      } catch (const std::runtime_error& e) { return; }
 
       std::string name = "";
       auto it = tags.find("name");
@@ -67,12 +68,13 @@ struct LandmarkDatabase::db_pimpl {
 
   db_pimpl(const std::string& db_name, bool read_only) : insert_stmt(nullptr) {
     // figure out if we need to create it or can just open it up
-    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
     if (!filesystem::exists(db_name)) {
-      LOG_INFO("database doesn't exist: " + db_name + ", creating now");
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
-      flags |= SQLITE_OPEN_CREATE;
+    } else if (!read_only) {
+      std::filesystem::remove(db_name);
+      LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
     // get a connection to the database
@@ -111,9 +113,7 @@ struct LandmarkDatabase::db_pimpl {
         sqlite3_free(err_msg);
         throw std::runtime_error("Sqlite spatial index creation error: " + std::string(err_msg));
       }
-    }
 
-    if (flags & SQLITE_OPEN_READWRITE) {
       // prep the insert statement
       const char* insert =
           "INSERT INTO landmarks (name, type, geom) VALUES (?, ?, MakePoint(?, ?, 4326))";
@@ -200,15 +200,15 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   while (ret == SQLITE_ROW) {
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
 
-    LandmarkType type = LandmarkType::null;
+    int landmark_type = -1;
     if (sqlite3_column_type(bounding_box_stmt, 1) != SQLITE_NULL) {
-      type = static_cast<LandmarkType>(sqlite3_column_int(bounding_box_stmt, 1));
+      landmark_type = sqlite3_column_int(bounding_box_stmt, 1);
     }
 
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
 
-    landmarks.emplace_back(std::make_tuple(name, type, lng, lat));
+    landmarks.emplace_back(std::make_tuple(name, static_cast<LandmarkType>(landmark_type), lng, lat));
 
     ret = sqlite3_step(bounding_box_stmt);
   }

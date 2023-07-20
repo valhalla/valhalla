@@ -12,15 +12,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-static const std::string db_path_test_build_database = "landmarks.db";
-
-static const std::string workdir_test_parse_landmarks = "../data/landmarks";
-static const std::string db_path_test_parse_landmarks =
-    workdir_test_parse_landmarks + "/landmarks.sqlite";
-
-static const std::vector<std::filesystem::path> db_paths{db_path_test_build_database,
-                                                         db_path_test_parse_landmarks};
-
 namespace {
 valhalla::gurka::map BuildPBF(const std::string& workdir) {
   const std::string ascii_map = R"(
@@ -29,7 +20,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
     )";
 
   const gurka::nodes nodes = {
-      {"A", {{"name", ""}, {"amenity", "university"}}},
+      {"A", {{"name", ""}, {"amenity", "bar"}}},
       {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
       {"C", {{"name", "ke ji lu"}, {"amenity", ""}}}, // no amenity, shouldn't be stored
       {"D", {{"name", "wan da"}, {"amenity", "cinema"}}},
@@ -59,22 +50,12 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 }
 } // namespace
 
-class LandmarkTest : public ::testing::Test {
-protected:
-  static void TearDownTestSuite() { // delete all databases
-    for (auto db_path : db_paths) {
-      LOG_INFO("deleting database: " + db_path.string());
-      if (!std::filesystem::remove(db_path)) {
-        LOG_ERROR("error deleting database");
-      }
-    }
-  }
-};
+TEST(LandmarkTest, TestBuildDatabase) {
+  const std::string db_path = "landmarks.db";
 
-TEST_F(LandmarkTest, TestBuildDatabase) {
   // insert test data
   {
-    LandmarkDatabase db_ini(db_path_test_build_database, false);
+    LandmarkDatabase db_ini(db_path, false);
 
     ASSERT_NO_THROW(
         db_ini.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
@@ -84,7 +65,7 @@ TEST_F(LandmarkTest, TestBuildDatabase) {
   }
 
   // test
-  LandmarkDatabase db(db_path_test_build_database, true);
+  LandmarkDatabase db(db_path, true);
 
   std::vector<Landmark> landmarks{};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(30, 30, 40, 40); });
@@ -105,24 +86,27 @@ TEST_F(LandmarkTest, TestBuildDatabase) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
 
-TEST_F(LandmarkTest, TestParseLandmarks) {
-  if (!filesystem::exists(workdir_test_parse_landmarks)) {
-    bool created = filesystem::create_directories(workdir_test_parse_landmarks);
+TEST(LandmarkTest, TestParseLandmarks) {
+  const std::string workdir = "../data/landmarks";
+  const std::string db_path = workdir + "/landmarks.sqlite";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
   // parse and store
-  valhalla::gurka::map landmark_map = BuildPBF(workdir_test_parse_landmarks);
+  valhalla::gurka::map landmark_map = BuildPBF(workdir);
   boost::property_tree::ptree& pt = landmark_map.config;
-  pt.put("mjolnir.landmarks", db_path_test_parse_landmarks);
+  pt.put("mjolnir.landmarks", db_path);
 
-  std::vector<std::string> input_files = {workdir_test_parse_landmarks + "/map.pbf"};
+  std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   EXPECT_TRUE(BuildLandmarkFromPBF(pt.get_child("mjolnir"), input_files));
 
   // check
   std::vector<Landmark> landmarks{};
-  LandmarkDatabase db(db_path_test_parse_landmarks, true);
+  LandmarkDatabase db(db_path, true);
 
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(-5, 0, 0, 10); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
@@ -135,7 +119,7 @@ TEST_F(LandmarkTest, TestParseLandmarks) {
              ", latitude: " + std::to_string(std::get<3>(landmark)));
   }
 
-  EXPECT_TRUE(std::get<1>(landmarks[0]) == LandmarkType::university); // A
+  EXPECT_TRUE(std::get<1>(landmarks[0]) == LandmarkType::bar); // A
   EXPECT_TRUE(std::get<0>(landmarks[0]) == default_landmark_name);
   EXPECT_TRUE(std::get<1>(landmarks[1]) == LandmarkType::restaurant); // B
   EXPECT_TRUE(std::get<0>(landmarks[1]) == "hai di lao");
