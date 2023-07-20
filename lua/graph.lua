@@ -1327,8 +1327,9 @@ function filter_tags_generic(kv)
   if kv["foot:forward"] ~= nil then
     kv["pedestrian_forward"] = foot[kv["foot:forward"]]
   end
-  if kv["bicycle:forward"] ~= nil then
-    kv["bike_forward"] = bicycle[kv["bicycle:forward"]]
+  local bk_forward = kv["bicycle:forward"] or kv["vehicle:forward"]
+  if bk_forward ~= nil then
+    kv["bike_forward"] = bicycle[bk_forward]
   end
 
   --let all the :backward overrides through, some of this is redundant but the code is a mess...
@@ -1344,8 +1345,9 @@ function filter_tags_generic(kv)
   if kv["foot:backward"] ~= nil then
     kv["pedestrian_backward"] = foot[kv["foot:backward"]]
   end
-  if kv["bicycle:backward"] ~= nil then
-    kv["bike_backward"] = bicycle[kv["bicycle:backward"]]
+  local bk_backward = kv["bicycle:backward"] or kv["vehicle:backward"]
+  if bk_backward ~= nil then
+    kv["bike_backward"] = bicycle[bk_backward]
   end
 
   kv["oneway_reverse"] = "false"
