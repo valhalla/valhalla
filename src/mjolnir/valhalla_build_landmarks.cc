@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
-      "valhalla_build_landmarks is a program that builds a SQLite database to store landmarks from \n"
+      "valhalla_build_landmarks is a program that builds a SQLite database to store POI as landmarks from \n"
       "one or multiple osm.pbf files. The landmark db is used during graph building to facilitate navigation."
       "\n\n");
 
