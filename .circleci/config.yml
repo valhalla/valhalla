@@ -17,6 +17,9 @@ commands:
   install_linux_dependencies:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
+  install_arm_linux_dependencies:
+    steps:
+      - run: sudo bash ./scripts/install-linux-deps.sh
 
 jobs:
   lint-build-debug:
@@ -107,6 +110,44 @@ jobs:
       - run: sudo make -C build install
       - run: make -C build package
 
+  build-arm-release:
+    machine:
+      image: ubuntu-2204:current
+    resource_class: arm.xlarge
+    steps:
+      - checkout
+      - run: |
+            pip3 install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - install_arm_linux_dependencies
+      - run: git submodule sync && git submodule update --init
+      - restore_cache:
+          keys:
+            - ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-arm_64-v3-{{ checksum "conanfile.txt" }}
+      - run: mkdir build
+      - run: |
+          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+      - run: make -C build -j8
+      - run: make -C build utrecht_tiles
+      - run: make -C build -j8 tests
+      # leaks in glibc we cant control for
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
+      - run: make -C build -j8 benchmarks
+      - run: make -C build -j8 run-benchmarks
+      - save_cache:
+          key: ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          paths:
+            - ~/.ccache
+            - ~/.conan
+      - run: sudo make -C build install
+      - run: make -C build package
+
   build-osx:
     executor: macos
     resource_class: large
@@ -148,6 +189,10 @@ workflows:
             tags:
               ignore: /.*/
       - build-release:
+          filters:
+            tags:
+              ignore: /.*/
+      - build-arm-release:
           filters:
             tags:
               ignore: /.*/
