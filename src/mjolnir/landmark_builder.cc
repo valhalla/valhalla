@@ -3,7 +3,6 @@
 
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
-#include <boost/property_tree/ptree.hpp>
 #include <filesystem>
 #include <tuple>
 
@@ -19,35 +18,35 @@ public:
   node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
     auto iter = tags.find("amenity");
     if (iter != tags.cend() && !iter->second.empty()) {
-      valhalla::mjolnir::LandmarkType type = static_cast<valhalla::mjolnir::LandmarkType>(0);
       try {
-        type = valhalla::mjolnir::string_to_landmark_type(iter->second);
-      } catch (const std::runtime_error& e) { return; }
+        auto landmark_type = valhalla::mjolnir::string_to_landmark_type(iter->second);
 
-      std::string name = "";
-      auto it = tags.find("name");
-      if (it != tags.cend() && !it->second.empty()) {
-        name = it->second;
-      }
+        std::string name = "";
+        auto it = tags.find("name");
+        if (it != tags.cend() && !it->second.empty()) {
+          name = it->second;
+        }
 
-      // insert parsed landmark directly into database
-      db_.insert_landmark(name, type, lng, lat);
+        // insert parsed landmark directly into database
+        db_.insert_landmark(name, landmark_type, lng, lat);
+      } catch (...) {}
     }
   }
 
-  virtual void changeset_callback(const uint64_t changeset_id) override {
+  virtual void changeset_callback(const uint64_t /*changeset_id*/) override {
+    LOG_WARN("landmark changeset callback shouldn't be called!");
   }
 
   virtual void way_callback(const uint64_t /*osmid*/,
                             const OSMPBF::Tags& /*tags*/,
                             const std::vector<uint64_t>& /*nodes*/) override {
-    LOG_WARN("way callback shouldn't be called!");
+    LOG_WARN("landmark way callback shouldn't be called!");
   }
 
   virtual void relation_callback(const uint64_t /*osmid*/,
                                  const OSMPBF::Tags& /*tags*/,
                                  const std::vector<OSMPBF::Member>& /*members*/) override {
-    LOG_WARN("relation callback shouldn't be called!");
+    LOG_WARN("landmark relation callback shouldn't be called!");
   }
 
   valhalla::mjolnir::LandmarkDatabase db_;
@@ -67,7 +66,13 @@ struct LandmarkDatabase::db_pimpl {
   bool vacuum_analyze = false;
 
   db_pimpl(const std::string& db_name, bool read_only) : insert_stmt(nullptr) {
-    // figure out if we need to create it or can just open it up
+    // create parent directory if not exist
+    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
+    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+      throw std::runtime_error("Can't create parent directory " + parent_dir.string());
+    }
+
+    // figure out if we need to create database or can just open it up
     auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
     if (!filesystem::exists(db_name)) {
       if (read_only)
@@ -208,7 +213,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
 
-    landmarks.emplace_back(std::make_tuple(name, static_cast<LandmarkType>(landmark_type), lng, lat));
+    landmarks.emplace_back(name, static_cast<LandmarkType>(landmark_type), lng, lat);
 
     ret = sqlite3_step(bounding_box_stmt);
   }
@@ -223,21 +228,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
 bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           const std::vector<std::string>& input_files) {
-  // parse config to get landmark database
-  auto db = pt.get_optional<std::string>("landmarks");
-  if (!db) {
-    LOG_ERROR("Landmarks config info not found. Landmarks builder will not be created.");
-    return false;
-  }
-
-  const filesystem::path parent_dir = filesystem::path(*db).parent_path();
-  if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
-    LOG_ERROR("Can't create parent directory " + parent_dir.string());
-    return false;
-  }
-
   // parse pbf to get landmark nodes
-  const std::string db_name = pt.get<std::string>("landmarks");
+  const std::string db_name = pt.get<std::string>("landmarks", "");
   landmark_callback callback(db_name);
 
   LOG_INFO("Parsing files...");

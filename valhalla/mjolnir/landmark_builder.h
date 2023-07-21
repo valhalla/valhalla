@@ -5,13 +5,10 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
-#include <string>
 #include <unordered_map>
 
 namespace valhalla {
 namespace mjolnir {
-static const std::string default_landmark_name = "";
-
 // obvious landmark types for vehicle routing
 enum class LandmarkType : uint8_t {
   restaurant = 1,

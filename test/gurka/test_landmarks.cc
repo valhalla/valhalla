@@ -20,16 +20,16 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
     )";
 
   const gurka::nodes nodes = {
-      {"A", {{"name", ""}, {"amenity", "bar"}}},
+      {"A", {{"amenity", "bar"}}},
       {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
-      {"C", {{"name", "ke ji lu"}, {"amenity", ""}}}, // no amenity, shouldn't be stored
+      {"C", {{"name", "ke ji lu"}}}, // no amenity, shouldn't be stored
       {"D", {{"name", "wan da"}, {"amenity", "cinema"}}},
       {"E", {{"name", "zhong lou"}, {"amenity", "monument"}}}, // not in list, shouldn't be stored
       // non-landmark nodes
-      {"a", {{"name", "gong ce"}, {"amenity", ""}}},
-      {"b", {{"name", "la ji tong"}}},
-      {"c", {{"name", "hua yuan"}}},
-      {"d", {{"name", ""}, {"amenity", ""}}},
+      {"a", {{"name", "gong ce"}, {"amenity", "toilets"}}},
+      {"b", {{"name", "la ji tong"}, {"amenity", "waste_basket"}}},
+      {"c", {{"name", "hua yuan"}, {"place", "city"}}},
+      {"d", {{"traffic_signal", "signal"}}},
   };
 
   const gurka::ways ways = {
@@ -120,7 +120,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   }
 
   EXPECT_TRUE(std::get<1>(landmarks[0]) == LandmarkType::bar); // A
-  EXPECT_TRUE(std::get<0>(landmarks[0]) == default_landmark_name);
+  EXPECT_TRUE(std::get<0>(landmarks[0]) == "A");
   EXPECT_TRUE(std::get<1>(landmarks[1]) == LandmarkType::restaurant); // B
   EXPECT_TRUE(std::get<0>(landmarks[1]) == "hai di lao");
   EXPECT_TRUE(std::get<1>(landmarks[2]) == LandmarkType::cinema); // D
