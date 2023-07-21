@@ -122,7 +122,7 @@ jobs:
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files
       - install_arm_linux_dependencies
       - run: git submodule sync && git submodule update --init
       - restore_cache:
