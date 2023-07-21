@@ -31,9 +31,7 @@ enum class LandmarkType : uint8_t {
   car_wash = 15,
   theatre = 16,
   cinema = 17,
-  bus_station = 18,
-  biergarten = 19,
-  casino = 20,
+  casino = 18,
 };
 
 using Landmark = std::tuple<std::string, LandmarkType, double, double>;
@@ -57,8 +55,6 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
        {"car_wash", LandmarkType::car_wash},
        {"theatre", LandmarkType::theatre},
        {"cinema", LandmarkType::cinema},
-       {"bus_station", LandmarkType::bus_station},
-       {"biergarten", LandmarkType::biergarten},
        {"casino", LandmarkType::casino}};
 
   auto it = string_to_landmark_type.find(s);
