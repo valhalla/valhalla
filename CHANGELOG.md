@@ -1,4 +1,4 @@
-## Release Date: 2022-??-?? Valhalla 3.4.1
+## Release Date: 2023-??-?? Valhalla 3.4.1
 * **Removed**
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
@@ -13,6 +13,10 @@
    * ADDED: PBF output for matrix endpoint [#4121](https://github.com/valhalla/valhalla/pull/4121)
    * CHANGED: sped up the transit gtfs ingestion process by sorting the feeds before querying them and avoiding copying their structures. forked just_gtfs into the valhalla org to accomplish it [#4167](https://github.com/valhalla/valhalla/pull/4167)
    * CHANGED: write traffic tile headers in `valhalla_build_extract` [#4195](https://github.com/valhalla/valhalla/pull/4195)
+   * ADDED: `source_percent_along` & `target_percent_along` to /trace_attributes JSON response [#4199](https://github.com/valhalla/valhalla/pull/4199)
+   * ADDED: sqlite database to store landmarks along with interfaces of insert and bounding box queries [#4189](https://github.com/valhalla/valhalla/pull/4189)
+   * CHANGED: refactor landmark database interface to use a pimpl [#4202](https://github.com/valhalla/valhalla/pull/4202)
+   * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
