@@ -42,7 +42,7 @@ enum class LandmarkType : uint8_t {
   hospital = 14,
   // same as bar could be just a building need at least a name to have a chance of seeing it
   pub = 16,
-  // generic, could be manyy many types of clinics also often there are multiple of these located in
+  // generic, could be many many types of clinics also often there are multiple of these located in
   // same "complex", you might have a dentist, orthodontist, ear nose throat and eye specialists all
   // next to each other.
   clinic = 17,

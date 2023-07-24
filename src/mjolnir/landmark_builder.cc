@@ -3,7 +3,6 @@
 
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
-#include <filesystem>
 #include <tuple>
 
 namespace {
@@ -66,7 +65,7 @@ struct LandmarkDatabase::db_pimpl {
   bool vacuum_analyze = false;
 
   db_pimpl(const std::string& db_name, bool read_only) : insert_stmt(nullptr) {
-    // create parent directory if not exist
+    // create parent directory if it doesn't exist
     const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
     if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
       throw std::runtime_error("Can't create parent directory " + parent_dir.string());
@@ -78,7 +77,7 @@ struct LandmarkDatabase::db_pimpl {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
     } else if (!read_only) {
-      std::filesystem::remove(db_name);
+      filesystem::remove(db_name);
       LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
