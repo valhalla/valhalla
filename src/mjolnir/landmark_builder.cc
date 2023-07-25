@@ -1,10 +1,59 @@
-#include "mjolnir/landmark_database_builder.h"
+#include "mjolnir/landmark_builder.h"
 #include "filesystem.h"
+
+#include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
+#include <tuple>
+
+namespace {
+struct landmark_callback : public OSMPBF::Callback {
+public:
+  landmark_callback(const std::string& db_name) : db_(db_name, false) {
+  }
+  virtual ~landmark_callback() {
+  }
+
+  virtual void
+  node_callback(const uint64_t /*osmid*/, double lng, double lat, const OSMPBF::Tags& tags) override {
+    auto iter = tags.find("amenity");
+    if (iter != tags.cend() && !iter->second.empty()) {
+      try {
+        auto landmark_type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+
+        std::string name = "";
+        auto it = tags.find("name");
+        if (it != tags.cend() && !it->second.empty()) {
+          name = it->second;
+        }
+
+        // insert parsed landmark directly into database
+        db_.insert_landmark(name, landmark_type, lng, lat);
+      } catch (...) {}
+    }
+  }
+
+  virtual void changeset_callback(const uint64_t /*changeset_id*/) override {
+    LOG_WARN("landmark changeset callback shouldn't be called!");
+  }
+
+  virtual void way_callback(const uint64_t /*osmid*/,
+                            const OSMPBF::Tags& /*tags*/,
+                            const std::vector<uint64_t>& /*nodes*/) override {
+    LOG_WARN("landmark way callback shouldn't be called!");
+  }
+
+  virtual void relation_callback(const uint64_t /*osmid*/,
+                                 const OSMPBF::Tags& /*tags*/,
+                                 const std::vector<OSMPBF::Member>& /*members*/) override {
+    LOG_WARN("landmark relation callback shouldn't be called!");
+  }
+
+  valhalla::mjolnir::LandmarkDatabase db_;
+};
+} // namespace
 
 namespace valhalla {
 namespace mjolnir {
-
 // TODO: this can be a utility and be more generic with a few more options, we could make the prepared
 //  statements on the fly and retrievable by the caller, then anything in the code base that wants to
 //  use sqlite can make use of this utility class. for now its ok to be specific to landmarks though
@@ -16,12 +65,20 @@ struct LandmarkDatabase::db_pimpl {
   bool vacuum_analyze = false;
 
   db_pimpl(const std::string& db_name, bool read_only) : insert_stmt(nullptr) {
-    // figure out if we need to create it or can just open it up
-    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+    // create parent directory if it doesn't exist
+    const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
+    if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
+      throw std::runtime_error("Can't create parent directory " + parent_dir.string());
+    }
+
+    // figure out if we need to create database or can just open it up
+    auto flags = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE;
     if (!filesystem::exists(db_name)) {
       if (read_only)
         throw std::logic_error("Cannot open sqlite database in read-only mode if it does not exist");
-      flags |= SQLITE_OPEN_CREATE;
+    } else if (!read_only) {
+      filesystem::remove(db_name);
+      LOG_INFO("deleting existing landmark database " + db_name + ", creating a new one");
     }
 
     // get a connection to the database
@@ -104,7 +161,10 @@ LandmarkDatabase::LandmarkDatabase(const std::string& db_name, bool read_only)
     : pimpl(new db_pimpl(db_name, read_only)) {
 }
 
-void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
+void LandmarkDatabase::insert_landmark(const std::string& name,
+                                       const LandmarkType& type,
+                                       const double lng,
+                                       const double lat) {
   auto* insert_stmt = pimpl->insert_stmt;
   if (!insert_stmt)
     throw std::logic_error("Sqlite database connection is read-only");
@@ -112,20 +172,10 @@ void LandmarkDatabase::insert_landmark(const Landmark& landmark) {
   sqlite3_reset(insert_stmt);
   sqlite3_clear_bindings(insert_stmt);
 
-  if (landmark.name != "") {
-    sqlite3_bind_text(insert_stmt, 1, landmark.name.c_str(), landmark.name.length(), SQLITE_STATIC);
-  } else {
-    sqlite3_bind_null(insert_stmt, 1);
-  }
-
-  if (landmark.type != "") {
-    sqlite3_bind_text(insert_stmt, 2, landmark.type.c_str(), landmark.type.length(), SQLITE_STATIC);
-  } else {
-    sqlite3_bind_null(insert_stmt, 2);
-  }
-
-  sqlite3_bind_double(insert_stmt, 3, landmark.lng);
-  sqlite3_bind_double(insert_stmt, 4, landmark.lat);
+  sqlite3_bind_text(insert_stmt, 1, name.c_str(), name.length(), SQLITE_STATIC);
+  sqlite3_bind_int(insert_stmt, 2, static_cast<int>(type));
+  sqlite3_bind_double(insert_stmt, 3, lng);
+  sqlite3_bind_double(insert_stmt, 4, lat);
 
   LOG_TRACE(sqlite3_expanded_sql(insert_stmt));
   if (sqlite3_step(insert_stmt) != SQLITE_DONE)
@@ -153,10 +203,17 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   int ret = sqlite3_step(bounding_box_stmt);
   while (ret == SQLITE_ROW) {
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 0));
-    const char* type = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
+
+    int landmark_type = -1;
+    if (sqlite3_column_type(bounding_box_stmt, 1) != SQLITE_NULL) {
+      landmark_type = sqlite3_column_int(bounding_box_stmt, 1);
+    }
+
     double lng = sqlite3_column_double(bounding_box_stmt, 2);
     double lat = sqlite3_column_double(bounding_box_stmt, 3);
-    landmarks.emplace_back(Landmark{name, type, lng, lat});
+
+    landmarks.emplace_back(name, static_cast<LandmarkType>(landmark_type), lng, lat);
+
     ret = sqlite3_step(bounding_box_stmt);
   }
 
@@ -166,6 +223,32 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
   }
 
   return landmarks;
+}
+
+bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
+                          const std::vector<std::string>& input_files) {
+  // parse pbf to get landmark nodes
+  const std::string db_name = pt.get<std::string>("landmarks", "");
+  landmark_callback callback(db_name);
+
+  LOG_INFO("Parsing files...");
+  // hold open all the files so that if something else (like diff application)
+  // needs to mess with them we wont have troubles with inodes changing underneath us
+  std::list<std::ifstream> file_handles;
+  for (const auto& input_file : input_files) {
+    file_handles.emplace_back(input_file, std::ios::binary);
+    if (!file_handles.back().is_open()) {
+      throw std::runtime_error("Unable to open: " + input_file);
+    }
+  }
+
+  LOG_INFO("Parsing nodes and storing landmarks...");
+  for (auto& file_handle : file_handles) {
+    OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
+                          callback);
+  }
+
+  return true;
 }
 
 } // end namespace mjolnir
