@@ -61,7 +61,7 @@ Check your architecture typing `arch` in the terminal. In case the result is `ar
 3. Rename the duplicated app `Rosetta Terminal`.
 4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
 5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
-6. Make shure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
+6. Make sure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
 7. Now it fully supports Homebrew and other x86_64 command line applications.
 
 Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.

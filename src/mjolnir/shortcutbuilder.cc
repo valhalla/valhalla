@@ -746,7 +746,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
-    uint32_t count = FormShortcuts(reader, *tile_level);
+    [[maybe_unused]] uint32_t count = FormShortcuts(reader, *tile_level);
     LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
   }
 }

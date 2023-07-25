@@ -93,17 +93,14 @@ public:
    * @param  mode_costing          Costing methods.
    * @param  mode                  Travel mode to use.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @return time/distance from origin index to all other locations
    */
-  std::vector<TimeDistance>
-  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t mode,
-                 const float max_matrix_distance,
-                 const bool has_time = false,
-                 const bool invariant = false);
+  void SourceToTarget(Api& request,
+                      baldr::GraphReader& graphreader,
+                      const sif::mode_costing_t& mode_costing,
+                      const sif::travel_mode_t mode,
+                      const float max_matrix_distance,
+                      const bool has_time = false,
+                      const bool invariant = false);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -279,12 +276,6 @@ protected:
 
     return infos;
   };
-
-  /**
-   * Form a time/distance matrix from the results.
-   * @return  Returns a time distance matrix among locations.
-   */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
 
 private:
   class TargetMap;

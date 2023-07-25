@@ -8,19 +8,20 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 
+#include "config.h"
 #include <algorithm>
 #include <cxxopts.hpp>
 #include <iostream>
 #include <unordered_map>
 #include <utility>
 
-#include "config.h"
+#include "argparse_utils.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
 // global options instead of passing them around
-std::string row_separator, column_separator, config;
+std::string row_separator, column_separator;
 bool ferries, unnamed;
 
 namespace {
@@ -141,13 +142,17 @@ void extend(GraphReader& reader,
 
 // program entry point
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree pt;
+  std::string bbox;
 
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_export_edges",
-      "valhalla_export_edges " VALHALLA_VERSION "\n\n"
-      "valhalla_export_edges is a simple command line test tool which\n"
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a simple command line test tool which\n"
       "dumps information about each graph edge.\n\n");
 
     using namespace std::string_literals;
@@ -158,38 +163,22 @@ int main(int argc, char* argv[]) {
       ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>(row_separator)->default_value("\n"))
       ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>(ferries)->default_value("false"))
       ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"))
-      ("config", "positional argument", cxxopts::value<std::string>(config));
+      ("config", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"config"});
     options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_export_edges " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (!result.count("config") || !filesystem::is_regular_file(filesystem::path(config))) {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
   // get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));

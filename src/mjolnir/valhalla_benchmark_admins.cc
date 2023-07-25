@@ -36,6 +36,8 @@
 #include "midgard/util.h"
 #include "mjolnir/util.h"
 
+#include "argparse_utils.h"
+
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
@@ -195,58 +197,45 @@ void Benchmark(const boost::property_tree::ptree& pt) {
   sqlite3_close(db_handle);
 }
 
-bool ParseArguments(int argc, char* argv[]) {
+int main(int argc, char** argv) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
   std::vector<std::string> input_files;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
-    cxxopts::Options options("valhalla_benchmark_admins", 
-      "valhalla_benchmark_admins " VALHALLA_VERSION "\n\n"
+    cxxopts::Options options(
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
       "valhalla_benchmark_admins is a program to time the admin queries\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>());
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+      return EXIT_SUCCESS;
 
     if (result.count("version")) {
       std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
       return EXIT_SUCCESS;
     }
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(config_file_path =
-                                        filesystem::path(result["config"].as<std::string>()))) {
-      return true;
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-    }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
-  }
-
-  return false;
-}
-
-int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv)) {
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
-  // Ccheck what type of input we are getting
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config_file_path.string(), pt);
-
   // Configure logging
-  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = config.get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -255,7 +244,7 @@ int main(int argc, char** argv) {
   }
 
   auto t1 = std::chrono::high_resolution_clock::now();
-  Benchmark(pt.get_child("mjolnir"));
+  Benchmark(config.get_child("mjolnir"));
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   float secs = msecs * 0.001f;

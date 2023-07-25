@@ -581,7 +581,7 @@ TEST(LokiService, test_actions_whitelist) {
 }
 
 TEST(LokiService, test_hierarchy_warning) {
-  // all actions involving disble_hierarchy_pruning
+  // all actions involving disable_hierarchy_pruning
   const std::vector<Options_Action> actions{Options_Action_route, Options_Action_sources_to_targets};
   // all relevant costing types, with or without warning
   const std::vector<Costing_Type> costing_types{Costing_Type_bicycle,       Costing_Type_bus,

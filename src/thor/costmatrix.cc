@@ -119,22 +119,24 @@ void CostMatrix::clear() {
 
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
-std::vector<TimeDistance> CostMatrix::SourceToTarget(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-    baldr::GraphReader& graphreader,
-    const sif::mode_costing_t& mode_costing,
-    const sif::travel_mode_t mode,
-    const float max_matrix_distance,
-    const bool has_time,
-    const bool invariant) {
+void CostMatrix::SourceToTarget(Api& request,
+                                baldr::GraphReader& graphreader,
+                                const sif::mode_costing_t& mode_costing,
+                                const sif::travel_mode_t mode,
+                                const float max_matrix_distance,
+                                const bool has_time,
+                                const bool invariant) {
 
   LOG_INFO("matrix::CostMatrix");
+  request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
 
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+
+  auto& source_location_list = *request.mutable_options()->mutable_sources();
+  auto& target_location_list = *request.mutable_options()->mutable_targets();
 
   current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
@@ -230,24 +232,26 @@ std::vector<TimeDistance> CostMatrix::SourceToTarget(
     RecostPaths(graphreader, source_location_list, target_location_list, time_infos, invariant);
   }
 
-  // Form the time, distance matrix from the destinations list
-  std::vector<TimeDistance> td;
+  // Form the matrix PBF output
   uint32_t count = 0;
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  reserve_pbf_arrays(matrix, best_connection_.size());
   for (const auto& connection : best_connection_) {
     uint32_t target_idx = count % target_location_list.size();
     uint32_t origin_idx = count / target_location_list.size();
-    if (has_time) {
-      auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
-                                     time_infos[origin_idx].timezone_index,
-                                     target_edgelabel_[target_idx].front().edgeid(), graphreader,
-                                     static_cast<uint64_t>(connection.cost.secs + .5f));
-      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance), date_time);
-    } else {
-      td.emplace_back(std::round(connection.cost.secs), std::round(connection.distance));
-    }
+    float time = connection.cost.secs + .5f;
+    auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
+                                   time_infos[origin_idx].timezone_index,
+                                   target_edgelabel_[target_idx].front().edgeid(), graphreader,
+                                   static_cast<uint64_t>(time));
+    matrix.mutable_from_indices()->Set(count, origin_idx);
+    matrix.mutable_to_indices()->Set(count, target_idx);
+    matrix.mutable_distances()->Set(count, connection.distance);
+    matrix.mutable_times()->Set(count, time);
+    auto* pbf_date_time = matrix.mutable_date_times()->Add();
+    *pbf_date_time = date_time;
     count++;
   }
-  return td;
 }
 
 // Initialize all time distance to "not found". Any locations that

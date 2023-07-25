@@ -489,7 +489,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // TODO - how to handle connections that reach nodes outside the tile? Need to break up the calls
     //  to MakeConnections and ConnectToGraph below. First we have threads find all the connections
-    //  even accross tile boundaries, we keep those in ram and then we run another pass where we add
+    //  even across tile boundaries, we keep those in ram and then we run another pass where we add
     //  those to the tiles when we rewrite them in ConnectToGraph. So two separate threaded steps
     //  rather than cramming both of them into the single build function
 
@@ -652,7 +652,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 
