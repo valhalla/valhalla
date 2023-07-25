@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "incidents.fullname" . }}
+  labels:
+    {{- include "incidents.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "incidents.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1      
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "incidents.selectorLabels" . | nindent 8 }}
+    spec: 
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "incidents.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: incidents-vol
+          persistentVolumeClaim:
+            claimName: {{ .Values.volname }}-pvc
+        - name: workdir
+          emptyDir: {}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8002
+              protocol: TCP
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: incidents-vol
+              mountPath: "/mnt"
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- if .Values.env }}
+              {{- toYaml .Values.env | nindent 12 }}
+            {{- end }}
+            - name: volume_prefix
+              value: {{ .Values.volume_prefix }}
+      # initContainers:
+      # - name: sysctl
+        # image: bitnami/bitnami-shell:latest
+        # imagePullPolicy: "IfNotPresent"
+        # command:
+          # - /bin/bash
+          # - -ec
+          # - |
+            # CURRENT=`sysctl -n vm.max_map_count`;
+            # DESIRED="262144";
+            # if [ "$DESIRED" -gt "$CURRENT" ]; then
+                # sysctl -w vm.max_map_count=262144;
+            # fi;
+        # securityContext:
+          # runAsUser: 0
+          # privileged: true
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/instance
+                operator: In
+                values:
+                - {{ include "incidents.fullname" . }}
+            topologyKey: "kubernetes.io/hostname"    
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
