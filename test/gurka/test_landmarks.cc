@@ -6,7 +6,8 @@
 #include "baldr/landmark.h"
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
-#include "mjolnir/landmark_builder.h"
+// #include "mjolnir/landmark_builder.h"
+#include "mjolnir/landmarks.h"
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>

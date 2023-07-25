@@ -1,4 +1,4 @@
-#include "mjolnir/landmark_builder.h"
+#include "mjolnir/landmarks.h"
 #include "filesystem.h"
 
 #include "mjolnir/osmpbfparser.h"
@@ -295,6 +295,51 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
     OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                           callback);
   }
+
+  return true;
+}
+
+// Returns the number of landmarks written to all the tiles
+std::pair<size_t, size_t> AddLandmarksToTiles(const std::vector<baldr::GraphId>& tiles, const std::string& dbname) {
+  // open the database
+
+  /*
+
+
+   for t in tiles:
+     // to get the bounding box of a tile you can use
+     baldr::TileHierarchy.get_level(graph_id
+     landmarks = db.query(t.bbox())
+     tb = tile_builder(t)
+     for l in landmarks:
+      edges = t.get_edges_near(l, 10) # 10 meter radius?
+      for e in edges:
+        tb.add_tag_value(e, to_tag(l), to_value(l))
+     tb.store_graph_tile()
+   */
+
+
+  return {tiles.size(), num_landmarks_written};
+}
+
+bool AddLandmarks(const boost::property_tree::ptree& pt) {
+  // make a thread pool, the size of the pool depends on mjolnir.concurrency from config
+
+  // make a list of jobs that the threads can burn down (can be either list per thread or shared list)
+  // each job is a tile id from the tileset. we can make num_threads individual lists, then we can
+  // sort the tileset by number of edges per tile, then loop over the sorted list, round robbining
+  // each one to the next threads individual list
+  /*
+   thread_jobs = []*num_threads
+   for i, tile in enumerate(descending_sorted_tiles): # most important (biggest) first
+     thread_jobs[i % num_threads].append(tile)
+  */
+
+  // start all the threads going burning down their jobs
+
+  // join all the threads and collect the number of landmarks that were written from all
+
+  // log how many were written to how many tiles INFO
 
   return true;
 }

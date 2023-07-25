@@ -15,6 +15,7 @@ namespace mjolnir {
 struct LandmarkDatabase {
 public:
   /**
+<<<<<<< HEAD:valhalla/mjolnir/landmark_builder.h
    * LandmarkDatabase constructor.
    * Create a new LandmarkDatabase object that connects to the SQLite landmark database
    * with the given `db_name`. The `read_only` parameter determines whether the
@@ -22,10 +23,16 @@ public:
    *
    * @param db_name The file path of the SQLite database to connect to.
    * @param read_only Set to true to open the database in read-only mode, false for read-write.
+=======
+   * TODO:
+   * @param db_name
+   * @param read_only
+>>>>>>> ec68e5ef1 (skeleton for adding landmarks to the tiles):valhalla/mjolnir/landmarks.h
    */
   LandmarkDatabase(const std::string& db_name, bool read_only);
 
   /**
+<<<<<<< HEAD:valhalla/mjolnir/landmark_builder.h
    * Insert a new landmark into the database.
    * This function inserts a new landmark into the database with the given `name`, `type`,
    * `lng`, and `lat`. The landmark's primary key will be automatically assigned by the database.
@@ -34,6 +41,13 @@ public:
    * @param type The type of the landmark (LandmarkType enum).
    * @param lng The longitude of the landmark.
    * @param lat The latitude of the landmark.
+=======
+   * TODO:
+   * @param name
+   * @param type
+   * @param lng
+   * @param lat
+>>>>>>> ec68e5ef1 (skeleton for adding landmarks to the tiles):valhalla/mjolnir/landmarks.h
    */
   void insert_landmark(const std::string& name,
                        const baldr::LandmarkType& type,
@@ -41,6 +55,7 @@ public:
                        const double lat);
 
   /**
+<<<<<<< HEAD:valhalla/mjolnir/landmark_builder.h
    * Retrieve a vector of landmarks from the database within the specified bounding box.
    * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max
    * longitude.
@@ -66,6 +81,19 @@ public:
    * @return A vector of Landmark objects matching the given primary keys.
    */
   std::vector<baldr::Landmark> get_landmarks_by_ids(const std::vector<int64_t>& pkeys);
+=======
+   * TODO:
+   * @param minLat
+   * @param minLong
+   * @param maxLat
+   * @param maxLong
+   * @return
+   */
+  std::vector<Landmark> get_landmarks_in_bounding_box(const double minLat,
+                                                      const double minLong,
+                                                      const double maxLat,
+                                                      const double maxLong);
+>>>>>>> ec68e5ef1 (skeleton for adding landmarks to the tiles):valhalla/mjolnir/landmarks.h
 
 protected:
   struct db_pimpl;
@@ -73,6 +101,7 @@ protected:
 };
 
 /**
+<<<<<<< HEAD:valhalla/mjolnir/landmark_builder.h
  * Build a SQLite landmark database and insert landmarks data from the PBF files to the database.
  * This function reads landmark data from PBF files specified in the `input_files` vector.
  * It then parses the data to extract landmark nodes and stores the landmarks in the database.
@@ -81,9 +110,23 @@ protected:
  * @param pt The configuration settings for the landmark building process.
  * @param input_files A vector of file paths to the PBF input files.
  * @return True if landmarks were successfully built and inserted into the database, false otherwise.
+=======
+ * TODO:
+ * @param pt
+ * @param input_files
+ * @return
+>>>>>>> ec68e5ef1 (skeleton for adding landmarks to the tiles):valhalla/mjolnir/landmarks.h
  */
 bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           const std::vector<std::string>& input_files);
+
+/**
+ * TODO:
+ * @param pt
+ * @param input_files
+ * @return
+ */
+bool AddLandmarks(const boost::property_tree::ptree& pt);
 
 } // namespace mjolnir
 
