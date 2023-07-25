@@ -10,7 +10,9 @@ ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-g
 
 # install deps
 WORKDIR /usr/local/src/valhalla
-RUN chmod a+r -R /etc/apt/trusted.gpg.d/
+RUN apt update
+RUN apt install gnupg2 --assume-yes
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
 COPY ./scripts/install-linux-deps.sh /usr/local/src/valhalla/scripts/install-linux-deps.sh
 RUN bash /usr/local/src/valhalla/scripts/install-linux-deps.sh
 RUN rm -rf /var/lib/apt/lists/*
