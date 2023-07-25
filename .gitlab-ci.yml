@@ -55,7 +55,7 @@ publish container:
   script:
     - 'until docker info; do sleep 1; done'
     - 'docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}'
-    - 'docker build -f src/Docker/Dockerfile -t ${CONTAINER_IMAGE} -t ${CONTAINER_IMAGE_LATEST} src/'
+    - 'docker build -f Dockerfile -t ${CONTAINER_IMAGE} -t ${CONTAINER_IMAGE_LATEST} .'
     - 'docker push ${CONTAINER_IMAGE}'
     - 'docker push ${CONTAINER_IMAGE_LATEST}'
 
