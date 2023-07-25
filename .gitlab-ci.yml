@@ -39,7 +39,7 @@ cache:
    
 publish container:
   stage: publish
-  image: docker:19.03.12
+  image: docker:20.10.14
   rules: 
     - if: '$MANUAL_RELEASE == "dev"'
     - if: '$MANUAL_RELEASE == "prod"'
@@ -51,7 +51,7 @@ publish container:
     CONTAINER_IMAGE: '${CI_REGISTRY}/${CONTAINER_NAME}:${VERSION_PREFIX}.${CI_PIPELINE_IID}'
     CONTAINER_IMAGE_LATEST: '${CI_REGISTRY}/${CONTAINER_NAME}:latest'
   services:
-    - docker:19.03.13-dind
+    - docker:20.10.14-dind
   script:
     - 'until docker info; do sleep 1; done'
     - 'docker login -u gitlab-ci-token -p ${CI_BUILD_TOKEN} ${CI_REGISTRY}'
