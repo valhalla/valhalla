@@ -102,6 +102,9 @@ int main(int argc, char** argv) {
                 proxy_t(context, "ipc:///tmp/incidents_in", "ipc:///tmp/incidents_out")));
   incident_proxy_thread.detach();
 
+  // add shortcut caching to the GraphReaderIncidents, but not the actors
+  pt.put("mjolnir.shortcut_caching", true);
+
   // only allow one thread
   auto indcident_worker_thread = std::thread(valhalla::incidents::run_service, pt);
   indcident_worker_thread.detach();
