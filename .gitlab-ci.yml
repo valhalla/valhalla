@@ -11,7 +11,7 @@ variables:
   PACKAGE_REGISTERY_PROJ_ID: '32'
   SOURCE_CODE_PATH: 'src/*/'
   VERSION_PREFIX: '1.0'
-  CONTAINER_NAME: 'internal/incidents'
+  CONTAINER_NAME: 'gis-ops/incidents'
   NAMESPACE: 'incidents'
   HELM_DEPLOYMENT_NAME: 'incidents-helm'
   MANUAL_RELEASE: ''
