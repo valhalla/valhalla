@@ -1,17 +1,30 @@
 #include "configuration.h"
+#include "filesystem.h"
+#include <stdexcept>
 
 namespace valhalla {
-namespace config {
-Configuration::Configuration(const std::string& config_file) : config_file_(config_file) {
-  rapidjson::read_json(config_file_, config_);
+namespace configuration {
+Configuration::Configuration(const std::string& config_file_or_inline) {
+  if (config_file_or_inline.empty()) {
+    throw std::runtime_error("no config provided");
+  }
+             
+  if(filesystem::is_regular_file(config_file_or_inline)) {
+    rapidjson::read_json(config_file_or_inline, config_);
+  } else {
+    auto inline_config = std::stringstream(config_file_or_inline);
+    rapidjson::read_json(inline_config, config_);
+  }
 }
-} // namespace config
 
-void config::Configure(const std::string& config_file) {
-  Configuration::GetInstance(config_file);
+void configure(const std::string& config_file_or_inline) {
+  Configuration::instance(config_file_or_inline);
 }
 
-const boost::property_tree::ptree& config::GetConfig() {
-  return config::Configuration::GetInstance().GetConfig();
+} // namespace configuration
+
+const boost::property_tree::ptree& config() {
+  return configuration::Configuration::instance().config();
 }
+
 } // namespace valhalla

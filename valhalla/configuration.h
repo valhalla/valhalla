@@ -6,38 +6,35 @@
 #include <string>
 
 namespace valhalla {
-namespace config {
+namespace configuration {
 
 class Configuration {
 protected:
   Configuration() = delete;
-  Configuration(const std::string& config_file);
+  Configuration(const std::string& config_file_or_inline);
 
   boost::property_tree::ptree config_;
-  std::string config_file_;
 
 public:
   Configuration(Configuration const&) = delete;
   void operator=(const Configuration&) = delete;
 
-  static Configuration& GetInstance(const std::string& config_file = "") {
-    static Configuration instance(config_file);
+  static Configuration& instance(const std::string& config_file_or_inline = "") {
+    static Configuration instance(config_file_or_inline);
     return instance;
   }
 
-  const std::string& GetConfigFile() const {
-    return config_file_;
-  }
-
-  const boost::property_tree::ptree& GetConfig() const {
+  const boost::property_tree::ptree& config() const {
     return config_;
   }
 };
 
-void Configure(const std::string& config_file);
-const boost::property_tree::ptree& GetConfig();
+void configure(const std::string& config_file_or_inline);
 
-} // namespace config
+} // namespace configuration
+
+const boost::property_tree::ptree& config();
+
 } // namespace valhalla
 
 #endif
