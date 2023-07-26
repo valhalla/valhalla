@@ -100,5 +100,5 @@ deploy to production:
   variables:
     VERSION: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'   
   script:
-    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/incidents --set image.tag=${VERSION} --set gitlab.envName="Production" --set nfs.path=/solvertech/production/incidents --set nfs.server=10.80.102.100 --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --set ingress.hosts[0].host=incidents.solvertech.cz,ingress.hosts[0].paths[0].path=/,ingress.hosts[0].paths[0].pathType=Prefix --set ingress.tls[0].hosts[0]=incidents.solvertech.cz --set ingress.tls[0].secretName=incidents-tls --namespace ${NAMESPACE} --debug'
+    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/incidents --set image.tag=${VERSION} --set gitlab.envName="Production" --set nfs.path=/solvertech/production/valhalla --set nfs.server=10.80.102.100 --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --set ingress.hosts[0].host=incidents.solvertech.cz,ingress.hosts[0].paths[0].path=/,ingress.hosts[0].paths[0].pathType=Prefix --set ingress.tls[0].hosts[0]=incidents.solvertech.cz --set ingress.tls[0].secretName=incidents-tls --namespace ${NAMESPACE} --debug'
    
