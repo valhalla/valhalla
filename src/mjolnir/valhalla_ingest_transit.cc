@@ -35,8 +35,8 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-  
-  auto pt = valhalla::config();
+
+  const auto& pt = valhalla::config();
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs

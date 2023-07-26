@@ -48,7 +48,7 @@ bool parse_common_args(const std::string& program,
   } else {
     throw cxxopts::OptionException("Configuration is required\n\n" + opts.help() + "\n\n");
   }
-  
+
   auto conf = valhalla::config();
 
   // configure logging
@@ -65,7 +65,7 @@ bool parse_common_args(const std::string& program,
     auto num_threads = std::max(1U, result.count("concurrency")
                                         ? result["concurrency"].as<uint32_t>()
                                         : conf.get<uint32_t>("mjolnir.concurrency",
-                                                           std::thread::hardware_concurrency()));
+                                                             std::thread::hardware_concurrency()));
     conf.put<uint32_t>("mjolnir.concurrency", num_threads);
 
     LOG_INFO("Running " + std::string(program) + " with " + std::to_string(num_threads) +

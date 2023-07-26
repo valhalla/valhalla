@@ -279,7 +279,7 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
-  
+
   auto config = valhalla::config();
 
   // configure logging

@@ -17,8 +17,8 @@
 using namespace prime_server;
 #endif
 
-#include "midgard/logging.h"
 #include "configuration.h"
+#include "midgard/logging.h"
 
 #include "loki/worker.h"
 #include "odin/worker.h"
