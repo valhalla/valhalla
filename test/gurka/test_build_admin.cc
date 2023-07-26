@@ -1,7 +1,8 @@
+#include <filesystem>
+
 #include <gtest/gtest.h>
 
 #include "baldr/admin.h"
-#include "filesystem.h"
 #include "gurka.h"
 #include "mjolnir/adminbuilder.h"
 #include "mjolnir/pbfgraphparser.h"
@@ -300,8 +301,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // Create test/data/admin/map.pbf
   const std::string workdir = "test/data/admin";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
