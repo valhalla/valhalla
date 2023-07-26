@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
   odin_proxy_thread.detach();
   std::list<std::thread> odin_worker_threads;
   for (size_t i = 0; i < worker_concurrency; ++i) {
-    odin_worker_threads.emplace_back(valhalla::odin::run_service);
+    odin_worker_threads.emplace_back(valhalla::odin::run_service, config);
     odin_worker_threads.back().detach();
   }
 
