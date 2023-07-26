@@ -29,6 +29,23 @@ void incident_worker_t::write_traffic(std::vector<OpenLrEdge>&& openlrs_edges,
     return;
   }
 
+  // Add the shortcuts
+  std::unordered_set<baldr::GraphId> shortcut_ids;
+  for (const auto& openlr_edge : openlrs_edges) {
+    auto itr = reader->edges_to_shorcuts.find(openlr_edge.edge_id);
+    if (itr == reader->edges_to_shorcuts.end()) {
+      continue;
+    }
+    shortcut_ids.insert(itr->second);
+  }
+  LOG_INFO("Found " + std::to_string(shortcut_ids.size()) + " shortcuts and " +
+           std::to_string(openlrs_edges.size()));
+
+  openlrs_edges.reserve(openlrs_edges.size() + shortcut_ids.size());
+  for (const auto& sid : shortcut_ids) {
+    openlrs_edges.emplace_back(sid, 0.f, 0.f, 0.f);
+  }
+
   std::sort(openlrs_edges.begin(), openlrs_edges.end(), [](const OpenLrEdge& a, const OpenLrEdge& b) {
     // This ordering means when we iterate over this list, it'll be
     // cache friendly, in-memory-order

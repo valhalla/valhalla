@@ -19,7 +19,7 @@ struct OpenLrEdge {
   bool is_last;            // if it's the last edge for an openlr, so we can plot them as GeoJSON
 
   // only allow this constructor: is_last will be set after initially collecting all edges
-  OpenLrEdge() = delete;
+  // OpenLrEdge() = delete;
   OpenLrEdge(const baldr::GraphId i, const float le, const float po, const float no)
       : edge_id(i), length(le), poff_start_offset(po), noff_start_offset(no), is_last(false) {
   }
@@ -56,8 +56,37 @@ struct RankEdge {
 class GraphReaderIncidents : public baldr::GraphReader {
 public:
   using baldr::GraphReader::tile_extract_;
+  std::unordered_map<valhalla::baldr::GraphId, valhalla::baldr::GraphId> edges_to_shorcuts;
   explicit GraphReaderIncidents(const boost::property_tree::ptree& pt)
       : baldr::GraphReader(pt, nullptr, false) {
+    // find all superseded edges and build the cached map
+    for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
+      // we dont get shortcuts on level 2 and up
+      if (level.level > 1)
+        continue;
+      // for each tile
+      for (auto tile_id : GetTileSet(level.level)) {
+        // cull cache if we are over allocated
+        if (OverCommitted())
+          Trim();
+        // this shouldnt fail but garbled files could cause it
+        auto tile = GetGraphTile(tile_id);
+        assert(tile);
+        // for each edge in the tile
+        for (const auto& edge : tile->GetDirectedEdges()) {
+          // skip non-shortcuts
+          if (!edge.shortcut())
+            continue;
+
+          auto shortcut_id = tile->header()->graphid();
+          shortcut_id.set_id(&edge - tile->directededge(0));
+
+          for (const auto& r_id : RecoverShortcut(shortcut_id)) {
+            edges_to_shorcuts[r_id] = shortcut_id;
+          }
+        }
+      }
+    }
   }
 };
 

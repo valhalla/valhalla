@@ -45,6 +45,8 @@ incident_worker_t::incident_worker_t(const boost::property_tree::ptree& config_t
                config.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   LOG_INFO("Running incident action with " + std::to_string(thread_count) + " threads...");
 
+  // remove shortcut caching before configuring the actors
+  config.erase("mjolnir.shortcut_caching");
   actors.reserve(thread_count);
   for (uint32_t i = 0; i < thread_count; i++) {
     actors.emplace_back(tyr::actor_t(config, false));
