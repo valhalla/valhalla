@@ -299,47 +299,56 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
   return true;
 }
 
-// Returns the number of landmarks written to all the tiles
-std::pair<size_t, size_t> AddLandmarksToTiles(const std::vector<baldr::GraphId>& tiles, const std::string& dbname) {
+// return the sequence file location where we wrote the edges correlated to each landmark
+std::string FindLandmarkEdges(const std::vector<baldr::GraphId>& tiles, const std::string& dbname) {
   // open the database
 
-  /*
+  // open a new sequence<std::pair<uint64_t, uint64_t>> give it a temp file name
 
+  // for each job (bounding box)
+    // get the landmarks in the box
+    // call loki::search with the landmark lat lon and some radius
+    // maybe do some filtering and only keep some of the edges it finds
+    // for each edge
+      // add the edgeid,landmark_pkey to the sequence
 
-   for t in tiles:
-     // to get the bounding box of a tile you can use
-     baldr::TileHierarchy.get_level(graph_id
-     landmarks = db.query(t.bbox())
-     tb = tile_builder(t)
-     for l in landmarks:
-      edges = t.get_edges_near(l, 10) # 10 meter radius?
-      for e in edges:
-        tb.add_tag_value(e, to_tag(l), to_value(l))
-     tb.store_graph_tile()
-   */
+  // return the sequence file name
+}
 
-
-  return {tiles.size(), num_landmarks_written};
+std::tuple<size_t, size_t, size_t> UpdateTiles(/*const ref start of range in sequence, const ref end of range in sequence*/){
+  // make a null tilebuilder unique_ptr
+  // for each entry in sequence
+    // if tilebuilder is null or its a not before seen tile
+      // write the old tilebuilder to disk if not null
+      // create a new tile bulider to reset the unique_ptr with
+    // add this landmark to this edge
+  // write the tilebuilder to the disk if not null
+  //return some stats about number of tiles writting, number of landmarks seen and number of edges updated
 }
 
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
   // make a thread pool, the size of the pool depends on mjolnir.concurrency from config
 
-  // make a list of jobs that the threads can burn down (can be either list per thread or shared list)
-  // each job is a tile id from the tileset. we can make num_threads individual lists, then we can
-  // sort the tileset by number of edges per tile, then loop over the sorted list, round robbining
-  // each one to the next threads individual list
-  /*
-   thread_jobs = []*num_threads
-   for i, tile in enumerate(descending_sorted_tiles): # most important (biggest) first
-     thread_jobs[i % num_threads].append(tile)
-  */
+  // ok so we need some work for each thread to do but in this case the difficulty of a given threads
+  // work is a function of the number of landmarks in a location and density of the road network
+  // one option is to still use tiles from the tileset to get a good guess of this though we cant just
+  // look at one level we'll have to look at all the tiles in the tileset and intersect them with a
+  // grid of our choosing
 
   // start all the threads going burning down their jobs
 
-  // join all the threads and collect the number of landmarks that were written from all
+  // join all the threads and collect the N different sequence files
 
-  // log how many were written to how many tiles INFO
+  // merge sort the N different sequence files
+
+  // find the start/end of each tiles edge associations in the sequence, these ranges become the jobs
+  // that we'll send to the next batch of threads
+
+  // start all the threads going updating the tiles with the associated edges for each tile
+
+  // join all the threads accumulating stats about how many tiles, landmarks, and edges were touched
+
+  // LOG_INFO the stats
 
   return true;
 }
