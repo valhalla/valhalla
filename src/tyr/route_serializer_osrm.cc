@@ -1220,17 +1220,21 @@ json::MapPtr banner_component(const std::string& type, const std::string& text) 
 json::MapPtr primary_banner_instruction(const std::string& primary_text,
                                         const std::string& ref,
                                         const std::string& exit,
+                                        const bool arrive_maneuver,
                                         const std::string& maneuver_type,
-                                        const std::string& modifier) {
+                                        const std::string& modifier,
+                                        const bool roundabout,
+                                        const uint32_t roundabout_turn_degrees,
+                                        const std::string& drive_side) {
   json::MapPtr instruction = json::map({});
   json::ArrayPtr components = json::array({});
 
-  if (!exit.empty()) {
+  if (!exit.empty() && !arrive_maneuver) {
     components->emplace_back(banner_component("exit", "Exit"));
     components->emplace_back(banner_component("exit-number", exit));
   }
   components->emplace_back(banner_component("text", primary_text));
-  if (!ref.empty()) {
+  if (!ref.empty() && !arrive_maneuver) {
     components->emplace_back(banner_component("delimiter", "/"));
     components->emplace_back(banner_component("text", ref));
   }
@@ -1241,6 +1245,10 @@ json::MapPtr primary_banner_instruction(const std::string& primary_text,
   }
   if (!modifier.empty()) {
     instruction->emplace("modifier", modifier);
+  }
+  if (roundabout) {
+    instruction->emplace("degrees", static_cast<uint64_t>(roundabout_turn_degrees));
+    instruction->emplace("driving_side", drive_side);
   }
   return instruction;
 }
@@ -1298,6 +1306,48 @@ json::MapPtr sub_banner_instruction(const valhalla::DirectionsLeg::Maneuver* pre
   return instruction;
 }
 
+// The roundabout_turn_degrees is approximated by comparing the heading of the last edge
+// before the roundabout with the heading of the first edge after the roundabout
+uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                      const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                      valhalla::odin::EnhancedTripLeg* etp) {
+  uint32_t roundabout_turn_degrees = 0;
+  uint32_t bearing_before = 0;
+  uint32_t bearing_after = 0;
+
+  if (maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter) {
+    uint32_t begin_index = maneuver.begin_path_index();
+    if (begin_index > 0) {
+      // This is the normal case where a previous edge exists
+      bearing_before = etp->GetPrevEdge(begin_index)->end_heading();
+    } else {
+      bearing_before = etp->GetCurrEdge(begin_index)->begin_heading();
+    }
+
+    uint32_t end_index = maneuver.end_path_index();
+    bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+  }
+
+  if (prev_maneuver != nullptr && maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
+    uint32_t begin_index = prev_maneuver->begin_path_index();
+    if (begin_index > 0) {
+      // This is the normal case where a previous edge exists
+      bearing_before = etp->GetPrevEdge(begin_index)->end_heading();
+    } else {
+      bearing_before = etp->GetCurrEdge(begin_index)->begin_heading();
+    }
+    bearing_after = maneuver.begin_heading();
+  }
+
+  roundabout_turn_degrees = ((bearing_before - bearing_after - 180) + 720) % 360;
+
+  if (!etp->GetCurrEdge(maneuver.begin_path_index())->drive_on_right()) {
+    roundabout_turn_degrees = 360 - roundabout_turn_degrees;
+  }
+
+  return roundabout_turn_degrees;
+}
+
 // Populate the bannerInstructions within a step.
 // bannerInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
 json::ArrayPtr banner_instructions(const std::string& name,
@@ -1310,7 +1360,8 @@ json::ArrayPtr banner_instructions(const std::string& name,
                                    const std::string& maneuver_type,
                                    const std::string& modifier,
                                    const std::string& exit,
-                                   const double distance) {
+                                   const double distance,
+                                   const std::string& drive_side) {
   // bannerInstructions is an array, because there may be multiple similar banner instruction
   // objects. Mostly if the 'sub' attribute is to be added along the current step, a new
   // instruction is created and the primary and secondary instructions are repeated with the
@@ -1336,11 +1387,22 @@ json::ArrayPtr banner_instructions(const std::string& name,
     primary_text = maneuver.text_instruction();
   }
 
+  bool roundabout = maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutEnter ||
+                    maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit;
+
+  // The roundabout_turn_degrees represents how far around the roundabout a circle the maneuver is.
+  // If it goes straight through, it's 180 degrees, if it's a quarter circle is 90 degrees, etc.
+  uint32_t roundabout_turn_degrees =
+      roundabout ? calc_roundabout_turn_degrees(prev_maneuver, maneuver, etp) : 0;
+
   // distanceAlongGeometry is the distance along the current step from where on this
   // banner should be visible. The first banner starts at the beginning.
   banner_instruction_main->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
-  banner_instruction_main->emplace("primary", primary_banner_instruction(primary_text, ref_, exit,
-                                                                         maneuver_type, modifier));
+  banner_instruction_main->emplace("primary",
+                                   primary_banner_instruction(primary_text, ref_, exit,
+                                                              arrive_maneuver, maneuver_type,
+                                                              modifier, roundabout,
+                                                              roundabout_turn_degrees, drive_side));
 
   if (!secondary_text.empty()) {
     banner_instruction_main->emplace("secondary", secondary_banner_instruction(secondary_text));
@@ -1359,7 +1421,10 @@ json::ArrayPtr banner_instructions(const std::string& name,
       }
       banner_instruction_with_sub->emplace("primary",
                                            primary_banner_instruction(primary_text, ref_, exit,
-                                                                      maneuver_type, modifier));
+                                                                      arrive_maneuver, maneuver_type,
+                                                                      modifier, roundabout,
+                                                                      roundabout_turn_degrees,
+                                                                      drive_side));
       banner_instruction_with_sub->emplace("distanceAlongGeometry", json::fixed_t{400, 3});
     } else {
       banner_instruction_main->emplace("sub", std::move(sub_banner));
@@ -1664,12 +1729,12 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           prev_step->emplace("bannerInstructions",
                              banner_instructions(name, dest, ref, prev_maneuver, maneuver,
                                                  arrive_maneuver, &etp, mnvr_type, modifier, ex,
-                                                 prev_distance));
+                                                 prev_distance, drive_side));
         }
         if (arrive_maneuver) {
           step->emplace("bannerInstructions",
                         banner_instructions(name, dest, ref, prev_maneuver, maneuver, arrive_maneuver,
-                                            &etp, mnvr_type, modifier, ex, distance));
+                                            &etp, mnvr_type, modifier, ex, distance, drive_side));
         }
       }
 
