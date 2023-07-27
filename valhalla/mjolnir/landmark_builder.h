@@ -60,7 +60,7 @@ enum class LandmarkType : uint8_t {
   casino = 18,
 };
 
-using Landmark = std::tuple<std::string, LandmarkType, double, double>;
+using Landmark = std::tuple<uint32_t, std::string, LandmarkType, double, double>;
 
 inline LandmarkType string_to_landmark_type(const std::string& s) {
   static const std::unordered_map<std::string, LandmarkType> string_to_landmark_type =
@@ -98,10 +98,13 @@ public:
                        const LandmarkType& type,
                        const double lng,
                        const double lat);
+
   std::vector<Landmark> get_landmarks_in_bounding_box(const double minLat,
                                                       const double minLong,
                                                       const double maxLat,
                                                       const double maxLong);
+
+  Landmark get_landmark(const uint32_t pkey);
 
 protected:
   struct db_pimpl;

@@ -74,10 +74,10 @@ TEST(LandmarkTest, TestBuildDatabase) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + std::get<0>(landmark) +
-             ", type: " + std::to_string(static_cast<uint8_t>(std::get<1>(landmark))) +
-             ", longitude: " + std::to_string(std::get<2>(landmark)) +
-             ", latitude: " + std::to_string(std::get<3>(landmark)));
+    LOG_INFO("id: " + std::to_string(std::get<0>(landmark)) + ", name: " + std::get<1>(landmark) +
+             ", type: " + std::to_string(static_cast<uint8_t>(std::get<2>(landmark))) +
+             ", longitude: " + std::to_string(std::get<3>(landmark)) +
+             ", latitude: " + std::to_string(std::get<4>(landmark)));
   }
 
   landmarks.clear();
@@ -113,16 +113,24 @@ TEST(LandmarkTest, TestParseLandmarks) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("name: " + std::get<0>(landmark) +
-             ", type: " + std::to_string(static_cast<uint8_t>(std::get<1>(landmark))) +
-             ", longitude: " + std::to_string(std::get<2>(landmark)) +
-             ", latitude: " + std::to_string(std::get<3>(landmark)));
+    LOG_INFO("id: " + std::to_string(std::get<0>(landmark)) + ", name: " + std::get<1>(landmark) +
+             ", type: " + std::to_string(static_cast<uint8_t>(std::get<2>(landmark))) +
+             ", longitude: " + std::to_string(std::get<3>(landmark)) +
+             ", latitude: " + std::to_string(std::get<4>(landmark)));
   }
 
-  EXPECT_TRUE(std::get<1>(landmarks[0]) == LandmarkType::bar); // A
-  EXPECT_TRUE(std::get<0>(landmarks[0]) == "A");
-  EXPECT_TRUE(std::get<1>(landmarks[1]) == LandmarkType::restaurant); // B
-  EXPECT_TRUE(std::get<0>(landmarks[1]) == "hai di lao");
-  EXPECT_TRUE(std::get<1>(landmarks[2]) == LandmarkType::cinema); // D
-  EXPECT_TRUE(std::get<0>(landmarks[2]) == "wan da");
+  EXPECT_TRUE(std::get<2>(landmarks[0]) == LandmarkType::bar); // A
+  EXPECT_TRUE(std::get<1>(landmarks[0]) == "A");
+  EXPECT_TRUE(std::get<2>(landmarks[1]) == LandmarkType::restaurant); // B
+  EXPECT_TRUE(std::get<1>(landmarks[1]) == "hai di lao");
+  EXPECT_TRUE(std::get<2>(landmarks[2]) == LandmarkType::cinema); // D
+  EXPECT_TRUE(std::get<1>(landmarks[2]) == "wan da");
+
+  // check landmark getter
+  Landmark result{};
+  for (uint32_t pkey = 1; pkey < 4; pkey++) {
+    EXPECT_NO_THROW({ result = db.get_landmark(pkey); });
+    EXPECT_TRUE(std::get<0>(result) == pkey);
+  }
+  EXPECT_THROW({ result = db.get_landmark(4); }, std::runtime_error); // only three landmarks exist
 }
