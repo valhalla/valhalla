@@ -1,3 +1,4 @@
+#include "baldr/rapidjson_utils.h"
 #include "gurka.h"
 #include <gtest/gtest.h>
 
@@ -799,74 +800,83 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   EXPECT_STREQ(primary_0["text"].GetString(), "Other");
 }
 
-TEST(Standalone, BannerInstructionsRotary) {
-  const std::string ascii_map = R"(
-                            V
-                            |
-                            |
-                            |
-                            U
-                           / \
-                          3   |
-                          K---J
-                     L---/     \---I
-                  --/               \--
-                 /                     \
-                M                       H
-                |                       |
-          /----N                         G-2--\
-    Q----R     |                         |     S------T
-          \--1-A                         F----/
-                |                       |
-                B                       E
-                 \                     /
-                  --\               /--
-                     C---\     /---D
-                          Y---Z
+class Rotary : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    const std::string ascii_map = R"(
+                              V
+                              |
+                              |
+                              |
+                              U
+                             / \
+                            3   |
+                            K---J
+                       L---/     \---I
+                    --/               \--
+                   /                     \
+                  M                       H
+                  |                       |
+            /----N                         G-2--\
+      Q----R     |                         |     S------T
+            \--1-A                         F----/
+                  |                       |
+                  B                       E
+                   \                     /
+                    --\               /--
+                       C---\     /---D
+                            Y---Z
 
 
-  )";
+    )";
 
-  const gurka::ways ways =
-      {{"ABCYZDEFG", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
-       {"GHIJK", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
-       {"KLMNA", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
+    const gurka::ways ways =
+        {{"ABCYZDEFG", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
+         {"GHIJK", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
+         {"KLMNA", {{"name", "Grand Rotary"}, {"highway", "primary"}, {"junction", "circular"}}},
 
-       {"QR", {{"name", "Western Road"}, {"highway", "primary"}}},
-       {"R1A", {{"name", "Western Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
-       {"NR", {{"name", "Western Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
+         {"QR", {{"name", "Western Road"}, {"highway", "primary"}}},
+         {"R1A", {{"name", "Western Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
+         {"NR", {{"name", "Western Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
 
-       {"TS", {{"name", "Eastern Road"}, {"highway", "primary"}}},
-       {"S2G", {{"name", "Eastern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
-       {"FS", {{"name", "Eastern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
+         {"TS", {{"name", "Eastern Road"}, {"highway", "primary"}}},
+         {"S2G", {{"name", "Eastern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
+         {"FS", {{"name", "Eastern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
 
-       {"UV", {{"name", "Northern Road"}, {"highway", "primary"}}},
-       {"U3K", {{"name", "Northern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
-       {"JU", {{"name", "Northern Road"}, {"highway", "primary"}, {"oneway", "yes"}}}};
-  const gurka::nodes nodes = {{"1", {{"highway", "give_way"}, {"direction", "forward"}}},
-                              {"2", {{"highway", "give_way"}, {"direction", "forward"}}},
-                              {"3", {{"highway", "give_way"}, {"direction", "forward"}}}};
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {13.34792, 52.51585});
-  const std::unordered_map<std::string, std::string> build_config{
-      {"mjolnir.data_processing.use_admin_db", "false"}};
+         {"UV", {{"name", "Northern Road"}, {"highway", "primary"}}},
+         {"U3K", {{"name", "Northern Road"}, {"highway", "primary"}, {"oneway", "yes"}}},
+         {"JU", {{"name", "Northern Road"}, {"highway", "primary"}, {"oneway", "yes"}}}};
+    const gurka::nodes nodes = {{"1", {{"highway", "give_way"}, {"direction", "forward"}}},
+                                {"2", {{"highway", "give_way"}, {"direction", "forward"}}},
+                                {"3", {{"highway", "give_way"}, {"direction", "forward"}}}};
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {13.34792, 52.51585});
+    const std::unordered_map<std::string, std::string> build_config{
+        {"mjolnir.data_processing.use_admin_db", "false"}};
 
-  auto map = gurka::buildtiles(layout, ways, nodes, {},
-                               "test/data/osrm_serializer_banner_instructions_rotary", build_config);
+    map = gurka::buildtiles(layout, ways, nodes, {},
+                            "test/data/osrm_serializer_banner_instructions_rotary", build_config);
+  }
 
-  // starts on west side, goes north
-  auto from = "Q";
-  auto to = "V";
-  const std::string& request_1 =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
-  auto result = gurka::do_action(valhalla::Options::route, map, request_1);
-  auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
+  rapidjson::Document json_request(const std::string& from, const std::string& to) {
+    const std::string& request =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
+         std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, map, request);
+    return gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
+  }
+};
+
+gurka::map Rotary::map = {};
+
+TEST_F(Rotary, BannerInstructionsRotaryWestNorth) {
+  auto json = json_request("Q", "V");
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // validate first step's primary instructions
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_0["type"].GetString(), "rotary");
@@ -877,7 +887,6 @@ TEST(Standalone, BannerInstructionsRotary) {
   EXPECT_STREQ(primary_0["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_0["text"].GetString(), "Northern Road");
 
-  // validate second step's primary instructions
   auto primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_1["type"].GetString(), "exit rotary");
@@ -887,44 +896,26 @@ TEST(Standalone, BannerInstructionsRotary) {
   ASSERT_TRUE(primary_1.HasMember("driving_side"));
   EXPECT_STREQ(primary_1["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_1["text"].GetString(), "Northern Road");
+}
 
-  // NEXT NAVIGATION
-  // starts on rotary itself, goes north
-  from = "A";
-  to = "V";
-  const std::string& request_2 =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
-  result = gurka::do_action(valhalla::Options::route, map, request_2);
-  json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+TEST_F(Rotary, BannerInstructionsOnRotary) {
+  auto json = json_request("A", "V");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
+  auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_0["type"].GetString(), "exit roundabout");
   ASSERT_TRUE(primary_0.HasMember("degrees"));
   ASSERT_TRUE(primary_0.HasMember("driving_side"));
   EXPECT_STREQ(primary_0["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_0["text"].GetString(), "Northern Road");
+}
 
-  // NEXT NAVIGATION
-  // starts on east side goes north
-  from = "T";
-  to = "V";
-  const std::string& request_3 =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
-  result = gurka::do_action(valhalla::Options::route, map, request_3);
-  json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+TEST_F(Rotary, BannerInstructionsRotaryEastNorth) {
+  auto json = json_request("T", "V");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
+  auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_0["type"].GetString(), "rotary");
   ASSERT_TRUE(primary_0.HasMember("degrees"));
@@ -934,7 +925,7 @@ TEST(Standalone, BannerInstructionsRotary) {
   EXPECT_STREQ(primary_0["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_0["text"].GetString(), "Northern Road");
 
-  primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
+  auto primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_1["type"].GetString(), "exit rotary");
   ASSERT_TRUE(primary_1.HasMember("degrees"));
@@ -943,23 +934,13 @@ TEST(Standalone, BannerInstructionsRotary) {
   ASSERT_TRUE(primary_1.HasMember("driving_side"));
   EXPECT_STREQ(primary_1["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_1["text"].GetString(), "Northern Road");
+}
 
-  // NEXT NAVIGATION
-  // goes straight through roundabout from east to west
-  from = "Q";
-  to = "T";
-  const std::string& request_4 =
-      (boost::format(
-           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","banner_instructions":true})") %
-       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
-       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
-          .str();
-  result = gurka::do_action(valhalla::Options::route, map, request_4);
+TEST_F(Rotary, BannerInstructionsRotaryEastWest) {
+  auto json = json_request("Q", "T");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  steps = json["routes"][0]["legs"][0]["steps"].GetArray();
-
-  primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
+  auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_0["type"].GetString(), "rotary");
   ASSERT_TRUE(primary_0.HasMember("degrees"));
@@ -969,7 +950,7 @@ TEST(Standalone, BannerInstructionsRotary) {
   EXPECT_STREQ(primary_0["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_0["text"].GetString(), "Eastern Road");
 
-  primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
+  auto primary_1 = steps[1]["bannerInstructions"][0]["primary"].GetObject();
 
   EXPECT_STREQ(primary_1["type"].GetString(), "exit rotary");
   ASSERT_TRUE(primary_1.HasMember("degrees"));
