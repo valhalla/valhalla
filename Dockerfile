@@ -71,5 +71,5 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     # python smoke test
     python3 -c "import valhalla,sys; print(sys.version, valhalla)"
     # dir for NFS mount
-RUN mkdir /mnt
+RUN mkdir /data
 ENTRYPOINT ["tail", "-f", "/dev/null"]
