@@ -18,6 +18,7 @@
    * CHANGED: refactor landmark database interface to use a pimpl [#4202](https://github.com/valhalla/valhalla/pull/4202)
    * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
+   * ADDED: add primary key in the landmark sqlite database and a method to retrieve a landmark via its primary key [#4224](https://github.com/valhalla/valhalla/pull/4224)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
