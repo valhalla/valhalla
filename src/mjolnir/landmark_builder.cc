@@ -194,7 +194,7 @@ void LandmarkDatabase::insert_landmark(const std::string& name,
   pimpl->vacuum_analyze = true;
 }
 
-Landmark LandmarkDatabase::get_landmark(const uint32_t pkey) {
+Landmark LandmarkDatabase::get_landmark(const int64_t pkey) {
   auto* get_landmark_stmt = pimpl->get_landmark_stmt;
 
   sqlite3_reset(get_landmark_stmt);
@@ -207,12 +207,7 @@ Landmark LandmarkDatabase::get_landmark(const uint32_t pkey) {
   if (ret == SQLITE_ROW) {
     uint32_t landmark_id = static_cast<uint32_t>(sqlite3_column_int(get_landmark_stmt, 0));
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(get_landmark_stmt, 1));
-
-    int landmark_type = -1;
-    if (sqlite3_column_type(get_landmark_stmt, 2) != SQLITE_NULL) {
-      landmark_type = sqlite3_column_int(get_landmark_stmt, 2);
-    }
-
+    int landmark_type = sqlite3_column_int(get_landmark_stmt, 2);
     double lng = sqlite3_column_double(get_landmark_stmt, 3);
     double lat = sqlite3_column_double(get_landmark_stmt, 4);
 
@@ -245,14 +240,9 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_in_bounding_box(const doub
 
   int ret = sqlite3_step(bounding_box_stmt);
   while (ret == SQLITE_ROW) {
-    uint32_t landmark_id = static_cast<uint32_t>(sqlite3_column_int(bounding_box_stmt, 0));
+    auto landmark_id = static_cast<int64_t>(sqlite3_column_int64(bounding_box_stmt, 0));
     const char* name = reinterpret_cast<const char*>(sqlite3_column_text(bounding_box_stmt, 1));
-
-    int landmark_type = -1;
-    if (sqlite3_column_type(bounding_box_stmt, 2) != SQLITE_NULL) {
-      landmark_type = sqlite3_column_int(bounding_box_stmt, 2);
-    }
-
+    int landmark_type = sqlite3_column_int(bounding_box_stmt, 2);
     double lng = sqlite3_column_double(bounding_box_stmt, 3);
     double lat = sqlite3_column_double(bounding_box_stmt, 4);
 
