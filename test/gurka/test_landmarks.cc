@@ -126,11 +126,8 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_TRUE(std::get<2>(landmarks[2]) == LandmarkType::cinema); // D
   EXPECT_TRUE(std::get<1>(landmarks[2]) == "wan da");
 
-  // check landmark getter
-  Landmark result{};
-  for (uint32_t pkey = 1; pkey < 4; pkey++) {
-    EXPECT_NO_THROW({ result = db.get_landmark_by_id(pkey); });
-    EXPECT_TRUE(std::get<0>(result) == pkey);
-  }
-  EXPECT_THROW({ result = db.get_landmark_by_id(4); }, std::runtime_error); // only three landmarks exist
+  // check getting multiple landmarks by ids
+  landmarks.clear();
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({1, 2, 3, 4}); });
+  EXPECT_EQ(landmarks.size(), 3);
 }

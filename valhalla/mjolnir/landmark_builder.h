@@ -104,7 +104,7 @@ public:
                                               const double maxLat,
                                               const double maxLong);
 
-  Landmark get_landmark_by_id(const int64_t pkey);
+  std::vector<Landmark> get_landmarks_by_ids(const std::vector<int64_t>& pkeys);
 
 protected:
   struct db_pimpl;

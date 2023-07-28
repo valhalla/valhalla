@@ -61,12 +61,11 @@ struct LandmarkDatabase::db_pimpl {
   sqlite3* db;
   sqlite3_stmt* insert_stmt;
   sqlite3_stmt* bounding_box_stmt;
-  sqlite3_stmt* get_landmark_by_id_stmt;
   std::shared_ptr<void> spatial_lite;
   bool vacuum_analyze = false;
 
   db_pimpl(const std::string& db_name, bool read_only)
-      : insert_stmt(nullptr), bounding_box_stmt(nullptr), get_landmark_by_id_stmt(nullptr) {
+      : insert_stmt(nullptr), bounding_box_stmt(nullptr) {
     // create parent directory if it doesn't exist
     const filesystem::path parent_dir = filesystem::path(db_name).parent_path();
     if (!filesystem::exists(parent_dir) && !filesystem::create_directories(parent_dir)) {
@@ -137,16 +136,6 @@ struct LandmarkDatabase::db_pimpl {
       throw std::runtime_error("Sqlite prepared select statement error: " +
                                std::string(sqlite3_errmsg(db)));
     }
-
-    // prep the landmark getter statement
-    const char* get_landmark_by_id =
-        "SELECT id, name, type, X(geom), Y(geom) FROM landmarks WHERE id = ?";
-    ret = sqlite3_prepare_v2(db, get_landmark_by_id, strlen(get_landmark_by_id),
-                             &get_landmark_by_id_stmt, NULL);
-    if (ret != SQLITE_OK) {
-      throw std::runtime_error("Sqlite prepared landmark getter statement error: " +
-                               std::string(sqlite3_errmsg(db)));
-    }
   }
   ~db_pimpl() {
     char* err_msg = nullptr;
@@ -162,7 +151,6 @@ struct LandmarkDatabase::db_pimpl {
 
     sqlite3_finalize(insert_stmt);
     sqlite3_finalize(bounding_box_stmt);
-    sqlite3_finalize(get_landmark_by_id_stmt);
     sqlite3_close_v2(db);
   }
   std::string last_error() {
@@ -196,31 +184,52 @@ void LandmarkDatabase::insert_landmark(const std::string& name,
   pimpl->vacuum_analyze = true;
 }
 
-Landmark LandmarkDatabase::get_landmark_by_id(const int64_t pkey) {
-  auto* get_landmark_by_id_stmt = pimpl->get_landmark_by_id_stmt;
+// get multiple landmarks by their ids
+std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<int64_t>& pkeys) {
+  sqlite3_stmt* get_landmarks_by_ids_stmt = nullptr;
 
-  sqlite3_reset(get_landmark_by_id_stmt);
-  sqlite3_clear_bindings(get_landmark_by_id_stmt);
-
-  sqlite3_bind_int(get_landmark_by_id_stmt, 1, pkey);
-  LOG_TRACE(sqlite3_expanded_sql(get_landmark_by_id_stmt));
-
-  int ret = sqlite3_step(get_landmark_by_id_stmt);
-  if (ret == SQLITE_ROW) {
-    uint32_t landmark_id = static_cast<uint32_t>(sqlite3_column_int(get_landmark_by_id_stmt, 0));
-    const char* name = reinterpret_cast<const char*>(sqlite3_column_text(get_landmark_by_id_stmt, 1));
-    int landmark_type = sqlite3_column_int(get_landmark_by_id_stmt, 2);
-    double lng = sqlite3_column_double(get_landmark_by_id_stmt, 3);
-    double lat = sqlite3_column_double(get_landmark_by_id_stmt, 4);
-
-    return std::make_tuple(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat);
-  } else if (ret == SQLITE_DONE) {
-    // The landmark with the given key does not exist in the database
-    throw std::runtime_error("Landmark with the given key does not exist in the database: " +
-                             pimpl->last_error());
-  } else {
-    throw std::runtime_error("Sqlite could not get landmark with given key: " + pimpl->last_error());
+  // prepare the sql statement with appropriate number of question marks for the ids
+  std::string sql = "SELECT id, name, type, X(geom), Y(geom) FROM landmarks WHERE id IN (";
+  for (size_t i = 0; i < pkeys.size(); ++i) {
+    if (i > 0) {
+      sql += ", ";
+    }
+    sql += "?";
   }
+  sql += ")";
+
+  int ret =
+      sqlite3_prepare_v2(pimpl->db, sql.c_str(), sql.length(), &get_landmarks_by_ids_stmt, NULL);
+  if (ret != SQLITE_OK) {
+    throw std::runtime_error("Sqlite prepared get landmarks by ids statement error: " +
+                             std::string(sqlite3_errmsg(pimpl->db)));
+  }
+
+  // bind ids to the prepared statement
+  for (size_t i = 0; i < pkeys.size(); ++i) {
+    sqlite3_bind_int64(get_landmarks_by_ids_stmt, static_cast<int64_t>(i + 1), pkeys[i]);
+  }
+
+  // execute the statement and fetch the results
+  std::vector<Landmark> landmarks;
+  while ((ret = sqlite3_step(get_landmarks_by_ids_stmt)) == SQLITE_ROW) {
+    int64_t landmark_id = static_cast<int64_t>(sqlite3_column_int64(get_landmarks_by_ids_stmt, 0));
+    const char* name =
+        reinterpret_cast<const char*>(sqlite3_column_text(get_landmarks_by_ids_stmt, 1));
+    int landmark_type = sqlite3_column_int(get_landmarks_by_ids_stmt, 2);
+    double lng = sqlite3_column_double(get_landmarks_by_ids_stmt, 3);
+    double lat = sqlite3_column_double(get_landmarks_by_ids_stmt, 4);
+
+    landmarks.emplace_back(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat);
+  }
+
+  if (ret != SQLITE_DONE) {
+    throw std::runtime_error("Sqlite could not get landmarks with given keys: " +
+                             pimpl->last_error());
+  }
+
+  sqlite3_finalize(get_landmarks_by_ids_stmt);
+  return landmarks;
 }
 
 std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLat,
