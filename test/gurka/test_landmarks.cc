@@ -68,7 +68,7 @@ TEST(LandmarkTest, TestBuildDatabase) {
   LandmarkDatabase db(db_path, true);
 
   std::vector<Landmark> landmarks{};
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(30, 30, 40, 40); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(30, 30, 40, 40); });
 
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
@@ -81,7 +81,7 @@ TEST(LandmarkTest, TestBuildDatabase) {
   }
 
   landmarks.clear();
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(0, 0, 50, 50); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
 
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
@@ -108,7 +108,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   std::vector<Landmark> landmarks{};
   LandmarkDatabase db(db_path, true);
 
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_in_bounding_box(-5, 0, 0, 10); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-5, 0, 0, 10); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
@@ -129,8 +129,8 @@ TEST(LandmarkTest, TestParseLandmarks) {
   // check landmark getter
   Landmark result{};
   for (uint32_t pkey = 1; pkey < 4; pkey++) {
-    EXPECT_NO_THROW({ result = db.get_landmark(pkey); });
+    EXPECT_NO_THROW({ result = db.get_landmark_by_id(pkey); });
     EXPECT_TRUE(std::get<0>(result) == pkey);
   }
-  EXPECT_THROW({ result = db.get_landmark(4); }, std::runtime_error); // only three landmarks exist
+  EXPECT_THROW({ result = db.get_landmark_by_id(4); }, std::runtime_error); // only three landmarks exist
 }

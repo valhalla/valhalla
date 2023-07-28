@@ -99,12 +99,12 @@ public:
                        const double lng,
                        const double lat);
 
-  std::vector<Landmark> get_landmarks_in_bounding_box(const double minLat,
-                                                      const double minLong,
-                                                      const double maxLat,
-                                                      const double maxLong);
+  std::vector<Landmark> get_landmarks_by_bbox(const double minLat,
+                                              const double minLong,
+                                              const double maxLat,
+                                              const double maxLong);
 
-  Landmark get_landmark(const int64_t pkey);
+  Landmark get_landmark_by_id(const int64_t pkey);
 
 protected:
   struct db_pimpl;
