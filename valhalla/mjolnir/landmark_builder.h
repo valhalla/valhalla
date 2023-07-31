@@ -147,7 +147,7 @@ protected:
 };
 
 /**
- * Build landmark database and insert landmarks data from the PBF files to the database.
+ * Build a SQLite landmark database and insert landmarks data from the PBF files to the database.
  * This function reads landmark data from PBF files specified in the `input_files` vector.
  * It then parses the data to extract landmark nodes and stores the landmarks in the database.
  * The database is automatically built based on the configuration settings provided in `pt`.
