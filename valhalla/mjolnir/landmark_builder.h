@@ -118,7 +118,8 @@ public:
 
   /**
    * Retrieve a vector of landmarks from the database within the specified bounding box.
-   * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max longitude.s
+   * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max
+   * longitude.s
    * @param minLat The minimum latitude of the bounding box.
    * @param minLong The minimum longitude of the bounding box.
    * @param maxLat The maximum latitude of the bounding box.
@@ -147,8 +148,8 @@ protected:
 
 /**
  * Build landmark database and insert landmarks data from the PBF files to the database.
- * This function reads landmark data from PBF files specified in the `input_files` vector. 
- * It then parses the data to extract landmark nodes and stores the landmarks in the database. 
+ * This function reads landmark data from PBF files specified in the `input_files` vector.
+ * It then parses the data to extract landmark nodes and stores the landmarks in the database.
  * The database is automatically built based on the configuration settings provided in `pt`.
  * @param pt The configuration settings for the landmark building process.
  * @param input_files A vector of file paths to the PBF input files.
