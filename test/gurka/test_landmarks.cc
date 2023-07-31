@@ -127,7 +127,18 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_TRUE(std::get<1>(landmarks[2]) == "wan da");
 
   // check getting multiple landmarks by ids
-  landmarks.clear();
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({1, 2, 3, 4}); });
+  EXPECT_EQ(landmarks.size(), 3);
+
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({0, 937, 45, 15, 200, 353, 2386}); });
+  EXPECT_EQ(landmarks.size(), 0);
+
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({2, 3, 5, 7, 11, 13, 17, 19, 23, 29}); });
+  EXPECT_EQ(landmarks.size(), 2);
+
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({4}); });
+  EXPECT_EQ(landmarks.size(), 0);
+
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({3, 2, 1}); });
   EXPECT_EQ(landmarks.size(), 3);
 }

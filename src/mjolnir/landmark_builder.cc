@@ -211,7 +211,7 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   }
 
   // execute the statement and fetch the results
-  std::vector<Landmark> landmarks;
+  std::vector<Landmark> landmarks{};
   while ((ret = sqlite3_step(get_landmarks_by_ids_stmt)) == SQLITE_ROW) {
     int64_t landmark_id = static_cast<int64_t>(sqlite3_column_int64(get_landmarks_by_ids_stmt, 0));
     const char* name =
