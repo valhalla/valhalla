@@ -185,50 +185,50 @@ void LandmarkDatabase::insert_landmark(const std::string& name,
 }
 
 // get multiple landmarks by their ids
+/** TODO: Currently this function dynamically creates query statement based on
+ *  the number of provided primary keys.
+ *  In the future, we may consider implementing a fix-sized batch retrieval approach, where
+ *  multiple landmarks are retrieved in batches using a prepared SQL statement with a fixed
+ *  number of placeholders (e.g., 10 question marks) to be filled with corresponding inputs.
+ *  If the caller provides more than the fixed number of inputs, the function will automatically
+ *  perform multiple batch retrieves.
+ */
 std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<int64_t>& pkeys) {
-  sqlite3_stmt* get_landmarks_by_ids_stmt = nullptr;
-
-  // prepare the sql statement with appropriate number of question marks for the ids
+  // create the sql statement with inputs
   std::string sql = "SELECT id, name, type, X(geom), Y(geom) FROM landmarks WHERE id IN (";
   for (size_t i = 0; i < pkeys.size(); ++i) {
     if (i > 0) {
       sql += ", ";
     }
-    sql += "?";
+    sql += std::to_string(static_cast<int>(pkeys[i]));
   }
   sql += ")";
 
-  int ret =
-      sqlite3_prepare_v2(pimpl->db, sql.c_str(), sql.length(), &get_landmarks_by_ids_stmt, NULL);
+  // callback for the sql query
+  auto populate_landmarks = [](void* data, int argc, char** argv, char** col_names) {
+    std::vector<Landmark>* landmarks = static_cast<std::vector<Landmark>*>(data);
+
+    int64_t landmark_id = static_cast<int64_t>(std::stoi(argv[0]));
+    const char* landmark_name = argv[1];
+    int landmark_type = std::stoi(argv[2]);
+    double lng = std::stod(argv[3]);
+    double lat = std::stod(argv[4]);
+
+    landmarks->emplace_back(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng,
+                            lat);
+    return 0;
+  };
+
+  std::vector<Landmark> landmarks;
+  char* err_msg = nullptr;
+  // execute query
+  int ret = sqlite3_exec(pimpl->db, sql.c_str(), populate_landmarks, &landmarks, &err_msg);
+
+  // check for errors in the sql execution
   if (ret != SQLITE_OK) {
-    throw std::runtime_error("Sqlite prepared get landmarks by ids statement error: " +
-                             std::string(sqlite3_errmsg(pimpl->db)));
+    throw std::runtime_error("Sqlite execution error: " + std::string(err_msg));
   }
 
-  // bind ids to the prepared statement
-  for (size_t i = 0; i < pkeys.size(); ++i) {
-    sqlite3_bind_int64(get_landmarks_by_ids_stmt, static_cast<int64_t>(i + 1), pkeys[i]);
-  }
-
-  // execute the statement and fetch the results
-  std::vector<Landmark> landmarks{};
-  while ((ret = sqlite3_step(get_landmarks_by_ids_stmt)) == SQLITE_ROW) {
-    int64_t landmark_id = static_cast<int64_t>(sqlite3_column_int64(get_landmarks_by_ids_stmt, 0));
-    const char* name =
-        reinterpret_cast<const char*>(sqlite3_column_text(get_landmarks_by_ids_stmt, 1));
-    int landmark_type = sqlite3_column_int(get_landmarks_by_ids_stmt, 2);
-    double lng = sqlite3_column_double(get_landmarks_by_ids_stmt, 3);
-    double lat = sqlite3_column_double(get_landmarks_by_ids_stmt, 4);
-
-    landmarks.emplace_back(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat);
-  }
-
-  if (ret != SQLITE_DONE) {
-    throw std::runtime_error("Sqlite could not get landmarks with given keys: " +
-                             pimpl->last_error());
-  }
-
-  sqlite3_finalize(get_landmarks_by_ids_stmt);
   return landmarks;
 }
 
