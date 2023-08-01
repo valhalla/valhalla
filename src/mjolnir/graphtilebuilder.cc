@@ -1258,5 +1258,38 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   }
 }
 
+void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id, const valhalla::mjolnir::Landmark& landmark) {
+  // first thing is check that the edge id makes sense, tile id should match and edges_.size() > edge_id.id
+  // if not throw a runtime error. otherwise we grab the edge and then
+
+  // get the edges edgeinfo, to do that we need to look at the edgeinfo offset of the edge
+  // so we take the edgeinfo offset from the edge use it as the key into edgeinfo_offset_map_, which
+  // will give us back an edgeinfobuilder
+  const auto& edge = directededges_builder_[edge_id.id()];
+  auto eib = edgeinfo_offset_map_.find(edge.edgeinfo_offset());
+  // TODO bail here if this iterator is the end
+
+  // we need to use the edgeinfobuilder to add a new tagged value record to it that tkaes some work
+
+  // first we construct the string that makes up the record we want to store, ours is going to look like:
+  std::string tagged_value(1, baldr::kLandmark);
+  tagged_value.push_back(static_cast<std::string::value_type>(std::get<1>(landmark)));
+  uint32_t location = uint32_t((std::get<2>(landmark) + 180) * 1e7) << 16 |
+                      uint32_t((std::get<3>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
+  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 4);
+  tagged_value += std::get<0>(landmark);
+  // TODO: this block above should be turned into a method in the landmarks header and the reverse of
+  //  this process should also be over there. their signatures should be Landmark in string out and
+  //  vice versa for the reverse
+
+  // do we already have this record, if so we dont want a copy instead we just want the offset
+  auto name_offset = AddName(tagged_value);
+
+  // so now we know where we are storing this variable sized string in the tile, we need to keep the
+  // record in the edge info of where that was
+  NameInfo ni{name_offset,0,0,1};
+  eib->second->AddNameInfo(ni);
+}
+
 } // namespace mjolnir
 } // namespace valhalla

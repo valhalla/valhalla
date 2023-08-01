@@ -142,3 +142,36 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({3, 2, 1}); });
   EXPECT_EQ(landmarks.size(), 3);
 }
+
+
+TEST(LandmarkTest, TestStoreLandmarks) {
+  // build graph tiles from the pbf that was already created in the first call to build pbf,
+  // you'll need to use the config returned by buildpbf
+  /*
+   mjolnir::build_tile_set(config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
+mjolnir::BuildStage::kValidate, false);
+   */
+
+  // load one of the graphtiles via the graphtilebuilder with the deserialze option turned on
+
+  // loop over the edges in the tile and add a landmark to each one using our new addlandmark function
+  // make the names simple like std::to_string(edge_id.id()) the lat lon can be similarly easy like
+  // takign other simple information about the edge and encoding it into 2 numbers something you can
+  // easily reverse in the assertion below, for the type you can also use the .id field of the eggeid
+  // but just modulus it with the max type so it doesnt pick an invalid value
+
+  // call the store graphtile function to overwrite the tile on disk with the new info
+
+  // instantiate a graphreader using the config
+
+  // call getgraphtile on it
+
+  // get the edgeinfo using the edge who you added the landmark to
+
+  // call GetNamesAndTypes on the edgeinfo
+
+  // loop over the results until the type is kLandmark when it is then you need to use the method
+  // to decode the string into a landmark object. asser tthat the landmark you got out matches the one
+  // you told it to add (excepting the id because we dont store that).
+
+}
