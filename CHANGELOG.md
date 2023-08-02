@@ -17,7 +17,7 @@
    * ADDED: `source_percent_along` & `target_percent_along` to /trace_attributes JSON response [#4199](https://github.com/valhalla/valhalla/pull/4199)
    * ADDED: sqlite database to store landmarks along with interfaces of insert and bounding box queries [#4189](https://github.com/valhalla/valhalla/pull/4189)
    * CHANGED: refactor landmark database interface to use a pimpl [#4202](https://github.com/valhalla/valhalla/pull/4202)
-   
+
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)

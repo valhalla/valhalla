@@ -222,7 +222,6 @@ endif()
 # TODO: After switching to CMake 3.12+, replace with
 #       $<TARGET_EXISTS:protobuf::libprotobuf
 #       $<TARGET_EXISTS:protobuf::libprotobuf-lite
-# TODO: need to manually link abseil
 if(TARGET protobuf::libprotobuf-lite)
   set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
 elseif(TARGET protobuf::libprotobuf)
