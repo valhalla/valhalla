@@ -11,6 +11,13 @@
 #include <set>
 #include <stdexcept>
 
+#include "baldr/graphtileheader.h"
+#include "baldr/directededge.h"
+#include "baldr/graphid.h"
+#include "mjolnir/landmark_builder.h"
+#include "mjolnir/edgeinfobuilder.h"
+#include "baldr/graphconstants.h"
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -43,7 +50,7 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
 } // namespace
 
 // Constructor given an existing tile. This is used to read in the tile
-// data and then add to it (e.g. adding node connections between hierarchy
+// data and then add to it (e.g. adding edge_idnode connections between hierarchy
 // levels. If the deserialize flag is set then all objects are serialized
 // from memory into builders that can be added to and then stored using
 // StoreTileData.
@@ -1261,18 +1268,28 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id, const valhalla::mjolnir::Landmark& landmark) {
   // first thing is check that the edge id makes sense, tile id should match and edges_.size() > edge_id.id
   // if not throw a runtime error. otherwise we grab the edge and then
+  if (header_builder_.graphid().tileid() != edge_id.tileid() ||
+      header_builder_.graphid().level() != edge_id.level()) {
+    throw std::runtime_error("Tile id or hierarchy level doesn't match");
+  }
+  if (header_builder_.directededgecount() <= edge_id.id()) {
+    throw std::runtime_error("Given edge doesn't exist: edge id is larger than total edge size in this tile");
+  }
 
   // get the edges edgeinfo, to do that we need to look at the edgeinfo offset of the edge
   // so we take the edgeinfo offset from the edge use it as the key into edgeinfo_offset_map_, which
   // will give us back an edgeinfobuilder
   const auto& edge = directededges_builder_[edge_id.id()];
   auto eib = edgeinfo_offset_map_.find(edge.edgeinfo_offset());
-  // TODO bail here if this iterator is the end
+  // bail here if this iterator is the end
+  if (eib == edgeinfo_offset_map_.end()) {
+    throw std::runtime_error("Couldn't find edge info for the given edge: " + std::to_string(static_cast<int>(edge_id.id())));
+  }
 
-  // we need to use the edgeinfobuilder to add a new tagged value record to it that tkaes some work
+  // we need to use the edgeinfobuilder to add a new tagged value record to it that takes some work
 
   // first we construct the string that makes up the record we want to store, ours is going to look like:
-  std::string tagged_value(1, baldr::kLandmark);
+  std::string tagged_value(1, TaggedValue::kLandmark);
   tagged_value.push_back(static_cast<std::string::value_type>(std::get<1>(landmark)));
   uint32_t location = uint32_t((std::get<2>(landmark) + 180) * 1e7) << 16 |
                       uint32_t((std::get<3>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
