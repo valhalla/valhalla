@@ -180,17 +180,33 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  # CONFIG mode is required for new abseil protobuf builds, which uses the protobuf-provided
-  # CMake configuration instead of CMake internal one: they're not looking for abseil:
-  # https://github.com/valhalla/valhalla/issues/4173#issuecomment-1638067950
-  # However, when doing this, newer protobuf versions require a protobuf_MODULE_COMPATIBLE
-  # to be able to see the protobuf_generate_cpp() CMake function
-  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
-  find_package(Protobuf REQUIRED CONFIG)
-  # Also, this is a band-aid, only works when the package manager actually installed
-  # protobuf CMake config files
-  if (NOT Protobuf_FOUND)
-    find_package(Protobuf REQUIRED)
+  find_package(Protobuf REQUIRED)
+
+  # orchestrated effort of both protobuf & cmake are responsible for the next lines..
+
+  # TODO: monitor how protobuf Linux packages evolve. Eventually everyone should use
+  # the Apple configuration, but e.g. apt does not install CMake config with protobuf
+  if(Protobuf_VERSION VERSION_GREATER_EQUAL 4.22.0)
+    add_definitions(-DPROTOBUF_USE_DLLS)
+    if(APPLE OR WIN32)
+      # CONFIG mode is ideal for new abseil protobuf builds, which uses the protobuf-provided
+      # CMake configuration instead of CMake internal one, as that's not looking for abseil:
+      # https://github.com/valhalla/valhalla/issues/4173#issuecomment-1638067950
+      # Newer protobuf versions require a protobuf_MODULE_COMPATIBLE to be able 
+      # to see the protobuf_generate_cpp() CMake function
+      set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+      find_package(Protobuf REQUIRED CONFIG)
+    else()
+      # linux might not have CMake config installed (e.g. Debian derivatives)
+      # need to link protobuf to abseil manually
+      find_package(Protobuf REQUIRED)
+      find_package(absl REQUIRED)
+      if(TARGET protobuf::libprotobuf-lite)
+        target_link_libraries(protobuf::libprotobuf-lite INTERFACE "absl::absl_check;absl::absl_log;absl::algorithm;absl::base;absl::bind_front;absl::bits;absl::btree;absl::cleanup;absl::cord;absl::core_headers;absl::debugging;absl::die_if_null;absl::dynamic_annotations;absl::flags;absl::flat_hash_map;absl::flat_hash_set;absl::function_ref;absl::hash;absl::layout;absl::log_initialize;absl::log_severity;absl::memory;absl::node_hash_map;absl::node_hash_set;absl::optional;absl::span;absl::status;absl::statusor;absl::strings;absl::synchronization;absl::time;absl::type_traits;absl::utility;absl::variant")
+      elseif(TARGET protobuf::libprotobuf)
+        target_link_libraries(protobuf::libprotobuf INTERFACE "absl::absl_check;absl::absl_log;absl::algorithm;absl::base;absl::bind_front;absl::bits;absl::btree;absl::cleanup;absl::cord;absl::core_headers;absl::debugging;absl::die_if_null;absl::dynamic_annotations;absl::flags;absl::flat_hash_map;absl::flat_hash_set;absl::function_ref;absl::hash;absl::layout;absl::log_initialize;absl::log_severity;absl::memory;absl::node_hash_map;absl::node_hash_set;absl::optional;absl::span;absl::status;absl::statusor;absl::strings;absl::synchronization;absl::time;absl::type_traits;absl::utility;absl::variant")
+      endif()
+    endif()
   endif()
 endif()
 
@@ -206,6 +222,7 @@ endif()
 # TODO: After switching to CMake 3.12+, replace with
 #       $<TARGET_EXISTS:protobuf::libprotobuf
 #       $<TARGET_EXISTS:protobuf::libprotobuf-lite
+# TODO: need to manually link abseil
 if(TARGET protobuf::libprotobuf-lite)
   set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
 elseif(TARGET protobuf::libprotobuf)

@@ -4,6 +4,7 @@
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
+   * FIXED: missing protobuf CMake configuration to link abseil for protobuf >= 3.22.0 [#4207](https://github.com/valhalla/valhalla/pull/4207)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -16,8 +17,7 @@
    * ADDED: `source_percent_along` & `target_percent_along` to /trace_attributes JSON response [#4199](https://github.com/valhalla/valhalla/pull/4199)
    * ADDED: sqlite database to store landmarks along with interfaces of insert and bounding box queries [#4189](https://github.com/valhalla/valhalla/pull/4189)
    * CHANGED: refactor landmark database interface to use a pimpl [#4202](https://github.com/valhalla/valhalla/pull/4202)
-   * CHANGED: use protobuf's CMake config instead of CMake's own [#4207](https://github.com/valhalla/valhalla/pull/4207)
-
+   
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
