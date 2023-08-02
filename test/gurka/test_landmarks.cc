@@ -143,7 +143,6 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3);
 }
 
-
 TEST(LandmarkTest, TestStoreLandmarks) {
   // build graph tiles from the pbf that was already created in the first call to build pbf,
   // you'll need to use the config returned by buildpbf
@@ -173,5 +172,4 @@ mjolnir::BuildStage::kValidate, false);
   // loop over the results until the type is kLandmark when it is then you need to use the method
   // to decode the string into a landmark object. asser tthat the landmark you got out matches the one
   // you told it to add (excepting the id because we dont store that).
-
 }

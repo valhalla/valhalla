@@ -234,6 +234,7 @@ message TaggedValue {
     kBssInfo = 3;
     kLevel = 4;
     kLevelRef = 5;
+    kLandmark = 6;
     kTunnel = 49;
     kBridge = 50;    
   }

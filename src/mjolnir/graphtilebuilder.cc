@@ -11,12 +11,12 @@
 #include <set>
 #include <stdexcept>
 
-#include "baldr/graphtileheader.h"
 #include "baldr/directededge.h"
-#include "baldr/graphid.h"
-#include "mjolnir/landmark_builder.h"
-#include "mjolnir/edgeinfobuilder.h"
 #include "baldr/graphconstants.h"
+#include "baldr/graphid.h"
+#include "baldr/graphtileheader.h"
+#include "mjolnir/edgeinfobuilder.h"
+#include "mjolnir/landmark_builder.h"
 
 using namespace valhalla::baldr;
 
@@ -1265,15 +1265,17 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   }
 }
 
-void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id, const valhalla::mjolnir::Landmark& landmark) {
-  // first thing is check that the edge id makes sense, tile id should match and edges_.size() > edge_id.id
-  // if not throw a runtime error. otherwise we grab the edge and then
+void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id,
+                                   const valhalla::mjolnir::Landmark& landmark) {
+  // first thing is check that the edge id makes sense, tile id should match and edges_.size() >
+  // edge_id.id if not throw a runtime error. otherwise we grab the edge and then
   if (header_builder_.graphid().tileid() != edge_id.tileid() ||
       header_builder_.graphid().level() != edge_id.level()) {
     throw std::runtime_error("Tile id or hierarchy level doesn't match");
   }
   if (header_builder_.directededgecount() <= edge_id.id()) {
-    throw std::runtime_error("Given edge doesn't exist: edge id is larger than total edge size in this tile");
+    throw std::runtime_error(
+        "Given edge doesn't exist: edge id is larger than total edge size in this tile");
   }
 
   // get the edges edgeinfo, to do that we need to look at the edgeinfo offset of the edge
@@ -1283,18 +1285,21 @@ void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id, const valhalla
   auto eib = edgeinfo_offset_map_.find(edge.edgeinfo_offset());
   // bail here if this iterator is the end
   if (eib == edgeinfo_offset_map_.end()) {
-    throw std::runtime_error("Couldn't find edge info for the given edge: " + std::to_string(static_cast<int>(edge_id.id())));
+    throw std::runtime_error("Couldn't find edge info for the given edge: " +
+                             std::to_string(static_cast<int>(edge_id.id())));
   }
 
   // we need to use the edgeinfobuilder to add a new tagged value record to it that takes some work
 
-  // first we construct the string that makes up the record we want to store, ours is going to look like:
-  std::string tagged_value(1, TaggedValue::kLandmark);
-  tagged_value.push_back(static_cast<std::string::value_type>(std::get<1>(landmark)));
-  uint32_t location = uint32_t((std::get<2>(landmark) + 180) * 1e7) << 16 |
-                      uint32_t((std::get<3>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
+  // first we construct the string that makes up the record we want to store, ours is going to look
+  // like:
+  std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
+  tagged_value.push_back(static_cast<std::string::value_type>(std::get<2>(landmark)));
+  uint32_t location = uint32_t((std::get<3>(landmark) + 180) * 1e7) << 16 |
+                      uint32_t((std::get<4>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
   tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 4);
-  tagged_value += std::get<0>(landmark);
+  tagged_value += std::get<1>(landmark);
+
   // TODO: this block above should be turned into a method in the landmarks header and the reverse of
   //  this process should also be over there. their signatures should be Landmark in string out and
   //  vice versa for the reverse
@@ -1304,7 +1309,7 @@ void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id, const valhalla
 
   // so now we know where we are storing this variable sized string in the tile, we need to keep the
   // record in the edge info of where that was
-  NameInfo ni{name_offset,0,0,1};
+  NameInfo ni{name_offset, 0, 0, 1};
   eib->second->AddNameInfo(ni);
 }
 

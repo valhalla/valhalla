@@ -486,7 +486,6 @@ public:
    */
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
 
-
   /**
    * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value
    *
