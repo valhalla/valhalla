@@ -187,7 +187,8 @@ if(NOT Protobuf_FOUND)
   # TODO: monitor how protobuf Linux packages evolve. Eventually everyone should use
   # the Apple configuration, but e.g. apt does not install CMake config with protobuf
   if(Protobuf_VERSION VERSION_GREATER_EQUAL 4.22.0)
-    add_definitions(-DPROTOBUF_USE_DLLS)
+    # this might be needed for some Apple/Linux protobuf versions
+    # add_definitions(-DPROTOBUF_USE_DLLS)
     if(APPLE OR WIN32)
       # CONFIG mode is ideal for new abseil protobuf builds, which uses the protobuf-provided
       # CMake configuration instead of CMake internal one, as that's not looking for abseil:
