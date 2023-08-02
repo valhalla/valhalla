@@ -179,8 +179,9 @@ else()
   message(STATUS "Using curl from the outside")
 endif()
 
-if(NOT Protobuf_FOUND)
-  find_package(Protobuf REQUIRED)
+if(NOT Protobuf_FOUND)      
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+  find_package(Protobuf REQUIRED CONFIG)
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
