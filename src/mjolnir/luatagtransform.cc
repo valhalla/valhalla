@@ -126,7 +126,6 @@ Tags LuaTagTransform::Transform(OSMType type, uint64_t osmid, const Tags& maptag
       result.clear();
     }
   } catch (std::exception& e) {
-    // ..gets sent back to the main thread
     LOG_ERROR((boost::format("Exception in Lua function: %1%: %2%") % lua_func % e.what()).str());
   } catch (...) {
     LOG_ERROR((boost::format("Unknown exception in Lua function: %1%.") % lua_func).str());
