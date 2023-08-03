@@ -106,7 +106,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   std::vector<Landmark> landmarks{};
   LandmarkDatabase db(db_path, true);
 
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-5, -.1, 0, 10); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-.1, -5, 10, 0); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");

@@ -234,10 +234,10 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   return landmarks;
 }
 
-std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLat,
-                                                              const double minLong,
-                                                              const double maxLat,
-                                                              const double maxLong) {
+std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLong,
+                                                              const double minLat,
+                                                              const double maxLong,
+                                                              const double maxLat) {
   std::vector<Landmark> landmarks;
 
   auto* bounding_box_stmt = pimpl->bounding_box_stmt;

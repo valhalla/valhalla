@@ -45,17 +45,16 @@ public:
    * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max
    * longitude.
    *
-   * @param minLat The minimum latitude of the bounding box.
-   * @param minLong The minimum longitude of the bounding box.
-   * @param maxLat The maximum latitude of the bounding box.
-   * @param maxLong The maximum longitude of the bounding box.
+   * @param minLong The minimum longitude of the bounding box (min x).
+   * @param minLat The minimum latitude of the bounding box (min y).
+   * @param maxLong The maximum longitude of the bounding box (max x).
+   * @param maxLat The maximum latitude of the bounding box (max y).
    * @return A vector of Landmark objects within the specified bounding box.
    */
-  // TODO: should be min x, min y, max x, max y, basically flip lat and lon
-  std::vector<baldr::Landmark> get_landmarks_by_bbox(const double minLat,
-                                                     const double minLong,
-                                                     const double maxLat,
-                                                     const double maxLong);
+  std::vector<baldr::Landmark> get_landmarks_by_bbox(const double minLong,
+                                                     const double minLat,
+                                                     const double maxLong,
+                                                     const double maxLat);
 
   /**
    * Retrieve a vector of landmarks that match the provided primary keys.
