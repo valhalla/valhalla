@@ -1293,16 +1293,7 @@ void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id,
 
   // first we construct the string that makes up the record we want to store, ours is going to look
   // like:
-  std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
-  tagged_value.push_back(static_cast<std::string::value_type>(std::get<2>(landmark)));
-  uint32_t location = uint32_t((std::get<3>(landmark) + 180) * 1e7) << 16 |
-                      uint32_t((std::get<4>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
-  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 4);
-  tagged_value += std::get<1>(landmark);
-
-  // TODO: this block above should be turned into a method in the landmarks header and the reverse of
-  //  this process should also be over there. their signatures should be Landmark in string out and
-  //  vice versa for the reverse
+  std::string tagged_value = mjolnir::landmark_to_str(landmark);
 
   // do we already have this record, if so we dont want a copy instead we just want the offset
   auto name_offset = AddName(tagged_value);
