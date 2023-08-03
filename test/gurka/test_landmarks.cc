@@ -4,7 +4,9 @@
 
 #include "gurka.h"
 #include "mjolnir/landmark_builder.h"
+#include "mjolnir/graphtilebuilder.h"
 #include "test/test.h"
+
 #include <boost/property_tree/ptree.hpp>
 
 using namespace valhalla;
@@ -12,12 +14,13 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-const std::string workdir = "../data/landmarks";
+const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks";
 const std::string db_path = workdir + "/landmarks.sqlite";
 const std::string pbf_filename = workdir + "/map.pbf";
+valhalla::gurka::map landmark_map;
 
 namespace {
-valhalla::gurka::map BuildPBF() {
+void BuildPBF() {
   const std::string ascii_map = R"(
       a-----b-----c---d
       A   B   C   D   E
@@ -42,15 +45,10 @@ valhalla::gurka::map BuildPBF() {
       {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
   };
 
-  constexpr double gridsize = 10000;
-  auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  constexpr double gridsize = 100;
+  landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
 
-
-  detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
-
-  valhalla::gurka::map result;
-  result.nodes = node_layout;
-  return result;
+  detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
 }
 } // namespace
 
@@ -98,7 +96,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   }
 
   // parse and store
-  valhalla::gurka::map landmark_map = BuildPBF();
+  BuildPBF();
   boost::property_tree::ptree& pt = landmark_map.config;
   pt.put("mjolnir.landmarks", db_path);
 
@@ -110,7 +108,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   std::vector<Landmark> landmarks{};
   LandmarkDatabase db(db_path, true);
 
-  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-5, 0, 0, 10); });
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-5, -.1, 0, 10); });
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
@@ -146,20 +144,34 @@ TEST(LandmarkTest, TestParseLandmarks) {
 }
 
 TEST(LandmarkTest, TestStoreLandmarks) {
-  // build graph tiles from the pbf that was already created in the first call to build pbf,
-  // you'll need to use the config returned by buildpbf
-  /*
-   mjolnir::build_tile_set(config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-mjolnir::BuildStage::kValidate, false);
-   */
+  // make a config, though we dont need the landmarks db in there until the next test
+  landmark_map.config = test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}});
 
-  // load one of the graphtiles via the graphtilebuilder with the deserialze option turned on
+  // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
+  mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
+mjolnir::BuildStage::kValidate, false);
+
+  // load one of the graphtiles via the graphtilebuilder with the deserialize option turned on
+  GraphId tile_id("2/519119/0");
+  GraphTileBuilder tb(workdir, tile_id, true);
 
   // loop over the edges in the tile and add a landmark to each one using our new addlandmark function
   // make the names simple like std::to_string(edge_id.id()) the lat lon can be similarly easy like
   // takign other simple information about the edge and encoding it into 2 numbers something you can
   // easily reverse in the assertion below, for the type you can also use the .id field of the eggeid
   // but just modulus it with the max type so it doesnt pick an invalid value
+  auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
+  uint32_t edge_index = 0;
+  for(const auto& e : tb.directededges()) {
+    std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
+    auto point = shape[shape.size() / 2];
+    auto ltype = static_cast<LandmarkType>(edge_index % invalid_landmark);
+    Landmark landmark{edge_index, std::to_string(edge_index), ltype, point.first, point.second};
+
+    auto edge_id = tile_id;
+    edge_id.set_id(edge_index++);
+    tb.AddLandmark(edge_id, landmark);
+  }
 
   // call the store graphtile function to overwrite the tile on disk with the new info
 

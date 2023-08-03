@@ -51,6 +51,7 @@ public:
    * @param maxLong The maximum longitude of the bounding box.
    * @return A vector of Landmark objects within the specified bounding box.
    */
+  //TODO: should be min x, min y, max x, max y, basically flip lat and lon
   std::vector<baldr::Landmark> get_landmarks_by_bbox(const double minLat,
                                               const double minLong,
                                               const double maxLat,

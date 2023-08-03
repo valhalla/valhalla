@@ -91,6 +91,8 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
+// TODO: turn this back into a struct and make the 2 functions below member functions
+//  also this helps to tell which is lon and which is lat
 using Landmark = std::tuple<int64_t, std::string, LandmarkType, double, double>;
 
 /**
