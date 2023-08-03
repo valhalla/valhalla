@@ -216,8 +216,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
     double lng = std::stod(argv[3]);
     double lat = std::stod(argv[4]);
 
-    landmarks->emplace_back(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng,
-                            lat);
+    landmarks->emplace_back(
+        Landmark{landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat});
     return 0;
   };
 
@@ -259,7 +259,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLa
     double lng = sqlite3_column_double(bounding_box_stmt, 3);
     double lat = sqlite3_column_double(bounding_box_stmt, 4);
 
-    landmarks.emplace_back(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat);
+    landmarks.emplace_back(
+        Landmark{landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat});
 
     ret = sqlite3_step(bounding_box_stmt);
   }

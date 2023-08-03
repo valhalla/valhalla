@@ -1,11 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include <tuple>
-#include <string>
-#include <unordered_map>
-#include <stdexcept>
 #include <cstring>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
 
 #include <valhalla/baldr/graphconstants.h>
 
@@ -91,55 +91,66 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
-// TODO: turn this back into a struct and make the 2 functions below member functions
-//  also this helps to tell which is lon and which is lat
-using Landmark = std::tuple<int64_t, std::string, LandmarkType, double, double>;
+struct Landmark {
+  int64_t id;
+  std::string name;
+  LandmarkType type;
+  double lng;
+  double lat;
+
+  std::string to_str() const;
+  Landmark from_str(const std::string& str) const;
+};
 
 /**
  * Convert a Landmark object to a string which consists of 1 byte for kLandmark tag,
- * 1 byte for landmark type, 4 bytes for location (lng and lat), and landmark name.
+ * 1 byte for landmark type, 4 bytes for location (lng and lat), and landmark name at last.
  *
  * @param landmark The Landmark object to be converted.
  */
-inline std::string landmark_to_str(const Landmark& landmark) {
+inline std::string Landmark::to_str() const {
   std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
-  tagged_value.push_back(static_cast<std::string::value_type>(std::get<2>(landmark)));
-  uint32_t location = uint32_t((std::get<3>(landmark) + 180) * 1e7) << 16 |
-                      uint32_t((std::get<4>(landmark) + 90) * 1e7) << 1; // leaves one spare bit
+  tagged_value.push_back(static_cast<std::string::value_type>(type));
+  uint32_t location = uint32_t((lng + 180) * 1e7) << 16 | uint32_t((lat + 90) * 1e7)
+                                                              << 1; // leaves one spare bit
   tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 4);
-  tagged_value += std::get<1>(landmark);
+  tagged_value += name;
 
   return tagged_value;
 }
 
-// Convert a string to a Landmark object
-inline Landmark str_to_landmark(const std::string& str) {
-  // Ensure that the string has the minimum expected size to represent a Landmark
-  if (str.size() < 7) { // or 6 = 1 + 1 + 4?
+/**
+ * Convert a string to a Landmark object.
+ * The input string should consist of at least 6 bytes: 1 byte for kLandmark tag,
+ * 1 byte for landmark type, 4 bytes for location (lng and lat), and the remaining for landmark name.
+ *
+ * @param str The string to be converted.
+ */
+inline Landmark Landmark::from_str(const std::string& str) const {
+  // ensure that the string has the minimum expected size to represent a Landmark
+  if (str.size() < 6) { // 6 = 1 + 1 + 4, name may be null
     throw std::runtime_error("Invalid Landmark string: too short");
   }
 
-  // Ensure that the first byte is the kLandmark tag
+  // ensure that the first byte is the kLandmark tag
   if (str[0] != static_cast<char>(baldr::TaggedValue::kLandmark)) {
     throw std::runtime_error("Invalid Landmark string: missing kLandmark tag");
   }
 
-  // Extract the LandmarkType (second byte in the string)
+  // extract the LandmarkType (second byte in the string)
   LandmarkType landmark_type = static_cast<LandmarkType>(static_cast<uint8_t>(str[1]));
 
-  // Extract the location (next 4 bytes) - lng and lat
+  // extract the location (next 4 bytes) - lng and lat
   uint32_t location = 0;
   std::memcpy(&location, str.data() + 2, 4);
   double lng = (static_cast<double>((location >> 16) & 0x7FFFFFFF) / 1e7) - 180;
   double lat = (static_cast<double>((location >> 1) & 0x7FFFFFFF) / 1e7) - 90;
 
-  // Extract the name (rest of the string after the first 6 bytes)
+  // extract the name (rest of the string after the first 6 bytes)
   std::string name = str.substr(6);
 
-  return std::make_tuple(0, name, landmark_type, lng,
-                         lat); // The first element (int64_t) is not used in this reverse conversion
+  return Landmark{0, name, landmark_type, lng, lat}; // note: fake id should not be used!
 }
 
-
-}
-}
+} // namespace baldr
+} // namespace valhalla

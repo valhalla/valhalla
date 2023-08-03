@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "gurka.h"
-#include "mjolnir/landmark_builder.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/landmark_builder.h"
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -75,10 +75,9 @@ TEST(LandmarkTest, TestBuildDatabase) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(std::get<0>(landmark)) + ", name: " + std::get<1>(landmark) +
-             ", type: " + std::to_string(static_cast<uint8_t>(std::get<2>(landmark))) +
-             ", longitude: " + std::to_string(std::get<3>(landmark)) +
-             ", latitude: " + std::to_string(std::get<4>(landmark)));
+    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 
   landmarks.clear();
@@ -88,7 +87,6 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-
 
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
@@ -113,18 +111,17 @@ TEST(LandmarkTest, TestParseLandmarks) {
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
   for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(std::get<0>(landmark)) + ", name: " + std::get<1>(landmark) +
-             ", type: " + std::to_string(static_cast<uint8_t>(std::get<2>(landmark))) +
-             ", longitude: " + std::to_string(std::get<3>(landmark)) +
-             ", latitude: " + std::to_string(std::get<4>(landmark)));
+    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
   }
 
-  EXPECT_TRUE(std::get<2>(landmarks[0]) == LandmarkType::bar); // A
-  EXPECT_TRUE(std::get<1>(landmarks[0]) == "A");
-  EXPECT_TRUE(std::get<2>(landmarks[1]) == LandmarkType::restaurant); // B
-  EXPECT_TRUE(std::get<1>(landmarks[1]) == "hai di lao");
-  EXPECT_TRUE(std::get<2>(landmarks[2]) == LandmarkType::cinema); // D
-  EXPECT_TRUE(std::get<1>(landmarks[2]) == "wan da");
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
+  EXPECT_TRUE(landmarks[0].name == "A");
+  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant); // B
+  EXPECT_TRUE(landmarks[1].name == "hai di lao");
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::cinema); // D
+  EXPECT_TRUE(landmarks[2].name == "wan da");
 
   // check getting multiple landmarks by ids
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({1, 2, 3, 4}); });
@@ -149,7 +146,7 @@ TEST(LandmarkTest, TestStoreLandmarks) {
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-mjolnir::BuildStage::kValidate, false);
+                          mjolnir::BuildStage::kValidate, false);
 
   // load one of the graphtiles via the graphtilebuilder with the deserialize option turned on
   GraphId tile_id("2/519119/0");
@@ -162,7 +159,7 @@ mjolnir::BuildStage::kValidate, false);
   // but just modulus it with the max type so it doesnt pick an invalid value
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
   uint32_t edge_index = 0;
-  for(const auto& e : tb.directededges()) {
+  for (const auto& e : tb.directededges()) {
     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
     auto point = shape[shape.size() / 2];
     auto ltype = static_cast<LandmarkType>(edge_index % invalid_landmark);
