@@ -1265,8 +1265,8 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   }
 }
 
-void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id,
-                                   const valhalla::mjolnir::Landmark& landmark) {
+void GraphTileBuilder::AddLandmark(const GraphId& edge_id,
+                                   const Landmark& landmark) {
   // first thing is check that the edge id makes sense, tile id should match and edges_.size() >
   // edge_id.id if not throw a runtime error. otherwise we grab the edge and then
   if (header_builder_.graphid().tileid() != edge_id.tileid() ||
@@ -1293,7 +1293,7 @@ void GraphTileBuilder::AddLandmark(const baldr::GraphId& edge_id,
 
   // first we construct the string that makes up the record we want to store, ours is going to look
   // like:
-  std::string tagged_value = mjolnir::landmark_to_str(landmark);
+  std::string tagged_value = landmark_to_str(landmark);
 
   // do we already have this record, if so we dont want a copy instead we just want the offset
   auto name_offset = AddName(tagged_value);

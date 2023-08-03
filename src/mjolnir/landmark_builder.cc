@@ -5,6 +5,8 @@
 #include "mjolnir/util.h"
 #include <tuple>
 
+using namespace valhalla::baldr;
+
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
 public:
@@ -18,7 +20,7 @@ public:
     auto iter = tags.find("amenity");
     if (iter != tags.cend() && !iter->second.empty()) {
       try {
-        auto landmark_type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+        auto landmark_type = string_to_landmark_type(iter->second);
 
         std::string name = "";
         auto it = tags.find("name");

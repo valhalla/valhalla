@@ -12,8 +12,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
+const std::string workdir = "../data/landmarks";
+const std::string db_path = workdir + "/landmarks.sqlite";
+const std::string pbf_filename = workdir + "/map.pbf";
+
 namespace {
-valhalla::gurka::map BuildPBF(const std::string& workdir) {
+valhalla::gurka::map BuildPBF() {
   const std::string ascii_map = R"(
       a-----b-----c---d
       A   B   C   D   E
@@ -41,7 +45,7 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
   constexpr double gridsize = 10000;
   auto node_layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
 
-  auto pbf_filename = workdir + "/map.pbf";
+
   detail::build_pbf(node_layout, ways, nodes, {}, pbf_filename, 0, false);
 
   valhalla::gurka::map result;
@@ -51,7 +55,6 @@ valhalla::gurka::map BuildPBF(const std::string& workdir) {
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
-  const std::string db_path = "landmarks.db";
 
   // insert test data
   {
@@ -87,8 +90,7 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-  const std::string workdir = "../data/landmarks";
-  const std::string db_path = workdir + "/landmarks.sqlite";
+
 
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
@@ -96,7 +98,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
   }
 
   // parse and store
-  valhalla::gurka::map landmark_map = BuildPBF(workdir);
+  valhalla::gurka::map landmark_map = BuildPBF();
   boost::property_tree::ptree& pt = landmark_map.config;
   pt.put("mjolnir.landmarks", db_path);
 
