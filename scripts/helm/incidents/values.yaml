@@ -17,7 +17,7 @@ volume_prefix: "vol"
 
 volname: incidents-volname
 nfs:
-  path: /solvertech/lab/incidents
+  path: /solvertech/lab/valhalla
   server: 10.80.103.100
 
 persistence:
