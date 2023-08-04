@@ -112,7 +112,7 @@ jobs:
 
   build-arm-release:
     machine:
-      image: ubuntu-2204:current
+      image: arm64v8/ubuntu:23.04
     resource_class: arm.xlarge
     steps:
       - checkout
