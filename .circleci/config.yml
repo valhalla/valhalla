@@ -111,7 +111,7 @@ jobs:
       - run: make -C build package
 
   build-arm-release:
-    machine:
+    docker:
       image: arm64v8/ubuntu:23.04
     resource_class: arm.xlarge
     steps:
