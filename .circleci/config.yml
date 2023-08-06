@@ -27,6 +27,7 @@ commands:
   check_ci_lint:
     steps:
       - run: |
+            source venv/bin/activate
             python3 -m pip install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
