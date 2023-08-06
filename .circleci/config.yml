@@ -21,7 +21,7 @@ commands:
     steps:
       - run: |
             apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet python3-venv
+            env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet python3-pip python3-venv
             python3 -m venv venv
             source venv/bin/activate
   check_ci_lint:
