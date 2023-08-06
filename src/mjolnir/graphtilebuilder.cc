@@ -1295,12 +1295,32 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   std::string tagged_value = landmark.to_str();
 
   // do we already have this record, if so we dont want a copy instead we just want the offset
-  auto name_offset = AddName(tagged_value);
-
+    auto name_offset = AddName(tagged_value);
+  
   // so now we know where we are storing this variable sized string in the tile, we need to keep the
   // record in the edge info of where that was
   NameInfo ni{name_offset, 0, 0, 1};
   eib->second->AddNameInfo(ni);
+
+
+  //////////////
+
+  // auto edge_tuple_item = EdgeTuple(edgeindex, nodea, nodeb);
+  // edgeinfo.set_name_info_list(name_info_list);
+
+  // // Add to the map
+  // edge_offset_map_.emplace(edge_tuple_item, edge_info_offset_);
+
+  // // Set current edge offset
+  // uint32_t current_edge_offset = edge_info_offset_;
+
+  // // Update edge offset for next item
+  // edge_info_offset_ += edgeinfo.SizeOf();
+
+
+
+
+  // std::cout << tagged_value.size() << std::endl;
 }
 
 } // namespace mjolnir

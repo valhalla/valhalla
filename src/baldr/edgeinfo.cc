@@ -11,7 +11,8 @@ namespace {
 // do not return TaggedValue::kPronunciation
 bool IsNameTag(char ch) {
   static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
-                                                            TaggedValue::kTunnel};
+                                                            TaggedValue::kTunnel,
+                                                            TaggedValue::kLandmark};
   return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
 }
 
