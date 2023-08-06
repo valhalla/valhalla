@@ -9,17 +9,30 @@ executors:
       CXXFLAGS: -DGEOS_INLINE
 
 commands:
-  install_macos_dependencies:
+  mac_deps:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: sudo python3 -m pip install shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
-  install_linux_dependencies:
+  linux_deps:
     steps:
       - run: sudo bash ./scripts/install-linux-deps.sh
-  install_arm_linux_dependencies:
+  linux_preflight:
     steps:
-      - run: sudo bash ./scripts/install-linux-deps.sh
+      - run: |
+            apt-get update --assume-yes
+            env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet python3-venv
+            python3 -m venv venv
+            source venv/bin/activate
+  check_ci_lint:
+    steps:
+      - run: |
+            python3 -m pip install requests
+            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
+                echo "Changes in last commit do not need CI. Skipping step"
+                circleci-agent step halt
+            fi
+            python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
 
 jobs:
   lint-build-debug:
@@ -28,14 +41,9 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_linux_dependencies
+      - linux_preflight
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -77,14 +85,9 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_linux_dependencies
+      - linux_preflight
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -116,13 +119,9 @@ jobs:
     resource_class: arm.xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - install_arm_linux_dependencies
+      - linux_preflight
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
@@ -152,14 +151,8 @@ jobs:
     resource_class: large
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_macos_dependencies
+      - check_ci_lint
+      - mac_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
