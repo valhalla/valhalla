@@ -1516,7 +1516,7 @@ void TripLegBuilder::Build(
     // in all other cases just using the previous end node is perfect
     GraphId edgestartnode =
         graphtile
-            ->directededge(graphtile->node(directededge->endnode())->edge_index() + 
+            ->directededge(graphtile->node(directededge->endnode())->edge_index() +
                            directededge->opp_index())
             ->endnode();
     graphreader.GetGraphTile(startnode, start_tile);
