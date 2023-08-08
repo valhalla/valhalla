@@ -12,6 +12,7 @@ readonly CLANG_FORMAT_VERSION=11.0.0
 
 if [[ $(uname -i) != 'aarch64' ]]; then
   echo 'Formatting is disabled on arm for the time being'
+  exit
 fi
 source scripts/bash_utils.sh
 setup_mason
