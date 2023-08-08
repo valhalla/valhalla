@@ -10,6 +10,9 @@ set -o errexit -o pipefail -o nounset
 
 readonly CLANG_FORMAT_VERSION=11.0.0
 
+if [[ $(uname -i) != 'aarch64' ]]; then
+  echo 'Formatting is disabled on arm for the time being'
+fi
 source scripts/bash_utils.sh
 setup_mason
 
@@ -21,7 +24,6 @@ echo "Using clang-format $CLANG_FORMAT_VERSION from ${CLANG_FORMAT}"
 
 find src valhalla test bench -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}
-
 
 # Python setup
 py=$(setup_python)
