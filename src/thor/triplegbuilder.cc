@@ -1510,10 +1510,12 @@ void TripLegBuilder::Build(
 
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
-	// Edge start node is the end node of the opposing edge of the current edge
-	// TODO: we only need this node if there is a discontinuity in the edges
-	// i.e. we 'teleport' from one edge to another due to an infeasibility
-	GraphId edgestartnode = graphtile->directededge(graphtile->node(directededge->endnode())->edge_index() + directededge->opp_index())->endnode();
+    // Edge start node is the end node of the opposing edge of the current edge
+    // TODO: we only need this node if there is a discontinuity in the edges
+    // (i.e. we 'teleport' from one edge to another due to an infeasibility)
+    // in all other cases just using the previous end node is perfect
+    GraphId edgestartnode = graphtile->directededge(graphtile->node(
+        directededge->endnode())->edge_index() + directededge->opp_index())->endnode();
     graphreader.GetGraphTile(startnode, start_tile);
     if (start_tile == nullptr) {
       throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
