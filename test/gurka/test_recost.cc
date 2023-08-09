@@ -383,7 +383,7 @@ TEST(recosting, all_algorithms) {
         // is there time dependence and in what direction
         auto dt_itr = option.find("/date_time/value");
         std::string date_time = dt_itr != option.cend() ? dt_itr->second : "";
-        [[maybe_unused]] auto type_itr = option.find("/date_time/type");
+
         // build up the costing object
         auto costing = sif::CostFactory().Create(api.options());
 
