@@ -381,24 +381,21 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
 
-      std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
-          pronunciations.find(sign_index);
-      ASSERT_NE(iter, pronunciations.end());
+    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
+        pronunciations.find(sign_index);
+    ASSERT_NE(iter, pronunciations.end());
 
-      if ((iter->second).second == "named junction:pronunciation:nt-sampa") {
-        EXPECT_EQ(signs.at(sign_index).text(), "named junction");
-        EXPECT_EQ(static_cast<int>((iter->second).first),
-                  static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
-      } else if ((iter->second).second == "destination:pronunciation:nt-sampa") {
-        EXPECT_EQ(signs.at(sign_index).text(), "destination");
-        EXPECT_EQ(static_cast<int>((iter->second).first),
-                  static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
-      } else
-        FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
-    }
+    if ((iter->second).second == "named junction:pronunciation:nt-sampa") {
+      EXPECT_EQ(signs.at(sign_index).text(), "named junction");
+      EXPECT_EQ(static_cast<int>((iter->second).first),
+                static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+    } else if ((iter->second).second == "destination:pronunciation:nt-sampa") {
+      EXPECT_EQ(signs.at(sign_index).text(), "destination");
+      EXPECT_EQ(static_cast<int>((iter->second).first),
+                static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
+    } else
+      FAIL() << (iter->second).second << " Extra key. This should not happen.";
   }
   // Test the ref on the node katakana wins.  Also, test empty pronunciations
   {
@@ -410,11 +407,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(EF_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
-
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
       if (iter == pronunciations.end()) {
@@ -430,7 +425,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         } else
           FAIL() << (iter->second).second << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -474,11 +468,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(FG_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
-
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
 
@@ -495,7 +487,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -540,10 +531,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(GH_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -562,7 +552,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -609,11 +598,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(HI_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
 
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -635,7 +623,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -682,10 +669,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(IJ_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -707,7 +693,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -754,10 +739,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(JK_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -779,7 +763,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
   }
 
@@ -793,10 +776,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(KL_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -815,7 +797,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
   }
 
@@ -829,10 +810,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(LM_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 1);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -851,7 +831,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
   }
 
@@ -865,10 +844,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(MN_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(pronunciations.size(), 2);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -890,7 +868,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-      ++sign_index;
     }
   }
 
@@ -966,10 +943,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint32_t, std::pair<uint8_t, std::string>> pronunciations;
     std::vector<SignInfo> signs = tile->GetSigns(BD_edge_id.id(), pronunciations);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1001,8 +977,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     node_id = DB_edge->endnode();
@@ -1013,10 +987,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(DB_edge_id.id(), pronunciations);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1048,8 +1021,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kXKatakana));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // more signs.  jeita wins.
@@ -1061,10 +1032,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(BC_edge_id.id(), pronunciations);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(pronunciations.size(), 6);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1096,8 +1066,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kXJeita));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // ipa wins for the name.
@@ -1156,10 +1124,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     signs = tile->GetSigns(DE_edge_id.id(), pronunciations);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(pronunciations.size(), 2);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1175,8 +1142,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // blank pronunciations for names.
@@ -1221,10 +1186,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(ED_edge_id.id(), pronunciations);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(pronunciations.size(), 2);
-    for ([[maybe_unused]] const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>::const_iterator iter =
           pronunciations.find(sign_index);
@@ -1240,8 +1204,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                   static_cast<int>(baldr::PronunciationAlphabet::kIpa));
       } else
         FAIL() << (iter->second).second << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
   } // end test the signs
 }
