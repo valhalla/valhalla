@@ -122,7 +122,7 @@ struct Landmark {
   }
 
   /**
-   * Construtor: convert a given string to a Landmark object.
+   * Constructor: convert a given string to a Landmark object.
    * The input string should consist of at least 10 bytes: 1 byte for kLandmark tag,
    * 1 byte for landmark type, 8 bytes for location (lng and lat), and the remaining for landmark
    * name.

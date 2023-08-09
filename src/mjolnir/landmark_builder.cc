@@ -234,20 +234,20 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   return landmarks;
 }
 
-std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLong,
-                                                              const double minLat,
-                                                              const double maxLong,
-                                                              const double maxLat) {
+std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minlng,
+                                                              const double minlat,
+                                                              const double maxlng,
+                                                              const double maxlat) {
   std::vector<Landmark> landmarks;
 
   auto* bounding_box_stmt = pimpl->bounding_box_stmt;
   sqlite3_reset(bounding_box_stmt);
   sqlite3_clear_bindings(bounding_box_stmt);
 
-  sqlite3_bind_double(bounding_box_stmt, 1, minLong);
-  sqlite3_bind_double(bounding_box_stmt, 2, minLat);
-  sqlite3_bind_double(bounding_box_stmt, 3, maxLong);
-  sqlite3_bind_double(bounding_box_stmt, 4, maxLat);
+  sqlite3_bind_double(bounding_box_stmt, 1, minlng);
+  sqlite3_bind_double(bounding_box_stmt, 2, minlat);
+  sqlite3_bind_double(bounding_box_stmt, 3, maxlng);
+  sqlite3_bind_double(bounding_box_stmt, 4, maxlat);
 
   LOG_TRACE(sqlite3_expanded_sql(bounding_box_stmt));
 
