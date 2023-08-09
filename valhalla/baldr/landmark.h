@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <iostream>
 
 #include <valhalla/baldr/graphconstants.h>
 
@@ -91,6 +92,18 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
+inline uint64_t encode_lnglat(double lng, double lat) {
+  return (((uint64_t(lng * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
+          ((uint64_t(lat * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
+}
+
+inline std::pair<double, double> decode_lnglat(uint64_t location) {
+  double lng = (int64_t((location >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7;
+  double lat = (int64_t(location & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7;
+
+  return std::make_pair(lng, lat);
+}
+
 struct Landmark {
   int64_t id;
   std::string name;
@@ -110,15 +123,15 @@ struct Landmark {
 
   /**
    * Construtor: convert a given string to a Landmark object.
-   * The input string should consist of at least 6 bytes: 1 byte for kLandmark tag,
-   * 1 byte for landmark type, 4 bytes for location (lng and lat), and the remaining for landmark
+   * The input string should consist of at least 10 bytes: 1 byte for kLandmark tag,
+   * 1 byte for landmark type, 8 bytes for location (lng and lat), and the remaining for landmark
    * name.
    *
    * @param str The string to be converted.
    */
   Landmark(const std::string& str) {
     // ensure that the string has the minimum expected size to represent a Landmark
-    if (str.size() < 6) { // 6 = 1 + 1 + 4, name may be null
+    if (str.size() < 10) { // 6 = 1 + 1 + 8, name may be null
       throw std::runtime_error("Invalid Landmark string: too short");
     }
 
@@ -132,14 +145,18 @@ struct Landmark {
     // extract the LandmarkType (second byte in the string)
     type = static_cast<LandmarkType>(static_cast<uint8_t>(str[1]));
 
-    // extract the location (next 4 bytes) - lng and lat
-    uint32_t location = 0;
-    std::memcpy(&location, str.data() + 2, 4);
-    lng = (static_cast<double>((location >> 16) & 0x7FFFFFFF) / 1e7) - 180;
-    lat = (static_cast<double>((location >> 1) & 0x7FFFFFFF) / 1e7) - 90;
+    // extract the location (next 8 bytes) - lng and lat
+    uint64_t location = 0;
+    std::memcpy(&location, str.data() + 2, 8);
+
+    auto lnglat = decode_lnglat(location);
+    lng = lnglat.first;
+    lat = lnglat.second;
 
     // extract the name (rest of the string after the first 6 bytes)
-    name = str.substr(6);
+    name = str.substr(10);
+
+    // std::cout << "from str result:" << id << " " << name << " " << std::to_string(static_cast<uint8_t>(type)) << " " << lng << " " << lat << std::endl;
   }
 };
 
@@ -152,10 +169,16 @@ struct Landmark {
 inline std::string Landmark::to_str() const {
   std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
   tagged_value.push_back(static_cast<std::string::value_type>(type));
-  uint32_t location = uint32_t((lng + 180) * 1e7) << 16 | uint32_t((lat + 90) * 1e7)
-                                                              << 1; // leaves one spare bit
-  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 4);
+
+  // uint32_t location = uint32_t((lng + 180) * 1e7) << 16 | uint32_t((lat + 90) * 1e7)
+  //                                                             << 1; // leaves one spare bit
+  
+  uint64_t location = encode_lnglat(lng, lat);
+
+  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 8);
   tagged_value += name;
+
+  std::cout << "to string: " << tagged_value << std::endl;
 
   return tagged_value;
 }

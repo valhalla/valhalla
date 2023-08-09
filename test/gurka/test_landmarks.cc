@@ -2,12 +2,12 @@
 #include <gtest/gtest.h>
 #include <vector>
 
-#include "baldr/graphreader.h"
-#include "baldr/landmark.h"
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmark_builder.h"
 #include "test/test.h"
+#include "baldr/landmark.h"
+#include "baldr/graphreader.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -45,6 +45,7 @@ void BuildPBF() {
   const gurka::ways ways = {
       // {"ae", {{"highway", "residential"}}},
       // {"eb", {{"highway", "residential"}}},
+      // {"ab", {{"highway", "residential"}, {"tunnel", "yes"}, {"tunnel:name", "Fort McHenry Tunnel"}}},
       {"ab", {{"highway", "residential"}}},
       {"bc", {{"highway", "motorway"}}},
       {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
@@ -145,70 +146,82 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3);
 }
 
-// TEST(LandmarkTest, TestTileStoreLandmarks) {
-//   BuildPBF();
-//   // make a config, though we dont need the landmarks db in there until the next test
-//   landmark_map.config = test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
-//                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
-//   // landmark_map.config.get_child("mjolnir").erase("traffic_extract");
+TEST(LandmarkTest, TestTileStoreLandmarks) {
+  BuildPBF();
+  // make a config, though we dont need the landmarks db in there until the next test
+  landmark_map.config = test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
+  // landmark_map.config.get_child("mjolnir").erase("traffic_extract");
 
-//   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in
-//   them mjolnir::build_tile_set(landmark_map.config, {pbf_filename},
-//   mjolnir::BuildStage::kInitialize,
-//                           mjolnir::BuildStage::kValidate, false);
+  // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
+  mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
+                          mjolnir::BuildStage::kValidate, false);
 
-//   // load one of the graphtiles via the graphtilebuilder with the deserialize option turned on
-//   GraphId tile_id("2/519119/0");
-//   GraphTileBuilder tb(workdir, tile_id, true);
+  // load one of the graphtiles via the graphtilebuilder with the deserialize option turned on
+  GraphId tile_id("2/519119/0");
+  GraphTileBuilder tb(workdir, tile_id, true);
 
-//   // loop over the edges in the tile and add a landmark to each one using our new addlandmark
-//   function
-//   // make the names simple like std::to_string(edge_id.id()) the lat lon can be similarly easy like
-//   // takign other simple information about the edge and encoding it into 2 numbers something you
-//   can
-//   // easily reverse in the assertion below, for the type you can also use the .id field of the
-//   eggeid
-//   // but just modulus it with the max type so it doesnt pick an invalid value
-//   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
-//   uint32_t edge_index = 0;
-//   for (const auto& e : tb.directededges()) {
-//     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
-//     auto point = shape[shape.size() / 2];
-//     auto ltype = static_cast<LandmarkType>(edge_index % invalid_landmark);
-//     // Landmark landmark{edge_index, std::to_string(edge_index), ltype, point.first, point.second};
-//     Landmark landmark{edge_index, std::to_string(edge_index), ltype, point.first, point.second};
+  // loop over the edges in the tile and add a landmark to each one using our new addlandmark function
+  // make the names simple like std::to_string(edge_id.id()) the lat lon can be similarly easy like
+  // takign other simple information about the edge and encoding it into 2 numbers something you can
+  // easily reverse in the assertion below, for the type you can also use the .id field of the eggeid
+  // but just modulus it with the max type so it doesnt pick an invalid value
+  auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
+  uint32_t edge_index = 0;
 
-//     auto edge_id = tile_id;
-//     edge_id.set_id(edge_index++);
+  const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, 0., 0.);
 
-//     //std::cout << "offset = " << std::to_string(tb.header_builder().end_offset()) << std::endl;
-//     tb.AddLandmark(edge_id, landmark);
-//   }
+  std::string str = landmark_fixed.to_str();
+  Landmark landmark(str);
 
-//   // call the store graphtile function to overwrite the tile on disk with the new info
-//   tb.StoreTileData();
+  EXPECT_EQ(landmark.id, 0);
+  EXPECT_EQ(landmark.name, "fixed landmark");
+  EXPECT_EQ(landmark.type, LandmarkType::casino);
+  EXPECT_EQ(landmark.lng, 0.);
+  EXPECT_EQ(landmark.lat, 0.);
 
-//   // instantiate a graphreader using the config
-//   GraphReader gr(landmark_map.config.get_child("mjolnir"));
+  for (const auto& e : tb.directededges()) {
+    std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
+    auto point = shape[shape.size() / 2];
+    auto ltype = static_cast<LandmarkType>(edge_index % invalid_landmark);
 
-//   // call getgraphtile on it
-//   auto tile = gr.GetGraphTile(tile_id);
+    // Landmark landmark(edge_index, std::to_string(edge_index), ltype, point.first, point.second);
 
-//   // get the edgeinfo using the edge who you added the landmark to
-//   // call GetNamesAndTypes on the edgeinfo
-//   for (const auto& e: tile->GetDirectedEdges()) {
-//     auto ei = tile->edgeinfo(&e);
-//     auto results = ei.GetNamesAndTypes(true);
+    auto edge_id = tile_id;
+    edge_id.set_id(edge_index++);
 
-//     for (const std::tuple<std::string, bool, uint8_t>& r: results) {
-//       // if (std::get<2>(r) == static_cast<char>(valhalla::baldr::TaggedValue::kLandmark)) {
-//       //   std::cout << std::get<0>(r) << std::endl;
-//       // }
-//       std::cout << std::get<0>(r) << " " << std::get<2>(r) << std::endl;
-//     }
-//   }
+    // tb.AddLandmark(edge_id, landmark);
+    tb.AddLandmark(edge_id, landmark_fixed);
+  }
 
-// loop over the results until the type is kLandmark when it is then you need to use the method
-// to decode the string into a landmark object. asser that the landmark you got out matches the one
-// you told it to add (excepting the id because we dont store that).
-// }
+  // call the store graphtile function to overwrite the tile on disk with the new info
+  tb.StoreTileData();
+
+  // instantiate a graphreader using the config
+  GraphReader gr(landmark_map.config.get_child("mjolnir"));
+
+  // call getgraphtile on it
+  auto tile = gr.GetGraphTile(tile_id);
+
+  // get the edgeinfo using the edge who you added the landmark to
+  // call GetNamesAndTypes on the edgeinfo
+
+  for (const auto& e: tile->GetDirectedEdges()) {
+    auto ei = tile->edgeinfo(&e);
+    auto results = ei.GetNamesAndTypes(true);
+
+    for (const std::tuple<std::string, bool, uint8_t>& r: results) {
+      // if (std::get<2>(r) == static_cast<char>(valhalla::baldr::TaggedValue::kLandmark)) {
+      //   std::string str = std::get<0>(r);
+      //   std::cout << str << std::endl;
+        // Landmark landmark(str);
+        // std::cout << landmark.id << landmark.name << static_cast<uint8_t>(landmark.type) << landmark.lng << landmark.lat << std::endl;
+      // }
+      std::cout << "name:" << std::get<0>(r) << ", bool:" << std::get<1>(r) << ", type:" << static_cast<uint8_t>(std::get<2>(r)) << std::endl;
+    }
+  }
+  
+  // loop over the results until the type is kLandmark when it is then you need to use the method
+  // to decode the string into a landmark object. asser that the landmark you got out matches the one
+  // you told it to add (excepting the id because we dont store that).
+}
