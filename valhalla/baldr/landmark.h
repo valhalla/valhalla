@@ -99,7 +99,48 @@ struct Landmark {
   double lat;
 
   std::string to_str() const;
-  Landmark from_str(const std::string& str) const;
+
+  Landmark(const int64_t id,
+           const std::string name,
+           const LandmarkType type,
+           const double lng,
+           const double lat)
+      : id(id), name(name), type(type), lng(lng), lat(lat) {
+  }
+
+  /**
+   * Construtor: convert a given string to a Landmark object.
+   * The input string should consist of at least 6 bytes: 1 byte for kLandmark tag,
+   * 1 byte for landmark type, 4 bytes for location (lng and lat), and the remaining for landmark
+   * name.
+   *
+   * @param str The string to be converted.
+   */
+  Landmark(const std::string& str) {
+    // ensure that the string has the minimum expected size to represent a Landmark
+    if (str.size() < 6) { // 6 = 1 + 1 + 4, name may be null
+      throw std::runtime_error("Invalid Landmark string: too short");
+    }
+
+    // ensure that the first byte is the kLandmark tag
+    if (str[0] != static_cast<char>(baldr::TaggedValue::kLandmark)) {
+      throw std::runtime_error("Invalid Landmark string: missing kLandmark tag");
+    }
+
+    id = 0; // fake id
+
+    // extract the LandmarkType (second byte in the string)
+    type = static_cast<LandmarkType>(static_cast<uint8_t>(str[1]));
+
+    // extract the location (next 4 bytes) - lng and lat
+    uint32_t location = 0;
+    std::memcpy(&location, str.data() + 2, 4);
+    lng = (static_cast<double>((location >> 16) & 0x7FFFFFFF) / 1e7) - 180;
+    lat = (static_cast<double>((location >> 1) & 0x7FFFFFFF) / 1e7) - 90;
+
+    // extract the name (rest of the string after the first 6 bytes)
+    name = str.substr(6);
+  }
 };
 
 /**
@@ -117,39 +158,6 @@ inline std::string Landmark::to_str() const {
   tagged_value += name;
 
   return tagged_value;
-}
-
-/**
- * Convert a string to a Landmark object.
- * The input string should consist of at least 6 bytes: 1 byte for kLandmark tag,
- * 1 byte for landmark type, 4 bytes for location (lng and lat), and the remaining for landmark name.
- *
- * @param str The string to be converted.
- */
-inline Landmark Landmark::from_str(const std::string& str) const {
-  // ensure that the string has the minimum expected size to represent a Landmark
-  if (str.size() < 6) { // 6 = 1 + 1 + 4, name may be null
-    throw std::runtime_error("Invalid Landmark string: too short");
-  }
-
-  // ensure that the first byte is the kLandmark tag
-  if (str[0] != static_cast<char>(baldr::TaggedValue::kLandmark)) {
-    throw std::runtime_error("Invalid Landmark string: missing kLandmark tag");
-  }
-
-  // extract the LandmarkType (second byte in the string)
-  LandmarkType landmark_type = static_cast<LandmarkType>(static_cast<uint8_t>(str[1]));
-
-  // extract the location (next 4 bytes) - lng and lat
-  uint32_t location = 0;
-  std::memcpy(&location, str.data() + 2, 4);
-  double lng = (static_cast<double>((location >> 16) & 0x7FFFFFFF) / 1e7) - 180;
-  double lat = (static_cast<double>((location >> 1) & 0x7FFFFFFF) / 1e7) - 90;
-
-  // extract the name (rest of the string after the first 6 bytes)
-  std::string name = str.substr(6);
-
-  return Landmark{0, name, landmark_type, lng, lat}; // note: fake id should not be used!
 }
 
 } // namespace baldr
