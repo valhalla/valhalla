@@ -648,8 +648,7 @@ TEST(UtilMidgard, TestExpandLocation) {
   EXPECT_GE(area, 199.0f * 199.0f);
 
   // Should throw an exception if negative value is sent
-  EXPECT_THROW([[maybe_unused]] AABB2<PointLL> box = ExpandMeters(loc, -10.0f);
-               , std::invalid_argument)
+  EXPECT_THROW(ExpandMeters(loc, -10.0f);, std::invalid_argument)
       << "ExpandLocation: should throw exception with negative meters supplied";
 }
 
