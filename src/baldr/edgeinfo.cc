@@ -169,16 +169,8 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
 // Get a list of names
 std::vector<std::tuple<std::string, bool, uint8_t>>
 EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
-
   // Get each name
   std::vector<std::tuple<std::string, bool, uint8_t>> name_type_pairs;
-
-std::cout << "\nname list: "<< std::endl;
-
-for (size_t i = 0; i < names_list_length_; i++) {
-  std::cout << i << " " << names_list_ + i << std::endl;
-}
-std::cout << std::endl;
 
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
@@ -188,8 +180,6 @@ std::cout << std::endl;
       continue;
     }
 
-std::cout << "name info offset: " << ni->name_offset_ << ", names_list_length_: " << names_list_length_ << std::endl;
-    
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         std::string name = names_list_ + ni->name_offset_;

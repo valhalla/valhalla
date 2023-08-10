@@ -234,13 +234,12 @@ message TaggedValue {
     kBssInfo = 3;
     kLevel = 4;
     kLevelRef = 5;
-    // kLandmark = 6;
+    kLandmark = 6;
     kTunnel = 49;
     kBridge = 50;
-    kLandmark = 51;    
   }
   bytes value = 1;    // The actual tagged name value, examples: Ted Williams Tunnel
-  Type type = 3;      // The type of tagged name (tunnel or bridge)
+  Type type = 3;      // The type of tagged name (tunnel, bridge or landmark)
 }
 
 enum TravelMode {

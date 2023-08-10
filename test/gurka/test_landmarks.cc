@@ -2,12 +2,12 @@
 #include <gtest/gtest.h>
 #include <vector>
 
+#include "baldr/graphreader.h"
+#include "baldr/landmark.h"
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmark_builder.h"
 #include "test/test.h"
-#include "baldr/landmark.h"
-#include "baldr/graphreader.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -36,16 +36,12 @@ void BuildPBF() {
       {"E", {{"name", "zhong lou"}, {"amenity", "monument"}}}, // not in list, shouldn't be stored
       // non-landmark nodes
       {"a", {{"name", "gong ce"}, {"amenity", "toilets"}}},
-      // {"e", {{"name", "fake"}, {"amenity", "fake"}}},
       {"b", {{"name", "la ji tong"}, {"amenity", "waste_basket"}}},
       {"c", {{"name", "hua yuan"}, {"place", "city"}}},
       {"d", {{"traffic_signal", "signal"}}},
   };
 
   const gurka::ways ways = {
-      // {"ae", {{"highway", "residential"}}},
-      // {"eb", {{"highway", "residential"}}},
-      // {"ab", {{"highway", "residential"}, {"tunnel", "yes"}, {"tunnel:name", "Fort McHenry Tunnel"}}},
       {"ab", {{"highway", "residential"}}},
       {"bc", {{"highway", "motorway"}}},
       {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
@@ -149,7 +145,8 @@ TEST(LandmarkTest, TestParseLandmarks) {
 TEST(LandmarkTest, TestTileStoreLandmarks) {
   BuildPBF();
   // make a config, though we dont need the landmarks db in there until the next test
-  landmark_map.config = test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+  landmark_map.config =
+      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
   // landmark_map.config.get_child("mjolnir").erase("traffic_extract");
 
@@ -169,16 +166,8 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
   uint32_t edge_index = 0;
 
-  const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, 0., 0.);
-
-  std::string str = landmark_fixed.to_str();
-  Landmark landmark(str);
-
-  EXPECT_EQ(landmark.id, 0);
-  EXPECT_EQ(landmark.name, "fixed landmark");
-  EXPECT_EQ(landmark.type, LandmarkType::casino);
-  EXPECT_EQ(landmark.lng, 0.);
-  EXPECT_EQ(landmark.lat, 0.);
+  double lng = 10, lat = 10;
+  const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
 
   for (const auto& e : tb.directededges()) {
     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
@@ -190,7 +179,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     auto edge_id = tile_id;
     edge_id.set_id(edge_index++);
 
-    // tb.AddLandmark(edge_id, landmark);
     tb.AddLandmark(edge_id, landmark_fixed);
   }
 
@@ -205,23 +193,25 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
   // get the edgeinfo using the edge who you added the landmark to
   // call GetNamesAndTypes on the edgeinfo
-
-  for (const auto& e: tile->GetDirectedEdges()) {
-    auto ei = tile->edgeinfo(&e);
-    auto results = ei.GetNamesAndTypes(true);
-
-    for (const std::tuple<std::string, bool, uint8_t>& r: results) {
-      // if (std::get<2>(r) == static_cast<char>(valhalla::baldr::TaggedValue::kLandmark)) {
-      //   std::string str = std::get<0>(r);
-      //   std::cout << str << std::endl;
-        // Landmark landmark(str);
-        // std::cout << landmark.id << landmark.name << static_cast<uint8_t>(landmark.type) << landmark.lng << landmark.lat << std::endl;
-      // }
-      std::cout << "name:" << std::get<0>(r) << ", bool:" << std::get<1>(r) << ", type:" << static_cast<uint8_t>(std::get<2>(r)) << std::endl;
-    }
-  }
-  
   // loop over the results until the type is kLandmark when it is then you need to use the method
   // to decode the string into a landmark object. asser that the landmark you got out matches the one
   // you told it to add (excepting the id because we dont store that).
+
+  for (const auto& e : tile->GetDirectedEdges()) {
+    auto ei = tile->edgeinfo(&e);
+    auto results = ei.GetNamesAndTypes(true);
+
+    for (const std::tuple<std::string, bool, uint8_t>& r : results) {
+      if (std::get<2>(r) == static_cast<uint8_t>(baldr::TaggedValue::kLandmark)) {
+        Landmark landmark(std::get<0>(r));
+        // std::cout << "landmark: " << landmark.id << " " << landmark.name << " " <<
+        // static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat << std::endl;
+        EXPECT_EQ(landmark.id, 0);
+        EXPECT_EQ(landmark.name, "fixed landmark");
+        EXPECT_EQ(landmark.type, LandmarkType::casino);
+        EXPECT_EQ(landmark.lng, lng);
+        EXPECT_EQ(landmark.lat, lat);
+      }
+    }
+  }
 }
