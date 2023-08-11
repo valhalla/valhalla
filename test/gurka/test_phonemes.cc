@@ -428,6 +428,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kKatakana));
+          EXPECT_EQ(to_string(static_cast<Language>(
+                        std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
+                    "nl");
         } else {
           if (static_cast<valhalla::baldr::PronunciationAlphabet>(
                   std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)) ==
