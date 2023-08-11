@@ -149,11 +149,7 @@ void FilterTiles(GraphReader& reader,
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
                                     edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(),
-                                    edgeinfo.GetLinguisticTaggedValues(
-                                        valhalla::baldr::TaggedValue::kPronunciation),
-                                    edgeinfo.GetLinguisticTaggedValues(
-                                        valhalla::baldr::TaggedValue::kLanguage),
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());

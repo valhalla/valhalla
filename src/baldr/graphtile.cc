@@ -789,8 +789,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
 
       const char* text = (textlist_ + signs_[found].text_offset());
 
-      bool isLinguistic = (signs_[found].type() == Sign::Type::kPronunciation ||
-                           signs_[found].type() == Sign::Type::kLanguage);
+      bool isLinguistic = (signs_[found].type() == Sign::Type::kLinguistic);
 
       bool is_node_sign_type = signs_[found].type() == Sign::Type::kJunctionName ||
                                signs_[found].type() == Sign::Type::kTollName;
@@ -810,23 +809,19 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
         if (isLinguistic) {
           sign_text.clear();
           while (*text != '\0') {
-            if (signs_[found].type() == Sign::Type::kPronunciation) {
+            if (signs_[found].type() == Sign::Type::kLinguistic) {
               const auto header = midgard::unaligned_read<linguistic_text_header_t>(text);
               sign_text.append(
                   std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) +
                   std::string((text + kLinguisticHeaderSize), header.length_));
 
               text += header.length_ + kLinguisticHeaderSize;
-            } else if (signs_[found].type() == Sign::Type::kLanguage) {
-              const auto header = midgard::unaligned_read<language_text_header_t>(text);
-              sign_text.append(
-                  std::string(reinterpret_cast<const char*>(&header), kLanguageHeaderSize));
-              text += kLanguageHeaderSize;
             }
           }
         }
+
         signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
-                           signs_[found].tagged(), false, false, 0, 0, 0, 0, sign_text);
+                           signs_[found].tagged(), false, 0, 0, sign_text);
       }
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
@@ -879,8 +874,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
     if (signs_[found].text_offset() < textlist_size_) {
 
       const auto* text = (textlist_ + signs_[found].text_offset());
-      if (signs_[found].tagged() && (signs_[found].type() == Sign::Type::kPronunciation ||
-                                     signs_[found].type() == Sign::Type::kLanguage)) {
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kLinguistic) {
 
         // is_route_num_type indicates if this phonome is for a node or not
         if ((signs_[found].is_route_num_type() && signs_on_node) ||
@@ -888,7 +882,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
           while (*text != '\0') {
             std::tuple<uint8_t, uint8_t, std::string> liguistic_attributes;
             uint8_t name_index = 0;
-            if (signs_[found].type() == Sign::Type::kPronunciation) {
+            if (signs_[found].type() == Sign::Type::kLinguistic) {
               const auto header = midgard::unaligned_read<linguistic_text_header_t>(text);
 
               std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) =
@@ -900,23 +894,19 @@ std::vector<SignInfo> GraphTile::GetSigns(
               text += header.length_ + kLinguisticHeaderSize;
               name_index = header.name_index_;
 
-            } else if (signs_[found].type() == Sign::Type::kLanguage) {
-              const auto header = midgard::unaligned_read<language_text_header_t>(text);
-
-              std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) =
-                  static_cast<uint8_t>(PronunciationAlphabet::kNone);
-              std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) = header.language_;
-              std::get<kLinguisticMapTuplePronunciationIndex>(liguistic_attributes) = "";
-
-              text += kLanguageHeaderSize;
-              name_index = header.name_index_;
             } else
               continue;
 
+            // Edge case.  Sometimes when phonemes exist but the language for that phoneme is not
+            // supported in that area, we toss the phoneme but add the default language for that
+            // name/destination key.  We only want to return the highest ranking phoneme type
+            // over the language.
             auto iter = index_linguistic_map.insert(std::make_pair(name_index, liguistic_attributes));
             if (!iter.second) {
               if ((std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) >
                    std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter.first->second)) &&
+                  (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) !=
+                   static_cast<uint8_t>(PronunciationAlphabet::kNone)) &&
                   (std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) ==
                    std::get<kLinguisticMapTupleLanguageIndex>(iter.first->second))) {
                 iter.first->second = liguistic_attributes;
@@ -934,7 +924,7 @@ std::vector<SignInfo> GraphTile::GetSigns(
       // only add edge signs when asking for signs at the edges.
       if ((is_node_sign_type && signs_on_node) || (!is_node_sign_type && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
-                           signs_[found].tagged(), false, false, 0, 0, 0, 0, text);
+                           signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }

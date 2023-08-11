@@ -419,9 +419,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Get names - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
       auto tagged_values = edgeinfo.GetTaggedValues();
-      auto pronunciations =
-          edgeinfo.GetLinguisticTaggedValues(valhalla::baldr::TaggedValue::kPronunciation);
-      auto languages = edgeinfo.GetLinguisticTaggedValues(valhalla::baldr::TaggedValue::kLanguage);
+      auto linguistics = edgeinfo.GetLinguisticTaggedValues();
 
       auto types = edgeinfo.GetTypes();
 
@@ -487,8 +485,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, pronunciations,
-                                  languages, types, forward, diff_names);
+                                  edgeinfo.speed_limit(), shape, names, tagged_values, linguistics,
+                                  types, forward, diff_names);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -680,11 +678,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(),
-                                    edgeinfo.GetLinguisticTaggedValues(
-                                        valhalla::baldr::TaggedValue::kPronunciation),
-                                    edgeinfo.GetLinguisticTaggedValues(
-                                        valhalla::baldr::TaggedValue::kLanguage),
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added);
 
         newedge.set_edgeinfo_offset(edge_info_offset);

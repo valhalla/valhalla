@@ -17,58 +17,37 @@ public:
    * @param  type                 Sign type.
    * @param  rn                   Bool indicating if this sign is a route number.
    * @param  tagged               Bool indicating if this sign is a special tagged type.
-   * @param  has_phoneme          Bool indicating if this has a phoneme or not.
-   * @param  phoneme_start_index  uint32_t. The phoneme start index.
-   * @param  phoneme_count        uint32_t. The number of phonemes
-   * @param  lang_start_index     uint32_t. The language start index.
-   * @param  lang_count           uint32_t. The number of languages
+   * @param  has_linguistic       Bool indicating if this has a linguistic record or not.
+   * @param  linguistic_start_index  uint32_t. The linguistic start index.
+   * @param  linguistic_count        uint32_t. The number of linguistic records
    * @param  text   Text string.
    */
   SignInfo(const Sign::Type& type,
            const bool rn,
            const bool tagged,
-           const bool has_phoneme,
-           const bool has_lang,
-           const uint32_t phoneme_start_index,
-           const uint32_t phoneme_count,
-           const uint32_t lang_start_index,
-           const uint32_t lang_count,
+           const bool has_linguistic,
+           const uint32_t linguistic_start_index,
+           const uint32_t linguistic_count,
            const std::string& text)
-      : phoneme_start_index_(phoneme_start_index), phoneme_count_(phoneme_count),
-        lang_start_index_(lang_start_index), lang_count_(lang_count), type_(type), is_route_num_(rn),
-        is_tagged_(tagged), has_phoneme_(has_phoneme), has_lang_(has_lang), text_(text) {
+      : linguistic_start_index_(linguistic_start_index), linguistic_count_(linguistic_count),
+        type_(type), is_route_num_(rn), is_tagged_(tagged), has_linguistic_(has_linguistic),
+        text_(text) {
   }
 
   /**
-   * Returns the phoneme start index.
-   * @return Returns the phoneme start index.
+   * Returns the linguistic start index.
+   * @return Returns the linguistic start index.
    */
-  uint32_t phoneme_start_index() const {
-    return phoneme_start_index_;
+  uint32_t linguistic_start_index() const {
+    return linguistic_start_index_;
   }
 
   /**
-   * Returns the phoneme count.
-   * @return Returns the phoneme count.
+   * Returns the linguistic count.
+   * @return Returns the linguistic count.
    */
-  uint32_t phoneme_count() const {
-    return phoneme_count_;
-  }
-
-  /**
-   * Returns the language start index.
-   * @return Returns the language start index.
-   */
-  uint32_t lang_start_index() const {
-    return lang_start_index_;
-  }
-
-  /**
-   * Returns the lang count.
-   * @return Returns the lang count.
-   */
-  uint32_t lang_count() const {
-    return lang_count_;
+  uint32_t linguistic_count() const {
+    return linguistic_count_;
   }
 
   /**
@@ -96,19 +75,11 @@ public:
   }
 
   /**
-   * Does the sign have a phoneme set?
-   * @return Returns true the sign has a phoneme set?
+   * Does the sign have a linguistic set?
+   * @return Returns true the sign has a linguistic set?
    */
-  bool has_phoneme() const {
-    return has_phoneme_;
-  }
-
-  /**
-   * Does the sign have a language?
-   * @return Returns true the sign has a language?
-   */
-  bool has_language() const {
-    return has_lang_;
+  bool has_linguistic() const {
+    return has_linguistic_;
   }
 
   /**
@@ -125,16 +96,13 @@ public:
   }
 
 protected:
-  uint32_t phoneme_start_index_;
-  uint32_t phoneme_count_;
-  uint32_t lang_start_index_;
-  uint32_t lang_count_;
+  uint32_t linguistic_start_index_;
+  uint32_t linguistic_count_;
 
   Sign::Type type_;
   bool is_route_num_;
   bool is_tagged_;
-  bool has_phoneme_;
-  bool has_lang_;
+  bool has_linguistic_;
 
   std::string text_;
 };

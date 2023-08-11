@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -2347,7 +2348,8 @@ struct OSMWay {
     return turn_channel_;
   }
 
-  void AddPronunciations(std::vector<std::string>& linguistics,
+  void AddPronunciations(std::vector<std::string>& pronunciations,
+                         std::map<size_t, baldr::Language>& lang_map,
                          const UniqueNames& name_offset_map,
                          const std::vector<std::pair<std::string, bool>>& default_languages,
                          const std::vector<baldr::Language> token_langs,
@@ -2364,6 +2366,7 @@ struct OSMWay {
                          bool diff_names) const;
 
   void AddPronunciationsWithLang(std::vector<std::string>& pronunciations,
+                                 std::map<size_t, baldr::Language>& lang_map,
                                  const baldr::PronunciationAlphabet verbal_type,
                                  const std::vector<std::string>& pronunciation_tokens,
                                  const std::vector<baldr::Language>& pronunciation_langs,
@@ -2371,9 +2374,9 @@ struct OSMWay {
                                  const size_t token_size,
                                  const size_t key) const;
 
-  void AddLanguages(std::vector<std::string>& linguistics,
-                    const std::vector<baldr::Language>& token_languages,
-                    const size_t key) const;
+  void AddLanguage(std::vector<std::string>& linguistics,
+                   const size_t index,
+                   const baldr::Language& lang) const;
 
   /**
    * Sets layer index(Z-level) of the way.
@@ -2469,8 +2472,7 @@ struct OSMWay {
                 const uint32_t alt_name_lang_index,
                 uint16_t& types,
                 std::vector<std::string>& names,
-                std::vector<std::string>& pronunciations,
-                std::vector<std::string>& languages,
+                std::vector<std::string>& linguistics,
                 OSMPronunciation::DiffType type = OSMPronunciation::DiffType::kRight,
                 bool diff_names = false) const;
 
@@ -2481,8 +2483,7 @@ struct OSMWay {
                        const uint32_t tunnel_name_lang_index,
                        const size_t& names_size,
                        std::vector<std::string>& names,
-                       std::vector<std::string>& pronunciations,
-                       std::vector<std::string>& languages,
+                       std::vector<std::string>& linguistics,
                        OSMPronunciation::DiffType type = OSMPronunciation::DiffType::kRight,
                        bool diff_names = false) const;
 

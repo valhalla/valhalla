@@ -78,6 +78,7 @@ public:
                          std::vector<baldr::Language>& jeita_langs);
 
   static void AddPronunciationsWithLang(std::vector<std::string>& pronunciations,
+                                        std::map<size_t, baldr::Language>& lang_map,
                                         const baldr::PronunciationAlphabet verbal_type,
                                         const std::vector<std::string>& pronunciation_tokens,
                                         const std::vector<baldr::Language>& pronunciation_langs,
@@ -85,10 +86,8 @@ public:
                                         const size_t token_size,
                                         const size_t key);
 
-  static void AddLanguages(const std::vector<baldr::Language>& sign_langs,
-                           const size_t index,
-                           std::vector<std::string>& languages,
-                           uint32_t& count);
+  static void
+  AddLanguage(const size_t index, const baldr::Language& lang, std::vector<std::string>& linguistics);
 
   static void BuildPronunciations(const std::vector<std::string>& ipa_tokens,
                                   const std::vector<baldr::Language>& ipa_langs,
@@ -102,6 +101,7 @@ public:
                                   const size_t token_size,
                                   const size_t key,
                                   std::vector<std::string>& pronunciations,
+                                  std::map<size_t, baldr::Language>& lang_map,
                                   bool add_ipa,
                                   bool add_nt_sampa,
                                   bool add_katakana,
@@ -127,8 +127,7 @@ public:
                                  const OSMData& osmdata,
                                  const std::vector<std::pair<std::string, bool>>& default_languages,
                                  std::vector<baldr::SignInfo>& exits,
-                                 std::vector<std::string>& pronunciations,
-                                 std::vector<std::string>& languages,
+                                 std::vector<std::string>& linguistics,
                                  bool fork,
                                  bool forward,
                                  bool ramp,

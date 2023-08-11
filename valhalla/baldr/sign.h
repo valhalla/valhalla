@@ -27,8 +27,7 @@ public:
     kGuidanceViewJunction,
     kGuidanceViewSignboard,
     kTollName,
-    kLanguage = 254,
-    kPronunciation = 255
+    kLinguistic = 255
   };
 
   /**

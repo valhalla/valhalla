@@ -144,8 +144,7 @@ public:
    */
   void AddSigns(const uint32_t idx,
                 const std::vector<baldr::SignInfo>& signs,
-                const std::vector<std::string>& pronunciations,
-                const std::vector<std::string>& languages);
+                const std::vector<std::string>& linguistics);
 
   /**
    * Add sign information.
@@ -197,13 +196,11 @@ public:
    * Process Tagged values for the edge.
    * @param  edgeindex      The edgeindex we are processing.
    * @param  names          The names to add.
-   * @param  type           The type of the names
    * @param  name_count     The current name count.
    * @param  name_info_list The list to add the name infos
    */
   void ProcessTaggedValues(const uint32_t edgeindex,
                            const std::vector<std::string>& names,
-                           const valhalla::baldr::TaggedValue type,
                            size_t& name_count,
                            std::vector<NameInfo>& name_info_list);
 
@@ -225,8 +222,7 @@ public:
    * @param  spd            Speed limit. [kph]
    * @param  lls            The shape of the target edge.
    * @param  names          The names of the target edge.
-   * @param  pronunciations The pronunciations of the target edge.
-   * @param  languages      The languages of the target edge.
+   * @param  linguistics    The pronunciations and languages of the target edge.
    * @param  types          Bits indicating if the name is a ref vs a name.
    * @param  added          Set to true if the target edge was newly added to the list,
    *                        set to false if the target edge was already in the list.
@@ -245,8 +241,7 @@ public:
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
-                       const std::vector<std::string>& pronunciations,
-                       const std::vector<std::string>& languages,
+                       const std::vector<std::string>& linguistics,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
@@ -269,8 +264,7 @@ public:
    * @param  llstr          The shape of the target edge as an encoded string.
    * @param  names          The names of the target edge.
    * @param  tagged_values  The tagged names of the target edge.
-   * @param  pronunciations The pronunciations of the target edge.
-   * @param  languages      The languages of the target edge.
+   * @param  linguistics    The pronunciations and languages of the target edge.
    * @param  types          Bits indicating if the name is a ref vs a name.
    * @param  added          Set to true if the target edge was newly added to the list,
    *                        set to false if the target edge was already in the list.
@@ -288,8 +282,7 @@ public:
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
-                       const std::vector<std::string>& pronunciations,
-                       const std::vector<std::string>& languages,
+                       const std::vector<std::string>& linguistics,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);

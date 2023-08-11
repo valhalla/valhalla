@@ -63,13 +63,10 @@ constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
 constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
 constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
 constexpr size_t kLinguisticHeaderSize = 3;
-constexpr size_t kLanguageHeaderSize = 2;
 
-// Unfortunately a bug was found where we were returning a blank phoneme for a linguistic
-// record where it just contained a language and no phoneme.  Therefore, for now we have
-// to separate languages from phonemes in order to ensure backward compatibility.  If we
-// ever version the tiles, we need to move languages under the linguistic header and delete
-// the language_text_header_t.
+// Unfortunately a bug was found where we were returning a blank phoneme (kNone = 0) for a linguistic
+// record where it just contained a language and no phoneme.  This caused us to stop reading the
+// header and in turn caused the name_index to be off.  This is why kNone is now equal to 5
 struct linguistic_text_header_t {
   uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
@@ -77,12 +74,6 @@ struct linguistic_text_header_t {
   uint32_t name_index_ : 4; // what name is this pronunciation for
   uint32_t spare_ : 1;
   uint32_t DO_NOT_USE_ : 8; // DONT EVER USE THIS WE DON'T ACTUALLY STORE IT IN THE TEXT LIST
-};
-
-struct language_text_header_t {
-  uint16_t language_ : 8; // this is just the language as we will derive locale by getting admin info
-  uint16_t name_index_ : 4; // what name is this language for
-  uint16_t spare_ : 4;
 };
 
 /**
@@ -187,7 +178,7 @@ public:
    *
    * @return   Returns a list (vector) of linguistic names.
    */
-  std::vector<std::string> GetLinguisticTaggedValues(const baldr::TaggedValue type) const;
+  std::vector<std::string> GetLinguisticTaggedValues() const;
 
   /**
    * Convenience method to get the names and route number flags for an edge.
