@@ -5,7 +5,7 @@ Traffic data for routing engines can be divided into two different types:
 - *Historical traffic* describes the typically observed speed on a road at a specific point in time. So e.g. the typical speed on a Monday morning at 8 o'clock.
 - *Live traffic* describes the currently observed speed on a road according to the actual traffic situation.
 
-Valhalla supports both types of traffic for all APIs, but there are some excluded use-cases. First, traffic is not supported for multimodal costing. Furthermore it is currently not supported for arrive_by timestamps in the `source_to_targets` API. For more information of how to route with traffic data and time information, check the respective API documentation. In the following it will be explained how to integrate historical and live traffic data into valhalla graph.
+Valhalla supports both types of traffic for all APIs, but there are some excluded use-cases. First, traffic is not supported for multimodal costing. Furthermore, traffic is currently not supported for `arrive_by` timestamps in the `source_to_targets` API. For more information about how to route with traffic data and time information, check the respective API documentation. In the following it will be explained how to integrate historical and live traffic data into the valhalla graph.
 
 ## Historical Traffic
 
@@ -17,7 +17,7 @@ way_id,speed_1,speed_2, ... ,speed_2016
 681494965,45,46,...,70
 ```
 
-The way_id represents the id of an Openstreetmap way. The column speed_1 represents the estimated speed between 00:00 to 00:05 on Sunday, speed_2 the speed between 00:05 to 00:10 on Sunday and so forth.
+The `way_id` represents the id of an Openstreetmap way. The column `speed_1` represents the estimated speed between 00:00 to 00:05 on Sunday, `speed_2` the speed between 00:05 to 00:10 on Sunday and so forth.
 
 This data has to be converted to a format which can be used by valhalla and has to be structured properly in a folder hierarchy similar to the valhalla tile hierarchy. Valhalla requires the speed information in following CSV file format:
 
@@ -29,7 +29,7 @@ edge_id,freeflow_speed,constrained_speed,historical_speeds
 
 This CSV file can be created by following steps:
 
-1. The `edge_id` column represents the internal graph id of the OSM way in the valhalla graph. The valhalla tool `valhalla_ways_to_edges` can be used to generate a mapping from OSM way ids to these valhalla edge ids. An example for an `way_edges.txt` file created by the tool looks like this:
+1. The `edge_id` column represents the internal `graph_id` of ways in the valhalla graph. The valhalla tool `valhalla_ways_to_edges` can be used to generate a mapping from OSM way ids to valhalla edge ids. An example for an `way_edges.txt` file created by the tool looks like this:
     ```
     1175181586,1,112642252344
     984719585,1,110964530744,1,112508034616,1,112843578936
@@ -68,7 +68,7 @@ valhalla_traffic_tiles
 ...
 ```
 
-If a way's information is found in `0/003/015.gph`, then its matching speed values have to be saved in `0/003/015.csv`. To find the path in the tile hierarchy to save a speed value in, the implementation `GraphTile::FileSuffix`, which can be found in the valhalla source code, can be used to obtain the path from a way id.
+If a way's information is found in `0/003/015.gph`, then its matching speed values have to be saved in `0/003/015.csv`. To find the path in the tile hierarchy to save a speed value in, the function `GraphTile::FileSuffix`can be used to obtain the path from a way id. Its implementation can also be found in the valhalla source code.
 
 In a last step, the traffic data has to be added to the routing graph. This can be done by using the `valhalla_add_predicted_traffic` tool. It's parameter `-t` can be used to hand over the folder which contains the traffic CSV files.
 
