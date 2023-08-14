@@ -137,7 +137,7 @@ class TestBuildExtract(unittest.TestCase):
         tile_count = len(tile_paths)
 
         # test that the index has the right offsets/sizes
-        exp_tuples = ((2560, 25568, 302520), (306688, 410441, 678632), (987136, 6549282, 6137896))
+        exp_tuples = ((2560, 25568, 302544), (306688, 410441, 678640), (987136, 6549282, 6137896))
         self.check_tar(EXTRACT_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
         # same for traffic.tar
         exp_tuples = ((1536, 25568, 26416), (28672, 410441, 65552), (95232, 6549282, 604608))

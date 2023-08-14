@@ -28,12 +28,12 @@ TEST(Signinfo, ExitToTest) {
   exit_node.set_name_index(osmdata.node_names.index("PATP West Exit"));
 
   std::vector<SignInfo> signs;
-  std::vector<std::string> pronunciations, languages;
+  std::vector<std::string> linguistics;
   std::vector<std::pair<std::string, bool>> default_languages;
 
   bool has_guide =
       GraphBuilder::CreateSignInfoList(exit_node, way, pronunciation, osmdata, default_languages,
-                                       signs, pronunciations, languages, fork, forward, true, false);
+                                       signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -48,9 +48,8 @@ TEST(Signinfo, ExitToTest) {
 
   node.set_exit_to_index(osmdata.node_names.index("US 11;To I 81;Carlisle;Harrisburg"));
   signs.clear();
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -70,9 +69,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   node.set_exit_to_index(osmdata.node_names.index("US 11;Toward I 81;Carlisle;Harrisburg"));
 
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -92,9 +90,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   node.set_exit_to_index(osmdata.node_names.index("I 95 To I 695"));
 
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -110,9 +107,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   node.set_exit_to_index(osmdata.node_names.index("I 495 Toward I 270"));
 
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -129,9 +125,8 @@ TEST(Signinfo, ExitToTest) {
   node.set_exit_to_index(
       osmdata.node_names.index("I 495 Toward I 270 To I 95")); // default to toward.  Punt on parsing.
 
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -148,9 +143,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   auto index = osmdata.name_offset_map.index("I 495 North");
   way.set_destination_ref_index(index);
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -166,9 +160,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   index = osmdata.name_offset_map.index("I 495 North");
   way.set_destination_ref_index(index);
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, false, true);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, false, true);
 
   EXPECT_TRUE(has_guide) << "Guides should not be Exits";
 
@@ -186,9 +179,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   auto index2 = osmdata.name_offset_map.index("I 695 North");
   way2.set_destination_ref_to_index(index2);
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way2, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, true, false);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way2, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, true, false);
 
   EXPECT_FALSE(has_guide) << "Exits should not be Guides";
 
@@ -206,9 +198,8 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   auto index3 = osmdata.name_offset_map.index("I 695 North");
   way3.set_destination_ref_to_index(index3);
-  has_guide =
-      GraphBuilder::CreateSignInfoList(node, way2, pronunciation, osmdata, default_languages, signs,
-                                       pronunciations, languages, fork, forward, false, true);
+  has_guide = GraphBuilder::CreateSignInfoList(node, way2, pronunciation, osmdata, default_languages,
+                                               signs, linguistics, fork, forward, false, true);
 
   EXPECT_TRUE(has_guide) << "Guides should not be Exits";
 
@@ -226,7 +217,7 @@ TEST(Signinfo, ExitToTest) {
   signs.clear();
   has_guide =
       GraphBuilder::CreateSignInfoList(exit_node, way2, pronunciation, osmdata, default_languages,
-                                       signs, pronunciations, languages, fork, forward, false, true);
+                                       signs, linguistics, fork, forward, false, true);
 
   EXPECT_TRUE(has_guide) << "Guides should not be Exits";
 
