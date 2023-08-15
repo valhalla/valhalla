@@ -9,7 +9,7 @@ import sys
 import os
 
 import valhalla_build_extract
-from valhalla_build_extract import TILE_SIZES, Bbox
+from valhalla_build_extract import TILE_SIZES, Bbox, TileResolver
 
 INDEX_BIN_SIZE = valhalla_build_extract.INDEX_BIN_SIZE
 INDEX_BIN_FORMAT = valhalla_build_extract.INDEX_BIN_FORMAT
@@ -132,8 +132,8 @@ class TestBuildExtract(unittest.TestCase):
                               "traffic_extract": str(TRAFFIC_PATH)}}
 
         # it will open the tars in write mode, so other test output can't interfere
-        tile_paths = sorted(TILE_PATH.rglob('*.gph'))
-        valhalla_build_extract.create_extracts(config, True, tile_paths)
+        # tests the implementation using the tile_dir
+        valhalla_build_extract.create_extracts(config, True, TileResolver(TILE_PATH), EXTRACT_PATH)
         tile_count = len(tile_paths)
 
         # test that the index has the right offsets/sizes
@@ -142,6 +142,12 @@ class TestBuildExtract(unittest.TestCase):
         # same for traffic.tar
         exp_tuples = ((1536, 25568, 26416), (28672, 410441, 65552), (95232, 6549282, 604608))
         self.check_tar(TRAFFIC_PATH, exp_tuples, tile_count * INDEX_BIN_SIZE)
+
+        # tests the implementation using the tile_dir
+        new_tile_extract = TILE_PATH.joinpath("tiles2.tar")
+        valhalla_build_extract.create_extracts(config, True, TileResolver(EXTRACT_PATH), new_tile_extract)
+        self.check_tar(new_tile_extract, exp_tuples, tile_count * INDEX_BIN_SIZE)
+        self.check_tar(new_tile_extract, exp_tuples, tile_count * INDEX_BIN_SIZE)
 
     def check_tar(self, p: Path, exp_tuples, end_index):
         with open(p, 'r+b') as f:
