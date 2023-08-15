@@ -13,7 +13,7 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
-from typing import List, Tuple, Union, Set, Optional
+from typing import List, Tuple, Set, Optional
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
@@ -255,7 +255,6 @@ def write_index_to_tar(tar_fp_: Path):
     # get the offset and size from the tarred tile members
     index: List[Tuple[int, int, int]] = list()
     with tarfile.open(tar_fp_, 'r|') as tar:
-        LOGGER.debug(tar_fp_)
         for member in tar.getmembers():
             if member.name.endswith('.gph'):
                 LOGGER.debug(
@@ -382,7 +381,7 @@ if __name__ == '__main__':
     # if output file exists and not --overwrite specified, fail
     tiles_extract_out = args.extract_tar or config["mjolnir"].get("tile_extract")
     if not tiles_extract_out:
-        LOGGER.critical(f"No output file path specified in 'mjolnir.tile_extract' or --extract-tar.")
+        LOGGER.critical("No output file path specified in 'mjolnir.tile_extract' or --extract-tar.")
         sys.exit(1)
     elif Path(tiles_extract_out).is_file() and not args.overwrite:
         LOGGER.critical(f"File exists. Specify --overwrite to overwrite {tiles_extract_out}")
