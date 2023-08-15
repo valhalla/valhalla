@@ -68,9 +68,13 @@ class TileResolver:
 
         # add initial tile paths
         if self._is_tar:
-            self.normalized_tile_paths = sorted([Path(m.name) for m in self._tar_obj.getmembers() if m.name != "index.bin"])
+            self.normalized_tile_paths = sorted(
+                [Path(m.name) for m in self._tar_obj.getmembers() if m.name != "index.bin"]
+            )
         else:
-            self.normalized_tile_paths = sorted(p.relative_to(self.path) for p in self.path.rglob('*.gph'))
+            self.normalized_tile_paths = sorted(
+                p.relative_to(self.path) for p in self.path.rglob('*.gph')
+            )
 
     def add_to_tar(self, tar: tarfile.TarFile):
         """
@@ -103,14 +107,9 @@ parser.add_argument(
     "--extract-tar",
     help="If specified, will build an extract from an existing tar file at 'mjolnir.tile_extract' and save it to this specified path.",
     type=str,
-    default=""
+    default="",
 )
-parser.add_argument(
-    "-O",
-    "--overwrite",
-    help="Overwrites an output tar file",
-    action="store_true"
-)
+parser.add_argument("-O", "--overwrite", help="Overwrites an output tar file", action="store_true")
 parser.add_argument(
     "-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False
 )
