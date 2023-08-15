@@ -166,7 +166,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
   uint32_t edge_index = 0;
 
-  double lng = 10, lat = 10;
+  double lng = 0, lat = -89.999999;
   const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
 
   for (const auto& e : tb.directededges()) {

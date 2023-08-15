@@ -191,6 +191,7 @@ inline std::string Landmark::to_str() const {
   tagged_value += std::string(1, static_cast<std::string::value_type>(type));
   tagged_value += encode_latlng(lat) + encode_latlng(lng);
   tagged_value += name;
+  std::cout << "size:" << tagged_value.size() << std::endl;
 
   return tagged_value;
 }
