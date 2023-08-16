@@ -205,7 +205,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-      
+
       Landmark landmark(value.second);
       std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
