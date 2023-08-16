@@ -13,7 +13,7 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
-from typing import List, Tuple, Set, Optional
+from typing import List, Tuple, Optional
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
@@ -64,17 +64,23 @@ class TileResolver:
         self._is_tar = path.is_file()
         self._tar_obj: Optional[tarfile.TarFile] = tarfile.open(self.path, "r") if self._is_tar else None
 
-        self.matched_paths: Set[Path] = set()
+        self.normalized_tile_paths: List[Path] = list()
+        self.matched_paths: List[Path] = list()
 
-        # add initial tile paths
+        # pre-populate the available paths
         if self._is_tar:
             self.normalized_tile_paths = sorted(
-                [Path(m.name) for m in self._tar_obj.getmembers() if m.name != "index.bin"]
+                [Path(m.name) for m in self._tar_obj.getmembers() if m.name.endswith('.gph')]
             )
         else:
             self.normalized_tile_paths = sorted(
                 p.relative_to(self.path) for p in self.path.rglob('*.gph')
             )
+
+    def __del__(self):
+        # close the tar object on GC
+        if self._tar_obj:
+            self._tar_obj.close()
 
     def add_to_tar(self, tar: tarfile.TarFile):
         """
@@ -87,6 +93,7 @@ class TileResolver:
                 tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
             else:
                 tar.add(str(self.path.joinpath(t)), arcname=t)
+                tar_member = tar.getmember(str(t))
 
 
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
@@ -192,10 +199,10 @@ def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
 
     geojson_polys = get_outer_rings(geojson_dir)
     for tile_path in tile_resolver_.normalized_tile_paths:
-        tile_bbox = box(*get_tile_bbox(tile_path))
+        tile_bbox = box(*get_tile_bbox(str(tile_path)))
         for poly in geojson_polys:
             if poly.intersects(tile_bbox):
-                tile_resolver_.matched_paths.add(tile_path)
+                tile_resolver_.matched_paths.append(tile_path)
 
 
 def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
@@ -224,7 +231,7 @@ def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
                 tile_bbox.min_y > bbox.max_y and tile_bbox.max_y > bbox.max_y,  # above bbox
             ]
         ):
-            tile_resolver_.matched_paths.add(tile_path)
+            tile_resolver_.matched_paths.append(tile_path)
 
 
 def get_tile_level_id(path: str) -> List[str]:
@@ -272,8 +279,6 @@ def write_index_to_tar(tar_fp_: Path):
 
 def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolver, extract_fp: Path):
     """Actually creates the tar ball. Break out of main function for testability."""
-    traffic_fp: Path = Path(config_["mjolnir"].get("traffic_extract"))
-
     tiles_count = len(tile_resolver_.matched_paths)
     if not tiles_count:
         LOGGER.critical(f"Couldn't find usable tiles in {tile_resolver_.path}")
@@ -300,6 +305,9 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
         sys.exit(0)
 
     LOGGER.info("Start creating traffic extract...")
+    traffic_fp: Path = Path(
+        config_["mjolnir"].get("traffic_extract") or extract_fp.parent().joinpath("traffic.tar")
+    )
 
     # we already have the right size of the index file, simply reset it
     index_fd.seek(0)
@@ -407,5 +415,7 @@ if __name__ == '__main__':
         get_tiles_with_bbox(tile_resolver, args.bbox)
     elif args.geojson_dir:
         get_tiles_with_geojson(tile_resolver, args.geojson_dir)
+    else:
+        tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 
     create_extracts(config, args.with_traffic, tile_resolver, tiles_extract_out)
