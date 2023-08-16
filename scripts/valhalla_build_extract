@@ -294,6 +294,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     # first add the index file, then the sorted tiles to the tarfile
     # TODO: come up with a smarter strategy to cluster the tiles in the tar
+    extract_fp.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(extract_fp, 'w') as tar:
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
         tile_resolver_.add_to_tar(tar)
