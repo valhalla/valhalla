@@ -2,7 +2,6 @@
 #include "baldr/graphconstants.h"
 
 #include "baldr/landmark.h"
-#include "midgard/encoded.h"
 
 using namespace valhalla::baldr;
 

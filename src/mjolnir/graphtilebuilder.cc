@@ -13,10 +13,6 @@
 
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
-#include "baldr/graphid.h"
-#include "baldr/graphtileheader.h"
-#include "mjolnir/edgeinfobuilder.h"
-#include "mjolnir/landmark_builder.h"
 
 using namespace valhalla::baldr;
 
