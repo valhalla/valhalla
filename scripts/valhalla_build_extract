@@ -88,8 +88,7 @@ class TileResolver:
         """
         # deduplicate the list (geojson variant might've added dups)
         # since 3.7 python dicts are insertion-ordered, so order is preserved
-        list(dict.fromkeys(self.matched_paths))
-        for t in self.matched_paths:
+        for t in list(dict.fromkeys(self.matched_paths)):
             LOGGER.debug(f"Adding tile {t} to the tar file")
             if self._is_tar:
                 tar_member = self._tar_obj.getmember(str(t))
