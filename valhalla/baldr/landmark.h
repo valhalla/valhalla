@@ -65,6 +65,9 @@ enum class LandmarkType : uint8_t {
   casino = 18,
 };
 
+constexpr uint8_t LandmarkTypeFirstValue = static_cast<uint8_t>(LandmarkType::fuel);
+constexpr uint8_t LandmarkTypeLastValue = static_cast<uint8_t>(LandmarkType::casino);
+
 inline LandmarkType string_to_landmark_type(const std::string& s) {
   static const std::unordered_map<std::string, LandmarkType> string_to_landmark_type =
       {{"restaurant", LandmarkType::restaurant},
@@ -93,46 +96,21 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
-inline int32_t deserialize_latlng(const char*& begin) {
-  int32_t byte, shift = 0, result = 0;
-  do {
-    // take the least significant 7 bits shifted into place
-    byte = int32_t(*begin++);
-    result |= (byte & 0x7f) << shift;
-    shift += 7;
-    // if the most significant bit is set there is more to this number
-  } while (byte & 0x80);
-
-  return ((result & 1 ? ~result : result) >> 1);
+inline uint64_t encode_lnglat(double lng, double lat) {
+  return (((uint64_t(lng * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
+         ((uint64_t(lat * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
 }
 
-inline std::string serialize_latlng(int number) {
-  // get the sign bit down on the least significant end to
-  // make the most significant bits mostly zeros
-  std::string output{};
+inline std::pair<double, double> decode_lnglat(uint64_t location) {
+  double lng = (int64_t((location >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7;
+  double lat = (int64_t(location & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7;
 
-  number = number < 0 ? ~(static_cast<unsigned int>(number) << 1) : number << 1;
-  // we take 7 bits of this at a time
-  while (number > 0x7f) {
-    // marking the most significant bit means there are more pieces to come
-    int nextValue = (0x80 | (number & 0x7f));
-    output.push_back(static_cast<char>(nextValue));
-    number >>= 7;
-  }
-  // write the last chunk
-  output.push_back(static_cast<char>(number & 0x7f));
-
-  return output;
+  return std::make_pair(lng, lat);
 }
 
-inline std::string encode_latlng(double d) {
-  int int_d = static_cast<int>(round(d * 1e6));
-  return serialize_latlng(int_d);
-}
-
-inline double decode_latlng(const char*& begin) {
-  auto int_result = deserialize_latlng(begin);
-  return (static_cast<double>(int_result) / 1e6);
+inline size_t find_landmark_taggedvalue_end(const char* begin) {
+  std::string landmark_name = begin + 9;
+  return landmark_name.size() + 9;
 }
 
 struct Landmark {
@@ -154,44 +132,54 @@ struct Landmark {
 
   /**
    * Constructor: convert the given string to a Landmark object.
-   * The input string should consist of 1 byte of LandmarkType,
-   * some bytes for location (lng and lat) and landmark name.
+   * The input string should consist of at least 9 bytes: 1 byte for landmark type,
+   * 8 bytes for location (lng and lat), and the remaining for landmark name.
    *
    * @param str The string to be converted.
    */
   Landmark(const std::string& str) {
     // ensure that the string has the minimum expected size to represent a Landmark
-    if (str.size() < 3) { // TODO: any other size?
+    if (str.size() < 9) {
       throw std::runtime_error("Invalid Landmark string: too short");
     }
 
-    // TODO: ensure that the first byte is in LandmarkType
+    // ensure the first byte is a valid LandmarkType
+    uint8_t uint_type = static_cast<uint8_t>(str[0]);
+    if (uint_type >= LandmarkTypeFirstValue && uint_type <= LandmarkTypeLastValue) {
+      type = static_cast<LandmarkType>(uint_type);
+    } else {
+      throw std::logic_error("Invalid landmark type");
+    }
 
     id = 0; // fake id
 
-    type = static_cast<LandmarkType>(static_cast<uint8_t>(str[0]));
+    // extract the location (next 8 bytes) - lng and lat
+    uint64_t location = 0;
+    std::memcpy(&location, str.data() + 1, 8);
 
-    const char* begin = str.data() + 1;
-    lat = decode_latlng(begin);
-    lng = decode_latlng(begin);
+    auto lnglat = decode_lnglat(location);
+    lng = lnglat.first;
+    lat = lnglat.second;
 
-    name = begin;
+    // extract the name (rest of the string after the first 9 bytes)
+    name = str.substr(9);
   }
 };
 
 /**
- * Convert a Landmark object to a string which consists of 1 byte of kLandmark tag,
- * 1 byte of landmark type, dynamic bytes of location (lng and lat) and landmark name at last.
+ * Convert a Landmark object to a string.
+ * The string consists of 1 byte of kLandmark tag, 1 byte of landmark type,
+ * 8 bytes of location (lng and lat) and some bytes for landmark name at last.
  *
  * @param landmark The Landmark object to be converted.
  */
 inline std::string Landmark::to_str() const {
-  std::string tagged_value(1, static_cast<std::string::value_type>(TaggedValue::kLandmark));
+  std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
+  tagged_value.push_back(static_cast<std::string::value_type>(type));
 
-  tagged_value += std::string(1, static_cast<std::string::value_type>(type));
-  tagged_value += encode_latlng(lat) + encode_latlng(lng);
+  uint64_t location = encode_lnglat(lng, lat);
+  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 8);
   tagged_value += name;
-  std::cout << "size:" << tagged_value.size() << std::endl;
 
   return tagged_value;
 }

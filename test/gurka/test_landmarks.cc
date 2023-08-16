@@ -199,19 +199,23 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
   for (const auto& e : tile->GetDirectedEdges()) {
     auto ei = tile->edgeinfo(&e);
-    auto results = ei.GetNamesAndTypes(true);
+    // auto results = ei.GetNamesAndTypes(true);
+    auto values = ei.GetTaggedValues(false);
 
-    for (const std::tuple<std::string, bool, uint8_t>& r : results) {
-      if (std::get<2>(r) == static_cast<uint8_t>(baldr::TaggedValue::kLandmark)) {
-        Landmark landmark(std::get<0>(r));
-        // std::cout << "landmark: " << landmark.id << " " << landmark.name << " " <<
-        // static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat << std::endl;
-        EXPECT_EQ(landmark.id, 0);
-        EXPECT_EQ(landmark.name, "fixed landmark");
-        EXPECT_EQ(landmark.type, LandmarkType::casino);
-        EXPECT_EQ(landmark.lng, lng);
-        EXPECT_EQ(landmark.lat, lat);
-      }
+    for (const std::string& value : values) {
+      std::cout << "tagged value size: " << value.size() << std::endl;
+
+      Landmark landmark(value);
+
+      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
+                << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
+                << std::endl;
+
+      EXPECT_EQ(landmark.id, 0);
+      EXPECT_EQ(landmark.name, "fixed landmark");
+      EXPECT_EQ(landmark.type, LandmarkType::casino);
+      EXPECT_EQ(landmark.lng, lng);
+      EXPECT_EQ(landmark.lat, lat);
     }
   }
 }

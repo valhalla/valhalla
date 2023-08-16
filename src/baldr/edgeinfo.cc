@@ -1,6 +1,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 
+#include "baldr/landmark.h"
 #include "midgard/encoded.h"
 
 using namespace valhalla::baldr;
@@ -32,8 +33,9 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
+// per tag parser
 std::vector<std::string> parse_tagged_value(const char* ptr) {
-  switch(static_cast<TaggedValue>(ptr[0])) {
+  switch (static_cast<TaggedValue>(ptr[0])) {
     case TaggedValue::kLayer:
     case TaggedValue::kBssInfo:
     case TaggedValue::kLevel:
@@ -41,8 +43,7 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     case TaggedValue::kTunnel:
     case TaggedValue::kBridge:
       return {std::string(ptr + 1)};
-    case TaggedValue::kPronunciation:
-    {
+    case TaggedValue::kPronunciation: {
       std::vector<std::string> names;
       size_t pos = 1;
       while (pos < strlen(ptr)) {
@@ -56,9 +57,10 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       return names;
     }
     case TaggedValue::kLandmark:
-      return {std::string(ptr + 1, Landmark::find_end(ptr + 1))};
+      return {std::string(ptr + 1, find_landmark_taggedvalue_end(ptr + 1))};
+    default:
+      return {};
   }
-
 }
 
 } // namespace
@@ -188,8 +190,8 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
 // Get a list of tagged values
 std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) const {
   // Get each name
-  std::vector<std::string> names;
-  names.reserve(name_count());
+  std::vector<std::string> tagged_values;
+  tagged_values.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
     if (!ni->tagged_)
@@ -198,32 +200,25 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
     if (ni->name_offset_ < names_list_length_) {
       const char* value = names_list_ + ni->name_offset_;
       try {
-
         // due to short sightedness on pronunciations we have a dichotomy here
         // basically you can either get other stuff OR pronunciations not both..
         TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
         if ((tv == baldr::TaggedValue::kPronunciation) != only_pronunciations) {
-            continue;
+          continue;
         }
 
-        // TODO: add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-        //  both of these first two if/if else should be removed in place of the parser
-
-        // TODO: move all custom parsing out of these functions
-
-
-
+        // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
+        std::vector<std::string> contents = parse_tagged_value(value);
+        tagged_values.insert(tagged_values.end(), contents.begin(), contents.end());
       } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
+        LOG_DEBUG("invalid_argument thrown for tagged value: " + std::string(value));
       }
     } else {
       throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
     }
   }
-  return names;
+  return tagged_values;
 }
-
-
 
 // Get a list of tagged names
 const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
@@ -237,18 +232,24 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
       // Skip any non tagged names
       if (ni->tagged_) {
         if (ni->name_offset_ < names_list_length_) {
-          const char* name = names_list_ + ni->name_offset_;
+          const char* value = names_list_ + ni->name_offset_;
           try {
             // no pronunciations for some reason...
-            TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
-            if (tv == baldr::TaggedValue::kPronunciation)
+            TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
+            if (tv == baldr::TaggedValue::kPronunciation) {
               continue;
+            }
             // get whatever tag value was in there
-
-
-            // TODO: add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
-            tag_cache_.emplace(tv, name + 1);
-          } catch (const std::logic_error& arg) { LOG_DEBUG("logic_error thrown for name: " + name); }
+            // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
+            auto contents = parse_tagged_value(value);
+            if (contents.empty()) {
+              continue;
+            }
+            // for non kPronunciation tag values there should be only one content in the vector
+            tag_cache_.emplace(tv, contents[0]);
+          } catch (const std::logic_error& arg) {
+            LOG_DEBUG("logic_error thrown for tagged value: " + value);
+          }
         } else {
           throw std::runtime_error("GetTags: offset exceeds size of text list");
         }

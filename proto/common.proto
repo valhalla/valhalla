@@ -239,7 +239,7 @@ message TaggedValue {
     kBridge = 50;
   }
   bytes value = 1;    // The actual tagged name value, examples: Ted Williams Tunnel
-  Type type = 3;      // The type of tagged name (tunnel, bridge or landmark)
+  Type type = 2;      // The type of tagged name (tunnel or bridge)
 }
 
 enum TravelMode {
