@@ -394,7 +394,9 @@ if __name__ == '__main__':
     if not tiles_extract_out:
         LOGGER.critical("No output file path specified in 'mjolnir.tile_extract' or --extract-tar.")
         sys.exit(1)
-    elif Path(tiles_extract_out).is_file() and not args.overwrite:
+
+    tiles_extract_out = Path(tiles_extract_out)
+    if tiles_extract_out.is_file() and not args.overwrite:
         LOGGER.critical(f"File exists. Specify --overwrite to overwrite {tiles_extract_out}")
         sys.exit(1)
 
