@@ -248,7 +248,7 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
             // for non kPronunciation tag values there should be only one content in the vector
             tag_cache_.emplace(tv, contents[0]);
           } catch (const std::logic_error& arg) {
-            LOG_DEBUG("logic_error thrown for tagged value: " + value);
+            LOG_DEBUG("logic_error thrown for tagged value: " + std::string(value));
           }
         } else {
           throw std::runtime_error("GetTags: offset exceeds size of text list");
