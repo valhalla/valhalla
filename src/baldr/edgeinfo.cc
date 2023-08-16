@@ -33,7 +33,7 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
   return a;
 }
 
-// per tag parser
+// per tag parser. each returned string includes the leading TaggedValue.
 std::vector<std::string> parse_tagged_value(const char* ptr) {
   switch (static_cast<TaggedValue>(ptr[0])) {
     case TaggedValue::kLayer:
@@ -42,9 +42,9 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     case TaggedValue::kLevelRef:
     case TaggedValue::kTunnel:
     case TaggedValue::kBridge:
-      return {std::string(ptr + 1)};
+      return {std::string(ptr)};
     case TaggedValue::kPronunciation: {
-      std::vector<std::string> names;
+      std::vector<std::string> names{};
       size_t pos = 1;
       while (pos < strlen(ptr)) {
         const auto header = valhalla::midgard::unaligned_read<linguistic_text_header_t>(ptr + pos);
@@ -57,7 +57,7 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       return names;
     }
     case TaggedValue::kLandmark:
-      return {std::string(ptr + 1, find_landmark_taggedvalue_end(ptr + 1))};
+      return {std::string(ptr, find_landmark_taggedvalue_end(ptr))};
     default:
       return {};
   }
@@ -206,7 +206,6 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
         if ((tv == baldr::TaggedValue::kPronunciation) != only_pronunciations) {
           continue;
         }
-
         // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
         std::vector<std::string> contents = parse_tagged_value(value);
         tagged_values.insert(tagged_values.end(), contents.begin(), contents.end());
@@ -246,7 +245,8 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
               continue;
             }
             // for non kPronunciation tag values there should be only one content in the vector
-            tag_cache_.emplace(tv, contents[0]);
+            tag_cache_.emplace(tv, contents[0].substr(
+                                       1)); // remove the leading TaggedValue byte from the content
           } catch (const std::logic_error& arg) {
             LOG_DEBUG("logic_error thrown for tagged value: " + std::string(value));
           }

@@ -109,8 +109,8 @@ inline std::pair<double, double> decode_lnglat(uint64_t location) {
 }
 
 inline size_t find_landmark_taggedvalue_end(const char* begin) {
-  std::string landmark_name = begin + 9;
-  return landmark_name.size() + 9;
+  std::string landmark_name = begin + 10;
+  return landmark_name.size() + 10;
 }
 
 struct Landmark {
