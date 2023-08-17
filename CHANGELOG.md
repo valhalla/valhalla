@@ -4,6 +4,8 @@
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
+   * FIXED: fix crash in timedistancebssmatrix.cc  [#4244](https://github.com/valhalla/valhalla/pull/4244)
+   * FIXED: missing protobuf CMake configuration to link abseil for protobuf >= 3.22.0 [#4207](https://github.com/valhalla/valhalla/pull/4207)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
