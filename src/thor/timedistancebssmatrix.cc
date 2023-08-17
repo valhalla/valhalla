@@ -99,8 +99,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     const DirectedEdge* opp_edge = nullptr;
     if (!FORWARD) {
       // Get opposing edge Id and end node tile
-      graph_tile_ptr t2 =
-          directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
+      t2 = directededge->leaves_tile() ? graphreader.GetGraphTile(directededge->endnode()) : tile;
       if (t2 == nullptr) {
         continue;
       }
