@@ -207,7 +207,7 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
         }
         // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
         std::vector<std::string> contents = parse_tagged_value(value);
-        tagged_values.insert(tagged_values.end(), contents.begin(), contents.end());
+        std::move(contents.begin(), contents.end(), std::back_inserter(tagged_values));
       } catch (const std::invalid_argument& arg) {
         LOG_DEBUG("invalid_argument thrown for tagged value: " + std::string(value));
       }
@@ -240,12 +240,10 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
             // get whatever tag value was in there
             // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
             auto contents = parse_tagged_value(value);
-            if (contents.empty()) {
-              continue;
+            for (const std::string& c : contents) {
+              // remove the leading TaggedValue byte from the content
+              tag_cache_.emplace(tv, c.substr(1));
             }
-            // for non kPronunciation tag values there should be only one content in the vector
-            tag_cache_.emplace(tv, contents[0].substr(
-                                       1)); // remove the leading TaggedValue byte from the content
           } catch (const std::logic_error& arg) {
             LOG_DEBUG("logic_error thrown for tagged value: " + std::string(value));
           }

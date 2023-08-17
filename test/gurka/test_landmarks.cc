@@ -148,7 +148,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   landmark_map.config =
       test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
-  // landmark_map.config.get_child("mjolnir").erase("traffic_extract");
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
   mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
@@ -166,7 +165,8 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
   uint32_t edge_index = 0;
 
-  // double lng = 0, lat = -89.999999;
+  // either test the fixed landmark or flexible landmarks as following
+  // double lng = 0, lat = 0;
   // const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
 
   for (const auto& e : tb.directededges()) {
@@ -211,6 +211,26 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
                 << std::endl;
 
+      // check data correctness of the fixed landmark
+      // EXPECT_EQ(landmark.id, 0);
+      // EXPECT_EQ(landmark.name, "fixed landmark");
+      // EXPECT_EQ(landmark.type, LandmarkType::casino);
+      // EXPECT_EQ(landmark.lng, lng);
+      // EXPECT_EQ(landmark.lat, lat);
+    }
+
+    auto values = ei.GetTaggedValues();
+    for (const std::string& v : values) {
+      if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
+        continue;
+      }
+
+      Landmark landmark(v.substr(1));
+      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
+                << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
+                << std::endl;
+
+      // check data correctness of the fixed landmark
       // EXPECT_EQ(landmark.id, 0);
       // EXPECT_EQ(landmark.name, "fixed landmark");
       // EXPECT_EQ(landmark.type, LandmarkType::casino);
