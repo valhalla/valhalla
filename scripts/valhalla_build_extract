@@ -309,7 +309,7 @@ def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolve
 
     LOGGER.info("Start creating traffic extract...")
     traffic_fp: Path = Path(
-        config_["mjolnir"].get("traffic_extract") or extract_fp.parent().joinpath("traffic.tar")
+        config_["mjolnir"].get("traffic_extract") or extract_fp.parent.joinpath("traffic.tar")
     )
 
     # we already have the right size of the index file, simply reset it
