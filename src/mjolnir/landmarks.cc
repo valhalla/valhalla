@@ -305,7 +305,7 @@ std::string FindLandmarkEdges(const std::vector<baldr::GraphId>& tiles, const st
 
   // open a new sequence<std::pair<uint64_t, uint64_t>> give it a temp file name
 
-  // for each job (bounding box)
+  // for each job (bounding box) tileheirarchy::GetGraphIdBoundingBox
     // get the landmarks in the box
     // call loki::search with the landmark lat lon and some radius
     // maybe do some filtering and only keep some of the edges it finds
