@@ -1510,15 +1510,6 @@ void TripLegBuilder::Build(
 
     // Set node attributes - only set if they are true since they are optional
     graph_tile_ptr start_tile = graphtile;
-    // Edge start node is the end node of the opposing edge of the current edge
-    // TODO: we only need this node if there is a discontinuity in the edges
-    // (i.e. we 'teleport' from one edge to another due to an infeasibility)
-    // in all other cases just using the previous end node is perfect
-    GraphId edgestartnode =
-        graphtile
-            ->directededge(graphtile->node(directededge->endnode())->edge_index() +
-                           directededge->opp_index())
-            ->endnode();
     graphreader.GetGraphTile(startnode, start_tile);
     if (start_tile == nullptr) {
       throw tile_gone_error_t("TripLegBuilder::Build failed", startnode);
@@ -1585,7 +1576,37 @@ void TripLegBuilder::Build(
 
     // Set node id (OSM node id) if requested
     if (controller.attributes.at(kNodeNodeId) && start_tile->has_osmids_for_nodes()) {
-      trip_node->set_osmid(start_tile->osmid_for_node(edgestartnode));
+      // Get the opposing edge and the endnode of that edge
+      // this will be the startnode of the directededge we are working on
+      // we need this startnode for consistent OSM ids in case we have a 'teleport' due to a
+      // discontinuity in the route path
+      // TODO: is there another check we can add so this whole lookup is only performed in case of
+      // discontinuity?
+      if (!directededge->IsTransitLine()) {
+        graph_tile_ptr t2 = directededge->leaves_tile()
+                                ? graphreader.GetGraphTile(directededge->endnode())
+                                : graphtile;
+        if (t2 != nullptr) {
+          GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+          GraphId edgestartnode = t2->directededge(oppedge)->endnode();
+          // Get the tile for the edgestartnode
+          graph_tile_ptr startnode_tile;
+          graphreader.GetGraphTile(edgestartnode, startnode_tile);
+          if (startnode_tile->has_osmids_for_nodes()) {
+            // Set the osm id of the startnode of the edge
+            trip_node->set_osmid(startnode_tile->osmid_for_node(edgestartnode));
+          } else {
+            // Fallback: set the osm id of the regular startnode
+            trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+          }
+        } else {
+          // Fallback: set the osm id of the regular startnode
+          trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+        }
+      } else {
+        // Fallback: set the osm id of the regular startnode
+        trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+      }
     }
 
     // Add multi modal stuff
