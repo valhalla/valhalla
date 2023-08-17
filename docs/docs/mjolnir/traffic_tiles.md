@@ -9,12 +9,12 @@ Valhalla supports both types of traffic for all APIs, but there are some exclude
 
 ## Graph Association
 
-If the available traffic data is associated to OSM ways, these ways have to be mapped on valhallas internal graph ids to then add the traffic data to the routing graph. The valhalla tool `valhalla_ways_to_edges` can be used to generate a mapping from OSM way ids to valhalla edge ids. An example for an `way_edges.txt` file created by the tool looks like this:
+If the available traffic data is associated to OSM ways, these ways have to be mapped on valhallas internal graph ids to then add the traffic data to the routing graph. The valhalla tool `valhalla_ways_to_edges` can be used to generate a mapping from OSM way ids to valhalla the graph ids. An example for an `way_edges.txt` file created by the tool looks like this:
 ```
 1175181586,1,112642252344
 984719585,1,110964530744,1,112508034616,1,112843578936
 ```
-The format of each row is `<osm_way_id>,[<direction: 0 | 1>, <edge_id>]`. Accordingly, the `osm_way_id` is mapped to multiple `edge_id`'s. An `edge_id` can be converted to the required `graph_id` string according to the `valhalla::baldr::GraphId` implementation in the valhalla repository. The result is a string of the following form `level/tile_id/id` (e.g. `1/47701/130`).
+The format of each row is `<osm_way_id>,[<direction: 0 | 1>, <graph_id>]`. Accordingly, the `osm_way_id` is mapped to multiple `graph_id`'s. An `graph_id` can be converted to the required string format according to the `to_string` function of the class `valhalla::baldr::GraphId`, whose implementation can be found in the valhalla repository. The result is a string of the following form `level/tile_id/id` (e.g. `1/47701/130`).
     
 ## Historical Traffic
 
@@ -44,7 +44,7 @@ valhalla_tiles
 ...
 ```
 
-The regarding traffic folder structure, containing the traffic CSV files, should accordingly look like this:
+The traffic folder structure, containing the traffic CSV files, should accordingly look like this:
 ```
 valhalla_traffic_tiles
 └───0
@@ -58,9 +58,9 @@ valhalla_traffic_tiles
 ...
 ```
 
-If a way's information is found in `0/003/015.gph`, then its matching speed values have to be saved in `0/003/015.csv`. To find the path in the tile hierarchy to save a speed value in, the function `GraphTile::FileSuffix`can be used to obtain the path from a `graph_id`. Its implementation can also be found in the valhalla source code.
+If a way's information is found in `0/003/015.gph`, then its matching speed values have to be saved in `0/003/015.csv`. To find the path in the tile hierarchy to save a speed value in, the function `GraphTile::FileSuffix`can be used to obtain the path from a `graph_id`. Its implementation can be found in the valhalla source code.
 
-In a last step, the traffic data has to be added to the routing graph. This can be done by using the `valhalla_add_predicted_traffic` tool. It's parameter `-t` can be used to hand over the folder which contains the traffic CSV files.
+In a last step, the traffic data has to be added to the routing graph. This can be done by using the `valhalla_add_predicted_traffic` tool. Its parameter `-t` can be used to hand over the folder which contains the traffic CSV files.
 
 ## Live Traffic
 
