@@ -108,11 +108,6 @@ inline std::pair<double, double> decode_lnglat(uint64_t location) {
   return std::make_pair(lng, lat);
 }
 
-inline size_t find_landmark_taggedvalue_end(const char* begin) {
-  std::string landmark_name = begin + 10;
-  return landmark_name.size() + 10;
-}
-
 struct Landmark {
   int64_t id;
   std::string name;
