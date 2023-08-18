@@ -46,7 +46,7 @@ std::vector<ComplexRestrictionBuilder> DeserializeRestrictions(char* restriction
 } // namespace
 
 // Constructor given an existing tile. This is used to read in the tile
-// data and then add to it (e.g. adding edge_idnode connections between hierarchy
+// data and then add to it (e.g. adding node connections between hierarchy
 // levels. If the deserialize flag is set then all objects are serialized
 // from memory into builders that can be added to and then stored using
 // StoreTileData.

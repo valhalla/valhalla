@@ -1,8 +1,6 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 
-#include "baldr/landmark.h"
-
 using namespace valhalla::baldr;
 
 namespace {
@@ -55,8 +53,11 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
       }
       return names;
     }
-    case TaggedValue::kLandmark:
-      return {std::string(ptr, find_landmark_taggedvalue_end(ptr))};
+    case TaggedValue::kLandmark: {
+      std::string landmark_name = ptr + 10;
+      size_t landmark_size = landmark_name.size() + 10;
+      return {std::string(ptr, landmark_size)};
+    }
     default:
       return {};
   }
