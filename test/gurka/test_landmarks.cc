@@ -10,6 +10,7 @@
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
+#include <iomanip>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -51,6 +52,12 @@ void BuildPBF() {
   landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
 
   detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
+}
+
+// round a double to the given precision. default 1000000.0 means we support double precision up to 6
+// decimal places in landmarks
+double round_to(double value, double precision = 1000000.0) {
+  return std::round(value * precision) / precision;
 }
 } // namespace
 
@@ -166,7 +173,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   uint32_t edge_index = 0;
 
   // either test the fixed landmark or flexible landmarks as following
-  // double lng = 0, lat = 0;
+  // double lng = 0, lat = -89.999999;
   // const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
 
   for (const auto& e : tb.directededges()) {
@@ -202,40 +209,67 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
+    edge_index = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
 
       Landmark landmark(value.second);
-      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
+      std::cout << std::setprecision(10) << "landmark: " << landmark.id << " " << landmark.name << " "
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
                 << std::endl;
+
+      // NOTE: in the following checks, all doubles should be rounded to precision 6 to eliminate the
+      // effect of rounding error
+
+      // check data correctness for flexible landmarks
+      std::vector<PointLL> shape = ei.shape();
+      auto point = shape[shape.size() / 2];
+      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+
+      EXPECT_EQ(landmark.id, 0);
+      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
+      EXPECT_EQ(landmark.type, ltype);
+      EXPECT_EQ(round_to(landmark.lng), round_to(point.first));
+      EXPECT_EQ(round_to(landmark.lat), round_to(point.second));
 
       // check data correctness of the fixed landmark
       // EXPECT_EQ(landmark.id, 0);
       // EXPECT_EQ(landmark.name, "fixed landmark");
       // EXPECT_EQ(landmark.type, LandmarkType::casino);
-      // EXPECT_EQ(landmark.lng, lng);
-      // EXPECT_EQ(landmark.lat, lat);
+      // EXPECT_EQ(round_to(landmark.lng), round_to(lng));
+      // EXPECT_EQ(round_to(landmark.lat), round_to(lat));
     }
 
     auto values = ei.GetTaggedValues();
+    edge_index = 0;
     for (const std::string& v : values) {
       if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
         continue;
       }
 
       Landmark landmark(v.substr(1));
-      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
+      std::cout << std::setprecision(10) << "landmark: " << landmark.id << " " << landmark.name << " "
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
                 << std::endl;
+
+      // check data correctness for flexible landmarks
+      std::vector<PointLL> shape = ei.shape();
+      auto point = shape[shape.size() / 2];
+      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+
+      EXPECT_EQ(landmark.id, 0);
+      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
+      EXPECT_EQ(landmark.type, ltype);
+      EXPECT_EQ(round_to(landmark.lng), round_to(point.first));
+      EXPECT_EQ(round_to(landmark.lat), round_to(point.second));
 
       // check data correctness of the fixed landmark
       // EXPECT_EQ(landmark.id, 0);
       // EXPECT_EQ(landmark.name, "fixed landmark");
       // EXPECT_EQ(landmark.type, LandmarkType::casino);
-      // EXPECT_EQ(landmark.lng, lng);
-      // EXPECT_EQ(landmark.lat, lat);
+      // EXPECT_EQ(round_to(landmark.lng), round_to(lng));
+      // EXPECT_EQ(round_to(landmark.lat), round_to(lat));
     }
   }
 }
