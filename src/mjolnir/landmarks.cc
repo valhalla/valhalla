@@ -3,6 +3,8 @@
 
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
+#include "midgard/sequence.h"
+#include "baldr/graphreader.h"
 #include <tuple>
 
 using namespace valhalla::baldr;
@@ -299,8 +301,51 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
   return true;
 }
 
+// old implementation
+std::pair<size_t, size_t> AddLandmarksToTiles(const std::vector<baldr::GraphId>& tiles,
+                                                const std::string& dbname) {
+  // Open the database
+  valhalla::mjolnir::LandmarkDatabase db(dbname, true);
+
+  // Initialize the counters for the number of tiles and landmarks written
+  size_t num_tiles_processed = 0;
+  size_t num_landmarks_written = 0;
+
+  for (const auto& tile : tiles) {
+    // Get the bounding box of the current tile
+    const auto& tile_bbox = tile_bbox(tile);
+
+    // Query landmarks within the bounding box from the database
+    auto landmarks = db.query(tile_bbox);
+
+    // Create a tile builder for the current tile
+    valhalla::mjolnir::GraphTileBuilder tile_builder(tile);
+
+    for (const auto& landmark : landmarks) {
+      // Get edges within a 10-meter radius of the landmark
+      auto edges = tile.get_edges_near(landmark.lng, landmark.lat, 10.0);
+
+      for (const auto& edge : edges) {
+        // Add tags and values to the edges in the tile builder
+        tile_builder.AddTagValue(edge, to_tag(landmark), to_value(landmark));
+      }
+    }
+
+    // Store the updated graph tile
+    tile_builder.StoreTileData();
+
+    // Increment the counters
+    num_tiles_processed++;
+    num_landmarks_written += landmarks.size();
+  }
+
+  return {num_tiles_processed, num_landmarks_written};
+}
+
 // return the sequence file location where we wrote the edges correlated to each landmark
-std::string FindLandmarkEdges(const std::vector<baldr::GraphId>& tiles, const std::string& dbname) {
+void FindLandmarkEdges(baldr::GraphReader& reader, const std::string& db_name, 
+                       const std::unordered_set<GraphId>& tileset, const size_t& thread_number, 
+                       const size_t& thread_count, std::promise<std::string>* result) {\
   // open the database
 
   // open a new sequence<std::pair<uint64_t, uint64_t>> give it a temp file name
@@ -313,6 +358,29 @@ std::string FindLandmarkEdges(const std::vector<baldr::GraphId>& tiles, const st
       // add the edgeid,landmark_pkey to the sequence
 
   // return the sequence file name
+/////////////////////////////////////////////////////////////////////
+  // Open the database
+  LandmarkDatabase db(db_name, true);
+
+	std::string file_name = "landmark_dump_" + std::to_string(thread_number);
+	// sequence(file_name....);
+  midgard::sequence<std::pair<uint64_t, uint64_t>> file_name{};
+
+  std::vector<Landmark> landmarks{};
+	for (size_t i = 0; i < tileset.size(); ++i){
+    // assign tiles for threads
+		if (i % thread_count == thread_number) {
+      // get landmarks in the tile
+			const graph_tile_ptr tile = reader.GetGraphTile(tileset[i]);
+      auto bbox = tile->BoundingBox();
+      auto results =
+          db.get_landmarks_by_bbox(bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
+      
+      std::move(results.begin(), results.end(), std::back_inserter(landmarks));
+		}
+	}
+	
+	result->set(file_name);
 }
 
 std::tuple<size_t, size_t, size_t> UpdateTiles(/*const ref start of range in sequence, const ref end of range in sequence*/){
@@ -327,28 +395,37 @@ std::tuple<size_t, size_t, size_t> UpdateTiles(/*const ref start of range in seq
 }
 
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
-  // make a thread pool, the size of the pool depends on mjolnir.concurrency from config
+  // Make a thread pool, the size of the pool depends on mjolnir.concurrency from config
+  const size_t num_threads =
+      pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
+  const std::string db_name = pt.get<std::string>("landmarks", "");
 
-  // ok so we need some work for each thread to do but in this case the difficulty of a given threads
-  // work is a function of the number of landmarks in a location and density of the road network
-  // one option is to still use tiles from the tileset to get a good guess of this though we cant just
-  // look at one level we'll have to look at all the tiles in the tileset and intersect them with a
-  // grid of our choosing
+  // Make a list of jobs that the threads can work on (can be either list per thread or shared list)
+  // Each job is a tile id from the tileset. We can make num_threads individual lists, then we can
+  // sort the tileset by the number of edges per tile, then loop over the sorted list, round-robin
+  // each one to the next thread's individual list.
 
-  // start all the threads going burning down their jobs
+  // get tile access
+  baldr::GraphReader reader(pt.get_child("mjolnir"));
 
-  // join all the threads and collect the N different sequence files
+  // get all tile ids and sort the tiles in descending order by size
+  auto tileset = reader.GetTileSet(1);
+  std::sort(tileset.begin(), tileset.end(), [&](const auto id_a, const auto id_b) {
+		return reader.getgraphtile(id_a)->header()->nodecount() > reader.getgraphtile(id_b)->header()->nodecount();
+	});
 
-  // merge sort the N different sequence files
+  std::vector<std::thread> threads(num_threads); // 0 1 2 ... max
+	std::vector<std::promise<std::string>> sequence_file_names(num_threads);
+	for (size_t i=0; i< threads.size(); ++i) {
+	   threads[i].start(std::bind(FindLandmarkEdges, reader, db_name, std::cref(tileset), i, threads.size(), std::ref(sequence_file_names[i])));
+	}
 
-  // find the start/end of each tiles edge associations in the sequence, these ranges become the jobs
-  // that we'll send to the next batch of threads
+	// join all the threads and collect the number of landmarks that were written from all
+  for (auto& thread : threads) {
+    thread->join();
+  }
 
-  // start all the threads going updating the tiles with the associated edges for each tile
-
-  // join all the threads accumulating stats about how many tiles, landmarks, and edges were touched
-
-  // LOG_INFO the stats
+  // log how many were written to how many tiles INFO
 
   return true;
 }
