@@ -55,7 +55,7 @@ struct Edge {
                                //   an intersection
     uint64_t driveable_ferry : 1;
     uint64_t reclass_ferry : 1; // Has edge been reclassified due to
-                                // ferry connection
+                                // ferry connection, will remove dest_only tag from DE
     uint64_t turn_channel : 1;  // Link edge should be a turn channel
     uint64_t way_begin : 1;     // True if first edge of way
     uint64_t way_end : 1;       // True if last edge of way

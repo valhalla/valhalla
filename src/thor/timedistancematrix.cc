@@ -188,27 +188,34 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant) {
+void TimeDistanceMatrix::ComputeMatrix(Api& request,
+                                       baldr::GraphReader& graphreader,
+                                       const float max_matrix_distance,
+                                       const uint32_t matrix_locations,
+                                       const bool invariant) {
   uint32_t bucketsize = costing_->UnitSize();
+
+  auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
+                          : *request.mutable_options()->mutable_targets();
+  auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
+                               : *request.mutable_options()->mutable_sources();
+
+  size_t num_elements = origins.size() * destinations.size();
   auto time_infos = SetTime(origins, graphreader);
+  // thanks to protobuf not handling strings well, we have to collect those
+  std::vector<std::string> out_date_times(num_elements);
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+  // reserve the PBF vectors
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
 
-  std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
     edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
     const auto& time_info = time_infos[origin_index];
 
-    std::vector<TimeDistance> one_to_many;
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
     // Construct adjacency list. Set bucket size and cost range based on DynamicCost.
@@ -227,8 +234,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, GraphId{});
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, GraphId{}, out_date_times);
         break;
       }
 
@@ -252,16 +259,16 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
-          one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                               time_info.timezone_index, pred.edgeid());
+          FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                                 time_info.timezone_index, pred.edgeid(), out_date_times);
           break;
         }
       }
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, pred.edgeid());
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, pred.edgeid(), out_date_times);
         break;
       }
 
@@ -270,38 +277,28 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
                                   invariant);
     }
 
-    // Insert one-to-many into many-to-many
-    if (FORWARD) {
-      for (size_t target_index = 0; target_index < destinations.size(); target_index++) {
-        size_t index = origin_index * origins.size() + target_index;
-        many_to_many[index] = one_to_many[target_index];
-      }
-    } else {
-      for (size_t source_index = 0; source_index < destinations.size(); source_index++) {
-        size_t index = source_index * origins.size() + origin_index;
-        many_to_many[index] = one_to_many[source_index];
-      }
-    }
     reset();
   }
 
-  return many_to_many;
+  // amend the date_time strings
+  for (auto& date_time : out_date_times) {
+    auto* pbf_dt = request.mutable_matrix()->mutable_date_times()->Add();
+    *pbf_dt = date_time;
+  }
 }
 
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
+template void
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
+                                                                baldr::GraphReader& graphreader,
+                                                                const float max_matrix_distance,
+                                                                const uint32_t matrix_locations,
+                                                                const bool invariant);
+template void
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
+                                                                 baldr::GraphReader& graphreader,
+                                                                 const float max_matrix_distance,
+                                                                 const uint32_t matrix_locations,
+                                                                 const bool invariant);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -556,17 +553,33 @@ bool TimeDistanceMatrix::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader& reader,
-                                                                     const std::string& origin_dt,
-                                                                     const uint64_t& origin_tz,
-                                                                     const GraphId& pred_id) {
-  std::vector<TimeDistance> td;
-  for (auto& dest : destinations_) {
-    auto date_time = get_date_time(origin_dt, origin_tz, pred_id, reader,
-                                   static_cast<uint64_t>(dest.best_cost.secs + .5f));
-    td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
+void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
+                                                GraphReader& reader,
+                                                const bool forward,
+                                                const uint32_t origin_index,
+                                                const std::string& origin_dt,
+                                                const uint64_t& origin_tz,
+                                                const GraphId& pred_id,
+                                                std::vector<std::string>& out_date_times) {
+  // when it's forward, origin_index will be the source_index
+  // when it's reverse, origin_index will be the target_index
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  for (uint32_t i = 0; i < destinations_.size(); i++) {
+    auto& dest = destinations_[i];
+    float time = dest.best_cost.secs + .5f;
+    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
+                           : (i * request.options().targets().size()) + origin_index;
+    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
+    matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
+    matrix.mutable_distances()->Set(pbf_idx, dest.distance);
+    matrix.mutable_times()->Set(pbf_idx, time);
+
+    // this logic doesn't work with string repeated fields, gotta collect them
+    // and process them later
+    auto date_time =
+        get_date_time(origin_dt, origin_tz, pred_id, reader, static_cast<uint64_t>(time));
+    out_date_times[pbf_idx] = date_time;
   }
-  return td;
 }
 
 } // namespace thor

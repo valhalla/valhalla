@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -363,7 +364,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kRail), "rail"},
       {static_cast<uint8_t>(Use::kBus), "bus"},
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
-      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
+      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
       {static_cast<uint8_t>(Use::kConstruction), "construction"},
   };

@@ -4,6 +4,9 @@
 using namespace valhalla;
 
 namespace valhalla {
+std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo) {
+  return algo == valhalla::Matrix::CostMatrix ? "costmatrix" : "timedistancematrix";
+};
 
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
   switch (incident_type) {

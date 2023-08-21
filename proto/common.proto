@@ -124,6 +124,9 @@ message Location {
     int32 preferred_layer = 28;
   }
   float waiting_secs = 29;                   // waiting period before a new leg starts, e.g. for servicing/loading goods
+  oneof has_street_side_cutoff {
+    RoadClass street_side_cutoff = 30;
+  }
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;

@@ -105,7 +105,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (tiles.empty()) {
-        LOG_WARN("Tile extract contained no usuable tiles");
+        LOG_WARN("Tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -145,7 +145,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
-        LOG_WARN("Traffic tile extract contained no usuable tiles");
+        LOG_WARN("Traffic tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {

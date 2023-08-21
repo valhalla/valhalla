@@ -22,6 +22,8 @@
 #include "thor/pathinfo.h"
 #include "thor/route_matcher.h"
 
+#include "argparse_utils.h"
+
 using namespace valhalla;
 using namespace valhalla::sif;
 using namespace valhalla::meili;
@@ -160,12 +162,16 @@ std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree pt;
+
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_path_comparison",
-      "valhalla_path_comparison " VALHALLA_VERSION "\n\n"
-      "valhalla_path_comparison is a simple command line dev tool for comparing the cost between "
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a simple command line dev tool for comparing the cost between "
       "two routes.\n"
       "Use the -j option for specifying the locations or the -s option to enter an encoded shape.\n\n");
 
@@ -183,36 +189,24 @@ int main(int argc, char* argv[]) {
     options.parse_positional({"config"});
     options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_path_comparison " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
 
     if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else if (result.count("shape")) {
       shape = result["shape"].as<std::string>();
     } else {
-      std::cerr << "The json parameter or shape parameter was not supplied but is required.\n\n"
-                << options.help() << std::endl;
-      return EXIT_FAILURE;
+      throw cxxopts::OptionException(
+          "The json parameter or shape parameter was not supplied but is required.\n\n" +
+          options.help());
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
@@ -271,10 +265,6 @@ int main(int argc, char* argv[]) {
   } else if (!shape.empty()) {
     map_match = false;
   }
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));

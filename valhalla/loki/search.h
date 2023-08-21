@@ -21,7 +21,7 @@ namespace loki {
  * @param reader         and object used to access tiled route data TODO: switch this out for a
  * proper cache
  * @param costing        a costing object by which we can determine which portions of the graph are
- *                       accessable and therefor potential candidates
+ *                       accessible and therefor potential candidates
  * @return pathLocations the correlated data with in the tile that matches the inputs. If a
  * projection is not found, it will not have any entry in the returned value.
  */

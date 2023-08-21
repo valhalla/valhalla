@@ -985,7 +985,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tileid.tileid()) + ": added " + std::to_string(transitedges) +
            " transit edges, and " + std::to_string(tilebuilder_transit.nodes().size()) +
            " nodes. time = " + std::to_string(msecs) + " ms");
@@ -1324,7 +1325,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished building transit network - took " + std::to_string(secs) + " secs");
 
   return all_tiles;

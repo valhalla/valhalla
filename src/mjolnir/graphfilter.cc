@@ -225,8 +225,6 @@ void FilterTiles(GraphReader& reader,
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
   LOG_INFO("Update end nodes of directed edges");
 
-  int found = 0;
-
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
@@ -257,7 +255,6 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         LOG_ERROR("UpdateEndNodes - failed to find associated node");
       } else {
         end_node = iter->second;
-        found++;
       }
 
       // Copy the edge to the directededges vector and update the end node

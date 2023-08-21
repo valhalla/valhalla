@@ -1550,7 +1550,7 @@ void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
-bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
+bool EnhancedTripLeg_Node::HasForwardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading()))) {

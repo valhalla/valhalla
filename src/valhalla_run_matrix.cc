@@ -10,6 +10,7 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
 #include "config.h"
@@ -44,15 +45,16 @@ std::string GetFormattedTime(uint32_t secs) {
 // Log results
 void LogResults(const bool optimize,
                 const valhalla::Options& options,
-                const std::vector<TimeDistance>& res) {
+                const valhalla::Matrix& matrix) {
   LOG_INFO("Results:");
   uint32_t idx1 = 0;
   uint32_t idx2 = 0;
   uint32_t nlocs = options.sources_size();
-  for (auto& td : res) {
-    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) +
-             ": Distance= " + std::to_string(td.dist) + " Time= " + GetFormattedTime(td.time) +
-             " secs = " + std::to_string(td.time));
+  for (uint32_t i = 0; i < matrix.times().size(); i++) {
+    auto distance = matrix.distances().Get(i);
+    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
+             std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
+             " secs = " + std::to_string(distance));
     idx2++;
     if (idx2 == nlocs) {
       idx2 = 0;
@@ -63,9 +65,9 @@ void LogResults(const bool optimize,
     // Optimize the path
     auto t10 = std::chrono::high_resolution_clock::now();
     std::vector<float> costs;
-    costs.reserve(res.size());
-    for (auto& td : res) {
-      costs.push_back(static_cast<float>(td.time));
+    costs.reserve(matrix.times().size());
+    for (const auto& time : matrix.times()) {
+      costs.push_back(time);
     }
 
     Optimizer opt;
@@ -82,16 +84,18 @@ void LogResults(const bool optimize,
 
 // Main method for testing time and distance matrix methods
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  std::string json_str, config;
+  std::string json_str;
   uint32_t iterations;
+  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_run_matrix",
-      "valhalla_run_matrix " VALHALLA_VERSION "\n\n"
-      "valhalla_run_matrix is a command line test tool for time+distance matrix routing.\n"
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a command line test tool for time+distance matrix routing.\n"
       "Use the -j option for specifying source to target locations.");
 
     options.add_options()
@@ -106,58 +110,32 @@ int main(int argc, char* argv[]) {
         "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
         "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
       ("m,multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>()->default_value("1"))
-      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>());
+      ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_run_matrix " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-
-    if (result.count("config") &&
-        filesystem::is_regular_file(filesystem::path(result["config"].as<std::string>()))) {
-      config = result["config"].as<std::string>();
-    } else {
-      std::cerr << "Configuration file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
 
     if (!result.count("json")) {
-      std::cerr << "A JSON format request must be present."
-                << "\n";
-      return EXIT_FAILURE;
+      throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
     }
     json_str = result["json"].as<std::string>();
 
     iterations = result["multi-run"].as<uint32_t>();
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 
   Api request;
   ParseApi(json_str, valhalla::Options::sources_to_targets, request);
   auto& options = *request.mutable_options();
-
-  // parse the config
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(config.c_str(), pt);
-
-  // configure logging
-  auto logging_subtree = pt.get_child_optional("thor.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
 
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
@@ -227,34 +205,31 @@ int main(int argc, char* argv[]) {
   }
 
   // Timing with CostMatrix
-  std::vector<TimeDistance> res;
   CostMatrix matrix;
   t0 = std::chrono::high_resolution_clock::now();
   for (uint32_t n = 0; n < iterations; n++) {
-    res.clear();
-    res = matrix.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
-                                mode_costing, mode, max_distance);
+    request.clear_matrix();
+    matrix.SourceToTarget(request, reader, mode_costing, mode, max_distance);
     matrix.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, res);
+  LogResults(optimize, options, request.matrix());
 
   // Run with TimeDistanceMatrix
   TimeDistanceMatrix tdm;
   for (uint32_t n = 0; n < iterations; n++) {
-    res.clear();
-    res = tdm.SourceToTarget(*options.mutable_sources(), *options.mutable_targets(), reader,
-                             mode_costing, mode, max_distance);
+    request.clear_matrix();
+    tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);
     tdm.clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, res);
+  LogResults(optimize, options, request.matrix());
 
   // Shutdown protocol buffer library
   google::protobuf::ShutdownProtobufLibrary();

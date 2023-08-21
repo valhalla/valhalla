@@ -824,16 +824,16 @@ uint32_t GetDensity(GraphReader& reader,
                     const Tiles<PointLL>& tiles,
                     uint8_t local_level) {
   // Radius is in km - turn into meters
-  float rm = kDensityRadius * kMetersPerKm;
-  float mr2 = rm * rm;
+  auto rm = kDensityRadius * kMetersPerKm;
+  auto mr2 = rm * rm;
 
   // Use distance approximator for all distance checks
   DistanceApproximator<PointLL> approximator(ll);
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
-  AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg),
-                      Point2(ll.lng() + lngdeg, ll.lat() + kDensityLatDeg));
+  auto lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
+  AABB2<PointLL> bbox(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg, ll.lng() + lngdeg,
+                      ll.lat() + kDensityLatDeg);
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
   // For all tiles needed to find nodes within the radius...find nodes within
