@@ -161,22 +161,17 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
   uint32_t edge_index = 0;
 
-  // either test the fixed landmark as following or flexible landmarks
-  // double lng = 0, lat = -89.999999;
-  // const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
-
+  // add flexible landmarks for the edges
   for (const auto& e : tb.directededges()) {
     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
     auto point = shape[shape.size() / 2];
     auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
 
-    // flexible landmarks
     Landmark landmark(edge_index, std::to_string(edge_index), ltype, point.first, point.second);
 
     auto edge_id = tile_id;
     edge_id.set_id(edge_index++);
 
-    // tb.AddLandmark(edge_id, landmark_fixed);
     tb.AddLandmark(edge_id, landmark);
   }
 
@@ -200,7 +195,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
       Landmark landmark(value.second);
 
-      // check data correctness for flexible landmarks
+      // check data correctness
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
@@ -210,14 +205,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       EXPECT_EQ(landmark.type, ltype);
       EXPECT_NEAR(landmark.lng, point.first, rounding_error);
       EXPECT_NEAR(landmark.lat, point.second, rounding_error);
-
-      // check data correctness of the fixed landmark
-
-      // EXPECT_EQ(landmark.id, 0);
-      // EXPECT_EQ(landmark.name, "fixed landmark");
-      // EXPECT_EQ(landmark.type, LandmarkType::casino);
-      // EXPECT_NEAR(landmark.lng, lng, rounding_error);
-      // EXPECT_NEAR(landmark.lat, lat, rounding_error);
     }
 
     auto values = ei.GetTaggedValues();
@@ -229,7 +216,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
       Landmark landmark(v.substr(1));
 
-      // check data correctness for flexible landmarks
+      // check data correctness
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
@@ -239,14 +226,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       EXPECT_EQ(landmark.type, ltype);
       EXPECT_NEAR(landmark.lng, point.first, rounding_error);
       EXPECT_NEAR(landmark.lat, point.second, rounding_error);
-
-      // check data correctness of the fixed landmark
-
-      // EXPECT_EQ(landmark.id, 0);
-      // EXPECT_EQ(landmark.name, "fixed landmark");
-      // EXPECT_EQ(landmark.type, LandmarkType::casino);
-      // EXPECT_NEAR(landmark.lng, lng, rounding_error);
-      // EXPECT_NEAR(landmark.lat, lat, rounding_error);
     }
   }
 }
