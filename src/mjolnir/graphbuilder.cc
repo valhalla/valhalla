@@ -388,7 +388,6 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& edges_file,
                   const std::string& complex_restriction_from_file,
                   const std::string& complex_restriction_to_file,
-                  const std::string& pronunciation_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
                   std::map<GraphId, size_t>::const_iterator tile_start,
@@ -403,11 +402,6 @@ void BuildTileSet(const std::string& ways_file,
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
-
-  auto less_than = [](const OSMPronunciation& a, const OSMPronunciation& b) {
-    return a.way_id() < b.way_id();
-  };
-  sequence<OSMPronunciation> pronunciation(pronunciation_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
@@ -455,6 +449,8 @@ void BuildTileSet(const std::string& ways_file,
   // shape/attributes twice we avoid doing this by caching it here
   std::unordered_map<uint32_t, std::pair<double, uint32_t>> geo_attribute_cache;
 
+  std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
+  std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
   for (; tile_start != tile_end; ++tile_start) {
@@ -708,13 +704,21 @@ void BuildTileSet(const std::string& ways_file,
             }
           }
 
-          OSMPronunciation p{0};
-          if (w.has_pronunciation_tags()) {
-            OSMPronunciation target{w.way_id()};
-            sequence<OSMPronunciation>::iterator pronunciation_it =
-                pronunciation.find(target, less_than);
-            if (pronunciation_it != pronunciation.end()) {
-              p = pronunciation_it;
+          pronunciationMap.clear();
+          auto pron = osmdata.pronunciations.equal_range(w.way_id());
+          if (pron.first != osmdata.pronunciations.end()) {
+            for (auto p = pron.first; p != pron.second; ++p) {
+              pronunciationMap[std::make_pair(p->second.key_.type_, p->second.key_.alpha_)] =
+                  p->second.name_offset();
+            }
+          }
+
+          langMap.clear();
+          auto lang = osmdata.langs.equal_range(w.way_id());
+          if (lang.first != osmdata.langs.end()) {
+            for (auto l = lang.first; l != lang.second; ++l) {
+              langMap[std::make_pair(l->second.key_.type_, l->second.key_.alpha_)] =
+                  l->second.name_offset();
             }
           }
 
@@ -734,28 +738,28 @@ void BuildTileSet(const std::string& ways_file,
             auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
 
             bool diff_names = false;
-            OSMPronunciation::DiffType type = OSMPronunciation::DiffType::kRight;
+            OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight;
             uint32_t name_index = w.name_index(), name_lang_index = w.name_lang_index();
             if (w.name_right_index() && forward) {
               name_index = w.name_right_index();
               name_lang_index = w.name_right_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kRight;
+              type = OSMLinguistic::DiffType::kRight;
             } else if (w.name_left_index() && !forward) {
               name_index = w.name_left_index();
               name_lang_index = w.name_left_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kLeft;
+              type = OSMLinguistic::DiffType::kLeft;
             } else if (w.name_forward_index() && forward) {
               name_index = w.name_forward_index();
               name_lang_index = w.name_forward_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kForward;
+              type = OSMLinguistic::DiffType::kForward;
             } else if (w.name_backward_index() && !forward) {
               name_index = w.name_backward_index();
               name_lang_index = w.name_backward_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kBackward;
+              type = OSMLinguistic::DiffType::kBackward;
             }
 
             uint32_t official_name_index = w.official_name_index(),
@@ -764,12 +768,12 @@ void BuildTileSet(const std::string& ways_file,
               official_name_index = w.official_name_right_index();
               official_name_lang_index = w.official_name_right_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kRight;
+              type = OSMLinguistic::DiffType::kRight;
             } else if (w.official_name_left_index() && !forward) {
               official_name_index = w.official_name_left_index();
               official_name_lang_index = w.official_name_left_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kLeft;
+              type = OSMLinguistic::DiffType::kLeft;
             }
 
             uint32_t alt_name_index = w.alt_name_index(),
@@ -778,12 +782,12 @@ void BuildTileSet(const std::string& ways_file,
               alt_name_index = w.alt_name_right_index();
               alt_name_lang_index = w.alt_name_right_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kRight;
+              type = OSMLinguistic::DiffType::kRight;
             } else if (w.alt_name_left_index() && !forward) {
               alt_name_index = w.alt_name_left_index();
               alt_name_lang_index = w.alt_name_left_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kLeft;
+              type = OSMLinguistic::DiffType::kLeft;
             }
 
             uint32_t ref_index = w.ref_index(), ref_lang_index = w.ref_lang_index();
@@ -791,12 +795,12 @@ void BuildTileSet(const std::string& ways_file,
               ref_index = w.ref_right_index();
               ref_lang_index = w.ref_right_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kRight;
+              type = OSMLinguistic::DiffType::kRight;
             } else if (w.ref_left_index() && !forward) {
               ref_index = w.ref_left_index();
               ref_lang_index = w.ref_left_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kLeft;
+              type = OSMLinguistic::DiffType::kLeft;
             }
 
             uint32_t tunnel_index = w.tunnel_name_index(),
@@ -805,24 +809,24 @@ void BuildTileSet(const std::string& ways_file,
               tunnel_index = w.tunnel_name_right_index();
               tunnel_lang_index = w.tunnel_name_right_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kRight;
+              type = OSMLinguistic::DiffType::kRight;
             } else if (w.tunnel_name_left_index() && !forward) {
               tunnel_index = w.tunnel_name_left_index();
               tunnel_lang_index = w.tunnel_name_left_lang_index();
               diff_names = true;
-              type = OSMPronunciation::DiffType::kLeft;
+              type = OSMLinguistic::DiffType::kLeft;
             }
 
             uint16_t types = 0;
 
             std::vector<std::string> names, tagged_values, linguistics;
-            w.GetNames(ref, osmdata.name_offset_map, p, default_languages, ref_index, ref_lang_index,
-                       name_index, name_lang_index, official_name_index, official_name_lang_index,
-                       alt_name_index, alt_name_lang_index, types, names, linguistics, type,
-                       diff_names);
-            w.GetTaggedValues(osmdata.name_offset_map, p, default_languages, tunnel_index,
-                              tunnel_lang_index, names.size(), tagged_values, linguistics, type,
-                              diff_names);
+            w.GetNames(ref, osmdata.name_offset_map, pronunciationMap, langMap, default_languages,
+                       ref_index, ref_lang_index, name_index, name_lang_index, official_name_index,
+                       official_name_lang_index, alt_name_index, alt_name_lang_index, types, names,
+                       linguistics, type, diff_names);
+            w.GetTaggedValues(osmdata.name_offset_map, pronunciationMap, langMap, default_languages,
+                              tunnel_index, tunnel_lang_index, names.size(), tagged_values,
+                              linguistics, type, diff_names);
             // Update bike_network type
 
             if (bike_network) {
@@ -908,8 +912,8 @@ void BuildTileSet(const std::string& ways_file,
           std::vector<std::string> linguistics;
 
           bool has_guide =
-              GraphBuilder::CreateSignInfoList(node, w, p, osmdata, default_languages, signs,
-                                               linguistics, fork, forward,
+              GraphBuilder::CreateSignInfoList(node, w, pronunciationMap, langMap, osmdata,
+                                               default_languages, signs, linguistics, fork, forward,
                                                (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
@@ -1276,7 +1280,6 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& edges_file,
                      const std::string& complex_from_restriction_file,
                      const std::string& complex_to_restriction_file,
-                     const std::string& pronunciation_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1311,8 +1314,7 @@ void BuildLocalTiles(const unsigned int thread_count,
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
-                                     std::cref(complex_to_restriction_file),
-                                     std::cref(pronunciation_file), std::cref(tile_dir),
+                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
                                      std::cref(osmdata), tile_start, tile_end, tile_creation_date,
                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
   }
@@ -1368,7 +1370,6 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
-                         const std::string& pronunciation_file,
                          const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified
@@ -1396,8 +1397,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_from_restriction_file, complex_to_restriction_file, pronunciation_file,
-                  tiles, tile_dir, stats, pt);
+                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
+                  pt);
   stats.LogStatistics();
 }
 
@@ -1655,7 +1656,8 @@ void GraphBuilder::BuildPronunciations(const std::vector<std::string>& ipa_token
 bool GraphBuilder::CreateSignInfoList(
     const OSMNode& node,
     const OSMWay& way,
-    const OSMPronunciation& pronunciation,
+    const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+    const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
     const OSMData& osmdata,
     const std::vector<std::pair<std::string, bool>>& default_languages,
     std::vector<SignInfo>& exit_list,
@@ -1673,6 +1675,22 @@ bool GraphBuilder::CreateSignInfoList(
   bool add_ipa, add_nt_sampa, add_katakana, add_jeita;
   bool is_branch_or_toward = tc || (!ramp && !fork);
   Sign::Type sign_type = Sign::Type::kExitNumber;
+
+  auto get_pronunciation_index = [&pronunciationMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = pronunciationMap.find(std::make_pair(type, alpha));
+    if (itr != pronunciationMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
+
+  auto get_lang_index = [&langMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = langMap.find(std::make_pair(type, alpha));
+    if (itr != langMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
 
   auto get_pronunciations =
       [](const UniqueNames& uniquenames,
@@ -1751,28 +1769,30 @@ bool GraphBuilder::CreateSignInfoList(
   // NUMBER
   // Exit sign number
   bool has_phoneme = false;
+  const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+  const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+  const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+  const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+
   if (way.junction_ref_index() != 0) {
     way.ProcessNamesPronunciations(osmdata.name_offset_map, default_languages,
                                    way.junction_ref_index(), way.junction_ref_lang_index(),
                                    sign_names, sign_langs, false);
 
-    has_phoneme = get_pronunciations(osmdata.name_offset_map, default_languages,
-                                     pronunciation.junction_ref_pronunciation_ipa_index(),
-                                     pronunciation.junction_ref_pronunciation_ipa_lang_index(),
-                                     pronunciation.junction_ref_pronunciation_nt_sampa_index(),
-                                     pronunciation.junction_ref_pronunciation_nt_sampa_lang_index(),
-                                     pronunciation.junction_ref_pronunciation_katakana_index(),
-                                     pronunciation.junction_ref_pronunciation_katakana_lang_index(),
-                                     pronunciation.junction_ref_pronunciation_jeita_index(),
-                                     pronunciation.junction_ref_pronunciation_jeita_lang_index(),
-                                     ipa_tokens, ipa_langs, nt_sampa_tokens, nt_sampa_langs,
-                                     katakana_tokens, katakana_langs, jeita_tokens, jeita_langs,
-                                     add_ipa, add_nt_sampa, add_katakana, add_jeita);
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionRef);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
 
   } else if (node.has_ref() && !fork && ramp) {
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.ref_index(),
                                    node.ref_lang_index(), sign_names, sign_langs, false);
-
     has_phoneme =
         get_pronunciations(osmdata.node_names, default_languages, node.ref_pronunciation_ipa_index(),
                            node.ref_pronunciation_ipa_lang_index(),
@@ -1804,20 +1824,18 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = is_branch_or_toward ? Sign::Type::kGuideBranch : Sign::Type::kExitBranch;
     has_branch = true;
     has_guide = is_branch_or_toward;
-  }
 
-  has_phoneme =
-      get_pronunciations(osmdata.name_offset_map, default_languages,
-                         pronunciation.destination_ref_pronunciation_ipa_index(),
-                         pronunciation.destination_ref_pronunciation_ipa_lang_index(),
-                         pronunciation.destination_ref_pronunciation_nt_sampa_index(),
-                         pronunciation.destination_ref_pronunciation_nt_sampa_lang_index(),
-                         pronunciation.destination_ref_pronunciation_katakana_index(),
-                         pronunciation.destination_ref_pronunciation_katakana_lang_index(),
-                         pronunciation.destination_ref_pronunciation_jeita_index(),
-                         pronunciation.destination_ref_pronunciation_jeita_lang_index(), ipa_tokens,
-                         ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens, katakana_langs,
-                         jeita_tokens, jeita_langs, add_ipa, add_nt_sampa, add_katakana, add_jeita);
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kDestinationRef);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
+  }
   add_sign_info(sign_names, sign_langs, sign_type, true /* is_route_number */, has_phoneme);
   sign_names.clear();
   sign_langs.clear();
@@ -1833,22 +1851,18 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = is_branch_or_toward ? Sign::Type::kGuideBranch : Sign::Type::kExitBranch;
     has_branch = true;
     has_guide = is_branch_or_toward;
+
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kDestinationStreet);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
   }
-
-  has_phoneme =
-      get_pronunciations(osmdata.name_offset_map, default_languages,
-                         pronunciation.destination_street_pronunciation_ipa_index(),
-                         pronunciation.destination_street_pronunciation_ipa_lang_index(),
-                         pronunciation.destination_street_pronunciation_nt_sampa_index(),
-                         pronunciation.destination_street_pronunciation_nt_sampa_lang_index(),
-                         pronunciation.destination_street_pronunciation_katakana_index(),
-                         pronunciation.destination_street_pronunciation_katakana_lang_index(),
-                         pronunciation.destination_street_pronunciation_jeita_index(),
-                         pronunciation.destination_street_pronunciation_jeita_lang_index(),
-                         ipa_tokens, ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
-                         katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
-                         add_katakana, add_jeita);
-
   add_sign_info(sign_names, sign_langs, sign_type, false /* is_route_number */, has_phoneme);
   sign_names.clear();
   sign_langs.clear();
@@ -1870,22 +1884,18 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = is_branch_or_toward ? Sign::Type::kGuideToward : Sign::Type::kExitToward;
     has_toward = true;
     has_guide = is_branch_or_toward;
+
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kDestinationRefTo);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
   }
-
-  has_phoneme =
-      get_pronunciations(osmdata.name_offset_map, default_languages,
-                         pronunciation.destination_ref_to_pronunciation_ipa_index(),
-                         pronunciation.destination_ref_to_pronunciation_ipa_lang_index(),
-                         pronunciation.destination_ref_to_pronunciation_nt_sampa_index(),
-                         pronunciation.destination_ref_to_pronunciation_nt_sampa_lang_index(),
-                         pronunciation.destination_ref_to_pronunciation_katakana_index(),
-                         pronunciation.destination_ref_to_pronunciation_katakana_lang_index(),
-                         pronunciation.destination_ref_to_pronunciation_jeita_index(),
-                         pronunciation.destination_ref_to_pronunciation_jeita_lang_index(),
-                         ipa_tokens, ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
-                         katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
-                         add_katakana, add_jeita);
-
   add_sign_info(sign_names, sign_langs, sign_type, true /* is_route_number */, has_phoneme);
 
   sign_names.clear();
@@ -1903,22 +1913,18 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = is_branch_or_toward ? Sign::Type::kGuideToward : Sign::Type::kExitToward;
     has_toward = true;
     has_guide = is_branch_or_toward;
+
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kDestinationStreetTo);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
   }
-
-  has_phoneme =
-      get_pronunciations(osmdata.name_offset_map, default_languages,
-                         pronunciation.destination_street_to_pronunciation_ipa_index(),
-                         pronunciation.destination_street_to_pronunciation_ipa_lang_index(),
-                         pronunciation.destination_street_to_pronunciation_nt_sampa_index(),
-                         pronunciation.destination_street_to_pronunciation_nt_sampa_lang_index(),
-                         pronunciation.destination_street_to_pronunciation_katakana_index(),
-                         pronunciation.destination_street_to_pronunciation_katakana_lang_index(),
-                         pronunciation.destination_street_to_pronunciation_jeita_index(),
-                         pronunciation.destination_street_to_pronunciation_jeita_lang_index(),
-                         ipa_tokens, ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
-                         katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
-                         add_katakana, add_jeita);
-
   add_sign_info(sign_names, sign_langs, sign_type, false /* is_route_number */, has_phoneme);
   sign_names.clear();
   sign_langs.clear();
@@ -1945,53 +1951,55 @@ bool GraphBuilder::CreateSignInfoList(
     has_toward = true;
     has_guide = is_branch_or_toward;
 
-    uint32_t ipa_index =
-        pronunciation.destination_pronunciation_ipa_index()
-            ? pronunciation.destination_pronunciation_ipa_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_ipa_index()
-                       : pronunciation.destination_backward_pronunciation_ipa_index());
+    const uint8_t t_destination = static_cast<uint8_t>(OSMLinguistic::Type::kDestination);
+    const uint8_t t_destination_forward =
+        static_cast<uint8_t>(OSMLinguistic::Type::kDestinationForward);
+    const uint8_t t_destination_backward =
+        static_cast<uint8_t>(OSMLinguistic::Type::kDestinationBackward);
 
+    index = get_pronunciation_index(t_destination, ipa);
+    uint32_t ipa_index = index ? index
+                               : (forward ? get_pronunciation_index(t_destination_forward, ipa)
+                                          : get_pronunciation_index(t_destination_backward, ipa));
+
+    index = get_pronunciation_index(t_destination, nt_sampa);
     uint32_t nt_sampa_index =
-        pronunciation.destination_pronunciation_nt_sampa_index()
-            ? pronunciation.destination_pronunciation_nt_sampa_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_nt_sampa_index()
-                       : pronunciation.destination_backward_pronunciation_nt_sampa_index());
+        index ? index
+              : (forward ? get_pronunciation_index(t_destination_forward, nt_sampa)
+                         : get_pronunciation_index(t_destination_backward, nt_sampa));
 
+    index = get_pronunciation_index(t_destination, katakana);
     uint32_t katakana_index =
-        pronunciation.destination_pronunciation_katakana_index()
-            ? pronunciation.destination_pronunciation_katakana_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_katakana_index()
-                       : pronunciation.destination_backward_pronunciation_katakana_index());
+        index ? index
+              : (forward ? get_pronunciation_index(t_destination_forward, katakana)
+                         : get_pronunciation_index(t_destination_backward, katakana));
 
-    uint32_t jeita_index =
-        pronunciation.destination_pronunciation_jeita_index()
-            ? pronunciation.destination_pronunciation_jeita_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_jeita_index()
-                       : pronunciation.destination_backward_pronunciation_jeita_index());
+    index = get_pronunciation_index(t_destination, jeita);
+    uint32_t jeita_index = index ? index
+                                 : (forward ? get_pronunciation_index(t_destination_forward, jeita)
+                                            : get_pronunciation_index(t_destination_backward, jeita));
 
-    uint32_t ipa_lang_index =
-        pronunciation.destination_pronunciation_ipa_lang_index()
-            ? pronunciation.destination_pronunciation_ipa_lang_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_ipa_lang_index()
-                       : pronunciation.destination_backward_pronunciation_ipa_lang_index());
+    index = get_lang_index(t_destination, ipa);
+    uint32_t ipa_lang_index = index ? index
+                                    : (forward ? get_lang_index(t_destination_forward, ipa)
+                                               : get_lang_index(t_destination_backward, ipa));
 
-    uint32_t nt_sampa_lang_index =
-        pronunciation.destination_pronunciation_nt_sampa_lang_index()
-            ? pronunciation.destination_pronunciation_nt_sampa_lang_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_nt_sampa_lang_index()
-                       : pronunciation.destination_backward_pronunciation_nt_sampa_lang_index());
+    index = get_lang_index(t_destination, nt_sampa);
+    uint32_t nt_sampa_lang_index = index
+                                       ? index
+                                       : (forward ? get_lang_index(t_destination_forward, nt_sampa)
+                                                  : get_lang_index(t_destination_backward, nt_sampa));
 
-    uint32_t katakana_lang_index =
-        pronunciation.destination_pronunciation_katakana_lang_index()
-            ? pronunciation.destination_pronunciation_katakana_lang_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_katakana_lang_index()
-                       : pronunciation.destination_backward_pronunciation_katakana_lang_index());
+    index = get_lang_index(t_destination, katakana);
+    uint32_t katakana_lang_index = index
+                                       ? index
+                                       : (forward ? get_lang_index(t_destination_forward, katakana)
+                                                  : get_lang_index(t_destination_backward, katakana));
 
-    uint32_t jeita_lang_index =
-        pronunciation.destination_pronunciation_jeita_lang_index()
-            ? pronunciation.destination_pronunciation_jeita_lang_index()
-            : (forward ? pronunciation.destination_forward_pronunciation_jeita_lang_index()
-                       : pronunciation.destination_backward_pronunciation_jeita_lang_index());
+    index = get_lang_index(t_destination, jeita);
+    uint32_t jeita_lang_index = index ? index
+                                      : (forward ? get_lang_index(t_destination_forward, jeita)
+                                                 : get_lang_index(t_destination_backward, jeita));
 
     has_phoneme =
         get_pronunciations(osmdata.name_offset_map, default_languages, ipa_index, ipa_lang_index,
@@ -2076,7 +2084,6 @@ bool GraphBuilder::CreateSignInfoList(
 
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.name_index(),
                                    node.name_lang_index(), sign_names, sign_langs, false);
-
     has_phoneme =
         get_pronunciations(osmdata.node_names, default_languages, node.name_pronunciation_ipa_index(),
                            node.name_pronunciation_ipa_lang_index(),
@@ -2103,19 +2110,17 @@ bool GraphBuilder::CreateSignInfoList(
                                    way.junction_name_index(), way.junction_name_lang_index(),
                                    sign_names, sign_langs, false);
 
+    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionName);
     sign_type = Sign::Type::kExitName;
-    has_phoneme = get_pronunciations(osmdata.name_offset_map, default_languages,
-                                     pronunciation.junction_name_pronunciation_ipa_index(),
-                                     pronunciation.junction_name_pronunciation_ipa_lang_index(),
-                                     pronunciation.junction_name_pronunciation_nt_sampa_index(),
-                                     pronunciation.junction_name_pronunciation_nt_sampa_lang_index(),
-                                     pronunciation.junction_name_pronunciation_katakana_index(),
-                                     pronunciation.junction_name_pronunciation_katakana_lang_index(),
-                                     pronunciation.junction_name_pronunciation_jeita_index(),
-                                     pronunciation.junction_name_pronunciation_jeita_lang_index(),
-                                     ipa_tokens, ipa_langs, nt_sampa_tokens, nt_sampa_langs,
-                                     katakana_tokens, katakana_langs, jeita_tokens, jeita_langs,
-                                     add_ipa, add_nt_sampa, add_katakana, add_jeita);
+    has_phoneme =
+        get_pronunciations(osmdata.name_offset_map, default_languages,
+                           get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                           get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                           get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                           get_pronunciation_index(t, jeita), get_lang_index(t, jeita), ipa_tokens,
+                           ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
+                           katakana_langs, jeita_tokens, jeita_langs, add_ipa, add_nt_sampa,
+                           add_katakana, add_jeita);
   }
 
   add_sign_info(sign_names, sign_langs, sign_type, false /* is_route_number */, has_phoneme);

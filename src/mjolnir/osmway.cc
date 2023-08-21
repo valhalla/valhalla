@@ -526,7 +526,8 @@ void OSMWay::ProcessNamesPronunciations(
 // Get the names for the edge info based on the road class.
 void OSMWay::GetNames(const std::string& ref,
                       const UniqueNames& name_offset_map,
-                      const OSMPronunciation& pronunciation,
+                      const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                      const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
                       const std::vector<std::pair<std::string, bool>>& default_languages,
                       const uint32_t ref_index,
                       const uint32_t ref_lang_index,
@@ -539,11 +540,31 @@ void OSMWay::GetNames(const std::string& ref,
                       uint16_t& types,
                       std::vector<std::string>& names,
                       std::vector<std::string>& linguistics,
-                      OSMPronunciation::DiffType type,
+                      OSMLinguistic::DiffType type,
                       bool diff_names) const {
 
   uint16_t location = 0;
   types = 0;
+  const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+  const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+  const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+  const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+
+  auto get_pronunciation_index = [&pronunciationMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = pronunciationMap.find(std::make_pair(type, alpha));
+    if (itr != pronunciationMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
+
+  auto get_lang_index = [&langMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = langMap.find(std::make_pair(type, alpha));
+    if (itr != langMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
 
   // Process motorway and trunk refs
   if ((ref_index != 0 || !ref.empty()) &&
@@ -573,66 +594,38 @@ void OSMWay::GetNames(const std::string& ref,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRefRight);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.ref_right_pronunciation_ipa_index(),
-                            pronunciation.ref_right_pronunciation_ipa_lang_index(),
-                            pronunciation.ref_right_pronunciation_nt_sampa_index(),
-                            pronunciation.ref_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.ref_right_pronunciation_katakana_index(),
-                            pronunciation.ref_right_pronunciation_katakana_lang_index(),
-                            pronunciation.ref_right_pronunciation_jeita_index(),
-                            pronunciation.ref_right_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kLeft:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.ref_left_pronunciation_ipa_index(),
-                            pronunciation.ref_left_pronunciation_ipa_lang_index(),
-                            pronunciation.ref_left_pronunciation_nt_sampa_index(),
-                            pronunciation.ref_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.ref_left_pronunciation_katakana_index(),
-                            pronunciation.ref_left_pronunciation_katakana_lang_index(),
-                            pronunciation.ref_left_pronunciation_jeita_index(),
-                            pronunciation.ref_left_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kForward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_forward_pronunciation_ipa_index(),
-                            pronunciation.name_forward_pronunciation_ipa_lang_index(),
-                            pronunciation.name_forward_pronunciation_nt_sampa_index(),
-                            pronunciation.name_forward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_forward_pronunciation_katakana_index(),
-                            pronunciation.name_forward_pronunciation_katakana_lang_index(),
-                            pronunciation.name_forward_pronunciation_jeita_index(),
-                            pronunciation.name_forward_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kBackward:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRefLeft);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_backward_pronunciation_ipa_index(),
-                            pronunciation.name_backward_pronunciation_ipa_lang_index(),
-                            pronunciation.name_backward_pronunciation_nt_sampa_index(),
-                            pronunciation.name_backward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_backward_pronunciation_katakana_index(),
-                            pronunciation.name_backward_pronunciation_katakana_lang_index(),
-                            pronunciation.name_backward_pronunciation_jeita_index(),
-                            pronunciation.name_backward_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
+          break;
+        }
+        case OSMLinguistic::DiffType::kForward:
+        case OSMLinguistic::DiffType::kBackward:
           break;
       }
     } else {
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.ref_pronunciation_ipa_index(),
-                        pronunciation.ref_pronunciation_ipa_lang_index(),
-                        pronunciation.ref_pronunciation_nt_sampa_index(),
-                        pronunciation.ref_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.ref_pronunciation_katakana_index(),
-                        pronunciation.ref_pronunciation_katakana_lang_index(),
-                        pronunciation.ref_pronunciation_jeita_index(),
-                        pronunciation.ref_pronunciation_jeita_lang_index(), tokens.size(), key,
-                        diff_names);
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
+                        key, diff_names);
     }
 
     bool add_phoneme = (linguistics.size() - phoneme_start_index);
@@ -670,67 +663,55 @@ void OSMWay::GetNames(const std::string& ref,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kNameRight);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_right_pronunciation_ipa_index(),
-                            pronunciation.name_right_pronunciation_ipa_lang_index(),
-                            pronunciation.name_right_pronunciation_nt_sampa_index(),
-                            pronunciation.name_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_right_pronunciation_katakana_index(),
-                            pronunciation.name_right_pronunciation_katakana_lang_index(),
-                            pronunciation.name_right_pronunciation_jeita_index(),
-                            pronunciation.name_right_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kLeft:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_left_pronunciation_ipa_index(),
-                            pronunciation.name_left_pronunciation_ipa_lang_index(),
-                            pronunciation.name_left_pronunciation_nt_sampa_index(),
-                            pronunciation.name_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_left_pronunciation_katakana_index(),
-                            pronunciation.name_left_pronunciation_katakana_lang_index(),
-                            pronunciation.name_left_pronunciation_jeita_index(),
-                            pronunciation.name_left_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kForward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_forward_pronunciation_ipa_index(),
-                            pronunciation.name_forward_pronunciation_ipa_lang_index(),
-                            pronunciation.name_forward_pronunciation_nt_sampa_index(),
-                            pronunciation.name_forward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_forward_pronunciation_katakana_index(),
-                            pronunciation.name_forward_pronunciation_katakana_lang_index(),
-                            pronunciation.name_forward_pronunciation_jeita_index(),
-                            pronunciation.name_forward_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kBackward:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kNameLeft);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.name_backward_pronunciation_ipa_index(),
-                            pronunciation.name_backward_pronunciation_ipa_lang_index(),
-                            pronunciation.name_backward_pronunciation_nt_sampa_index(),
-                            pronunciation.name_backward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.name_backward_pronunciation_katakana_index(),
-                            pronunciation.name_backward_pronunciation_katakana_lang_index(),
-                            pronunciation.name_backward_pronunciation_jeita_index(),
-                            pronunciation.name_backward_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
+        }
+        case OSMLinguistic::DiffType::kForward: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kNameForward);
+          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
+                            tokens.size(), key, diff_names);
+          break;
+        }
+        case OSMLinguistic::DiffType::kBackward: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kNameBackward);
+          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
+                            tokens.size(), key, diff_names);
+          break;
+        }
       }
     } else {
-
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kName);
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.name_pronunciation_ipa_index(),
-                        pronunciation.name_pronunciation_ipa_lang_index(),
-                        pronunciation.name_pronunciation_nt_sampa_index(),
-                        pronunciation.name_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.name_pronunciation_katakana_index(),
-                        pronunciation.name_pronunciation_katakana_lang_index(),
-                        pronunciation.name_pronunciation_jeita_index(),
-                        pronunciation.name_pronunciation_jeita_lang_index(), tokens.size(), key,
-                        diff_names);
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
+                        key, diff_names);
     }
 
     bool add_phoneme = (linguistics.size() - phoneme_start_index);
@@ -776,45 +757,38 @@ void OSMWay::GetNames(const std::string& ref,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRefRight);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.ref_right_pronunciation_ipa_index(),
-                            pronunciation.ref_right_pronunciation_ipa_lang_index(),
-                            pronunciation.ref_right_pronunciation_nt_sampa_index(),
-                            pronunciation.ref_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.ref_right_pronunciation_katakana_index(),
-                            pronunciation.ref_right_pronunciation_katakana_lang_index(),
-                            pronunciation.ref_right_pronunciation_jeita_index(),
-                            pronunciation.ref_right_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
+                            tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kLeft:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRefLeft);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.ref_left_pronunciation_ipa_index(),
-                            pronunciation.ref_left_pronunciation_ipa_lang_index(),
-                            pronunciation.ref_left_pronunciation_nt_sampa_index(),
-                            pronunciation.ref_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.ref_left_pronunciation_katakana_index(),
-                            pronunciation.ref_left_pronunciation_katakana_lang_index(),
-                            pronunciation.ref_left_pronunciation_jeita_index(),
-                            pronunciation.ref_left_pronunciation_jeita_lang_index(), tokens.size(),
-                            key, diff_names);
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
+                            tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kForward:
-        case OSMPronunciation::DiffType::kBackward:
+        }
+        case OSMLinguistic::DiffType::kForward:
+        case OSMLinguistic::DiffType::kBackward:
           break;
       }
     } else {
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.ref_pronunciation_ipa_index(),
-                        pronunciation.ref_pronunciation_ipa_lang_index(),
-                        pronunciation.ref_pronunciation_nt_sampa_index(),
-                        pronunciation.ref_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.ref_pronunciation_katakana_index(),
-                        pronunciation.ref_pronunciation_katakana_lang_index(),
-                        pronunciation.ref_pronunciation_jeita_index(),
-                        pronunciation.ref_pronunciation_jeita_lang_index(), tokens.size(), key,
-                        diff_names);
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
+                        key, diff_names);
     }
     bool add_phoneme = (linguistics.size() - phoneme_start_index);
 
@@ -848,66 +822,40 @@ void OSMWay::GetNames(const std::string& ref,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kAltNameRight);
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.alt_name_right_pronunciation_ipa_index(),
-                            pronunciation.alt_name_right_pronunciation_ipa_lang_index(),
-                            pronunciation.alt_name_right_pronunciation_nt_sampa_index(),
-                            pronunciation.alt_name_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.alt_name_right_pronunciation_katakana_index(),
-                            pronunciation.alt_name_right_pronunciation_katakana_lang_index(),
-                            pronunciation.alt_name_right_pronunciation_jeita_index(),
-                            pronunciation.alt_name_right_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kLeft:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kAltNameLeft);
+
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.alt_name_left_pronunciation_ipa_index(),
-                            pronunciation.alt_name_left_pronunciation_ipa_lang_index(),
-                            pronunciation.alt_name_left_pronunciation_nt_sampa_index(),
-                            pronunciation.alt_name_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.alt_name_left_pronunciation_katakana_index(),
-                            pronunciation.alt_name_left_pronunciation_katakana_lang_index(),
-                            pronunciation.alt_name_left_pronunciation_jeita_index(),
-                            pronunciation.alt_name_left_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kForward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.alt_name_forward_pronunciation_ipa_index(),
-                            pronunciation.alt_name_forward_pronunciation_ipa_lang_index(),
-                            pronunciation.alt_name_forward_pronunciation_nt_sampa_index(),
-                            pronunciation.alt_name_forward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.alt_name_forward_pronunciation_katakana_index(),
-                            pronunciation.alt_name_forward_pronunciation_katakana_lang_index(),
-                            pronunciation.alt_name_forward_pronunciation_jeita_index(),
-                            pronunciation.alt_name_forward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kBackward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.alt_name_backward_pronunciation_ipa_index(),
-                            pronunciation.alt_name_backward_pronunciation_ipa_lang_index(),
-                            pronunciation.alt_name_backward_pronunciation_nt_sampa_index(),
-                            pronunciation.alt_name_backward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.alt_name_backward_pronunciation_katakana_index(),
-                            pronunciation.alt_name_backward_pronunciation_katakana_lang_index(),
-                            pronunciation.alt_name_backward_pronunciation_jeita_index(),
-                            pronunciation.alt_name_backward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
+        }
+        case OSMLinguistic::DiffType::kForward:
+        case OSMLinguistic::DiffType::kBackward:
           break;
       }
     } else {
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kAltName);
+
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.alt_name_pronunciation_ipa_index(),
-                        pronunciation.alt_name_pronunciation_ipa_lang_index(),
-                        pronunciation.alt_name_pronunciation_nt_sampa_index(),
-                        pronunciation.alt_name_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.alt_name_pronunciation_katakana_index(),
-                        pronunciation.alt_name_pronunciation_katakana_lang_index(),
-                        pronunciation.alt_name_pronunciation_jeita_index(),
-                        pronunciation.alt_name_pronunciation_jeita_lang_index(), tokens.size(), key,
-                        diff_names);
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
+                        key, diff_names);
     }
     bool add_phoneme = (linguistics.size() - phoneme_start_index);
 
@@ -941,65 +889,40 @@ void OSMWay::GetNames(const std::string& ref,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kOfficialNameRight);
+
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.official_name_right_pronunciation_ipa_index(),
-                            pronunciation.official_name_right_pronunciation_ipa_lang_index(),
-                            pronunciation.official_name_right_pronunciation_nt_sampa_index(),
-                            pronunciation.official_name_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.official_name_right_pronunciation_katakana_index(),
-                            pronunciation.official_name_right_pronunciation_katakana_lang_index(),
-                            pronunciation.official_name_right_pronunciation_jeita_index(),
-                            pronunciation.official_name_right_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kLeft:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kOfficialNameLeft);
+
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.official_name_left_pronunciation_ipa_index(),
-                            pronunciation.official_name_left_pronunciation_ipa_lang_index(),
-                            pronunciation.official_name_left_pronunciation_nt_sampa_index(),
-                            pronunciation.official_name_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.official_name_left_pronunciation_katakana_index(),
-                            pronunciation.official_name_left_pronunciation_katakana_lang_index(),
-                            pronunciation.official_name_left_pronunciation_jeita_index(),
-                            pronunciation.official_name_left_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kForward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.official_name_forward_pronunciation_ipa_index(),
-                            pronunciation.official_name_forward_pronunciation_ipa_lang_index(),
-                            pronunciation.official_name_forward_pronunciation_nt_sampa_index(),
-                            pronunciation.official_name_forward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.official_name_forward_pronunciation_katakana_index(),
-                            pronunciation.official_name_forward_pronunciation_katakana_lang_index(),
-                            pronunciation.official_name_forward_pronunciation_jeita_index(),
-                            pronunciation.official_name_forward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kBackward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.official_name_backward_pronunciation_ipa_index(),
-                            pronunciation.official_name_backward_pronunciation_ipa_lang_index(),
-                            pronunciation.official_name_backward_pronunciation_nt_sampa_index(),
-                            pronunciation.official_name_backward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.official_name_backward_pronunciation_katakana_index(),
-                            pronunciation.official_name_backward_pronunciation_katakana_lang_index(),
-                            pronunciation.official_name_backward_pronunciation_jeita_index(),
-                            pronunciation.official_name_backward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
+        }
+        case OSMLinguistic::DiffType::kForward:
+        case OSMLinguistic::DiffType::kBackward:
           break;
       }
     } else {
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kOfficialName);
+
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.official_name_pronunciation_ipa_index(),
-                        pronunciation.official_name_pronunciation_ipa_lang_index(),
-                        pronunciation.official_name_pronunciation_nt_sampa_index(),
-                        pronunciation.official_name_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.official_name_pronunciation_katakana_index(),
-                        pronunciation.official_name_pronunciation_katakana_lang_index(),
-                        pronunciation.official_name_pronunciation_jeita_index(),
-                        pronunciation.official_name_pronunciation_jeita_lang_index(), tokens.size(),
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
                         key, diff_names);
     }
     bool add_phoneme = (linguistics.size() - phoneme_start_index);
@@ -1019,16 +942,32 @@ void OSMWay::GetNames(const std::string& ref,
 
 // Get the tagged names for an edge
 void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
-                             const OSMPronunciation& pronunciation,
+                             const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                             const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
                              const std::vector<std::pair<std::string, bool>>& default_languages,
                              const uint32_t tunnel_name_index,
                              const uint32_t tunnel_name_lang_index,
                              const size_t& names_size,
                              std::vector<std::string>& names,
                              std::vector<std::string>& linguistics,
-                             OSMPronunciation::DiffType type,
+                             OSMLinguistic::DiffType type,
                              bool diff_names) const {
 
+  auto get_pronunciation_index = [&pronunciationMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = pronunciationMap.find(std::make_pair(type, alpha));
+    if (itr != pronunciationMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
+
+  auto get_lang_index = [&langMap](const uint8_t type, const uint8_t alpha) {
+    auto itr = langMap.find(std::make_pair(type, alpha));
+    if (itr != langMap.end()) {
+      return itr->second;
+    }
+    return static_cast<uint32_t>(0);
+  };
   auto encode_tag = [](TaggedValue tag) {
     return std::string(1, static_cast<std::string::value_type>(tag));
   };
@@ -1038,6 +977,10 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
     std::vector<std::string> tokens;
     std::vector<baldr::Language> token_langs;
     std::map<size_t, valhalla::baldr::Language> lang_map;
+    const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
 
     ProcessNamesPronunciations(name_offset_map, default_languages, tunnel_name_index,
                                tunnel_name_lang_index, tokens, token_langs, diff_names);
@@ -1051,65 +994,40 @@ void OSMWay::GetTaggedValues(const UniqueNames& name_offset_map,
 
     if (diff_names) {
       switch (type) {
-        case OSMPronunciation::DiffType::kRight:
+        case OSMLinguistic::DiffType::kRight: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kTunnelNameRight);
+
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.tunnel_name_right_pronunciation_ipa_index(),
-                            pronunciation.tunnel_name_right_pronunciation_ipa_lang_index(),
-                            pronunciation.tunnel_name_right_pronunciation_nt_sampa_index(),
-                            pronunciation.tunnel_name_right_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.tunnel_name_right_pronunciation_katakana_index(),
-                            pronunciation.tunnel_name_right_pronunciation_katakana_lang_index(),
-                            pronunciation.tunnel_name_right_pronunciation_jeita_index(),
-                            pronunciation.tunnel_name_right_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kLeft:
+        }
+        case OSMLinguistic::DiffType::kLeft: {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kTunnelNameLeft);
+
           AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.tunnel_name_left_pronunciation_ipa_index(),
-                            pronunciation.tunnel_name_left_pronunciation_ipa_lang_index(),
-                            pronunciation.tunnel_name_left_pronunciation_nt_sampa_index(),
-                            pronunciation.tunnel_name_left_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.tunnel_name_left_pronunciation_katakana_index(),
-                            pronunciation.tunnel_name_left_pronunciation_katakana_lang_index(),
-                            pronunciation.tunnel_name_left_pronunciation_jeita_index(),
-                            pronunciation.tunnel_name_left_pronunciation_jeita_lang_index(),
+                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                            get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                            get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                            get_pronunciation_index(t, jeita), get_lang_index(t, jeita),
                             tokens.size(), key, diff_names);
           break;
-        case OSMPronunciation::DiffType::kForward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.tunnel_name_forward_pronunciation_ipa_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_ipa_lang_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_nt_sampa_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_katakana_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_katakana_lang_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_jeita_index(),
-                            pronunciation.tunnel_name_forward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
-          break;
-        case OSMPronunciation::DiffType::kBackward:
-          AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                            pronunciation.tunnel_name_backward_pronunciation_ipa_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_ipa_lang_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_nt_sampa_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_nt_sampa_lang_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_katakana_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_katakana_lang_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_jeita_index(),
-                            pronunciation.tunnel_name_backward_pronunciation_jeita_lang_index(),
-                            tokens.size(), key, diff_names);
+        }
+        case OSMLinguistic::DiffType::kForward:
+        case OSMLinguistic::DiffType::kBackward:
           break;
       }
     } else {
+      const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kTunnelName);
+
       AddPronunciations(linguistics, lang_map, name_offset_map, default_languages, token_langs,
-                        pronunciation.tunnel_name_pronunciation_ipa_index(),
-                        pronunciation.tunnel_name_pronunciation_ipa_lang_index(),
-                        pronunciation.tunnel_name_pronunciation_nt_sampa_index(),
-                        pronunciation.tunnel_name_pronunciation_nt_sampa_lang_index(),
-                        pronunciation.tunnel_name_pronunciation_katakana_index(),
-                        pronunciation.tunnel_name_pronunciation_katakana_lang_index(),
-                        pronunciation.tunnel_name_pronunciation_jeita_index(),
-                        pronunciation.tunnel_name_pronunciation_jeita_lang_index(), tokens.size(),
+                        get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
+                        get_pronunciation_index(t, nt_sampa), get_lang_index(t, nt_sampa),
+                        get_pronunciation_index(t, katakana), get_lang_index(t, katakana),
+                        get_pronunciation_index(t, jeita), get_lang_index(t, jeita), tokens.size(),
                         key, diff_names);
     }
     bool add_phoneme = (linguistics.size() - phoneme_start_index);

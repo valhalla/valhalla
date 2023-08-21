@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <valhalla/baldr/graphconstants.h>
-#include <valhalla/mjolnir/osmpronunciation.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/uniquenames.h>
 
 namespace valhalla {
@@ -2460,7 +2460,8 @@ struct OSMWay {
    */
   void GetNames(const std::string& ref,
                 const UniqueNames& name_offset_map,
-                const OSMPronunciation& pronunciation,
+                const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
                 const std::vector<std::pair<std::string, bool>>& default_languages,
                 const uint32_t ref_index,
                 const uint32_t ref_lang_index,
@@ -2473,18 +2474,19 @@ struct OSMWay {
                 uint16_t& types,
                 std::vector<std::string>& names,
                 std::vector<std::string>& linguistics,
-                OSMPronunciation::DiffType type = OSMPronunciation::DiffType::kRight,
+                OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight,
                 bool diff_names = false) const;
 
   void GetTaggedValues(const UniqueNames& name_offset_map,
-                       const OSMPronunciation& pronunciation,
+                       const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                       const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
                        const std::vector<std::pair<std::string, bool>>& default_languages,
                        const uint32_t tunnel_name_index,
                        const uint32_t tunnel_name_lang_index,
                        const size_t& names_size,
                        std::vector<std::string>& names,
                        std::vector<std::string>& linguistics,
-                       OSMPronunciation::DiffType type = OSMPronunciation::DiffType::kRight,
+                       OSMLinguistic::DiffType type = OSMLinguistic::DiffType::kRight,
                        bool diff_names = false) const;
 
   // OSM way Id

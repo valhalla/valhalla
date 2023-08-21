@@ -35,8 +35,6 @@ public:
    * not in memory
    * @param  complex_to_restriction_file    where to store the to complex restrictions so they are not
    * in memory
-   * @param  pronunciation_file             where to store the to pronunciations so they are not
-   * in memory
    */
   static void Build(const boost::property_tree::ptree& pt,
                     const OSMData& osmdata,
@@ -46,7 +44,6 @@ public:
                     const std::string& edges_file,
                     const std::string& complex_from_restriction_file,
                     const std::string& complex_to_restriction_file,
-                    const std::string& pronunciation_file,
                     const std::map<baldr::GraphId, size_t>& tiles);
 
   static std::map<baldr::GraphId, size_t> BuildEdges(const ptree& conf,
@@ -121,17 +118,19 @@ public:
                          const size_t index,
                          uint32_t& count);
 
-  static bool CreateSignInfoList(const OSMNode& node,
-                                 const OSMWay& way,
-                                 const OSMPronunciation& pronunciation,
-                                 const OSMData& osmdata,
-                                 const std::vector<std::pair<std::string, bool>>& default_languages,
-                                 std::vector<baldr::SignInfo>& exits,
-                                 std::vector<std::string>& linguistics,
-                                 bool fork,
-                                 bool forward,
-                                 bool ramp,
-                                 bool tc);
+  static bool
+  CreateSignInfoList(const OSMNode& node,
+                     const OSMWay& way,
+                     const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& pronunciationMap,
+                     const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
+                     const OSMData& osmdata,
+                     const std::vector<std::pair<std::string, bool>>& default_languages,
+                     std::vector<baldr::SignInfo>& exits,
+                     std::vector<std::string>& linguistics,
+                     bool fork,
+                     bool forward,
+                     bool ramp,
+                     bool tc);
 };
 } // namespace mjolnir
 } // namespace valhalla
