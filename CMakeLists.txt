@@ -180,7 +180,7 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  find_package(Protobuf REQUIRED CONFIG)
+  find_package(Protobuf REQUIRED)
 
   # orchestrated effort of both protobuf & cmake are responsible for the next lines..
 
