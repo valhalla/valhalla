@@ -13,7 +13,7 @@ struct config_singleton_t {
 protected:
   boost::property_tree::ptree config_;
 
-  config_singleton_t () = delete;
+  config_singleton_t() = delete;
   config_singleton_t(const std::string& config_file_or_inline) {
     if (config_file_or_inline.empty()) {
       throw std::runtime_error("no config provided");
@@ -36,12 +36,12 @@ public:
     return instance.config_;
   }
 };
-}
+} // namespace
 
 namespace valhalla {
-  inline const boost::property_tree::ptree& config(const std::string& config_file_or_inline = ""){
-    return config_singleton_t::get_config(config_file_or_inline);
-  }
+inline const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "") {
+  return config_singleton_t::get_config(config_file_or_inline);
+}
 } // namespace valhalla
 
 #endif
