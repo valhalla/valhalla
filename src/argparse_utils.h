@@ -40,16 +40,15 @@ bool parse_common_args(const std::string& program,
   }
 
   // Read the config file
+  boost::property_tree::ptree conf;
   if (result.count("inline-config")) {
-    valhalla::configuration::configure(result["inline-config"].as<std::string>());
+    conf = valhalla::config(result["inline-config"].as<std::string>());
   } else if (result.count("config") &&
              filesystem::is_regular_file(result["config"].as<std::string>())) {
-    valhalla::configuration::configure(result["config"].as<std::string>());
+    conf = valhalla::config(result["config"].as<std::string>());
   } else {
     throw cxxopts::OptionException("Configuration is required\n\n" + opts.help() + "\n\n");
   }
-
-  auto conf = valhalla::config();
 
   // configure logging
   auto logging_subtree = conf.get_child_optional(log);

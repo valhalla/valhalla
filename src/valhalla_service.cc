@@ -42,8 +42,7 @@ int main(int argc, char** argv) {
   // config file
   // TODO: validate the config
   std::string config_file(argv[1]);
-  valhalla::configuration::configure(config_file);
-  boost::property_tree::ptree config = valhalla::config();
+  boost::property_tree::ptree config = valhalla::config(config_file);
 
   // one shot direct request mode
   if (argc == 4) {

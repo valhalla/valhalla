@@ -7,13 +7,14 @@
 #include <stdexcept>
 #include <string>
 
-namespace valhalla {
-namespace configuration {
+namespace {
 
-class Configuration {
+struct config_singleton_t {
 protected:
-  Configuration() = delete;
-  Configuration(const std::string& config_file_or_inline) {
+  boost::property_tree::ptree config_;
+
+  config_singleton_t () = delete;
+  config_singleton_t(const std::string& config_file_or_inline) {
     if (config_file_or_inline.empty()) {
       throw std::runtime_error("no config provided");
     }
@@ -26,32 +27,21 @@ protected:
     }
   }
 
-  boost::property_tree::ptree config_;
-
 public:
-  Configuration(Configuration const&) = delete;
-  void operator=(const Configuration&) = delete;
+  config_singleton_t(config_singleton_t const&) = delete;
+  void operator=(const config_singleton_t&) = delete;
 
-  static Configuration& instance(const std::string& config_file_or_inline = "") {
-    static Configuration instance(config_file_or_inline);
-    return instance;
-  }
-
-  inline const boost::property_tree::ptree& config() const {
-    return config_;
+  static const boost::property_tree::ptree& get_config(const std::string& config_file_or_inline) {
+    static config_singleton_t instance(config_file_or_inline);
+    return instance.config_;
   }
 };
-
-void configure(const std::string& config_file_or_inline) {
-  Configuration::instance(config_file_or_inline);
 }
 
-} // namespace configuration
-
-inline const boost::property_tree::ptree& config() {
-  return configuration::Configuration::instance().config();
-}
-
+namespace valhalla {
+  inline const boost::property_tree::ptree& config(const std::string& config_file_or_inline = ""){
+    return config_singleton_t::get_config(config_file_or_inline);
+  }
 } // namespace valhalla
 
 #endif

@@ -41,7 +41,6 @@
 
 #include "argparse_utils.h"
 #include "config.h"
-#include "configuration.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
