@@ -24,9 +24,8 @@ TEST(Configuration, ReadInlineConfig) {
       }
     }
     )";
-  configuration::configure(inline_config);
 
-  auto conf = config();
+  auto conf = config(inline_config);
 
   EXPECT_EQ(conf.get<std::string>("obj1.val"), "example");
   EXPECT_EQ(conf.get<uint32_t>("obj2.inner.val"), 4);
