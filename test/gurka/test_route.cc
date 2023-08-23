@@ -318,7 +318,7 @@ uint32_t AlgorithmTest::current = 0, AlgorithmTest::historical = 0, AlgorithmTes
          AlgorithmTest::freeflow = 0;
 
 uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_edge = true) {
-  uint32_t kmh = -1;
+  uint32_t kmh = invalid<uint32_t>();
   const auto& nodes = api.trip().routes(0).legs(0).node();
   for (int i = 0; i < nodes.size() - 1; ++i) {
     const auto& node = nodes.Get(i);
@@ -329,7 +329,7 @@ uint32_t speed_from_edge(const valhalla::Api& api, bool compare_with_previous_ed
               node.cost().elapsed_cost().seconds() - node.cost().transition_cost().seconds()) /
              3600.0;
     auto new_kmh = static_cast<uint32_t>(km / h + .5);
-    if (kmh != -1 && compare_with_previous_edge) {
+    if (is_valid(kmh) && compare_with_previous_edge) {
       EXPECT_EQ(kmh, new_kmh);
     }
     kmh = new_kmh;
