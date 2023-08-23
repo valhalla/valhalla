@@ -169,7 +169,7 @@ const std::unordered_map<std::string, std::vector<int>>
                      (kPedestrianAccess | kWheelchairAccess | kBicycleAccess), -1, -1}}};
 
 const std::unordered_map<std::string, std::pair<uint8_t, std::string>>
-    kSupportedLanguages{{"Wales", {4, "cy"}},
+    kSupportedLanguages{{"Cymru / Wales", {2, "cy;en"}},
                         {"United Kingdom", {2, "en"}},
                         {"Ireland", {4, "ga"}},
                         {"Northern Ireland", {4, "ga"}},
