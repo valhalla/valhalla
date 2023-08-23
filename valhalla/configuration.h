@@ -1,11 +1,13 @@
 #ifndef VALHALLA_CONFIGURATION_H_
 #define VALHALLA_CONFIGURATION_H_
 
-#include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
-#include <boost/property_tree/ptree.hpp>
 #include <stdexcept>
 #include <string>
+
+#include <boost/property_tree/ptree.hpp>
+
+#include "baldr/rapidjson_utils.h"
+#include "filesystem.h"
 
 namespace {
 
