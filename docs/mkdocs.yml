@@ -105,7 +105,7 @@ nav:
       - mjolnir/map_roulette.md
       - mjolnir/map_roulette_blog.md
       - mjolnir/tag_parsing.md
-      - mjolnir/traffic_tiles.md
+      - mjolnir/historical_traffic.md
     - Thor (routing algorithms):
       - thor.md
       - thor/isochrones.md
