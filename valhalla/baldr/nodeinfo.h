@@ -17,6 +17,13 @@ constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
 constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
 constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
 
+// Elevation precision. Elevation is clamped to a range of -500 meters to 7683 meters
+constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
+constexpr float kNodeElevationPrecision = 0.25f;
+constexpr float kNodeMinElevation = -500.0f;
+constexpr float kNodeMaxElevation =
+    kNodeMinElevation + (kNodeElevationPrecision * kNodeMaxStoredElevation);
+
 // Heading shrink factor to reduce max heading of 359 to 255
 constexpr float kHeadingShrinkFactor = (255.0f / 359.0f);
 
@@ -255,6 +262,20 @@ public:
    *             left-side driving.
    */
   void set_drive_on_right(const bool rsd);
+
+  /**
+   * Get the elevation at this node.
+   * @return Returns the elevation in meters.
+   */
+  float elevation() const {
+    return kNodeMinElevation + (elevation_ * kNodeElevationPrecision);
+  }
+
+  /**
+   * Set the elevation at this node.
+   * @param Elevation in meters.
+   */
+  void set_elevation(const float elevation);
 
   /**
    * Was the access information originally set in the data?
@@ -499,7 +520,8 @@ protected:
   uint64_t tagged_access_ : 1;       // Was access initially tagged?
   uint64_t private_access_ : 1;      // Is the access private?
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
-  uint64_t spare2_ : 17;
+  uint64_t elevation_ : 15;          // Encoded elevation (meters)
+  uint64_t spare2_ : 2;
 
   // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
   // nearest 2 degrees)for all other levels.

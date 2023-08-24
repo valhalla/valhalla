@@ -124,6 +124,14 @@ public:
   }
 
   /**
+   * Does this EdgeInfo have elevation data.
+   * @return Returns true if the EdgeInfo record has elevation along the edge.
+   */
+  bool has_elevation() const {
+    return ei_.has_elevation_;
+  }
+
+  /**
    * Get the number of names.
    * @return Returns the name count.
    */
@@ -217,6 +225,15 @@ public:
   std::string encoded_shape() const;
 
   /**
+   * Returns the encoded elevation along the edge. The sampling interval is uniform
+   * (based on the length of the edge). The sampling interval is returned via argument.
+   * @param  length  Length of the edge. Used to determine sampling interval.
+   * @param  interval  Sampling interval (reference - value is returned).
+   * @return Returns a vector holding delta encoded elevation along the edge.
+   */
+  std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
+
+  /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
    * @see https://wiki.openstreetmap.org/wiki/Key:layer
    * @return layer index of the edge
@@ -259,7 +276,8 @@ public:
     uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
     uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
     uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
-    uint32_t spare0_ : 2;              // not used
+    uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
+    uint32_t spare0_ : 1;              // not used
   };
 
 protected:
@@ -278,6 +296,9 @@ protected:
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
+
+  // Encoded elevation
+  const int8_t* encoded_elevation_;
 
   // The list of names within the tile
   const char* names_list_;

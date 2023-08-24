@@ -1,6 +1,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 
+#include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
 
 using namespace valhalla::baldr;
@@ -61,6 +62,9 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
     extended_wayid3_ = static_cast<uint8_t>(*ptr);
     ptr += sizeof(uint8_t);
   }
+
+  // Set encoded elevation pointer
+  encoded_elevation_ = reinterpret_cast<int8_t*>(ptr);
 }
 
 EdgeInfo::~EdgeInfo() {
@@ -297,6 +301,24 @@ const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
 std::string EdgeInfo::encoded_shape() const {
   return encoded_shape_ == nullptr ? midgard::encode7(shape_)
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
+}
+
+// Returns the encoded elevation along the edge as well as the sampling interval.
+// The sampling interval is uniform (based on the length of the edge).
+std::vector<int8_t> EdgeInfo::encoded_elevation(const uint32_t length, double& interval) const {
+  if (!has_elevation()) {
+    // If no elevation then the edge length is shorter than the sampling interval...set the
+    // interval to the edge length. The elevation at the nodes will be used in this case.
+    interval = length;
+    return std::vector<int8_t>();
+  }
+
+  // Set the sampling interval
+  interval = midgard::sampling_interval(length);
+
+  // Number of elevations encoded (start and end of the edge are stored in NodeInfo)
+  uint32_t n = midgard::encoded_elevation_count(length);
+  return std::vector<int8_t>(encoded_elevation_, encoded_elevation_ + n);
 }
 
 int8_t EdgeInfo::layer() const {
