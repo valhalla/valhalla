@@ -109,7 +109,7 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim =
  * @param  delim      delimiter
  * @return the vector of strings
  */
-std::vector<std::string> GetTagTokens(const std::string tag_value, const std::string delim_str);
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str);
 
 /**
  * Remove double quotes.

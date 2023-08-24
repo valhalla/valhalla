@@ -2352,7 +2352,7 @@ struct OSMWay {
                          std::map<size_t, baldr::Language>& lang_map,
                          const UniqueNames& name_offset_map,
                          const std::vector<std::pair<std::string, bool>>& default_languages,
-                         const std::vector<baldr::Language> token_langs,
+                         const std::vector<baldr::Language>& token_langs,
                          const uint32_t ipa_index,
                          const uint32_t ipa_lang_index,
                          const uint32_t nt_sampa_index,

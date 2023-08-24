@@ -75,7 +75,7 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
   return tokens;
 }
 
-std::vector<std::string> GetTagTokens(const std::string tag_value, const std::string delim_str) {
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
   std::regex regex_str(delim_str);
   std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
                                                              regex_str, -1),

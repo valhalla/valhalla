@@ -2052,9 +2052,9 @@ public:
           }
         }
         if (boost::algorithm::starts_with(t, "name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kNodeName, alphabet, &n);
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &n);
         } else if (boost::algorithm::starts_with(t, "ref:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kNodeRef, alphabet, &n);
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &n);
         }
       }
     }
@@ -2508,63 +2508,63 @@ public:
         }
 
         if (boost::algorithm::starts_with(t, "name:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kNameLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameLeft, alphabet);
         } else if (boost::algorithm::starts_with(t, "name:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kNameRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameRight, alphabet);
         } else if (boost::algorithm::starts_with(t, "name:forward:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kNameForward, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameForward, alphabet);
         } else if (boost::algorithm::starts_with(t, "name:backward:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kNameBackward, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameBackward, alphabet);
         } else if (boost::algorithm::starts_with(t, "name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kName, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kName, alphabet);
         } else if (boost::algorithm::starts_with(t, "official_name:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kOfficialNameLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameLeft, alphabet);
         } else if (boost::algorithm::starts_with(t, "official_name:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kOfficialNameRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameRight, alphabet);
         } else if (boost::algorithm::starts_with(t, "official_name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kOfficialName, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kOfficialName, alphabet);
         } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kAltNameLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameLeft, alphabet);
         } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kAltNameRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameRight, alphabet);
         } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kAltName, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kAltName, alphabet);
         } else if (boost::algorithm::starts_with(t, "ref:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kRefLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefLeft, alphabet);
         } else if (boost::algorithm::starts_with(t, "ref:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kRefRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefRight, alphabet);
         } else if (boost::algorithm::starts_with(t, "ref:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kRef, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kRef, alphabet);
         } else if (boost::algorithm::starts_with(t, "int_ref:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kIntRefLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefLeft, alphabet);
         } else if (boost::algorithm::starts_with(t, "int_ref:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kIntRefRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefRight, alphabet);
         } else if (boost::algorithm::starts_with(t, "int_ref:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kIntRef, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kIntRef, alphabet);
         } else if (boost::algorithm::starts_with(t, "tunnel:name:left:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kTunnelNameLeft, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameLeft, alphabet);
         } else if (boost::algorithm::starts_with(t, "tunnel:name:right:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kTunnelNameRight, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameRight, alphabet);
         } else if (boost::algorithm::starts_with(t, "tunnel:name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kTunnelName, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kTunnelName, alphabet);
         } else if (boost::algorithm::starts_with(t, "destination:forward:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationForward, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationForward, alphabet);
         } else if (boost::algorithm::starts_with(t, "destination:backward:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationBackward, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationBackward, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationRefTo, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRefTo, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationRef, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRef, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationStreetTo, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreetTo, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kDestinationStreet, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreet, alphabet);
         } else if (boost::algorithm::starts_with(t, "destination:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kDestination, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kDestination, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
-          ProcessLeftRightPronunciationTag(tag_, OSMLinguistic::Type::kJunctionRef, alphabet);
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kJunctionRef, alphabet);
         } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
-          ProcessPronunciationTag(tag_, OSMLinguistic::Type::kJunctionName, alphabet);
+          ProcessPronunciationTag(OSMLinguistic::Type::kJunctionName, alphabet);
         }
       }
     }
@@ -4036,8 +4036,7 @@ public:
     bss_nodes_.reset(bss_nodes);
   }
 
-  void ProcessPronunciationTag(const std::pair<std::string, std::string>& tag,
-                               const OSMLinguistic::Type& type,
+  void ProcessPronunciationTag(const OSMLinguistic::Type& type,
                                const PronunciationAlphabet& alphabet,
                                OSMNode* n = nullptr) {
 
@@ -4107,8 +4106,7 @@ public:
     SavePronunciationData(t, alpha, name_w_lang, language, n);
   }
 
-  void ProcessLeftRightPronunciationTag(const std::pair<std::string, std::string>& tag,
-                                        const OSMLinguistic::Type& type,
+  void ProcessLeftRightPronunciationTag(const OSMLinguistic::Type& type,
                                         const PronunciationAlphabet& alphabet) {
     uint32_t name = 0, lang = 0;
     std::string name_w_lang, language;
@@ -4131,8 +4129,8 @@ public:
 
   void SavePronunciationData(const uint8_t type,
                              const uint8_t alphabet,
-                             const std::string pronunciation,
-                             const std::string language,
+                             const std::string& pronunciation,
+                             const std::string& language,
                              OSMNode* n = nullptr) {
     if (!pronunciation.empty()) {
       has_pronunciation_tags_ = true;
