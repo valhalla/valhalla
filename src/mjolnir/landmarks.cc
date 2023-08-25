@@ -1,13 +1,24 @@
 #include "mjolnir/landmarks.h"
 #include "filesystem.h"
 
+#include "baldr/graphreader.h"
+#include "midgard/sequence.h"
 #include "mjolnir/osmpbfparser.h"
 #include "mjolnir/util.h"
-#include "midgard/sequence.h"
-#include "baldr/graphreader.h"
 #include <tuple>
 
+#include "baldr/location.h"
+#include "baldr/pathlocation.h"
+#include "loki/search.h"
+#include "mjolnir/graphtilebuilder.h"
+#include "sif/nocost.h"
+#include <future>
+#include <thread>
+
 using namespace valhalla::baldr;
+using namespace valhalla::mjolnir;
+using namespace valhalla::midgard;
+using namespace valhalla;
 
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
@@ -54,6 +65,13 @@ public:
 
   valhalla::mjolnir::LandmarkDatabase db_;
 };
+
+bool sort_seq_file(const std::pair<GraphId, uint64_t>& a, const std::pair<GraphId, uint64_t>& b) {
+  if (a.first == b.first) {
+    return a.second < b.second;
+  }
+  return a.first < b.first;
+}
 } // namespace
 
 namespace valhalla {
@@ -301,131 +319,210 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
   return true;
 }
 
-// old implementation
-std::pair<size_t, size_t> AddLandmarksToTiles(const std::vector<baldr::GraphId>& tiles,
-                                                const std::string& dbname) {
-  // Open the database
-  valhalla::mjolnir::LandmarkDatabase db(dbname, true);
+// Find landmarks in the tiles and the edges correlated to each landmark,
+// and return the sequence file name where we wrote the correlations
+void FindLandmarkEdges(const boost::property_tree::ptree& pt,
+                       const std::string& db_name,
+                       const std::vector<GraphId>& tileset,
+                       const size_t& thread_number,
+                       const size_t& total_threads,
+                       std::promise<std::string>& seq_file_name) {
+  // Open the database and create a graph reader
+  LandmarkDatabase db(db_name, true);
+  GraphReader reader(pt.get_child("mjolnir"));
+  // create the sequence file
+  std::string file_name = "landmark_dump_" + std::to_string(thread_number);
+  midgard::sequence<std::pair<GraphId, uint64_t>> seq_file(file_name, true);
 
-  // Initialize the counters for the number of tiles and landmarks written
-  size_t num_tiles_processed = 0;
-  size_t num_landmarks_written = 0;
+  for (size_t i = 0; i < tileset.size(); ++i) {
+    // assign tiles for threads
+    if (i % total_threads == thread_number) {
+      // get landmarks in the tile
+      // tileheirarchy::GetGraphIdBoundingBox(tileset[i]);
+      const graph_tile_ptr tile = reader.GetGraphTile(tileset[i]);
+      midgard::AABB2<PointLL> bbox =
+          tile->BoundingBox(); // TODO: can we use this to get the bbox of the tile? (instead
+                               // of using tileheirarchy::GetGraphIdBoundingBox)
+      std::vector<Landmark> landmarks =
+          db.get_landmarks_by_bbox(bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
 
-  for (const auto& tile : tiles) {
-    // Get the bounding box of the current tile
-    const auto& tile_bbox = tile_bbox(tile);
+      // find and collect all nearby path locations for the landmarks
+      for (const auto& landmark : landmarks) {
+        baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
+                                          baldr::Location::StopType::BREAK, 0, 0,
+                                          10); // 10 meters radius
+        // call loki::Search to get nearby edges to each landmark
+        std::unordered_map<valhalla::baldr::Location, PathLocation> result =
+            loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
+        if (result.size() != 1) {
+          throw std::logic_error("Error occured in calling loki::Search. Result size is " +
+                                 std::to_string(result.size()) + ", but should be one");
+        }
 
-    // Query landmarks within the bounding box from the database
-    auto landmarks = db.query(tile_bbox);
-
-    // Create a tile builder for the current tile
-    valhalla::mjolnir::GraphTileBuilder tile_builder(tile);
-
-    for (const auto& landmark : landmarks) {
-      // Get edges within a 10-meter radius of the landmark
-      auto edges = tile.get_edges_near(landmark.lng, landmark.lat, 10.0);
-
-      for (const auto& edge : edges) {
-        // Add tags and values to the edges in the tile builder
-        tile_builder.AddTagValue(edge, to_tag(landmark), to_value(landmark));
+        // PathLocation path_location =
+        std::vector<PathLocation::PathEdge> edges = result.begin()->second.edges;
+        // for each edge insert edgeid - landmark_pkey pair into the sequence file
+        // TODO: maybe do some filtering and only keep some of the edges it finds?
+        for (const auto& edge : edges) {
+          seq_file.push_back(std::make_pair(edge.id, landmark.id));
+        }
       }
     }
-
-    // Store the updated graph tile
-    tile_builder.StoreTileData();
-
-    // Increment the counters
-    num_tiles_processed++;
-    num_landmarks_written += landmarks.size();
   }
+  // sort the sequence file by edgeid in increasing order
+  seq_file.sort(sort_seq_file);
 
-  return {num_tiles_processed, num_landmarks_written};
+  seq_file_name.set_value(file_name);
 }
 
-// return the sequence file location where we wrote the edges correlated to each landmark
-void FindLandmarkEdges(baldr::GraphReader& reader, const std::string& db_name, 
-                       const std::unordered_set<GraphId>& tileset, const size_t& thread_number, 
-                       const size_t& thread_count, std::promise<std::string>* result) {\
-  // open the database
-
-  // open a new sequence<std::pair<uint64_t, uint64_t>> give it a temp file name
-
-  // for each job (bounding box) tileheirarchy::GetGraphIdBoundingBox
-    // get the landmarks in the box
-    // call loki::search with the landmark lat lon and some radius
-    // maybe do some filtering and only keep some of the edges it finds
-    // for each edge
-      // add the edgeid,landmark_pkey to the sequence
-
-  // return the sequence file name
-/////////////////////////////////////////////////////////////////////
-  // Open the database
+// Update tiles to associate landmarks, return some stats about the numbers of updated tiles, edges,
+// and landmarks
+void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
+                 const std::string& tile_dir, // tile_dir = reader.tile_dir()
+                 const std::string& db_name,
+                 std::promise<std::tuple<size_t, size_t, size_t>>& stats,
+                 const size_t& thread_number,
+                 const size_t& total_threads) {
+  // open the database and initialize a unique pointer to graph tile builder
+  std::unique_ptr<GraphTileBuilder> tile_builder_ptr = nullptr;
   LandmarkDatabase db(db_name, true);
 
-	std::string file_name = "landmark_dump_" + std::to_string(thread_number);
-	// sequence(file_name....);
-  midgard::sequence<std::pair<uint64_t, uint64_t>> file_name{};
+  // stats
+  size_t updated_tiles = 0, updated_edges = 0, updated_landmarks = 0;
+  GraphId last_edge, last_tile;
 
-  std::vector<Landmark> landmarks{};
-	for (size_t i = 0; i < tileset.size(); ++i){
-    // assign tiles for threads
-		if (i % thread_count == thread_number) {
-      // get landmarks in the tile
-			const graph_tile_ptr tile = reader.GetGraphTile(tileset[i]);
-      auto bbox = tile->BoundingBox();
-      auto results =
-          db.get_landmarks_by_bbox(bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
-      
-      std::move(results.begin(), results.end(), std::back_inserter(landmarks));
-		}
-	}
-	
-	result->set(file_name);
+  // modulus count to assign tiles to threads
+  size_t tile_count = static_cast<size_t>(-1);
+
+  for (auto it = seq_file.begin(); it != seq_file.end(); ++it) {
+    if ((*it).first.Tile_Base() != last_tile) {
+      last_tile = (*it).first.Tile_Base();
+      tile_count++;
+    }
+    if (tile_count % total_threads != thread_number) {
+      continue;
+    }
+
+    if (!tile_builder_ptr ||
+        tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
+      // store the previously updated tile
+      if (tile_builder_ptr) {
+        tile_builder_ptr->StoreTileData();
+        updated_tiles++;
+      }
+      // reset the tile builder ptr to the current tile
+      GraphTileBuilder current_tile_builder(tile_dir, (*it).first.Tile_Base(), true);
+      tile_builder_ptr.reset(&current_tile_builder);
+    }
+
+    // retrieve the landmark to be added
+    const std::vector<Landmark> landmark =
+        db.get_landmarks_by_ids({static_cast<int64_t>((*it).second)});
+    if (landmark.size() != 1) {
+      throw std::logic_error("Incorrect result size " + std::to_string(landmark.size()) +
+                             " of retrieved landmarks, which should be 1");
+    }
+    // add the landmark to the tile
+    tile_builder_ptr->AddLandmark((*it).first, landmark[0]);
+
+    // update the counting numbers
+    updated_landmarks++;
+    if (last_edge != (*it).first) {
+      updated_edges++;
+      last_edge = (*it).first;
+    }
+  }
+  // store the last updated tile
+  if (tile_builder_ptr) {
+    tile_builder_ptr->StoreTileData();
+    updated_tiles++;
+  }
+
+  // set the stats
+  stats.set_value(std::make_tuple(updated_tiles, updated_landmarks, updated_edges));
 }
 
-std::tuple<size_t, size_t, size_t> UpdateTiles(/*const ref start of range in sequence, const ref end of range in sequence*/){
-  // make a null tilebuilder unique_ptr
-  // for each entry in sequence
-    // if tilebuilder is null or its a not before seen tile
-      // write the old tilebuilder to disk if not null
-      // create a new tile bulider to reset the unique_ptr with
-    // add this landmark to this edge
-  // write the tilebuilder to the disk if not null
-  //return some stats about number of tiles writting, number of landmarks seen and number of edges updated
-}
-
+// Add all landmarks to tiles
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
-  // Make a thread pool, the size of the pool depends on mjolnir.concurrency from config
   const size_t num_threads =
       pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
   const std::string db_name = pt.get<std::string>("landmarks", "");
-
-  // Make a list of jobs that the threads can work on (can be either list per thread or shared list)
-  // Each job is a tile id from the tileset. We can make num_threads individual lists, then we can
-  // sort the tileset by the number of edges per tile, then loop over the sorted list, round-robin
-  // each one to the next thread's individual list.
 
   // get tile access
   baldr::GraphReader reader(pt.get_child("mjolnir"));
 
   // get all tile ids and sort the tiles in descending order by size
   auto tileset = reader.GetTileSet(1);
-  std::sort(tileset.begin(), tileset.end(), [&](const auto id_a, const auto id_b) {
-		return reader.getgraphtile(id_a)->header()->nodecount() > reader.getgraphtile(id_b)->header()->nodecount();
-	});
+  std::vector<GraphId> vec_tileset(tileset.begin(), tileset.end()); // turn into a vector for sorting
 
-  std::vector<std::thread> threads(num_threads); // 0 1 2 ... max
-	std::vector<std::promise<std::string>> sequence_file_names(num_threads);
-	for (size_t i=0; i< threads.size(); ++i) {
-	   threads[i].start(std::bind(FindLandmarkEdges, reader, db_name, std::cref(tileset), i, threads.size(), std::ref(sequence_file_names[i])));
-	}
+  std::sort(vec_tileset.begin(), vec_tileset.end(), [&](const auto id_a, const auto id_b) {
+    return reader.GetGraphTile(id_a)->header()->nodecount() >
+           reader.GetGraphTile(id_b)->header()->nodecount();
+  });
 
-	// join all the threads and collect the number of landmarks that were written from all
+  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
+  std::vector<std::promise<std::string>> sequence_file_names(num_threads);
+  for (size_t i = 0; i < num_threads; ++i) {
+    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt), db_name,
+                                     std::cref(vec_tileset), i, num_threads,
+                                     std::ref(sequence_file_names[i])));
+  }
+
+  // join all the threads and collect the sequence file names
   for (auto& thread : threads) {
     thread->join();
   }
 
+  std::vector<std::string> seq_names{};
+  for (std::promise<std::string>& s : sequence_file_names) {
+    seq_names.push_back(s.get_future().get());
+  }
+
+  // concatenate all sequence files and sort the merged sequence file
+  std::string merged_seq_file = seq_names.back();
+  seq_names.pop_back();
+
+  std::ofstream seq_file(merged_seq_file, std::ios_base::binary | std::ios_base::app);
+  for (std::string& s : seq_names) {
+    std::ifstream seq(s, std::ios_base::binary);
+    seq_file << seq.rdbuf();
+  }
+  seq_file.close();
+
+  midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
+  merged_sequence_file.sort(sort_seq_file);
+
+  // open up a new pool thread to update tiles
+  std::vector<std::shared_ptr<std::thread>> threads_new(num_threads);
+  std::vector<std::promise<std::tuple<size_t, size_t, size_t>>> stats_info(
+      num_threads); // tiles, edges, landmarks
+
+  const std::string tile_dir = reader.tile_dir();
+  for (size_t i = 0; i < num_threads; ++i) {
+    // assume size doesn't affect performance a lot
+    threads_new[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
+                                         db_name, std::ref(stats_info[i]), i, num_threads));
+  }
+
+  for (auto& thread : threads_new) {
+    thread->join();
+  }
+  // collect stats results
+  std::vector<std::tuple<size_t, size_t, size_t>> stats{};
+  for (std::promise<std::tuple<size_t, size_t, size_t>>& s : stats_info) {
+    stats.push_back(s.get_future().get());
+  }
+
   // log how many were written to how many tiles INFO
+  size_t tiles = 0, edges = 0, landmarks = 0;
+  for (const auto& s : stats) {
+    tiles += std::get<0>(s);
+    edges += std::get<1>(s);
+    landmarks += std::get<2>(s);
+  }
+
+  LOG_INFO("Updated " + std::to_string(tiles) + " tiles, " + std::to_string(edges) +
+           " edges, and written " + std::to_string(landmarks) + " landmarks (repeat included)");
 
   return true;
 }
