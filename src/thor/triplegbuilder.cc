@@ -889,7 +889,6 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
-
   TripLeg_Edge* trip_edge = trip_node->mutable_edge();
 
   // Get the edgeinfo
@@ -916,7 +915,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
         }
         default:
           // Skip the rest tagged names
-          LOG_TRACE(std::string("skipped tagged value= ") + std::to_string(types.at(name_index)));
+          LOG_TRACE(std::string("skipped tagged value= ") +
+                    std::to_string(std::get<2>(name_and_type)));
           break;
       }
       ++name_index;
