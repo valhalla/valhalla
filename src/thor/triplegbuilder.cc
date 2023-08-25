@@ -792,11 +792,11 @@ void AddIntersectingEdges(const AttributesController& controller,
 
 void ProcessNonTaggedValue(valhalla::StreetName* trip_edge_name,
                            const LinguisticMap& linguistics,
-                           const std::pair<std::string, bool>& name_and_type,
+                           const std::tuple<std::string, bool, uint8_t>& name_and_type,
                            const uint8_t name_index) {
   // Assign name and type
-  trip_edge_name->set_value(name_and_type.first);
-  trip_edge_name->set_is_route_number(name_and_type.second);
+  trip_edge_name->set_value(std::get<0>(name_and_type));
+  trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
 
   const auto iter = linguistics.find(name_index);
 
@@ -823,11 +823,11 @@ void ProcessNonTaggedValue(valhalla::StreetName* trip_edge_name,
 
 void ProcessTunnelTaggedValue(valhalla::StreetName* trip_edge_tunnel_name,
                               const LinguisticMap& linguistics,
-                              const std::pair<std::string, bool>& name_and_type,
+                              const std::tuple<std::string, bool, uint8_t>& name_and_type,
                               const uint8_t name_index) {
 
-  trip_edge_tunnel_name->set_value(name_and_type.first);
-  trip_edge_tunnel_name->set_is_route_number(name_and_type.second);
+  trip_edge_tunnel_name->set_value(std::get<0>(name_and_type));
+  trip_edge_tunnel_name->set_is_route_number(std::get<1>(name_and_type));
 
   const auto iter = linguistics.find(name_index);
   if (iter != linguistics.end()) {
@@ -897,14 +897,13 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
-    std::vector<uint8_t> types;
-    const auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    const auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     const auto linguistics = edgeinfo.GetLinguisticMap();
 
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      switch (types.at(name_index)) {
+      switch (std::get<2>(name_and_type)) {
         case kNotTagged: {
           ProcessNonTaggedValue(trip_edge->mutable_name()->Add(), linguistics, name_and_type,
                                 name_index);

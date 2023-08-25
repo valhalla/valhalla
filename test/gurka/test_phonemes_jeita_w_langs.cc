@@ -89,8 +89,7 @@ TEST(Standalone, Names) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -98,7 +97,7 @@ TEST(Standalone, Names) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -135,8 +134,7 @@ TEST(Standalone, Names) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -144,7 +142,7 @@ TEST(Standalone, Names) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -252,8 +250,7 @@ TEST(Standalone, Alts) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -261,7 +258,7 @@ TEST(Standalone, Alts) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -303,8 +300,7 @@ TEST(Standalone, Alts) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -312,7 +308,7 @@ TEST(Standalone, Alts) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -427,8 +423,7 @@ TEST(Standalone, Official) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -436,7 +431,7 @@ TEST(Standalone, Official) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -478,8 +473,7 @@ TEST(Standalone, Official) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -487,7 +481,7 @@ TEST(Standalone, Official) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -602,8 +596,7 @@ TEST(Standalone, Tunnel) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -611,7 +604,7 @@ TEST(Standalone, Tunnel) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) == 0) {
+      if (std::get<2>(name_and_type) == 0) {
         // Skip the non tagged names
         ++name_index;
         continue;
@@ -649,8 +642,7 @@ TEST(Standalone, Tunnel) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 3);
 
@@ -658,7 +650,7 @@ TEST(Standalone, Tunnel) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) == 0) {
+      if (std::get<2>(name_and_type) == 0) {
         // Skip the non tagged names
         ++name_index;
         continue;
@@ -763,8 +755,7 @@ TEST(Standalone, NamesFB) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 1);
 
@@ -772,7 +763,7 @@ TEST(Standalone, NamesFB) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -799,8 +790,7 @@ TEST(Standalone, NamesFB) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 1);
 
@@ -808,7 +798,7 @@ TEST(Standalone, NamesFB) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -905,8 +895,7 @@ TEST(Standalone, RefLR) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -914,7 +903,7 @@ TEST(Standalone, RefLR) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -941,8 +930,7 @@ TEST(Standalone, RefLR) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -950,7 +938,7 @@ TEST(Standalone, RefLR) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -2255,8 +2243,7 @@ TEST(Standalone, NamesPart2) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -2266,7 +2253,7 @@ TEST(Standalone, NamesPart2) {
 
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -2303,8 +2290,7 @@ TEST(Standalone, NamesPart2) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 2);
 
@@ -2314,7 +2300,7 @@ TEST(Standalone, NamesPart2) {
 
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -2755,8 +2741,7 @@ TEST(Standalone, MultiPhonemes) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(BC_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 4);
 
@@ -2764,7 +2749,7 @@ TEST(Standalone, MultiPhonemes) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -2775,7 +2760,7 @@ TEST(Standalone, MultiPhonemes) {
       ASSERT_NE(iter, linguistics.end());
 
       if (name_index == 0) {
-        EXPECT_EQ(name_and_type.first, "Rochor");
+        EXPECT_EQ(std::get<0>(name_and_type), "Rochor");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "en");
@@ -2784,7 +2769,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kJeita));
       } else if (name_index == 1) {
-        EXPECT_EQ(name_and_type.first, "梧槽");
+        EXPECT_EQ(std::get<0>(name_and_type), "梧槽");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "zh");
@@ -2793,7 +2778,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kJeita));
       } else if (name_index == 2) {
-        EXPECT_EQ(name_and_type.first, "Rochor");
+        EXPECT_EQ(std::get<0>(name_and_type), "Rochor");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "ms");
@@ -2801,7 +2786,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kNone));
       } else if (name_index == 3) {
-        EXPECT_EQ(name_and_type.first, "ரோச்சோர்");
+        EXPECT_EQ(std::get<0>(name_and_type), "ரோச்சோர்");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "ta");
@@ -2819,8 +2804,7 @@ TEST(Standalone, MultiPhonemes) {
     auto tile = graph_reader.GetGraphTile(node_id);
 
     auto edgeinfo = tile->edgeinfo(CB_edge);
-    std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
     ASSERT_EQ(names_and_types.size(), 4);
 
@@ -2828,7 +2812,7 @@ TEST(Standalone, MultiPhonemes) {
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -2839,7 +2823,7 @@ TEST(Standalone, MultiPhonemes) {
       ASSERT_NE(iter, linguistics.end());
 
       if (name_index == 0) {
-        EXPECT_EQ(name_and_type.first, "Rochor");
+        EXPECT_EQ(std::get<0>(name_and_type), "Rochor");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "en");
@@ -2848,7 +2832,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kJeita));
       } else if (name_index == 1) {
-        EXPECT_EQ(name_and_type.first, "梧槽");
+        EXPECT_EQ(std::get<0>(name_and_type), "梧槽");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "zh");
@@ -2857,7 +2841,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kJeita));
       } else if (name_index == 2) {
-        EXPECT_EQ(name_and_type.first, "Rochor");
+        EXPECT_EQ(std::get<0>(name_and_type), "Rochor");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "ms");
@@ -2865,7 +2849,7 @@ TEST(Standalone, MultiPhonemes) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kNone));
       } else if (name_index == 3) {
-        EXPECT_EQ(name_and_type.first, "ரோச்சோர்");
+        EXPECT_EQ(std::get<0>(name_and_type), "ரோச்சோர்");
         EXPECT_EQ(to_string(static_cast<Language>(
                       std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                   "ta");

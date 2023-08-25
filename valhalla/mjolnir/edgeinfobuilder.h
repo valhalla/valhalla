@@ -103,6 +103,20 @@ public:
    */
   std::size_t SizeOf() const;
 
+  /**
+   * Check if the given name_info exists in this edge info.
+   * @param  offset  The offset of the name info.
+   * @return  Returns true if the name info exists, false otherwise.
+   */
+  bool has_name_info(uint32_t offset) const {
+    for (const auto& name : name_info_list_) {
+      if (name.name_offset_ == offset) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 protected:
   // Fixed size information
   baldr::EdgeInfo::EdgeInfoInner ei_{};

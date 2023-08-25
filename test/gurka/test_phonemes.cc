@@ -449,14 +449,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank linguistics for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> name_linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -475,7 +475,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 1);
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) == "name:pronunciation2") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "xyz street");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
@@ -535,14 +535,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank linguistics for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> name_linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -562,7 +562,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         // first and last name is missing in the name field
         EXPECT_EQ(name_index, 0);
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) == "name:pronunciation1") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "FG");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "FG");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
@@ -625,14 +625,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank linguistics for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> name_linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -650,13 +650,13 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) == "name:pronunciation2") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "xyz street");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:pronunciation3") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "abc ave");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
@@ -723,14 +723,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank linguistics for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 3);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> name_linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -749,13 +749,13 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "name:pronunciation2:jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "xyz street");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kJeita));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:pronunciation3:jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "abc ave");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kJeita));
@@ -821,14 +821,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     // blank linguistics for names.
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 1);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> name_linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -846,13 +846,13 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "name:pronunciation1:katakana") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "xyz street");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "xyz street");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kKatakana));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:pronunciation2:jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "abc ave");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kJeita));
@@ -1075,14 +1075,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     auto tile = graph_reader.GetGraphTile(node_id);
     auto edgeinfo = tile->edgeinfo(AB_edge);
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 6);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -1097,43 +1097,43 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "AB");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "AB");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "tunnel:name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "tunnel:name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "int_ref:pronunciation:nt-sampa int_direction:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "int_ref int_direction");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "int_ref int_direction");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "ref:pronunciation:nt-sampa direction:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "ref direction");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "ref direction");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "alt_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "alt_name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "official_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "official_name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:en:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "name:en");
 
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
@@ -1318,14 +1318,14 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     {
       auto edgeinfo = tile->edgeinfo(BC_edge);
       std::vector<uint8_t> types;
-      auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+      auto names_and_types = edgeinfo.GetNamesAndTypes(true);
       ASSERT_EQ(names_and_types.size(), 3);
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics =
           edgeinfo.GetLinguisticMap();
       uint8_t name_index = 0;
       for (const auto& name_and_type : names_and_types) {
-        if (types.at(name_index) != 0) {
+        if (std::get<2>(name_and_type) != 0) {
           // Skip the tagged names
           ++name_index;
           continue;
@@ -1335,25 +1335,25 @@ TEST(Standalone, PhonemesWithAltandDirection) {
         ASSERT_NE(iter, linguistics.end());
 
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) == "name:pronunciation") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "BC");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "BC");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kIpa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "alt_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "alt_name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "alt_name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "official_name:pronunciation:jeita") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "official_name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kJeita));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:en:pronunciation:katakana") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "name:en");
 
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
@@ -1406,7 +1406,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     {
       auto edgeinfo = tile->edgeinfo(DE_edge);
       std::vector<uint8_t> types;
-      auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+      auto names_and_types = edgeinfo.GetNamesAndTypes(true);
 
       ASSERT_EQ(names_and_types.size(), 3);
 
@@ -1414,7 +1414,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           edgeinfo.GetLinguisticMap();
       uint8_t name_index = 0;
       for (const auto& name_and_type : names_and_types) {
-        if (types.at(name_index) != 0) {
+        if (std::get<2>(name_and_type) != 0) {
           // Skip the tagged names
           ++name_index;
           continue;
@@ -1435,7 +1435,7 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           EXPECT_EQ(name_index, 2);
           if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
               "name:pronunciation3") {
-            EXPECT_EQ(names_and_types.at(name_index).first, "abc ave");
+            EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "abc ave");
             EXPECT_EQ(static_cast<int>(
                           std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                       static_cast<int>(baldr::PronunciationAlphabet::kIpa));
@@ -1522,14 +1522,14 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
     auto tile = graph_reader.GetGraphTile(node_id);
     auto edgeinfo = tile->edgeinfo(AB_edge);
     std::vector<uint8_t> types;
-    auto names_and_types = edgeinfo.GetNamesAndTypes(types, true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     ASSERT_EQ(names_and_types.size(), 5);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics =
         edgeinfo.GetLinguisticMap();
     uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      if (types.at(name_index) != 0) {
+      if (std::get<2>(name_and_type) != 0) {
         // Skip the tagged names
         ++name_index;
         continue;
@@ -1544,37 +1544,37 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
       } else {
         if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
             "name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "AB");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "AB");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "tunnel:name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "tunnel:name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "tunnel:name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "int_ref:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "int_ref");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "int_ref");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "ref:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "ref");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "ref");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "official_name:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "official_name");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "official_name");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));
         } else if (std::get<kLinguisticMapTuplePronunciationIndex>(iter->second) ==
                    "name:en:pronunciation:nt-sampa") {
-          EXPECT_EQ(names_and_types.at(name_index).first, "name:en");
+          EXPECT_EQ(std::get<0>(names_and_types.at(name_index)), "name:en");
           EXPECT_EQ(static_cast<int>(
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(baldr::PronunciationAlphabet::kNtSampa));

@@ -44,10 +44,6 @@ struct NameInfo {
                                    // and GetNamesAndTags until code is ready to actually use it.
   uint32_t spare_ : 2;
 
-  NameInfo(uint32_t name_offset)
-      : name_offset_(name_offset), additional_fields_{}, is_route_num_{}, tagged_{}, spare_{} {
-  }
-
   bool operator==(const NameInfo& other) const {
     return (name_offset_ == other.name_offset_);
   }
@@ -165,6 +161,16 @@ public:
    */
   std::vector<std::string> GetNames() const;
 
+  /** Convenience method to get the names and route number flags for an edge.
+   *
+   *  This one does not calculate the types
+   *  Like GetNamesAndTypes but without using memory for the types
+   *
+   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
+   * @return Returns a list (vector) (name, route number flag) pairs
+   */
+  std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
+
   /**
    * Convenience method to get the non linguistic, tagged names for an edge
    *
@@ -181,13 +187,13 @@ public:
   std::vector<std::string> GetLinguisticTaggedValues() const;
 
   /**
-   * Convenience method to get the names and route number flags for an edge.
+   * Convenience method to get the names, route number flags and tag value type for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
-   * @return   Returns a list (vector) of name/route number pairs.
+   * @return   Returns a list (vector) of name/route number flags/types tuples.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
-                                                             bool include_tagged_names = false) const;
+  std::vector<std::tuple<std::string, bool, uint8_t>>
+  GetNamesAndTypes(bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get tags of the edge.

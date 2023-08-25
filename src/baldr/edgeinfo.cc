@@ -1,8 +1,6 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 
-#include "midgard/encoded.h"
-
 using namespace valhalla::baldr;
 
 namespace {
@@ -34,6 +32,27 @@ json::ArrayPtr names_json(const std::vector<std::string>& names) {
     a->push_back(n);
   }
   return a;
+}
+
+// per tag parser. each returned string includes the leading TaggedValue.
+std::vector<std::string> parse_tagged_value(const char* ptr) {
+  switch (static_cast<TaggedValue>(ptr[0])) {
+    case TaggedValue::kLayer:
+    case TaggedValue::kBssInfo:
+    case TaggedValue::kLevel:
+    case TaggedValue::kLevelRef:
+    case TaggedValue::kTunnel:
+    case TaggedValue::kBridge:
+      return {std::string(ptr)};
+    case TaggedValue::kLandmark: {
+      std::string landmark_name = ptr + 10;
+      size_t landmark_size = landmark_name.size() + 10;
+      return {std::string(ptr, landmark_size)};
+    }
+    case TaggedValue::kLinguistic:
+    default:
+      return {};
+  }
 }
 
 } // namespace
@@ -100,33 +119,32 @@ std::vector<std::string> EdgeInfo::GetNames() const {
   return names;
 }
 
-// Get the non linguistic, tagged names for an edge
-std::vector<std::string> EdgeInfo::GetTaggedValues() const {
+// Get a list of names tagged and/or untagged with tag status
+std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged_values) const {
   // Get each name
-  std::vector<std::string> names;
-  names.reserve(name_count());
+  std::vector<std::pair<std::string, bool>> name_type_pairs;
+  name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
-    if (!ni->tagged_)
+    // Skip any tagged names (FUTURE code may make use of them)
+    if (ni->tagged_ && !include_tagged_values) {
       continue;
-
-    if (ni->name_offset_ < names_list_length_) {
-      const auto* name = names_list_ + ni->name_offset_;
-      try {
-        TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
-        if (tv == baldr::TaggedValue::kLinguistic) {
-          continue;
-        } else {
-          names.push_back(name);
+    }
+    if (ni->tagged_) {
+      if (ni->name_offset_ < names_list_length_) {
+        const char* name = names_list_ + ni->name_offset_;
+        if (IsNameTag(name[0])) {
+          name_type_pairs.push_back({std::string(name + 1), false});
         }
-      } catch (const std::invalid_argument& arg) {
-        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
-      }
+      } else
+        throw std::runtime_error("GetNames: offset exceeds size of text list");
+    } else if (ni->name_offset_ < names_list_length_) {
+      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
     } else {
-      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+      throw std::runtime_error("GetNames: offset exceeds size of text list");
     }
   }
-  return names;
+  return name_type_pairs;
 }
 
 // Get the linguistic, tagged names for an edge
@@ -165,11 +183,11 @@ std::vector<std::string> EdgeInfo::GetLinguisticTaggedValues() const {
 }
 
 // Get a list of names
-std::vector<std::pair<std::string, bool>>
-EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_values) const {
-
+std::vector<std::tuple<std::string, bool, uint8_t>>
+EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
   // Get each name
-  std::vector<std::pair<std::string, bool>> name_type_pairs;
+  std::vector<std::tuple<std::string, bool, uint8_t>> name_type_pairs;
+
   name_type_pairs.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
@@ -177,27 +195,54 @@ EdgeInfo::GetNamesAndTypes(std::vector<uint8_t>& types, bool include_tagged_valu
     if (ni->tagged_ && !include_tagged_values) {
       continue;
     }
+
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
-        std::string name = names_list_ + ni->name_offset_;
-        try {
-          if (IsNameTag(name[0])) {
-            name_type_pairs.push_back({name.substr(1), false});
-            types.push_back(static_cast<uint8_t>(name.at(0)));
-          }
-        } catch (const std::invalid_argument& arg) {
-          LOG_DEBUG("invalid_argument thrown for name: " + name);
+        const char* name = names_list_ + ni->name_offset_;
+        auto tag = name[0];
+        if (IsNameTag(tag)) {
+          name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
       } else
         throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     } else if (ni->name_offset_ < names_list_length_) {
-      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_});
-      types.push_back(0);
+      name_type_pairs.push_back({names_list_ + ni->name_offset_, ni->is_route_num_, 0});
     } else {
       throw std::runtime_error("GetNamesAndTypes: offset exceeds size of text list");
     }
   }
   return name_type_pairs;
+}
+
+// Get a list of tagged values
+std::vector<std::string> EdgeInfo::GetTaggedValues() const {
+  // Get each name
+  std::vector<std::string> tagged_values;
+  tagged_values.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      const char* value = names_list_ + ni->name_offset_;
+      try {
+        TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
+        if (tv == baldr::TaggedValue::kLinguistic) {
+          continue;
+        }
+
+        // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
+        std::vector<std::string> contents = parse_tagged_value(value);
+        std::move(contents.begin(), contents.end(), std::back_inserter(tagged_values));
+      } catch (const std::invalid_argument& arg) {
+        LOG_DEBUG("invalid_argument thrown for tagged value: " + std::string(value));
+      }
+    } else {
+      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+    }
+  }
+  return tagged_values;
 }
 
 // Get a list of tagged names
@@ -212,12 +257,23 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
       // Skip any non tagged names
       if (ni->tagged_) {
         if (ni->name_offset_ < names_list_length_) {
-          std::string name = names_list_ + ni->name_offset_;
+          const char* value = names_list_ + ni->name_offset_;
           try {
-            TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
-            if (tv != baldr::TaggedValue::kLinguistic)
-              tag_cache_.emplace(tv, name.substr(1));
-          } catch (const std::logic_error& arg) { LOG_DEBUG("logic_error thrown for name: " + name); }
+            // no pronunciations for some reason...
+            TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
+            if (tv == baldr::TaggedValue::kLinguistic) {
+              continue;
+            }
+            // get whatever tag value was in there
+            // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
+            auto contents = parse_tagged_value(value);
+            for (const std::string& c : contents) {
+              // remove the leading TaggedValue byte from the content
+              tag_cache_.emplace(tv, c.substr(1));
+            }
+          } catch (const std::logic_error& arg) {
+            LOG_DEBUG("logic_error thrown for tagged value: " + std::string(value));
+          }
         } else {
           throw std::runtime_error("GetTags: offset exceeds size of text list");
         }

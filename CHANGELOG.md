@@ -23,6 +23,7 @@
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
    * ADDED: Update the street name and sign data processing include language [#4268](https://github.com/valhalla/valhalla/pull/4268)
+   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
