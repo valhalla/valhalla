@@ -52,12 +52,15 @@ void BuildPBF() {
   landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
 
   detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
+<<<<<<< HEAD
 }
 
 // round a double to the given precision. default 1000000.0 means we support double precision up to 6
 // decimal places in landmarks
 double round_to(double value, double precision = 1000000.0) {
   return std::round(value * precision) / precision;
+=======
+>>>>>>> origin/master
 }
 } // namespace
 
@@ -151,7 +154,11 @@ TEST(LandmarkTest, TestParseLandmarks) {
 
 TEST(LandmarkTest, TestTileStoreLandmarks) {
   BuildPBF();
+<<<<<<< HEAD
   // make a config, though we dont need the landmarks db in there until the next test
+=======
+
+>>>>>>> origin/master
   landmark_map.config =
       test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
@@ -160,6 +167,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);
 
+<<<<<<< HEAD
   // load one of the graphtiles via the graphtilebuilder with the deserialize option turned on
   GraphId tile_id("2/519119/0");
   GraphTileBuilder tb(workdir, tile_id, true);
@@ -176,6 +184,16 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   // double lng = 0, lat = -89.999999;
   // const Landmark landmark_fixed(1, "fixed landmark", LandmarkType::casino, lng, lat);
 
+=======
+  // load one of the graphtiles
+  GraphId tile_id("2/519119/0");
+  GraphTileBuilder tb(workdir, tile_id, true);
+
+  auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
+  uint32_t edge_index = 0;
+
+  // add flexible landmarks for the edges
+>>>>>>> origin/master
   for (const auto& e : tb.directededges()) {
     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
     auto point = shape[shape.size() / 2];
@@ -186,15 +204,22 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     auto edge_id = tile_id;
     edge_id.set_id(edge_index++);
 
+<<<<<<< HEAD
     // tb.AddLandmark(edge_id, landmark_fixed);
     tb.AddLandmark(edge_id, landmark);
   }
 
   // call the store graphtile function to overwrite the tile on disk with the new info
+=======
+    tb.AddLandmark(edge_id, landmark);
+  }
+
+>>>>>>> origin/master
   tb.StoreTileData();
 
   // instantiate a graphreader using the config
   GraphReader gr(landmark_map.config.get_child("mjolnir"));
+<<<<<<< HEAD
 
   // call getgraphtile on it
   auto tile = gr.GetGraphTile(tile_id);
@@ -204,6 +229,12 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   // loop over the results until the type is kLandmark when it is then you need to use the method
   // to decode the string into a landmark object. asser that the landmark you got out matches the one
   // you told it to add (excepting the id because we dont store that).
+=======
+  auto tile = gr.GetGraphTile(tile_id);
+
+  // we support up to 6 decimal precision for landmark lng/lat, so max rounding error is 5e-7
+  const double rounding_error = 5e-7;
+>>>>>>> origin/master
 
   for (const auto& e : tile->GetDirectedEdges()) {
     auto ei = tile->edgeinfo(&e);
@@ -215,6 +246,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
         continue;
 
       Landmark landmark(value.second);
+<<<<<<< HEAD
       std::cout << std::setprecision(10) << "landmark: " << landmark.id << " " << landmark.name << " "
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
                 << std::endl;
@@ -223,6 +255,10 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       // effect of rounding error
 
       // check data correctness for flexible landmarks
+=======
+
+      // check data correctness
+>>>>>>> origin/master
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
@@ -230,6 +266,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       EXPECT_EQ(landmark.id, 0);
       EXPECT_EQ(landmark.name, std::to_string(edge_index++));
       EXPECT_EQ(landmark.type, ltype);
+<<<<<<< HEAD
       EXPECT_EQ(round_to(landmark.lng), round_to(point.first));
       EXPECT_EQ(round_to(landmark.lat), round_to(point.second));
 
@@ -239,6 +276,10 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       // EXPECT_EQ(landmark.type, LandmarkType::casino);
       // EXPECT_EQ(round_to(landmark.lng), round_to(lng));
       // EXPECT_EQ(round_to(landmark.lat), round_to(lat));
+=======
+      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
+      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+>>>>>>> origin/master
     }
 
     auto values = ei.GetTaggedValues();
@@ -249,11 +290,16 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       }
 
       Landmark landmark(v.substr(1));
+<<<<<<< HEAD
       std::cout << std::setprecision(10) << "landmark: " << landmark.id << " " << landmark.name << " "
                 << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
                 << std::endl;
 
       // check data correctness for flexible landmarks
+=======
+
+      // check data correctness
+>>>>>>> origin/master
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
@@ -261,6 +307,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       EXPECT_EQ(landmark.id, 0);
       EXPECT_EQ(landmark.name, std::to_string(edge_index++));
       EXPECT_EQ(landmark.type, ltype);
+<<<<<<< HEAD
       EXPECT_EQ(round_to(landmark.lng), round_to(point.first));
       EXPECT_EQ(round_to(landmark.lat), round_to(point.second));
 
@@ -273,3 +320,10 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     }
   }
 }
+=======
+      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
+      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+    }
+  }
+}
+>>>>>>> origin/master

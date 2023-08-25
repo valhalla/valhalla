@@ -9,6 +9,7 @@
 #include <tuple>
 #include <unordered_map>
 
+<<<<<<<< HEAD:valhalla/baldr/landmark.h
 #include <valhalla/baldr/graphconstants.h>
 
 namespace valhalla {
@@ -95,6 +96,12 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   }
   return it->second;
 }
+========
+#include <valhalla/baldr/landmark.h>
+
+namespace valhalla {
+namespace mjolnir {
+>>>>>>>> origin/master:valhalla/mjolnir/landmark_builder.h
 
 inline uint64_t encode_lnglat(double lng, double lat) {
   return (((uint64_t(lng * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
@@ -132,6 +139,7 @@ struct Landmark {
    *
    * @param str The string to be converted.
    */
+<<<<<<<< HEAD:valhalla/baldr/landmark.h
   Landmark(const std::string& str) {
     // ensure that the string has the minimum expected size to represent a Landmark
     if (str.size() < 9) {
@@ -147,6 +155,39 @@ struct Landmark {
     }
 
     id = 0; // fake id
+========
+  void insert_landmark(const std::string& name,
+                       const baldr::LandmarkType& type,
+                       const double lng,
+                       const double lat);
+
+  /**
+   * Retrieve a vector of landmarks from the database within the specified bounding box.
+   * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max
+   * longitude.
+   *
+   * @param minlng The minimum longitude of the bounding box (min x).
+   * @param minlat The minimum latitude of the bounding box (min y).
+   * @param maxlng The maximum longitude of the bounding box (max x).
+   * @param maxlat The maximum latitude of the bounding box (max y).
+   * @return A vector of Landmark objects within the specified bounding box.
+   */
+  std::vector<baldr::Landmark> get_landmarks_by_bbox(const double minlng,
+                                                     const double minlat,
+                                                     const double maxlng,
+                                                     const double maxlat);
+
+  /**
+   * Retrieve a vector of landmarks that match the provided primary keys.
+   * NOTE: The return size may be less than the size of the input if some of the provided
+   * primary keys do not exist in the database. In such cases, the function will skip the missing IDs
+   * without throwing an exception.
+   *
+   * @param pkeys A vector of int64_t representing the primary keys of the landmarks to retrieve.
+   * @return A vector of Landmark objects matching the given primary keys.
+   */
+  std::vector<baldr::Landmark> get_landmarks_by_ids(const std::vector<int64_t>& pkeys);
+>>>>>>>> origin/master:valhalla/mjolnir/landmark_builder.h
 
     // extract the location (next 8 bytes) - lng and lat
     uint64_t location = 0;
