@@ -5,6 +5,8 @@
 #include "mjolnir/util.h"
 #include <tuple>
 
+using namespace valhalla::baldr;
+
 namespace {
 struct landmark_callback : public OSMPBF::Callback {
 public:
@@ -18,7 +20,7 @@ public:
     auto iter = tags.find("amenity");
     if (iter != tags.cend() && !iter->second.empty()) {
       try {
-        auto landmark_type = valhalla::mjolnir::string_to_landmark_type(iter->second);
+        auto landmark_type = string_to_landmark_type(iter->second);
 
         std::string name = "";
         auto it = tags.find("name");
@@ -214,8 +216,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
     double lng = std::stod(argv[3]);
     double lat = std::stod(argv[4]);
 
-    landmarks->emplace_back(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng,
-                            lat);
+    landmarks->emplace_back(
+        Landmark(landmark_id, landmark_name, static_cast<LandmarkType>(landmark_type), lng, lat));
     return 0;
   };
 
@@ -232,20 +234,20 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_ids(const std::vector<i
   return landmarks;
 }
 
-std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLat,
-                                                              const double minLong,
-                                                              const double maxLat,
-                                                              const double maxLong) {
+std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minlng,
+                                                              const double minlat,
+                                                              const double maxlng,
+                                                              const double maxlat) {
   std::vector<Landmark> landmarks;
 
   auto* bounding_box_stmt = pimpl->bounding_box_stmt;
   sqlite3_reset(bounding_box_stmt);
   sqlite3_clear_bindings(bounding_box_stmt);
 
-  sqlite3_bind_double(bounding_box_stmt, 1, minLong);
-  sqlite3_bind_double(bounding_box_stmt, 2, minLat);
-  sqlite3_bind_double(bounding_box_stmt, 3, maxLong);
-  sqlite3_bind_double(bounding_box_stmt, 4, maxLat);
+  sqlite3_bind_double(bounding_box_stmt, 1, minlng);
+  sqlite3_bind_double(bounding_box_stmt, 2, minlat);
+  sqlite3_bind_double(bounding_box_stmt, 3, maxlng);
+  sqlite3_bind_double(bounding_box_stmt, 4, maxlat);
 
   LOG_TRACE(sqlite3_expanded_sql(bounding_box_stmt));
 
@@ -257,7 +259,8 @@ std::vector<Landmark> LandmarkDatabase::get_landmarks_by_bbox(const double minLa
     double lng = sqlite3_column_double(bounding_box_stmt, 3);
     double lat = sqlite3_column_double(bounding_box_stmt, 4);
 
-    landmarks.emplace_back(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat);
+    landmarks.emplace_back(
+        Landmark(landmark_id, name, static_cast<LandmarkType>(landmark_type), lng, lat));
 
     ret = sqlite3_step(bounding_box_stmt);
   }
