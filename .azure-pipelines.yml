@@ -47,6 +47,7 @@ jobs:
 
     steps:
       - script: |
+          ls /
           git submodule update --init --recursive
           echo $(Build.SourceBranch)
         displayName: 'Pull submodules'
