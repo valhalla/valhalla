@@ -234,8 +234,9 @@ message TaggedValue {
     kBssInfo = 3;
     kLevel = 4;
     kLevelRef = 5;
+    kLandmark = 6;
     kTunnel = 49;
-    kBridge = 50;    
+    kBridge = 50;
   }
   bytes value = 1;    // The actual tagged name value, examples: Ted Williams Tunnel
   Type type = 2;      // The type of tagged name (tunnel or bridge)
