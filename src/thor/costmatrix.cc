@@ -353,7 +353,9 @@ void CostMatrix::ForwardSearch(const uint32_t index,
   // Get edge label and check cost threshold
   BDEdgeLabel pred = edgelabels[pred_idx];
   if (expansion_callback_) {
-    expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
+    auto prev_pred =
+        pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
                         pred.path_distance(), pred.cost().cost);
   }
 
@@ -433,6 +435,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
       uint8_t flow_sources;
       Cost newcost =
           pred.cost() + tc + costing_->EdgeCost(directededge, tile, offset_time, flow_sources);
+      const auto pred_dist = pred.path_distance() + directededge->length();
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -440,8 +443,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
         BDEdgeLabel& lab = edgelabels[es->index()];
         if (newcost.cost < lab.cost().cost) {
           adj.decrease(es->index(), newcost.cost);
-          lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length(), restriction_idx);
+          lab.Update(pred_idx, newcost, newcost.cost, tc, pred_dist, restriction_idx);
         }
         continue;
       }
@@ -457,8 +459,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
-      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
-                              pred.path_distance() + directededge->length(),
+      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc, pred_dist,
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                               static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -468,8 +469,8 @@ void CostMatrix::ForwardSearch(const uint32_t index,
 
       // setting this edge as reached
       if (expansion_callback_) {
-        expansion_callback_(graphreader, edgeid, "costmatrix", "r", pred.cost().secs,
-                            pred.path_distance(), pred.cost().cost);
+        expansion_callback_(graphreader, edgeid, pred.edgeid(), "costmatrix", "r", newcost.secs,
+                            pred_dist, newcost.cost);
       }
     }
 
@@ -596,8 +597,10 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       }
       // setting this edge as connected
       if (expansion_callback_) {
-        expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "c", pred.cost().secs,
-                            pred.path_distance(), pred.cost().cost);
+        auto prev_pred =
+            pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "c",
+                            pred.cost().secs, pred.path_distance(), pred.cost().cost);
       }
     }
   }
@@ -656,7 +659,9 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   }
 
   if (expansion_callback_) {
-    expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
+    auto prev_pred =
+        pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
                         pred.path_distance(), pred.cost().cost);
   }
 
@@ -740,6 +745,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
       newcost += tc;
+      const auto pred_dist = pred.path_distance() + directededge->length();
 
       // Check if edge is temporarily labeled and this path has less cost. If
       // less cost the predecessor is updated along with new cost and distance.
@@ -747,8 +753,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
         BDEdgeLabel& lab = edgelabels[es->index()];
         if (newcost.cost < lab.cost().cost) {
           adj.decrease(es->index(), newcost.cost);
-          lab.Update(pred_idx, newcost, newcost.cost, tc,
-                     pred.path_distance() + directededge->length(), restriction_idx);
+          lab.Update(pred_idx, newcost, newcost.cost, tc, pred_dist, restriction_idx);
         }
         continue;
       }
@@ -756,8 +761,7 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
       // Add edge label, add to the adjacency list and set edge status
       uint32_t idx = edgelabels.size();
       *es = {EdgeSet::kTemporary, idx};
-      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc,
-                              pred.path_distance() + directededge->length(),
+      edgelabels.emplace_back(pred_idx, edgeid, oppedge, directededge, newcost, mode_, tc, pred_dist,
                               (pred.not_thru_pruning() || !directededge->not_thru()),
                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                               static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -771,8 +775,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
       // setting this edge as reached
       if (expansion_callback_) {
-        expansion_callback_(graphreader, edgeid, "costmatrix", "r", pred.cost().secs,
-                            pred.path_distance(), pred.cost().cost);
+        expansion_callback_(graphreader, edgeid, pred.edgeid(), "costmatrix", "r", newcost.secs,
+                            pred_dist, newcost.cost);
       }
     }
 

@@ -62,14 +62,11 @@ protected:
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
     auto feat = res_doc["features"][0].GetObject();
-    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("MultiLineString"));
+    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("LineString"));
 
     auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
-    ASSERT_EQ(coords_size, exp_feats);
-
-    for (const auto& prop : props) {
-      ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
-    }
+    ASSERT_EQ(res_doc["features"].GetArray().Size(), exp_feats);
+    ASSERT_EQ(props.size(), feat["properties"].GetObject().MemberCount());
   }
 };
 
@@ -138,6 +135,7 @@ TEST_F(ExpansionTest, NoAction) {
 INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                          ExpansionTest,
                          ::testing::Values(std::vector<std::string>{"statuses"},
-                                           std::vector<std::string>{"distances", "durations"},
+                                           std::vector<std::string>{"distances", "durations",
+                                                                    "pred_edge_ids"},
                                            std::vector<std::string>{"edge_ids", "costs"},
                                            std::vector<std::string>{}));

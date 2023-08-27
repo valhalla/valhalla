@@ -371,6 +371,7 @@ message Options {
     distances = 2;
     statuses = 3;
     edge_ids = 4;
+    pred_edge_ids = 5;
   }
 
   Units units = 1;                                                 // kilometers or miles

@@ -369,7 +369,10 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
     }
 
     if (expansion_callback_) {
-      expansion_callback_(graphreader, pred.edgeid(), "dijkstras", "s", pred.cost().secs,
+      const auto prev_pred = pred.predecessor() == kInvalidLabel
+                                 ? GraphId{}
+                                 : bdedgelabels_[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "dijkstras", "s", pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }
   }
