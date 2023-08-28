@@ -470,7 +470,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
       // setting this edge as reached
       if (expansion_callback_) {
         expansion_callback_(graphreader, edgeid, pred.edgeid(), "costmatrix", "r", newcost.secs,
-                            pred_dist, newcost.cost);  
+                            pred_dist, newcost.cost);
       }
     }
 
