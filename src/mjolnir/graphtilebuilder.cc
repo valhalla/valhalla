@@ -883,6 +883,7 @@ uint32_t GraphTileBuilder::AddName(const std::string& name) {
     return offset;
   } else {
     // Return the offset to the existing name
+    std::cout << "name exist!" << std::endl;
     return existing_text_offset->second;
   }
 }
@@ -1262,52 +1263,46 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
 }
 
 void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
-  // first thing is check that the edge id makes sense, tile id should match and edges_.size() >
-  // edge_id.id if not throw a runtime error. otherwise we grab the edge and then
-  if (header_builder_.graphid().tileid() != edge_id.tileid() ||
-      header_builder_.graphid().level() != edge_id.level()) {
-    throw std::runtime_error("Tile id or hierarchy level doesn't match");
+  // debugging code
+  std::cout << "add landmark: level = " << edge_id.level() << ", id = " << edge_id.id()
+            << ", landmark id = " << landmark.id << std::endl;
+
+  // check the edge id makes sense
+  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+    throw std::runtime_error(
+        "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
   }
   if (header_builder_.directededgecount() <= edge_id.id()) {
     throw std::runtime_error(
         "Given edge doesn't exist: edge id is larger than total edge size in this tile");
   }
 
-  // get the edges edgeinfo, to do that we need to look at the edgeinfo offset of the edge
-  // so we take the edgeinfo offset from the edge use it as the key into edgeinfo_offset_map_, which
-  // will give us back an edgeinfobuilder
-  std::cout << "edge info offset map: " << std::endl;
-  for (const auto& i : edgeinfo_offset_map_) {
-    std::cout << i.first << std::endl;
-  }
-  std::cout << "edge count " << header_builder_.directededgecount() << std::endl;
-
+  // get the edge info / edge info builder
   const auto& edge = directededges_builder_[edge_id.id()];
   const auto original_offset = edge.edgeinfo_offset();
   auto eib = edgeinfo_offset_map_.find(original_offset);
-  // bail here if this iterator is the end
+
   if (eib == edgeinfo_offset_map_.end()) {
     throw std::runtime_error("Couldn't find edge info for the given edge: " +
                              std::to_string(static_cast<int>(edge_id.id())));
   }
 
-  // we need to use the edgeinfobuilder to add a new tagged value record to it that takes some work
-
-  // first we construct the string that makes up the record we want to store, ours is going to look
-  // like:
   std::string tagged_value = landmark.to_str();
 
-  // do we already have this record, if so we dont want a copy instead we just want the offset
+  // debugging
+  std::cout << tagged_value.size() << std::endl;
+  std::cout << tagged_value << std::endl;
 
-  auto name_offset = AddName(tagged_value);
-
+  auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
   // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)
+  std::cout << "landmark name: " << landmark.name << ", offset: " << name_offset << std::endl;  // debugging
   if (eib->second->has_name_info(name_offset)) {
+    std::cout << "repeated!" << std::endl << std::endl;  // debugging
     return;
   }
+  std::cout << std::endl;  // debugging
 
-  // so now we know where we are storing this variable sized string in the tile, we need to keep the
-  // record in the edge info of where that was
+  // record in the edge info builder of where the tagged_value is
   NameInfo ni{name_offset, 0, 0, 1};
   eib->second->AddNameInfo(ni);
 
@@ -1324,14 +1319,16 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   }
 
   // update edgeinfo_offset_map
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> new_edgeinfo_offset_map_{};
+
   for (auto& e : edgeinfo_offset_map_) {
     if (e.first > original_offset) {
-      auto* eib = e.second;
-      uint32_t newkey = e.first + shift;
-      edgeinfo_offset_map_.erase(e.first);
-      edgeinfo_offset_map_.insert(std::make_pair(newkey, eib));
+      new_edgeinfo_offset_map_.insert(std::make_pair(e.first + shift, e.second));
+    } else {
+      new_edgeinfo_offset_map_.insert(e);
     }
   }
+  edgeinfo_offset_map_ = new_edgeinfo_offset_map_;
 }
 
 } // namespace mjolnir

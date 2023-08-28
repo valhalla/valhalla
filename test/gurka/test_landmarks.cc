@@ -17,10 +17,10 @@ using namespace valhalla::baldr;
 using namespace valhalla::gurka;
 using namespace valhalla::mjolnir;
 
-// const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks/landmarks";
-// const std::string db_path = workdir + "/landmarks.sqlite";
-// const std::string pbf_filename = workdir + "/map.pbf";
-// valhalla::gurka::map landmark_map;
+const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks/landmarks";
+const std::string db_path = workdir + "/landmarks.sqlite";
+const std::string pbf_filename = workdir + "/map.pbf";
+valhalla::gurka::map landmark_map;
 
 const std::string workdir_tiles = VALHALLA_BUILD_DIR "test/data/landmarks/landmarks_tile";
 const std::string db_path_tile_test = workdir_tiles + "/landmarks.sqlite";
@@ -28,41 +28,10 @@ const std::string pbf_filename_tile_test = workdir_tiles + "/map.pbf";
 valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
-// void BuildPBF() {
-//   const std::string ascii_map = R"(
-//       a-----b-----c---d
-//       A   B   C   D   E
-//     )";
-
-//   const gurka::nodes nodes = {
-//       {"A", {{"amenity", "bar"}}},
-//       {"B", {{"name", "hai di lao"}, {"amenity", "restaurant"}}},
-//       {"C", {{"name", "ke ji lu"}}}, // no amenity, shouldn't be stored
-//       {"D", {{"name", "wan da"}, {"amenity", "cinema"}}},
-//       {"E", {{"name", "zhong lou"}, {"amenity", "monument"}}}, // not in list, shouldn't be stored
-//       // non-landmark nodes
-//       {"a", {{"name", "gong ce"}, {"amenity", "toilets"}}},
-//       {"b", {{"name", "la ji tong"}, {"amenity", "waste_basket"}}},
-//       {"c", {{"name", "hua yuan"}, {"place", "city"}}},
-//       {"d", {{"traffic_signal", "signal"}}},
-//   };
-
-//   const gurka::ways ways = {
-//       {"ab", {{"highway", "residential"}}},
-//       {"bc", {{"highway", "motorway"}}},
-//       {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
-//   };
-
-//   constexpr double gridsize = 100;
-//   landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
-
-//   detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
-// }
-
-void BuildPBFAddLandmarksToTiles() {
+void BuildPBF() {
   const std::string ascii_map = R"(
-      A   B   C   D   E
       a-----b-----c---d
+      A   B   C   D   E
     )";
 
   const gurka::nodes nodes = {
@@ -75,6 +44,36 @@ void BuildPBFAddLandmarksToTiles() {
       {"a", {{"name", "gong ce"}, {"amenity", "toilets"}}},
       {"b", {{"name", "la ji tong"}, {"amenity", "waste_basket"}}},
       {"c", {{"name", "hua yuan"}, {"place", "city"}}},
+      {"d", {{"traffic_signal", "signal"}}},
+  };
+
+  const gurka::ways ways = {
+      {"ab", {{"highway", "residential"}}},
+      {"bc", {{"highway", "motorway"}}},
+      {"cd", {{"highway", "residential"}, {"maxspeed", "60"}}},
+  };
+
+  constexpr double gridsize = 100;
+  landmark_map.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-.01, 0});
+
+  detail::build_pbf(landmark_map.nodes, ways, nodes, {}, pbf_filename, 0, false);
+}
+
+void BuildPBFAddLandmarksToTiles() {
+  const std::string ascii_map = R"(
+      AB         D    
+      a------b-----c----d
+    )";
+
+  const gurka::nodes nodes = {
+      {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
+      {"B", {{"name", "hai_di_laohhhhhhhh"}, {"amenity", "restaurant"}}},
+      {"D", {{"name", "McDonaldss"}, {"amenity", "fast_food"}}},
+      // {"D", {{"name", "McDonalds"}, {"amenity", "fast_food"}}},
+      // non-landmark nodes
+      {"a", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
+      {"b", {{"name", "la_ji_tong"}, {"amenity", "waste_basket"}}},
+      {"c", {{"name", "hua_yuan"}, {"place", "city"}}},
       {"d", {{"traffic_signal", "signal"}}},
   };
 
@@ -97,182 +96,182 @@ double round_to(double value, double precision = 1000000.0) {
 }
 } // namespace
 
-// TEST(LandmarkTest, TestBuildDatabase) {
+TEST(LandmarkTest, TestBuildDatabase) {
 
-//   // insert test data
-//   {
-//     LandmarkDatabase db_ini(db_path, false);
+  // insert test data
+  {
+    LandmarkDatabase db_ini(db_path, false);
 
-//     ASSERT_NO_THROW(
-//         db_ini.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
-//     ASSERT_NO_THROW(db_ini.insert_landmark("Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370));
-//     ASSERT_NO_THROW(db_ini.insert_landmark("A", LandmarkType::bank, 40., 40.));
-//     ASSERT_NO_THROW(db_ini.insert_landmark("B", LandmarkType::fire_station, 30., 30.));
-//   }
+    ASSERT_NO_THROW(
+        db_ini.insert_landmark("Statue of Liberty", LandmarkType::theatre, -74.044548, 40.689253));
+    ASSERT_NO_THROW(db_ini.insert_landmark("Eiffel Tower", LandmarkType::cafe, 2.294481, 48.858370));
+    ASSERT_NO_THROW(db_ini.insert_landmark("A", LandmarkType::bank, 40., 40.));
+    ASSERT_NO_THROW(db_ini.insert_landmark("B", LandmarkType::fire_station, 30., 30.));
+  }
 
-//   // test
-//   LandmarkDatabase db(db_path, true);
+  // test
+  LandmarkDatabase db(db_path, true);
 
-//   std::vector<Landmark> landmarks{};
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(30, 30, 40, 40); });
+  std::vector<Landmark> landmarks{};
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(30, 30, 40, 40); });
 
-//   EXPECT_EQ(landmarks.size(), 2); // A and B
+  EXPECT_EQ(landmarks.size(), 2); // A and B
 
-//   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-//   for (const auto& landmark : landmarks) {
-//     LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-//              ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-//              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-//   }
+  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
+  for (const auto& landmark : landmarks) {
+    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
+  }
 
-//   landmarks.clear();
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
+  landmarks.clear();
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
 
-//   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
-// }
+  EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
+}
 
-// TEST(LandmarkTest, TestParseLandmarks) {
+TEST(LandmarkTest, TestParseLandmarks) {
 
-//   if (!filesystem::exists(workdir)) {
-//     bool created = filesystem::create_directories(workdir);
-//     EXPECT_TRUE(created);
-//   }
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
 
-//   // parse and store
-//   BuildPBF();
-//   boost::property_tree::ptree& pt = landmark_map.config;
-//   pt.put("mjolnir.landmarks", db_path);
+  // parse and store
+  BuildPBF();
+  boost::property_tree::ptree& pt = landmark_map.config;
+  pt.put("mjolnir.landmarks", db_path);
 
-//   std::vector<std::string> input_files = {workdir + "/map.pbf"};
+  std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
-//   EXPECT_TRUE(BuildLandmarkFromPBF(pt.get_child("mjolnir"), input_files));
+  EXPECT_TRUE(BuildLandmarkFromPBF(pt.get_child("mjolnir"), input_files));
 
-//   // check
-//   std::vector<Landmark> landmarks{};
-//   LandmarkDatabase db(db_path, true);
+  // check
+  std::vector<Landmark> landmarks{};
+  LandmarkDatabase db(db_path, true);
 
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-.1, -5, 10, 0); });
-//   EXPECT_EQ(landmarks.size(), 3); // A, B, D
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(-.1, -5, 10, 0); });
+  EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
-//   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
-//   for (const auto& landmark : landmarks) {
-//     LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-//              ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-//              std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-//   }
+  LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
+  for (const auto& landmark : landmarks) {
+    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
+             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
+             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
+  }
 
-//   EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
-//   EXPECT_TRUE(landmarks[0].name == "A");
-//   EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant); // B
-//   EXPECT_TRUE(landmarks[1].name == "hai di lao");
-//   EXPECT_TRUE(landmarks[2].type == LandmarkType::cinema); // D
-//   EXPECT_TRUE(landmarks[2].name == "wan da");
+  EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
+  EXPECT_TRUE(landmarks[0].name == "A");
+  EXPECT_TRUE(landmarks[1].type == LandmarkType::restaurant); // B
+  EXPECT_TRUE(landmarks[1].name == "hai di lao");
+  EXPECT_TRUE(landmarks[2].type == LandmarkType::cinema); // D
+  EXPECT_TRUE(landmarks[2].name == "wan da");
 
-//   // check getting multiple landmarks by ids
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({1, 2, 3, 4}); });
-//   EXPECT_EQ(landmarks.size(), 3);
+  // check getting multiple landmarks by ids
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({1, 2, 3, 4}); });
+  EXPECT_EQ(landmarks.size(), 3);
 
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({0, 937, 45, 15, 200, 353, 2386}); });
-//   EXPECT_EQ(landmarks.size(), 0);
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({0, 937, 45, 15, 200, 353, 2386}); });
+  EXPECT_EQ(landmarks.size(), 0);
 
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({2, 3, 5, 7, 11, 13, 17, 19, 23, 29}); });
-//   EXPECT_EQ(landmarks.size(), 2);
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({2, 3, 5, 7, 11, 13, 17, 19, 23, 29}); });
+  EXPECT_EQ(landmarks.size(), 2);
 
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({4}); });
-//   EXPECT_EQ(landmarks.size(), 0);
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({4}); });
+  EXPECT_EQ(landmarks.size(), 0);
 
-//   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({3, 2, 1}); });
-//   EXPECT_EQ(landmarks.size(), 3);
-// }
+  EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({3, 2, 1}); });
+  EXPECT_EQ(landmarks.size(), 3);
+}
 
-// TEST(LandmarkTest, TestTileStoreLandmarks) {
-//   BuildPBF();
-//   landmark_map.config =
-//       test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
-//                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
+TEST(LandmarkTest, TestTileStoreLandmarks) {
+  BuildPBF();
+  landmark_map.config =
+      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
-//   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
-//   mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
-//                           mjolnir::BuildStage::kValidate, false);
+  // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
+  mjolnir::build_tile_set(landmark_map.config, {pbf_filename}, mjolnir::BuildStage::kInitialize,
+                          mjolnir::BuildStage::kValidate, false);
 
-//   // load one of the graphtiles
-//   GraphId tile_id("2/519119/0");
-//   GraphTileBuilder tb(workdir, tile_id, true);
+  // load one of the graphtiles
+  GraphId tile_id("2/519119/0");
+  GraphTileBuilder tb(workdir, tile_id, true);
 
-//   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
-//   uint32_t edge_index = 0;
+  auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
+  uint32_t edge_index = 0;
 
-//   // add flexible landmarks for the edges
-//   for (const auto& e : tb.directededges()) {
-//     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
-//     auto point = shape[shape.size() / 2];
-//     auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+  // add flexible landmarks for the edges
+  for (const auto& e : tb.directededges()) {
+    std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
+    auto point = shape[shape.size() / 2];
+    auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
 
-//     Landmark landmark(edge_index, std::to_string(edge_index), ltype, point.first, point.second);
+    Landmark landmark(edge_index, std::to_string(edge_index), ltype, point.first, point.second);
 
-//     auto edge_id = tile_id;
-//     edge_id.set_id(edge_index++);
+    auto edge_id = tile_id;
+    edge_id.set_id(edge_index++);
 
-//     tb.AddLandmark(edge_id, landmark);
-//   }
+    tb.AddLandmark(edge_id, landmark);
+  }
 
-//   tb.StoreTileData();
+  tb.StoreTileData();
 
-//   // instantiate a graphreader using the config
-//   GraphReader gr(landmark_map.config.get_child("mjolnir"));
-//   auto tile = gr.GetGraphTile(tile_id);
+  // instantiate a graphreader using the config
+  GraphReader gr(landmark_map.config.get_child("mjolnir"));
+  auto tile = gr.GetGraphTile(tile_id);
 
-//   // we support up to 6 decimal precision for landmark lng/lat, so max rounding error is 5e-7
-//   const double rounding_error = 5e-7;
+  // we support up to 6 decimal precision for landmark lng/lat, so max rounding error is 5e-7
+  const double rounding_error = 5e-7;
 
-//   for (const auto& e : tile->GetDirectedEdges()) {
-//     auto ei = tile->edgeinfo(&e);
+  for (const auto& e : tile->GetDirectedEdges()) {
+    auto ei = tile->edgeinfo(&e);
 
-//     // test EdgeInfo:GetTags
-//     auto tagged_values = ei.GetTags();
+    // test EdgeInfo:GetTags
+    auto tagged_values = ei.GetTags();
 
-//     edge_index = 0;
-//     for (const auto& value : tagged_values) {
-//       if (value.first != baldr::TaggedValue::kLandmark)
-//         continue;
+    edge_index = 0;
+    for (const auto& value : tagged_values) {
+      if (value.first != baldr::TaggedValue::kLandmark)
+        continue;
 
-//       Landmark landmark(value.second);
+      Landmark landmark(value.second);
 
-//       // check data correctness
-//       std::vector<PointLL> shape = ei.shape();
-//       auto point = shape[shape.size() / 2];
-//       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+      // check data correctness
+      std::vector<PointLL> shape = ei.shape();
+      auto point = shape[shape.size() / 2];
+      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
 
-//       EXPECT_EQ(landmark.id, 0);
-//       EXPECT_EQ(landmark.name, std::to_string(edge_index++));
-//       EXPECT_EQ(landmark.type, ltype);
-//       EXPECT_NEAR(landmark.lng, point.first, rounding_error);
-//       EXPECT_NEAR(landmark.lat, point.second, rounding_error);
-//     }
+      EXPECT_EQ(landmark.id, 0);
+      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
+      EXPECT_EQ(landmark.type, ltype);
+      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
+      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+    }
 
-//     // test EdgeInfo:GetTaggedValues
-//     auto values = ei.GetTaggedValues();
-//     edge_index = 0;
-//     for (const std::string& v : values) {
-//       if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
-//         continue;
-//       }
+    // test EdgeInfo:GetTaggedValues
+    auto values = ei.GetTaggedValues();
+    edge_index = 0;
+    for (const std::string& v : values) {
+      if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
+        continue;
+      }
 
-//       Landmark landmark(v.substr(1));
+      Landmark landmark(v.substr(1));
 
-//       // check data correctness
-//       std::vector<PointLL> shape = ei.shape();
-//       auto point = shape[shape.size() / 2];
-//       auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+      // check data correctness
+      std::vector<PointLL> shape = ei.shape();
+      auto point = shape[shape.size() / 2];
+      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
 
-//       EXPECT_EQ(landmark.id, 0);
-//       EXPECT_EQ(landmark.name, std::to_string(edge_index++));
-//       EXPECT_EQ(landmark.type, ltype);
-//       EXPECT_NEAR(landmark.lng, point.first, rounding_error);
-//       EXPECT_NEAR(landmark.lat, point.second, rounding_error);
-//     }
-//   }
-// }
+      EXPECT_EQ(landmark.id, 0);
+      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
+      EXPECT_EQ(landmark.type, ltype);
+      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
+      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+    }
+  }
+}
 
 TEST(LandmarkTest, TestAddLandmarksToTiles) {
   if (!filesystem::exists(workdir_tiles)) {
@@ -287,33 +286,51 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
-  mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test}, mjolnir::BuildStage::kInitialize,
-                          mjolnir::BuildStage::kValidate, false);
+  mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
+                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
 
   // build landmark database and parse landmarks
-  {
-    LandmarkDatabase db_ini(db_path_tile_test, false);
-  }
-  EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"), {pbf_filename_tile_test}));
+  { LandmarkDatabase db_ini(db_path_tile_test, false); }
+
+
+  EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
+                                   {pbf_filename_tile_test}));
 
   AddLandmarks(landmark_map_tile_test.config);
 
+  LOG_INFO("start checking");
+  
+  // debugging
+  LOG_INFO("check db");
+  LandmarkDatabase db(db_path_tile_test, true);
+  auto landmarks = db.get_landmarks_by_bbox(-180, -90, 180, 90);
+  for (const auto& landmark: landmarks) {
+          std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
+                << " " << landmark.lng << " " << landmark.lat << std::endl;
+  }
 
-  // GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
-  // GraphId tile_id("2/517680/0");
-  // auto tile = gr.GetGraphTile(tile_id);
+  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  // GraphId tile_id("1/032220/0");
+  GraphId tile_id("0/002025/0");
+  auto tile = gr.GetGraphTile(tile_id);
 
-  // for (const auto& e : tile->GetDirectedEdges()) {
-  //   auto ei = tile->edgeinfo(&e);
-  //   auto tagged_values = ei.GetTags();
+  for (const auto& e : tile->GetDirectedEdges()) {
+    auto ei = tile->edgeinfo(&e);
+    auto tagged_values = ei.GetTags();
 
-  //   for (const auto& value : tagged_values) {
-  //     if (value.first != baldr::TaggedValue::kLandmark)
-  //       continue;
+    LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
+             ", length: " + std::to_string(e.length()));
 
-  //     Landmark landmark(value.second);
+    int count = 0;
+    for (const auto& value : tagged_values) {
+      if (value.first != baldr::TaggedValue::kLandmark)
+        continue;
 
-  //     std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat << std::endl;
-  //   }
-  // }
+      std::cout << ++count << std::endl;
+      Landmark landmark(value.second);
+
+      std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
+                << " " << landmark.lng << " " << landmark.lat << std::endl;
+    }
+  }
 }

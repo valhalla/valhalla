@@ -9,10 +9,10 @@
 
 #include "baldr/location.h"
 #include "baldr/pathlocation.h"
+#include "baldr/tilehierarchy.h"
 #include "loki/search.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/nocost.h"
-#include "baldr/tilehierarchy.h"
 #include <future>
 #include <thread>
 
@@ -340,18 +340,11 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
   for (size_t i = 0; i < tileset.size(); ++i) {
     // assign tiles for threads
     if (i % total_threads == thread_number) {
-      std::cout << "tileset: " << tileset[i].tile_value() << std::endl;
       // get landmarks in the tile
       midgard::AABB2<PointLL> bbox = baldr::TileHierarchy::GetGraphIdBoundingBox(tileset[i]);
 
       std::vector<Landmark> landmarks =
           db.get_landmarks_by_bbox(bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
-
-      std::cout << bbox.minx() << " " << bbox.miny() << " " << bbox.maxx() << " " << bbox.maxy() << std::endl;
-      std::cout << "find landmarks size: " << landmarks.size() << std::endl;
-        for (const auto& l: landmarks) {
-          std::cout << l.id << " " << l.name << " " << static_cast<int>(l.type) << " " << l.lng << " " << l.lat << std::endl;
-        }
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
@@ -411,7 +404,6 @@ void UpdateTiles(const boost::property_tree::ptree& pt,
     if (tile_count % total_threads != thread_number) {
       continue;
     }
-    LOG_INFO("start tile builder...");
 
     if (!tile_builder_ptr ||
         tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
@@ -421,10 +413,8 @@ void UpdateTiles(const boost::property_tree::ptree& pt,
         updated_tiles++;
       }
       // reset the tile builder ptr to the current tile
-      GraphTileBuilder current_tile_builder(tile_dir, (*it).first.Tile_Base(), true);
-      tile_builder_ptr.reset(&current_tile_builder);
+      tile_builder_ptr.reset(new GraphTileBuilder(tile_dir, (*it).first.Tile_Base(), true));
     }
-    LOG_INFO("retrieve landmarks...");
 
     // retrieve the landmark to be added
     const std::vector<Landmark> landmark =
@@ -435,11 +425,6 @@ void UpdateTiles(const boost::property_tree::ptree& pt,
     }
     // add the landmark to the tile
     GraphId edge_id = (*it).first;
-    std::cout << "edge id: " << edge_id.Tile_Base() << " " << edge_id.tileid() << " " << edge_id.level() << " " << edge_id.id() << std::endl;
-
-    GraphId builder_id = tile_builder_ptr->header_builder().graphid();
-    std::cout << "builder id: " << builder_id.Tile_Base() << " " << builder_id.tileid() << " " << builder_id.level() << " " << builder_id.id() << std::endl;
-
     tile_builder_ptr->AddLandmark(edge_id, landmark[0]);
 
     // update the counting numbers
@@ -456,7 +441,7 @@ void UpdateTiles(const boost::property_tree::ptree& pt,
   }
 
   // set the stats
-  stats.set_value(std::make_tuple(updated_tiles, updated_landmarks, updated_edges));
+  stats.set_value(std::make_tuple(updated_tiles, updated_edges, updated_landmarks));
 }
 
 // Add all landmarks to tiles
@@ -465,7 +450,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
 
   const size_t num_threads =
       pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get<std::string>("landmarks", "");
+  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks", "");
 
   // get tile access
   baldr::GraphReader reader(pt.get_child("mjolnir"));
@@ -484,9 +469,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt),
-                                     std::cref(vec_tileset), i, num_threads,
-                                     std::ref(sequence_file_names[i])));
+    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt), std::cref(vec_tileset), i,
+                                     num_threads, std::ref(sequence_file_names[i])));
   }
 
   // join all the threads and collect the sequence file names
@@ -513,6 +497,20 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
   merged_sequence_file.sort(sort_seq_file);
 
+  // debugging code
+  {
+    LandmarkDatabase db(db_name, true);
+    for (auto it = merged_sequence_file.begin(); it != merged_sequence_file.end(); it++) {
+      std::cout << "level: " << (*it).first.level() << ", graph id: " << (*it).first.id()
+                << std::endl;
+      auto landmarks = db.get_landmarks_by_ids({static_cast<int64_t>((*it).second)});
+      Landmark landmark = landmarks[0];
+      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
+                << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
+                << std::endl;
+    }
+  }
+
   LOG_INFO("Updating tiles...");
 
   // open up a new pool thread to update tiles
@@ -523,8 +521,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume size doesn't affect performance a lot
-    threads_new[i].reset(new std::thread(UpdateTiles, std::cref(pt), std::ref(merged_sequence_file), tile_dir,
-                                         std::ref(stats_info[i]), i, num_threads));
+    threads_new[i].reset(new std::thread(UpdateTiles, std::cref(pt), std::ref(merged_sequence_file),
+                                         tile_dir, std::ref(stats_info[i]), i, num_threads));
   }
 
   for (auto& thread : threads_new) {
@@ -545,7 +543,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   }
 
   LOG_INFO("Updated " + std::to_string(tiles) + " tiles, " + std::to_string(edges) +
-           " edges, and written " + std::to_string(landmarks) + " landmarks (repeat included)");
+           " edges, and wrote " + std::to_string(landmarks) + " landmarks (repeat included)");
 
   return true;
 }
