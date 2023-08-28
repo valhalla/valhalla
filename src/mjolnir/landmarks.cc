@@ -12,6 +12,7 @@
 #include "loki/search.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "sif/nocost.h"
+#include "baldr/tilehierarchy.h"
 #include <future>
 #include <thread>
 
@@ -316,19 +317,21 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           callback);
   }
 
+  LOG_INFO("Successfully build landmark databse from PBF");
   return true;
 }
 
 // Find landmarks in the tiles and the edges correlated to each landmark,
 // and return the sequence file name where we wrote the correlations
 void FindLandmarkEdges(const boost::property_tree::ptree& pt,
-                       const std::string& db_name,
                        const std::vector<GraphId>& tileset,
                        const size_t& thread_number,
                        const size_t& total_threads,
                        std::promise<std::string>& seq_file_name) {
   // Open the database and create a graph reader
-  LandmarkDatabase db(db_name, true);
+  const std::string dbname = pt.get_child("mjolnir").get<std::string>("landmarks", "");
+
+  LandmarkDatabase db(dbname, true);
   GraphReader reader(pt.get_child("mjolnir"));
   // create the sequence file
   std::string file_name = "landmark_dump_" + std::to_string(thread_number);
@@ -337,14 +340,18 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
   for (size_t i = 0; i < tileset.size(); ++i) {
     // assign tiles for threads
     if (i % total_threads == thread_number) {
+      std::cout << "tileset: " << tileset[i].tile_value() << std::endl;
       // get landmarks in the tile
-      // tileheirarchy::GetGraphIdBoundingBox(tileset[i]);
-      const graph_tile_ptr tile = reader.GetGraphTile(tileset[i]);
-      midgard::AABB2<PointLL> bbox =
-          tile->BoundingBox(); // TODO: can we use this to get the bbox of the tile? (instead
-                               // of using tileheirarchy::GetGraphIdBoundingBox)
+      midgard::AABB2<PointLL> bbox = baldr::TileHierarchy::GetGraphIdBoundingBox(tileset[i]);
+
       std::vector<Landmark> landmarks =
           db.get_landmarks_by_bbox(bbox.minx(), bbox.miny(), bbox.maxx(), bbox.maxy());
+
+      std::cout << bbox.minx() << " " << bbox.miny() << " " << bbox.maxx() << " " << bbox.maxy() << std::endl;
+      std::cout << "find landmarks size: " << landmarks.size() << std::endl;
+        for (const auto& l: landmarks) {
+          std::cout << l.id << " " << l.name << " " << static_cast<int>(l.type) << " " << l.lng << " " << l.lat << std::endl;
+        }
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
@@ -377,15 +384,17 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
 
 // Update tiles to associate landmarks, return some stats about the numbers of updated tiles, edges,
 // and landmarks
-void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
+void UpdateTiles(const boost::property_tree::ptree& pt,
+                 midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
                  const std::string& tile_dir, // tile_dir = reader.tile_dir()
-                 const std::string& db_name,
                  std::promise<std::tuple<size_t, size_t, size_t>>& stats,
                  const size_t& thread_number,
                  const size_t& total_threads) {
   // open the database and initialize a unique pointer to graph tile builder
   std::unique_ptr<GraphTileBuilder> tile_builder_ptr = nullptr;
-  LandmarkDatabase db(db_name, true);
+
+  const std::string dbname = pt.get_child("mjolnir").get<std::string>("landmarks", "");
+  LandmarkDatabase db(dbname, true);
 
   // stats
   size_t updated_tiles = 0, updated_edges = 0, updated_landmarks = 0;
@@ -402,6 +411,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
     if (tile_count % total_threads != thread_number) {
       continue;
     }
+    LOG_INFO("start tile builder...");
 
     if (!tile_builder_ptr ||
         tile_builder_ptr->header_builder().graphid().Tile_Base() != (*it).first.Tile_Base()) {
@@ -414,6 +424,7 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
       GraphTileBuilder current_tile_builder(tile_dir, (*it).first.Tile_Base(), true);
       tile_builder_ptr.reset(&current_tile_builder);
     }
+    LOG_INFO("retrieve landmarks...");
 
     // retrieve the landmark to be added
     const std::vector<Landmark> landmark =
@@ -423,7 +434,13 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
                              " of retrieved landmarks, which should be 1");
     }
     // add the landmark to the tile
-    tile_builder_ptr->AddLandmark((*it).first, landmark[0]);
+    GraphId edge_id = (*it).first;
+    std::cout << "edge id: " << edge_id.Tile_Base() << " " << edge_id.tileid() << " " << edge_id.level() << " " << edge_id.id() << std::endl;
+
+    GraphId builder_id = tile_builder_ptr->header_builder().graphid();
+    std::cout << "builder id: " << builder_id.Tile_Base() << " " << builder_id.tileid() << " " << builder_id.level() << " " << builder_id.id() << std::endl;
+
+    tile_builder_ptr->AddLandmark(edge_id, landmark[0]);
 
     // update the counting numbers
     updated_landmarks++;
@@ -444,6 +461,8 @@ void UpdateTiles(midgard::sequence<std::pair<GraphId, uint64_t>>& seq_file,
 
 // Add all landmarks to tiles
 bool AddLandmarks(const boost::property_tree::ptree& pt) {
+  LOG_INFO("Starting adding landmarks to tiles...");
+
   const size_t num_threads =
       pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
   const std::string db_name = pt.get<std::string>("landmarks", "");
@@ -460,10 +479,12 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
            reader.GetGraphTile(id_b)->header()->nodecount();
   });
 
+  LOG_INFO("Finding landmarks and their correlated edges...");
+
   std::vector<std::shared_ptr<std::thread>> threads(num_threads);
   std::vector<std::promise<std::string>> sequence_file_names(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt), db_name,
+    threads[i].reset(new std::thread(FindLandmarkEdges, std::cref(pt),
                                      std::cref(vec_tileset), i, num_threads,
                                      std::ref(sequence_file_names[i])));
   }
@@ -492,6 +513,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
   merged_sequence_file.sort(sort_seq_file);
 
+  LOG_INFO("Updating tiles...");
+
   // open up a new pool thread to update tiles
   std::vector<std::shared_ptr<std::thread>> threads_new(num_threads);
   std::vector<std::promise<std::tuple<size_t, size_t, size_t>>> stats_info(
@@ -500,8 +523,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume size doesn't affect performance a lot
-    threads_new[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
-                                         db_name, std::ref(stats_info[i]), i, num_threads));
+    threads_new[i].reset(new std::thread(UpdateTiles, std::cref(pt), std::ref(merged_sequence_file), tile_dir,
+                                         std::ref(stats_info[i]), i, num_threads));
   }
 
   for (auto& thread : threads_new) {

@@ -1276,6 +1276,11 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   // get the edges edgeinfo, to do that we need to look at the edgeinfo offset of the edge
   // so we take the edgeinfo offset from the edge use it as the key into edgeinfo_offset_map_, which
   // will give us back an edgeinfobuilder
+  std::cout << "edge info offset map: " << std::endl;
+  for (const auto& i : edgeinfo_offset_map_) {
+    std::cout << i.first << std::endl;
+  }
+  std::cout << "edge count " << header_builder_.directededgecount() << std::endl;
 
   const auto& edge = directededges_builder_[edge_id.id()];
   const auto original_offset = edge.edgeinfo_offset();
