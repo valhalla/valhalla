@@ -497,20 +497,6 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   midgard::sequence<std::pair<GraphId, uint64_t>> merged_sequence_file(merged_seq_file, false);
   merged_sequence_file.sort(sort_seq_file);
 
-  // debugging code
-  {
-    LandmarkDatabase db(db_name, true);
-    for (auto it = merged_sequence_file.begin(); it != merged_sequence_file.end(); it++) {
-      std::cout << "level: " << (*it).first.level() << ", graph id: " << (*it).first.id()
-                << std::endl;
-      auto landmarks = db.get_landmarks_by_ids({static_cast<int64_t>((*it).second)});
-      Landmark landmark = landmarks[0];
-      std::cout << "landmark: " << landmark.id << " " << landmark.name << " "
-                << static_cast<int>(landmark.type) << " " << landmark.lng << " " << landmark.lat
-                << std::endl;
-    }
-  }
-
   LOG_INFO("Updating tiles...");
 
   // open up a new pool thread to update tiles
@@ -521,7 +507,8 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
   const std::string tile_dir = reader.tile_dir();
   for (size_t i = 0; i < num_threads; ++i) {
     // assume size doesn't affect performance a lot
-    threads_new[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir, db_name, i, num_threads, std::ref(stats_info[i])));
+    threads_new[i].reset(new std::thread(UpdateTiles, std::ref(merged_sequence_file), tile_dir,
+                                         db_name, i, num_threads, std::ref(stats_info[i])));
   }
 
   for (auto& thread : threads_new) {
