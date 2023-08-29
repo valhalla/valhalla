@@ -22,11 +22,12 @@
    * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
-   * ADDED: Update the street name and sign data processing include language [#4268](https://github.com/valhalla/valhalla/pull/4268)
-   * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
    * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
+   * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
+   * ADDED: option `--extract-tar` to `valhalla_build_extract` to create extracts from .tar files instead of tile directory [#4255](https://github.com/valhalla/valhalla/pull/4255)
    * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
    * UPDATED: submodules which had new releases, unless it was a major version change [#4231](https://github.com/valhalla/valhalla/pull/4231)
+   * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
