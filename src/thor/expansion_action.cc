@@ -100,20 +100,20 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (exp_props.count(Options_ExpansionProperties_durations)) {
+    if (exp_props.count(Options_ExpansionProperties_time)) {
       writer("time", static_cast<uint64_t>(duration));
     }
-    if (exp_props.count(Options_ExpansionProperties_distances)) {
+    if (exp_props.count(Options_ExpansionProperties_distance)) {
       writer("distance", static_cast<uint64_t>(distance));
     }
-    if (exp_props.count(Options_ExpansionProperties_costs)) {
+    if (exp_props.count(Options_ExpansionProperties_cost)) {
       writer("cost", static_cast<uint64_t>(cost));
     }
-    if (exp_props.count(Options_ExpansionProperties_statuses))
-      writer("status", status);
-    if (exp_props.count(Options_ExpansionProperties_edge_ids))
+    if (exp_props.count(Options_ExpansionProperties_edge_status))
+      writer("edge_status", status);
+    if (exp_props.count(Options_ExpansionProperties_edge_id))
       writer("edge_id", static_cast<uint64_t>(edgeid));
-    if (exp_props.count(Options_ExpansionProperties_pred_edge_ids))
+    if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
       writer("pred_edge_id", static_cast<uint64_t>(prev_edgeid));
 
     writer.end_object(); // properties
