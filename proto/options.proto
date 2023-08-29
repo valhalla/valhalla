@@ -367,7 +367,7 @@ message Options {
 
   enum ExpansionProperties {
     cost = 0;
-    time = 1;
+    duration = 1;
     distance = 2;
     edge_status = 3;
     edge_id = 4;

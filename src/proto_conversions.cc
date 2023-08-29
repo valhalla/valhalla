@@ -370,7 +370,7 @@ bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
                                             Options::ExpansionProperties* a) {
   static const std::unordered_map<std::string, Options::ExpansionProperties>
       actions{{"cost", Options_ExpansionProperties_cost},
-              {"time", Options_ExpansionProperties_time},
+              {"duration", Options_ExpansionProperties_duration},
               {"distance", Options_ExpansionProperties_distance},
               {"edge_status", Options_ExpansionProperties_edge_status},
               {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},

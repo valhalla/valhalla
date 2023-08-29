@@ -2,7 +2,7 @@
 
 Routing algorithms find the best path by _expanding_ their search from start nodes/edges across the routing network until the destination is reached (unidirectional) or both search branches meet (bidirectional). This service could be subject to change in terms of API until we remove the BETA label.
 
-The expansion service wraps the `route`, `isochrone` and `sources_to_targets` services and returns a GeoJSON with all network edges (way segments) the underlying routing algorithm visited during the expansion, with relevant properties for each edge (e.g. `time` & `distance`). A top-level `algorithm` propertry informs about the used algorithm: unidirectional & bidirectional A* (for `route`), unidirectional Dijkstra (for `isochrone`) or bidirectional Dijkstra (for `sources_to_targets`).
+The expansion service wraps the `route`, `isochrone` and `sources_to_targets` services and returns a GeoJSON with all network edges (way segments) the underlying routing algorithm visited during the expansion, with relevant properties for each edge (e.g. `duration` & `distance`). A top-level `algorithm` propertry informs about the used algorithm: unidirectional & bidirectional A* (for `route`), unidirectional Dijkstra (for `isochrone`) or bidirectional Dijkstra (for `sources_to_targets`).
 
 **Note**, for even moderately long routes (or isochrones or few sources/targets) the `/expansion` action can produce gigantic GeoJSON responses of 100s of MB.
 
@@ -16,14 +16,14 @@ Since this service wraps other services, the request format mostly follows the o
 |:----------------------------------| :------------------------------------ |
 | `action` (required)               | The service whose expansion should be tracked. Currently one of `route`, `isochrone` or `sources_to_targets`. | 
 | `skip_opposites` (optional)       | If set to `true` the output won't contain an edge's opposing edge. Opposing edges can be thought of as both directions of one road segment. Of the two, we discard the directional edge with higher cost and keep the one with less cost. Default false. | 
-| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "time", "distance", "cost", "edge_id", "pred_edge_id" or "edge_status". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
+| `expansion_properties` (optional) | A JSON array of strings of the GeoJSON property keys you'd like to have in the response. One or multiple of "duration", "distance", "cost", "edge_id", "pred_edge_id" or "edge_status". **Note**, that each additional property will increase the output size by minimum ~ 10%. By default an empty `properties` object is returned. |
 
 The `expansion_properties` choices are as follows:
 
 | Property   | Description                           |
 | :--------- | :------------------------------------ |
 | `distance`   | Returns the accumulated distance in meters for each edge in order of graph traversal. | 
-| `time`   | Returns the accumulated time in seconds for each edge in order of graph traversal. | 
+| `duration`   | Returns the accumulated duration in seconds for each edge in order of graph traversal. | 
 | `cost`       | Returns the accumulated cost for each edge in order of graph traversal. | 
 | `edge_id`   | Returns the internal edge IDs for each edge in order of graph traversal. Mostly interesting for debugging. | 
 | `pred_edge_id` |  Returns the internal edge IDs of the predecessor for each edge in order of graph traversal. Mostly interesting for debugging. |
@@ -49,7 +49,7 @@ An example request is:
 	],
 	"skip_opposites": true,
 	"expansion_properties": [
-		"time",
+		"duration",
 		"edge_id",
 		"pred_edge_id",
 		"edge_status",
@@ -86,7 +86,7 @@ An example response for `"action": "isochrone"` is:
 				]
 			},
 			"properties": {
-				"time": 19,
+				"duration": 19,
 				"cost": 19,
 				"edge_status": "s",
 				"edge_id": 4049718357265,
@@ -109,7 +109,7 @@ An example response for `"action": "isochrone"` is:
 				]
 			},
 			"properties": {
-				"time": 34,
+				"duration": 34,
 				"cost": 34,
 				"edge_status": "s",
 				"edge_id": 4049617693969,
@@ -132,7 +132,7 @@ An example response for `"action": "isochrone"` is:
 				]
 			},
 			"properties": {
-				"time": 89,
+				"duration": 89,
 				"cost": 89,
 				"edge_status": "s",
 				"edge_id": 4444184259857,

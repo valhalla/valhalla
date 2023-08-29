@@ -100,8 +100,8 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (exp_props.count(Options_ExpansionProperties_time)) {
-      writer("time", static_cast<uint64_t>(duration));
+    if (exp_props.count(Options_ExpansionProperties_duration)) {
+      writer("duration", static_cast<uint64_t>(duration));
     }
     if (exp_props.count(Options_ExpansionProperties_distance)) {
       writer("distance", static_cast<uint64_t>(distance));

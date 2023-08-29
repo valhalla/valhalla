@@ -138,7 +138,7 @@ TEST_F(ExpansionTest, NoAction) {
 INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                          ExpansionTest,
                          ::testing::Values(std::vector<std::string>{"edge_status"},
-                                           std::vector<std::string>{"distance", "time",
+                                           std::vector<std::string>{"distance", "duration",
                                                                     "pred_edge_id"},
                                            std::vector<std::string>{"edge_id", "cost"},
                                            std::vector<std::string>{}));
