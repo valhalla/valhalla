@@ -24,6 +24,8 @@
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
    * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
    * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
+   * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
+   * UPDATED: submodules which had new releases, unless it was a major version change [#4231](https://github.com/valhalla/valhalla/pull/4231)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
