@@ -49,8 +49,14 @@ protected:
 
     // get the response
     std::string res;
-    auto api =
-        gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
+    valhalla::Api api;
+
+    if (action == "sources_to_targets") {
+      api = gurka::do_action(Options::expansion, expansion_map, {waypoints[0]}, {waypoints[1]},
+                             "auto", options, {}, &res);
+    } else {
+      api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
+    }
 
     // get the MultiLineString feature
     rapidjson::Document res_doc;
@@ -90,6 +96,14 @@ TEST_P(ExpansionTest, Routing) {
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
   check_result("route", {"E", "H"}, true, 16, GetParam());
+}
+
+TEST_P(ExpansionTest, Matrix) {
+  check_result("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+}
+
+TEST_P(ExpansionTest, MatrixNoOpposites) {
+  check_result("sources_to_targets", {"E", "H"}, true, 23, GetParam());
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
