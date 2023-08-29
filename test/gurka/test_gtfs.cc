@@ -585,6 +585,7 @@ TEST(GtfsExample, MakeProto) {
     auto currDest = transit_lls[segment + 1];
     shape_length += currOrigin.Distance(currDest);
   }
+  EXPECT_NEAR(shape_length, 36287.046875, 0.0001);
 
   size_t shapes = 0;
   // for each pbf.
