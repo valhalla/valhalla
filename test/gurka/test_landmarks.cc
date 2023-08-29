@@ -61,26 +61,54 @@ void BuildPBF() {
 
 void BuildPBFAddLandmarksToTiles() {
   const std::string ascii_map = R"(
-      AB         D    
+      A B               E   
       a------b-----c----d
+      |        C   | D
+  F   |            |  
+      |            |
+      |            |
+      |      G     |
+      |            |
+      |            |
+      |            |
+      |            |
+      |            |    H                       I
+      e------------f
+      J                           K
     )";
 
   const gurka::nodes nodes = {
       {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
-      {"B", {{"name", "hai_di_laohhhhhhhh"}, {"amenity", "restaurant"}}},
-      {"D", {{"name", "McDonaldss"}, {"amenity", "fast_food"}}},
-      // {"D", {{"name", "McDonalds"}, {"amenity", "fast_food"}}},
+      {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "McDonalds"}, {"amenity", "fast_food"}}},
+      {"D", {{"name", "wan_da"}, {"amenity", "cinema"}}},
+      {"E", {{"name", "sheng_ren_min_yi_yuan"}, {"amenity", "hospital"}}},
+      {"F", {{"name", "gong_shang_yin_hang"}, {"amenity", "bank"}}},
+      {"G", {{"name", "ju_yuan"}, {"amenity", "theatre"}}},
+      {"H", {{"name", "pizza_hut"}, {"amenity", "restaurant"}}},
+      {"I", {{"name", "you_zheng"}, {"amenity", "post_office"}}},
+      {"J", {{"name", "shell"}, {"amenity", "fuel"}}},
+      {"K", {{"name", "starbucks"}, {"amenity", "cafe"}}},
       // non-landmark nodes
-      {"a", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
-      {"b", {{"name", "la_ji_tong"}, {"amenity", "waste_basket"}}},
-      {"c", {{"name", "hua_yuan"}, {"place", "city"}}},
-      {"d", {{"traffic_signal", "signal"}}},
+      {"a", {{"junction", "yes"}, {"name", "you_yi_lu_kou"}}},
+      {"b", {{"traffic_signal", "signal"}}},
+      {"c", {{"junction", "yes"}, {"name", "gao_xin_lu_kou"}}},
+      {"d", {{"barrier", "gate"}}},
+      {"e", {{"name", "hua_yuan"}, {"place", "city"}}},
+      {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
   };
 
   const gurka::ways ways = {
-      {"ab", {{"highway", "secondary"}}},
-      {"bc", {{"highway", "motorway"}}},
-      {"cd", {{"highway", "secondary"}, {"maxspeed", "60"}}},
+      {"ae",
+        {{"highway", "primary"},
+         {"name", "G999"},
+         {"driving_side", "right"},
+         {"maxspeed", "120"}}},  // length 11
+      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},  // length 7
+      {"bc", {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},  // length 6
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},  // length 5
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}},  // length 11
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}},  // length 13
   };
 
   constexpr double gridsize = 1;
@@ -290,29 +318,25 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
                           mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
 
   // build landmark database and parse landmarks
-  { LandmarkDatabase db_ini(db_path_tile_test, false); }
-
-
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
                                    {pbf_filename_tile_test}));
 
   AddLandmarks(landmark_map_tile_test.config);
 
-  LOG_INFO("start checking");
   
   // debugging
-  LOG_INFO("check db");
-  LandmarkDatabase db(db_path_tile_test, true);
-  auto landmarks = db.get_landmarks_by_bbox(-180, -90, 180, 90);
-  for (const auto& landmark: landmarks) {
-          std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
-                << " " << landmark.lng << " " << landmark.lat << std::endl;
-  }
+  // LOG_INFO("check db");
+  // LandmarkDatabase db(db_path_tile_test, true);
+  // auto landmarks = db.get_landmarks_by_bbox(-180, -90, 180, 90);
+  // for (const auto& landmark: landmarks) {
+  //         std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
+  //               << " " << landmark.lng << " " << landmark.lat << std::endl;
+  // }
 
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
-  // GraphId tile_id("1/032220/0");
-  GraphId tile_id("0/002025/0");
-  auto tile = gr.GetGraphTile(tile_id);
+
+  LOG_INFO("Checking level 1 tiles...");
+  auto tile = gr.GetGraphTile(GraphId("1/032220/0"));
 
   for (const auto& e : tile->GetDirectedEdges()) {
     auto ei = tile->edgeinfo(&e);
@@ -321,16 +345,41 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
     LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
              ", length: " + std::to_string(e.length()));
 
-    int count = 0;
+    int count_landmarks = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
 
-      std::cout << ++count << std::endl;
       Landmark landmark(value.second);
-
       std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
                 << " " << landmark.lng << " " << landmark.lat << std::endl;
+      count_landmarks++;
     }
+    EXPECT_EQ(count_landmarks, 6);
   }
+
+  LOG_INFO("Checking level 0 tiles...");
+  tile = gr.GetGraphTile(GraphId("0/002025/0"));
+
+  for (const auto& e : tile->GetDirectedEdges()) {
+    auto ei = tile->edgeinfo(&e);
+    auto tagged_values = ei.GetTags();
+
+    LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
+             ", length: " + std::to_string(e.length()));
+
+    int count_landmarks = 0;
+    for (const auto& value : tagged_values) {
+      if (value.first != baldr::TaggedValue::kLandmark)
+        continue;
+
+      Landmark landmark(value.second);
+      std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
+                << " " << landmark.lng << " " << landmark.lat << std::endl;
+      count_landmarks++;
+    }
+    // EXPECT_EQ(count_landmarks, 6);
+  }
+
+  // tile = gr.GetGraphTile(GraphId("2/517680/0"));
 }
