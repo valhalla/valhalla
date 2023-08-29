@@ -318,7 +318,7 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           callback);
   }
 
-  LOG_INFO("Successfully build landmark databse from PBF");
+  LOG_INFO("Successfully build landmark database from PBF");
   return true;
 }
 
@@ -356,7 +356,7 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
             loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
         if (result.size() != 1) {
-          throw std::logic_error("Error occured in calling loki::Search. Result size is " +
+          throw std::logic_error("Error occurred in calling loki::Search. Result size is " +
                                  std::to_string(result.size()) + ", but should be one");
         }
 
