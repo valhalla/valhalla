@@ -508,7 +508,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       writer.end_array(); // maneuvers
     }
 
-        // Store elevation for the leg
+    // Store elevation for the leg
     if (api.options().elevation_interval() > 0.0f) {
       writer.set_precision(1);
       float unit_factor = api.options().units() == Options::miles ? kFeetPerMeter : 1.0f;
