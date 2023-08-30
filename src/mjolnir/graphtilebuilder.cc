@@ -1306,17 +1306,17 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
     }
   }
 
-  // update edgeinfo_offset_map
+  // update edgeinfo_offset_map by updating the offsets (keys)
   std::unordered_map<uint32_t, EdgeInfoBuilder*> new_edgeinfo_offset_map_{};
 
   for (auto& e : edgeinfo_offset_map_) {
     if (e.first > original_offset) {
-      new_edgeinfo_offset_map_.insert(std::make_pair(e.first + shift, e.second));
+      new_edgeinfo_offset_map_.emplace(e.first + shift, e.second);
     } else {
       new_edgeinfo_offset_map_.insert(e);
     }
   }
-  edgeinfo_offset_map_ = new_edgeinfo_offset_map_;
+  edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
 }
 
 } // namespace mjolnir
