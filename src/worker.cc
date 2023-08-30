@@ -938,7 +938,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   if (elevation_interval) {
     options.set_elevation_interval(
         std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
-  } else if (options.has_elevation_interval_case()) {
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
     options.set_elevation_interval(
         std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
   }
