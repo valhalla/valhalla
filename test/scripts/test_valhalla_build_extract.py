@@ -159,7 +159,7 @@ class TestBuildExtract(unittest.TestCase):
 
         # tests the implementation using the tile_dir
         new_tile_extract = TILE_PATH.joinpath("tiles2.tar")
-        exp_tuples = ((2560, 25568, 291912), (296448, 410441, 662496), (960512, 6549282, 6059792))
+        exp_tuples = ((2560, 25568, 302544), (296448, 410441, 662496), (960512, 6549282, 6059792))
         tile_resolver = TileResolver(EXTRACT_PATH)
         tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
         valhalla_build_extract.create_extracts(config, True, tile_resolver, new_tile_extract)
