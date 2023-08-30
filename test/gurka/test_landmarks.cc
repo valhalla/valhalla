@@ -105,19 +105,19 @@ void BuildPBFAddLandmarksToTiles() {
        {{"highway", "primary"},
         {"name", "G999"},
         {"driving_side", "right"},
-        {"maxspeed", "120"}}},                                                       // length 11
-      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}}, // length 7
+        {"maxspeed", "120"}}},                                                       // length 55
+      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}}, // length 35
       {"bc",
        {{"highway", "secondary"},
         {"name", "S2"},
         {"lanes", "2"},
-        {"driving_side", "right"}}},                            // length 6
-      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 5
-      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 11
-      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 13
+        {"driving_side", "right"}}},                            // length 30
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65
   };
 
-  constexpr double gridsize = 1;
+  constexpr double gridsize = 5;
   landmark_map_tile_test.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {0, 0});
 
   detail::build_pbf(landmark_map_tile_test.nodes, ways, nodes, {}, pbf_filename_tile_test, 0, false);
@@ -141,11 +141,29 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
 
       count_landmarks++;
       // Landmark landmark(value.second);
-      // std::cout << landmark.id << " " << landmark.name << " " << static_cast<int>(landmark.type)
-      //           << " " << landmark.lng << " " << landmark.lat << std::endl;
+      // std::cout << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng
+      //           << " " << landmark.lat << std::endl;
     }
 
-    EXPECT_EQ(count_landmarks, 6);
+    switch (graphid.level()) {
+      case 0: // edge ae, cd
+        EXPECT_EQ(count_landmarks, 4);
+        break;
+      case 1:
+        if (e.length() == 35) { // ab
+          EXPECT_EQ(count_landmarks, 5);
+        } else if (e.length() == 30) { // bc
+          EXPECT_EQ(count_landmarks, 3);
+        }
+        break;
+      case 2:
+        if (e.length() == 55) { // cf
+          EXPECT_EQ(count_landmarks, 3);
+        } else if (e.length() == 65) { // ef
+          EXPECT_EQ(count_landmarks, 1);
+        }
+        break;
+    }
   }
 }
 } // namespace

@@ -318,7 +318,7 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           callback);
   }
 
-  LOG_INFO("Successfully build landmark database from PBF");
+  LOG_INFO("Successfully built landmark database from PBF");
   return true;
 }
 
@@ -351,13 +351,20 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
       for (const auto& landmark : landmarks) {
         baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
                                           baldr::Location::StopType::BREAK, 0, 0,
-                                          10); // 10 meters radius
+                                          25); // a 25m radius, which allows us to only keep the close
+                                               // ones in the tight cities
+        landmark_location.search_cutoff_ = 75.; // a 75m search cutoff should allow us to get gas
+                                                // stations that are off the road a bit (for parking)
+
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =
             loki::Search({landmark_location}, reader, sif::CreateNoCost({}));
-        if (result.size() != 1) {
+        if (result.size() > 1) {
           throw std::logic_error("Error occurred in calling loki::Search. Result size is " +
-                                 std::to_string(result.size()) + ", but should be one");
+                                 std::to_string(result.size()) + ", but should be one or zero");
+        }
+        if (result.size() == 0) {
+          continue;
         }
 
         std::vector<PathLocation::PathEdge> edges = result.begin()->second.edges;
