@@ -400,41 +400,40 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   CheckLandmarksInTiles(gr, GraphId("2/517680/0"));
 }
 
-// TODO: This is an example test to show the underlying bugs or problems in current code.
+// TODO: This is an example test to show the underlying bugs or problems in the current code.
 // Right now the problem is we cannot add landmarks to a graph tile twice.
 // The test will return "[ERROR] Failed to build GraphTile. Error: GraphId level exceeds tile
 // hierarchy max level", and "Could not compute FileSuffix for GraphId with invalid tile
 // id:0/245760/0". We need to fix it in the future.
+TEST(LandmarkTest, DISABLED_ErrorTest) {
+  if (!filesystem::exists(workdir_tiles)) {
+    bool created = filesystem::create_directories(workdir_tiles);
+    EXPECT_TRUE(created);
+  }
 
-// TEST(LandmarkTest, ErrorTest) {
-//   if (!filesystem::exists(workdir_tiles)) {
-//     bool created = filesystem::create_directories(workdir_tiles);
-//     EXPECT_TRUE(created);
-//   }
+  BuildPBFAddLandmarksToTiles();
 
-//   BuildPBFAddLandmarksToTiles();
+  landmark_map_tile_test.config =
+      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
-//   landmark_map_tile_test.config =
-//       test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
-//                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
+  // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
+  mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
+                          mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
 
-//   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in
-//   them mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
-//                           mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
+  // build landmark database and parse landmarks
+  EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
+                                   {pbf_filename_tile_test}));
 
-//   // build landmark database and parse landmarks
-//   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
-//                                    {pbf_filename_tile_test}));
+  // add landmarks from db to tiles
+  AddLandmarks(landmark_map_tile_test.config);
+  // add again, but this will result in errors
+  AddLandmarks(landmark_map_tile_test.config);
 
-//   // add landmarks from db to tiles
-//   AddLandmarks(landmark_map_tile_test.config);
-//   // add again, but this will result in errors
-//   AddLandmarks(landmark_map_tile_test.config);
+  // check data (cannot reach here yet)
+  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
 
-//   // check data (cannot reach here yet)
-//   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
-
-//   DisplayLandmarksInTiles(gr, GraphId("0/002025/0"));
-//   DisplayLandmarksInTiles(gr, GraphId("1/032220/0"));
-//   DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
-// }
+  DisplayLandmarksInTiles(gr, GraphId("0/002025/0"));
+  DisplayLandmarksInTiles(gr, GraphId("1/032220/0"));
+  DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
+}

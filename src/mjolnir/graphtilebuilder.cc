@@ -1307,6 +1307,7 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   }
 
   // update edgeinfo_offset_map by updating the offsets (keys)
+  // TODO: optimize this in a better way
   std::unordered_map<uint32_t, EdgeInfoBuilder*> new_edgeinfo_offset_map_{};
 
   for (auto& e : edgeinfo_offset_map_) {
