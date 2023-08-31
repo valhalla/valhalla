@@ -28,7 +28,7 @@ namespace {
 const unsigned long LandmarkRadius = 25;
 // a 75m search cutoff used to associate edges to landmarks, which should allow us to get gas stations
 // that are off the road a bit (for parking)
-float LandmarkSearchCutoff = 75.;
+const float LandmarkSearchCutoff = 75.;
 
 struct landmark_callback : public OSMPBF::Callback {
 public:

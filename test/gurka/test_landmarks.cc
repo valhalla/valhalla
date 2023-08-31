@@ -101,20 +101,15 @@ void BuildPBFAddLandmarksToTiles() {
   };
 
   const gurka::ways ways = {
-      {"ae",
-       {{"highway", "primary"},
-        {"name", "G999"},
-        {"driving_side", "right"},
-        {"maxspeed", "120"}}},                                                       // length 55
-      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}}, // length 35
-      {"bc",
-       {{"highway", "secondary"},
-        {"name", "S2"},
-        {"lanes", "2"},
-        {"driving_side", "right"}}},                            // length 30
-      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25
-      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55
-      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65
+      {"ae", // length 55, associated with ABFI
+       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
+      {"ab", // length 35, associated with ABCFG
+       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
+      {"bc", // length 30, associated with CDG
+       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
   };
 
   constexpr double gridsize = 5;
