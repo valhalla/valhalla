@@ -86,9 +86,12 @@ bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
                           const std::vector<std::string>& input_files);
 
 /**
- * TODO:
- * @param pt
- * @param input_files
+ * Add landmarks from the landmark database to graph tiles.
+ * This function finds landmarks in each graph tile, retrieves them from the landmark database,
+ * associate them with nearby edges, and update the graph tiles with these associations of landmark -
+ * edge pairs.
+ *
+ * @param pt The configuration settings
  * @return
  */
 bool AddLandmarks(const boost::property_tree::ptree& pt);
