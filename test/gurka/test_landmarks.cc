@@ -432,3 +432,6 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   DisplayLandmarksInTiles(gr, GraphId("1/032220/0"));
   DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
 }
+
+// TODO: test with normal route, returns PBF so you can check the landmarks being added as tagged
+// values

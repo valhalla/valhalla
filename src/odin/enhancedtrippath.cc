@@ -541,6 +541,10 @@ std::string EnhancedTripLeg_Edge::GetLevelRef() const {
   return level_ref;
 }
 
+// TODO: return all landmarks for this edge
+std::vector<Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
+}
+
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
   if (units == Options::miles) {
     return (length_km() * kMilePerKm);
