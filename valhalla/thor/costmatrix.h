@@ -189,6 +189,8 @@ protected:
    * @param  index        Index of the source location.
    * @param  n            Iteration counter.
    * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  time_info    The origin's timeinfo object
+   * @param  invariant    Whether time should be treated as invariant
    */
   void ForwardSearch(const uint32_t index,
                      const uint32_t n,
@@ -199,11 +201,25 @@ protected:
   /**
    * Check if the edge on the forward search connects to a reached edge
    * on the reverse search tree.
-   * @param  source  Source index.
-   * @param  pred    Edge label of the predecessor.
-   * @param  n       Iteration counter.
+   * @param  source      Source index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
    */
   void CheckForwardConnections(const uint32_t source,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader);
+
+  /**
+   * Check if the edge on the backward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  target      target index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
+   */
+  void CheckReverseConnections(const uint32_t target,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
@@ -219,8 +235,9 @@ protected:
    * Iterate the backward search from the target/destination location.
    * @param  index        Index of the target location.
    * @param  graphreader  Graph reader for accessing routing graph.
+   * @param  n            Iteration counter.
    */
-  void BackwardSearch(const uint32_t index, baldr::GraphReader& graphreader);
+  void BackwardSearch(const uint32_t index, baldr::GraphReader& graphreader, const uint32_t n);
 
   /**
    * Sets the source/origin locations. Search expands forward from these
@@ -296,10 +313,11 @@ protected:
   };
 
 private:
-  class TargetMap;
+  class ReachedMap;
 
-  // Mark each target edge with a list of target indexes that have reached it
-  std::unique_ptr<TargetMap> targets_;
+  // Mark each source/target edge with a list of source/target indexes that have reached it
+  std::unique_ptr<ReachedMap> targets_;
+  std::unique_ptr<ReachedMap> sources_;
 };
 
 } // namespace thor
