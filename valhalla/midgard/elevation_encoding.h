@@ -79,8 +79,8 @@ inline std::vector<int8_t> encode_elevation(const std::vector<double>& elevation
     // Convert to fixed precision offset. Clamp to 1 byte values. It should be
     // very rare that the limit is exceeded, but if it is we try to make up for
     // any shortfall on subsequent postings.
-    int v = to_fixed_precision(elevation[i]);
-    int delta = v - prior;
+    auto v = to_fixed_precision(elevation[i]);
+    auto delta = v - prior;
     if (delta > 127) {
       if (delta > 256) {
         LOG_WARN("Elevation delta " + std::to_string(delta) + " exceeds limit!");
@@ -98,7 +98,7 @@ inline std::vector<int8_t> encode_elevation(const std::vector<double>& elevation
     } else {
       prior = v;
     }
-    encoding.push_back(delta);
+    encoding.push_back(static_cast<int8_t>(delta));
   }
   return encoding;
 }

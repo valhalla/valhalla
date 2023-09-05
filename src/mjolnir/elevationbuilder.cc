@@ -157,9 +157,8 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       std::tuple<double, double, double, double> reverse_grades(0.0, 0.0, 0.0, 0.0);
 
       // Evenly sample the shape and add the last shape point. TODO - if close to the end do not!
-      auto interval = POSTING_INTERVAL;
       std::vector<PointLL> resampled =
-          valhalla::midgard::resample_spherical_polyline(shape, interval);
+          valhalla::midgard::resample_spherical_polyline(shape, POSTING_INTERVAL);
       resampled.push_back(shape.back());
 
       // Get the heights at each sampled point.
@@ -171,9 +170,8 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
         tmp.emplace_back(resampled.back());
         auto h = sample->get_all(tmp);
         heights[0] = h[0];
-        float endheight = h[1];
-        float dh = (endheight - heights[0]) / heights.size();
-        for (int i = 1; i < static_cast<int>(heights.size()); ++i) {
+        float dh = (h[1] - heights[0]) / heights.size();
+        for (size_t i = 1; i < static_cast<int>(heights.size()); ++i) {
           heights[i] = heights[i - 1] + dh;
         }
       } else {
@@ -183,7 +181,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       // Compute "weighted" grades as well as max grades in both directions. Valid range
       // for weighted grades is between -10 and +15 which is then mapped to a value
       // between 0 to 15 for use in costing.
-      auto grades = valhalla::skadi::weighted_grade(heights, interval);
+      auto grades = valhalla::skadi::weighted_grade(heights, POSTING_INTERVAL);
       if (length < kMinimumInterval) {
         // Keep the default grades - but set the mean elevation
         forward_grades = std::make_tuple(0.0, 0.0, 0.0, std::get<3>(grades));
@@ -193,7 +191,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
         // weighted grade in reverse direction.
         forward_grades = grades;
         std::reverse(heights.begin(), heights.end());
-        reverse_grades = valhalla::skadi::weighted_grade(heights, interval);
+        reverse_grades = valhalla::skadi::weighted_grade(heights, POSTING_INTERVAL);
       }
 
       // Add elevation info to the geo attribute cache.

@@ -581,7 +581,7 @@ void AddSignInfo(const AttributesController& controller,
 
 /**
  * Set elevation along the edge if requested.
- * @param  trip_edge   Trip path edge to add headings.
+ * @param  trip_edge   Trip path edge to add elevation.
  * @param  start_pct   Start percent
  * @param  end_pct     End percent
  * @param  start_node  Nodeinfo for start of the edge.
