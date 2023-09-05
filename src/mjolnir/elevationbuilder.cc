@@ -171,7 +171,7 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
         auto h = sample->get_all(tmp);
         heights[0] = h[0];
         float dh = (h[1] - heights[0]) / heights.size();
-        for (size_t i = 1; i < static_cast<int>(heights.size()); ++i) {
+        for (size_t i = 1; i < heights.size(); ++i) {
           heights[i] = heights[i - 1] + dh;
         }
       } else {
