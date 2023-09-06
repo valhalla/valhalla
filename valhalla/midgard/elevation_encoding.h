@@ -55,6 +55,9 @@ inline uint32_t encoded_elevation_count(const uint32_t length) {
  * precision (0.25m). Does not encode the first or last shape point (these are
  * stored in NodeInfo).
  * @param elevation Elevation sampled along an edge.
+ * @param error Boolean value indicating if an error occurred (clamped a value
+ *              that would have exceeded 1 byte). This is returned by this
+ *              argument to the calling method.
  * @return Returns encoding of elevation along the edge. Can be an empty
  *         vector if the elevation vector size is <= 2 (length of the edge
  *         is less than the max interval).
