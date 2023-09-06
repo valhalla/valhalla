@@ -435,3 +435,6 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
 
 // TODO: test with normal route, returns PBF so you can check the landmarks being added as tagged
 // values
+TEST(LandmarkTest, TestLandmarkManeuvers) {
+  
+}

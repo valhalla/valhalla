@@ -1119,6 +1119,11 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     maneuver.set_end_level_ref(curr_edge->GetLevelRef());
   }
 
+  // Landmarks
+  if (curr_edge && !curr_edge->GetLandmarks().empty()) {
+    maneuver.set_landmarks(curr_edge->GetLandmarks());
+  }
+
   // Elevator
   if (prev_edge->IsElevatorUse()) {
     maneuver.set_elevator(true);

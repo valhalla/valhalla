@@ -541,8 +541,19 @@ std::string EnhancedTripLeg_Edge::GetLevelRef() const {
   return level_ref;
 }
 
-// TODO: return all landmarks for this edge
+// return all landmarks for this edge
 std::vector<Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
+  std::vector<Landmark> landmarks{};
+  if (tagged_value().empty()) {
+    return landmarks;
+  }
+
+  for (size_t i = 0; i < tagged_value().size(); ++i) {
+    if (tagged_value().Get(i).type() == TaggedValue_Type_kLandmark) {
+      landmarks.emplace_back(tagged_value().Get(i).value());
+    }
+  }
+  return landmarks;
 }
 
 float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {

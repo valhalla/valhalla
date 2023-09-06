@@ -9,6 +9,7 @@
 
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
+#include <valhalla/baldr/landmark.h>
 
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
@@ -396,6 +397,9 @@ public:
   std::string end_level_ref() const;
   void set_end_level_ref(std::string end_level_ref);
 
+  std::vector<Landmark> landmarks() const;
+  void set_landmarks(std::vector<Landmark> landmarks);
+
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
 
@@ -478,6 +482,9 @@ protected:
   bool building_enter_;
   bool building_exit_;
   std::string end_level_ref_;
+
+  // Landmarks as direction support
+  std::vector<Landmark> landmarks_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

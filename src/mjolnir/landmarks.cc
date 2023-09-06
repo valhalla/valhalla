@@ -25,10 +25,10 @@ using namespace valhalla;
 namespace {
 // a 25m radius used to associate edges to landmarks, which allows us to only keep the close edges in
 // the tight cities
-const unsigned long LandmarkRadius = 25;
+constexpr unsigned long kLandmarkRadius = 25;
 // a 75m search cutoff used to associate edges to landmarks, which should allow us to get gas stations
 // that are off the road a bit (for parking)
-const float LandmarkSearchCutoff = 75.;
+constexpr float kLandmarkSearchCutoff = 75.;
 
 struct landmark_callback : public OSMPBF::Callback {
 public:
@@ -358,8 +358,8 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
         baldr::Location landmark_location(midgard::PointLL{landmark.lng, landmark.lat},
-                                          baldr::Location::StopType::BREAK, 0, 0, LandmarkRadius);
-        landmark_location.search_cutoff_ = LandmarkSearchCutoff;
+                                          baldr::Location::StopType::BREAK, 0, 0, kLandmarkRadius);
+        landmark_location.search_cutoff_ = kLandmarkSearchCutoff;
 
         // call loki::Search to get nearby edges to each landmark
         std::unordered_map<valhalla::baldr::Location, PathLocation> result =

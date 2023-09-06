@@ -1184,6 +1184,14 @@ void Maneuver::set_end_level_ref(std::string end_level_ref) {
   end_level_ref_ = std::move(end_level_ref);
 }
 
+std::vector<Landmark> Maneuver::landmarks() const {
+  return landmarks_;
+}
+
+void Maneuver::set_landmarks(std::vector<Landmark> landmarks) {
+  landmarks_ = std::move(landmarks);
+}
+
 #ifdef LOGGING_LEVEL_TRACE
 std::string Maneuver::ToString() const {
   std::string man_str;
