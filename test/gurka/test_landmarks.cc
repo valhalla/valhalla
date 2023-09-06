@@ -435,6 +435,13 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
 
 // TODO: test with normal route, returns PBF so you can check the landmarks being added as tagged
 // values
+
+// get a route, by calling valhalla::Api do_action(). valhalla::Api is just a proto
+// go to Trip.routes, go to the first route, inside the legs are all these nodes, each node has an edge leaving it. 
+// loop over the nodes and look at the edge, then loop over the tagged_value.
+
+// example: test_forks. gurka::do_action
+// example: test_maxspeed
 TEST(LandmarkTest, TestLandmarkManeuvers) {
   
 }

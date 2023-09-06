@@ -143,6 +143,8 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
 
+  // TODO: add a function here to loop over the edges and add accumulate all landmarks to the maneuver
+
   ProcessVerbalSuccinctTransitionInstruction(maneuvers);
 
 #ifdef LOGGING_LEVEL_TRACE
@@ -1117,11 +1119,6 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
   // Set the end level ref
   if (curr_edge && !curr_edge->GetLevelRef().empty()) {
     maneuver.set_end_level_ref(curr_edge->GetLevelRef());
-  }
-
-  // Landmarks
-  if (curr_edge && !curr_edge->GetLandmarks().empty()) {
-    maneuver.set_landmarks(curr_edge->GetLandmarks());
   }
 
   // Elevator

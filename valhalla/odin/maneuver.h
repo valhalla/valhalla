@@ -483,7 +483,7 @@ protected:
   bool building_exit_;
   std::string end_level_ref_;
 
-  // Landmarks as direction support
+  // Landmarks along the edges as direction support
   std::vector<Landmark> landmarks_;
 
   ////////////////////////////////////////////////////////////////////////////

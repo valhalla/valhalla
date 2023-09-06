@@ -547,7 +547,6 @@ std::vector<Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
   if (tagged_value().empty()) {
     return landmarks;
   }
-
   for (size_t i = 0; i < tagged_value().size(); ++i) {
     if (tagged_value().Get(i).type() == TaggedValue_Type_kLandmark) {
       landmarks.emplace_back(tagged_value().Get(i).value());
