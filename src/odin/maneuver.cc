@@ -1188,7 +1188,7 @@ std::vector<Landmark> Maneuver::landmarks() const {
   return landmarks_;
 }
 
-void Maneuver::set_landmarks(std::vector<Landmark> landmarks) {
+void Maneuver::set_landmarks(const std::vector<Landmark>& landmarks) {
   landmarks_ = std::move(landmarks);
 }
 

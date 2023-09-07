@@ -10,8 +10,8 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/baldr/turn.h>
 #include <valhalla/baldr/landmark.h>
+#include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto/sign.pb.h>
@@ -417,7 +417,7 @@ public:
 
   std::string GetLevelRef() const;
 
-  std::vector<Landmark> GetLandmarks() const;
+  std::vector<valhalla::baldr::Landmark> GetLandmarks() const;
 
   float GetLength(const Options::Units& units);
 

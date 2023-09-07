@@ -7,9 +7,9 @@
 #include <string>
 #include <unordered_map>
 
+#include <valhalla/baldr/landmark.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
-#include <valhalla/baldr/landmark.h>
 
 #include <valhalla/odin/signs.h>
 #include <valhalla/odin/transitrouteinfo.h>
@@ -398,7 +398,7 @@ public:
   void set_end_level_ref(std::string end_level_ref);
 
   std::vector<Landmark> landmarks() const;
-  void set_landmarks(std::vector<Landmark> landmarks);
+  void set_landmarks(const std::vector<Landmark>& landmarks);
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;

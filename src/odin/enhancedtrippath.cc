@@ -542,8 +542,8 @@ std::string EnhancedTripLeg_Edge::GetLevelRef() const {
 }
 
 // return all landmarks for this edge
-std::vector<Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
-  std::vector<Landmark> landmarks{};
+std::vector<valhalla::baldr::Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
+  std::vector<valhalla::baldr::Landmark> landmarks{};
   if (tagged_value().empty()) {
     return landmarks;
   }
