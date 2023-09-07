@@ -29,7 +29,7 @@
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
-#include <valhalla/mjolnir/landmark_builder.h>
+#include <valhalla/mjolnir/landmarks.h>
 
 namespace valhalla {
 namespace mjolnir {
