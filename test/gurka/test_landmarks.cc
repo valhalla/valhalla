@@ -200,7 +200,6 @@ std::vector<Landmark> ParseLandmarkInTripleg(TripLeg_Edge* tripleg_edge) {
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
-
   // insert test data
   {
     LandmarkDatabase db_ini(db_path, false);
@@ -221,11 +220,9 @@ TEST(LandmarkTest, TestBuildDatabase) {
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
+  // for (const auto& landmark : landmarks) {
+  //   DisplayLandmark(landmark);
+  // }
 
   landmarks.clear();
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
@@ -234,7 +231,6 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
@@ -257,11 +253,9 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
+  // for (const auto& landmark : landmarks) {
+  //   DisplayLandmark(landmark);
+  // }
 
   EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
   EXPECT_TRUE(landmarks[0].name == "A");
@@ -500,6 +494,11 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
   const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks/maneuvers";
   const std::string db_path = workdir + "/landmarks.sqlite";
   const std::string pbf = workdir + "/map.pbf";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
 
   valhalla::gurka::map map{};
   map.nodes = gurka::detail::map_to_coordinates(ascii_map, 10, {0, 0});
