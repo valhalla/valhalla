@@ -6,8 +6,7 @@ using namespace valhalla;
 
 namespace {
 
-void
-test_headings(const std::vector<int> &expected_headings, const rapidjson::Document &json) {
+void test_headings(const std::vector<int> &expected_headings, const rapidjson::Document &json) {
   int index{0};
   for (const auto &step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
     for (const auto &intersection : step["intersections"].GetArray()) {
@@ -15,6 +14,23 @@ test_headings(const std::vector<int> &expected_headings, const rapidjson::Docume
     }
   }
   ASSERT_EQ(index, expected_headings.size());
+}
+
+void test_bannerInstructions(const rapidjson::Document &json) {
+  // Validate that each step has bannerInstructions with primary
+  for (const auto &step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
+    ASSERT_TRUE(step.HasMember("bannerInstructions"));
+    ASSERT_TRUE(step["bannerInstructions"].IsArray());
+    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
+    for (const auto &instr : step["bannerInstructions"].GetArray()) {
+      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
+      ASSERT_TRUE(instr.HasMember("primary"));
+      ASSERT_TRUE(instr["primary"].HasMember("type"));
+      ASSERT_TRUE(instr["primary"].HasMember("text"));
+      ASSERT_TRUE(instr["primary"].HasMember("components"));
+      ASSERT_TRUE(instr["primary"]["components"].IsArray());
+    }
+  }
 }
 
 }  // namespace
@@ -538,20 +554,7 @@ TEST(Standalone, BannerInstructions) {
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // Validate that each step has bannerInstructions with primary
-  for (const auto &step : steps) {
-    ASSERT_TRUE(step.HasMember("bannerInstructions"));
-    ASSERT_TRUE(step["bannerInstructions"].IsArray());
-    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
-    for (const auto &instr : step["bannerInstructions"].GetArray()) {
-      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(instr.HasMember("primary"));
-      ASSERT_TRUE(instr["primary"].HasMember("type"));
-      ASSERT_TRUE(instr["primary"].HasMember("text"));
-      ASSERT_TRUE(instr["primary"].HasMember("components"));
-      ASSERT_TRUE(instr["primary"]["components"].IsArray());
-    }
-  }
+  test_bannerInstructions(json);
 
   // validate first step has two bannerInstruction
   // validate first step's distance of first bannerInstruction
@@ -747,19 +750,7 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
   // Validate that each step has bannerInstructions with primary
-  for (const auto &step : steps) {
-    ASSERT_TRUE(step.HasMember("bannerInstructions"));
-    ASSERT_TRUE(step["bannerInstructions"].IsArray());
-    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
-    for (const auto &instr : step["bannerInstructions"].GetArray()) {
-      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(instr.HasMember("primary"));
-      ASSERT_TRUE(instr["primary"].HasMember("type"));
-      ASSERT_TRUE(instr["primary"].HasMember("text"));
-      ASSERT_TRUE(instr["primary"].HasMember("components"));
-      ASSERT_TRUE(instr["primary"]["components"].IsArray());
-    }
-  }
+  test_bannerInstructions(json);
 
   // validate first step's primary instructions
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
