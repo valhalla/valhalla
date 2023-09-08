@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <iomanip>
 #include <vector>
 
 #include "baldr/graphreader.h"
@@ -7,10 +8,10 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmarks.h"
+#include "odin/enhancedtrippath.h"
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <iomanip>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -30,6 +31,12 @@ const std::string pbf_filename_tile_test = workdir_tiles + "/map.pbf";
 valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
+inline void DisplayLandmark(const Landmark& landmark) {
+  std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
+            << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
+            << ", lat = " << landmark.lat << std::endl;
+}
+
 void BuildPBF() {
   const std::string ascii_map = R"(
       a-----b-----c---d
@@ -133,11 +140,8 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-
       count_landmarks++;
-      // Landmark landmark(value.second);
-      // std::cout << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng
-      //           << " " << landmark.lat << std::endl;
+      // DisplayLandmark(Landmark(value.second));
     }
 
     switch (graphid.level()) {
@@ -177,18 +181,24 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-
       count_landmarks++;
-      Landmark landmark(value.second);
-      std::cout << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng
-                << " " << landmark.lat << std::endl;
+      DisplayLandmark(Landmark(value.second));
     }
   }
+}
+
+std::vector<Landmark> ParseLandmarksInTripleg(TripLeg_Edge* tripleg_edge) {
+  odin::EnhancedTripLeg_Edge edge(tripleg_edge);
+  auto landmarks = edge.GetLandmarks();
+
+  for (const auto& l : landmarks) {
+    DisplayLandmark(l);
+  }
+  return landmarks;
 }
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
-
   // insert test data
   {
     LandmarkDatabase db_ini(db_path, false);
@@ -209,11 +219,9 @@ TEST(LandmarkTest, TestBuildDatabase) {
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
+  // for (const auto& landmark : landmarks) {
+  //   DisplayLandmark(landmark);
+  // }
 
   landmarks.clear();
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
@@ -222,7 +230,6 @@ TEST(LandmarkTest, TestBuildDatabase) {
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
@@ -245,11 +252,9 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
+  // for (const auto& landmark : landmarks) {
+  //   DisplayLandmark(landmark);
+  // }
 
   EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
   EXPECT_TRUE(landmarks[0].name == "A");
@@ -431,4 +436,105 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   DisplayLandmarksInTiles(gr, GraphId("0/002025/0"));
   DisplayLandmarksInTiles(gr, GraphId("1/032220/0"));
   DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
+}
+
+TEST(LandmarkTest, LandmarksInManeuvers) {
+  const std::string ascii_map = R"(
+    A B           C         D 
+    a-------b-------c------d
+          E |    F  |G
+            |       |
+            e       |    I   J
+              H     f-------g
+                      K
+  )";
+
+  const gurka::nodes nodes = {
+      // landmarks
+      {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
+      {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "McDonalds"}, {"amenity", "fast_food"}}},
+      {"D", {{"name", "wan_da"}, {"amenity", "cinema"}}},
+      {"E", {{"name", "sheng_ren_min_yi_yuan"}, {"amenity", "hospital"}}},
+      {"F", {{"name", "gong_shang_yin_hang"}, {"amenity", "bank"}}},
+      {"G", {{"name", "ju_yuan"}, {"amenity", "theatre"}}},
+      {"H", {{"name", "pizza_hut"}, {"amenity", "restaurant"}}},
+      {"I", {{"name", "shell"}, {"amenity", "fuel"}}},
+      {"J", {{"name", "starbucks"}, {"amenity", "cafe"}}},
+      {"K", {{"name", "you_zheng"}, {"amenity", "post_office"}}},
+      // non-landmark nodes
+      {"a", {{"junction", "yes"}, {"name", "you_yi_lu_kou"}}},
+      {"b", {{"traffic_signal", "signal"}}},
+      {"c", {{"junction", "yes"}, {"name", "gao_xin_lu_kou"}}},
+      {"d", {{"barrier", "gate"}}},
+      {"e", {{"name", "hua_yuan"}, {"place", "city"}}},
+      {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
+      {"g", {{"barrier", "gate"}, {"access", "yes"}}},
+  };
+
+  const gurka::ways ways = {
+      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"maxspeed", "80"}}},
+      {"bc", {{"highway", "secondary"}, {"name", "S2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "secondary"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"be", {{"highway", "secondary"}, {"maxspeed", "60"}}},
+      {"cf", {{"highway", "secondary"}, {"maxspeed", "50"}}},
+      {"fg", {{"highway", "secondary"}, {"maxspeed", "50"}}},
+  };
+
+  const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks/maneuvers";
+  const std::string db_path = workdir + "/landmarks.sqlite";
+  const std::string pbf = workdir + "/map.pbf";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  valhalla::gurka::map map{};
+  map.nodes = gurka::detail::map_to_coordinates(ascii_map, 10, {0, 0});
+  detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
+
+  map.config =
+      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
+
+  // build regular graph tiles from the pbf. there wont be landmarks in them
+  mjolnir::build_tile_set(map.config, {pbf}, mjolnir::BuildStage::kInitialize,
+                          mjolnir::BuildStage::kValidate, false);
+
+  // build landmark database and parse landmarks
+  EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
+
+  // add landmarks to the tiles
+  AddLandmarks(map.config);
+
+  // get routing result from point a to g
+  auto result = gurka::do_action(valhalla::Options::route, map, {"a", "g"}, "auto");
+
+  ASSERT_EQ(result.trip().routes_size(), 1);
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+
+  auto leg = result.trip().routes(0).legs(0);
+  // check each edge in the route
+  for (int i = 0; i < 4; ++i) {
+    // ParseLandmarksInTripleg(&(leg.node(i).edge()));
+
+    // get the landmarks in the leg
+    auto size = leg.node(i).edge().tagged_value_size();
+    size_t count = 0;
+    for (int j = 0; j < size; ++j) {
+      if (leg.node(i).edge().tagged_value().Get(j).type() == TaggedValue_Type_kLandmark) {
+        count++;
+        // Landmark landmark(leg.node(i).edge().tagged_value().Get(j).value());
+        // DisplayLandmark(landmark);
+      }
+    }
+
+    // check number of landmarks
+    if (i == 1) {
+      EXPECT_EQ(count, 4);
+    } else {
+      EXPECT_EQ(count, 3);
+    }
+  }
 }

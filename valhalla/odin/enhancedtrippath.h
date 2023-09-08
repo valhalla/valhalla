@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/landmark.h>
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
@@ -417,6 +418,8 @@ public:
   std::string GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
+
+  std::vector<valhalla::baldr::Landmark> GetLandmarks() const;
 
   // Turn Lanes
   bool HasActiveTurnLane() const;
