@@ -31,6 +31,29 @@ const std::string pbf_filename_tile_test = workdir_tiles + "/map.pbf";
 valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
+// this map is correlated with the ascii map in BuildPBFAddLandmarksToTiles
+const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
+    {{0, 55},
+     std::vector<std::string>{"lv_mo_li", "gong_shang_yin_hang", "shell", "hai_di_lao"}}, // ae
+    {{0, 25},
+     std::vector<std::string>{"sheng_ren_min_yi_yuan", "wan_da", "McDonalds", "you_zheng"}}, // cd
+    {{1, 35},
+     std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "McDonalds", "hai_di_lao",
+                              "lv_mo_li"}},                                  // ab
+    {{1, 30}, std::vector<std::string>{"wan_da", "ju_yuan", "McDonalds"}},   // bc
+    {{2, 55}, std::vector<std::string>{"wan_da", "McDonalds", "pizza_hut"}}, // cf
+    {{2, 65}, std::vector<std::string>{"shell"}},                            // ef
+};
+
+// this map is correlated with the ascii map in LandmarksInManeuvers
+const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
+    {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
+    {"S2", std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "sheng_ren_min_yi_yuan",
+                                    "McDonalds"}},
+    {"cf", std::vector<std::string>{"ju_yuan", "you_zheng", "McDonalds"}},
+    {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
+};
+
 inline void DisplayLandmark(const Landmark& landmark) {
   std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
             << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
@@ -133,32 +156,22 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
-    int count_landmarks = 0;
+    std::vector<std::string> landmark_names{};
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-      count_landmarks++;
+      landmark_names.push_back(Landmark(value.second).name);
     }
 
-    switch (graphid.level()) {
-      case 0: // edge ae, cd
-        EXPECT_EQ(count_landmarks, 4);
-        break;
-      case 1:
-        if (e.length() == 35) { // ab
-          EXPECT_EQ(count_landmarks, 5);
-        } else if (e.length() == 30) { // bc
-          EXPECT_EQ(count_landmarks, 3);
-        }
-        break;
-      case 2:
-        if (e.length() == 55) { // cf
-          EXPECT_EQ(count_landmarks, 3);
-        } else if (e.length() == 65) { // ef
-          EXPECT_EQ(count_landmarks, 1);
-        }
-        break;
+    // use graph level and edge length as map key
+    const auto expected_result = expected_landmarks_tiles.find({graphid.level(), e.length()});
+    if (expected_result == expected_landmarks_tiles.end()) {
+      throw std::runtime_error("Failed to find the edge in the expected landmarks, level = " +
+                               std::to_string(graphid.level()) +
+                               ", edge length = " + std::to_string(e.length()));
     }
+
+    EXPECT_EQ(expected_result->second, landmark_names);
   }
 }
 
@@ -182,14 +195,6 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     }
   }
 }
-
-const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
-    {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
-    {"S2", std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "sheng_ren_min_yi_yuan",
-                                    "McDonalds"}},
-    {"cf", std::vector<std::string>{"ju_yuan", "you_zheng", "McDonalds"}},
-    {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
-};
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
