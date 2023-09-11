@@ -3944,17 +3944,15 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
 }
 
 void ManeuversBuilder::AddLandmarksToManeuvers(std::list<Maneuver>& maneuvers) {
-  // the landmarks associated with edges in the previous maneuver. they should be added to the current
-  // maneuver
+  // the landmarks correlated with edges in the previous maneuver
   std::vector<Landmark> landmarks{};
 
   for (auto man = maneuvers.begin(); man != maneuvers.end(); ++man) {
     if (!landmarks.empty()) {
       man->set_landmarks(landmarks);
     }
-    // reset the landmarks to the ones associated with edges in the current maneuver
+    // accumulate landmarks in the current maneuver
     landmarks.clear();
-    // accumulate landmarks from all edges
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
       auto curr_landmarks = curr_edge->GetLandmarks();

@@ -133,15 +133,11 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
-    // LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
-    //          ", length: " + std::to_string(e.length()));
-
     int count_landmarks = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
       count_landmarks++;
-      // DisplayLandmark(Landmark(value.second));
     }
 
     switch (graphid.level()) {
@@ -187,15 +183,13 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
   }
 }
 
-std::vector<Landmark> ParseLandmarksInTripleg(TripLeg_Edge* tripleg_edge) {
-  odin::EnhancedTripLeg_Edge edge(tripleg_edge);
-  auto landmarks = edge.GetLandmarks();
-
-  for (const auto& l : landmarks) {
-    DisplayLandmark(l);
-  }
-  return landmarks;
-}
+const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
+    {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
+    {"S2", std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "sheng_ren_min_yi_yuan",
+                                    "McDonalds"}},
+    {"cf", std::vector<std::string>{"ju_yuan", "you_zheng", "McDonalds"}},
+    {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
+};
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
@@ -215,17 +209,12 @@ TEST(LandmarkTest, TestBuildDatabase) {
 
   std::vector<Landmark> landmarks{};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(30, 30, 40, 40); });
-
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-  // for (const auto& landmark : landmarks) {
-  //   DisplayLandmark(landmark);
-  // }
 
   landmarks.clear();
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
-
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
 
@@ -252,9 +241,6 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
-  // for (const auto& landmark : landmarks) {
-  //   DisplayLandmark(landmark);
-  // }
 
   EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
   EXPECT_TRUE(landmarks[0].name == "A");
@@ -498,14 +484,12 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
       test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
-  // build regular graph tiles from the pbf. there wont be landmarks in them
+  // build regular graph tiles from the pbf, and add landmarks to it
   mjolnir::build_tile_set(map.config, {pbf}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);
 
-  // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
 
-  // add landmarks to the tiles
   AddLandmarks(map.config);
 
   // get routing result from point a to g
@@ -515,26 +499,32 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
 
   auto leg = result.trip().routes(0).legs(0);
-  // check each edge in the route
-  for (int i = 0; i < 4; ++i) {
-    // ParseLandmarksInTripleg(&(leg.node(i).edge()));
 
-    // get the landmarks in the leg
-    auto size = leg.node(i).edge().tagged_value_size();
-    size_t count = 0;
-    for (int j = 0; j < size; ++j) {
-      if (leg.node(i).edge().tagged_value().Get(j).type() == TaggedValue_Type_kLandmark) {
-        count++;
-        // Landmark landmark(leg.node(i).edge().tagged_value().Get(j).value());
-        // DisplayLandmark(landmark);
+  // check landmarks in the route
+  for (const auto& node : leg.node()) {
+    // skip the point
+    if (node.edge().name_size() == 0) {
+      continue;
+    }
+    // get edge name
+    ASSERT_EQ(node.edge().name_size(), 1);
+    const std::string edge_name = node.edge().name(0).value();
+
+    // get landmarks in the edge
+    std::vector<std::string> landmark_names{};
+    for (const auto& tag : node.edge().tagged_value()) {
+      if (tag.type() == TaggedValue_Type_kLandmark) {
+        Landmark landmark(tag.value());
+        landmark_names.push_back(landmark.name);
       }
     }
-
-    // check number of landmarks
-    if (i == 1) {
-      EXPECT_EQ(count, 4);
-    } else {
-      EXPECT_EQ(count, 3);
+    // compare landmarks with expected results
+    auto expected_result = expected_landmarks_maneuvers.find(edge_name);
+    if (expected_result == expected_landmarks_maneuvers.end()) {
+      throw std::runtime_error("Failed to find the edge in the expected landmarks, edge name = " +
+                               edge_name);
     }
+
+    EXPECT_EQ(expected_result->second, landmark_names);
   }
 }
