@@ -34,23 +34,23 @@ namespace {
 // this map is correlated with the ascii map in BuildPBFAddLandmarksToTiles
 const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
     {{0, 55},
-     std::vector<std::string>{"lv_mo_li", "gong_shang_yin_hang", "shell", "hai_di_lao"}}, // ae
+     std::vector<std::string>{"gong_shang_yin_hang", "hai_di_lao", "lv_mo_li", "shell"}}, // ae
     {{0, 25},
-     std::vector<std::string>{"sheng_ren_min_yi_yuan", "wan_da", "McDonalds", "you_zheng"}}, // cd
+     std::vector<std::string>{"McDonalds", "sheng_ren_min_yi_yuan", "wan_da", "you_zheng"}}, // cd
     {{1, 35},
-     std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "McDonalds", "hai_di_lao",
+     std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "hai_di_lao", "ju_yuan",
                               "lv_mo_li"}},                                  // ab
-    {{1, 30}, std::vector<std::string>{"wan_da", "ju_yuan", "McDonalds"}},   // bc
-    {{2, 55}, std::vector<std::string>{"wan_da", "McDonalds", "pizza_hut"}}, // cf
+    {{1, 30}, std::vector<std::string>{"McDonalds", "ju_yuan", "wan_da"}},   // bc
+    {{2, 55}, std::vector<std::string>{"McDonalds", "pizza_hut", "wan_da"}}, // cf
     {{2, 65}, std::vector<std::string>{"shell"}},                            // ef
 };
 
 // this map is correlated with the ascii map in LandmarksInManeuvers
 const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
     {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
-    {"S2", std::vector<std::string>{"gong_shang_yin_hang", "ju_yuan", "sheng_ren_min_yi_yuan",
-                                    "McDonalds"}},
-    {"cf", std::vector<std::string>{"ju_yuan", "you_zheng", "McDonalds"}},
+    {"S2", std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "ju_yuan",
+                                    "sheng_ren_min_yi_yuan"}},
+    {"cf", std::vector<std::string>{"McDonalds", "ju_yuan", "you_zheng"}},
     {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
 };
 
@@ -171,6 +171,7 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
                                ", edge length = " + std::to_string(e.length()));
     }
 
+    std::sort(landmark_names.begin(), landmark_names.end());
     EXPECT_EQ(expected_result->second, landmark_names);
   }
 }
@@ -530,6 +531,7 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
                                edge_name);
     }
 
+    std::sort(landmark_names.begin(), landmark_names.end());
     EXPECT_EQ(expected_result->second, landmark_names);
   }
 }
