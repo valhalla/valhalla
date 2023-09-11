@@ -9,7 +9,6 @@
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  std::vector<std::string> input_files;
   boost::property_tree::ptree pt;
 
   try {
@@ -17,28 +16,23 @@ int main(int argc, char** argv) {
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
-      "valhalla_build_landmarks is a program that builds a SQLite database to store POI as landmarks from \n"
-      "one or multiple osm.pbf files. The landmark db is used during graph building to facilitate navigation."
+      "valhalla_add_landmarks is a program that adds landmarks to existing graph tiles via a SQLite"
+      " database containing landmark POIs.\n"
       "\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
-      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
+      ("j,concurrency", "Number of threads to use when processing the data.", cxxopts::value<unsigned int>())
+      ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-
-    // input files are positional
-    if (!result.count("input_files")) {
-      throw cxxopts::OptionException("Input file is required\n\n" + options.help());
-    }
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
@@ -57,7 +51,7 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  if (!valhalla::mjolnir::BuildLandmarkFromPBF(pt.get_child("mjolnir"), input_files)) {
+  if (!valhalla::mjolnir::AddLandmarks(pt.get_child("mjolnir"))) {
     return EXIT_FAILURE;
   };
 
