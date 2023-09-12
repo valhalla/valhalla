@@ -184,7 +184,7 @@ TEST(Filesystem, concurrent_folder_create_delete) {
     start_race_event.wait(start_lock, [&] { return start_race; });
     start_race_mutex.unlock();
 
-    [[maybe_unused]] std::uintmax_t delete_count = filesystem::remove_all(base_subdir);
+    filesystem::remove_all(base_subdir);
     // I've found that two+ threads will claim that they've deleted the same
     // file object. This results in double+ counting and prevents me from
     // asserting anything related to the delete_count. All we can be sure
