@@ -151,7 +151,7 @@ function rels_proc (kv, nokeys)
      if (kv["admin_level"] == "3") then
         if (kv["name"] ~= "Guyane" and kv["name"] ~= "Guadeloupe" and  kv["name"] ~= "La Réunion" and
             kv["name"] ~= "Martinique" and kv["name"] ~= "Mayotte" and kv["name"] ~= "Saint-Pierre-et-Miquelon" and
-            kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin" and kv["name"] ~= "Polynésie Française" and
+            kv["name"] ~= "Saint-Barthélemy" and  kv["name"] ~= "Saint-Martin (France)" and kv["name"] ~= "Polynésie Française" and
             kv["name"] ~= "Wallis-et-Futuna" and kv["name"] ~= "Nouvelle-Calédonie" and kv["name"] ~= "Île de Clipperton" and
             kv["name"] ~= "Terres australes et antarctiques françaises" and kv["name:en"] ~= "Metropolitan France" and
             kv["name:en"] ~= "Hong Kong" and kv["name"] ~= "Metro Manila") then
