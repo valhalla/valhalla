@@ -7,7 +7,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <valhalla/baldr/landmark.h>
 #include <valhalla/baldr/streetnames.h>
 #include <valhalla/baldr/verbal_text_formatter.h>
 
@@ -397,8 +396,8 @@ public:
   std::string end_level_ref() const;
   void set_end_level_ref(const std::string& end_level_ref);
 
-  const std::vector<Landmark>& landmarks() const;
-  void set_landmarks(std::vector<Landmark>& landmarks);
+  const std::vector<LandmarkManeuver>& landmarks() const;
+  void set_landmarks(std::vector<LandmarkManeuver>& landmarks);
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
@@ -483,8 +482,8 @@ protected:
   bool building_exit_;
   std::string end_level_ref_;
 
-  // Landmarks close to the maneuver as direction support
-  std::vector<Landmark> landmarks_;
+  // Landmarks correlated to the maneuver
+  std::vector<LandmarkManeuver> landmarks_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

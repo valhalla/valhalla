@@ -548,19 +548,6 @@ float EnhancedTripLeg_Edge::GetLength(const Options::Units& units) {
   return length_km();
 }
 
-std::vector<valhalla::baldr::Landmark> EnhancedTripLeg_Edge::GetLandmarks() const {
-  std::vector<valhalla::baldr::Landmark> landmarks{};
-  if (tagged_value().empty()) {
-    return landmarks;
-  }
-  for (const auto& tag : tagged_value()) {
-    if (tag.type() == TaggedValue_Type_kLandmark) {
-      landmarks.emplace_back(tag.value());
-    }
-  }
-  return landmarks;
-}
-
 bool EnhancedTripLeg_Edge::HasActiveTurnLane() const {
   for (const auto& turn_lane : turn_lanes()) {
     if (turn_lane.state() == TurnLane::kActive) {

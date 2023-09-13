@@ -325,7 +325,7 @@ protected:
    *
    * @param maneuvers The list of maneuvers to add landmarks.
    */
-  void AddLandmarksToManeuvers(std::list<Maneuver>& maneuvers);
+  void AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers);
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;

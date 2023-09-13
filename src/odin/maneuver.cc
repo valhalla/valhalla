@@ -1184,11 +1184,11 @@ void Maneuver::set_end_level_ref(const std::string& end_level_ref) {
   end_level_ref_ = end_level_ref;
 }
 
-const std::vector<Landmark>& Maneuver::landmarks() const {
+const std::vector<LandmarkManeuver>& Maneuver::landmarks() const {
   return landmarks_;
 }
 
-void Maneuver::set_landmarks(std::vector<Landmark>& landmarks) {
+void Maneuver::set_landmarks(std::vector<LandmarkManeuver>& landmarks) {
   landmarks_ = std::move(landmarks);
 }
 

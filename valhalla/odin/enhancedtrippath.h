@@ -10,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/baldr/landmark.h>
 #include <valhalla/baldr/turn.h>
 #include <valhalla/proto/directions.pb.h>
 #include <valhalla/proto/options.pb.h>
@@ -139,6 +138,10 @@ public:
 
   const ::google::protobuf::RepeatedPtrField<::valhalla::TaggedValue>& tagged_value() const {
     return mutable_edge_->tagged_value();
+  }
+
+  const ::google::protobuf::RepeatedPtrField<::valhalla::LandmarkManeuver>& landmarks() const {
+    return mutable_edge_->landmarks();
   }
 
   float length_km() const {
@@ -418,8 +421,6 @@ public:
   std::string GetLevelRef() const;
 
   float GetLength(const Options::Units& units);
-
-  std::vector<valhalla::baldr::Landmark> GetLandmarks() const;
 
   // Turn Lanes
   bool HasActiveTurnLane() const;

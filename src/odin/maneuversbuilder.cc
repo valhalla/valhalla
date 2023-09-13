@@ -145,7 +145,7 @@ std::list<Maneuver> ManeuversBuilder::Build() {
 
   // Add landmarks to maneuvers as direction guidance support
   // Each maneuver should get the landmarks associated with edges in the previous maneuver
-  AddLandmarksToManeuvers(maneuvers);
+  AddLandmarksFromTripLegToManeuvers(maneuvers);
 
   ProcessVerbalSuccinctTransitionInstruction(maneuvers);
 
@@ -3943,20 +3943,33 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
   }
 }
 
-void ManeuversBuilder::AddLandmarksToManeuvers(std::list<Maneuver>& maneuvers) {
-  // the landmarks correlated with edges in the previous maneuver
-  std::vector<Landmark> landmarks{};
-
+void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers) {
+  std::vector<LandmarkManeuver> landmarks{};
   for (auto man = maneuvers.begin(); man != maneuvers.end(); ++man) {
+    // set landmarks correlated with edges in the previous maneuver to the current maneuver
     if (!landmarks.empty()) {
       man->set_landmarks(landmarks);
     }
-    // accumulate landmarks in the current maneuver
     landmarks.clear();
+
+    // accumulate landmarks in the current maneuver
+    double distance_from_begin_to_curr_edge = 0;    // distance from the begin point of the whole
+                                                    // manerver to the begin point of the current edge
+    double maneuver_total_distance = man->length(); // total distance of the maneuver
+
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
-      auto curr_landmarks = curr_edge->GetLandmarks();
-      std::move(curr_landmarks.begin(), curr_landmarks.end(), std::back_inserter(landmarks));
+      if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
+        // every time we are about to leave an edge, collect all landmarks in it
+        // and reset distance of each landmark to the distance from the landmark to the maneuver point
+        auto curr_landmarks = curr_edge->landmarks();
+        for (auto& l : curr_landmarks) {
+          double new_distance =
+              maneuver_total_distance - l.distance() - distance_from_begin_to_curr_edge;
+          l.set_distance(new_distance);
+        }
+        std::move(curr_landmarks.begin(), curr_landmarks.end(), std::back_inserter(landmarks));
+      }
     }
   }
 }
