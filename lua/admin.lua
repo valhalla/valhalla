@@ -75,7 +75,6 @@ drive_on_right = {
 ["Turks and Caicos Islands"] = "false",
 ["Tuvalu"] = "false",
 ["Uganda"] = "false",
-["United Kingdom"] = "false",
 ["United States Virgin Islands"] = "false",
 ["Viti"] = "false",
 ["Cymru / Wales"] = "false",
