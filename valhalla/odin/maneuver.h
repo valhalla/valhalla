@@ -395,10 +395,10 @@ public:
   void set_building_exit(bool building_exit);
 
   std::string end_level_ref() const;
-  void set_end_level_ref(std::string end_level_ref);
+  void set_end_level_ref(const std::string& end_level_ref);
 
-  std::vector<Landmark> landmarks() const;
-  void set_landmarks(const std::vector<Landmark>& landmarks);
+  const std::vector<Landmark>& landmarks() const;
+  void set_landmarks(std::vector<Landmark>& landmarks);
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;

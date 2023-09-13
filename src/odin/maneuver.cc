@@ -1180,15 +1180,15 @@ std::string Maneuver::end_level_ref() const {
   return end_level_ref_;
 }
 
-void Maneuver::set_end_level_ref(std::string end_level_ref) {
-  end_level_ref_ = std::move(end_level_ref);
+void Maneuver::set_end_level_ref(const std::string& end_level_ref) {
+  end_level_ref_ = end_level_ref;
 }
 
-std::vector<Landmark> Maneuver::landmarks() const {
+const std::vector<Landmark>& Maneuver::landmarks() const {
   return landmarks_;
 }
 
-void Maneuver::set_landmarks(const std::vector<Landmark>& landmarks) {
+void Maneuver::set_landmarks(std::vector<Landmark>& landmarks) {
   landmarks_ = std::move(landmarks);
 }
 
