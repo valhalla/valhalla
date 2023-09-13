@@ -37,6 +37,7 @@ using LinguisticMap = std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, s
 
 constexpr uint8_t kNotTagged = 0;
 constexpr uint8_t kTunnelTag = static_cast<uint8_t>(baldr::TaggedValue::kTunnel);
+constexpr uint8_t kBridgeTag = static_cast<uint8_t>(baldr::TaggedValue::kBridge);
 
 uint32_t
 GetAdminIndex(const AdminInfo& admin_info,
@@ -821,20 +822,20 @@ void ProcessNonTaggedValue(valhalla::StreetName* trip_edge_name,
   }
 }
 
-void ProcessTunnelTaggedValue(valhalla::StreetName* trip_edge_tunnel_name,
-                              const LinguisticMap& linguistics,
-                              const std::tuple<std::string, bool, uint8_t>& name_and_type,
-                              const uint8_t name_index) {
+void ProcessTunnelBridgeTaggedValue(valhalla::StreetName* trip_edge_name,
+                                    const LinguisticMap& linguistics,
+                                    const std::tuple<std::string, bool, uint8_t>& name_and_type,
+                                    const uint8_t name_index) {
 
-  trip_edge_tunnel_name->set_value(std::get<0>(name_and_type));
-  trip_edge_tunnel_name->set_is_route_number(std::get<1>(name_and_type));
+  trip_edge_name->set_value(std::get<0>(name_and_type));
+  trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
 
   const auto iter = linguistics.find(name_index);
   if (iter != linguistics.end()) {
 
     auto lang = static_cast<Language>(std::get<kLinguisticMapTupleLanguageIndex>(iter->second));
     if (lang != Language::kNone) {
-      trip_edge_tunnel_name->set_language_tag(GetTripLanguageTag(lang));
+      trip_edge_name->set_language_tag(GetTripLanguageTag(lang));
     }
 
     auto alphabet = static_cast<valhalla::baldr::PronunciationAlphabet>(
@@ -842,7 +843,7 @@ void ProcessTunnelTaggedValue(valhalla::StreetName* trip_edge_tunnel_name,
 
     if (alphabet != PronunciationAlphabet::kNone) {
 
-      auto* pronunciation = trip_edge_tunnel_name->mutable_pronunciation();
+      auto* pronunciation = trip_edge_name->mutable_pronunciation();
       pronunciation->set_alphabet(
           GetTripPronunciationAlphabet(static_cast<valhalla::baldr::PronunciationAlphabet>(
               std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second))));
@@ -908,9 +909,10 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                                 name_index);
           break;
         }
-        case kTunnelTag: {
-          ProcessTunnelTaggedValue(trip_edge->mutable_tunnel_name()->Add(), linguistics,
-                                   name_and_type, name_index);
+        case kTunnelTag:
+        case kBridgeTag: {
+          ProcessTunnelBridgeTaggedValue(trip_edge->mutable_tunnel_name()->Add(), linguistics,
+                                         name_and_type, name_index);
           break;
         }
         default:
