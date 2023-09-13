@@ -5,15 +5,11 @@ using namespace valhalla::baldr;
 
 namespace {
 
-// should return true for any tags which we should consider "named"
-// do not return TaggedValue::kLinguistic
-bool IsNameTag(char ch) {
-  static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
-                                                            TaggedValue::kTunnel,
-                                                            TaggedValue::kBssInfo,
-                                                            TaggedValue::kLayer,
-                                                            TaggedValue::kLevel,
-                                                            TaggedValue::kLevelRef};
+// should return true if not equal to TaggedValue::kLinguistic
+bool IsNonLiguisticTagValue(char ch) {
+  static const std::unordered_set<TaggedValue> kNameTags =
+      {TaggedValue::kBridge, TaggedValue::kTunnel,   TaggedValue::kBssInfo, TaggedValue::kLayer,
+       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLandmark};
   return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
 }
 
@@ -133,7 +129,7 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         const char* name = names_list_ + ni->name_offset_;
-        if (IsNameTag(name[0])) {
+        if (IsNonLiguisticTagValue(name[0])) {
           name_type_pairs.push_back({std::string(name + 1), false});
         }
       } else
@@ -200,7 +196,7 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
       if (ni->name_offset_ < names_list_length_) {
         const char* name = names_list_ + ni->name_offset_;
         auto tag = name[0];
-        if (IsNameTag(tag)) {
+        if (IsNonLiguisticTagValue(tag)) {
           name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
       } else
@@ -214,7 +210,8 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
   return name_type_pairs;
 }
 
-// Get a list of tagged values
+// Get a list of tagged values.  We do not return linguistic tagged values here.  Use
+// GetLinguisticTaggedValues to obtain those
 std::vector<std::string> EdgeInfo::GetTaggedValues() const {
   // Get each name
   std::vector<std::string> tagged_values;
@@ -322,15 +319,14 @@ EdgeInfo::GetLinguisticMap() const {
             // supported in that area, we toss the phoneme but add the default language for that
             // name/destination key.  We only want to return the highest ranking phoneme type
             // over the language.
-            if (!iter.second) {
-              if ((std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) >
-                   std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter.first->second)) &&
-                  (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) !=
-                   static_cast<uint8_t>(PronunciationAlphabet::kNone)) &&
-                  (std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) ==
-                   std::get<kLinguisticMapTupleLanguageIndex>(iter.first->second))) {
-                iter.first->second = liguistic_attributes;
-              }
+            if (!iter.second &&
+                (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) >
+                 std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter.first->second)) &&
+                (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) !=
+                 static_cast<uint8_t>(PronunciationAlphabet::kNone)) &&
+                (std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) ==
+                 std::get<kLinguisticMapTupleLanguageIndex>(iter.first->second))) {
+              iter.first->second = liguistic_attributes;
             }
           }
         }

@@ -172,7 +172,8 @@ public:
   std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
 
   /**
-   * Convenience method to get the non linguistic, tagged names for an edge
+   * Convenience method to get the non linguistic, tagged values for an edge.
+   *
    *
    * @return   Returns a list (vector) of tagged names.
    */
