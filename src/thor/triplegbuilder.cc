@@ -491,7 +491,7 @@ void SetHeadings(TripLeg_Edge* trip_edge,
  * @param  edge        Directed edge where the landmarks are stored.
  * @param  shape       Trip shape.
  */
-void AddLandmarks(graph_tile_ptr graphtile,
+void AddLandmarks(const graph_tile_ptr& graphtile,
                   TripLeg_Edge* trip_edge,
                   const AttributesController& controller,
                   const DirectedEdge* edge,
