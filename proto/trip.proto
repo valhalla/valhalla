@@ -178,7 +178,7 @@ message TripLeg {
     bool shoulder = 52;
     bool indoor = 53;
 
-    repeated LandmarkManeuver landmarks = 54;
+    repeated RouteLandmark landmarks = 54;
   }
 
   message IntersectingEdge {

@@ -75,6 +75,7 @@ const std::string kEdgeDestinationOnly = "edge.destination_only";
 const std::string kEdgeIsUrban = "edge.is_urban";
 const std::string kEdgeTaggedValues = "edge.tagged_values";
 const std::string kEdgeIndoor = "edge.indoor";
+const std::string kEdgeLandmarks = "edge.landmarks";
 
 // Node keys
 const std::string kNodeIntersectingEdgeBeginHeading = "node.intersecting_edge.begin_heading";

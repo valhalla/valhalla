@@ -11,7 +11,7 @@ message LatLng {
   }
 }
 
-message LandmarkManeuver {
+message RouteLandmark {
   enum Type {
     kUnused = 0;
     kFuel = 1;

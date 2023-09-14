@@ -32,6 +32,7 @@ valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
 // this map is correlated with the ascii map in BuildPBFAddLandmarksToTiles
+// put them in the test, dont even have to be const
 const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
     {{0, 55},
      std::vector<std::string>{"gong_shang_yin_hang", "hai_di_lao", "lv_mo_li", "shell"}}, // ae

@@ -396,8 +396,8 @@ public:
   std::string end_level_ref() const;
   void set_end_level_ref(const std::string& end_level_ref);
 
-  const std::vector<LandmarkManeuver>& landmarks() const;
-  void set_landmarks(std::vector<LandmarkManeuver>& landmarks);
+  const std::vector<RouteLandmark>& landmarks() const;
+  void set_landmarks(const std::vector<RouteLandmark>& landmarks);
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
@@ -483,7 +483,7 @@ protected:
   std::string end_level_ref_;
 
   // Landmarks correlated to the maneuver
-  std::vector<LandmarkManeuver> landmarks_;
+  std::vector<RouteLandmark> landmarks_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

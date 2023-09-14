@@ -482,68 +482,57 @@ void SetHeadings(TripLeg_Edge* trip_edge,
   }
 }
 
-// TODO: how to use controller? or we don't need it at all?
 /**
- * Add landmarks in directed edge to trip edge.
+ * Add landmarks in the directed edge to trip edge.
  * @param  reader      Graph reader to get access to the graph tile and edge info.
  * @param  trip_edge   Trip path edge to add landmarks.
- * @param  controller  ?
+ * @param  controller  Controller specifying whether we want landmarks in the graph to come out the other side.
  * @param  edge        Directed edge where the landmarks are stored.
  * @param  shape       Trip shape.
- * @param  begin_index ?
  */
-void AddLandmarks(GraphReader& reader,
+void AddLandmarks(graph_tile_ptr graphtile,
                   TripLeg_Edge* trip_edge,
                   const AttributesController& controller,
                   const DirectedEdge* edge,
                   const std::vector<PointLL>& shape,
                   const uint32_t begin_index) {
-  // get access to edge info from the graph tile
-  graph_tile_ptr tile = nullptr;
-  reader.GetGraphTile(edge->endnode(), tile); // TODO: why endnode() works (like everywhere else) ? is
-                                              // the edge always on the same tile?
-  auto ei = tile->edgeinfo(edge);
+  if (controller(kEdgeLandmarks)) {
+    auto ei = graphtile->edgeinfo(edge);
+    for (const auto& tag : ei.GetTags()) {
+      // get landmarks from tagged values in the edge info
+      if (tag.first == baldr::TaggedValue::kLandmark) {
+        Landmark lan(tag.second);
+        PointLL landmark_point = {lan.lng, lan.lat};
 
-  // get landmarks from tagged values in the edge info
-  for (const auto& tag : ei.GetTags()) {
-    if (tag.first == baldr::TaggedValue::kLandmark) {
-      Landmark lan(tag.second);
-      PointLL landmark_point = {lan.lng, lan.lat};
+        // find the closed point on edge to the landmark
+        auto closest = landmark_point.ClosestPoint(shape, begin_index);
+        // TODO: in the future maybe we could allow a request option to have a tighter threshold on how far landmarks should be away from an edge
 
-      // find the closed point on edge to the landmark
-      auto closest = landmark_point.ClosestPoint(shape, begin_index);
-      const double kLandmarkMaxDisCutoff =
-          50.; // the maximum distance allowed between landmark and its closest point on the edge
-      if (std::get<1>(closest) > kLandmarkMaxDisCutoff) {
-        continue;
+        // add the landmark to trip leg
+        auto* landmark = trip_edge->mutable_landmarks()->Add();
+        landmark->set_name(lan.name);
+        landmark->set_type(static_cast<valhalla::RouteLandmark::Type>(lan.type));
+        landmark->mutable_lat_lng()->set_lng(lan.lng);
+        landmark->mutable_lat_lng()->set_lat(lan.lat);
+
+        // calculate the landmark's distance along the edge
+        // that is to accumulate distance from the begin point to the closest point to it on the edge
+        int closest_idx = std::get<2>(closest);
+
+        double distance_along_edge = 0;
+        for (int idx = begin_index; idx < closest_idx; ++idx) {
+          distance_along_edge += shape[idx].Distance(shape[idx + 1]);
+        }
+        distance_along_edge += shape[closest_idx].Distance(std::get<0>(closest));
+        // the overall distance shouldn't be larger than edge length
+        distance_along_edge = std::min(distance_along_edge, static_cast<double>(edge->length()));
+        landmark->set_distance(distance_along_edge);
+
+        // check which side of the edge the landmark is on
+        LineSegment2<PointLL> segment(shape[closest_idx], shape[closest_idx + 1]);
+        bool is_right = segment.IsLeft(landmark_point) <= 0;
+        landmark->set_right(is_right);
       }
-
-      // add the landmark to trip leg
-      auto* landmark = trip_edge->mutable_landmarks()->Add();
-      landmark->set_name(lan.name);
-      landmark->set_type(static_cast<valhalla::LandmarkManeuver::Type>(lan.type));
-      landmark->mutable_lat_lng()->set_lng(lan.lng);
-      landmark->mutable_lat_lng()->set_lat(lan.lat);
-
-      // calculate the landmark's distance along the edge
-      // that is to accumulate distance from the begin point to the closest point to it on the edge
-      int idx = begin_index, closest_idx = std::get<2>(closest);
-      double distance_along_edge = 0;
-      while (idx < closest_idx) {
-        distance_along_edge +=
-            shape[idx].Distance(shape[idx + 1]); // TODO: what if the landmark is before the begin
-                                                 // node, or after the end node?
-        idx++;
-      }
-      landmark->set_distance(distance_along_edge);
-
-      // check which side of the edge the landmark is on
-      LineSegment2<PointLL>
-          segment(shape[closest_idx],
-                  shape[closest_idx + 1]); // TODO: what if the idx is the last one? idx + 1? (in
-                                           // loki/trace route action...)
-      bool is_right = segment.IsLeft(landmark_point) <= 0;
-      landmark->set_right(is_right);
     }
   }
 }
@@ -1795,7 +1784,7 @@ void TripLegBuilder::Build(
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add landmarks in the directededge to the trip leg
-    AddLandmarks(graphreader, trip_edge, controller, directededge, trip_shape, begin_index);
+    AddLandmarks(graphtile, trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.

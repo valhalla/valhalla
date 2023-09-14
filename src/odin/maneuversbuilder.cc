@@ -3944,7 +3944,7 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
 }
 
 void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers) {
-  std::vector<LandmarkManeuver> landmarks{};
+  std::vector<RouteLandmark> landmarks{};
   for (auto man = maneuvers.begin(); man != maneuvers.end(); ++man) {
     // set landmarks correlated with edges in the previous maneuver to the current maneuver
     if (!landmarks.empty()) {
@@ -3959,6 +3959,7 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
 
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
+      // multipoint routes with `through` or `via` types can have consecutive copies of the same edge
       if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
         // every time we are about to leave an edge, collect all landmarks in it
         // and reset distance of each landmark to the distance from the landmark to the maneuver point
@@ -3969,6 +3970,8 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
           l.set_distance(new_distance);
         }
         std::move(curr_landmarks.begin(), curr_landmarks.end(), std::back_inserter(landmarks));
+        // accumulate the distance from maneuver to the curr edge we are working on
+        distance_from_begin_to_curr_edge += curr_edge->length_km();
       }
     }
   }

@@ -140,7 +140,7 @@ public:
     return mutable_edge_->tagged_value();
   }
 
-  const ::google::protobuf::RepeatedPtrField<::valhalla::LandmarkManeuver>& landmarks() const {
+  const ::google::protobuf::RepeatedPtrField<::valhalla::RouteLandmark>& landmarks() const {
     return mutable_edge_->landmarks();
   }
 
