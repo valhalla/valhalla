@@ -484,7 +484,7 @@ void SetHeadings(TripLeg_Edge* trip_edge,
 
 /**
  * Add landmarks in the directed edge to trip edge.
- * @param  reader      Graph reader to get access to the graph tile and edge info.
+ * @param  edgeinfo    Edge info of the directed edge.
  * @param  trip_edge   Trip path edge to add landmarks.
  * @param  controller  Controller specifying whether we want landmarks in the graph to come out the
  * other side.
