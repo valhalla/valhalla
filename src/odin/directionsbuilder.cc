@@ -391,6 +391,18 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     auto* trip_bss_info = trip_maneuver->mutable_bss_info();
     trip_bss_info->CopyFrom(maneuver.bss_info());
 
+    // set landmarks
+    // TODO: is there a better way to do this?
+    for (auto& l : maneuver.landmarks()) {
+      auto* landmark = trip_maneuver->mutable_landmarks()->Add();
+      landmark->set_name(l.name());
+      landmark->set_type(l.type());
+      landmark->mutable_lat_lng()->set_lng(l.lat_lng().lng());
+      landmark->mutable_lat_lng()->set_lat(l.lat_lng().lat());
+      landmark->set_distance(l.distance());
+      landmark->set_right(l.right());
+    }
+
     // Travel type
     switch (maneuver.travel_mode()) {
       case TravelMode::kDrive: {

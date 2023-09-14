@@ -31,30 +31,6 @@ const std::string pbf_filename_tile_test = workdir_tiles + "/map.pbf";
 valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
-// this map is correlated with the ascii map in BuildPBFAddLandmarksToTiles
-// put them in the test, dont even have to be const
-const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
-    {{0, 55},
-     std::vector<std::string>{"gong_shang_yin_hang", "hai_di_lao", "lv_mo_li", "shell"}}, // ae
-    {{0, 25},
-     std::vector<std::string>{"McDonalds", "sheng_ren_min_yi_yuan", "wan_da", "you_zheng"}}, // cd
-    {{1, 35},
-     std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "hai_di_lao", "ju_yuan",
-                              "lv_mo_li"}},                                  // ab
-    {{1, 30}, std::vector<std::string>{"McDonalds", "ju_yuan", "wan_da"}},   // bc
-    {{2, 55}, std::vector<std::string>{"McDonalds", "pizza_hut", "wan_da"}}, // cf
-    {{2, 65}, std::vector<std::string>{"shell"}},                            // ef
-};
-
-// this map is correlated with the ascii map in LandmarksInManeuvers
-const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
-    {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
-    {"S2", std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "ju_yuan",
-                                    "sheng_ren_min_yi_yuan"}},
-    {"cf", std::vector<std::string>{"McDonalds", "ju_yuan", "you_zheng"}},
-    {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
-};
-
 inline void DisplayLandmark(const Landmark& landmark) {
   std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
             << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
@@ -151,6 +127,19 @@ void BuildPBFAddLandmarksToTiles() {
 
 void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
   LOG_INFO("Checking tiles of level " + std::to_string(graphid.level()) + "...");
+
+  const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
+      {{0, 55},
+       std::vector<std::string>{"gong_shang_yin_hang", "hai_di_lao", "lv_mo_li", "shell"}}, // ae
+      {{0, 25},
+       std::vector<std::string>{"McDonalds", "sheng_ren_min_yi_yuan", "wan_da", "you_zheng"}}, // cd
+      {{1, 35},
+       std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "hai_di_lao", "ju_yuan",
+                                "lv_mo_li"}},                                  // ab
+      {{1, 30}, std::vector<std::string>{"McDonalds", "ju_yuan", "wan_da"}},   // bc
+      {{2, 55}, std::vector<std::string>{"McDonalds", "pizza_hut", "wan_da"}}, // cf
+      {{2, 65}, std::vector<std::string>{"shell"}},                            // ef
+  };
 
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
@@ -507,9 +496,17 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
 
   auto leg = result.trip().routes(0).legs(0);
 
-  // check landmarks in the route
+  const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
+      {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
+      {"S2", std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "ju_yuan",
+                                      "sheng_ren_min_yi_yuan"}},
+      {"cf", std::vector<std::string>{"McDonalds", "ju_yuan", "you_zheng"}},
+      {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
+  };
+
+  // Check TripLeg
   for (const auto& node : leg.node()) {
-    // skip the point
+    // skip the point in trip leg
     if (node.edge().name_size() == 0) {
       continue;
     }
@@ -534,5 +531,31 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
 
     std::sort(landmark_names.begin(), landmark_names.end());
     EXPECT_EQ(expected_result->second, landmark_names);
+  }
+
+  // Check Maneuver
+  ASSERT_EQ(result.directions().routes_size(), 1);
+  ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
+
+  auto directions_leg = result.directions().routes(0).legs(0);
+
+  for (const auto& man : directions_leg.maneuver()) {
+    if (man.street_name_size() == 1) {
+      std::cout << "Maneuver: " << man.street_name(0).value() << std::endl;
+    }
+    std::cout << "Number of landmarks: " << man.landmarks_size() << std::endl;
+
+    for (const auto& l : man.landmarks()) {
+      std::cout << "name: " << l.name() << ", type: " << static_cast<int>(l.type())
+                << ", distance: " << l.distance() << ", right: " << l.right() << std::endl;
+    }
+    std::cout << std::endl;
+
+    // TODO: how to eliminate duplicated landmarks to keep the correct ones?
+    // e.g. in maneuver "cf" there are two "sheng_ren_min_yi_yuan", the one with distance 100 is
+    // correct.
+
+    // TODO: in maneuver "cf", "ju_yuan" (G) should be to the right, but it's left.
+    //       in the last maneuver, "startbucks" (J) should be to the left, but it's right.
   }
 }

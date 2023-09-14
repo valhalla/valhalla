@@ -178,7 +178,7 @@ message TripLeg {
     bool shoulder = 52;
     bool indoor = 53;
 
-    repeated RouteLandmark landmarks = 54;
+    repeated RouteLandmark landmarks = 54;   // landmarks in the trip leg
   }
 
   message IntersectingEdge {

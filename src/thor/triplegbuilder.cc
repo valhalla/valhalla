@@ -486,7 +486,8 @@ void SetHeadings(TripLeg_Edge* trip_edge,
  * Add landmarks in the directed edge to trip edge.
  * @param  reader      Graph reader to get access to the graph tile and edge info.
  * @param  trip_edge   Trip path edge to add landmarks.
- * @param  controller  Controller specifying whether we want landmarks in the graph to come out the other side.
+ * @param  controller  Controller specifying whether we want landmarks in the graph to come out the
+ * other side.
  * @param  edge        Directed edge where the landmarks are stored.
  * @param  shape       Trip shape.
  */
@@ -506,7 +507,8 @@ void AddLandmarks(graph_tile_ptr graphtile,
 
         // find the closed point on edge to the landmark
         auto closest = landmark_point.ClosestPoint(shape, begin_index);
-        // TODO: in the future maybe we could allow a request option to have a tighter threshold on how far landmarks should be away from an edge
+        // TODO: in the future maybe we could allow a request option to have a tighter threshold on
+        // how far landmarks should be away from an edge
 
         // add the landmark to trip leg
         auto* landmark = trip_edge->mutable_landmarks()->Add();
@@ -530,7 +532,7 @@ void AddLandmarks(graph_tile_ptr graphtile,
 
         // check which side of the edge the landmark is on
         LineSegment2<PointLL> segment(shape[closest_idx], shape[closest_idx + 1]);
-        bool is_right = segment.IsLeft(landmark_point) <= 0;
+        bool is_right = segment.IsLeft(landmark_point) < 0;
         landmark->set_right(is_right);
       }
     }
