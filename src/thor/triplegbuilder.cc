@@ -491,15 +491,14 @@ void SetHeadings(TripLeg_Edge* trip_edge,
  * @param  edge        Directed edge where the landmarks are stored.
  * @param  shape       Trip shape.
  */
-void AddLandmarks(const graph_tile_ptr& graphtile,
+void AddLandmarks(const EdgeInfo& edgeinfo,
                   TripLeg_Edge* trip_edge,
                   const AttributesController& controller,
                   const DirectedEdge* edge,
                   const std::vector<PointLL>& shape,
                   const uint32_t begin_index) {
   if (controller(kEdgeLandmarks)) {
-    auto ei = graphtile->edgeinfo(edge);
-    for (const auto& tag : ei.GetTags()) {
+    for (const auto& tag : edgeinfo.GetTags()) {
       // get landmarks from tagged values in the edge info
       if (tag.first == baldr::TaggedValue::kLandmark) {
         Landmark lan(tag.second);
@@ -1786,7 +1785,7 @@ void TripLegBuilder::Build(
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add landmarks in the directededge to the trip leg
-    AddLandmarks(graphtile, trip_edge, controller, directededge, trip_shape, begin_index);
+    AddLandmarks(edgeinfo, trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.
