@@ -69,8 +69,8 @@ cost_ptr_t CreateTaxiCost(const Costing& costing);
 /**
  * Parses the multiple cost options from json and stores values in pbf.
  * @param doc The json request represented as a DOM tree.
- * @param costing_options_key A string representing the location in the DOM tree where the multiple costing
- *                            options are stored.
+ * @param costing_options_key A string representing the location in the DOM tree where the multiple
+ * costing options are stored.
  * @param co A mutable protocol buffer where the parsed json values will be stored.
  */
 

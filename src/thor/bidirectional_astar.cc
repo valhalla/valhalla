@@ -272,15 +272,14 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   }
 
   // Apply country specific toll factor
-  if(costing_->get_multi_cost_flag()) {
+  if (costing_->get_multi_cost_flag()) {
     auto country_toll_map = costing_->get_toll_factor_per_country();
     std::string admin_endnode;
     if (FORWARD) {
       auto endtile = graphreader.GetGraphTile(meta.edge->endnode());
       auto endnode_admin_idx = graphreader.GetEndNode(meta.edge, endtile)->admin_index();
       admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
-    }
-    else {
+    } else {
       auto endtile = graphreader.GetGraphTile(opp_edge->endnode());
       auto endnode_admin_idx = graphreader.GetEndNode(opp_edge, endtile)->admin_index();
       admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
@@ -291,9 +290,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       costing_->set_toll_factor(toll_factor_val);
     } else {
       costing_->set_toll_factor(costing_->get_default_toll_factor());
-    } 
-  }
-  else {
+    }
+  } else {
     costing_->set_toll_factor(costing_->get_default_toll_factor());
   }
 
@@ -1002,7 +1000,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
-     if(costing_->get_multi_cost_flag()) {
+    if (costing_->get_multi_cost_flag()) {
       auto country_toll_map = costing_->get_toll_factor_per_country();
       auto endnode_admin_idx = nodeinfo->admin_index();
       auto admin_endnode = tile->admin(endnode_admin_idx)->country_iso();
@@ -1013,10 +1011,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       } else {
         auto toll_factor_val = costing_->get_default_toll_factor();
         costing_->set_toll_factor(toll_factor_val);
-      } 
-    }
-    else {
-    costing_->set_toll_factor(costing_->get_default_toll_factor());
+      }
+    } else {
+      costing_->set_toll_factor(costing_->get_default_toll_factor());
     }
     uint8_t flow_sources;
     Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
@@ -1116,7 +1113,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
-    if(costing_->get_multi_cost_flag()) {
+    if (costing_->get_multi_cost_flag()) {
       auto country_toll_map = costing_->get_toll_factor_per_country();
       auto endnode_admin_idx = endtile->node(directededge->endnode())->admin_index();
       auto admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
@@ -1127,10 +1124,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       } else {
         auto toll_factor_val = costing_->get_default_toll_factor();
         costing_->set_toll_factor(toll_factor_val);
-      } 
-    }
-    else {
-    costing_->set_toll_factor(costing_->get_default_toll_factor());
+      }
+    } else {
+      costing_->set_toll_factor(costing_->get_default_toll_factor());
     }
     uint8_t flow_sources;
     Cost cost =

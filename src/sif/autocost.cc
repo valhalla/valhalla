@@ -321,37 +321,35 @@ public:
            (allow_closures || !tile->IsClosed(edge)) && IsHOVAllowed(edge);
   }
   // returns toll factor for a given toll value
-  float get_toll_factor(float use_tolls)
-  {  
-  auto toll_factor = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
-                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
-  return toll_factor;
-
+  float get_toll_factor(float use_tolls) {
+    auto toll_factor = use_tolls < 0.5f ? (4.0f - 8 * use_tolls) : // ranges from 4 to 0
+                           (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+    return toll_factor;
   }
 
   // set toll factor that will be finally applied
-  void set_toll_factor(float toll_factor_value) override {  
+  void set_toll_factor(float toll_factor_value) override {
     this->toll_factor_ = toll_factor_value;
   }
 
   /**
    * Return default toll factor
    */
-  float get_default_toll_factor() override{
+  float get_default_toll_factor() override {
     return this->default_toll_factor_;
   }
 
   /**
    * Return toll factor per country map
    */
-  std::map<std::string, float> get_toll_factor_per_country() override{
+  std::map<std::string, float> get_toll_factor_per_country() override {
     return this->toll_factor_per_country_;
   }
 
   /**
    * Return true if multiple cost options is present in request
    */
-  bool get_multi_cost_flag() override{
+  bool get_multi_cost_flag() override {
     return this->multi_options_flag_;
   }
 
@@ -363,19 +361,19 @@ public:
   float density_factor_[16];  // Density factor
   float highway_factor_;      // Factor applied when road is a motorway or trunk
   float alley_factor_;        // Avoid alleys factor.
-  float default_toll_factor_; // Factor applied when road has a toll for all countries except specified otherwise
-  float toll_factor_;         // Final factor applied when road has a toll 
+  float default_toll_factor_; // Factor applied when road has a toll for all countries except
+                              // specified otherwise
+  float toll_factor_;         // Final factor applied when road has a toll
   float surface_factor_;      // How much the surface factors are applied.
   float distance_factor_;     // How much distance factors in overall favorability
   float inv_distance_factor_; // How much time factors in overall favorability
-  std::map<std::string, float> toll_factor_per_country_; // Factor applied when road has a toll for a specific country
-  bool multi_options_flag_; // set to true when "/cost_per_country" is present in the input
+  std::map<std::string, float>
+      toll_factor_per_country_; // Factor applied when road has a toll for a specific country
+  bool multi_options_flag_;     // set to true when "/cost_per_country" is present in the input
 
   // Vehicle attributes (used for special restrictions and costing)
   float height_; // Vehicle height in meters
   float width_;  // Vehicle width in meters
-
-  
 
   // Density factor used in edge transition costing
   std::vector<float> trans_density_factor_;
@@ -410,22 +408,21 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   get_base_costs(costing);
 
   // Get the multiple options if present and store it in the country based mapping for options
-  if(costing.has_multi_options()){
+  if (costing.has_multi_options()) {
     multi_options_flag_ = true;
     const auto& multiple_costing_options = costing.multi_options();
     const auto& cost_per_country = multiple_costing_options.cost_per_country();
-    for(const auto& cost_option_per_country: cost_per_country)
-    {  
-        if(cost_option_per_country.has_use_tolls_case()) {
+    for (const auto& cost_option_per_country : cost_per_country) {
+      if (cost_option_per_country.has_use_tolls_case()) {
         float toll_value = cost_option_per_country.use_tolls();
-        auto country_based_use_toll_factor = get_toll_factor(toll_value);  
+        auto country_based_use_toll_factor = get_toll_factor(toll_value);
         auto country_list = cost_option_per_country.country_code();
         if (!country_list.empty()) {
           for (const auto& country : country_list) {
             toll_factor_per_country_[country] = country_based_use_toll_factor;
           }
-        }                                    
-      }    
+        }
+      }
     }
   }
 
@@ -747,33 +744,30 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
 }
 
 void ParseMultiOptions(const rapidjson::Document& doc,
-                          const std::string& costing_options_key,
-                          Costing* c) {
-    std::string options_per_country_key = costing_options_key + "/cost_per_country";
-    auto* cmo = c->mutable_multi_options();
-    auto* cpc = cmo->mutable_cost_per_country();
-    auto multi_option_json = 
+                       const std::string& costing_options_key,
+                       Costing* c) {
+  std::string options_per_country_key = costing_options_key + "/cost_per_country";
+  auto* cmo = c->mutable_multi_options();
+  auto* cpc = cmo->mutable_cost_per_country();
+  auto multi_option_json =
       rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, options_per_country_key.c_str());
-    if (multi_option_json) {
-      for (const auto& option_arr : *multi_option_json) {
-        auto* cost_opt_country = cpc->Add();   
-        auto toll_value = rapidjson::get_optional<float>(option_arr, "/use_tolls");
-        if (toll_value) {
-        cost_opt_country->set_use_tolls(*toll_value); 
-        } 
-        else
-        {
+  if (multi_option_json) {
+    for (const auto& option_arr : *multi_option_json) {
+      auto* cost_opt_country = cpc->Add();
+      auto toll_value = rapidjson::get_optional<float>(option_arr, "/use_tolls");
+      if (toll_value) {
+        cost_opt_country->set_use_tolls(*toll_value);
+      } else {
         cost_opt_country->set_use_tolls(kDefaultUseTolls);
+      }
+      auto country_list =
+          rapidjson::get_optional<rapidjson::Value::ConstArray>(option_arr, "/country_code");
+      if (country_list) {
+        for (const auto& country : *country_list) {
+          cost_opt_country->add_country_code(country.GetString());
         }
-        auto country_list = rapidjson::get_optional<rapidjson::Value::ConstArray>(option_arr, "/country_code");
-        if(country_list)
-        {
-            for (const auto& country : *country_list)
-            {
-              cost_opt_country->add_country_code(country.GetString());
-            }
-        }
-    }  
+      }
+    }
   }
 }
 
@@ -786,7 +780,7 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
 
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
-  
+
   ParseMultiOptions(doc, costing_options_key, c);
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);

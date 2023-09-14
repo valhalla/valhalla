@@ -16,7 +16,7 @@ message Contour {
 }
 
 message Ring {
-  repeated LatLng coords = 1;
+  repeated LatLng coords = 1 ;
 }
 
 enum ShapeMatch {
