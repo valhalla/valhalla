@@ -38,6 +38,7 @@ config = {
         'incident_log': Optional(str),
         'shortcut_caching': Optional(bool),
         'admin': '/data/valhalla/admin.sqlite',
+        'landmarks': '/data/valhalla/landmarks.sqlite',
         'timezone': '/data/valhalla/tz_world.sqlite',
         'transit_dir': '/data/valhalla/transit',
         'transit_feeds_dir': '/data/valhalla/transit_feeds',
@@ -294,8 +295,9 @@ help_text = {
         'traffic_extract': 'Location to read traffic from tar',
         'incident_dir': 'Location to read incident tiles from',
         'incident_log': 'Location to read change events of incident tiles',
-        'shortcut_caching': 'Precaches the superceded edges of all shortcuts in the graph. Defaults to false',
+        'shortcut_caching': 'Precaches the superseded edges of all shortcuts in the graph. Defaults to false',
         'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
+        'landmarks': 'Location of sqlite file holding landmark POI created with valhalla_build_landmarks',
         'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
         'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
         'transit_feeds_dir': 'Location of GTFS transit feeds',
@@ -575,7 +577,7 @@ def add_leaf_args(
 
         # its either required and is the right type or optional and has a type to use
         # lists are supported as comma separated and bools support a bunch of conventions
-        # the rest of the primatives (strings and numbers) parse automatically
+        # the rest of the primitives (strings and numbers) parse automatically
         if isinstance(tree, Optional):
             t = tree.type
         elif isinstance(tree, list):

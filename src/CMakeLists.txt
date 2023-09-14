@@ -37,7 +37,7 @@ set(LIBCXX_COMPILE_FLAGS "")
 set(LIBCXX_LINK_FLAGS "")
 set(LIBCXX_LIBRARIES "")
 
-# Inlclude build macros for updating configuration variables
+# Include build macros for updating configuration variables
 include(HandleLibcxxFlags)
 
 ## Define libvalhalla sub-modules as OBJECT libraries
@@ -229,6 +229,7 @@ endif()
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
+    ${VALHALLA_SOURCE_DIR}/src      # For private headers in /src
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers

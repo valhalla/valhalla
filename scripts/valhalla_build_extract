@@ -13,7 +13,7 @@ import sys
 import tarfile
 from tarfile import BLOCKSIZE
 from time import time
-from typing import List, Tuple, Union, Set
+from typing import List, Tuple, Optional
 
 # "<" prefix means little-endian and no alignment
 # order is important! if uint64_t is not first, c++ will use padding bytes to unpack
@@ -22,8 +22,10 @@ INDEX_BIN_SIZE = struct.calcsize(INDEX_BIN_FORMAT)
 INDEX_FILE = "index.bin"
 # skip the first 40 bytes of the tile header
 GRAPHTILE_SKIP_BYTES = struct.calcsize('<Q2f16cQ')
-TRAFFIC_HEADER_SIZE = struct.calcsize('<2Q4I')
+TRAFFIC_HEADER_FORMAT = '<2Q4I'
+TRAFFIC_HEADER_SIZE = struct.calcsize(TRAFFIC_HEADER_FORMAT)
 TRAFFIC_SPEED_SIZE = struct.calcsize('<Q')
+TRAFFIC_VERSION = 3
 
 Bbox = namedtuple("Bbox", "min_x min_y max_x max_y")
 TILE_SIZES = {0: 4, 1: 1, 2: 0.25, 3: 0.25}
@@ -51,6 +53,51 @@ class TileHeader(ctypes.Structure):
     ]
 
 
+class TileResolver:
+    def __init__(self, path: Path):
+        """
+        Abstraction so we don't have to care whether we're looking at a tile directory or tar file.
+
+        :param path: path to the tile directory or tar file.
+        """
+        self.path = path.resolve()
+        self._is_tar = path.is_file()
+        self._tar_obj: Optional[tarfile.TarFile] = tarfile.open(self.path, "r") if self._is_tar else None
+
+        self.normalized_tile_paths: List[Path] = list()
+        self.matched_paths: List[Path] = list()
+
+        # pre-populate the available paths
+        if self._is_tar:
+            self.normalized_tile_paths = sorted(
+                [Path(m.name) for m in self._tar_obj.getmembers() if m.name.endswith('.gph')]
+            )
+        else:
+            self.normalized_tile_paths = sorted(
+                p.relative_to(self.path) for p in self.path.rglob('*.gph')
+            )
+
+    def __del__(self):
+        # close the tar object on GC
+        if self._tar_obj:
+            self._tar_obj.close()
+
+    def add_to_tar(self, tar: tarfile.TarFile):
+        """
+        Adds the self.matched_paths to the passed tar file.
+        """
+        # deduplicate the list (geojson variant might've added dups)
+        # since 3.7 python dicts are insertion-ordered, so order is preserved
+        for t in list(dict.fromkeys(self.matched_paths)):
+            LOGGER.debug(f"Adding tile {t} to the tar file")
+            if self._is_tar:
+                tar_member = self._tar_obj.getmember(str(t))
+                tar.addfile(tar_member, self._tar_obj.extractfile(tar_member.name))
+            else:
+                tar.add(str(self.path.joinpath(t)), arcname=t)
+                tar_member = tar.getmember(str(t))
+
+
 description = "Builds a tar extract from the tiles in mjolnir.tile_dir to the path specified in mjolnir.tile_extract."
 
 parser = argparse.ArgumentParser(description=description)
@@ -64,6 +111,14 @@ parser.add_argument(
     type=str,
     default='{}',
 )
+parser.add_argument(
+    "-e",
+    "--extract-tar",
+    help="If specified, will build an extract from an existing tar file at 'mjolnir.tile_extract' and save it to this specified path.",
+    type=str,
+    default="",
+)
+parser.add_argument("-O", "--overwrite", help="Overwrites an output tar file", action="store_true")
 parser.add_argument(
     "-t", "--with-traffic", help="Flag to add a traffic.tar skeleton", action="store_true", default=False
 )
@@ -115,7 +170,7 @@ def get_tile_bbox(tile_path_id: str) -> Tuple[float, float, float, float]:
     return tile_base_x, tile_base_y, tile_base_x + tile_size, tile_base_y + tile_size
 
 
-def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path, tiles_dir_: Path) -> Set[Path]:
+def get_tiles_with_geojson(tile_resolver_: TileResolver, geojson_dir: Path):
     """Returns all tile paths intersecting with the GeoJSON (multi)polygons"""
     try:
         from shapely.geometry import Polygon, box
@@ -144,19 +199,15 @@ def get_tiles_with_geojson(all_tile_paths: List[Path], geojson_dir: Path, tiles_
                         polygons.append(Polygon(single_polygon[0]))
         return polygons
 
-    tile_paths_ = set()
     geojson_polys = get_outer_rings(geojson_dir)
-    for tile_path in all_tile_paths:
-        tile_path_id = str(tile_path.relative_to(tiles_dir_))
-        tile_bbox = box(*get_tile_bbox(tile_path_id))
+    for tile_path in tile_resolver_.normalized_tile_paths:
+        tile_bbox = box(*get_tile_bbox(str(tile_path)))
         for poly in geojson_polys:
             if poly.intersects(tile_bbox):
-                tile_paths_.add(tile_path)
-
-    return tile_paths_
+                tile_resolver_.matched_paths.append(tile_path)
 
 
-def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str, tiles_dir_: Path) -> Set[Path]:
+def get_tiles_with_bbox(tile_resolver_: TileResolver, bbox_str: str):
     """Returns all tile paths intersecting with the bbox"""
     try:
         bbox = Bbox(*[float(x) for x in bbox_str.split(",")])
@@ -171,11 +222,9 @@ def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str, tiles_dir_: P
         LOGGER.critical(f"Bbox invalid: {list(bbox)}")
         sys.exit(1)
 
-    tile_paths_ = set()
-    for tile_path in all_tile_paths:
-        tile_path_id = str(tile_path.relative_to(tiles_dir_))
-        tile_bbox = Bbox(*get_tile_bbox(tile_path_id))
-        # check if tile_bbox is outside of bbox
+    for tile_path in tile_resolver_.normalized_tile_paths:
+        tile_bbox = Bbox(*get_tile_bbox(str(tile_path)))
+        # check if tile_bbox is outside bbox
         if not any(
             [
                 tile_bbox.min_x < bbox.min_x and tile_bbox.max_x < bbox.min_x,  # left of bbox
@@ -184,9 +233,7 @@ def get_tiles_with_bbox(all_tile_paths: List[Path], bbox_str: str, tiles_dir_: P
                 tile_bbox.min_y > bbox.max_y and tile_bbox.max_y > bbox.max_y,  # above bbox
             ]
         ):
-            tile_paths_.add(tile_path)
-
-    return tile_paths_
+            tile_resolver_.matched_paths.append(tile_path)
 
 
 def get_tile_level_id(path: str) -> List[str]:
@@ -232,19 +279,11 @@ def write_index_to_tar(tar_fp_: Path):
             tar.write(struct.pack(INDEX_BIN_FORMAT, *entry))
 
 
-def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path], List[Path]]):
+def create_extracts(config_: dict, do_traffic: bool, tile_resolver_: TileResolver, extract_fp: Path):
     """Actually creates the tar ball. Break out of main function for testability."""
-    tiles_fp: Path = Path(config_["mjolnir"].get("tile_dir", '/dev/null'))
-    extract_fp: Path = Path(
-        config_["mjolnir"].get("tile_extract") or tiles_fp.parent.joinpath('tiles.tar')
-    )
-    traffic_fp: Path = Path(
-        config_["mjolnir"].get("traffic_extract") or tiles_fp.parent.joinpath('traffic.tar')
-    )
-
-    tiles_count = len(tile_paths_)
+    tiles_count = len(tile_resolver_.matched_paths)
     if not tiles_count:
-        LOGGER.critical(f"Directory {tiles_fp.resolve()} does not contain any usable graph tiles.")
+        LOGGER.critical(f"Couldn't find usable tiles in {tile_resolver_.path}")
         sys.exit(1)
 
     # write the in-memory index file
@@ -254,12 +293,10 @@ def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path
 
     # first add the index file, then the sorted tiles to the tarfile
     # TODO: come up with a smarter strategy to cluster the tiles in the tar
+    extract_fp.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(extract_fp, 'w') as tar:
         tar.addfile(get_tar_info(INDEX_FILE, index_size), index_fd)
-        for t in tile_paths_:
-            rel_path = str(t.relative_to(tiles_fp))
-            LOGGER.debug(f"Adding tile {rel_path} to the path")
-            tar.add(str(t.resolve()), arcname=rel_path)
+        tile_resolver_.add_to_tar(tar)
 
     write_index_to_tar(extract_fp)
 
@@ -271,6 +308,9 @@ def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path
         sys.exit(0)
 
     LOGGER.info("Start creating traffic extract...")
+    traffic_fp: Path = Path(
+        config_["mjolnir"].get("traffic_extract") or extract_fp.parent.joinpath("traffic.tar")
+    )
 
     # we already have the right size of the index file, simply reset it
     index_fd.seek(0)
@@ -296,11 +336,27 @@ def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path
             b.readinto(tile_header)
             b.close()
 
-            # create the traffic tile
-            traffic_size = TRAFFIC_HEADER_SIZE + TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
-            tar_traffic.addfile(get_tar_info(tile_in.name, traffic_size), BytesIO(b'\0' * traffic_size))
+            # create the traffic header
+            header_bytes = struct.pack(
+                TRAFFIC_HEADER_FORMAT,
+                get_tile_id(tile_in.name),  # numerical tile_id
+                0,  # timestamp
+                tile_header.directededgecount_,  # edge count
+                TRAFFIC_VERSION,  # tile version
+                0,  # spare2
+                0,  # spare3
+            )
 
-            LOGGER.debug(f"Tile {tile_in.name} has {tile_header.directededgecount_} directed edges")
+            # create the traffic tile
+            traffic_size = TRAFFIC_SPEED_SIZE * tile_header.directededgecount_
+            tar_traffic.addfile(
+                get_tar_info(tile_in.name, len(header_bytes) + traffic_size),
+                BytesIO(header_bytes + b'\0' * traffic_size),
+            )
+
+            LOGGER.debug(
+                f"Traffic tile {tile_in.name} has {tile_header.directededgecount_} directed edges"
+            )
 
     write_index_to_tar(traffic_fp)
 
@@ -309,6 +365,14 @@ def create_extracts(config_: dict, do_traffic: bool, tile_paths_: Union[Set[Path
 
 if __name__ == '__main__':
     args = parser.parse_args()
+
+    # set the right logger level
+    if args.verbosity == 0:
+        LOGGER.setLevel(logging.CRITICAL)
+    elif args.verbosity == 1:
+        LOGGER.setLevel(logging.INFO)
+    elif args.verbosity >= 2:
+        LOGGER.setLevel(logging.DEBUG)
 
     if not args.config and not args.inline_config:
         LOGGER.critical("No valid config file or inline config used.")
@@ -324,27 +388,39 @@ if __name__ == '__main__':
     # override with inline-config
     config.update(**json.loads(args.inline_config))
 
-    # get and validate the tiles directory
+    # if output file exists and not --overwrite specified, fail
+    tiles_extract_out = args.extract_tar or config["mjolnir"].get("tile_extract")
+    if not tiles_extract_out:
+        LOGGER.critical("No output file path specified in 'mjolnir.tile_extract' or --extract-tar.")
+        sys.exit(1)
+
+    tiles_extract_out = Path(tiles_extract_out)
+    if tiles_extract_out.is_file() and not args.overwrite:
+        LOGGER.critical(f"File exists. Specify --overwrite to overwrite {tiles_extract_out}")
+        sys.exit(1)
+
+    # prefer the tar file to extract from, fall back to the tile dir
     tiles_dir: Path = Path(config["mjolnir"].get("tile_dir", '/dev/null'))
-    if not tiles_dir.is_dir():
+    # optionally use the tile extract to find the tiles
+    if args.extract_tar and (tiles_extract_in := Path(config["mjolnir"].get("tile_extract"))).is_file():
+        tile_resolver = TileResolver(tiles_extract_in)
+        LOGGER.debug("Using tar file to extract tiles")
+    # else get and validate the tiles directory
+    elif tiles_dir.is_dir():
+        tile_resolver = TileResolver(tiles_dir)
+        LOGGER.debug("Using graph dir to extract tiles")
+    else:
         LOGGER.critical(
-            f"Directory 'mjolnir.tile_dir': {tiles_dir.resolve()} was not found on the filesystem."
+            f"'Can't find valid paths for 'mjolnir.tile_dir' or 'mjolnir.tile_extract' in {args.config}"
         )
         sys.exit(1)
 
-    # get the tile paths which intersect with the geom, if any
-    tile_paths: Union[Set[Path], List[Path]] = sorted(tiles_dir.rglob('*.gph'))
+    # get the tile paths which intersect with the geom, if any, and write to TileResolver
     if args.bbox:
-        tile_paths = get_tiles_with_bbox(tile_paths, args.bbox, tiles_dir)
+        get_tiles_with_bbox(tile_resolver, args.bbox)
     elif args.geojson_dir:
-        tile_paths = get_tiles_with_geojson(tile_paths, args.geojson_dir, tiles_dir)
+        get_tiles_with_geojson(tile_resolver, args.geojson_dir)
+    else:
+        tile_resolver.matched_paths = tile_resolver.normalized_tile_paths
 
-    # set the right logger level
-    if args.verbosity == 0:
-        LOGGER.setLevel(logging.CRITICAL)
-    elif args.verbosity == 1:
-        LOGGER.setLevel(logging.INFO)
-    elif args.verbosity >= 2:
-        LOGGER.setLevel(logging.DEBUG)
-
-    create_extracts(config, args.with_traffic, tile_paths)
+    create_extracts(config, args.with_traffic, tile_resolver, tiles_extract_out)

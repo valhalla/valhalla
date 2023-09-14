@@ -11,6 +11,9 @@
 #include <set>
 #include <stdexcept>
 
+#include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -1256,6 +1259,65 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     // Close the file
     file.close();
   }
+}
+
+void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
+  // check the edge id makes sense
+  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+    throw std::runtime_error(
+        "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
+  }
+  if (header_builder_.directededgecount() <= edge_id.id()) {
+    throw std::runtime_error(
+        "Given edge doesn't exist: edge id is larger than total edge size in this tile");
+  }
+
+  // get the edge info / edge info builder
+  const auto& edge = directededges_builder_[edge_id.id()];
+  const auto original_offset = edge.edgeinfo_offset();
+  auto eib = edgeinfo_offset_map_.find(original_offset);
+
+  if (eib == edgeinfo_offset_map_.end()) {
+    throw std::runtime_error("Couldn't find edge info for the given edge: " +
+                             std::to_string(static_cast<int>(edge_id.id())));
+  }
+
+  std::string tagged_value = landmark.to_str();
+
+  auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
+  // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)
+  if (eib->second->has_name_info(name_offset)) {
+    return;
+  }
+
+  // record in the edge info builder of where the tagged_value is
+  NameInfo ni{name_offset, 0, 0, 1};
+  eib->second->AddNameInfo(ni);
+
+  // update edge info offset
+  const auto shift = sizeof(ni);
+  edge_info_offset_ += shift;
+
+  // update edgeinfo_offset for all directededges behind
+  for (auto& e : directededges_builder_) {
+    const auto offset = e.edgeinfo_offset();
+    if (offset > original_offset) {
+      e.set_edgeinfo_offset(offset + shift);
+    }
+  }
+
+  // update edgeinfo_offset_map by updating the offsets (keys)
+  // TODO: optimize this in a better way
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> new_edgeinfo_offset_map_{};
+
+  for (auto& e : edgeinfo_offset_map_) {
+    if (e.first > original_offset) {
+      new_edgeinfo_offset_map_.emplace(e.first + shift, e.second);
+    } else {
+      new_edgeinfo_offset_map_.insert(e);
+    }
+  }
+  edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
 }
 
 } // namespace mjolnir

@@ -29,7 +29,7 @@ message CodedDescription {
 
 message Info {
   repeated Statistic statistics = 1;      // stats that we collect during request processing
-  repeated CodedDescription errors = 2;   // errors that occured during request processing
-  repeated CodedDescription warnings = 3; // warnings that occured during request processing
+  repeated CodedDescription errors = 2;   // errors that occurred during request processing
+  repeated CodedDescription warnings = 3; // warnings that occurred during request processing
   bool is_service = 4;                    // was this a service request/response rather than a direct call to the library
 }

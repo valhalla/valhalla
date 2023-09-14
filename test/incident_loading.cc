@@ -23,14 +23,14 @@ protected:
 
 struct testable_singleton : public incident_singleton_t {
   // make an incident singleton and inject a watch function that either passes or fails initialization
-  testable_singleton(const boost::property_tree::ptree& config, bool intialize)
+  testable_singleton(const boost::property_tree::ptree& config, bool initialize)
       : incident_singleton_t(config,
                              {},
-                             [intialize](boost::property_tree::ptree,
-                                         std::unordered_set<valhalla::baldr::GraphId>,
-                                         std::shared_ptr<state_t> state,
-                                         std::function<bool(size_t)>) {
-                               state->initialized.store(intialize);
+                             [initialize](boost::property_tree::ptree,
+                                          std::unordered_set<valhalla::baldr::GraphId>,
+                                          std::shared_ptr<state_t> state,
+                                          std::function<bool(size_t)>) {
+                               state->initialized.store(initialize);
                                state->signal.notify_one();
                              }) {
   }
@@ -80,7 +80,7 @@ TEST_F(incident_loading, update_tile) {
   // no slot exists
   std::shared_ptr<testable_singleton::state_t> state{new testable_singleton::state_t{}};
   ASSERT_TRUE(testable_singleton::update_tile(state, baldr::GraphId(0), {}))
-      << " unable to update nonexistant tile";
+      << " unable to update nonexistent tile";
   ASSERT_TRUE(state->cache.count(baldr::GraphId(0))) << " cannot find new tile in cache";
   ASSERT_TRUE(state->cache.find(baldr::GraphId(0))->second == nullptr) << " tile should be null";
 

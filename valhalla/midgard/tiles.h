@@ -169,7 +169,7 @@ public:
    * @param   y   y (or lat)
    * @param   x   x (or lng)
    * @return  Returns the tile Id. -1 (error is returned if the x,y is
-   *          outside the bounding box of the tiling sytem).
+   *          outside the bounding box of the tiling system).
    */
   int32_t TileId(const typename coord_t::first_type y, const typename coord_t::first_type x) const {
     // Return -1 if totally outside the extent.
@@ -230,8 +230,8 @@ public:
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2<coord_t> TileBounds(const int32_t tileid) const {
-    Point2 base = Base(tileid);
-    return AABB2<coord_t>(base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_);
+    auto base = Base(tileid);
+    return {base.x(), base.y(), base.x() + tilesize_, base.y() + tilesize_};
   }
 
   /**
@@ -241,9 +241,9 @@ public:
    * @return  The latitude, longitude extent of the specified tile.
    */
   AABB2<coord_t> TileBounds(const int32_t col, const int32_t row) const {
-    float basex = tilebounds_.minx() + ((float)col * tilesize_);
-    float basey = tilebounds_.miny() + ((float)row * tilesize_);
-    return AABB2<coord_t>(basex, basey, basex + tilesize_, basey + tilesize_);
+    auto basex = tilebounds_.minx() + col * tilesize_;
+    auto basey = tilebounds_.miny() + row * tilesize_;
+    return {basex, basey, basex + tilesize_, basey + tilesize_};
   }
 
   /**

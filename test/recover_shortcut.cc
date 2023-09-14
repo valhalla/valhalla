@@ -103,7 +103,7 @@ void recover(bool cache) {
           continue;
         }
 
-        // check if the shape matches approximatly
+        // check if the shape matches approximately
         for (size_t k = 0; k < shortcut_shape.size(); ++k) {
           if (!shortcut_shape[k].ApproximatelyEqual(recovered_shape[k])) {
             //            FAIL() << "edge shape points are not equal: " +
@@ -144,7 +144,7 @@ TEST(GetShortcut, check_false_negatives) {
       auto tile = reader.GetGraphTile(tile_id);
 
       valhalla::baldr::GraphId edge_id{tile_id};
-      for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+      for (size_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
         auto directed_edge = tile->directededge(i);
         if (!directed_edge->is_shortcut()) {
           continue;
@@ -183,7 +183,7 @@ TEST(GetShortcut, check_false_positives) {
       auto tile = reader.GetGraphTile(tile_id);
 
       valhalla::baldr::GraphId edge_id{tile_id};
-      for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+      for (size_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
         auto shortcut_id = reader.GetShortcut(edge_id);
 
         // Edges that don't belong to any shortcut will lead to invalid shortcut ID and this is fine

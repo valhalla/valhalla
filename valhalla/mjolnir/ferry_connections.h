@@ -32,14 +32,17 @@ constexpr uint32_t kPermanent = 1;
 // be "adjacent" to an node that is permanently labeled.
 constexpr uint32_t kTemporary = 2;
 
+constexpr uint32_t kFerryUpClass = static_cast<uint32_t>(baldr::RoadClass::kPrimary);
+
 // NodeLabel - for simple shortest path
 struct NodeLabel {
   float cost;
   uint32_t node_index;
   uint32_t pred_node_index;
+  bool dest_only;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p)
-      : cost(c), node_index(n), pred_node_index(p) {
+  NodeLabel(const float c, const uint32_t n, const uint32_t p, const bool d)
+      : cost(c), node_index(n), pred_node_index(p), dest_only(d) {
   }
 };
 
@@ -72,7 +75,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
                       sequence<Edge>& edges,
                       sequence<Node>& nodes,
                       const bool inbound,
-                      const uint32_t rc);
+                      const bool remove_dest_only);
 
 /**
  * Check if the ferry included in this node bundle is short. Must be
@@ -93,8 +96,7 @@ bool ShortFerry(const uint32_t node_index,
 void ReclassifyFerryConnections(const std::string& ways_file,
                                 const std::string& way_nodes_file,
                                 const std::string& nodes_file,
-                                const std::string& edges_file,
-                                const uint32_t rc);
+                                const std::string& edges_file);
 
 } // namespace mjolnir
 } // namespace valhalla

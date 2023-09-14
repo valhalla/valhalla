@@ -237,7 +237,7 @@ public:
   }
 
   /**This method adds to the exclude list based on the
-   * user inputed exclude and include lists.
+   * user-provided exclude and include lists.
    */
   virtual void AddToExcludeList(const graph_tile_ptr& tile) override;
 

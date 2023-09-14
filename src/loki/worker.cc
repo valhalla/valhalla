@@ -378,8 +378,10 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
       case Options::expansion:
         if (options.expansion_action() == Options::route) {
           route(request);
-        } else {
+        } else if (options.expansion_action() == Options::isochrone) {
           isochrones(request);
+        } else {
+          matrix(request);
         }
         result.messages.emplace_back(request.SerializeAsString());
         break;

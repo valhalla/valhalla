@@ -124,6 +124,7 @@ public:
     l->set_search_cutoff(pl.radius_ > pl.search_cutoff_ ? pl.radius_ : pl.search_cutoff_);
     l->set_street_side_tolerance(pl.street_side_tolerance_);
     l->set_street_side_max_distance(pl.street_side_max_distance_);
+    l->set_street_side_cutoff(pl.street_side_cutoff_);
     l->mutable_search_filter()->set_min_road_class(pl.search_filter_.min_road_class_);
     l->mutable_search_filter()->set_max_road_class(pl.search_filter_.max_road_class_);
     l->mutable_search_filter()->set_exclude_tunnel(pl.search_filter_.exclude_tunnel_);
@@ -192,7 +193,8 @@ public:
 
     SearchFilter search_filter = SearchFilter();
     Location l({loc.ll().lng(), loc.ll().lat()}, fromPBF(loc.type()), loc.minimum_reachability(),
-               loc.minimum_reachability(), loc.radius(), side, search_filter);
+               loc.minimum_reachability(), loc.radius(), side, valhalla::RoadClass::kServiceOther,
+               search_filter);
 
     l.name_ = loc.name();
     l.street_ = loc.street();
@@ -217,6 +219,9 @@ public:
     }
     if (loc.has_street_side_max_distance_case()) {
       l.street_side_max_distance_ = loc.street_side_max_distance();
+    }
+    if (loc.has_street_side_cutoff_case()) {
+      l.street_side_cutoff_ = loc.street_side_cutoff();
     }
     if (loc.has_search_filter()) {
       l.search_filter_.min_road_class_ = loc.search_filter().min_road_class();
