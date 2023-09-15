@@ -993,7 +993,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
     graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (!endtile) {
+    if (endtile == nullptr) {
       continue;
     }
 
