@@ -519,19 +519,19 @@ void AddLandmarks(const EdgeInfo& edgeinfo,
         // calculate the landmark's distance along the edge
         // that is to accumulate distance from the begin point to the closest point to it on the edge
         int closest_idx = std::get<2>(closest);
-
         double distance_along_edge = 0;
-        for (int idx = begin_index; idx < closest_idx; ++idx) {
-          distance_along_edge += shape[idx].Distance(shape[idx + 1]);
+        for (int idx = begin_index + 1; idx <= closest_idx; ++idx) {
+          distance_along_edge += shape[idx].Distance(shape[idx - 1]);
         }
         distance_along_edge += shape[closest_idx].Distance(std::get<0>(closest));
         // the overall distance shouldn't be larger than edge length
         distance_along_edge = std::min(distance_along_edge, static_cast<double>(edge->length()));
         landmark->set_distance(distance_along_edge);
-
         // check which side of the edge the landmark is on
-        LineSegment2<PointLL> segment(shape[closest_idx], shape[closest_idx + 1]);
-        bool is_right = segment.IsLeft(landmark_point) < 0;
+        // quirks of the ClosestPoint function
+        bool is_right = closest_idx == shape.size() - 1
+                            ? landmark_point.IsLeft(shape[closest_idx - 1], shape[closest_idx]) < 0
+                            : landmark_point.IsLeft(shape[closest_idx], shape[closest_idx + 1]) < 0;
         landmark->set_right(is_right);
       }
     }
