@@ -1113,7 +1113,7 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
     graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (!endtile) {
+    if (endtile == nullptr) {
       continue;
     }
     if (costing_->get_multi_cost_flag()) {
