@@ -40,7 +40,7 @@ TEST(StandAlone, exhaust_reverse_search) {
     }
   });
 
-  // Without extending search, the route should not fail due to settting not_thru_pruning_
+  // Without extending search, the route should not fail due to setting not_thru_pruning_
   // to false on the second pass
   map.config.put("thor.extended_search", false);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});
@@ -84,7 +84,7 @@ TEST(StandAlone, exhaust_forward_search) {
     }
   });
 
-  // Without extending search, the route should not fail due to settting not_thru_pruning_
+  // Without extending search, the route should not fail due to setting not_thru_pruning_
   // to false on the second pass
   map.config.put("thor.extended_search", false);
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto", {});

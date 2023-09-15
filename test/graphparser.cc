@@ -778,7 +778,7 @@ TEST(GraphParser, TestImportBssNode) {
     EXPECT_EQ(directededge->surface(), Surface::kPavedRough) << "The edges' surface is incorrect";
     EXPECT_EQ(directededge->cyclelane(), CycleLane::kNone) << "The edges' cyclelane is incorrect";
     EXPECT_EQ(directededge->classification(), RoadClass::kResidential)
-        << "The edges' road calss is incorrect";
+        << "The edges' road class is incorrect";
     EXPECT_EQ(directededge->use(), Use::kRoad) << "The edges' use is incorrect";
 
     EdgeInfo edgeinfo = local_tile->edgeinfo(directededge);

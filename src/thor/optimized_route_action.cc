@@ -28,9 +28,10 @@ void thor_worker_t::optimized_route(Api& request) {
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;
-  std::vector<thor::TimeDistance> td =
-      costmatrix.SourceToTarget(options.sources(), options.targets(), *reader, mode_costing, mode,
-                                max_matrix_distance.find(costing)->second);
+  costmatrix.SourceToTarget(request, *reader, mode_costing, mode,
+                            max_matrix_distance.find(costing)->second,
+                            check_matrix_time(request, Matrix::CostMatrix),
+                            options.date_time_type() == Options::invariant);
 
   // Return an error if any locations are totally unreachable
   const auto& correlated =
@@ -39,7 +40,8 @@ void thor_worker_t::optimized_route(Api& request) {
   // Set time costs to send to Optimizer.
   std::vector<float> time_costs;
   bool reachable = true;
-  for (size_t i = 0; i < td.size(); ++i) {
+  const auto tds = request.matrix().times();
+  for (size_t i = 0; i < tds.size(); ++i) {
     // If any location is completely unreachable then we cant have a connected path
     if (i % correlated.size() == 0) {
       if (!reachable) {
@@ -47,9 +49,9 @@ void thor_worker_t::optimized_route(Api& request) {
       };
       reachable = false;
     }
-    reachable = reachable || td[i].time != kMaxCost;
+    reachable = reachable || tds.Get(i) != kMaxCost;
     // Keep the times for the reordering
-    time_costs.emplace_back(static_cast<float>(td[i].time));
+    time_costs.emplace_back(static_cast<float>(tds.Get(i)));
   }
 
   Optimizer optimizer;

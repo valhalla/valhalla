@@ -50,9 +50,9 @@ message PbfFieldSelector {
   bool trip = 2;       // /trace_attributes
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
+  bool matrix = 5;     // sources_to_targets
   // TODO: enable these once we have objects for them
   // bool isochrone = 5;
-  // bool matrix = 6;
   // bool locate = 7;
   // bool height = 8;
   // bool expansion = 9;
@@ -467,7 +467,7 @@ message Options {
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
+    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   }
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
@@ -482,4 +482,5 @@ message Options {
     uint32 matrix_locations = 54;                                  // a one to many or many to one time distance matrix. Does not affect
   }                                                                // sources_to_targets when either sources or targets has more than 1 location
                                                                    // or when CostMatrix is the selected matrix mode.
+  bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
 }

@@ -9,6 +9,7 @@
     "tile_extract": "test/data/utrecht_tiles/tiles.tar",
     "traffic_extract": "/data/valhalla/traffic.tar",
     "admin": "/data/valhalla/admin.sqlite",
+    "landmarks": "/data/valhalla/landmarks.sqlite",
     "timezone": "/data/valhalla/tz_world.sqlite",
     "transit_dir": "/data/valhalla/transit",
     "transit_feeds_dir": "/data/valhalla/transit_feeds",

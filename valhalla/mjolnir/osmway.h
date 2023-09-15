@@ -1193,7 +1193,7 @@ struct OSMWay {
   /*
    * Gets whether a pedestrian or cyclist should have preference to use a different
    * path to the side (A separate OSMWay completely)
-   * @return  Returns if using a sidepath is preffered
+   * @return  Returns if using a sidepath is preferred
    */
   bool use_sidepath() const {
     return use_sidepath_;

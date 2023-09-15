@@ -19,7 +19,7 @@ public:
 #ifdef HAVE_HTTP
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
-                                                const std::function<void()>& interupt) override;
+                                                const std::function<void()>& interrupt) override;
 #endif
 
   /**

@@ -44,8 +44,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     python3-pip \
     spatialite-bin \
     unzip \
-    zlib1g-dev \
-  && rm -rf /var/lib/apt/lists/*
+    zlib1g-dev
   
 # build prime_server from source
 # readonly primeserver_version=0.7.0
@@ -58,4 +57,4 @@ popd && \
 rm -r $primeserver_dir
 
 # for boost
-python3 -m pip install --upgrade "conan<2.0.0" requests
+python3 -m pip install --upgrade "conan<2.0.0" requests shapely

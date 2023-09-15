@@ -120,6 +120,14 @@ std::string serializeStatus(Api& request) {
   if (request.status().has_has_live_traffic_case())
     status_doc.AddMember("has_live_traffic",
                          rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+  if (request.status().has_has_transit_tiles_case())
+    status_doc.AddMember("has_transit_tiles",
+                         rapidjson::Value().SetBool(request.status().has_transit_tiles()), alloc);
+  // a 0 changeset indicates there's none, so don't write in the output
+  // TODO: currently this can't be tested as gurka isn't adding changeset IDs to OSM objects (yet)
+  if (request.status().has_osm_changeset_case() && request.status().osm_changeset())
+    status_doc.AddMember("osm_changeset",
+                         rapidjson::Value().SetUint64(request.status().osm_changeset()), alloc);
 
   rapidjson::Document bbox_doc;
   if (request.status().has_bbox_case()) {
@@ -202,6 +210,9 @@ std::string serializePbf(Api& request) {
       case Options::status:
         selection.set_status(true);
         break;
+      case Options::sources_to_targets:
+        selection.set_matrix(true);
+        break;
       // should never get here, actions which dont have pbf yet return json
       default:
         throw std::logic_error("Requested action is not yet serializable as pbf");
@@ -225,6 +236,8 @@ std::string serializePbf(Api& request) {
     request.clear_status();
   if (!selection.options())
     request.clear_options();
+  if (!selection.matrix())
+    request.clear_matrix();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();

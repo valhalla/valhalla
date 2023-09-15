@@ -29,6 +29,7 @@
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/mjolnir/landmarks.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -50,7 +51,7 @@ public:
    * @param  graphid                GraphId used to determine the tileid and level
    * @param  deserialize            If true the existing objects in the tile are
    *                                converted into builders so they can be added to.
-   * @param  serialize_turn_lanes   If true, the offsets are truely text offsets.
+   * @param  serialize_turn_lanes   If true, the offsets are truly text offsets.
    *                                If false, the offsets are indexes into unique name file
    */
   GraphTileBuilder(const std::string& tile_dir,
@@ -484,6 +485,14 @@ public:
    * @param  directededges  Updated directed edge information.
    */
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+
+  /**
+   * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value
+   *
+   * @param edge_id  the edge id to modify
+   * @param landmark the landmark to associate to the edge
+   */
+  void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
 
 protected:
   struct EdgeTupleHasher {

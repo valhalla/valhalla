@@ -172,7 +172,7 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // The recipe from DIN 33466 goes: For every 300m ascent/500m descent, add
 // one hour to bucket H. For every 4km distance, add one hour to bucket D.
 // Now add half of the value in the smaller bucket to the bigger bucket
-// to get the estimated duration. The method is recommeded by the DAV and
+// to get the estimated duration. The method is recommended by the DAV and
 // the OEAV for casual hiking.
 //
 // For comparison, value researched by the Mountain Tactical Institute

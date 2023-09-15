@@ -3,6 +3,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/proto/incidents.pb.h>
+#include <valhalla/proto/matrix.pb.h>
 #include <valhalla/sif/costconstants.h>
 
 namespace valhalla {
@@ -246,6 +247,8 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
   }
 }
 
+// matrix algo to string
+std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact

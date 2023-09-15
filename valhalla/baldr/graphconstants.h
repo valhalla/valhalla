@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -363,7 +364,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kRail), "rail"},
       {static_cast<uint8_t>(Use::kBus), "bus"},
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
-      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
+      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
       {static_cast<uint8_t>(Use::kConstruction), "construction"},
   };
@@ -381,11 +382,11 @@ enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kBssInfo = 3,
   kLevel = 4,
   kLevelRef = 5,
+  kLandmark = 6,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),
   kBridge = static_cast<uint8_t>('2'),
-
 };
 
 enum class PronunciationAlphabet : uint8_t {

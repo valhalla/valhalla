@@ -165,7 +165,7 @@ protected:
   // The actual cached GraphTile objects
   std::vector<graph_tile_ptr> cache_;
 
-  // Indicies into the array of actual cached items
+  // Indices into the array of actual cached items
   std::vector<uint32_t> cache_indices_;
 
   // Offsets in the indices list for where a set of tile indices begin
@@ -425,7 +425,7 @@ class TileCacheFactory final {
 public:
   /**
    * Constructs tile cache.
-   * @param pt  Property tree listing the configuration for the cahce configuration
+   * @param pt  Property tree listing the configuration for the cache configuration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
 };

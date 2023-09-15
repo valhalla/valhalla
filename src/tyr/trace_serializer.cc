@@ -193,6 +193,12 @@ void serialize_edges(const AttributesController& controller,
       if (controller(kEdgeLength)) {
         writer.set_precision(3);
         writer("length", edge.length_km() * scale);
+        if (edge.source_along_edge() != 0.f) {
+          writer("source_percent_along", edge.source_along_edge());
+        }
+        if (edge.target_along_edge() != 1.f) {
+          writer("target_percent_along", edge.target_along_edge());
+        }
       }
       // TODO: do we want to output 'is_route_number'?
       if (edge.name_size() > 0) {

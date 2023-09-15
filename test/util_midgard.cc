@@ -270,15 +270,15 @@ TEST(UtilMidgard, TestIterable) {
     sum += i;
   EXPECT_EQ(sum, 15) << "integer array sum failed";
 
-  std::string concatinated;
+  std::string concatenated;
   for (const auto& i : iterable_t<char>(b, 5))
-    concatinated.push_back(i);
-  EXPECT_EQ(concatinated, "abcde") << "char concatenation failed";
+    concatenated.push_back(i);
+  EXPECT_EQ(concatenated, "abcde") << "char concatenation failed";
 
-  concatinated = "";
+  concatenated = "";
   for (const auto& i : iterable_t<std::string>(c, 5))
-    concatinated.append(i);
-  EXPECT_EQ(concatinated, "onetwothreefourfive") << "string concatenation failed";
+    concatenated.append(i);
+  EXPECT_EQ(concatenated, "onetwothreefourfive") << "string concatenation failed";
 
   size_t cumulative_product = 1;
   iterable_t<const size_t> iterable(d, 5);
