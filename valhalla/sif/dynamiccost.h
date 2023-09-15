@@ -901,6 +901,7 @@ public:
    * @param  toll_factor_value  set the toll_factor for edge cost calculations.
    */
   virtual void set_toll_factor(float toll_factor_value) {
+    static_cast<void>(toll_factor_value);
   }
 
   /**
