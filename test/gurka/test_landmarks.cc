@@ -186,6 +186,34 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     }
   }
 }
+
+// struct to represent a landmark in maneuvers in test
+struct LandmarkInManeuver {
+  std::string _name;
+  uint8_t _type;
+  double _distance;
+  bool _right;
+
+  LandmarkInManeuver(std::string name, uint8_t type, double distance, bool right)
+      : _name(std::move(name)), _type(type), _distance(distance), _right(right) {
+  }
+
+  bool operator<(const LandmarkInManeuver& other) const {
+    if (_name != other._name) {
+      return _name < other._name;
+    } else {
+      return _distance < other._distance;
+    }
+  }
+
+  bool operator==(const LandmarkInManeuver& other) const {
+    if (_name == other._name && _type == other._type && _distance == other._distance &&
+        _right == other._right) {
+      return true;
+    }
+    return false;
+  }
+};
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
@@ -420,7 +448,7 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
 }
 
-TEST(LandmarkTest, LandmarksInManeuvers) {
+TEST(LandmarkTest, TestLandmarksInManeuvers) {
   const std::string ascii_map = R"(
     A B           C         D 
     a-------b-------c------d
@@ -483,9 +511,9 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
   // build regular graph tiles from the pbf, and add landmarks to it
   mjolnir::build_tile_set(map.config, {pbf}, mjolnir::BuildStage::kInitialize,
                           mjolnir::BuildStage::kValidate, false);
-
+  // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
-
+  // add landmarks to graphtile from the landmark database
   AddLandmarks(map.config);
 
   // get routing result from point a to g
@@ -493,10 +521,9 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
 
   ASSERT_EQ(result.trip().routes_size(), 1);
   ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-
   auto leg = result.trip().routes(0).legs(0);
 
-  const std::map<std::string, std::vector<std::string>> expected_landmarks_maneuvers = {
+  const std::map<std::string, std::vector<std::string>> expected_landmarks_tripleg = {
       {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
       {"S2", std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "ju_yuan",
                                       "sheng_ren_min_yi_yuan"}},
@@ -504,9 +531,9 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
       {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
   };
 
-  // Check TripLeg
+  // Check tripLeg
   for (const auto& node : leg.node()) {
-    // skip the point in trip leg
+    // skip the point in trip leg, check edges
     if (node.edge().name_size() == 0) {
       continue;
     }
@@ -523,8 +550,8 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
       }
     }
     // compare landmarks with expected results
-    auto expected_result = expected_landmarks_maneuvers.find(edge_name);
-    if (expected_result == expected_landmarks_maneuvers.end()) {
+    auto expected_result = expected_landmarks_tripleg.find(edge_name);
+    if (expected_result == expected_landmarks_tripleg.end()) {
       throw std::runtime_error("Failed to find the edge in the expected landmarks, edge name = " +
                                edge_name);
     }
@@ -533,29 +560,56 @@ TEST(LandmarkTest, LandmarksInManeuvers) {
     EXPECT_EQ(expected_result->second, landmark_names);
   }
 
-  // Check Maneuver
+  // Check maneuver
   ASSERT_EQ(result.directions().routes_size(), 1);
   ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
-
   auto directions_leg = result.directions().routes(0).legs(0);
 
+  // expected landmark results in the maneuvers
+  std::vector<LandmarkInManeuver> cf_maneuver{LandmarkInManeuver("hai_di_lao", 6, 140, 0),
+                                              LandmarkInManeuver("lv_mo_li", 12, 160, 0),
+                                              LandmarkInManeuver("sheng_ren_min_yi_yuan", 13, 100, 1),
+                                              LandmarkInManeuver("gong_shang_yin_hang", 9, 30, 1),
+                                              LandmarkInManeuver("ju_yuan", 16, 0, 1),
+                                              LandmarkInManeuver("sheng_ren_min_yi_yuan", 13, 80, 1),
+                                              LandmarkInManeuver("McDonalds", 7, 20, 0)};
+  std::vector<LandmarkInManeuver> fg_maneuver{LandmarkInManeuver("ju_yuan", 16, 30, 0),
+                                              LandmarkInManeuver("you_zheng", 2, 0, 0),
+                                              LandmarkInManeuver("McDonalds", 7, 40, 1)};
+  std::vector<LandmarkInManeuver> end_point_maneuver{LandmarkInManeuver("shell", 1, 30, 0),
+                                                     LandmarkInManeuver("you_zheng", 2, 60, 1),
+                                                     LandmarkInManeuver("starbucks", 8, 0, 0)};
+  std::sort(cf_maneuver.begin(), cf_maneuver.end());
+  std::sort(fg_maneuver.begin(), fg_maneuver.end());
+  std::sort(end_point_maneuver.begin(), end_point_maneuver.end());
+
+  std::map<std::string, std::vector<LandmarkInManeuver>> expected_landmarks_maneuver = {
+      {"S1", {}},
+      {"cf", cf_maneuver},
+      {"fg", fg_maneuver},
+      {"end_point", end_point_maneuver},
+  };
+
+  // check landmarks with expectation one by one
   for (const auto& man : directions_leg.maneuver()) {
-    if (man.street_name_size() == 1) {
-      std::cout << "Maneuver: " << man.street_name(0).value() << std::endl;
-    }
-    std::cout << "Number of landmarks: " << man.landmarks_size() << std::endl;
+    std::string street_name =
+        man.street_name_size() == 1 ? street_name = man.street_name(0).value() : "end_point";
 
+    std::vector<LandmarkInManeuver> result_landmarks{};
     for (const auto& l : man.landmarks()) {
-      std::cout << "name: " << l.name() << ", type: " << static_cast<int>(l.type())
-                << ", distance: " << l.distance() << ", right: " << l.right() << std::endl;
+      result_landmarks.emplace_back(LandmarkInManeuver(l.name(), static_cast<uint8_t>(l.type()),
+                                                       std::round(l.distance()), l.right()));
     }
-    std::cout << std::endl;
+    std::sort(result_landmarks.begin(), result_landmarks.end());
 
-    // TODO: how to eliminate duplicated landmarks to keep the correct ones?
-    // e.g. in maneuver "cf" there are two "sheng_ren_min_yi_yuan", the one with distance 100 is
-    // correct.
-
-    // TODO: in maneuver "cf", "ju_yuan" (G) should be to the right, but it's left.
-    //       in the last maneuver, "startbucks" (J) should be to the left, but it's right.
+    auto expected = expected_landmarks_maneuver.find(street_name);
+    if (expected == expected_landmarks_maneuver.end()) {
+      throw std::runtime_error(
+          "Checking landmarks in maneuver failed: cannot find the maneuver in the expected result!");
+    }
+    ASSERT_EQ(result_landmarks.size(), expected->second.size());
+    for (auto i = 0; i < result_landmarks.size(); ++i) {
+      EXPECT_EQ(result_landmarks[i], expected->second[i]);
+    }
   }
 }
