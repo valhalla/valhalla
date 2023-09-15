@@ -1003,7 +1003,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     if (costing_->get_multi_cost_flag()) {
       auto country_toll_map = costing_->get_toll_factor_per_country();
       auto endnode_admin_idx = nodeinfo->admin_index();
-      auto admin_endnode = tile->admin(endnode_admin_idx)->country_iso();
+      auto admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
       auto it = country_toll_map.find(admin_endnode);
       if (it != country_toll_map.end()) {
         auto toll_factor_val = it->second;
@@ -1112,10 +1112,14 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (!endtile) {
+      continue;
+    }
     if (costing_->get_multi_cost_flag()) {
       auto country_toll_map = costing_->get_toll_factor_per_country();
-      auto endnode_admin_idx = tile->node(directededge->endnode())->admin_index();
-      auto admin_endnode = tile->admin(endnode_admin_idx)->country_iso();
+      auto endnode_admin_idx = endtile->node(directededge->endnode())->admin_index();
+      auto admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
       auto it = country_toll_map.find(admin_endnode);
       if (it != country_toll_map.end()) {
         auto toll_factor_val = it->second;
