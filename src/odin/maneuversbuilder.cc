@@ -67,9 +67,6 @@ constexpr float kSmallEndRampForkThreshold = 0.125f;
 constexpr uint32_t kMaxWordCount = 5;
 constexpr uint32_t kMaxStreetNameLength = 25;
 
-// Coefficient to convert kilometers to meters
-constexpr uint32_t kConvertKmtoMeters = 1000;
-
 std::vector<std::string> split(const std::string& source, char delimiter) {
   std::vector<std::string> tokens;
   std::string token;
@@ -3959,7 +3956,7 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
     double distance_from_begin_to_curr_edge = 0; // distance from the begin point of the whole
                                                  // manerver to the begin point of the current edge
     double maneuver_total_distance =
-        man->length() * kConvertKmtoMeters; // total distance of the maneuver in meters
+        man->length() * kMetersPerKm; // total distance of the maneuver in meters
 
     for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
       auto curr_edge = trip_path_->GetCurrEdge(node);
@@ -3975,7 +3972,7 @@ void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& m
         }
         std::move(curr_landmarks.begin(), curr_landmarks.end(), std::back_inserter(landmarks));
         // accumulate the distance from maneuver to the curr edge we are working on
-        distance_from_begin_to_curr_edge += curr_edge->length_km() * kConvertKmtoMeters;
+        distance_from_begin_to_curr_edge += curr_edge->length_km() * kMetersPerKm;
       }
     }
   }
