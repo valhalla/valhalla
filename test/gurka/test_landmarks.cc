@@ -194,8 +194,8 @@ struct LandmarkInManeuver {
   double _distance;
   bool _right;
 
-  LandmarkInManeuver(std::string name, uint8_t type, double distance, bool right)
-      : _name(std::move(name)), _type(type), _distance(distance), _right(right) {
+  LandmarkInManeuver(const std::string& name, uint8_t type, double distance, bool right)
+      : _name(name), _type(type), _distance(distance), _right(right) {
   }
 
   bool operator<(const LandmarkInManeuver& other) const {
@@ -584,7 +584,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   std::sort(end_point_maneuver.begin(), end_point_maneuver.end());
 
   std::map<std::string, std::vector<LandmarkInManeuver>> expected_landmarks_maneuver = {
-      {"S1", {}},
+      {"S1", std::vector<LandmarkInManeuver>{}},
       {"cf", cf_maneuver},
       {"fg", fg_maneuver},
       {"end_point", end_point_maneuver},
