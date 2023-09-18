@@ -344,6 +344,13 @@ void match_edges(valhalla::tyr::actor_t& actor,
       const auto b_ranked =
           rank_edges(b_res.GetArray()[0]["edges"].GetArray(), b_lrp, LRPOrder::LAST);
 
+      if (!a_ranked.size() || !b_ranked.size()) {
+        LOG_ERROR("[valhalla] " + std::string(openlr_start->GetString()) +
+                  " : No suitable edges after ranking for 1st or 2nd LRP of segment " +
+                  std::to_string(i));
+        continue;
+      }
+
       const auto size_before = local_edges.size();
 
       // try without heading filter if the first try wasn't successful
@@ -389,12 +396,6 @@ void match_edges(valhalla::tyr::actor_t& actor,
         uint32_t delete_count = 0;
         // we're skipping entire edges at the front until we're past the poff
         while (true) {
-          delete_count++;
-          first_edge_poff += first_edge->length;
-          if (a_smaller_b(first_edge_poff, poff_meter)) {
-            break;
-          }
-          first_edge++;
           // if at this point there's no nodes left, that means we already looked at the
           // last segment just before, this shouldn't happen
           if (first_edge == local_edges.end()) {
@@ -404,6 +405,13 @@ void match_edges(valhalla::tyr::actor_t& actor,
             poff_meter = poff_meter - first_edge_poff;
             break;
           }
+
+          delete_count++;
+          first_edge_poff += first_edge->length;
+          if (a_smaller_b(first_edge_poff, poff_meter)) {
+            break;
+          }
+          first_edge++;
         }
         // remove the skipped edges, invalidates first_edge
         local_edges.erase(local_edges.begin(), local_edges.begin() + delete_count);
@@ -420,12 +428,6 @@ void match_edges(valhalla::tyr::actor_t& actor,
         uint32_t delete_count = 0;
         // we're skipping entire edges at the front until we're past the poff
         while (true) {
-          delete_count++;
-          last_edge_noff += last_edge->length;
-          if (a_smaller_b(last_edge_noff, noff_meter)) {
-            break;
-          }
-          last_edge++;
           // if at this point there's no nodes left, that means we already looked at the
           // last segment just before, this shouldn't happen
           if (last_edge == local_edges.rend()) {
@@ -435,6 +437,13 @@ void match_edges(valhalla::tyr::actor_t& actor,
             noff_meter = noff_meter - last_edge_noff;
             break;
           }
+
+          delete_count++;
+          last_edge_noff += last_edge->length;
+          if (a_smaller_b(last_edge_noff, noff_meter)) {
+            break;
+          }
+          last_edge++;
         }
         // remove the skipped edges
         for (uint32_t i = 0; i < delete_count; i++) {
@@ -449,6 +458,7 @@ void match_edges(valhalla::tyr::actor_t& actor,
       local_edges.back().is_last = true;
       std::move(local_edges.begin(), local_edges.end(), std::back_inserter(openlrs_edges));
     }
+    local_edges.clear();
   }
 
   openlrs_edges.shrink_to_fit();

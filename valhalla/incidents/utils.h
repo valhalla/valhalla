@@ -18,8 +18,8 @@ struct OpenLrEdge {
   float noff_start_offset; // meter offset of noff in negative direction of openlr, 0 is no offset
   bool is_last;            // if it's the last edge for an openlr, so we can plot them as GeoJSON
 
+  OpenLrEdge() = delete;
   // only allow this constructor: is_last will be set after initially collecting all edges
-  // OpenLrEdge() = delete;
   OpenLrEdge(const baldr::GraphId i, const float le, const float po, const float no)
       : edge_id(i), length(le), poff_start_offset(po), noff_start_offset(no), is_last(false) {
   }
