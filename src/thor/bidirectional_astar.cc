@@ -277,12 +277,16 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     std::string admin_endnode;
     if (FORWARD) {
       auto endtile = graphreader.GetGraphTile(meta.edge->endnode());
-      auto endnode_admin_idx = graphreader.GetEndNode(meta.edge, endtile)->admin_index();
-      admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      if (endtile == nullptr) {
+        auto endnode_admin_idx = graphreader.GetEndNode(meta.edge, endtile)->admin_index();
+        admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      }
     } else {
       auto endtile = graphreader.GetGraphTile(opp_edge->endnode());
-      auto endnode_admin_idx = graphreader.GetEndNode(opp_edge, endtile)->admin_index();
-      admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      if (endtile == nullptr) {
+        auto endnode_admin_idx = graphreader.GetEndNode(opp_edge, endtile)->admin_index();
+        admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      }
     }
     auto it = country_toll_map.find(admin_endnode);
     if (it != country_toll_map.end()) {
