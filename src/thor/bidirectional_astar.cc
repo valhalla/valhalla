@@ -277,13 +277,13 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     std::string admin_endnode;
     if (FORWARD) {
       auto endtile = graphreader.GetGraphTile(meta.edge->endnode());
-      if (endtile == nullptr) {
+      if (endtile != nullptr) {
         auto endnode_admin_idx = graphreader.GetEndNode(meta.edge, endtile)->admin_index();
         admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
       }
     } else {
       auto endtile = graphreader.GetGraphTile(opp_edge->endnode());
-      if (endtile == nullptr) {
+      if (endtile != nullptr) {
         auto endnode_admin_idx = graphreader.GetEndNode(opp_edge, endtile)->admin_index();
         admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
       }
