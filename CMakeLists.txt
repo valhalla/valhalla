@@ -180,7 +180,6 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
   find_package(Protobuf REQUIRED)
 endif()
 
