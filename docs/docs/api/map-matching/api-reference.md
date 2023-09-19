@@ -218,6 +218,7 @@ Each `edge` may include:
 | `truck_speed` | Edge truck speed in the units specified. The default is kilometers per hour. |
 | `truck_route` | True if edge is part of a truck network/route. |
 | `end_node` | The node at the end of this edge. See the list of [end node items](#end-node-items) for details. |
+| `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |
 
 #### Sign items
 
