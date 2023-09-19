@@ -36,6 +36,38 @@ constexpr float kVerbalAlertMergePriorManeuverMinimumLength = kVerbalPostMinimum
 constexpr uint32_t kRoundaboutExitCountLowerBound = 1;
 constexpr uint32_t kRoundaboutExitCountUpperBound = 10;
 
+// Distance compensation to be added to the landmarks which are on the opposite direction to
+// maneuver's turn direction. i.e. if the maneuver is to turn right but a landmark is left hand, we
+// add this compensation to its distance. so that it's less preferred than the right handed landmarks
+// in selection.
+constexpr double kLandmarkOppositeDirectionCompensation = 100.;
+
+// Select the most suitable landmark in a maneuver to be used in narrative generation.
+// TODO: the current logic is to select the nearest landmark to the maneuver and it should be
+// preferably on the correct side. However, if for say the maneuver is to turn right, the nearest
+// right handed landmark is far away from the maneuver but the nearest left handed landmark is very
+// close, than we pick the nearest left handed one.
+valhalla::RouteLandmark select_landmark(const std::vector<valhalla::RouteLandmark>& landmarks,
+                                        const std::string& relative_direction) {
+  bool direction = relative_direction == "right" ? 1 : 0;
+  // choose the nearest landmark to the maneuver
+  int idx = -1;
+  double min_dist = -1;
+  for (auto i = 0; i < landmarks.size(); ++i) {
+    // adjust landmark distance with compensation based on their direction
+    auto dist = landmarks[i].right() == direction
+                    ? landmarks[i].distance()
+                    : (landmarks[i].distance() + kLandmarkOppositeDirectionCompensation);
+    if (idx == -1) {
+      idx = i;
+      min_dist = dist;
+    } else if (dist < min_dist) {
+      idx = i;
+      min_dist = dist;
+    }
+  }
+  return landmarks[idx];
+}
 } // namespace
 
 namespace valhalla {
@@ -1143,6 +1175,7 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
   uint8_t phrase_id = 0;
   std::string junction_name;
   std::string guide_sign;
+  valhalla::RouteLandmark landmark;
 
   if (maneuver.HasGuideSign()) {
     // Set the toward phrase - it takes priority over street names and junction name
@@ -1163,6 +1196,20 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
     phrase_id = 1;
   }
 
+  // Select the most suitable landmark if there are landmarks associated with the maneuver
+  if (phrase_id < 4 && maneuver.landmarks().size() > 0) {
+    landmark =
+        select_landmark(maneuver.landmarks(),
+                        FormRelativeTwoDirection(maneuver.type(), subset->relative_directions));
+
+    // Make sure the landmark type is legal
+    if (static_cast<int>(landmark.type()) > 0 &&
+        static_cast<int>(landmark.type()) < subset->landmark_types.size()) {
+      // increment the phrase id by 6 to get the corresponding landmark phrase
+      phrase_id += 6;
+    }
+  }
+
   // Set instruction to the determined tagged phrase
   instruction = subset->phrases.at(std::to_string(phrase_id));
 
@@ -1173,6 +1220,9 @@ std::string NarrativeBuilder::FormTurnInstruction(Maneuver& maneuver,
   boost::replace_all(instruction, kBeginStreetNamesTag, begin_street_names);
   boost::replace_all(instruction, kJunctionNameTag, junction_name);
   boost::replace_all(instruction, kTowardSignTag, guide_sign);
+  boost::replace_all(instruction, kLandmarkTypeTag,
+                     FormLandmarkType(landmark.type(), subset->landmark_types));
+  boost::replace_all(instruction, kLandmarkNameTag, landmark.name());
 
   // If enabled, form articulated prepositions
   if (articulated_preposition_enabled_) {
@@ -4527,6 +4577,52 @@ NarrativeBuilder::FormRelativeThreeDirection(DirectionsLeg_Maneuver_Type type,
     }
     default: {
       throw valhalla_exception_t{232};
+    }
+  }
+}
+
+std::string NarrativeBuilder::FormLandmarkType(RouteLandmark_Type type,
+                                               const std::vector<std::string>& landmark_types) {
+  switch (type) {
+    case RouteLandmark_Type_kFuel:
+      return landmark_types[1];
+    case RouteLandmark_Type_kPostOffice:
+      return landmark_types[2];
+    case RouteLandmark_Type_kPolice:
+      return landmark_types[3];
+    case RouteLandmark_Type_kFireStation:
+      return landmark_types[4];
+    case RouteLandmark_Type_kCarWash:
+      return landmark_types[5];
+    case RouteLandmark_Type_kRestaurant:
+      return landmark_types[6];
+    case RouteLandmark_Type_kFastFood:
+      return landmark_types[7];
+    case RouteLandmark_Type_kCafe:
+      return landmark_types[8];
+    case RouteLandmark_Type_kBank:
+      return landmark_types[9];
+    case RouteLandmark_Type_kPharmacy:
+      return landmark_types[10];
+    case RouteLandmark_Type_kKindergarten:
+      return landmark_types[11];
+    case RouteLandmark_Type_kBar:
+      return landmark_types[12];
+    case RouteLandmark_Type_kHospital:
+      return landmark_types[13];
+    case RouteLandmark_Type_kPub:
+      return landmark_types[14];
+    case RouteLandmark_Type_kClinic:
+      return landmark_types[15];
+    case RouteLandmark_Type_kTheatre:
+      return landmark_types[16];
+    case RouteLandmark_Type_kCinema:
+      return landmark_types[17];
+    case RouteLandmark_Type_kCasino:
+      return landmark_types[18];
+    default: {
+      // TODO: throw exception?
+      return "unknown landmark type";
     }
   }
 }

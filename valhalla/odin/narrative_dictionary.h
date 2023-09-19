@@ -95,6 +95,7 @@ constexpr auto kFerryLabelKey = "ferry_label";
 constexpr auto kStationLabelKey = "station_label";
 constexpr auto kEmptyTransitNameLabelsKey = "empty_transit_name_labels";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
+constexpr auto kLandmarkTypesKey = "landmark_types";
 
 constexpr auto kPluralCategoryZeroKey = "zero";
 constexpr auto kPluralCategoryOneKey = "one";
@@ -157,7 +158,8 @@ constexpr auto kTransitHeadSignTag = "<TRANSIT_HEADSIGN>";
 constexpr auto kTransitPlatformCountTag = "<TRANSIT_STOP_COUNT>";
 constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 constexpr auto kLevelTag = "<LEVEL>";
-
+constexpr auto kLandmarkNameTag = "<LANDMARK_NAME>";
+constexpr auto kLandmarkTypeTag = "<LANDMARK_TYPE>";
 } // namespace
 
 namespace valhalla {
@@ -193,6 +195,7 @@ struct ContinueVerbalSubset : ContinueSubset {
 struct TurnSubset : PhraseSet {
   std::vector<std::string> relative_directions;
   std::vector<std::string> empty_street_name_labels;
+  std::vector<std::string> landmark_types;
 };
 
 struct RampSubset : PhraseSet {

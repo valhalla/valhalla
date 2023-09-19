@@ -611,4 +611,14 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
       EXPECT_EQ(result_landmarks[i], expected->second[i]);
     }
   }
+
+  // check narrative generation
+  const std::vector<std::string> expected_narrative =
+      {"Drive east on S1.", "Turn right onto cf at the theatre ju_yuan.",
+       "Turn left onto fg at the post office you_zheng.", "You have arrived at your destination."};
+  std::vector<std::string> narrative{};
+  for (const auto& man : directions_leg.maneuver()) {
+    narrative.push_back(man.text_instruction());
+  }
+  EXPECT_EQ(narrative, expected_narrative);
 }

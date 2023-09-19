@@ -421,6 +421,9 @@ void NarrativeDictionary::Load(TurnSubset& turn_handle,
   // Populate empty_street_name_labels
   turn_handle.empty_street_name_labels =
       as_vector<std::string>(turn_subset_pt, kEmptyStreetNameLabelsKey);
+
+  // Populate landmark types
+  turn_handle.landmark_types = as_vector<std::string>(turn_subset_pt, kLandmarkTypesKey);
 }
 
 void NarrativeDictionary::Load(RampSubset& ramp_handle,
