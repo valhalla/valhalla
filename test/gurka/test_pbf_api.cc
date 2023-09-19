@@ -78,7 +78,6 @@ TEST(pbf_api, pbf_in_out) {
       pbf_out.mutable_options()->set_format(Options::pbf);
       pbf_out.mutable_options()->mutable_pbf_field_selector()->CopyFrom(select_all);
 
-      auto format = pbf_out.options().format();
       auto pbf_bytes = gurka::do_action(map, pbf_out);
       Api actual_pbf;
       EXPECT_TRUE(actual_pbf.ParseFromString(pbf_bytes));
