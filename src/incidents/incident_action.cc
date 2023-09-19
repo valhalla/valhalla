@@ -21,6 +21,12 @@ std::string serialize_geojson_matches(const std::vector<vi::OpenLrEdge>& openlrs
   writer("type", "FeatureCollection");
   writer.start_array("features");
 
+  if (openlrs_edges.size() == 0) {
+    writer.end_array();  // features
+    writer.end_object(); // FeatureCollection
+    return writer.get_buffer();
+  }
+
   writer.set_precision(6);
 
   vb::graph_tile_ptr tile;

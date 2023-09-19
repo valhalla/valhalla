@@ -180,7 +180,8 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  find_package(Protobuf REQUIRED)
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+  find_package(Protobuf REQUIRED CONFIG)
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
