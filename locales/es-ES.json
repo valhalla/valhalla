@@ -39,8 +39,33 @@
         "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
         "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -79,8 +104,33 @@
         "2": "Siga por la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
         "3": "Manténgase a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Siga por la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Siga por la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -1068,6 +1118,7 @@
         "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
         "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "izquierda",
         "derecha"
@@ -1108,6 +1159,7 @@
         "4": "Incorpórese en dirección a <TOWARD_SIGN>.",
         "5": "Incorpórese a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "izquierda",
         "derecha"
@@ -1393,8 +1445,33 @@
         "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
         "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -1433,8 +1510,33 @@
         "2": "Gire completamente a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
         "3": "Gire completamente a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Gire completamente a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Gire completamente a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -1952,8 +2054,33 @@
         "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>. Continúe en <STREET_NAMES>.",
         "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -1992,8 +2119,33 @@
         "2": "Gire a la <RELATIVE_DIRECTION> hacia <BEGIN_STREET_NAMES>.",
         "3": "Gire a la <RELATIVE_DIRECTION> para permanecer en <STREET_NAMES>.",
         "4": "Gire a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
-        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
+        "5": "Gire a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -2036,6 +2188,7 @@
         "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
         "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",
@@ -2084,6 +2237,7 @@
         "6": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en <JUNCTION_NAME>.",
         "7": "Haga un cambio de sentido a la <RELATIVE_DIRECTION> en dirección a <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "la calzada",
         "el carril bici",

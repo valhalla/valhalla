@@ -39,8 +39,33 @@
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -79,8 +104,33 @@
         "2": "Queda't a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Queda't a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Bear <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Bear <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -1068,6 +1118,7 @@
         "4": "Merge toward <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "l'esquerra",
         "la dreta"
@@ -1108,6 +1159,7 @@
         "4": "Merge toward <TOWARD_SIGN>.",
         "5": "Merge <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "l'esquerra",
         "la dreta"
@@ -1393,8 +1445,33 @@
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -1433,8 +1510,33 @@
         "2": "Gir tancat a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Gir tancat a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Make a sharp <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Make a sharp <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -1952,8 +2054,33 @@
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>. Continua per <STREET_NAMES>.",
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -1992,8 +2119,33 @@
         "2": "Gira a <RELATIVE_DIRECTION> cap a <BEGIN_STREET_NAMES>.",
         "3": "Gira a <RELATIVE_DIRECTION> per continuar per <STREET_NAMES>.",
         "4": "Turn <RELATIVE_DIRECTION> at <JUNCTION_NAME>.",
-        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>."
+        "5": "Turn <RELATIVE_DIRECTION> toward <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -2036,6 +2188,7 @@
         "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
         "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",
@@ -2084,6 +2237,7 @@
         "6": "Make a <RELATIVE_DIRECTION> U-turn at <JUNCTION_NAME>.",
         "7": "Make a <RELATIVE_DIRECTION> U-turn toward <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "la vorera",
         "el carril bici",

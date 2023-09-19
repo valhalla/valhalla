@@ -39,8 +39,33 @@
         "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -79,8 +104,33 @@
         "2": "Leicht nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Leicht nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> leicht nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "5": "Leicht nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -1068,6 +1118,7 @@
         "4": "In Richtung <TOWARD_SIGN> einfädeln.",
         "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
+      "landmark_types": [],
       "relative_directions": [
         "Links",
         "Rechts"
@@ -1108,6 +1159,7 @@
         "4": "In Richtung <TOWARD_SIGN> einfädeln.",
         "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
+      "landmark_types": [],
       "relative_directions": [
         "Links",
         "Rechts"
@@ -1393,8 +1445,33 @@
         "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -1433,8 +1510,33 @@
         "2": "Scharf nach <RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen.",
         "3": "Scharf nach <RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> scharf nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen."
+        "5": "Scharf nach <RELATIVE_DIRECTION> in Richtung <TOWARD_SIGN> abbiegen.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -1952,8 +2054,33 @@
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -1992,8 +2119,33 @@
         "2": "<RELATIVE_DIRECTION> auf <BEGIN_STREET_NAMES> abbiegen. Dann weiter auf <STREET_NAMES>.",
         "3": "<RELATIVE_DIRECTION> abbiegen um auf <STREET_NAMES> zu bleiben.",
         "4": "An <JUNCTION_NAME> nach <RELATIVE_DIRECTION> abbiegen.",
-        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen."
+        "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> abbiegen.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -2036,6 +2188,7 @@
         "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
         "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -2084,6 +2237,7 @@
         "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
         "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",

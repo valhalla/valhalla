@@ -39,8 +39,33 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Затем двигайтесь по <STREET_NAMES>.",
         "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
@@ -79,8 +104,33 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
         "3": "Поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
@@ -1068,6 +1118,7 @@
         "4": "Выезжайте к <TOWARD_SIGN>.",
         "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "налево",
         "направо"
@@ -1108,6 +1159,7 @@
         "4": "Выезжайте к <TOWARD_SIGN>.",
         "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "налево",
         "направо"
@@ -1393,8 +1445,33 @@
         "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Следуйте далее по <STREET_NAMES>.",
         "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
-        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
@@ -1433,8 +1510,33 @@
         "2": "Круто поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
         "3": "Круто поверните <RELATIVE_DIRECTION>, оставаясь на <STREET_NAMES>.",
         "4": "Круто поверните <RELATIVE_DIRECTION> через <JUNCTION_NAME>.",
-        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Круто поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
@@ -1952,8 +2054,33 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>. Продолжайте движение по <STREET_NAMES>.",
         "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
@@ -1992,8 +2119,33 @@
         "2": "Поверните <RELATIVE_DIRECTION> на <BEGIN_STREET_NAMES>.",
         "3": "Поверните <RELATIVE_DIRECTION>, чтобы остаться на <STREET_NAMES>.",
         "4": "Поверните <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
+        "5": "Поверните <RELATIVE_DIRECTION> к <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходную дорожку",
         "велосипедную дорожку",
@@ -2036,6 +2188,7 @@
         "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
         "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
@@ -2084,6 +2237,7 @@
         "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
         "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",

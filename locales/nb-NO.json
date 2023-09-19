@@ -39,8 +39,33 @@
         "2": "Hold til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
         "3": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Hold til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -79,8 +104,33 @@
         "2": "Hold til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
         "3": "Hold til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Hold til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Hold til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Bear <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Bear <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Bear <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -1068,6 +1118,7 @@
         "4": "Flett mot <TOWARD_SIGN>.",
         "5": "Flett til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "venstre",
         "høyre"
@@ -1108,6 +1159,7 @@
         "4": "Flett mot <TOWARD_SIGN>.",
         "5": "Flett til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "relative_directions": [
         "venstre",
         "høyre"
@@ -1393,8 +1445,33 @@
         "2": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
         "3": "Ta en skarp sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Ta en skarp sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -1433,8 +1510,33 @@
         "2": "Ta en skarp sving mot <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
         "3": "Ta en skarp sving mot <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Ta en skarp sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Ta en skarp sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Make a sharp <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Make a sharp <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a sharp <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -1952,8 +2054,33 @@
         "2": "Ta til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>. Fortsett på <STREET_NAMES>.",
         "3": "Ta til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Ta til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>. Continue on <STREET_NAMES>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -1992,8 +2119,33 @@
         "2": "Ta til <RELATIVE_DIRECTION> inn på <BEGIN_STREET_NAMES>.",
         "3": "Ta til <RELATIVE_DIRECTION> for å holde deg på <STREET_NAMES>.",
         "4": "Ta til <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
-        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
+        "5": "Ta til <RELATIVE_DIRECTION> mot <TOWARD_SIGN>.",
+        "6": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "7": "Turn <RELATIVE_DIRECTION> onto <STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "8": "Turn <RELATIVE_DIRECTION> onto <BEGIN_STREET_NAMES> at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Turn <RELATIVE_DIRECTION> at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -2036,6 +2188,7 @@
         "6": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
         "7": "Ta en U-sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
@@ -2084,6 +2237,7 @@
         "6": "Ta en U-sving mot <RELATIVE_DIRECTION> ved <JUNCTION_NAME>.",
         "7": "Ta en U-sving mot <RELATIVE_DIRECTION> mot <TOWARD_SIGN>."
       },
+      "landmark_types": [],
       "empty_street_name_labels": [
         "gangveien",
         "sykkelveien",
