@@ -11,6 +11,7 @@
 #include "baldr/datetime.h"
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
+#include "baldr/landmark.h"
 #include "baldr/signinfo.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
@@ -477,6 +478,64 @@ void SetHeadings(TripLeg_Edge* trip_edge,
     if (controller(kEdgeEndHeading)) {
       trip_edge->set_end_heading(
           std::round(PointLL::HeadingAtEndOfPolyline(shape, offset, begin_index, shape.size() - 1)));
+    }
+  }
+}
+
+/**
+ * Add landmarks in the directed edge to trip edge.
+ * @param  edgeinfo    Edge info of the directed edge.
+ * @param  trip_edge   Trip path edge to add landmarks.
+ * @param  controller  Controller specifying whether we want landmarks in the graph to come out the
+ * other side.
+ * @param  edge        Directed edge where the landmarks are stored.
+ * @param  shape       Trip shape.
+ */
+void AddLandmarks(const EdgeInfo& edgeinfo,
+                  TripLeg_Edge* trip_edge,
+                  const AttributesController& controller,
+                  const DirectedEdge* edge,
+                  const std::vector<PointLL>& shape,
+                  const uint32_t begin_index) {
+  if (!controller(kEdgeLandmarks)) {
+    return;
+  }
+
+  for (const auto& tag : edgeinfo.GetTags()) {
+    // get landmarks from tagged values in the edge info
+    if (tag.first == baldr::TaggedValue::kLandmark) {
+      Landmark lan(tag.second);
+      PointLL landmark_point = {lan.lng, lan.lat};
+
+      // find the closed point on edge to the landmark
+      auto closest = landmark_point.ClosestPoint(shape, begin_index);
+      // TODO: in the future maybe we could allow a request option to have a tighter threshold on
+      // how far landmarks should be away from an edge
+
+      // add the landmark to trip leg
+      auto* landmark = trip_edge->mutable_landmarks()->Add();
+      landmark->set_name(lan.name);
+      landmark->set_type(static_cast<valhalla::RouteLandmark::Type>(lan.type));
+      landmark->mutable_lat_lng()->set_lng(lan.lng);
+      landmark->mutable_lat_lng()->set_lat(lan.lat);
+
+      // calculate the landmark's distance along the edge
+      // that is to accumulate distance from the begin point to the closest point to it on the edge
+      int closest_idx = std::get<2>(closest);
+      double distance_along_edge = 0;
+      for (int idx = begin_index + 1; idx <= closest_idx; ++idx) {
+        distance_along_edge += shape[idx].Distance(shape[idx - 1]);
+      }
+      distance_along_edge += shape[closest_idx].Distance(std::get<0>(closest));
+      // the overall distance shouldn't be larger than edge length
+      distance_along_edge = std::min(distance_along_edge, static_cast<double>(edge->length()));
+      landmark->set_distance(distance_along_edge);
+      // check which side of the edge the landmark is on
+      // quirks of the ClosestPoint function
+      bool is_right = closest_idx == (int)shape.size() - 1
+                          ? landmark_point.IsLeft(shape[closest_idx - 1], shape[closest_idx]) < 0
+                          : landmark_point.IsLeft(shape[closest_idx], shape[closest_idx + 1]) < 0;
+      landmark->set_right(is_right);
     }
   }
 }
@@ -1726,6 +1785,9 @@ void TripLegBuilder::Build(
     // Set begin and end heading if requested. Uses trip_shape so
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
+
+    // Add landmarks in the directededge to the trip leg
+    AddLandmarks(edgeinfo, trip_edge, controller, directededge, trip_shape, begin_index);
 
     // Add the intersecting edges at the node. Skip it if the node was an inner node (excluding start
     // node and end node) of a shortcut that was recovered.
