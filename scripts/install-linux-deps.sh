@@ -51,6 +51,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
 readonly primeserver_dir=/usr/local/src/prime_server
 git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
 pushd $primeserver_dir
+# git checkout tags/$primeserver_version -b $primeserver_version
 ./autogen.sh && ./configure && \
 make -j${CONCURRENCY:-$(nproc)} install && \
 popd && \

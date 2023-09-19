@@ -223,6 +223,12 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   std::copy(lane_connectivity_, lane_connectivity_ + n,
             std::back_inserter(lane_connectivity_builder_));
 
+  if (header_builder_.has_osmids_for_nodes()) {
+    osmids_for_nodes_.resize(header_->nodecount());
+    std::copy(GraphTile::osmids_for_nodes_, GraphTile::osmids_for_nodes_ + header_->nodecount(),
+              osmids_for_nodes_.begin());
+  }
+
   complex_restriction_forward_builder_ =
       DeserializeRestrictions(complex_restriction_forward_, complex_restriction_forward_size_);
   complex_restriction_reverse_builder_ =
@@ -375,8 +381,24 @@ void GraphTileBuilder::StoreTileData() {
                  lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
 
     // Set the end offset
-    header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
-                                   (lane_connectivity_builder_.size() * sizeof(LaneConnectivity)));
+    if (has_osmids_for_nodes()) {
+      if (osmids_for_nodes_.size() != nodes_builder_.size()) {
+        throw std::runtime_error(std::string("length of osmids does not equal length of nodes: ") +
+                                 std::to_string(osmids_for_nodes_.size()) +
+                                 " != " + std::to_string(nodes_builder_.size()));
+      }
+      header_builder_.set_osmids_for_nodes_offset(header_builder_.lane_connectivity_offset() +
+                                                  lane_connectivity_builder_.size() *
+                                                      sizeof(LaneConnectivity));
+      header_builder_.set_end_offset(header_builder_.osmids_for_nodes_offset() +
+                                     osmids_for_nodes_.size() * sizeof(uint64_t));
+      in_mem.write(reinterpret_cast<const char*>(osmids_for_nodes_.data()),
+                   osmids_for_nodes_.size() * sizeof(uint64_t));
+    } else {
+      header_builder_.set_osmids_for_nodes_offset(0u);
+      header_builder_.set_end_offset(header_builder_.lane_connectivity_offset() +
+                                     lane_connectivity_builder_.size() * sizeof(LaneConnectivity));
+    }
 
     // Sanity check for the end offset
     uint32_t curr =
@@ -1147,6 +1169,7 @@ void GraphTileBuilder::AddBins(const std::string& tile_dir,
   header.set_edgeinfo_offset(header.edgeinfo_offset() + shift);
   header.set_textlist_offset(header.textlist_offset() + shift);
   header.set_lane_connectivity_offset(header.lane_connectivity_offset() + shift);
+  header.set_osmids_for_nodes_offset(header.osmids_for_nodes_offset() + shift);
   header.set_end_offset(header.end_offset() + shift);
   // rewrite the tile
   filesystem::path filename =

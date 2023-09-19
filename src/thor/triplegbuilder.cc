@@ -1092,6 +1092,11 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
     trip_edge->set_way_id(edgeinfo.wayid());
   }
 
+  // Set node id (OSM node id) if requested
+  if (controller.attributes.at(kEdgeNodeId) && start_tile->has_osmids_for_nodes()) {
+    trip_edge->set_osmid(trip_node->osmid());
+  }
+
   // Set weighted grade if requested
   if (controller(kEdgeWeightedGrade)) {
     trip_edge->set_weighted_grade((directededge->weighted_grade() - 6.f) / 0.6f);
@@ -1569,6 +1574,41 @@ void TripLegBuilder::Build(
       trip_node->mutable_cost()->mutable_transition_cost()->set_cost(edge_itr->transition_cost.cost);
     }
 
+    // Set node id (OSM node id) if requested
+    if (controller.attributes.at(kNodeNodeId) && start_tile->has_osmids_for_nodes()) {
+      // Get the opposing edge and the endnode of that edge
+      // this will be the startnode of the directededge we are working on
+      // we need this startnode for consistent OSM ids in case we have a 'teleport' due to a
+      // discontinuity in the route path
+      // TODO: is there another check we can add so this whole lookup is only performed in case of
+      // discontinuity?
+      if (!directededge->IsTransitLine()) {
+        graph_tile_ptr t2 = directededge->leaves_tile()
+                                ? graphreader.GetGraphTile(directededge->endnode())
+                                : graphtile;
+        if (t2 != nullptr) {
+          GraphId oppedge = t2->GetOpposingEdgeId(directededge);
+          GraphId edgestartnode = t2->directededge(oppedge)->endnode();
+          // Get the tile for the edgestartnode
+          graph_tile_ptr startnode_tile;
+          graphreader.GetGraphTile(edgestartnode, startnode_tile);
+          if (startnode_tile->has_osmids_for_nodes()) {
+            // Set the osm id of the startnode of the edge
+            trip_node->set_osmid(startnode_tile->osmid_for_node(edgestartnode));
+          } else {
+            // Fallback: set the osm id of the regular startnode
+            trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+          }
+        } else {
+          // Fallback: set the osm id of the regular startnode
+          trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+        }
+      } else {
+        // Fallback: set the osm id of the regular startnode
+        trip_node->set_osmid(start_tile->osmid_for_node(startnode));
+      }
+    }
+
     // Add multi modal stuff
     multimodal_builder.Build(trip_node, edge_itr->trip_id, node, startnode, directededge, edge,
                              start_tile, graphtile, mode_costing, controller, graphreader);
@@ -1712,6 +1752,11 @@ void TripLegBuilder::Build(
     SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,
                        costing->flow_mask() & kCurrentFlowMask, incidents);
+
+    // set the endNode ID if requested (look for it in the end_node_tile)
+    if (controller.attributes.at(kNodeNodeId) && end_node_tile->has_osmids_for_nodes()) {
+      trip_edge->set_end_osmid(end_node_tile->osmid_for_node(directededge->endnode()));
+    }
 
     // Set begin shape index if requested
     if (controller(kEdgeBeginShapeIndex)) {
