@@ -1394,7 +1394,10 @@ std::string NarrativeBuilder::FormUturnInstruction(Maneuver& maneuver,
 
   // Select the most suitable landmark if there are landmarks associated with the maneuver
   if (phrase_id < 6 && maneuver.landmarks().size() > 0) {
-    landmark = select_landmark(maneuver.landmarks(), FormRelativeTwoDirection(maneuver.type(), dictionary_.uturn_subset.relative_directions));
+    landmark =
+        select_landmark(maneuver.landmarks(),
+                        FormRelativeTwoDirection(maneuver.type(),
+                                                 dictionary_.uturn_subset.relative_directions));
 
     // Make sure the landmark type is legal
     if (static_cast<int>(landmark.type()) > 0 &&
