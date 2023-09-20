@@ -1118,7 +1118,6 @@
         "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
         "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "vlevo",
         "vpravo"
@@ -1159,7 +1158,6 @@
         "4": "Zařaďte se směrem na <TOWARD_SIGN>.",
         "5": "Zařaďte se <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "vlevo",
         "vpravo"
@@ -2186,9 +2184,32 @@
         "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "5": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
         "6": "Na <JUNCTION_NAME> se otočte o 180° <RELATIVE_DIRECTION> .",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",
@@ -2235,9 +2256,32 @@
         "4": "Na <CROSS_STREET_NAMES> se otočte o 180° <RELATIVE_DIRECTION> na <STREET_NAMES>.",
         "5": "Na <CROSS_STREET_NAMES> se otočte o 180°<RELATIVE_DIRECTION>, abyste zůstali na <STREET_NAMES>.",
         "6": "Na <JUNCTION_NAME> se otočte o 180 °<RELATIVE_DIRECTION>.",
-        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>."
+        "7": "Otočte se o 180° <RELATIVE_DIRECTION> směrem na <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "chodník",
         "cyklostezka",

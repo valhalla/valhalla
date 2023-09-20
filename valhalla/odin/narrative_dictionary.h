@@ -160,6 +160,15 @@ constexpr auto kTransitPlatformCountLabelTag = "<TRANSIT_STOP_COUNT_LABEL>";
 constexpr auto kLevelTag = "<LEVEL>";
 constexpr auto kLandmarkNameTag = "<LANDMARK_NAME>";
 constexpr auto kLandmarkTypeTag = "<LANDMARK_TYPE>";
+
+// TurnSubset type enum
+enum class TurnSubsetType : uint8_t {
+  kSharp,
+  kBear,
+  kTurn,
+  kUturn,
+  kMerge,
+};
 } // namespace
 
 namespace valhalla {
@@ -483,8 +492,11 @@ protected:
    *
    * @param  turn_handle  The 'turn' structure to populate.
    * @param  turn_subset_pt  The 'turn' property tree.
+   * @param  turn_type The 'turn' type.
    */
-  void Load(TurnSubset& turn_handle, const boost::property_tree::ptree& turn_subset_pt);
+  void Load(TurnSubset& turn_handle,
+            const boost::property_tree::ptree& turn_subset_pt,
+            TurnSubsetType turn_type);
 
   /**
    * Loads the specified 'ramp' instruction subset with the localized

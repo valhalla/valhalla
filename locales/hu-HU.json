@@ -1118,7 +1118,6 @@
         "4": "Úttorkolat <TOWARD_SIGN> felé.",
         "5": "Úttorkolat <RELATIVE_DIRECTION> felé <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "balra",
         "jobbra"
@@ -1159,7 +1158,6 @@
         "4": "Úttorkolat a(z) <TOWARD_SIGN> felé.",
         "5": "Úttorkolat <RELATIVE_DIRECTION> a(z) <TOWARD_SIGN> felé."
       },
-      "landmark_types": [],
       "relative_directions": [
         "balra",
         "jobbra"
@@ -2186,9 +2184,32 @@
         "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
         "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
         "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
-        "7": "Végezzen egy <RELATIVE_DIRECTION> Umegfordulást a(z) <TOWARD_SIGN> felé."
+        "7": "Végezzen egy <RELATIVE_DIRECTION> Umegfordulást a(z) <TOWARD_SIGN> felé.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",
@@ -2235,9 +2256,32 @@
         "4": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél a(z) <STREET_NAMES> utcára.",
         "5": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <CROSS_STREET_NAMES> útkereszteződésnél, hogy a(z) <STREET_NAMES> utcán maradjon.",
         "6": "Végezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <JUNCTION_NAME> útkereszteződésnél.",
-        "7": "VÉgezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <TOWARD_SIGN> felé."
+        "7": "VÉgezzen egy <RELATIVE_DIRECTION> megfordulást a(z) <TOWARD_SIGN> felé.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "a sétány",
         "a kerékpárút",

@@ -501,17 +501,6 @@ protected:
 
   /////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the landmark type string of the specified RouteLandmark Type value.
-   *
-   * @param type The RouteLandmark Type to process.
-   *
-   * @return the landmark type string.
-   */
-  std::string FormLandmarkType(RouteLandmark_Type type,
-                               const std::vector<std::string>& landmark_types);
-
-  /////////////////////////////////////////////////////////////////////////////
-  /**
    * Returns the transit name in this precedence - depending on which one exists:
    *    1) Short name
    * or 2) Long name

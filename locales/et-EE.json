@@ -1118,7 +1118,6 @@
         "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
         "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
       },
-      "landmark_types": [],
       "relative_directions": [
         "vasakul",
         "paremal"
@@ -1159,7 +1158,6 @@
         "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
         "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
       },
-      "landmark_types": [],
       "relative_directions": [
         "vasakul",
         "paremal"
@@ -2186,9 +2184,32 @@
         "4": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele.",
         "5": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele.",
         "6": "<JUNCTION_NAME> teeristist pööra <RELATIVE_DIRECTION> tagasi.",
-        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "läbipääs",
         "rattatee",
@@ -2235,9 +2256,32 @@
         "4": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi <STREET_NAMES> teele.",
         "5": "<CROSS_STREET_NAMES> teeristis pööra <RELATIVE_DIRECTION> tagasi ja jää <STREET_NAMES> teele.",
         "6": "<JUNCTION_NAME> teeristis pööra <RELATIVE_DIRECTION> tagasi.",
-        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas."
+        "7": "<RELATIVE_DIRECTION> pööra tagasi <TOWARD_SIGN> suunas.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "läbipääs",
         "rattatee",

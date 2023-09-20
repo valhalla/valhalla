@@ -1118,7 +1118,6 @@
         "4": "Приєднайтеся до потоку в напрямку <TOWARD_SIGN>.",
         "5": "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "ліворуч",
         "праворуч"
@@ -1159,7 +1158,6 @@
         "4": "Приєднайтеся до потоку в напрямку <TOWARD_SIGN>.",
         "5": "Приєднайтеся до потоку <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "ліворуч",
         "праворуч"
@@ -2186,9 +2184,32 @@
         "4": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
         "5": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> щоб залишатись на <STREET_NAMES>.",
         "6": "Розверніться <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пішохідній доріжці",
         "велодоріжці",
@@ -2235,9 +2256,32 @@
         "4": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
         "5": "Розверніться <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> щоб залишатись на <STREET_NAMES>.",
         "6": "Розверніться <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>."
+        "7": "Розверніться <RELATIVE_DIRECTION> в напрямку <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пішохідній доріжці",
         "велодоріжці",

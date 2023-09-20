@@ -1118,7 +1118,6 @@
         "4": "Vire em direção a <TOWARD_SIGN>.",
         "5": "Vire à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "esquerda",
         "direita"
@@ -1159,7 +1158,6 @@
         "4": "Vire em direção a <TOWARD_SIGN>.",
         "5": "Vire à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "esquerda",
         "direita"
@@ -2186,9 +2184,32 @@
         "4": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> no <CROSS_STREET_NAMES> em direção a <STREET_NAMES>.",
         "5": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> no <CROSS_STREET_NAMES> para se manter na <STREET_NAMES>.",
         "6": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "7": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
+        "7": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",
@@ -2235,9 +2256,32 @@
         "4": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> no <CROSS_STREET_NAMES> em direção à <STREET_NAMES>.",
         "5": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> no <CROSS_STREET_NAMES> para se manter na <STREET_NAMES>.",
         "6": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
-        "7": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>."
+        "7": "Faça uma inversão de marcha à <RELATIVE_DIRECTION> em direção a <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "o passeio",
         "a ciclovia",

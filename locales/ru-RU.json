@@ -1118,7 +1118,6 @@
         "4": "Выезжайте к <TOWARD_SIGN>.",
         "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "налево",
         "направо"
@@ -1159,7 +1158,6 @@
         "4": "Выезжайте к <TOWARD_SIGN>.",
         "5": "Выезжайте <RELATIVE_DIRECTION> к <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "налево",
         "направо"
@@ -2186,9 +2184,32 @@
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
         "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>, чтобы остаться на <STREET_NAMES>.",
         "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
+        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",
@@ -2235,9 +2256,32 @@
         "4": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES> на <STREET_NAMES>.",
         "5": "Развернитесь <RELATIVE_DIRECTION> на <CROSS_STREET_NAMES>, чтобы остаться на <STREET_NAMES>.",
         "6": "Развернитесь <RELATIVE_DIRECTION> на <JUNCTION_NAME>.",
-        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>."
+        "7": "Развернитесь <RELATIVE_DIRECTION> в сторону <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "пешеходной дорожке",
         "велосипедной дорожке",

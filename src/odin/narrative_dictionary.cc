@@ -100,38 +100,38 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate bear_subset...");
   // Populate bear_subset
-  Load(bear_subset, narrative_pt.get_child(kBearKey));
+  Load(bear_subset, narrative_pt.get_child(kBearKey), TurnSubsetType::kBear);
 
   LOG_TRACE("Populate bear_verbal_subset...");
   // Populate bear_verbal_subset
-  Load(bear_verbal_subset, narrative_pt.get_child(kBearVerbalKey));
+  Load(bear_verbal_subset, narrative_pt.get_child(kBearVerbalKey), TurnSubsetType::kBear);
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate turn_subset...");
   // Populate turn_subset
-  Load(turn_subset, narrative_pt.get_child(kTurnKey));
+  Load(turn_subset, narrative_pt.get_child(kTurnKey), TurnSubsetType::kTurn);
 
   LOG_TRACE("Populate turn_verbal_subset...");
   // Populate turn_verbal_subset
-  Load(turn_verbal_subset, narrative_pt.get_child(kTurnVerbalKey));
+  Load(turn_verbal_subset, narrative_pt.get_child(kTurnVerbalKey), TurnSubsetType::kTurn);
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate sharp_subset...");
   // Populate sharp_subset
-  Load(sharp_subset, narrative_pt.get_child(kSharpKey));
+  Load(sharp_subset, narrative_pt.get_child(kSharpKey), TurnSubsetType::kSharp);
 
   LOG_TRACE("Populate sharp_verbal_subset...");
   // Populate sharp_verbal_subset
-  Load(sharp_verbal_subset, narrative_pt.get_child(kSharpVerbalKey));
+  Load(sharp_verbal_subset, narrative_pt.get_child(kSharpVerbalKey), TurnSubsetType::kSharp);
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate uturn_subset...");
   // Populate uturn_subset
-  Load(uturn_subset, narrative_pt.get_child(kUturnKey));
+  Load(uturn_subset, narrative_pt.get_child(kUturnKey), TurnSubsetType::kUturn);
 
   LOG_TRACE("Populate uturn_verbal_subset...");
   // Populate uturn_verbal_subset
-  Load(uturn_verbal_subset, narrative_pt.get_child(kUturnVerbalKey));
+  Load(uturn_verbal_subset, narrative_pt.get_child(kUturnVerbalKey), TurnSubsetType::kUturn);
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate ramp_straight_subset...");
@@ -185,11 +185,11 @@ void NarrativeDictionary::Load(const boost::property_tree::ptree& narrative_pt) 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate merge_subset...");
   // Populate merge_subset
-  Load(merge_subset, narrative_pt.get_child(kMergeKey));
+  Load(merge_subset, narrative_pt.get_child(kMergeKey), TurnSubsetType::kMerge);
 
   LOG_TRACE("Populate merge_verbal_subset...");
   // Populate merge_verbal_subset
-  Load(merge_verbal_subset, narrative_pt.get_child(kMergeVerbalKey));
+  Load(merge_verbal_subset, narrative_pt.get_child(kMergeVerbalKey), TurnSubsetType::kMerge);
 
   /////////////////////////////////////////////////////////////////////////////
   LOG_TRACE("Populate enter_roundabout_subset...");
@@ -410,7 +410,8 @@ void NarrativeDictionary::Load(ContinueVerbalSubset& continue_verbal_handle,
 }
 
 void NarrativeDictionary::Load(TurnSubset& turn_handle,
-                               const boost::property_tree::ptree& turn_subset_pt) {
+                               const boost::property_tree::ptree& turn_subset_pt,
+                               TurnSubsetType turn_type) {
 
   // Populate phrases
   Load(static_cast<PhraseSet&>(turn_handle), turn_subset_pt);
@@ -422,8 +423,10 @@ void NarrativeDictionary::Load(TurnSubset& turn_handle,
   turn_handle.empty_street_name_labels =
       as_vector<std::string>(turn_subset_pt, kEmptyStreetNameLabelsKey);
 
-  // Populate landmark types
-  turn_handle.landmark_types = as_vector<std::string>(turn_subset_pt, kLandmarkTypesKey);
+  if (turn_type != TurnSubsetType::kMerge) {
+    // Populate landmark types
+    turn_handle.landmark_types = as_vector<std::string>(turn_subset_pt, kLandmarkTypesKey);
+  }
 }
 
 void NarrativeDictionary::Load(RampSubset& ramp_handle,

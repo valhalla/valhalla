@@ -1118,7 +1118,6 @@
         "4": "Intră pe banda spre <TOWARD_SIGN>.",
         "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "stânga",
         "dreapta"
@@ -1159,7 +1158,6 @@
         "4": "Intră pe banda spre <TOWARD_SIGN>.",
         "5": "Intră pe banda <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "stânga",
         "dreapta"
@@ -2186,9 +2184,32 @@
         "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
         "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe <STREET_NAMES>.",
         "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
-        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",
@@ -2235,9 +2256,32 @@
         "4": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pe <STREET_NAMES>.",
         "5": "Întoarce la <RELATIVE_DIRECTION> la <CROSS_STREET_NAMES> pentru a rămâne pe<STREET_NAMES>.",
         "6": "Întoarce la <RELATIVE_DIRECTION> la <JUNCTION_NAME>.",
-        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>."
+        "7": "Întoarce la <RELATIVE_DIRECTION> spre <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "alee",
         "pistă pentru biciclete",

@@ -1118,7 +1118,6 @@
         "4": "<TOWARD_SIGN>方面に合流です。",
         "5": "<RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
-      "landmark_types": [],
       "relative_directions": [
         "左",
         "右"
@@ -1159,7 +1158,6 @@
         "4": "<TOWARD_SIGN>方面に合流です。",
         "5": "<RELATIVE_DIRECTION>方向に合流です。<TOWARD_SIGN>方面に進みます。"
       },
-      "landmark_types": [],
       "relative_directions": [
         "左",
         "右"
@@ -2186,9 +2184,32 @@
         "4": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
         "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
         "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向、Uターンです。",
-        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。"
+        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "歩道",
         "自転車道",
@@ -2235,9 +2256,32 @@
         "4": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
         "5": "<CROSS_STREET_NAMES>を<RELATIVE_DIRECTION>方向、Uターンです。その先<STREET_NAMES>です。",
         "6": "<JUNCTION_NAME>を<RELATIVE_DIRECTION>方向、Uターンです。",
-        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。"
+        "7": "<RELATIVE_DIRECTION>方向、<TOWARD_SIGN>方面にUターンです。",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "歩道",
         "自転車道",

@@ -1118,7 +1118,6 @@
         "4": "In Richtung <TOWARD_SIGN> einfädeln.",
         "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
-      "landmark_types": [],
       "relative_directions": [
         "Links",
         "Rechts"
@@ -1159,7 +1158,6 @@
         "4": "In Richtung <TOWARD_SIGN> einfädeln.",
         "5": "In Richtung <TOWARD_SIGN> nach <RELATIVE_DIRECTION> einfädeln."
       },
-      "landmark_types": [],
       "relative_directions": [
         "Links",
         "Rechts"
@@ -2186,9 +2184,32 @@
         "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
         "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
         "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
-        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
+        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",
@@ -2235,9 +2256,32 @@
         "4": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> auf <STREET_NAMES> machen.",
         "5": "Nach <RELATIVE_DIRECTION> eine Kehrtwende bei <CROSS_STREET_NAMES> machen um auf <STREET_NAMES> zu bleiben.",
         "6": "An <JUNCTION_NAME> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
-        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen."
+        "7": "In Richtung <TOWARD_SIGN> eine Kehrtwende nach <RELATIVE_DIRECTION> machen.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "Fußweg",
         "Radweg",

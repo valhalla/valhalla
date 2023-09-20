@@ -1118,7 +1118,6 @@
         "4": "Insérez-vous vers <TOWARD_SIGN>.",
         "5": "Insérez-vous à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "gauche",
         "droite"
@@ -1159,7 +1158,6 @@
         "4": "Insérez-vous vers <TOWARD_SIGN>.",
         "5": "Insérez-vous à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
       },
-      "landmark_types": [],
       "relative_directions": [
         "gauche",
         "droite"
@@ -2186,9 +2184,32 @@
         "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.",
         "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>.",
         "6": "Faites demi-tour à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
-        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
+        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",
@@ -2235,9 +2256,32 @@
         "4": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> dans <STREET_NAMES>.",
         "5": "Faites demi-tour à <RELATIVE_DIRECTION> à <CROSS_STREET_NAMES> pour rester sur <STREET_NAMES>.",
         "6": "Faites demi-tour à <RELATIVE_DIRECTION> à <JUNCTION_NAME>.",
-        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>."
+        "7": "Faites demi-tour à <RELATIVE_DIRECTION> vers <TOWARD_SIGN>.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "l'allée",
         "la piste cyclable",

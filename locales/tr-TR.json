@@ -1118,7 +1118,6 @@
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
         "5": "<RELATIVE_DIRECTION>dan yola katılın toward <TOWARD_SIGN> işaretine doğru."
       },
-      "landmark_types": [],
       "relative_directions": [
         "sol",
         "sağ"
@@ -1159,7 +1158,6 @@
         "4": "<TOWARD_SIGN> işaretine doğru yola katılın.",
         "5": "<RELATIVE_DIRECTION> doğru <TOWARD_SIGN> işaretine katılın."
       },
-      "landmark_types": [],
       "relative_directions": [
         "sol",
         "sağ"
@@ -2186,9 +2184,32 @@
         "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
@@ -2235,9 +2256,32 @@
         "4": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "5": "<CROSS_STREET_NAMES> caddesinde <STREET_NAMES> caddesinde kalmak için <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
         "6": "<JUNCTION_NAME> kavşağında <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
-        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın."
+        "7": "<TOWARD_SIGN> işaretine doğru <RELATIVE_DIRECTION>a doğru U dönüşü yapın.",
+        "8": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME>.",
+        "9": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> onto <STREET_NAMES>.",
+        "10": "Make a <RELATIVE_DIRECTION> U-turn at the <LANDMARK_TYPE> <LANDMARK_NAME> to stay on <STREET_NAMES>."
       },
-      "landmark_types": [],
+      "landmark_types": [
+        "unused",
+        "gas station",
+        "post office",
+        "police station",
+        "fire station",
+        "car wash",
+        "restaurant",
+        "fast food",
+        "cafe",
+        "bank",
+        "pharmacy",
+        "kindergarden",
+        "bar",
+        "hospital",
+        "pub",
+        "clinic",
+        "theatre",
+        "cinema",
+        "casino"
+      ],
       "empty_street_name_labels": [
         "yaya geçidi",
         "bisiklet yolu",
