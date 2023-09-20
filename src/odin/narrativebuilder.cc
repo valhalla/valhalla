@@ -40,7 +40,7 @@ constexpr uint32_t kRoundaboutExitCountUpperBound = 10;
 // maneuver's turn direction. i.e. if the maneuver is to turn right but a landmark is left hand, we
 // add this penalty to its distance. so that it's less preferred than the right handed landmarks
 // in selection.
-// TODO: maybe we can make it adjustable by input, or make it relavant to length of the edge
+// TODO: maybe we can make it adjustable by input, or make it relevant to length of the edge
 constexpr double kLandmarkOppositeDirectionPenalty = 100.;
 
 // Select the most suitable landmark in a maneuver to be used in narrative generation.
