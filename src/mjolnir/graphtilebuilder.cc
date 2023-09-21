@@ -1261,7 +1261,7 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
   }
 }
 
-void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
+bool GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
   // check the edge id makes sense
   if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
     throw std::runtime_error(
@@ -1287,12 +1287,15 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
   // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)
   if (eib->second->has_name_info(name_offset)) {
-    return;
+    return false;
   }
 
   // record in the edge info builder of where the tagged_value is
   NameInfo ni{name_offset, 0, 0, 1};
-  eib->second->AddNameInfo(ni);
+  // if name info list has no vacancy for the landmark, it won't be added
+  if (!eib->second->AddNameInfo(ni)) {
+    return false;
+  }
 
   // update edge info offset
   const auto shift = sizeof(ni);
@@ -1318,6 +1321,8 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
     }
   }
   edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
+
+  return true;
 }
 
 } // namespace mjolnir

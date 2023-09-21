@@ -60,11 +60,13 @@ void EdgeInfoBuilder::set_name_info_list(const std::vector<NameInfo>& name_info_
 }
 
 // Add street name info to the list.
-void EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
+bool EdgeInfoBuilder::AddNameInfo(const baldr::NameInfo& info) {
   if (name_info_list_.size() == kMaxNamesPerEdge) {
     LOG_WARN("Tried to exceed max names per edge");
+    return false;
   } else {
     name_info_list_.push_back(info);
+    return true;
   }
 }
 

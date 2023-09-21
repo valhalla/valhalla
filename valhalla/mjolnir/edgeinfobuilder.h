@@ -75,7 +75,7 @@ public:
    * Add name info to the list.
    * @param  info  Adds name information to the list.
    */
-  void AddNameInfo(const baldr::NameInfo& info);
+  bool AddNameInfo(const baldr::NameInfo& info);
 
   /**
    * Set the shape of the edge.

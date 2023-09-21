@@ -293,7 +293,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
 TEST(LandmarkTest, TestTileStoreLandmarks) {
   BuildPBF();
   landmark_map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -388,7 +388,7 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles, {{"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -400,7 +400,7 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
   // check data
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
@@ -424,7 +424,7 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles, {{"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -436,9 +436,9 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
                                    {pbf_filename_tile_test}));
 
   // add landmarks from db to tiles
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
   // add again, but this will result in errors
-  AddLandmarks(landmark_map_tile_test.config);
+  AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
   // check data (cannot reach here yet)
   GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
@@ -505,7 +505,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
 
   map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf, and add landmarks to it
@@ -514,7 +514,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
   // add landmarks to graphtile from the landmark database
-  AddLandmarks(map.config);
+  AddLandmarks(map.config.get_child("mjolnir"));
 
   // get routing result from point a to g
   auto result = gurka::do_action(valhalla::Options::route, map, {"a", "g"}, "auto");

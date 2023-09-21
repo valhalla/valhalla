@@ -491,8 +491,9 @@ public:
    *
    * @param edge_id  the edge id to modify
    * @param landmark the landmark to associate to the edge
+   * @return Returns true if the input landmark is indeed inserted in to the edge.
    */
-  void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
+  bool AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
 
 protected:
   struct EdgeTupleHasher {
