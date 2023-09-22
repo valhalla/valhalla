@@ -1,7 +1,7 @@
 #include "test.h"
 #include <string>
 
-#include "configuration.h"
+#include "config.h"
 
 namespace {
 
@@ -29,6 +29,18 @@ TEST(Configuration, ReadInlineConfig) {
 
   EXPECT_EQ(conf.get<std::string>("obj1.val"), "example");
   EXPECT_EQ(conf.get<uint32_t>("obj2.inner.val"), 4);
+}
+
+TEST(Configuration, OneInstanceExisting) {
+  using namespace valhalla; 
+
+  auto inline_config_1 = "{'key1': 'val1'}";
+  auto inline_config_2 = "{'key2': 'val2'}";
+
+  auto conf1 = &config(inline_config_1);
+  auto conf2 = &config(inline_config_2);
+
+  EXPECT_EQ(*conf1, *conf2);
 }
 
 } // namespace

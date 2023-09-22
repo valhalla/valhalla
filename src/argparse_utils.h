@@ -3,7 +3,6 @@
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/config.h>
-#include <valhalla/configuration.h>
 #include <valhalla/filesystem.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/util.h>
