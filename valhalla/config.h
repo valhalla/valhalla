@@ -1,6 +1,4 @@
-#ifndef VALHALLA_CONFIG_H_
-#define VALHALLA_CONFIG_H_
-
+#pragma once
 #include <stdexcept>
 #include <string>
 #include <filesystem>
@@ -71,10 +69,8 @@ public:
 } // namespace
 
 namespace valhalla {
-const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "") {
+inline const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "") {
   static config_singleton_t instance(config_file_or_inline);
   return instance.config_;
 }
 } // namespace valhalla
-
-#endif
