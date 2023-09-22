@@ -1,7 +1,7 @@
 #pragma once
+#include <filesystem>
 #include <stdexcept>
 #include <string>
-#include <filesystem>
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -38,7 +38,7 @@
 /* Define to the version of this package. */
 #define PACKAGE_VERSION VALHALLA_VERSION
 
-namespace valhalla{
+namespace valhalla {
 const boost::property_tree::ptree& config(const std::string&);
 }
 
@@ -64,7 +64,8 @@ protected:
 public:
   config_singleton_t(config_singleton_t const&) = delete;
   void operator=(const config_singleton_t&) = delete;
-  friend const boost::property_tree::ptree& valhalla::config(const std::string& config_file_or_inline);
+  friend const boost::property_tree::ptree&
+  valhalla::config(const std::string& config_file_or_inline);
 };
 } // namespace
 

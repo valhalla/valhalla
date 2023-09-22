@@ -32,7 +32,7 @@ TEST(Configuration, ReadInlineConfig) {
 }
 
 TEST(Configuration, OneInstanceExisting) {
-  using namespace valhalla; 
+  using namespace valhalla;
 
   auto inline_config_1 = "{'key1': 'val1'}";
   auto inline_config_2 = "{'key2': 'val2'}";
