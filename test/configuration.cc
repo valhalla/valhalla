@@ -40,7 +40,7 @@ TEST(Configuration, OneInstanceExisting) {
   auto conf1 = &config(inline_config_1);
   auto conf2 = &config(inline_config_2);
 
-  EXPECT_EQ(*conf1, *conf2);
+  EXPECT_EQ(conf1, conf2);
 }
 
 } // namespace
