@@ -38,11 +38,11 @@ There are several key features that we hope can differentiate the Valhalla proje
 - Dynamic, runtime costing of edges and vertices within the graph via a plugin architecture. Should allow for customization and alternate route generation.
 - C++ based API. Should allow for cross compilation of the various pieces to enable routing on offline portable devices.
 - A plugin based narrative and manoeuvre generation architecture. Should allow for generation that is customized either to the administrative area or to the target locale.
-- Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation in the same route or setting a time by which one must arrive at a location.
+- Multi-modal and time-based routes. Should allow for mixing auto, pedestrian, bike and public transportation on the same route or setting a time by which one must arrive at a location.
 
 ## Demo Server
 
-[FOSSGIS e.V.](https://fossgis.de) hosts a demo server which is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on https://valhalla.openstreetmap.de. The HTTP API is accessible on a slightly different subdomain, e.g. https://valhalla1.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
+[FOSSGIS e.V.](https://fossgis.de) hosts a demo server that is open to the public and includes a full planet graph with an [open-source web app](https://github.com/gis-ops/valhalla-app) on https://valhalla.openstreetmap.de. The HTTP API is accessible on a slightly different subdomain, e.g. https://valhalla1.openstreetmap.de/isochrone. Usage of the demo server follows the usual fair-usage policy as OSRM & Nominatim demo servers (somewhat enforced by [rate limits](https://github.com/valhalla/valhalla/discussions/3373#discussioncomment-1644713)).
 
 ## Platform Compatibility
 
@@ -64,11 +64,11 @@ The Valhalla organization is comprised of several library modules each responsib
 - [Skadi](https://github.com/valhalla/valhalla/tree/master/valhalla/skadi) - Library and service for accessing elevation data. This can be used as input to `mjolnir` or as a standalone service.
 - [Mjolnir](https://github.com/valhalla/valhalla/tree/master/valhalla/mjolnir) - Tools for turning open data into Valhalla graph tiles.
 - [Loki](https://github.com/valhalla/valhalla/tree/master/valhalla/loki) - Library used to search graph tiles and correlate input locations to an entity within a tile. This correlated entity (edge or vertex) can be used as input to `thor`.
-- [Meili](https://github.com/valhalla/valhalla/tree/master/valhalla/meili) - Library used to for map-matching.
+- [Meili](https://github.com/valhalla/valhalla/tree/master/valhalla/meili) - Library used for map-matching.
 - [Thor](https://github.com/valhalla/valhalla/tree/master/valhalla/thor) - Library used to generate a path through the graph tile hierarchy.  This path and attribution along the path can be used as input to `odin`.
 - [Odin](https://github.com/valhalla/valhalla/tree/master/valhalla/odin) - Library used to generate manoeuvres and narrative based on a path. This set of directions information can be used as input to `tyr`.
 - [Tyr](https://github.com/valhalla/valhalla/tree/master/valhalla/tyr) - Service used to handle http requests for a route communicating with all of the other valhalla APIs. The service will format output from `odin` and support json (and eventually protocol buffer) output.
-- [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
+- [Tools](https://github.com/valhalla/valhalla/tree/master/src) - A set of command line tools that exercise bits of functionality from the library components above and provide the basis for quality testing and performance benchmarking.
 - [Demos](https://github.com/valhalla/demos) - A set of demos which allows interacting with the service and APIs.
 
 ## Documentation
@@ -77,7 +77,7 @@ Documentation is stored in the `docs/` folder in this GitHub repository. It can 
 
 ## Installation
 
-To run Valhalla locally or your own server, we recommend using our Docker image. Checkout our docker image here: https://github.com/orgs/valhalla/packages. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
+To run Valhalla locally or on your own server, we recommend using our Docker image. Checkout our docker image here: https://github.com/orgs/valhalla/packages. Also, there's a [community Docker image](https://github.com/gis-ops/docker-valhalla) with more "magic" than the native one.
 
 If you want to build Valhalla from source, follow the [documentation](https://valhalla.github.io/valhalla/building/).
 
