@@ -2310,7 +2310,7 @@ function rels_proc (kv, nokeys)
        kv["restriction"] = nil
 
        return 0, kv
-  --has a restiction but type is not restriction...ignore
+  --has a restriction but type is not restriction...ignore
      elseif restrict ~= nil then
        return 1, kv
      else
