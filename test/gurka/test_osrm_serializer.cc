@@ -6,23 +6,23 @@ using namespace valhalla;
 
 namespace {
 
-void test_headings(const std::vector<int> &expected_headings, const rapidjson::Document &json) {
+void test_headings(const std::vector<int>& expected_headings, const rapidjson::Document& json) {
   int index{0};
-  for (const auto &step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
-    for (const auto &intersection : step["intersections"].GetArray()) {
+  for (const auto& step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
+    for (const auto& intersection : step["intersections"].GetArray()) {
       ASSERT_EQ(expected_headings[index++], intersection["bearings"].GetArray().Size());
     }
   }
   ASSERT_EQ(index, expected_headings.size());
 }
 
-void test_bannerInstructions(const rapidjson::Document &json) {
+void test_bannerInstructions(const rapidjson::Document& json) {
   // Validate that each step has bannerInstructions with primary
-  for (const auto &step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
+  for (const auto& step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
     ASSERT_TRUE(step.HasMember("bannerInstructions"));
     ASSERT_TRUE(step["bannerInstructions"].IsArray());
     EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
-    for (const auto &instr : step["bannerInstructions"].GetArray()) {
+    for (const auto& instr : step["bannerInstructions"].GetArray()) {
       ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
       ASSERT_TRUE(instr.HasMember("primary"));
       ASSERT_TRUE(instr["primary"].HasMember("type"));
@@ -33,7 +33,7 @@ void test_bannerInstructions(const rapidjson::Document &json) {
   }
 }
 
-}  // namespace
+} // namespace
 
 TEST(Standalone, OsrmSerializerShape) {
   const std::string ascii_map = R"(
@@ -633,7 +633,7 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_0.HasMember("components"));
   ASSERT_TRUE(sub_0["components"].IsArray());
   EXPECT_EQ(sub_0["components"].GetArray().Size(), 2);
-  for (const auto &component : sub_0["components"].GetArray()) {
+  for (const auto& component : sub_0["components"].GetArray()) {
     EXPECT_STREQ(component["type"].GetString(), "lane");
     ASSERT_TRUE(component["directions"].IsArray());
   }
@@ -687,7 +687,7 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_1.HasMember("components"));
   ASSERT_TRUE(sub_1["components"].IsArray());
   EXPECT_EQ(sub_1["components"].GetArray().Size(), 2);
-  for (const auto &component : sub_1["components"].GetArray()) {
+  for (const auto& component : sub_1["components"].GetArray()) {
     EXPECT_STREQ(component["type"].GetString(), "lane");
     ASSERT_TRUE(component["directions"].IsArray());
   }
