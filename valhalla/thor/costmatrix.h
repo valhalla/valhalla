@@ -59,7 +59,8 @@ struct BestCandidate {
       : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), threshold(0) {
   }
 
-  void Update(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
+  void
+  Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
     edgeid = e1;
     opp_edgeid = e2;
     cost = c;

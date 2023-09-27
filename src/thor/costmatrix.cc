@@ -47,7 +47,7 @@ class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::v
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_(0),
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
-      current_cost_threshold_(0), targets_{new ReachedMap},
+      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap},
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)) {
 }
@@ -78,7 +78,13 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void CostMatrix::clear() {
-  // Clear the target edge markings
+  // Clear the source/target edge markings
+  for (auto& iter : *sources_) {
+    iter.second.clear();
+    iter.second.resize(0);
+    iter.second.shrink_to_fit();
+  }
+  sources_->clear();
   for (auto& iter : *targets_) {
     iter.second.clear();
     iter.second.resize(0);
@@ -466,6 +472,9 @@ void CostMatrix::ForwardSearch(const uint32_t index,
                               restriction_idx);
       adj.add(idx);
 
+      // Add to the list of sources that have reached this edge
+      (*sources_)[edgeid].push_back(index);
+
       // setting this edge as reached
       if (expansion_callback_) {
         expansion_callback_(graphreader, edgeid, "costmatrix", "r", pred.cost().secs,
@@ -840,8 +849,8 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
 
   // Get the opposing edge. Get a list of source locations whose forward
   // search has reached this edge.
-  GraphId oppedge = rev_pred.opp_edgeid();
-  auto sources = sources_->find(oppedge);
+  GraphId fwd_edgeid = rev_pred.opp_edgeid();
+  auto sources = sources_->find(fwd_edgeid);
   if (sources == sources_->end()) {
     return;
   }
@@ -863,7 +872,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
 
     // If this edge has been reached then a shortest path has been found
     // to the end node of this directed edge.
-    EdgeStatusInfo oppedgestatus = edgestate.Get(oppedge);
+    EdgeStatusInfo oppedgestatus = edgestate.Get(fwd_edgeid);
     if (oppedgestatus.set() != EdgeSet::kUnreachedOrReset) {
       const auto& edgelabels = source_edgelabel_[target];
       uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
@@ -879,7 +888,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         uint32_t d = std::abs(static_cast<int>(rev_pred.path_distance()) +
                               static_cast<int>(opp_el.path_distance()) -
                               static_cast<int>(opp_el.transition_cost().secs));
-        best_connection_[idx].Update(rev_pred.edgeid(), oppedge, Cost(s, s), d);
+        best_connection_[idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(s, s), d);
         best_connection_[idx].found = true;
 
         // Update status and update threshold if this is the last location
@@ -897,7 +906,7 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
           uint32_t d = rev_pred.path_distance() + oppdist;
 
           // Update best connection and set a threshold
-          best_connection_[idx].Update(rev_pred.edgeid(), oppedge, Cost(c, s), d);
+          best_connection_[idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(c, s), d);
           if (best_connection_[idx].threshold == 0) {
             best_connection_[idx].threshold =
                 n + GetThreshold(mode_,
@@ -911,8 +920,8 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       }
       // setting this edge as connected
       if (expansion_callback_) {
-        expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "c", pred.cost().secs,
-                            pred.path_distance(), pred.cost().cost);
+        expansion_callback_(graphreader, rev_pred.edgeid(), "costmatrix", "c", rev_pred.cost().secs,
+                            rev_pred.path_distance(), rev_pred.cost().cost);
       }
     }
   }
@@ -982,6 +991,7 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       source_edgelabel_[index].push_back(std::move(edge_label));
       source_adjacency_[index].add(idx);
       source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
+      (*sources_)[edgeid].push_back(index);
     }
     index++;
   }
