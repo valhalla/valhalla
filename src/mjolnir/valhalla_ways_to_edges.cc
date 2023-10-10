@@ -34,7 +34,7 @@ struct EdgeAndDirection {
 };
 
 // Main application to create a list wayids and directed edges belonging
-// to ways that are driveable.
+// to ways that are drivable.
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
-      "a program that creates a list of edges for each auto-driveable OSM way.\n\n");
+      "a program that creates a list of edges for each auto-drivable OSM way.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")

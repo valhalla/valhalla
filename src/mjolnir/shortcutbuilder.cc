@@ -212,7 +212,7 @@ bool CanContract(GraphReader& reader,
     return false;
 
   // Exactly one pair of edges match. Check if any other remaining edges
-  // are driveable outbound from the node. If so this cannot be contracted.
+  // are drivable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
   /*  for (uint32_t i = 0; i < n; i++) {
       if (i != match.first && i != match.second) {
@@ -264,14 +264,14 @@ bool CanContract(GraphReader& reader,
   // and there are other edges at the node (forward intersecting edge or a
   // 'T' intersection
   if (nodeinfo->local_edge_count() > 2) {
-    // Find number of driveable edges
-    uint32_t driveable = 0;
+    // Find number of drivable edges
+    uint32_t drivable = 0;
     for (uint32_t i = 0; i < nodeinfo->local_edge_count(); i++) {
       if (nodeinfo->local_driveability(i) != Traversability::kNone) {
-        driveable++;
+        drivable++;
       }
     }
-    if (driveable > 2) {
+    if (drivable > 2) {
       uint32_t heading1 = (nodeinfo->heading(edge1->localedgeidx()) + 180) % 360;
       uint32_t turn_degree = GetTurnDegree(heading1, nodeinfo->heading(edge2->localedgeidx()));
       if (turn_degree > 60 && turn_degree < 300) {
@@ -454,7 +454,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           next_edge_id = edgepairs.edge2.second;
         } else {
           // Break out of loop. This case can happen when a shortcut edge
-          // enters another shortcut edge (but is not driveable in reverse
+          // enters another shortcut edge (but is not drivable in reverse
           // direction from the node).
           const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +

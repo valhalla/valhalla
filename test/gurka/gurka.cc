@@ -525,7 +525,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
           if (way_id != 0) {
             if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
 
-              // Skip any edges that are not driveable inbound.
+              // Skip any edges that are not drivable inbound.
               if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
                 continue;
 
