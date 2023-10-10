@@ -140,6 +140,10 @@ public:
     return mutable_edge_->tagged_value();
   }
 
+  const ::google::protobuf::RepeatedPtrField<::valhalla::RouteLandmark>& landmarks() const {
+    return mutable_edge_->landmarks();
+  }
+
   float length_km() const {
     return mutable_edge_->length_km();
   }
