@@ -23,7 +23,7 @@
    * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
-   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
+   * CHANGED: the boost property tree config is now read in to a singleton that doesn't need to be passed down anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
    * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
    * ADDED: option `--extract-tar` to `valhalla_build_extract` to create extracts from .tar files instead of tile directory [#4255](https://github.com/valhalla/valhalla/pull/4255)
    * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
