@@ -11,6 +11,35 @@ message LatLng {
   }
 }
 
+message RouteLandmark {
+  enum Type {
+    kUnused = 0;
+    kFuel = 1;
+    kPostOffice = 2;
+    kPolice = 3;
+    kFireStation = 4;
+    kCarWash = 5;
+    kRestaurant = 6;
+    kFastFood = 7;
+    kCafe = 8;
+    kBank = 9;
+    kPharmacy = 10;
+    kKindergarten = 11;
+    kBar = 12;
+    kHospital = 13;
+    kPub = 14;
+    kClinic = 15;
+    kTheatre = 16;
+    kCinema = 17;
+    kCasino = 18;
+  }
+  string name = 1;
+  Type type = 2;
+  LatLng lat_lng = 3;
+  double distance = 4;  // landmark's distance along the trip edge. in maneuvers it's landmark's distance to the maneuver
+  bool right = 5;  // landmark is to the right of the route that comes before the maneuver
+}
+
 message BoundingBox {
   LatLng min_ll = 1;
   LatLng max_ll = 2;

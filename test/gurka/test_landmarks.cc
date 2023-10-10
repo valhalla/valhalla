@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <iomanip>
 #include <vector>
 
 #include "baldr/graphreader.h"
@@ -7,10 +8,10 @@
 #include "gurka.h"
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/landmarks.h"
+#include "odin/enhancedtrippath.h"
 #include "test/test.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <iomanip>
 
 using namespace valhalla;
 using namespace valhalla::baldr;
@@ -30,6 +31,12 @@ const std::string pbf_filename_tile_test = workdir_tiles + "/map.pbf";
 valhalla::gurka::map landmark_map_tile_test;
 
 namespace {
+inline void DisplayLandmark(const Landmark& landmark) {
+  std::cout << "landmark: id = " << landmark.id << ", name = " << landmark.name
+            << ", type = " << static_cast<int>(landmark.type) << ", lng = " << landmark.lng
+            << ", lat = " << landmark.lat << std::endl;
+}
+
 void BuildPBF() {
   const std::string ascii_map = R"(
       a-----b-----c---d
@@ -121,44 +128,41 @@ void BuildPBFAddLandmarksToTiles() {
 void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
   LOG_INFO("Checking tiles of level " + std::to_string(graphid.level()) + "...");
 
+  const std::map<std::pair<int, int>, std::vector<std::string>> expected_landmarks_tiles = {
+      {{0, 55},
+       std::vector<std::string>{"gong_shang_yin_hang", "hai_di_lao", "lv_mo_li", "shell"}}, // ae
+      {{0, 25},
+       std::vector<std::string>{"McDonalds", "sheng_ren_min_yi_yuan", "wan_da", "you_zheng"}}, // cd
+      {{1, 35},
+       std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "hai_di_lao", "ju_yuan",
+                                "lv_mo_li"}},                                  // ab
+      {{1, 30}, std::vector<std::string>{"McDonalds", "ju_yuan", "wan_da"}},   // bc
+      {{2, 55}, std::vector<std::string>{"McDonalds", "pizza_hut", "wan_da"}}, // cf
+      {{2, 65}, std::vector<std::string>{"shell"}},                            // ef
+  };
+
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
-    // LOG_INFO("edge endnode: " + std::to_string(e.endnode().id()) +
-    //          ", length: " + std::to_string(e.length()));
-
-    int count_landmarks = 0;
+    std::vector<std::string> landmark_names{};
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-
-      count_landmarks++;
-      // Landmark landmark(value.second);
-      // std::cout << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng
-      //           << " " << landmark.lat << std::endl;
+      landmark_names.push_back(Landmark(value.second).name);
     }
 
-    switch (graphid.level()) {
-      case 0: // edge ae, cd
-        EXPECT_EQ(count_landmarks, 4);
-        break;
-      case 1:
-        if (e.length() == 35) { // ab
-          EXPECT_EQ(count_landmarks, 5);
-        } else if (e.length() == 30) { // bc
-          EXPECT_EQ(count_landmarks, 3);
-        }
-        break;
-      case 2:
-        if (e.length() == 55) { // cf
-          EXPECT_EQ(count_landmarks, 3);
-        } else if (e.length() == 65) { // ef
-          EXPECT_EQ(count_landmarks, 1);
-        }
-        break;
+    // use graph level and edge length as map key
+    const auto expected_result = expected_landmarks_tiles.find({graphid.level(), e.length()});
+    if (expected_result == expected_landmarks_tiles.end()) {
+      throw std::runtime_error("Failed to find the edge in the expected landmarks, level = " +
+                               std::to_string(graphid.level()) +
+                               ", edge length = " + std::to_string(e.length()));
     }
+
+    std::sort(landmark_names.begin(), landmark_names.end());
+    EXPECT_EQ(expected_result->second, landmark_names);
   }
 }
 
@@ -177,18 +181,42 @@ void DisplayLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-
       count_landmarks++;
-      Landmark landmark(value.second);
-      std::cout << landmark.name << " " << static_cast<int>(landmark.type) << " " << landmark.lng
-                << " " << landmark.lat << std::endl;
+      DisplayLandmark(Landmark(value.second));
     }
   }
 }
+
+// struct to represent a landmark in maneuvers in test
+struct LandmarkInManeuver {
+  std::string _name;
+  uint8_t _type;
+  double _distance;
+  bool _right;
+
+  LandmarkInManeuver(const std::string& name, uint8_t type, double distance, bool right)
+      : _name(name), _type(type), _distance(distance), _right(right) {
+  }
+
+  bool operator<(const LandmarkInManeuver& other) const {
+    if (_name != other._name) {
+      return _name < other._name;
+    } else {
+      return _distance < other._distance;
+    }
+  }
+
+  bool operator==(const LandmarkInManeuver& other) const {
+    if (_name == other._name && _type == other._type && _distance == other._distance &&
+        _right == other._right) {
+      return true;
+    }
+    return false;
+  }
+};
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
-
   // insert test data
   {
     LandmarkDatabase db_ini(db_path, false);
@@ -205,24 +233,16 @@ TEST(LandmarkTest, TestBuildDatabase) {
 
   std::vector<Landmark> landmarks{};
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(30, 30, 40, 40); });
-
   EXPECT_EQ(landmarks.size(), 2); // A and B
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rows");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
 
   landmarks.clear();
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_bbox(0, 0, 50, 50); });
-
   EXPECT_EQ(landmarks.size(), 3); // A, B, Eiffel Tower
 }
 
 TEST(LandmarkTest, TestParseLandmarks) {
-
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
@@ -245,11 +265,6 @@ TEST(LandmarkTest, TestParseLandmarks) {
   EXPECT_EQ(landmarks.size(), 3); // A, B, D
 
   LOG_INFO("Get " + std::to_string(landmarks.size()) + " rowsmjolnir");
-  for (const auto& landmark : landmarks) {
-    LOG_INFO("id: " + std::to_string(landmark.id) + ", name: " + landmark.name +
-             ", type: " + std::to_string(static_cast<uint8_t>(landmark.type)) + ", longitude: " +
-             std::to_string(landmark.lng) + ", latitude: " + std::to_string(landmark.lat));
-  }
 
   EXPECT_TRUE(landmarks[0].type == LandmarkType::bar); // A
   EXPECT_TRUE(landmarks[0].name == "A");
@@ -431,4 +446,169 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   DisplayLandmarksInTiles(gr, GraphId("0/002025/0"));
   DisplayLandmarksInTiles(gr, GraphId("1/032220/0"));
   DisplayLandmarksInTiles(gr, GraphId("2/517680/0"));
+}
+
+TEST(LandmarkTest, TestLandmarksInManeuvers) {
+  const std::string ascii_map = R"(
+    A B           C         D 
+    a-------b-------c------d
+          E |    F  |G
+            |       |
+            e       |    I   J
+              H     f-------g
+                      K
+  )";
+
+  const gurka::nodes nodes = {
+      // landmarks
+      {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
+      {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
+      {"C", {{"name", "McDonalds"}, {"amenity", "fast_food"}}},
+      {"D", {{"name", "wan_da"}, {"amenity", "cinema"}}},
+      {"E", {{"name", "sheng_ren_min_yi_yuan"}, {"amenity", "hospital"}}},
+      {"F", {{"name", "gong_shang_yin_hang"}, {"amenity", "bank"}}},
+      {"G", {{"name", "ju_yuan"}, {"amenity", "theatre"}}},
+      {"H", {{"name", "pizza_hut"}, {"amenity", "restaurant"}}},
+      {"I", {{"name", "shell"}, {"amenity", "fuel"}}},
+      {"J", {{"name", "starbucks"}, {"amenity", "cafe"}}},
+      {"K", {{"name", "you_zheng"}, {"amenity", "post_office"}}},
+      // non-landmark nodes
+      {"a", {{"junction", "yes"}, {"name", "you_yi_lu_kou"}}},
+      {"b", {{"traffic_signal", "signal"}}},
+      {"c", {{"junction", "yes"}, {"name", "gao_xin_lu_kou"}}},
+      {"d", {{"barrier", "gate"}}},
+      {"e", {{"name", "hua_yuan"}, {"place", "city"}}},
+      {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
+      {"g", {{"barrier", "gate"}, {"access", "yes"}}},
+  };
+
+  const gurka::ways ways = {
+      {"ab", {{"highway", "secondary"}, {"name", "S1"}, {"maxspeed", "80"}}},
+      {"bc", {{"highway", "secondary"}, {"name", "S2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "secondary"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"be", {{"highway", "secondary"}, {"maxspeed", "60"}}},
+      {"cf", {{"highway", "secondary"}, {"maxspeed", "50"}}},
+      {"fg", {{"highway", "secondary"}, {"maxspeed", "50"}}},
+  };
+
+  const std::string workdir = VALHALLA_BUILD_DIR "test/data/landmarks/maneuvers";
+  const std::string db_path = workdir + "/landmarks.sqlite";
+  const std::string pbf = workdir + "/map.pbf";
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  valhalla::gurka::map map{};
+  map.nodes = gurka::detail::map_to_coordinates(ascii_map, 10, {0, 0});
+  detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
+
+  map.config =
+      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+                        {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
+
+  // build regular graph tiles from the pbf, and add landmarks to it
+  mjolnir::build_tile_set(map.config, {pbf}, mjolnir::BuildStage::kInitialize,
+                          mjolnir::BuildStage::kValidate, false);
+  // build landmark database and import landmarks to it
+  EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
+  // add landmarks to graphtile from the landmark database
+  AddLandmarks(map.config);
+
+  // get routing result from point a to g
+  auto result = gurka::do_action(valhalla::Options::route, map, {"a", "g"}, "auto");
+
+  ASSERT_EQ(result.trip().routes_size(), 1);
+  ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
+  auto leg = result.trip().routes(0).legs(0);
+
+  const std::map<std::string, std::vector<std::string>> expected_landmarks_tripleg = {
+      {"S1", std::vector<std::string>{"hai_di_lao", "lv_mo_li", "sheng_ren_min_yi_yuan"}},
+      {"S2", std::vector<std::string>{"McDonalds", "gong_shang_yin_hang", "ju_yuan",
+                                      "sheng_ren_min_yi_yuan"}},
+      {"cf", std::vector<std::string>{"McDonalds", "ju_yuan", "you_zheng"}},
+      {"fg", std::vector<std::string>{"shell", "starbucks", "you_zheng"}},
+  };
+
+  // Check tripLeg
+  for (const auto& node : leg.node()) {
+    // skip the point in trip leg, check edges
+    if (node.edge().name_size() == 0) {
+      continue;
+    }
+    // get edge name
+    ASSERT_EQ(node.edge().name_size(), 1);
+    const std::string edge_name = node.edge().name(0).value();
+
+    // get landmarks in the edge
+    std::vector<std::string> landmark_names{};
+    for (const auto& tag : node.edge().tagged_value()) {
+      if (tag.type() == TaggedValue_Type_kLandmark) {
+        Landmark landmark(tag.value());
+        landmark_names.push_back(landmark.name);
+      }
+    }
+    // compare landmarks with expected results
+    auto expected_result = expected_landmarks_tripleg.find(edge_name);
+    if (expected_result == expected_landmarks_tripleg.end()) {
+      throw std::runtime_error("Failed to find the edge in the expected landmarks, edge name = " +
+                               edge_name);
+    }
+
+    std::sort(landmark_names.begin(), landmark_names.end());
+    EXPECT_EQ(expected_result->second, landmark_names);
+  }
+
+  // Check maneuver
+  ASSERT_EQ(result.directions().routes_size(), 1);
+  ASSERT_EQ(result.directions().routes(0).legs_size(), 1);
+  auto directions_leg = result.directions().routes(0).legs(0);
+
+  // expected landmark results in the maneuvers
+  std::vector<LandmarkInManeuver> cf_maneuver{LandmarkInManeuver("hai_di_lao", 6, 140, 0),
+                                              LandmarkInManeuver("lv_mo_li", 12, 160, 0),
+                                              LandmarkInManeuver("sheng_ren_min_yi_yuan", 13, 100, 1),
+                                              LandmarkInManeuver("gong_shang_yin_hang", 9, 30, 1),
+                                              LandmarkInManeuver("ju_yuan", 16, 0, 1),
+                                              LandmarkInManeuver("sheng_ren_min_yi_yuan", 13, 80, 1),
+                                              LandmarkInManeuver("McDonalds", 7, 20, 0)};
+  std::vector<LandmarkInManeuver> fg_maneuver{LandmarkInManeuver("ju_yuan", 16, 30, 0),
+                                              LandmarkInManeuver("you_zheng", 2, 0, 0),
+                                              LandmarkInManeuver("McDonalds", 7, 40, 1)};
+  std::vector<LandmarkInManeuver> end_point_maneuver{LandmarkInManeuver("shell", 1, 30, 0),
+                                                     LandmarkInManeuver("you_zheng", 2, 60, 1),
+                                                     LandmarkInManeuver("starbucks", 8, 0, 0)};
+  std::sort(cf_maneuver.begin(), cf_maneuver.end());
+  std::sort(fg_maneuver.begin(), fg_maneuver.end());
+  std::sort(end_point_maneuver.begin(), end_point_maneuver.end());
+
+  std::map<std::string, std::vector<LandmarkInManeuver>> expected_landmarks_maneuver = {
+      {"S1", std::vector<LandmarkInManeuver>{}},
+      {"cf", cf_maneuver},
+      {"fg", fg_maneuver},
+      {"end_point", end_point_maneuver},
+  };
+
+  // check landmarks with expectations one by one
+  for (const auto& man : directions_leg.maneuver()) {
+    std::string street_name = man.street_name_size() == 1 ? man.street_name(0).value() : "end_point";
+
+    std::vector<LandmarkInManeuver> result_landmarks{};
+    for (const auto& l : man.landmarks()) {
+      result_landmarks.emplace_back(LandmarkInManeuver(l.name(), static_cast<uint8_t>(l.type()),
+                                                       std::round(l.distance()), l.right()));
+    }
+    std::sort(result_landmarks.begin(), result_landmarks.end());
+
+    auto expected = expected_landmarks_maneuver.find(street_name);
+    if (expected == expected_landmarks_maneuver.end()) {
+      throw std::runtime_error(
+          "Checking landmarks in maneuver failed: cannot find the maneuver in the expected result!");
+    }
+    ASSERT_EQ(result_landmarks.size(), expected->second.size());
+    for (auto i = 0; i < result_landmarks.size(); ++i) {
+      EXPECT_EQ(result_landmarks[i], expected->second[i]);
+    }
+  }
 }

@@ -32,25 +32,25 @@ enum class LandmarkType : uint8_t {
   cafe = 8,
   // on the fence about this one, these are often obvious without a name, maybe should go in the upper
   // list?
-  bank = 10,
+  bank = 9,
   // same with this one, in some countries these are obvious and have the little plus sign, in america
   // its not the case and they can be different chains or could be part of a grocery store or
   // anything... speaking of grocery store, why isnt that on the list? also why arent department
   // stores on the list, surely stores would be a good landmark to use (again when they are named)
-  pharmacy = 11,
+  pharmacy = 10,
   // again these could just be a random building with nothing other than a sign like "early years" or
   // something, they better have a name or it will be ambiguous
-  kindergarten = 12,
+  kindergarten = 11,
   // same thing, often just a building
-  bar = 13,
+  bar = 12,
   // this could be very very big like a college campus, i think we should remove this
-  hospital = 14,
+  hospital = 13,
   // same as bar could be just a building need at least a name to have a chance of seeing it
-  pub = 16,
+  pub = 14,
   // generic, could be many many types of clinics also often there are multiple of these located in
   // same "complex", you might have a dentist, orthodontist, ear nose throat and eye specialists all
   // next to each other.
-  clinic = 17,
+  clinic = 15,
   // on the fence about this one, to me this would be in the same category as "museum" or something
   // where its so specialized maybe it doesnt need a name. what keeps me from say ing that is you
   // often cant tell from the outside what function these amenities serve until you read the name
