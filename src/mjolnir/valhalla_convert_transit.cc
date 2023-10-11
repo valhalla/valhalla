@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, valhalla::config(), "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     pt = valhalla::config();
