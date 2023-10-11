@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     if (!parse_common_args(program, options, result, valhalla::config(), "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
-    pt = valhalla::config()
+    pt = valhalla::config();
 
     if (result.count("target_directory")) {
       pt.get_child("mjolnir").erase("transit_dir");
