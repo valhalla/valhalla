@@ -29,6 +29,7 @@
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/mjolnir/landmarks.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -484,6 +485,14 @@ public:
    * @param  directededges  Updated directed edge information.
    */
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+
+  /**
+   * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value
+   *
+   * @param edge_id  the edge id to modify
+   * @param landmark the landmark to associate to the edge
+   */
+  void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
 
 protected:
   struct EdgeTupleHasher {

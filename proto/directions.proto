@@ -140,6 +140,7 @@ message DirectionsLeg {
     BikeShareStationInfo bss_info = 38;                   // Bike Share Station Info
     bool portions_highway = 39;                           // has portions highway
     bool portions_ferry = 40;                             // has portions ferry
+    repeated RouteLandmark landmarks = 41;                // landmarks correlated with the maneuver
   }
 
   uint64 trip_id = 1;

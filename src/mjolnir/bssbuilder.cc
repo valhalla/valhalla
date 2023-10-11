@@ -157,7 +157,8 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    [[maybe_unused]] uint32_t secs =
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     LOG_INFO("Projection Finished - Projection of " + std::to_string(size) + " bike station  took " +
              std::to_string(secs) + " secs");
   });
@@ -589,7 +590,8 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
 
   auto scoped_finally = make_finally([&t1]() {
     auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    [[maybe_unused]] uint32_t secs =
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     LOG_INFO("Finished - BssBuilder took " + std::to_string(secs) + " secs");
   });
 

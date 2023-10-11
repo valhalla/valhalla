@@ -181,6 +181,34 @@ endif()
 
 if(NOT Protobuf_FOUND)
   find_package(Protobuf REQUIRED)
+
+  # orchestrated effort of both protobuf & cmake are responsible for the next lines..
+
+  # TODO: monitor how protobuf Linux packages evolve. Eventually everyone should use
+  # the Apple configuration, but e.g. apt does not install CMake config with protobuf
+  if(Protobuf_VERSION VERSION_GREATER_EQUAL 4.22.0)
+    # this might be needed for some Apple/Linux protobuf versions
+    # add_definitions(-DPROTOBUF_USE_DLLS)
+    if(APPLE OR WIN32)
+      # CONFIG mode is ideal for new abseil protobuf builds, which uses the protobuf-provided
+      # CMake configuration instead of CMake internal one, as that's not looking for abseil:
+      # https://github.com/valhalla/valhalla/issues/4173#issuecomment-1638067950
+      # Newer protobuf versions require a protobuf_MODULE_COMPATIBLE to be able 
+      # to see the protobuf_generate_cpp() CMake function
+      set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+      find_package(Protobuf REQUIRED CONFIG)
+    else()
+      # linux might not have CMake config installed (e.g. Debian derivatives)
+      # need to link protobuf to abseil manually
+      find_package(Protobuf REQUIRED)
+      find_package(absl REQUIRED)
+      if(TARGET protobuf::libprotobuf-lite)
+        target_link_libraries(protobuf::libprotobuf-lite INTERFACE "absl::absl_log")
+      elseif(TARGET protobuf::libprotobuf)
+        target_link_libraries(protobuf::libprotobuf INTERFACE "absl::absl_log")
+      endif()
+    endif()
+  endif()
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
@@ -272,7 +300,7 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
   valhalla_convert_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds valhalla_add_elevation)
+  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_add_landmarks)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)

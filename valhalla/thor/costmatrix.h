@@ -108,6 +108,18 @@ public:
    */
   void clear();
 
+  /**
+   * Sets the functor which will track the Dijkstra expansion.
+   *
+   * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
+   *                             on a given edge
+   */
+  using expansion_callback_t = std::function<
+      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  void set_track_expansion(const expansion_callback_t& expansion_callback) {
+    expansion_callback_ = expansion_callback;
+  }
+
 protected:
   // Access mode used by the costing method
   uint32_t access_mode_;
@@ -153,6 +165,9 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
+  // for tracking the expansion of the Dijkstra
+  expansion_callback_t expansion_callback_;
+
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
    * for that mode.
@@ -188,7 +203,10 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    */
-  void CheckForwardConnections(const uint32_t source, const sif::BDEdgeLabel& pred, const uint32_t n);
+  void CheckForwardConnections(const uint32_t source,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader);
 
   /**
    * Update status when a connection is found.
