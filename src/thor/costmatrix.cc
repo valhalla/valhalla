@@ -868,13 +868,11 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       continue;
     }
 
-    const auto& edgestate = source_edgestatus_[source];
-
     // If this edge has been reached then a shortest path has been found
     // to the end node of this directed edge.
-    EdgeStatusInfo oppedgestatus = edgestate.Get(fwd_edgeid);
+    EdgeStatusInfo oppedgestatus = source_edgestatus_[source].Get(fwd_edgeid);
     if (oppedgestatus.set() != EdgeSet::kUnreachedOrReset) {
-      const auto& edgelabels = source_edgelabel_[target];
+      const auto& edgelabels = source_edgelabel_[source];
       uint32_t predidx = edgelabels[oppedgestatus.index()].predecessor();
       const BDEdgeLabel& opp_el = edgelabels[oppedgestatus.index()];
 
