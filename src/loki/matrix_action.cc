@@ -78,15 +78,9 @@ void loki_worker_t::init_matrix(Api& request) {
   if (options.sources_size() < 1) {
     throw valhalla_exception_t{121};
   };
-  for (auto& s : *options.mutable_sources()) {
-    s.clear_heading();
-  }
   if (options.targets_size() < 1) {
     throw valhalla_exception_t{122};
   };
-  for (auto& t : *options.mutable_targets()) {
-    t.clear_heading();
-  }
 
   // no locations!
   options.clear_locations();
