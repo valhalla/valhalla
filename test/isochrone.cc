@@ -30,7 +30,7 @@ using rp = rapidjson::Pointer;
 
 namespace {
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
   EXPECT_NEAR(a.GetArray()[0].GetDouble(), b.GetArray()[0].GetDouble(), 0.00002);
@@ -131,9 +131,9 @@ std::vector<PointLL> polygon_from_geojson(const std::string& geojson) {
 
 TEST(Isochrones, Basic) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  thor_worker_t thor_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   {
     const auto request =
@@ -269,9 +269,9 @@ TEST(Isochrones, test_max_reserved_labels_count) {
 int main(int argc, char* argv[]) {
   // user wants to try it
   if (argc > 1) {
-    loki_worker_t loki_worker(config);
-    thor_worker_t thor_worker(config);
-    GraphReader reader(config.get_child("mjolnir"));
+    loki_worker_t loki_worker(cfg);
+    thor_worker_t thor_worker(cfg);
+    GraphReader reader(cfg.get_child("mjolnir"));
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);
