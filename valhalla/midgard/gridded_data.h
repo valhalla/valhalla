@@ -104,8 +104,13 @@ public:
     // Find the intersection along a tile edge
     auto intersect = [&tile_corners, &s](int p1, int p2) {
       auto ds = s[p2] - s[p1];
-      return PointLL((s[p2] * tile_corners[p1].first - s[p1] * tile_corners[p2].first) / ds,
-                     (s[p2] * tile_corners[p1].second - s[p1] * tile_corners[p2].second) / ds);
+      auto x = (s[p2] * tile_corners[p1].first - s[p1] * tile_corners[p2].first) / ds;
+      auto y = (s[p2] * tile_corners[p1].second - s[p1] * tile_corners[p2].second) / ds;
+      // we round here because connecting the cell line segments requires finding points via equality
+      // on some platforms the intersection arithmetic for adjacent cells results in floating point
+      // noise that differs for the intersection point on either side of the cell boundary, snapping
+      // to centimeter resolution lets us get usable results on those platforms (eg. aarch64)
+      return PointLL(std::round(x * 1e7) / 1e7, std::round(y * 1e7) / 1e7);
     };
 
     // In the tight loop below, we need to decide where a contour intersects the triangles that make
