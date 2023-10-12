@@ -11,8 +11,8 @@ executors:
 commands:
   mac_deps:
     steps:
-      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: sudo python3 -m pip install shapely "conan<2.0.0"
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip virtualenv
+      - run: python3 -m venv venv && source venv/bin/activate && sudo python3 -m pip install shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   linux_deps:
     steps:
@@ -133,7 +133,6 @@ jobs:
           keys:
             - ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
             - ccache-release-linux-arm_64-v3-{{ checksum "conanfile.txt" }}
-      - run: mkdir build
       - run: |
           mkdir build
           source venv/bin/activate
@@ -167,8 +166,11 @@ jobs:
           keys:
             - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
             - ccache-release-macos-{{ checksum "conanfile.txt" }}
-      - run: mkdir -p build
-      - run: cd build && cmake ..
+      - run: |
+          mkdir -p build
+          source venv/bin/activate
+          cd build
+          cmake ..
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
