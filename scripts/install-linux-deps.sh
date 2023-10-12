@@ -4,8 +4,8 @@
 set -x -o errexit -o pipefail -o nounset
 
 # Now, go through and install the build dependencies
-apt-get update --assume-yes
-env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
+sudo apt-get update --assume-yes
+env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     autoconf \
     automake \
     ccache \
@@ -52,9 +52,7 @@ readonly primeserver_dir=/usr/local/src/prime_server
 git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
 pushd $primeserver_dir
 ./autogen.sh && ./configure && \
-make -j${CONCURRENCY:-$(nproc)} install && \
-popd && \
-rm -r $primeserver_dir
+make -j${CONCURRENCY:-$(nproc)} && sudo make install && popd && rm -r $primeserver_dir
 
 # for boost
 python3 -m pip install --upgrade "conan<2.0.0" requests shapely
