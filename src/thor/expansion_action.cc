@@ -139,6 +139,7 @@ std::string thor_worker_t::expansion(Api& request) {
        }) {
     alg->set_track_expansion(track_expansion);
   }
+  costmatrix_.set_track_expansion(track_expansion);
   isochrone_gen.SetInnerExpansionCallback(track_expansion);
 
   try {
@@ -147,6 +148,8 @@ std::string thor_worker_t::expansion(Api& request) {
       route(request);
     } else if (exp_action == Options::isochrone) {
       isochrones(request);
+    } else if (exp_action == Options::sources_to_targets) {
+      matrix(request);
     }
   } catch (...) {
     // we swallow exceptions because we actually want to see what the heck the expansion did
@@ -158,6 +161,7 @@ std::string thor_worker_t::expansion(Api& request) {
                                                &bidir_astar, &bss_astar}) {
     alg->set_track_expansion(nullptr);
   }
+  costmatrix_.set_track_expansion(nullptr);
   isochrone_gen.SetInnerExpansionCallback(nullptr);
 
   // serialize it

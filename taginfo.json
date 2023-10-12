@@ -7352,6 +7352,134 @@
         "way"
       ],
       "description": "Considers the way lit"
+    },
+    {
+      "key": "motor_vehicle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables motor_vehicle access in the forward direction"
+    },
+    {
+      "key": "motor_vehicle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables motor_vehicle access in the forward direction"
+    },
+    {
+      "key": "motor_vehicle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables motor_vehicle access in the backward direction"
+    },
+    {
+      "key": "motor_vehicle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables motor_vehicle access in the backward direction"
+    },
+    {
+      "key": "vehicle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables vehicle access in the forward direction"
+    },
+    {
+      "key": "vehicle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables vehicle access in the forward direction"
+    },
+    {
+      "key": "vehicle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables vehicle access in the backward direction"
+    },
+    {
+      "key": "vehicle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables vehicle access in the backward direction"
+    },
+    {
+      "key": "foot:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables foot access in the forward direction"
+    },
+    {
+      "key": "foot:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables foot access in the forward direction"
+    },
+    {
+      "key": "foot:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables foot access in the backward direction"
+    },
+    {
+      "key": "foot:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables foot access in the backward direction"
+    },
+    {
+      "key": "bicycle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables bicycle access in the forward direction"
+    },
+    {
+      "key": "bicycle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables bicycle access in the forward direction"
+    },
+    {
+      "key": "bicycle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables bicycle access in the backward direction"
+    },
+    {
+      "key": "bicycle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables bicycle access in the backward direction"
     }
   ]
 }

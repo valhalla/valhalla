@@ -1169,6 +1169,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
 
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",
