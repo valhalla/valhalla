@@ -157,7 +157,7 @@ jobs:
 
   build-osx:
     executor: macos
-    resource_class: large
+    resource_class: macos.x86.medium.gen2
     steps:
       - checkout
       - check_ci_lint
