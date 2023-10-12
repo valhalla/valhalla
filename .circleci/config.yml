@@ -16,7 +16,9 @@ commands:
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   linux_deps:
     steps:
-      - run: bash ./scripts/install-linux-deps.sh
+      - run: |
+            source venv/bin/activate
+            ./scripts/install-linux-deps.sh
   linux_preflight:
     steps:
       - run: |
