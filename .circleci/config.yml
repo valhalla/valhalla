@@ -137,7 +137,7 @@ jobs:
           mkdir build
           source venv/bin/activate
           cd build
-          cmake .. -DENABLE_SINGLE_FILES_WERROR=OFF -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+          cmake .. -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
