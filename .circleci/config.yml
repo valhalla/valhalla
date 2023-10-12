@@ -120,6 +120,7 @@ jobs:
     resource_class: arm.xlarge
     steps:
       - checkout
+      - apt update && apt install sudo
       - linux_preflight
       - check_ci_lint
       - linux_deps
