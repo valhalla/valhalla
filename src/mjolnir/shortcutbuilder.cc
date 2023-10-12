@@ -90,7 +90,7 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   if (edge1->access_restriction()) {
     auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
     auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
-    if (res1.size() != res2.size() )
+    if (res1.size() != res2.size())
       return false;
     for (size_t i = 0; i < res1.size(); ++i) {
       res1[i].set_edgeindex(0);
@@ -99,7 +99,7 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
         return false;
     }
   }
-  
+
   return true;
 }
 
