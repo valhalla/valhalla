@@ -20,8 +20,8 @@ commands:
   linux_preflight:
     steps:
       - run: |
-            apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet python3-pip python3-venv git curl
+            sudo apt-get update --assume-yes
+            env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip python3-venv git curl
             python3 -m venv venv
             source venv/bin/activate
   check_ci_lint:
