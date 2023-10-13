@@ -233,7 +233,7 @@ TEST(Matrix, test_matrix) {
 
   CostMatrix cost_matrix_abort_source;
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
-                                          100000.0);
+                                          90000.0);
 
   matrix = request.matrix();
   uint32_t found = 0;
@@ -256,7 +256,7 @@ TEST(Matrix, test_matrix) {
       ++found;
     }
   }
-  EXPECT_EQ(found, 10) << " not the number of results as expected";
+  EXPECT_EQ(found, 11) << " not the number of results as expected";
   request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
