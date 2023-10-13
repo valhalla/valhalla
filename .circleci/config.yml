@@ -16,7 +16,6 @@ commands:
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   mac_preflight:
     steps:
-      - run: brew install virtualenv
       - run: python3 -m venv venv
   linux_deps:
     steps:
