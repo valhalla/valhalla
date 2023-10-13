@@ -1,13 +1,52 @@
 #include "gurka.h"
+#include "loki/worker.h"
 #include "midgard/pointll.h"
 #include "pixels.h"
 #include "test.h"
+
 #include <gtest/gtest.h>
+#include <prime_server/http_protocol.hpp>
+#include <prime_server/prime_server.hpp>
 
 using namespace valhalla;
 using namespace valhalla::gurka;
+using namespace prime_server;
 
-TEST(Standalone, ElevationInTiles) {
+namespace {
+std::string shape;
+std::vector<http_request_t> requests;
+std::vector<std::string> responses;
+const std::string workdir = "test/data/gurka_elevation_in_tiles";
+
+zmq::context_t context;
+void start_service(const boost::property_tree::ptree config) {
+  // need a place to drop our sockets
+  auto run_dir = config.get<std::string>("mjolnir.tile_dir");
+  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
+    throw std::runtime_error("Couldnt make directory to run from");
+
+  // server
+  std::thread server(std::bind(&http_server_t::serve,
+                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
+                                             config.get<std::string>("loki.service.proxy") + "_in",
+                                             config.get<std::string>("httpd.service.loopback"),
+                                             config.get<std::string>("httpd.service.interrupt"))));
+  server.detach();
+
+  // load balancer
+  std::thread proxy(std::bind(&proxy_t::forward,
+                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
+                                      config.get<std::string>("loki.service.proxy") + "_out")));
+  proxy.detach();
+
+  // service worker
+  std::thread worker(valhalla::loki::run_service, config);
+  worker.detach();
+}
+
+} // namespace
+
+TEST(Standalone, ElevationRealWorld) {
   const std::string ascii_map = R"(
                  A---B
                  |   |
@@ -75,7 +114,6 @@ TEST(Standalone, ElevationInTiles) {
   for (const auto& p : pixels)
     tile[p.first] = p.second;
 
-  const std::string workdir = "test/data/gurka_elevation_in_tiles";
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
@@ -102,15 +140,21 @@ TEST(Standalone, ElevationInTiles) {
                  false);
 
   std::string route_json;
-  auto route = gurka::do_action(valhalla::Options::route, map, {"F", "M"}, "bicycle",
+  // ~60m test
+  auto route = gurka::do_action(valhalla::Options::route, map, {"1", "M"}, "bicycle",
                                 {{"/elevation_interval", "30"}}, {}, &route_json);
 
   rapidjson::Document result;
   result.Parse(route_json.c_str());
+
+  auto s = rapidjson::get_child_optional(result, "/trip/legs/0/shape");
+  EXPECT_TRUE(s && s->IsString());
+  shape = s->GetString();
+
   auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
   EXPECT_TRUE(elevation && elevation->IsArray());
 
-  std::vector<float> expected_elevation = {30.7, 237, 257.7, 258, 258};
+  std::vector<float> expected_elevation = {252.9, 257.9, 258};
 
   size_t i = 0;
   if (elevation && elevation->IsArray()) {
@@ -119,12 +163,160 @@ TEST(Standalone, ElevationInTiles) {
     }
   }
 
-  // Now compare to skadi height response
-  // http://localhost:8002/height?json={%22height_precision%22:1,%22encoded_polyline%22:%22yxeplAtqz{pCpZiBbBk@vBw@hYaA%22}
+  requests.push_back(
+      http_request_t(POST, "/height",
+                     "{\"resample_distance\":30,\"height_precision\":1,\"encoded_polyline\":\"" +
+                         shape + "\"}"));
 
-  // example tests: sample.cc and skadi_service.cc
+  std::string res = std::string("{\"encoded_polyline\":\"g}dplAjnz{pClO{BvOi@\",\"height\":[");
+  for (const auto& e : expected_elevation) {
+    res += std::to_string(e) + ",";
+  }
+  res += "]}";
+  std::cout << res << std::endl;
 
-  // example point check
-  // skadi::sample s(workdir);
-  // EXPECT_NEAR(30.7, s.get(std::make_pair(-76.4946354, 40.6521889)), 1.0);
+  responses.push_back(res);
+}
+
+/*
+ * sigh. more bad data
+
+TEST(Standalone, ElevationFakeEdge) {
+  const std::string ascii_map = R"(
+                 A
+                 |
+                 |
+                 |
+                 B
+                 |
+                 |
+                 |
+                 C
+                 |
+                 |
+                 |
+                 D
+                 |
+                 |
+                 |
+                 E
+
+  )";
+
+  const gurka::ways ways = {
+      {"ABCDE", {{"highway", "residential"}, {"name", "East Chestnut Street"}}},
+  };
+
+  // Create our layout
+  using nodelayout = std::map<std::string, midgard::PointLL>;
+  nodelayout layout;
+
+  layout.insert({"A", {-76.537011, 40.723872}});// 300m
+  layout.insert({"B", {-76.537011, 40.726872}});// 350m
+  layout.insert({"C", {-76.537011, 40.729872}});// 450m
+  layout.insert({"D", {-76.537011, 40.732872}});// 325m
+  layout.insert({"E", {-76.537011, 40.735872}});// 250m
+
+  // create the test elevation tile
+  std::vector<int16_t> tile(3601 * 3601, 0);
+  for (const auto& p : pixels)
+    tile[p.first] = p.second;
+
+  if (!filesystem::exists(workdir)) {
+    bool created = filesystem::create_directories(workdir);
+    EXPECT_TRUE(created);
+  }
+
+  // actually store it
+  std::ofstream file(workdir + "/N40W077.hgt", std::ios::binary | std::ios::trunc);
+  file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
+             sizeof(int16_t) * tile.size());
+  ASSERT_TRUE(file.good()) << "File stream is not good";
+
+  auto pbf_filename = workdir + "/map.pbf";
+  detail::build_pbf(layout, ways, {}, {}, pbf_filename);
+
+  valhalla::gurka::map map;
+  map.nodes = layout;
+  map.config = test::make_config(workdir, {});
+  boost::property_tree::ptree& pt = map.config;
+  pt.put("mjolnir.tile_dir", workdir + "/tiles");
+  pt.put("additional_data.elevation", workdir);
+
+  std::vector<std::string> input_files = {pbf_filename};
+  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
+                 false);
+
+  std::string route_json;
+  auto route = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "bicycle",
+                                {{"/elevation_interval", "30"}}, {}, &route_json);
+
+  rapidjson::Document result;
+  result.Parse(route_json.c_str());
+
+  auto s = rapidjson::get_child_optional(result, "/trip/legs/0/shape");
+  EXPECT_TRUE(s && s->IsString());
+  shape = s->GetString();
+
+  auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+  EXPECT_TRUE(elevation && elevation->IsArray());
+
+  std::vector<float> expected_elevation = {252.9, 257.9, 258};
+
+  size_t i = 0;
+  if (elevation && elevation->IsArray()) {
+    for (const auto& e : elevation->GetArray()) {
+      EXPECT_EQ(e.GetFloat(), expected_elevation[i++]);
+    }
+  }
+
+  requests.push_back(
+  http_request_t(
+      POST,
+      "/height",
+      "{\"resample_distance\":30,\"height_precision\":1,\"encoded_polyline\":\"" + shape + "\"}" ));
+
+  std::string res = std::string(
+      "{\"encoded_polyline\":\"g}dplAjnz{pClO{BvOi@\",\"height\":[");
+  for (const auto& e : expected_elevation)
+          res += std::to_string(e) + ",";
+  res += "]}";
+  responses.push_back(res);
+}
+*/
+
+TEST(Standalone, ElevationCompareToSkadi) {
+
+  auto config = test::make_config(workdir, {});
+  config.put("additional_data.elevation", workdir);
+
+  // start up the service
+  start_service(config);
+
+  // client makes requests and gets back responses in a batch fashion
+  auto request = requests.cbegin();
+  std::string request_str;
+  http_client_t client(
+      context, config.get<std::string>("httpd.service.listen"),
+      [&request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend())
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&request](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
+        return request != requests.cend();
+      },
+      1);
+
+  // make this whole thing bail if it doesnt finish fast
+  alarm(120);
+
+  // request and receive
+  client.batch();
 }
