@@ -180,7 +180,8 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  find_package(Protobuf REQUIRED)
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+  find_package(Protobuf REQUIRED CONFIG)
 
   # orchestrated effort of both protobuf & cmake are responsible for the next lines..
 
@@ -200,13 +201,8 @@ if(NOT Protobuf_FOUND)
     else()
       # linux might not have CMake config installed (e.g. Debian derivatives)
       # need to link protobuf to abseil manually
-      find_package(Protobuf REQUIRED)
-      find_package(absl REQUIRED)
-      if(TARGET protobuf::libprotobuf-lite)
-        target_link_libraries(protobuf::libprotobuf-lite INTERFACE "absl::absl_log")
-      elseif(TARGET protobuf::libprotobuf)
-        target_link_libraries(protobuf::libprotobuf INTERFACE "absl::absl_log")
-      endif()
+      set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+      find_package(Protobuf REQUIRED CONFIG)
     endif()
   endif()
 endif()
