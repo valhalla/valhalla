@@ -53,6 +53,10 @@ make_config(const std::string& path_prefix,
             const std::unordered_map<std::string, std::string>& overrides = {},
             const std::unordered_set<std::string>& removes = {});
 
+void assert_encoded_shapes(const std::string& expected, const std::string& actual);
+template <typename container_t>
+void assert_shapes(const container_t& expected, const container_t& actual);
+
 /**
  * Generate a new GraphReader that doesn't re-use a previously
  * statically initizalized tile_extract member variable.

@@ -1,5 +1,6 @@
 #include "test.h"
 
+#include "midgard/polyline2.h"
 #include "baldr/graphmemory.h"
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
@@ -400,6 +401,16 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
   }
 
   return pt;
+}
+
+void assert_encoded_shapes(const std::string& expected, const std::string& actual) {
+  auto expected_shp = decode<std::vector<PointLL>>(expected);
+  auto actual_shp = decode<std::vector<PointLL>>(actual);
+  assert_shapes(expected_shp, actual_shp);
+}
+template <typename container_t>
+void assert_shapes(const container_t& expected, const container_t& actual){
+  auto hd = Polyline2<PointLL>::HausdorffDistance(expected, actual);
 }
 
 std::shared_ptr<valhalla::baldr::GraphReader>

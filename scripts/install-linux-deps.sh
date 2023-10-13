@@ -51,8 +51,10 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
 readonly primeserver_dir=/tmp/prime_server
 git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
 pushd $primeserver_dir
-./autogen.sh && ./configure && \
-make -j${CONCURRENCY:-$(nproc)} && sudo make install && popd && rm -r $primeserver_dir
+./autogen.sh && ./configure
+make -j${CONCURRENCY:-$(nproc)}
+sudo make install
+popd && rm -rf $primeserver_dir
 
 # for boost
 python3 -m pip install --upgrade "conan<2.0.0" requests shapely
