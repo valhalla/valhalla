@@ -99,11 +99,11 @@ TEST_P(ExpansionTest, RoutingNoOpposites) {
 }
 
 TEST_P(ExpansionTest, Matrix) {
-  check_result("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+  check_result("sources_to_targets", {"E", "H"}, false, 54, GetParam());
 }
 
 TEST_P(ExpansionTest, MatrixNoOpposites) {
-  check_result("sources_to_targets", {"E", "H"}, true, 23, GetParam());
+  check_result("sources_to_targets", {"E", "H"}, true, 24, GetParam());
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
