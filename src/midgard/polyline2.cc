@@ -316,7 +316,8 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
 
 template <typename coord_t>
 template <typename container_t>
-typename container_t::value_type::first_type Polyline2<coord_t>::HausdorffDistance(const container_t& l1, const container_t& l2) {
+typename container_t::value_type::first_type
+Polyline2<coord_t>::HausdorffDistance(const container_t& l1, const container_t& l2) {
   typename container_t::value_type::first_type hausdorff = 0;
 
   // which point of l1 is furthest away from l2
@@ -385,7 +386,6 @@ template void Polyline2<GeoPoint<double>>::Generalize(std::list<GeoPoint<double>
                                                       double,
                                                       const std::unordered_set<size_t>&,
                                                       bool);
-
 
 template double Polyline2<GeoPoint<double>>::HausdorffDistance(const std::vector<GeoPoint<double>>&,
                                                                const std::vector<GeoPoint<double>>&);

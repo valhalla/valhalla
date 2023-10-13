@@ -2,10 +2,10 @@
 #include <string>
 #include <vector>
 
-#include "midgard/polyline2.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
+#include "midgard/polyline2.h"
 #include "thor/worker.h"
 
 #include "gurka/gurka.h"
