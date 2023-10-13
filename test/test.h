@@ -55,18 +55,20 @@ make_config(const std::string& path_prefix,
             const std::unordered_set<std::string>& removes = {});
 
 template <typename container_t>
-testing::AssertionResult shape_equality(const container_t& expected, const container_t& actual) {
-  auto hd = Polyline2<PointLL>::HausdorffDistance(expected, actual);
-  if (hd > 1)
-    return testing::AssertionFailure();
+testing::AssertionResult shape_equality(const container_t& expected,
+                                        const container_t& actual,
+                                        typename container_t::value_type::first_type tolerance = 1) {
+  auto hd = Polyline2<typename container_t::value_type>::HausdorffDistance(expected, actual);
+  if (hd > tolerance)
+    return testing::AssertionFailure() << "shape exceeds tolerance by " << hd - tolerance;
   return testing::AssertionSuccess();
 }
 
-inline testing::AssertionResult encoded_shape_equality(const std::string& expected,
-                                                       const std::string& actual) {
+inline testing::AssertionResult
+encoded_shape_equality(const std::string& expected, const std::string& actual, double tolerance = 1) {
   auto expected_shp = decode<std::vector<PointLL>>(expected);
   auto actual_shp = decode<std::vector<PointLL>>(actual);
-  return shape_equality(expected_shp, actual_shp);
+  return shape_equality(expected_shp, actual_shp, tolerance);
 }
 
 /**

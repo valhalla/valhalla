@@ -5,7 +5,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
-#include "midgard/polyline2.h"
 #include "thor/worker.h"
 
 #include "gurka/gurka.h"
@@ -109,8 +108,7 @@ void try_isochrone(loki_worker_t& loki_worker,
 
       // different platforms can end up having some slightly different floating point wobble
       // to avoid failing tests we measure shape similarity and fail if its too far out of whack
-      auto hd = midgard::Polyline2<PointLL>::HausdorffDistance(actual, expected);
-      ASSERT_LT(hd, 1);
+      ASSERT_TRUE(test::shape_equality(actual, expected, 23));
     }
   }
 }
