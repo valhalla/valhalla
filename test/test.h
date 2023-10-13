@@ -1,11 +1,11 @@
 // -*- mode: c++ -*-
 #pragma once
 
-#include "midgard/polyline2.h"
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/traffictile.h"
 #include "config.h"
+#include "midgard/polyline2.h"
 #include "mjolnir/graphtilebuilder.h"
 
 #include <cmath>
@@ -55,19 +55,19 @@ make_config(const std::string& path_prefix,
             const std::unordered_set<std::string>& removes = {});
 
 template <typename container_t>
-testing::AssertionResult shape_equality(const container_t& expected, const container_t& actual){
+testing::AssertionResult shape_equality(const container_t& expected, const container_t& actual) {
   auto hd = Polyline2<PointLL>::HausdorffDistance(expected, actual);
   if (hd > 1)
     return testing::AssertionFailure();
   return testing::AssertionSuccess();
 }
 
-inline testing::AssertionResult encoded_shape_equality(const std::string& expected, const std::string& actual) {
+inline testing::AssertionResult encoded_shape_equality(const std::string& expected,
+                                                       const std::string& actual) {
   auto expected_shp = decode<std::vector<PointLL>>(expected);
   auto actual_shp = decode<std::vector<PointLL>>(actual);
   return shape_equality(expected_shp, actual_shp);
 }
-
 
 /**
  * Generate a new GraphReader that doesn't re-use a previously
