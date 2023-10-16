@@ -1,7 +1,9 @@
 #include "gurka.h"
+#include "test.h"
+
+#include "baldr/json.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
-#include "test.h"
 
 #include <gtest/gtest.h>
 #include <prime_server/http_protocol.hpp>
@@ -11,20 +13,28 @@ using namespace valhalla;
 using namespace valhalla::gurka;
 using namespace prime_server;
 
-const std::string workdir = "test/data/gurka_elevation_in_tiles";
+const std::string workdir = "test/data/gurka_elevation";
 
-// IMHO this is the only test that is needed, we only need to prove that what we store in the graph is
-// roughly equivalent to pulling it out of the elevation tile directly, we dont even care what the
-// values are, just that they are approximately similar, the only other thing to do is validate the
-// response format looks good but in order to pull the data out to compare you're already doing that
+std::string json_escape(const std::string& unescaped) {
+  std::stringstream ss;
+  baldr::json::OstreamVisitor v(ss);
+  v(unescaped);
+  std::string escaped = ss.str().substr(1);
+  escaped.pop_back();
+  return escaped;
+}
+
+// we need to prove that what we store in the graph is roughly equivalent to pulling it out of the
+// elevation tile directly, we dont even care what the values are, just that they are
+// approximately similar, the only other thing to do is validate the response format looks
+// good but in order to pull the data out to compare you're already doing that
 TEST(Standalone, ElevationCompareToSkadi) {
   // SKETCH OF THE TEST BELOW:
-  // TODO: call gurka do_action with route action and elevation requested
-  // TODO: pull the route shape out of the route response
-  // TODO: send the route shape to gurka do_action with the height action
-  // TODO: pull the elevation out of the route response
-  // TODO: compare it to the height response
-
+  // call gurka do_action with route action and elevation requested
+  // pull the route shape out of the route response
+  // send the route shape to gurka do_action with the height action
+  // pull the elevation out of the route response
+  // compare it to the height response
 
   const std::string ascii_map = R"(
                  A---B
@@ -94,7 +104,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   // just a randomly chosen max height that will create reasonable changes in local elevation
   double max_height = 9000;
   std::vector<int16_t> tile(3601 * 3601, 0);
-  for (size_t i = 0; i < 3601; ++i) { // latitude pixels
+  for (size_t i = 0; i < 3601; ++i) {   // latitude pixels
     for (size_t j = 0; j < 3601; ++j) { // longitude pixels
       // we set the height at each pixel of the srtm tile based on its lat lon. srtm tiles have their
       // origin in the south west corner of the tile. our tile is 40, -77, that means the top right
@@ -111,7 +121,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
       auto dist_ratio = bottom_left.Distance(PointLL(lon, lat)) / corner_to_corner_dist;
       int16_t height = std::round(dist_ratio * max_height);
       // and set the height in the tile data (flipping to big endian to match the srtm spec)
-      tile[i*3601 + j] = ((height & 0xFF) << 8) | ((height >> 8) & 0xFF);
+      tile[i * 3601 + j] = ((height & 0xFF) << 8) | ((height >> 8) & 0xFF);
     }
   }
 
@@ -141,7 +151,10 @@ TEST(Standalone, ElevationCompareToSkadi) {
                  false);
 
   // try a bunch of routes
-  for(const auto& waypoints : std::vector<std::vector<std::string>>{{"1", "M"},}) {
+  for (const auto& waypoints : std::vector<std::vector<std::string>>{
+           {"S", "F"},
+           {"C", "N"},
+       }) {
 
     // get a route with elevation included
     std::string route_json;
@@ -153,24 +166,68 @@ TEST(Standalone, ElevationCompareToSkadi) {
     // for each leg
     for (size_t leg_index = 0; leg_index < waypoints.size() - 1; ++leg_index) {
       // pull out the shape from the leg
-      auto s = rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape").c_str());
+      auto s =
+          rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape")
+                                                    .c_str());
       EXPECT_TRUE(s && s->IsString());
-      auto shape = s->GetString();
+      auto shape = json_escape(s->GetString());
 
+      std::string height_json;
+      std::string request =
+          R"({"height_precision":1,"resample_distance":30,"encoded_polyline":")" + shape + R"("})";
+      auto height = gurka::do_action(valhalla::Options::height, map, request, {}, &height_json);
 
-      //TODO: send the shape to the height api to get it directly from the elevation tile not from the graph edges
-      // dont forget to escape the json, every backslash should be replaced by two backslashes
-
-      // pull out the elevation from the leg
-      auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+      // pull out the elevation from the route result leg
+      auto elevation =
+          rapidjson::get_child_optional(result,
+                                        ("/trip/legs/" + std::to_string(leg_index) + "/elevation")
+                                            .c_str());
       EXPECT_TRUE(elevation && elevation->IsArray());
-      std::vector<float> actual_elevation;
+      std::vector<float> elevation_along_edges;
       for (const auto& e : elevation->GetArray()) {
-        actual_elevation.push_back(e.GetFloat());
+        elevation_along_edges.push_back(std::round(e.GetFloat() * 10) / 10);
+        std::cout << std::round(e.GetFloat() * 10) / 10 << std::endl;
+      }
+
+      result.Parse(height_json.c_str());
+      // pull out the elevation from the height result
+      elevation = rapidjson::get_child_optional(result, "/height");
+      EXPECT_TRUE(elevation && elevation->IsArray());
+      std::vector<float> elevation_from_skadi;
+      for (const auto& e : elevation->GetArray()) {
+        elevation_from_skadi.push_back(std::round(e.GetFloat() * 10) / 10);
+        std::cout << std::round(e.GetFloat() * 10) / 10 << std::endl;
+      }
+
+      EXPECT_EQ(elevation_along_edges.size(), elevation_from_skadi.size());
+      for (size_t i = 0; i < elevation_along_edges.size(); ++i) {
+        EXPECT_NEAR(elevation_along_edges[i], elevation_from_skadi[i], 0.5f);
       }
     }
   }
 
-  // TODO: add a quick test for when you request a route without elevation that its not there
+  // a quick test for when you request a route without elevation that its not there
+  // get a route without elevation included
+  for (const auto& waypoints : std::vector<std::vector<std::string>>{
+           {"S", "F"},
+           {"C", "N"},
+       }) {
+    std::string route_json;
+    auto route =
+        gurka::do_action(valhalla::Options::route, map, {"S", "F"}, "bicycle", {}, {}, &route_json);
+    rapidjson::Document result;
+    result.Parse(route_json.c_str());
 
+    for (size_t leg_index = 0; leg_index < waypoints.size() - 1; ++leg_index) {
+      auto s =
+          rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape")
+                                                    .c_str());
+
+      auto elevation =
+          rapidjson::get_child_optional(result,
+                                        ("/trip/legs/" + std::to_string(leg_index) + "/elevation")
+                                            .c_str());
+      EXPECT_FALSE(elevation && elevation->IsArray());
+    }
+  }
 }
