@@ -313,7 +313,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     auto point = shape[shape.size() / 2];
     auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
 
-    Landmark landmark(edge_index, std::to_string(edge_index), ltype, point.first, point.second);
+    Landmark landmark(0, std::to_string(edge_index), ltype, point.first, point.second);
 
     auto edge_id = tile_id;
     edge_id.set_id(edge_index++);

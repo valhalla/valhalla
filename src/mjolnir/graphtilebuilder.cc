@@ -1279,7 +1279,7 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
 
   if (eib == edgeinfo_offset_map_.end()) {
     throw std::runtime_error("Couldn't find edge info for the given edge: " +
-                             std::to_string(static_cast<int>(edge_id.id())));
+                             std::to_string(edge_id));
   }
 
   std::string tagged_value = landmark.to_str();
