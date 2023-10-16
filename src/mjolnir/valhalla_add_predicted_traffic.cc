@@ -240,7 +240,6 @@ void update_tiles(
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree config;
   filesystem::path traffic_tile_dir;
   bool summary = false;
 
@@ -264,7 +263,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("traffic-tile-dir")) {
@@ -280,6 +279,8 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
+
+  auto config = valhalla::config();
 
   // configure logging
   auto logging_subtree = config.get_child_optional("mjolnir.logging");
