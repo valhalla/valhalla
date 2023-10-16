@@ -1,7 +1,6 @@
 #include "gurka.h"
 #include "loki/worker.h"
 #include "midgard/pointll.h"
-#include "pixels.h"
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -12,41 +11,21 @@ using namespace valhalla;
 using namespace valhalla::gurka;
 using namespace prime_server;
 
-namespace {
-std::string shape;
-std::vector<http_request_t> requests;
-std::vector<std::string> responses;
 const std::string workdir = "test/data/gurka_elevation_in_tiles";
 
-zmq::context_t context;
-void start_service(const boost::property_tree::ptree config) {
-  // need a place to drop our sockets
-  auto run_dir = config.get<std::string>("mjolnir.tile_dir");
-  if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
-    throw std::runtime_error("Couldnt make directory to run from");
+// IMHO this is the only test that is needed, we only need to prove that what we store in the graph is
+// roughly equivalent to pulling it out of the elevation tile directly, we dont even care what the
+// values are, just that they are approximately similar, the only other thing to do is validate the
+// response format looks good but in order to pull the data out to compare you're already doing that
+TEST(Standalone, ElevationCompareToSkadi) {
+  // SKETCH OF THE TEST BELOW:
+  // TODO: call gurka do_action with route action and elevation requested
+  // TODO: pull the route shape out of the route response
+  // TODO: send the route shape to gurka do_action with the height action
+  // TODO: pull the elevation out of the route response
+  // TODO: compare it to the height response
 
-  // server
-  std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
-                                             config.get<std::string>("loki.service.proxy") + "_in",
-                                             config.get<std::string>("httpd.service.loopback"),
-                                             config.get<std::string>("httpd.service.interrupt"))));
-  server.detach();
 
-  // load balancer
-  std::thread proxy(std::bind(&proxy_t::forward,
-                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
-                                      config.get<std::string>("loki.service.proxy") + "_out")));
-  proxy.detach();
-
-  // service worker
-  std::thread worker(valhalla::loki::run_service, config);
-  worker.detach();
-}
-
-} // namespace
-
-TEST(Standalone, ElevationRealWorld) {
   const std::string ascii_map = R"(
                  A---B
                  |   |
@@ -109,10 +88,32 @@ TEST(Standalone, ElevationRealWorld) {
   layout.insert({"R", {-76.4950865, 40.6501919}});
   layout.insert({"S", {-76.4944069, 40.6502916}});
 
-  // create the test elevation tile
+  // create a fake elevation tile over the gurka map area
+  PointLL bottom_left(-77, 40), upper_right(-76, 41);
+  auto corner_to_corner_dist = bottom_left.Distance(upper_right);
+  // just a randomly chosen max height that will create reasonable changes in local elevation
+  double max_height = 9000;
   std::vector<int16_t> tile(3601 * 3601, 0);
-  for (const auto& p : pixels)
-    tile[p.first] = p.second;
+  for (size_t i = 0; i < 3601; ++i) { // latitude pixels
+    for (size_t j = 0; j < 3601; ++j) { // longitude pixels
+      // we set the height at each pixel of the srtm tile based on its lat lon. srtm tiles have their
+      // origin in the south west corner of the tile. our tile is 40, -77, that means the top right
+      // corner is 41, -76. so that our values dont get too crazy we'll just use the distance a given
+      // pixel is, from the bottom left corner to pick a height for a given pixel. this will give us a
+      // full tile of pixels even if the heights are not real they will vary by realistic amounts. the
+      // bottom left will have a height of 0 meters and the top right will have max_height. height
+      // will smoothly vary from corner to corner
+
+      // convert pixel to ll
+      double lon = (static_cast<double>(j) / 3601) - 77;
+      double lat = (static_cast<double>(i) / 3601) + 40;
+      // measure distance and use it to scale a max height range
+      auto dist_ratio = bottom_left.Distance(PointLL(lon, lat)) / corner_to_corner_dist;
+      int16_t height = std::round(dist_ratio * max_height);
+      // and set the height in the tile data (flipping to big endian to match the srtm spec)
+      tile[i*3601 + j] = ((height & 0xFF) << 8) | ((height >> 8) & 0xFF);
+    }
+  }
 
   if (!filesystem::exists(workdir)) {
     bool created = filesystem::create_directories(workdir);
@@ -139,184 +140,37 @@ TEST(Standalone, ElevationRealWorld) {
   build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
                  false);
 
-  std::string route_json;
-  // ~60m test
-  auto route = gurka::do_action(valhalla::Options::route, map, {"1", "M"}, "bicycle",
-                                {{"/elevation_interval", "30"}}, {}, &route_json);
+  // try a bunch of routes
+  for(const auto& waypoints : std::vector<std::vector<std::string>>{{"1", "M"},}) {
 
-  rapidjson::Document result;
-  result.Parse(route_json.c_str());
+    // get a route with elevation included
+    std::string route_json;
+    auto route = gurka::do_action(valhalla::Options::route, map, waypoints, "bicycle",
+                                  {{"/elevation_interval", "30"}}, {}, &route_json);
+    rapidjson::Document result;
+    result.Parse(route_json.c_str());
 
-  auto s = rapidjson::get_child_optional(result, "/trip/legs/0/shape");
-  EXPECT_TRUE(s && s->IsString());
-  shape = s->GetString();
+    // for each leg
+    for (size_t leg_index = 0; leg_index < waypoints.size() - 1; ++leg_index) {
+      // pull out the shape from the leg
+      auto s = rapidjson::get_child_optional(result, ("/trip/legs/" + std::to_string(leg_index) + "/shape").c_str());
+      EXPECT_TRUE(s && s->IsString());
+      auto shape = s->GetString();
 
-  auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
-  EXPECT_TRUE(elevation && elevation->IsArray());
 
-  std::vector<float> expected_elevation = {252.9, 257.9, 258};
+      //TODO: send the shape to the height api to get it directly from the elevation tile not from the graph edges
+      // dont forget to escape the json, every backslash should be replaced by two backslashes
 
-  size_t i = 0;
-  if (elevation && elevation->IsArray()) {
-    for (const auto& e : elevation->GetArray()) {
-      EXPECT_EQ(e.GetFloat(), expected_elevation[i++]);
+      // pull out the elevation from the leg
+      auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
+      EXPECT_TRUE(elevation && elevation->IsArray());
+      std::vector<float> actual_elevation;
+      for (const auto& e : elevation->GetArray()) {
+        actual_elevation.push_back(e.GetFloat());
+      }
     }
   }
 
-  requests.push_back(
-      http_request_t(POST, "/height",
-                     "{\"resample_distance\":30,\"height_precision\":1,\"encoded_polyline\":\"" +
-                         shape + "\"}"));
+  // TODO: add a quick test for when you request a route without elevation that its not there
 
-  std::string res = std::string("{\"encoded_polyline\":\"g}dplAjnz{pClO{BvOi@\",\"height\":[");
-  for (const auto& e : expected_elevation) {
-    res += std::to_string(e) + ",";
-  }
-  res += "]}";
-  std::cout << res << std::endl;
-
-  responses.push_back(res);
-}
-
-/*
- * sigh. more bad data
-
-TEST(Standalone, ElevationFakeEdge) {
-  const std::string ascii_map = R"(
-                 A
-                 |
-                 |
-                 |
-                 B
-                 |
-                 |
-                 |
-                 C
-                 |
-                 |
-                 |
-                 D
-                 |
-                 |
-                 |
-                 E
-
-  )";
-
-  const gurka::ways ways = {
-      {"ABCDE", {{"highway", "residential"}, {"name", "East Chestnut Street"}}},
-  };
-
-  // Create our layout
-  using nodelayout = std::map<std::string, midgard::PointLL>;
-  nodelayout layout;
-
-  layout.insert({"A", {-76.537011, 40.723872}});// 300m
-  layout.insert({"B", {-76.537011, 40.726872}});// 350m
-  layout.insert({"C", {-76.537011, 40.729872}});// 450m
-  layout.insert({"D", {-76.537011, 40.732872}});// 325m
-  layout.insert({"E", {-76.537011, 40.735872}});// 250m
-
-  // create the test elevation tile
-  std::vector<int16_t> tile(3601 * 3601, 0);
-  for (const auto& p : pixels)
-    tile[p.first] = p.second;
-
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
-    EXPECT_TRUE(created);
-  }
-
-  // actually store it
-  std::ofstream file(workdir + "/N40W077.hgt", std::ios::binary | std::ios::trunc);
-  file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
-             sizeof(int16_t) * tile.size());
-  ASSERT_TRUE(file.good()) << "File stream is not good";
-
-  auto pbf_filename = workdir + "/map.pbf";
-  detail::build_pbf(layout, ways, {}, {}, pbf_filename);
-
-  valhalla::gurka::map map;
-  map.nodes = layout;
-  map.config = test::make_config(workdir, {});
-  boost::property_tree::ptree& pt = map.config;
-  pt.put("mjolnir.tile_dir", workdir + "/tiles");
-  pt.put("additional_data.elevation", workdir);
-
-  std::vector<std::string> input_files = {pbf_filename};
-  build_tile_set(pt, input_files, mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate,
-                 false);
-
-  std::string route_json;
-  auto route = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "bicycle",
-                                {{"/elevation_interval", "30"}}, {}, &route_json);
-
-  rapidjson::Document result;
-  result.Parse(route_json.c_str());
-
-  auto s = rapidjson::get_child_optional(result, "/trip/legs/0/shape");
-  EXPECT_TRUE(s && s->IsString());
-  shape = s->GetString();
-
-  auto elevation = rapidjson::get_child_optional(result, "/trip/legs/0/elevation");
-  EXPECT_TRUE(elevation && elevation->IsArray());
-
-  std::vector<float> expected_elevation = {252.9, 257.9, 258};
-
-  size_t i = 0;
-  if (elevation && elevation->IsArray()) {
-    for (const auto& e : elevation->GetArray()) {
-      EXPECT_EQ(e.GetFloat(), expected_elevation[i++]);
-    }
-  }
-
-  requests.push_back(
-  http_request_t(
-      POST,
-      "/height",
-      "{\"resample_distance\":30,\"height_precision\":1,\"encoded_polyline\":\"" + shape + "\"}" ));
-
-  std::string res = std::string(
-      "{\"encoded_polyline\":\"g}dplAjnz{pClO{BvOi@\",\"height\":[");
-  for (const auto& e : expected_elevation)
-          res += std::to_string(e) + ",";
-  res += "]}";
-  responses.push_back(res);
-}
-*/
-
-TEST(Standalone, ElevationCompareToSkadi) {
-
-  auto config = test::make_config(workdir, {});
-  config.put("additional_data.elevation", workdir);
-
-  // start up the service
-  start_service(config);
-
-  // client makes requests and gets back responses in a batch fashion
-  auto request = requests.cbegin();
-  std::string request_str;
-  http_client_t client(
-      context, config.get<std::string>("httpd.service.listen"),
-      [&request, &request_str]() {
-        // we dont have any more requests so bail
-        if (request == requests.cend())
-          return std::make_pair<const void*, size_t>(nullptr, 0);
-        // get the string of bytes to send formatted for http protocol
-        request_str = request->to_string();
-        ++request;
-        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
-      },
-      [&request](const void* data, size_t size) {
-        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
-        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
-        return request != requests.cend();
-      },
-      1);
-
-  // make this whole thing bail if it doesnt finish fast
-  alarm(120);
-
-  // request and receive
-  client.batch();
 }
