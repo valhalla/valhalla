@@ -302,23 +302,20 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
 
   // load one of the graphtiles
   GraphId tile_id("2/519119/0");
+  GraphId edge_id = tile_id;
   GraphTileBuilder tb(workdir, tile_id, true);
 
   auto invalid_landmark = static_cast<uint32_t>(LandmarkType::casino) + 1;
-  uint32_t edge_index = 0;
-
   // add flexible landmarks for the edges
   for (const auto& e : tb.directededges()) {
     std::vector<PointLL> shape = tb.edgeinfo(&e).shape();
     auto point = shape[shape.size() / 2];
-    auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
+    auto ltype = static_cast<LandmarkType>((edge_id.id() + 1) % invalid_landmark);
+    Landmark landmark(0, std::to_string(edge_id), ltype, point.first, point.second);
 
-    Landmark landmark(0, std::to_string(edge_index), ltype, point.first, point.second);
-
-    auto edge_id = tile_id;
-    edge_id.set_id(edge_index++);
-
+    printf("ADDING %s -> %.6f,%.6f,%d\n", std::to_string(edge_id).c_str(), point.first, point.second,static_cast<int>(landmark.type));
     tb.AddLandmark(edge_id, landmark);
+    ++edge_id;
   }
 
   tb.StoreTileData();
@@ -327,37 +324,50 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
   GraphReader gr(landmark_map.config.get_child("mjolnir"));
   auto tile = gr.GetGraphTile(tile_id);
 
-  // we support up to 6 decimal precision for landmark lng/lat, so max rounding error is 5e-7
-  const double rounding_error = 5e-7;
+  auto check_landmark = [&](const auto& landmark, const auto& point) {
+    auto ltype = static_cast<LandmarkType>((edge_id.id() + 1) % invalid_landmark);
 
+    const double rounding_error = 5e-7;
+    // we dont store this in the tile
+    EXPECT_EQ(landmark.id, 0);
+    // opposing edges will have a copy of the edge we associated it to so we need to check it
+    bool skip = false;
+    if (landmark.name != std::to_string(edge_id)) {
+      auto opp = gr.GetOpposingEdgeId(edge_id);
+      ASSERT_EQ(landmark.name, std::to_string(opp)) << "Unexpected landmark name or edge/opp_edge";
+      skip = true;
+    }
+    // we dont do deep check on opposing edge records
+    if (!skip) {
+      EXPECT_EQ(landmark.type, ltype);
+      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
+      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+    }
+  };
+
+  // we support up to 6 decimal precision for landmark lng/lat, so max rounding error is 5e-7
+
+  edge_id.set_id(0);
   for (const auto& e : tile->GetDirectedEdges()) {
     auto ei = tile->edgeinfo(&e);
 
     // test EdgeInfo:GetTags
     auto tagged_values = ei.GetTags();
-
-    edge_index = 0;
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
 
       Landmark landmark(value.second);
+      printf("FOUND %s (%s) -> %.6f,%.6f,%d\n", std::to_string(edge_id).c_str(), landmark.name.c_str(), landmark.lng, landmark.lat,static_cast<int>(landmark.type));
 
       // check data correctness
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
-      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
-
-      EXPECT_EQ(landmark.id, 0);
-      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
-      EXPECT_EQ(landmark.type, ltype);
-      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
-      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+      check_landmark(landmark, point);
     }
 
     // test EdgeInfo:GetTaggedValues
     auto values = ei.GetTaggedValues();
-    edge_index = 0;
     for (const std::string& v : values) {
       if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
         continue;
@@ -368,14 +378,10 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       // check data correctness
       std::vector<PointLL> shape = ei.shape();
       auto point = shape[shape.size() / 2];
-      auto ltype = static_cast<LandmarkType>((edge_index + 1) % invalid_landmark);
-
-      EXPECT_EQ(landmark.id, 0);
-      EXPECT_EQ(landmark.name, std::to_string(edge_index++));
-      EXPECT_EQ(landmark.type, ltype);
-      EXPECT_NEAR(landmark.lng, point.first, rounding_error);
-      EXPECT_NEAR(landmark.lat, point.second, rounding_error);
+      check_landmark(landmark, point);
     }
+
+    ++edge_id;
   }
 }
 
