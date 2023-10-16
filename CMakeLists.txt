@@ -180,15 +180,15 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
-  # try to find protobuf based on its installed config file
-  # newer protobuf versions require a compat var to be set
-  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
-  find_package(Protobuf REQUIRED CONFIG)
+  # prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf fuckups
+  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
-  # won't work for systems where protobuf wasn't distributed with its config file
-  if(NOT Protobuf_FOUND)
-    find_package(Protobuf REQUIRED)
-  endif()
+  # newer protobuf versions require a compat bool
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+  find_package(Protobuf REQUIRED)
+
+  # and turn it off again
+  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
