@@ -22,8 +22,6 @@ using namespace valhalla::mjolnir;
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -43,7 +41,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -69,7 +67,7 @@ int main(int argc, char** argv) {
       std::sort(onestoptests.begin(), onestoptests.end());
       // Validate transit
       std::unordered_set<valhalla::baldr::GraphId> all_tiles;
-      if (!ValidateTransit::Validate(pt, all_tiles, onestoptests)) {
+      if (!ValidateTransit::Validate(valhalla::config(), all_tiles, onestoptests)) {
         return EXIT_FAILURE;
       }
     } else if (build_validate == "build") {
