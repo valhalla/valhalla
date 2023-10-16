@@ -6,6 +6,8 @@
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
    * FIXED: fix crash in timedistancebssmatrix.cc  [#4244](https://github.com/valhalla/valhalla/pull/4244)
    * FIXED: missing protobuf CMake configuration to link abseil for protobuf >= 3.22.0 [#4207](https://github.com/valhalla/valhalla/pull/4207)
+   * FIXED: broken links on the optimized route API page [#4260](https://github.com/valhalla/valhalla/pull/4260)
+   * FIXED: remove clearing of headings while calculating a matrix [#4288](https://github.com/valhalla/valhalla/pull/4288)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -21,6 +23,13 @@
    * ADDED: support for `:forward` and `:backward` for `motor_vehicle`, `vehicle`, `foot` and `bicycle` tag prefixes [#4204](https://github.com/valhalla/valhalla/pull/4204)
    * ADDED: add `valhalla_build_landmarks` to parse POIs from osm pbfs and store them as landmarks in the landmark sqlite database [#4201](https://github.com/valhalla/valhalla/pull/4201)
    * ADDED: add primary key in the landmark sqlite database and a method to retrieve landmarks via their primary keys [#4224](https://github.com/valhalla/valhalla/pull/4224)
+   * ADDED: update graph tile to allow adding landmarks to edge info, and refactor edgeinfo.cc [#4233](https://github.com/valhalla/valhalla/pull/4233)
+   * ADDED: `sources_to_targets` action for `/expansion` [#4263](https://github.com/valhalla/valhalla/pull/4263)
+   * ADDED: option `--extract-tar` to `valhalla_build_extract` to create extracts from .tar files instead of tile directory [#4255](https://github.com/valhalla/valhalla/pull/4255)
+   * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
+   * UPDATED: submodules which had new releases, unless it was a major version change [#4231](https://github.com/valhalla/valhalla/pull/4231)
+   * ADDED: the workflow to find landmarks in a graph tile, associate them with nearby edges, and update the graph tile to store the associations [#4278](https://github.com/valhalla/valhalla/pull/4278)
+   * ADDED: update maneuver generation to add nearby landmarks to maneuvers as direction support [#4293](https://github.com/valhalla/valhalla/pull/4293)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

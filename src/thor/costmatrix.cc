@@ -352,6 +352,11 @@ void CostMatrix::ForwardSearch(const uint32_t index,
 
   // Get edge label and check cost threshold
   BDEdgeLabel pred = edgelabels[pred_idx];
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
+                        pred.path_distance(), pred.cost().cost);
+  }
+
   if (pred.cost().secs > current_cost_threshold_) {
     source_status_[index].threshold = 0;
     return;
@@ -362,7 +367,7 @@ void CostMatrix::ForwardSearch(const uint32_t index,
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Check for connections to backwards search.
-  CheckForwardConnections(index, pred, n);
+  CheckForwardConnections(index, pred, n, graphreader);
 
   // Prune path if predecessor is not a through edge
   if (pred.not_thru() && pred.not_thru_pruning()) {
@@ -460,6 +465,12 @@ void CostMatrix::ForwardSearch(const uint32_t index,
                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                               restriction_idx);
       adj.add(idx);
+
+      // setting this edge as reached
+      if (expansion_callback_) {
+        expansion_callback_(graphreader, edgeid, "costmatrix", "r", pred.cost().secs,
+                            pred.path_distance(), pred.cost().cost);
+      }
     }
 
     // Handle transitions - expand from the end node of the transition
@@ -498,7 +509,8 @@ void CostMatrix::ForwardSearch(const uint32_t index,
 // on the reverse search trees.
 void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const BDEdgeLabel& pred,
-                                         const uint32_t n) {
+                                         const uint32_t n,
+                                         GraphReader& graphreader) {
 
   // Disallow connections that are part of an uturn on an internal edge
   if (pred.internal_turn() != InternalTurn::kNoTurn) {
@@ -582,6 +594,11 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
           UpdateStatus(source, target);
         }
       }
+      // setting this edge as connected
+      if (expansion_callback_) {
+        expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "c", pred.cost().secs,
+                            pred.path_distance(), pred.cost().cost);
+      }
     }
   }
 }
@@ -636,6 +653,11 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
   if (pred.cost().secs > current_cost_threshold_) {
     target_status_[index].threshold = 0;
     return;
+  }
+
+  if (expansion_callback_) {
+    expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
+                        pred.path_distance(), pred.cost().cost);
   }
 
   // Settle this edge
@@ -746,6 +768,12 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader) 
 
       // Add to the list of targets that have reached this edge
       (*targets_)[edgeid].push_back(index);
+
+      // setting this edge as reached
+      if (expansion_callback_) {
+        expansion_callback_(graphreader, edgeid, "costmatrix", "r", pred.cost().secs,
+                            pred.path_distance(), pred.cost().cost);
+      }
     }
 
     // Handle transitions - expand from the end node of the transition

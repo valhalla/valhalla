@@ -1,14 +1,19 @@
 #pragma once
 
-#include <memory>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <iostream>
+#include <stdexcept>
 #include <string>
-#include <vector>
-
-#include <boost/property_tree/ptree.hpp>
+#include <tuple>
 #include <unordered_map>
 
+#include <valhalla/baldr/graphconstants.h>
+
 namespace valhalla {
-namespace mjolnir {
+namespace baldr {
+
 // obvious landmark types for vehicle routing
 enum class LandmarkType : uint8_t {
   // these will almost always be obvious by their function and don't require a name
@@ -27,25 +32,25 @@ enum class LandmarkType : uint8_t {
   cafe = 8,
   // on the fence about this one, these are often obvious without a name, maybe should go in the upper
   // list?
-  bank = 10,
+  bank = 9,
   // same with this one, in some countries these are obvious and have the little plus sign, in america
   // its not the case and they can be different chains or could be part of a grocery store or
   // anything... speaking of grocery store, why isnt that on the list? also why arent department
   // stores on the list, surely stores would be a good landmark to use (again when they are named)
-  pharmacy = 11,
+  pharmacy = 10,
   // again these could just be a random building with nothing other than a sign like "early years" or
   // something, they better have a name or it will be ambiguous
-  kindergarten = 12,
+  kindergarten = 11,
   // same thing, often just a building
-  bar = 13,
+  bar = 12,
   // this could be very very big like a college campus, i think we should remove this
-  hospital = 14,
+  hospital = 13,
   // same as bar could be just a building need at least a name to have a chance of seeing it
-  pub = 16,
+  pub = 14,
   // generic, could be many many types of clinics also often there are multiple of these located in
   // same "complex", you might have a dentist, orthodontist, ear nose throat and eye specialists all
   // next to each other.
-  clinic = 17,
+  clinic = 15,
   // on the fence about this one, to me this would be in the same category as "museum" or something
   // where its so specialized maybe it doesnt need a name. what keeps me from say ing that is you
   // often cant tell from the outside what function these amenities serve until you read the name
@@ -60,7 +65,8 @@ enum class LandmarkType : uint8_t {
   casino = 18,
 };
 
-using Landmark = std::tuple<int64_t, std::string, LandmarkType, double, double>;
+constexpr uint8_t LandmarkTypeFirstValue = static_cast<uint8_t>(LandmarkType::fuel);
+constexpr uint8_t LandmarkTypeLastValue = static_cast<uint8_t>(LandmarkType::casino);
 
 inline LandmarkType string_to_landmark_type(const std::string& s) {
   static const std::unordered_map<std::string, LandmarkType> string_to_landmark_type =
@@ -90,79 +96,88 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
-struct LandmarkDatabase {
-public:
-  /**
-   * LandmarkDatabase constructor.
-   * Create a new LandmarkDatabase object that connects to the SQLite landmark database
-   * with the given `db_name`. The `read_only` parameter determines whether the
-   * database connection is read-only or read-write.
-   *
-   * @param db_name The file path of the SQLite database to connect to.
-   * @param read_only Set to true to open the database in read-only mode, false for read-write.
-   */
-  LandmarkDatabase(const std::string& db_name, bool read_only);
+inline uint64_t encode_lnglat(double lng, double lat) {
+  return (((uint64_t(lng * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
+         ((uint64_t(lat * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
+}
+
+inline std::pair<double, double> decode_lnglat(uint64_t location) {
+  double lng = (int64_t((location >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7;
+  double lat = (int64_t(location & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7;
+
+  return std::make_pair(lng, lat);
+}
+
+struct Landmark {
+  int64_t id;
+  std::string name;
+  LandmarkType type;
+  double lng;
+  double lat;
+
+  std::string to_str() const;
+
+  Landmark(const int64_t id,
+           const std::string name,
+           const LandmarkType type,
+           const double lng,
+           const double lat)
+      : id(id), name(name), type(type), lng(lng), lat(lat) {
+  }
 
   /**
-   * Insert a new landmark into the database.
-   * This function inserts a new landmark into the database with the given `name`, `type`,
-   * `lng`, and `lat`. The landmark's primary key will be automatically assigned by the database.
+   * Constructor: convert the given string to a Landmark object.
+   * The input string should consist of at least 9 bytes: 1 byte for landmark type,
+   * 8 bytes for location (lng and lat), and the remaining for landmark name.
    *
-   * @param name The name of the landmark.
-   * @param type The type of the landmark (LandmarkType enum).
-   * @param lng The longitude of the landmark.
-   * @param lat The latitude of the landmark.
+   * @param str The string to be converted.
    */
-  void insert_landmark(const std::string& name,
-                       const LandmarkType& type,
-                       const double lng,
-                       const double lat);
+  Landmark(const std::string& str) {
+    // ensure that the string has the minimum expected size to represent a Landmark
+    if (str.size() < 9) {
+      throw std::runtime_error("Invalid Landmark string: too short");
+    }
 
-  /**
-   * Retrieve a vector of landmarks from the database within the specified bounding box.
-   * Bounding box is a rectangle area defined by min latitude, max latitude, min longitude, and max
-   * longitude.
-   *
-   * @param minLat The minimum latitude of the bounding box.
-   * @param minLong The minimum longitude of the bounding box.
-   * @param maxLat The maximum latitude of the bounding box.
-   * @param maxLong The maximum longitude of the bounding box.
-   * @return A vector of Landmark objects within the specified bounding box.
-   */
-  std::vector<Landmark> get_landmarks_by_bbox(const double minLat,
-                                              const double minLong,
-                                              const double maxLat,
-                                              const double maxLong);
+    // ensure the first byte is a valid LandmarkType
+    uint8_t uint_type = static_cast<uint8_t>(str[0]);
+    if (uint_type >= LandmarkTypeFirstValue && uint_type <= LandmarkTypeLastValue) {
+      type = static_cast<LandmarkType>(uint_type);
+    } else {
+      throw std::logic_error("Invalid landmark type");
+    }
 
-  /**
-   * Retrieve a vector of landmarks that match the provided primary keys.
-   * NOTE: The return size may be less than the size of the input if some of the provided
-   * primary keys do not exist in the database. In such cases, the function will skip the missing IDs
-   * without throwing an exception.
-   *
-   * @param pkeys A vector of int64_t representing the primary keys of the landmarks to retrieve.
-   * @return A vector of Landmark objects matching the given primary keys.
-   */
-  std::vector<Landmark> get_landmarks_by_ids(const std::vector<int64_t>& pkeys);
+    id = 0; // fake id
 
-protected:
-  struct db_pimpl;
-  std::shared_ptr<db_pimpl> pimpl;
+    // extract the location (next 8 bytes) - lng and lat
+    uint64_t location = 0;
+    std::memcpy(&location, str.data() + 1, 8);
+
+    auto lnglat = decode_lnglat(location);
+    lng = lnglat.first;
+    lat = lnglat.second;
+
+    // extract the name (rest of the string after the first 9 bytes)
+    name = str.substr(9);
+  }
 };
 
 /**
- * Build a SQLite landmark database and insert landmarks data from the PBF files to the database.
- * This function reads landmark data from PBF files specified in the `input_files` vector.
- * It then parses the data to extract landmark nodes and stores the landmarks in the database.
- * The database is automatically built based on the configuration settings provided in `pt`.
+ * Convert a Landmark object to a string.
+ * The string consists of 1 byte of kLandmark tag, 1 byte of landmark type,
+ * 8 bytes of location (lng and lat) and some bytes for landmark name at last.
  *
- * @param pt The configuration settings for the landmark building process.
- * @param input_files A vector of file paths to the PBF input files.
- * @return True if landmarks were successfully built and inserted into the database, false otherwise.
+ * @param landmark The Landmark object to be converted.
  */
-bool BuildLandmarkFromPBF(const boost::property_tree::ptree& pt,
-                          const std::vector<std::string>& input_files);
+inline std::string Landmark::to_str() const {
+  std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
+  tagged_value.push_back(static_cast<std::string::value_type>(type));
 
-} // namespace mjolnir
+  uint64_t location = encode_lnglat(lng, lat);
+  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 8);
+  tagged_value += name;
 
+  return tagged_value;
+}
+
+} // namespace baldr
 } // namespace valhalla

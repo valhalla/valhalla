@@ -42,7 +42,7 @@ set(sources
   graphvalidator.cc
   hierarchybuilder.cc
   ingest_transit.cc
-  landmark_builder.cc
+  landmarks.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
