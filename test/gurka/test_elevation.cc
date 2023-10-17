@@ -135,6 +135,7 @@ TEST(Standalone, ElevationCompareToSkadi) {
   file.write(static_cast<const char*>(static_cast<void*>(tile.data())),
              sizeof(int16_t) * tile.size());
   ASSERT_TRUE(file.good()) << "File stream is not good";
+  file.close();
 
   auto pbf_filename = workdir + "/map.pbf";
   detail::build_pbf(layout, ways, {}, {}, pbf_filename);
