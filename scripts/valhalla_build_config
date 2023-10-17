@@ -270,9 +270,7 @@ config = {
         'max_exclude_polygons_length': 10000,
         'max_distance_disable_hierarchy_culling': 0,
     },
-    'baldr': {
-        'live_speed_fading_sec': 3600
-    },
+    'baldr': {'live_speed_fading_sec': 3600},
     'statsd': {
         'host': Optional(str),
         'port': 8125,
