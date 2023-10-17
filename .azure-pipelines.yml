@@ -41,7 +41,6 @@ jobs:
       VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_REF: '45b0e4b'
       TRIPLET: 'x64'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
@@ -54,16 +53,9 @@ jobs:
       - task: Cache@2
         displayName: "Cache vcpkg's packages"
         inputs:
-          key: .\.vcpkg_deps.txt | "$(VCPKG_REF)" | "$(TRIPLET)" |  ".v2"
+          key: .\vcpkg.json | ".v1"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
-
-      - task: Cache@2
-        displayName: "Cache conan packages"
-        inputs:
-          key: '"msvc-v16.10.0" | conan | .\conanfile.txt | "$(Build.SourceBranch)" | "v2"'
-          path: "$(CONAN_HOME)"
-          cacheHitVar: BUILD_CACHE_RESTORED
       
       # TODO: cache build never worked, look into it
       # - task: Cache@2
@@ -76,15 +68,8 @@ jobs:
       #       "msvc-v16.10.0" | build
       #     cacheHitVar: BUILD_CACHE_RESTORED
 
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '3.x' 
-          addToPath: true 
-          architecture: "$(TRIPLET)"
-
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
-          git -C %VCPKG_DIR% checkout %VCPKG_REF%
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
@@ -92,10 +77,8 @@ jobs:
         condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
-          %VCPKG_DIR%\vcpkg.exe install --triplet %TRIPLET%-windows "@.vcpkg_deps.txt"
+          %VCPKG_DIR%\vcpkg.exe install
           %VCPKG_DIR%\vcpkg.exe list
-          if exist %VCPKG_DIR%\downloads rmdir /S /Q %VCPKG_DIR%\downloads
-          if exist %VCPKG_DIR%\packages rmdir /S /Q %VCPKG_DIR%\packages
         displayName: 'Install vcpkg packages'
         condition: ne(variables.CACHE_RESTORED, 'true')
 
@@ -114,10 +97,6 @@ jobs:
           wget https://github.com/ninja-build/ninja/releases/download/v1.11.0/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
           Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
         displayName: 'Download Ninja'
-
-      - script: |
-          pip install "conan<2.0.0"
-        displayName: Install conan
 
       - script: |
           SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
@@ -141,7 +120,7 @@ jobs:
         displayName: 'Run CMake to build'
 
       - script: |
-          SET PATH=%PATH%;%VCPKG_DIR%\installed\%TRIPLET%-windows\bin;%VCPKG_DIR%\installed\%TRIPLET%-windows\debug\bin
+          SET PATH=%PATH%;%BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows\bin;%VCPKG_DIR%\installed\%TRIPLET%-windows\debug\bin
           %BUILD_DIR%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           %BUILD_DIR%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
           %BUILD_DIR%\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"

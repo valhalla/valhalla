@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "dependencies": [
+    "boost-algorithm",
+    "boost-foreach",
+    "boost-format",
+    "boost-geometry",
+    "boost-optional",
+    "boost-property-tree",
+    "boost-range",
+    "boost-tokenizer",
+    "curl",
+    "geos",
+    "libspatialite",
+    "spatialite-tools",
+    "luajit",
+    "protobuf",
+    "sqlite3",
+    "zlib"
+  ]
+}
