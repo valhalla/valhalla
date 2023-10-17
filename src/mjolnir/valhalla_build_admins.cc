@@ -14,7 +14,6 @@ int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -37,7 +36,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     // input files are positional
@@ -54,7 +53,7 @@ int main(int argc, char** argv) {
   }
 
   // configure logging
-  auto logging_subtree = pt.get_child_optional("mjolnir.logging");
+  auto logging_subtree = valhalla::config().get_child_optional("mjolnir.logging");
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -62,7 +61,7 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  if (!valhalla::mjolnir::BuildAdminFromPBF(pt.get_child("mjolnir"), input_files)) {
+  if (!valhalla::mjolnir::BuildAdminFromPBF(valhalla::config().get_child("mjolnir"), input_files)) {
     return EXIT_FAILURE;
   };
 

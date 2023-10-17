@@ -34,7 +34,7 @@ endif()
 
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
