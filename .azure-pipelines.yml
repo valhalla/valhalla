@@ -69,7 +69,7 @@ jobs:
       #     cacheHitVar: BUILD_CACHE_RESTORED
 
       - script: |
-          git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git clone --branch master --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
