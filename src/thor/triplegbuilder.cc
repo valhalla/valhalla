@@ -16,6 +16,7 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/time_info.h"
 #include "meili/match_result.h"
+#include "midgard/elevation_encoding.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
@@ -649,6 +650,84 @@ void AddSignInfo(const AttributesController& controller,
         }
       }
       ++sign_index;
+    }
+  }
+}
+
+/**
+ * Set elevation along the edge if requested.
+ * @param  trip_edge   Trip path edge to add elevation.
+ * @param  start_pct   Start percent
+ * @param  end_pct     End percent
+ * @param  start_node  Nodeinfo for start of the edge.
+ * @param  edge        Directed edge
+ * @param  tile        Graph tile of the edge.
+ * @param  graphreader Graphreader in case end node is in a different tile.
+ */
+void SetElevation(TripLeg_Edge* trip_edge,
+                  const double start_pct,
+                  const double end_pct,
+                  const NodeInfo* start_node,
+                  const DirectedEdge* edge,
+                  const graph_tile_ptr& tile,
+                  GraphReader& graphreader) {
+
+  // Lambda to get elevation at specified distance
+  double interval = 0.0;
+  const auto find_elevation = [&interval](const std::vector<float> elevation, const double d) {
+    // Find index based on the stored interval and the desired distance
+    uint32_t index = static_cast<uint32_t>(d / interval);
+    if (index >= elevation.size() - 1) {
+      return elevation.back();
+    }
+
+    // Interpolate between this vertex and the next
+    double pct = (d / interval) - index;
+    return static_cast<float>((elevation[index] * (1.0 - pct)) + (elevation[index + 1] * pct));
+  };
+
+  // Add the elevation at the start node to the elevation vector
+  float h1 = start_node->elevation();
+
+  // Get encoded elevation from EdgeInfo edge
+  auto encoded = tile->edgeinfo(edge).encoded_elevation(edge->length(), interval);
+
+  // Get the end node and its elevation (if end tile is null just set elevation at
+  // the end node to be same as at start node - this should be rare)
+  float h2 = h1;
+  auto end_tile = graphreader.GetGraphTile(edge->endnode());
+  if (end_tile != nullptr) {
+    h2 = end_tile->node(edge->endnode())->elevation();
+  }
+
+  // Decode elevation and reverse if edge is not forward direction
+  std::vector<float> elevation = decode_elevation(encoded, h1, h2, edge->forward());
+
+  // Add to trip edge (protect against both start and end percent == 0.0)
+  if (((0.0 < start_pct && start_pct < 1.0) || (0.0 < end_pct && end_pct < 1.0)) &&
+      start_pct != end_pct) {
+    // Trim elevation - find a new sampling interval based on the partial length
+    double partial_length = static_cast<double>(edge->length()) * (end_pct - start_pct);
+    double new_interval = sampling_interval(partial_length);
+    trip_edge->set_elevation_sampling_interval(new_interval);
+
+    // Add elevation along this portion of the edge
+    double d = edge->length() * start_pct;
+    double end_distance = edge->length() * end_pct;
+    while (d < end_distance + kEpsilon) {
+      trip_edge->mutable_elevation()->Add(find_elevation(elevation, d));
+      d += new_interval;
+    }
+
+    // Validate new size
+    if (trip_edge->elevation_size() - 1 != static_cast<int32_t>(partial_length / new_interval)) {
+      LOG_ERROR("TRIMMED elevation is wrong size");
+    }
+  } else {
+    // Set trip_edge sampling interval and elevation vector
+    trip_edge->set_elevation_sampling_interval(interval);
+    for (auto e : elevation) {
+      trip_edge->mutable_elevation()->Add(e);
     }
   }
 }
@@ -1859,6 +1938,12 @@ void TripLegBuilder::Build(
     // Set begin and end heading if requested. Uses trip_shape so
     // must be done after the edge's shape has been added.
     SetHeadings(trip_edge, controller, directededge, trip_shape, begin_index);
+
+    // Add elevation along the edge if requested
+    if (controller(kEdgeElevation)) {
+      SetElevation(trip_edge, trim_start_pct, trim_end_pct, node, directededge, graphtile,
+                   graphreader);
+    }
 
     // Add landmarks in the directededge to the trip leg
     AddLandmarks(edgeinfo, trip_edge, controller, directededge, trip_shape, begin_index);

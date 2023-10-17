@@ -208,6 +208,16 @@ void NodeInfo::set_drive_on_right(const bool rsd) {
   drive_on_right_ = rsd;
 }
 
+// Set the elevation at this node.
+void NodeInfo::set_elevation(const float elevation) {
+  if (elevation < kNodeMinElevation) {
+    elevation_ = 0;
+  } else {
+    uint32_t elev = static_cast<uint32_t>((elevation - kNodeMinElevation) / kNodeElevationPrecision);
+    elevation_ = (elev > kNodeMaxStoredElevation) ? kNodeMaxStoredElevation : elev;
+  }
+}
+
 // Sets the flag indicating if access was originally tagged.
 void NodeInfo::set_tagged_access(const bool tagged_access) {
   tagged_access_ = tagged_access;
@@ -264,6 +274,7 @@ json::MapPtr NodeInfo::json(const graph_tile_ptr& tile) const {
   auto m = json::map({
       {"lon", json::fixed_t{latlng(tile->header()->base_ll()).first, 6}},
       {"lat", json::fixed_t{latlng(tile->header()->base_ll()).second, 6}},
+      {"elevation", json::fixed_t{elevation(), 2}},
       {"edge_count", static_cast<uint64_t>(edge_count_)},
       {"access", access_json(access_)},
       {"tagged_access", static_cast<bool>(tagged_access_)},
