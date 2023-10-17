@@ -189,7 +189,7 @@ void NodeInfo::set_type(const NodeType type) {
   type_ = static_cast<uint32_t>(type);
 }
 
-// Set the number of driveable edges on the local level. Subtract 1 so
+// Set the number of drivable edges on the local level. Subtract 1 so
 // a value up to kMaxLocalEdgeIndex+1 can be stored.
 void NodeInfo::set_local_edge_count(const uint32_t n) {
   if (n > kMaxLocalEdgeIndex + 1) {
