@@ -1282,7 +1282,9 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
                              std::to_string(edge_id));
   }
 
+  // get the value and prepend the tag to it
   std::string tagged_value = landmark.to_str();
+  tagged_value.insert(tagged_value.begin(), static_cast<char>(baldr::TaggedValue::kLandmark));
 
   auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
   // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)

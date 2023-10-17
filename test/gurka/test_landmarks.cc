@@ -214,6 +214,11 @@ struct LandmarkInManeuver {
     return false;
   }
 };
+
+bool operator==(const Landmark& a, const Landmark& b) {
+  return a.id == b.id && a.name == b.name && a.type == b.type &&
+         PointLL(a.lng, a.lat).ApproximatelyEqual(PointLL(b.lng, b.lat));
+}
 } // namespace
 
 TEST(LandmarkTest, TestBuildDatabase) {
@@ -288,6 +293,13 @@ TEST(LandmarkTest, TestParseLandmarks) {
 
   EXPECT_NO_THROW({ landmarks = db.get_landmarks_by_ids({3, 2, 1}); });
   EXPECT_EQ(landmarks.size(), 3);
+
+  // test round trip encoding
+  for (auto& expected : landmarks) {
+    expected.id = 0;
+    Landmark actual(expected.to_str());
+    EXPECT_TRUE(expected == actual);
+  }
 }
 
 TEST(LandmarkTest, TestTileStoreLandmarks) {
