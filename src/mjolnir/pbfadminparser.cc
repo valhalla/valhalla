@@ -95,6 +95,8 @@ public:
         admin.allow_intersection_names = tag.second == "true" ? true : false;
       } else if (tag.first == "iso_code" && !tag.second.empty()) {
         admin.iso_code_index = osm_admin_data_.name_offset_map.index(tag.second);
+      } else if (tag.first == "default_language" && !tag.second.empty()) {
+        admin.default_language_index = osm_admin_data_.name_offset_map.index(tag.second);
       }
     }
 
