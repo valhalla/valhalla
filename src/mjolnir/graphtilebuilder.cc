@@ -511,35 +511,44 @@ void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction
 // Add signs
 void GraphTileBuilder::AddSigns(const uint32_t idx,
                                 const std::vector<SignInfo>& signs,
-                                const std::vector<std::string>& pronunciations) {
+                                const std::vector<std::string>& linguistics) {
   // Iterate through the list of sign info (with sign text) and add sign
   // text to the text list. Skip signs with no text.
+
+  auto process_linguistic_header = [](const uint32_t ling_start_index, const uint32_t ling_count,
+                                      const std::vector<std::string>& linguistics,
+                                      const size_t index) {
+    std::string updated_linguistics;
+    for (uint32_t x = ling_start_index; x <= ling_count; x++) {
+      auto* p = const_cast<char*>(linguistics[x].c_str());
+
+      while (*p != '\0') {
+        linguistic_text_header_t header = midgard::unaligned_read<linguistic_text_header_t>(p);
+
+        if (header.name_index_ == index) {
+          updated_linguistics.append(
+              std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) +
+              (p + kLinguisticHeaderSize));
+        }
+        p += header.length_ + kLinguisticHeaderSize;
+      }
+    }
+    return updated_linguistics;
+  };
+
   for (size_t i = 0; i < signs.size(); ++i) {
-    auto sign = signs[i];
+    const auto& sign = signs[i];
     if (!(sign.text().empty())) {
       uint32_t offset = AddName(sign.text());
+
       signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
-      if (sign.has_phoneme()) {
-        bool phoneme_on_node = sign.type() == Sign::Type::kJunctionName;
-        uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
-        for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
-          auto* p = const_cast<char*>(pronunciations[x].c_str());
-          size_t pos = 0;
-          std::string updated_pronunciation;
-
-          while (pos < strlen(p)) {
-            linguistic_text_header_t header =
-                midgard::unaligned_read<linguistic_text_header_t>(p + pos);
-            pos += 3;
-            header.name_index_ = i;
-            updated_pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
-                                         (p + pos));
-            pos += header.length_;
-          }
-
-          uint32_t offset = AddName(updated_pronunciation);
-          signs_builder_.emplace_back(idx, Sign::Type::kPronunciation, phoneme_on_node, true, offset);
-        }
+      if (sign.has_linguistic()) {
+        bool linguistic_on_node =
+            sign.type() == Sign::Type::kJunctionName || (sign.type() == Sign::Type::kTollName);
+        uint32_t count = (sign.linguistic_start_index() + sign.linguistic_count()) - 1;
+        uint32_t offset =
+            AddName(process_linguistic_header(sign.linguistic_start_index(), count, linguistics, i));
+        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true, offset);
       }
     }
   }
@@ -587,19 +596,45 @@ bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex,
   return false;
 }
 
+void GraphTileBuilder::ProcessTaggedValues([[maybe_unused]] const uint32_t edgeindex,
+                                           const std::vector<std::string>& names,
+                                           size_t& name_count,
+                                           std::vector<NameInfo>& name_info_list) {
+  auto encode_tag =
+      std::string(1, static_cast<std::string::value_type>(valhalla::baldr::TaggedValue::kLinguistic));
+  if (names.size()) {
+    if (name_count != kMaxNamesPerEdge) {
+      std::stringstream ss;
+      for (const auto& name : names) {
+        ss << name;
+      }
+
+      // Add linguistics and add its offset to edge info's list.
+      NameInfo ni{AddName(encode_tag + ss.str())};
+
+      ni.is_route_num_ = 0;
+      ni.tagged_ = 1;
+      name_info_list.emplace_back(ni);
+      ++name_count;
+    } else {
+      LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+    }
+  }
+}
+
 // Add edge info
 template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
-                                       const GraphId& nodea,
-                                       const baldr::GraphId& nodeb,
+                                       baldr::GraphId nodea,
+                                       baldr::GraphId nodeb,
                                        const uint64_t wayid,
                                        const float elev,
-                                       const uint32_t bike_network,
-                                       const uint32_t speed_limit,
+                                       const uint32_t bn,
+                                       const uint32_t spd,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
-                                       const std::vector<std::string>& pronunciations,
+                                       const std::vector<std::string>& linguistics,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -612,8 +647,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
-    edgeinfo.set_bike_network(bike_network);
-    edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_bike_network(bn);
+    edgeinfo.set_speed_limit(spd);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -660,27 +695,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
     }
 
-    if (pronunciations.size()) {
-      if (name_count != kMaxNamesPerEdge) {
-        std::stringstream ss;
-        for (const auto& pronunciation : pronunciations) {
-          ss << pronunciation;
-        }
-
-        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
-          return std::string(1, static_cast<std::string::value_type>(tag));
-        };
-
-        // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
-
-        ni.is_route_num_ = 0;
-        ni.tagged_ = 1;
-        name_info_list.emplace_back(ni);
-        ++name_count;
-      } else
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
-    }
+    ProcessTaggedValues(edgeindex, linguistics, name_count, name_info_list);
 
     edgeinfo.set_name_info_list(name_info_list);
 
@@ -702,9 +717,10 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   added = false;
   return existing_edge_offset_item->second;
 }
+
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
-                                                                      const GraphId&,
-                                                                      const baldr::GraphId&,
+                                                                      GraphId,
+                                                                      GraphId,
                                                                       const uint64_t,
                                                                       const float,
                                                                       const uint32_t,
@@ -717,8 +733,8 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       bool&,
                                                                       bool);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
-                                                                    const GraphId&,
-                                                                    const baldr::GraphId&,
+                                                                    GraphId,
+                                                                    baldr::GraphId,
                                                                     const uint64_t,
                                                                     const float,
                                                                     const uint32_t,
@@ -733,16 +749,16 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
-                                       const baldr::GraphId& nodea,
-                                       const baldr::GraphId& nodeb,
+                                       baldr::GraphId nodea,
+                                       baldr::GraphId nodeb,
                                        const uint64_t wayid,
                                        const float elev,
-                                       const uint32_t bike_network,
-                                       const uint32_t speed_limit,
+                                       const uint32_t bn,
+                                       const uint32_t spd,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
-                                       const std::vector<std::string>& pronunciations,
+                                       const std::vector<std::string>& linguistics,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -755,8 +771,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
-    edgeinfo.set_bike_network(bike_network);
-    edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_bike_network(bn);
+    edgeinfo.set_speed_limit(spd);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.
@@ -803,28 +819,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
     }
 
-    if (pronunciations.size()) {
-      if (name_count != kMaxNamesPerEdge) {
-        std::stringstream ss;
-        for (const auto& pronunciation : pronunciations) {
-          ss << pronunciation;
-        }
-
-        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
-          return std::string(1, static_cast<std::string::value_type>(tag));
-        };
-
-        // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
-
-        ni.is_route_num_ = 0;
-        ni.tagged_ = 1;
-        name_info_list.emplace_back(ni);
-        ++name_count;
-      } else
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
-    }
-
+    ProcessTaggedValues(edgeindex, linguistics, name_count, name_info_list);
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map

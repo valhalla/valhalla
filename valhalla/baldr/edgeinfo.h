@@ -54,6 +54,15 @@ struct NameInfo {
   }
 };
 
+// indexes of linguistic attributes in the linguistic map value-tuple
+constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
+constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
+constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
+constexpr size_t kLinguisticHeaderSize = 3;
+
+// Unfortunately a bug was found where we were returning a blank phoneme (kNone = 0) for a linguistic
+// record where it just contained a language and no phoneme.  This caused us to stop reading the
+// header and in turn caused the name_index to be off.  This is why kNone is now equal to 5
 struct linguistic_text_header_t {
   uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
@@ -163,12 +172,20 @@ public:
   std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
 
   /**
-   * Convenience method to get the names for an edge
-   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
+   * Convenience method to get the non linguistic, tagged values for an edge.
+   *
    *
    * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues() const;
+
+  /**
+   * Convenience method to get the linguistic names for an edge
+   * @param  type  type of linguistic names we are interested in obtaining.
+   *
+   * @return   Returns a list (vector) of linguistic names.
+   */
+  std::vector<std::string> GetLinguisticTaggedValues() const;
 
   /**
    * Convenience method to get the names, route number flags and tag value type for an edge.
@@ -187,11 +204,12 @@ public:
   const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
-   * Convenience method to get a pronunciation map for an edge.
-   * @return   Returns a unordered_map of type/name pairs with a key that references the name
-   * index from GetNamesAndTypes
+   * Convenience method to get a Linguistic map for an edge.
+   * @return   Returns a unordered_map in which the key is a index into the name list from
+   * GetNamesAndTypes and the tuple contains a pronunciation (w/wo a language) or no pronunciation and
+   * just a language
    */
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> GetLinguisticMap() const;
 
   /**
    * Convenience method to get the types for the names.
