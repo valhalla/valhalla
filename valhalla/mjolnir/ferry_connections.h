@@ -57,7 +57,7 @@ struct NodeStatusInfo {
 };
 
 /**
- * Get the best classification for any driveable non-ferry and non-link
+ * Get the best classification for any drivable non-ferry and non-link
  * edges from a node. Skip any reclassified ferry edges
  * @param  edges The file backed list of edges in the graph.
  * @return  Returns the best (most important) classification
