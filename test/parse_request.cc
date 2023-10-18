@@ -334,7 +334,7 @@ std::string get_request_str(const std::string& parent_key,
   return R"({")" + parent_key + R"(":{)" + get_kv_str(key, expected_value) + R"(}})";
 }
 
-std::string get_kv_str(const std::string& key, const std::vector<std::string>& values) {
+std::string get_kv_str(const std::string& key) {
   std::string kv_str = R"(")" + key + R"(":[)";
   bool first = true;
   for (const auto& value : values) {
@@ -458,8 +458,7 @@ void test_filter_action_parsing(const valhalla::FilterAction expected_value,
   validate(key, expected_value, true, request.options().filter_action());
 }
 
-void test_filter_attributes_parsing(const std::vector<std::string>& expected_values,
-                                    const Options::Action action = Options::trace_attributes) {
+void test_filter_attributes_parsing(const Options::Action action = Options::trace_attributes) {
   const std::string parent_key = "filters";
   const std::string key = "attributes";
   Api request = get_request(get_request_str(parent_key, key, expected_values), action);
@@ -1555,7 +1554,6 @@ void test_bicycle_parsing(const Costing::Type costing_type,
 
 void test_filter_stop_parsing(const Costing::Type costing_type,
                               const valhalla::FilterAction filter_action,
-                              const std::vector<std::string>& filter_ids,
                               const Options::Action action = Options::route) {
   // Create the costing string
   auto costing_str = get_costing_str(costing_type);
@@ -1573,7 +1571,6 @@ void test_filter_stop_parsing(const Costing::Type costing_type,
 
 void test_filter_route_parsing(const Costing::Type costing_type,
                                const valhalla::FilterAction filter_action,
-                               const std::vector<std::string>& filter_ids,
                                const Options::Action action = Options::route) {
   // Create the costing string
   auto costing_str = get_costing_str(costing_type);
@@ -1591,7 +1588,6 @@ void test_filter_route_parsing(const Costing::Type costing_type,
 
 void test_filter_operator_parsing(const Costing::Type costing_type,
                                   const valhalla::FilterAction filter_action,
-                                  const std::vector<std::string>& filter_ids,
                                   const Options::Action action = Options::route) {
   // Create the costing string
   auto costing_str = get_costing_str(costing_type);
@@ -1693,56 +1689,56 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
-TEST(ParseRequest, test_polygons) {
+TEST(test_polygons) {
   test_polygons_parsing(true);
   test_polygons_parsing(false);
 }
 
-TEST(ParseRequest, test_denoise) {
+TEST(test_denoise) {
   test_denoise_parsing(0.0f);
   test_denoise_parsing(0.5f);
   test_denoise_parsing(1.0f);
 }
 
-TEST(ParseRequest, test_generalize) {
+TEST(test_generalize) {
   test_generalize_parsing(20.f);
   test_generalize_parsing(50.f);
 }
 
-TEST(ParseRequest, test_show_locations) {
+TEST(test_show_locations) {
   test_show_locations_parsing(true);
   test_show_locations_parsing(false);
 }
 
-TEST(ParseRequest, test_shape_match) {
+TEST(test_shape_match) {
   test_shape_match_parsing(ShapeMatch::map_snap, Options::trace_route);
   test_shape_match_parsing(ShapeMatch::map_snap, Options::trace_attributes);
   test_shape_match_parsing(ShapeMatch::edge_walk, Options::trace_route);
   test_shape_match_parsing(ShapeMatch::edge_walk, Options::trace_attributes);
 }
 
-TEST(ParseRequest, test_best_paths) {
+TEST(test_best_paths) {
   test_best_paths_parsing(1);
   test_best_paths_parsing(2);
   test_best_paths_parsing(4);
 }
 
-TEST(ParseRequest, test_gps_accuracy) {
+TEST(test_gps_accuracy) {
   test_gps_accuracy_parsing(5.f);
   test_gps_accuracy_parsing(30.f);
 }
 
-TEST(ParseRequest, test_search_radius) {
+TEST(test_search_radius) {
   test_search_radius_parsing(10.f);
   test_search_radius_parsing(40.f);
 }
 
-TEST(ParseRequest, test_turn_penalty_factor) {
+TEST(test_turn_penalty_factor) {
   test_turn_penalty_factor_parsing(50.f);
   test_turn_penalty_factor_parsing(100.f);
 }
 
-TEST(ParseRequest, test_filter_action) {
+TEST(test_filter_action) {
   test_filter_action_parsing(valhalla::FilterAction::exclude);
   test_filter_action_parsing(valhalla::FilterAction::include);
 }
