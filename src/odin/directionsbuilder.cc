@@ -98,6 +98,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   bool has_toll = false;
   bool has_highway = false;
   bool has_ferry = false;
+  bool has_tunnel = false;
   // Populate trip and leg IDs
   trip_directions.set_trip_id(etp->trip_id());
   trip_directions.set_leg_id(etp->leg_id());
@@ -156,6 +157,10 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
     if (maneuver.ferry()) {
       trip_maneuver->set_portions_ferry(maneuver.ferry());
       has_ferry = true;
+    }
+    if (maneuver.portions_tunnel()) {
+      trip_maneuver->set_portions_tunnel(maneuver.portions_tunnel());
+      has_tunnel = true;
     }
 
     trip_maneuver->set_has_time_restrictions(maneuver.has_time_restrictions());
@@ -442,6 +447,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   trip_directions.mutable_summary()->set_has_toll(has_toll);
   trip_directions.mutable_summary()->set_has_highway(has_highway);
   trip_directions.mutable_summary()->set_has_ferry(has_ferry);
+  trip_directions.mutable_summary()->set_has_tunnel(has_tunnel);
 }
 
 } // namespace odin

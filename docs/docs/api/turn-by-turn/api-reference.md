@@ -354,6 +354,7 @@ The summary JSON object includes:
 | `has_toll`| Flag indicating if the the path uses one or more toll segments. |
 | `has_highway`| Flag indicating if the the path uses one or more highway segments. |
 | `has_ferry`| Flag indicating if the the path uses one or more ferry segments. |
+| `has_tunnel`| Flag indicating if the the path uses one or more tunnel segments. |
 | `min_lat` | Minimum latitude of a bounding box containing the route. |
 | `min_lon` | Minimum longitude of a bounding box containing the route. |
 | `max_lat` | Maximum latitude of a bounding box containing the route. |

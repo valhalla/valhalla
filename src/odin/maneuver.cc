@@ -125,7 +125,7 @@ Maneuver::Maneuver()
       begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
       end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
-      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
+      roundabout_(false), portions_toll_(false), portions_tunnel_(false), portions_unpaved_(false), portions_highway_(false),
       internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
       travel_mode_(TravelMode::kDrive), vehicle_type_(VehicleType::kCar),
       pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
@@ -459,6 +459,14 @@ bool Maneuver::portions_toll() const {
 
 void Maneuver::set_portions_toll(bool portionsToll) {
   portions_toll_ = portionsToll;
+}
+
+bool Maneuver::portions_tunnel() const {
+  return portions_tunnel_;
+}
+
+void Maneuver::set_portions_tunnel(bool portionsTunnel) {
+  portions_tunnel_ = portionsTunnel;
 }
 
 bool Maneuver::portions_unpaved() const {
@@ -1263,6 +1271,9 @@ std::string Maneuver::ToString() const {
   man_str += " | portions_toll=";
   man_str += std::to_string(portions_toll_);
 
+  man_str += " | portions_tunnel=";
+  man_str += std::to_string(portions_tunnel_);
+
   man_str += " | portions_unpaved=";
   man_str += std::to_string(portions_unpaved_);
 
@@ -1471,6 +1482,9 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(portions_toll_);
+
+  man_str += delim;
+  man_str += std::to_string(portions_tunnel_);
 
   man_str += delim;
   man_str += std::to_string(portions_unpaved_);

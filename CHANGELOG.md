@@ -33,6 +33,7 @@
    * ADDED: update maneuver generation to add nearby landmarks to maneuvers as direction support [#4293](https://github.com/valhalla/valhalla/pull/4293)
    * CHANGED: the boost property tree config is now read into a singleton that doesn't need to be passed around anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
+   * ADDED: option `use_tunnels` in costing_options [#4318](https://github.com/valhalla/valhalla/pull/4318)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

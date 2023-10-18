@@ -102,6 +102,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   bool has_toll = false;
   bool has_highway = false;
   bool has_ferry = false;
+  bool has_tunnel = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
   for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
@@ -129,6 +130,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
     has_toll = has_toll || leg.summary().has_toll();
     has_highway = has_highway || leg.summary().has_highway();
     has_ferry = has_ferry || leg.summary().has_ferry();
+    has_tunnel = has_tunnel || leg.summary().has_tunnel();
   }
 
   writer.start_object("summary");
