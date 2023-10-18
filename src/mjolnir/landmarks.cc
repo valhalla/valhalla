@@ -29,8 +29,8 @@ constexpr unsigned long kLandmarkRadius = 25;
 // a 75m search cutoff used to associate edges to landmarks, which should allow us to get gas stations
 // that are off the road a bit (for parking)
 constexpr float kLandmarkSearchCutoff = 75.;
-// a slight buffer to add to landmark querries to avoid near misses in the data due to precision
-constexpr double kLandmarkQuerryBuffer = .000001;
+// a slight buffer to add to landmark queries to avoid near misses in the data due to precision
+constexpr double kLandmarkQueryBuffer = .000001;
 
 struct landmark_callback : public OSMPBF::Callback {
 public:
@@ -354,10 +354,10 @@ void FindLandmarkEdges(const boost::property_tree::ptree& pt,
       // get landmarks in the tile
       midgard::AABB2<PointLL> bbox = baldr::TileHierarchy::GetGraphIdBoundingBox(tileset[i]);
 
-      std::vector<Landmark> landmarks = db.get_landmarks_by_bbox(bbox.minx() - kLandmarkQuerryBuffer,
-                                                                 bbox.miny() - kLandmarkQuerryBuffer,
-                                                                 bbox.maxx() + kLandmarkQuerryBuffer,
-                                                                 bbox.maxy() + kLandmarkQuerryBuffer);
+      std::vector<Landmark> landmarks = db.get_landmarks_by_bbox(bbox.minx() - kLandmarkQueryBuffer,
+                                                                 bbox.miny() - kLandmarkQueryBuffer,
+                                                                 bbox.maxx() + kLandmarkQueryBuffer,
+                                                                 bbox.maxy() + kLandmarkQueryBuffer);
 
       // find and collect all nearby path locations for the landmarks
       for (const auto& landmark : landmarks) {
