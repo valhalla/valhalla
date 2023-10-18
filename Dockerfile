@@ -1,12 +1,16 @@
 ####################################################################
-FROM ubuntu:22.04 as builder 
+FROM ubuntu:23.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
 
 # set paths
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
-ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+# python stuff
+ENV VIRTUAL_ENV=/usr/local/venv
+RUN export DEBIAN_FRONTEND=noninteractive && apt update && apt install -y sudo python3-venv && python3 -m venv ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 # install deps
 WORKDIR /usr/local/src/valhalla
@@ -26,7 +30,7 @@ RUN pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
+RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off
 RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
@@ -43,30 +47,35 @@ RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 RUN rm -f valhalla_*.debug
 RUN strip --strip-debug --strip-unneeded valhalla_* || true
 RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
+RUN strip /usr/local/venv/lib/python3.11/site-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-FROM ubuntu:22.04 as runner
+FROM ubuntu:23.04 as runner
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
+
+# basic paths
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # github packaging niceties
 LABEL org.opencontainers.image.description = "Open Source Routing Engine for OpenStreetMap and Other Datasources"
 LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
+# grab the builder stages artifacts
 COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libcurl4 libczmq4 libluajit-5.1-2 \
-      libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3.10-minimal python3-distutils python-is-python3 \
-      spatialite-bin unzip wget && \
-    cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
-    rm -rf /var/lib/apt/lists/* && \
-    \
-    # python smoke test
-    python3 -c "import valhalla,sys; print(sys.version, valhalla)"
+      libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
+      spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
+RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
+
+# python smoke test
+ENV VIRTUAL_ENV=/usr/local/venv
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"

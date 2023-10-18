@@ -9,29 +9,33 @@ executors:
       CXXFLAGS: -DGEOS_INLINE
 
 commands:
+  venv:
+    steps:
+      - run: echo 'export VIRTUAL_ENV="${PWD}"/venv' >> "$BASH_ENV"
+      - run: echo 'export PATH="${VIRTUAL_ENV}/bin:${PATH}"' >> "$BASH_ENV"
   mac_deps:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: source venv/bin/activate && sudo python3 -m pip install shapely "conan<2.0.0"
+      - run: sudo python3 -m pip install shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   mac_preflight:
     steps:
-      - run: python3 -m venv venv
+      - venv
+      - run: python3 -m venv ${VIRTUAL_ENV}
   linux_deps:
     steps:
       - run: |
-            source venv/bin/activate
             ./scripts/install-linux-deps.sh
   linux_preflight:
     steps:
+      - venv
       - run: |
             sudo apt-get update --assume-yes
             env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip python3-venv git curl
-            python3 -m venv venv
+            python3 -m venv ${VIRTUAL_ENV}
   check_ci_lint:
     steps:
       - run: |
-            source venv/bin/activate
             python3 -m pip install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
@@ -57,7 +61,6 @@ jobs:
       - run: |
           mkdir build
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-          source venv/bin/activate
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
@@ -101,7 +104,6 @@ jobs:
             - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
       - run: |
           mkdir build
-          source venv/bin/activate
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
@@ -137,7 +139,6 @@ jobs:
             - ccache-release-linux-arm_64-v3-{{ checksum "conanfile.txt" }}
       - run: |
           mkdir build
-          source venv/bin/activate
           cd build
           cmake .. -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
@@ -171,7 +172,6 @@ jobs:
             - ccache-release-macos-{{ checksum "conanfile.txt" }}
       - run: |
           mkdir -p build
-          source venv/bin/activate
           cd build
           cmake ..
       - run: make -C build -j8

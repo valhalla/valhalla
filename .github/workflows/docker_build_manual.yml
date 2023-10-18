@@ -22,5 +22,4 @@ jobs:
 
     - name: Build latest image
       run: |
-        docker build -t ghcr.io/valhalla/valhalla:manually_triggered_build .
-        docker push ghcr.io/valhalla/valhalla:manually_triggered_build
+        docker buildx build --push --tag -platform linux/amd64,linux/arm64 ghcr.io/valhalla/valhalla:manually_triggered_build .
