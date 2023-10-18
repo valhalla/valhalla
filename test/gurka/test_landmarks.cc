@@ -324,9 +324,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     auto point = shape[shape.size() / 2];
     auto ltype = static_cast<LandmarkType>((edge_id.id() + 1) % invalid_landmark);
     Landmark landmark(0, std::to_string(edge_id), ltype, point.first, point.second);
-
-    printf("ADDING %s -> %.6f,%.6f,%d\n", std::to_string(edge_id).c_str(), point.first, point.second,
-           static_cast<int>(landmark.type));
     tb.AddLandmark(edge_id, landmark);
     ++edge_id;
   }
@@ -369,10 +366,7 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
     for (const auto& value : tagged_values) {
       if (value.first != baldr::TaggedValue::kLandmark)
         continue;
-
       Landmark landmark(value.second);
-      printf("FOUND %s (%s) -> %.6f,%.6f,%d\n", std::to_string(edge_id).c_str(),
-             landmark.name.c_str(), landmark.lng, landmark.lat, static_cast<int>(landmark.type));
 
       // check data correctness
       std::vector<PointLL> shape = ei.shape();
@@ -386,7 +380,6 @@ TEST(LandmarkTest, TestTileStoreLandmarks) {
       if (static_cast<baldr::TaggedValue>(v[0]) != baldr::TaggedValue::kLandmark) {
         continue;
       }
-
       Landmark landmark(v.substr(1));
 
       // check data correctness
