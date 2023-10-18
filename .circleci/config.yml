@@ -9,30 +9,20 @@ executors:
       CXXFLAGS: -DGEOS_INLINE
 
 commands:
-  venv:
-    steps:
-      - run: echo 'export VIRTUAL_ENV="${PWD}"/venv' >> "$BASH_ENV"
-      - run: echo 'export PATH="${VIRTUAL_ENV}/bin:${PATH}"' >> "$BASH_ENV"
   mac_deps:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: sudo python3 -m pip install shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
-  mac_preflight:
-    steps:
-      - venv
-      - run: python3 -m venv ${VIRTUAL_ENV}
   linux_deps:
     steps:
-      - run: |
-            ./scripts/install-linux-deps.sh
-  linux_preflight:
+      - run: ./scripts/install-linux-deps.sh
+  linux_lint_deps:
     steps:
-      - venv
       - run: |
-            sudo apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip python3-venv git curl
-            python3 -m venv ${VIRTUAL_ENV}
+            apt-get update --assume-yes
+            env DEBIAN_FRONTEND=noninteractive apt install sudo --yes --quiet
+            env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip git     curl
   check_ci_lint:
     steps:
       - run: |
@@ -46,11 +36,11 @@ commands:
 jobs:
   lint-build-debug:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu:23.04
     resource_class: xlarge
     steps:
       - checkout
-      - linux_preflight
+      - linux_lint_deps
       - check_ci_lint
       - linux_deps
       - run: git submodule sync && git submodule update --init
@@ -90,11 +80,11 @@ jobs:
 
   build-release:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu:23.04
     resource_class: xlarge
     steps:
       - checkout
-      - linux_preflight
+      - linux_lint_deps
       - check_ci_lint
       - linux_deps
       - run: git submodule sync && git submodule update --init
@@ -128,8 +118,7 @@ jobs:
     resource_class: arm.xlarge
     steps:
       - checkout
-      - run: apt update && apt install sudo
-      - linux_preflight
+      - linux_lint_deps
       - check_ci_lint
       - linux_deps
       - run: git submodule sync && git submodule update --init
@@ -162,7 +151,6 @@ jobs:
     resource_class: macos.x86.medium.gen2
     steps:
       - checkout
-      - mac_preflight
       - check_ci_lint
       - mac_deps
       - run: git submodule sync && git submodule update --init

@@ -1,3 +1,12 @@
+# TODO: we should make use of BUILDPLATFORM and TARGETPLATFORM to figure out cross compiling
+#  as mentioned here: docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide
+#  then we could use the host architecture to simply compile to the target architecture without
+#  emulating the target architecture (thereby making the build hyper slow). the general gist is
+#  we add arm (or whatever architecture) repositories to apt and then install our dependencies
+#  with the architecture suffix, eg. :arm64. then we just need to set a bunch of cmake variables
+#  probably with the use of a cmake toolchain file so that cmake can make sure to use the
+#  binaries that can target the target architecture. from there bob is your uncle maybe..
+
 ####################################################################
 FROM ubuntu:23.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
@@ -7,10 +16,7 @@ ARG CONCURRENCY
 # set paths
 ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
-# python stuff
-ENV VIRTUAL_ENV=/usr/local/venv
-RUN export DEBIAN_FRONTEND=noninteractive && apt update && apt install -y sudo python3-venv && python3 -m venv ${VIRTUAL_ENV}
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+RUN export DEBIAN_FRONTEND=noninteractive && apt update && apt install -y sudo
 
 # install deps
 WORKDIR /usr/local/src/valhalla
