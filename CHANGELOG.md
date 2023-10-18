@@ -35,6 +35,7 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * ADDED: option `use_tunnels` in costing_options [#4318](https://github.com/valhalla/valhalla/pull/4318)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
+   * ADDED: option `use_tunnels` in costing_options [#4318](https://github.com/valhalla/valhalla/pull/4318)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
