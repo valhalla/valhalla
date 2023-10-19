@@ -5,6 +5,7 @@
     "boost-foreach",
     "boost-format",
     "boost-geometry",
+    "boost-heap",
     "boost-optional",
     "boost-property-tree",
     "boost-range",
