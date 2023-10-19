@@ -116,7 +116,7 @@ jobs:
           for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
           popd
           call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
-          cmake --build %BUILD_DIR% --config %BUILD_CFG%
+          cmake --build %BUILD_DIR% --config %BUILD_CFG% -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
         displayName: 'Run CMake to build'
 
       - script: |
