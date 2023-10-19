@@ -42,7 +42,7 @@ jobs:
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       TRIPLET: 'x64'
-      VCPKG_REF: '45b0e4b'
+      VCPKG_REF: 'f330a32'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
     steps:
@@ -71,7 +71,7 @@ jobs:
 
       - script: |
           git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
-          git checkout %VCPKG_REF%
+          git -C %VCPKG_DIR% checkout %VCPKG_REF%
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
@@ -102,10 +102,6 @@ jobs:
         displayName: 'Build Valhalla'
 
       - script: |
-          dir %BUILD_DIR%\vcpkg_installed
-          dir %BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows/bin
-          dir %BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows/tools
-          dir %BUILD_DIR%\%BUILD_CFG%
           SET PATH=%PATH%;%BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows\bin
           %BUILD_DIR%\%BUILD_CFG%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           %BUILD_DIR%\%BUILD_CFG%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
