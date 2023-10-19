@@ -12,7 +12,7 @@ commands:
   mac_deps:
     steps:
       - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: sudo python3 -m pip install shapely "conan<2.0.0"
+      - run: sudo python3 -m pip install requests shapely "conan<2.0.0"
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   linux_deps:
     steps:
@@ -20,19 +20,16 @@ commands:
   linux_lint_deps:
     steps:
       - run: |
-            echo 'export PIP_BREAK_SYSTEM_PACKAGES=1' >> "$BASH_ENV"
             apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive apt install sudo --yes --quiet
-            env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip git     curl
+            env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl
   check_ci_lint:
     steps:
       - run: |
-            sudo python3 -m pip install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-            sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+            ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
 jobs:
   lint-build-debug:

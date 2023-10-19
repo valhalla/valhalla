@@ -32,7 +32,7 @@ RUN rm -rf build && mkdir build
 
 # upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN pip install --upgrade "conan<2.0.0"
+RUN sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
@@ -53,7 +53,7 @@ RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 RUN rm -f valhalla_*.debug
 RUN strip --strip-debug --strip-unneeded valhalla_* || true
 RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/local/venv/lib/python3.11/site-packages/valhalla/python_valhalla*.so
+RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
@@ -70,6 +70,7 @@ LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
 # grab the builder stages artifacts
 COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
@@ -82,6 +83,4 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 
 # python smoke test
-ENV VIRTUAL_ENV=/usr/local/venv
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"

@@ -57,8 +57,4 @@ sudo make install
 popd && rm -rf $primeserver_dir
 
 # for boost and scripts deps
-if [[ $(python3 -c 'import sys; sys.exit(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -ne 0 ]]; then
-  python3 -m pip install --upgrade "conan<2.0.0" requests shapely
-else
-  sudo python3 -m pip install --upgrade "conan<2.0.0" requests shapely
-fi
+sudo PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade "conan<2.0.0" requests shapely
