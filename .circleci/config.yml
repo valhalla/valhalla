@@ -21,7 +21,7 @@ commands:
     steps:
       - run: |
             apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl
+            env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl file
   check_ci_lint:
     steps:
       - run: |
