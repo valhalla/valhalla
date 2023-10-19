@@ -26,7 +26,6 @@ jobs:
         apt install --yes --quiet binfmt-support qemu-user-static qemu-system
         docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
         docker buildx create --name mybuilder
-mybuilder
         docker buildx use mybuilder
         docker buildx inspect --bootstrap
         docker buildx build --push --tag -platform linux/amd64,linux/arm64 ghcr.io/valhalla/valhalla:manually_triggered_build .
