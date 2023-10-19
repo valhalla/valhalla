@@ -42,6 +42,7 @@ jobs:
       VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       TRIPLET: 'x64'
+      VCPKG_REF: '45b0e4b'
       CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
     steps:
@@ -53,7 +54,7 @@ jobs:
       - task: Cache@2
         displayName: "Cache vcpkg's packages"
         inputs:
-          key: .\vcpkg.json | ".v1"
+          key: .\vcpkg.json | "$(VCPKG_REF)" | ".v2"
           path: "$(VCPKG_DIR)"
           cacheHitVar: CACHE_RESTORED
       
@@ -69,7 +70,7 @@ jobs:
       #     cacheHitVar: BUILD_CACHE_RESTORED
 
       - script: |
-          git clone --branch master --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
+          git clone --branch %VCPKG_REF% --depth 1 https://github.com/microsoft/vcpkg %VCPKG_DIR%
           echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
           call %VCPKG_DIR%\bootstrap-vcpkg.bat
           %VCPKG_DIR%\vcpkg.exe version
@@ -93,33 +94,15 @@ jobs:
           del /Q third_party\OSM-binary\src\osmformat.proto.orig
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
-      - powershell: |
-          wget https://github.com/ninja-build/ninja/releases/download/v1.11.0/ninja-win.zip -o $(Build.SourcesDirectory)\ninja_win.zip
-          Expand-Archive $(Build.SourcesDirectory)\ninja_win.zip -DestinationPath $(Build.SourcesDirectory)\ninja
-        displayName: 'Download Ninja'
-
       - script: |
-          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
-          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
-          popd
-          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
           cmake --version
-          cmake -G "Ninja" -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF
-        env:
-          CONAN_USER_HOME: $(CONAN_HOME)
-        displayName: 'Run CMake to configure build'
-
-      - script: |
-          SET PATH=%PATH%;$(Build.SourcesDirectory)\ninja
-          pushd "C:\Program Files (x86)\Microsoft Visual Studio\Installer\"
-          for /f "delims=" %%x in ('.\vswhere.exe -latest -property InstallationPath') do set VSPATH=%%x
-          popd
-          call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat"
+          cmake -G "Visual Studio 17 2022" -A %TRIPLET% -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF
           cmake --build %BUILD_DIR% --config %BUILD_CFG% -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
-        displayName: 'Run CMake to build'
+        displayName: 'Build Valhalla'
 
       - script: |
+          dir %BUILD_DIR%\vcpkg_installed
+          dir %BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows
           SET PATH=%PATH%;%BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows\bin;%BUILD_DIR%\vcpkg_installed\%TRIPLET%-windows\debug\bin
           %BUILD_DIR%\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           %BUILD_DIR%\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
