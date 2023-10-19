@@ -28,7 +28,9 @@ find src valhalla test bench -type f -name '*.h' -o -name '*.cc' \
 
 # Python setup
 py=$(setup_python)
-sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==22.10.0 flake8==5.0.4
+if [[ $(python3 -m pip list | grep -c "black\|flake8") -ne 2 ]]; then
+  sudo PIP_BREAK_SYSTEM_PACKAGES=1 ${py} -m pip install black==22.10.0 flake8==5.0.4
+fi
 python_sources=$(LANG=C find scripts src/bindings/python -type f -exec file {} \; | grep -F "Python script" | sed 's/:.*//')
 
 # Python formatter
