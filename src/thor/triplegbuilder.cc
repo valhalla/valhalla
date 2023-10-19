@@ -191,7 +191,8 @@ void SetShapeAttributes(const AttributesController& controller,
                         double tgt_pct,
                         double edge_seconds,
                         bool cut_for_traffic,
-                        const valhalla::baldr::IncidentResult& incidents) {
+                        const valhalla::baldr::IncidentResult& incidents,
+                        const TimeInfo& time_info) {
   // TODO: if this is a transit edge then the costing will throw
 
   // bail if nothing to do
@@ -315,6 +316,28 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed()->Reserve(leg.shape_attributes().speed_size() +
                                                              shape.size() + cuts.size());
   }
+  auto freeflow = (edge->free_flow_speed() * kDecimeterPerMeter) + 0.5;
+  if (controller(kShapeAttributesFreeflow)) {
+    leg.mutable_shape_attributes()->mutable_freeflow()->Reserve(leg.shape_attributes().freeflow_size() +
+                                                             shape.size() + cuts.size());
+  }
+  auto constrained = (edge->constrained_flow_speed() * kDecimeterPerMeter) + 0.5;
+  if (controller(kShapeAttributesConstrained)) {
+    leg.mutable_shape_attributes()->mutable_constrained()->Reserve(leg.shape_attributes().constrained_size() +
+                                                             shape.size() + cuts.size());
+  }
+  double historical = 0.;
+  if (controller(kShapeAttributesHistorical)) {
+    // TODO: set historical speed using timeinfo
+    leg.mutable_shape_attributes()->mutable_historical()->Reserve(leg.shape_attributes().historical_size() +
+                                                             shape.size() + cuts.size());
+  }
+  double realtime = 0.;
+  if (controller(kShapeAttributesRealtime)) {
+    // TODO: set current real time
+    leg.mutable_shape_attributes()->mutable_realtime()->Reserve(leg.shape_attributes().realtime_size() +
+                                                             shape.size() + cuts.size());
+  }
   if (controller(kShapeAttributesSpeedLimit)) {
     leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
         leg.shape_attributes().speed_limit_size() + shape.size() + cuts.size());
@@ -381,6 +404,26 @@ void SetShapeAttributes(const AttributesController& controller,
         decimeters_sec = 0.;
       }
       leg.mutable_shape_attributes()->add_speed(decimeters_sec);
+    }
+
+    // Set shape attributes speed per shape point if requested
+    if (controller(kShapeAttributesFreeflow)) {
+      leg.mutable_shape_attributes()->add_speed(freeflow);
+    }
+
+    // Set shape attributes speed per shape point if requested
+    if (controller(kShapeAttributesConstrained)) {
+      leg.mutable_shape_attributes()->add_speed(constrained);
+    }
+
+    // Set shape attributes speed per shape point if requested
+    if (controller(kShapeAttributesHistorical)) {
+      leg.mutable_shape_attributes()->add_speed(historical);
+    }
+
+    // Set shape attributes speed per shape point if requested
+    if (controller(kShapeAttributesRealtime)) {
+      leg.mutable_shape_attributes()->add_speed(realtime);
     }
 
     // Set the maxspeed if requested
@@ -1923,7 +1966,7 @@ void TripLegBuilder::Build(
     graphreader.GetGraphTile(directededge->endnode(), end_node_tile);
     SetShapeAttributes(controller, graphtile, end_node_tile, directededge, trip_shape, begin_index,
                        trip_path, trim_start_pct, trim_end_pct, edge_seconds,
-                       costing->flow_mask() & kCurrentFlowMask, incidents);
+                       costing->flow_mask() & kCurrentFlowMask, incidents, forward_time_info);
 
     // Set begin shape index if requested
     if (controller(kEdgeBeginShapeIndex)) {

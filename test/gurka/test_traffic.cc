@@ -185,7 +185,8 @@ TEST(Traffic, CutGeoms) {
             R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
         nullptr, &api);
 
@@ -249,7 +250,8 @@ TEST(Traffic, CutGeoms) {
             R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
         nullptr, &api);
 
@@ -325,7 +327,8 @@ TEST(Traffic, CutGeoms) {
             R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
         nullptr, &api);
 
@@ -409,7 +412,8 @@ TEST(Traffic, CutGeoms) {
               R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
           nullptr, &api);
 
@@ -446,7 +450,8 @@ TEST(Traffic, CutGeoms) {
               R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
           nullptr, &api);
 
@@ -528,7 +533,8 @@ TEST(Traffic, CutGeoms) {
                 R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
             nullptr, &api);
 
@@ -567,7 +573,8 @@ TEST(Traffic, CutGeoms) {
                 R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
             nullptr, &api);
 
@@ -605,7 +612,8 @@ TEST(Traffic, CutGeoms) {
                 R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
             nullptr, &api);
 
@@ -645,7 +653,8 @@ TEST(Traffic, CutGeoms) {
                 R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
             nullptr, &api);
 
@@ -770,7 +779,8 @@ TEST(Traffic, CutGeoms) {
                 R"(}
       ],"costing":"auto","date_time":{"type":0},
       "filters":{"attributes":["edge.length","edge.speed","edge.begin_shape_index",
-      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed"],
+      "edge.end_shape_index","shape","shape_attributes.length","shape_attributes.time","shape_attributes.speed",
+      "shape_attributes.freeflow","shape_attributes.constrained","shape_attributes.historical","shape_attributes.realtime"],
       "action":"include"}})",
             nullptr, &api);
 

@@ -65,6 +65,7 @@ void DirectedEdge::set_endnode(const GraphId& endnode) {
 
 // Sets the free flow speed in KPH.
 void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
+  // TODO: remove this cap
   if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Free flow speed: " + std::to_string(speed));
     free_flow_speed_ = kMaxAssumedSpeed;
@@ -75,6 +76,7 @@ void DirectedEdge::set_free_flow_speed(const uint32_t speed) {
 
 // Sets the constrained flow speed in KPH.
 void DirectedEdge::set_constrained_flow_speed(const uint32_t speed) {
+  // TODO: remove this cap
   if (speed > kMaxAssumedSpeed) {
     LOG_WARN("Exceeding maximum.  Constrained flow speed: " + std::to_string(speed));
     constrained_flow_speed_ = kMaxAssumedSpeed;
