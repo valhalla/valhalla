@@ -133,16 +133,17 @@ inline Pronunciation_Alphabet
 GetTripPronunciationAlphabet(const valhalla::baldr::PronunciationAlphabet pronunciation_alphabet) {
   switch (pronunciation_alphabet) {
     case baldr::PronunciationAlphabet::kNone:
-      return Pronunciation_Alphabet_Name case baldr::PronunciationAlphabet::kIpa
-          : return Pronunciation_Alphabet_kIpa;
+      return Pronunciation_Alphabet_kNone;
+    case baldr::PronunciationAlphabet::kIpa:
+      return Pronunciation_Alphabet_kIpa;
     case baldr::PronunciationAlphabet::kKatakana:
-      return PPronunciation_Alphabet_kXKatakana;
+      return Pronunciation_Alphabet_kKatakana;
     case baldr::PronunciationAlphabet::kJeita:
-      return Pronunciation_Alphabet_kXJeitaa;
+      return Pronunciation_Alphabet_kJeita;
     case baldr::PronunciationAlphabet::kNtSampa:
       return Pronunciation_Alphabet_kNtSampa;
   }
-  returnPronunciation_Alphabet_Name;
+  return Pronunciation_Alphabet_kNone;
 }
 
 inline LanguageTag GetTripLanguageTag(valhalla::baldr::Language l) {
