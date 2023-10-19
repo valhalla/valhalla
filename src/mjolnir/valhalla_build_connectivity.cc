@@ -46,8 +46,6 @@ struct RGB {
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
   try {
     // clang-format off
     cxxopts::Options options(
@@ -64,7 +62,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -76,7 +74,7 @@ int main(int argc, char** argv) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::connectivity_map_t connectivity_map(pt.get_child("mjolnir"));
+  valhalla::baldr::connectivity_map_t connectivity_map(valhalla::config().get_child("mjolnir"));
 
   uint32_t transit_level = TileHierarchy::levels().back().level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {
