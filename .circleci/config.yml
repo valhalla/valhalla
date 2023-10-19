@@ -20,22 +20,23 @@ commands:
   linux_lint_deps:
     steps:
       - run: |
+            echo 'export PIP_BREAK_SYSTEM_PACKAGES=1' >> "$BASH_ENV"
             apt-get update --assume-yes
             env DEBIAN_FRONTEND=noninteractive apt install sudo --yes --quiet
             env DEBIAN_FRONTEND=noninteractive sudo apt-get install --yes --quiet python3-pip git     curl
   check_ci_lint:
     steps:
       - run: |
-            python3 -m pip install requests
+            sudo python3 -m pip install requests
             if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
                 echo "Changes in last commit do not need CI. Skipping step"
                 circleci-agent step halt
             fi
-            python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
+            sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
 
 jobs:
   lint-build-debug:
-    machine:
+    docker:
       image: ubuntu:23.04
     resource_class: xlarge
     steps:
@@ -79,7 +80,7 @@ jobs:
       - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
-    machine:
+    docker:
       image: ubuntu:23.04
     resource_class: xlarge
     steps:
