@@ -403,7 +403,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
 
   // Preference to use tunnel roads. Sets a tunnel
-  // factor. A tunnel factor of 0 would indicate no adjustment to weighting for tunnel roads.
+  // factor. A tunnel factor of 0.5 would indicate no adjustment to weighting for tunnel roads.
   // use_tunnel = 1 would reduce weighting slightly (a negative delta) while
   // use_tunnel = 0 would penalize (positive delta to weighting factor).
   float use_tunnels = costing_options.use_tunnels();
