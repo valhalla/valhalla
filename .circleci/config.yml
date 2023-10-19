@@ -94,7 +94,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
-            -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+            -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON -DBENCHMARK_ENABLE_WERROR=Off
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
@@ -127,7 +127,7 @@ jobs:
       - run: |
           mkdir build
           cd build
-          cmake .. -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
+          cmake .. -DBENCHMARK_ENABLE_WERROR=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)"
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
