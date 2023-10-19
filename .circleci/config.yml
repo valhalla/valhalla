@@ -127,7 +127,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DCPACK_GENERATOR=DEB \
-            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DBENCHMARK_ENABLE_WERROR=Off -DENABLE_SINGLE_FILES_WERROR=Of
+            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DBENCHMARK_ENABLE_WERROR=Off -DENABLE_SINGLE_FILES_WERROR=Off
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
