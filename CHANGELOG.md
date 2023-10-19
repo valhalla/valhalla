@@ -8,6 +8,7 @@
    * FIXED: missing protobuf CMake configuration to link abseil for protobuf >= 3.22.0 [#4207](https://github.com/valhalla/valhalla/pull/4207)
    * FIXED: broken links on the optimized route API page [#4260](https://github.com/valhalla/valhalla/pull/4260)
    * FIXED: remove clearing of headings while calculating a matrix [#4288](https://github.com/valhalla/valhalla/pull/4288)
+   * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
    * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
