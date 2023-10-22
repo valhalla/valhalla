@@ -649,9 +649,6 @@ public:
       flow_sources = &temp_sources;
     *flow_sources = kNoFlowMask;
 
-    // TODO(danpat): for short-ish durations along the route, we should fade live
-    //               speeds into any historic/predictive/average value we'd normally use
-
     constexpr double LIVE_SPEED_FADE = 1. / 3600.;
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
@@ -755,6 +752,18 @@ public:
   inline const volatile TrafficSpeed& trafficspeed(const DirectedEdge* de) const {
     auto directed_edge_index = std::distance(const_cast<const DirectedEdge*>(directededges_), de);
     return traffic_tile.trafficspeed(directed_edge_index);
+  }
+
+  /**
+   * Returns the historical/predicted speed for the edge at the given time of the week
+   * @param de  the directed edge
+   * @param s   the ordinal second of the week
+   * @return a value between 0 and 140 kph if valid, 255 otherwise
+   */
+  inline uint8_t predictedspeed(const DirectedEdge* de, uint32_t s) const {
+    if (de->has_predicted_speed())
+      return predictedspeeds_.speed(de - directededges_, s);
+    return midgard::invalid<uint8_t>();
   }
 
   /**

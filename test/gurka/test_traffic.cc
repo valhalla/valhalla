@@ -198,6 +198,10 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
   }
 
   // then we add one portion of the edge having traffic
@@ -263,6 +267,10 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
     EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0]));
     auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 127 / 255.0);
@@ -340,6 +348,10 @@ TEST(Traffic, CutGeoms) {
     EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
     EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+    EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
     {
       auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
@@ -425,6 +437,10 @@ TEST(Traffic, CutGeoms) {
       EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
       EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
       EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
       { EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0])); }
       {
@@ -463,6 +479,10 @@ TEST(Traffic, CutGeoms) {
       EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
       EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
       EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+      EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
       EXPECT_TRUE(map.nodes["1"].ApproximatelyEqual(shapes[0]));
       {
         auto b1 = map.nodes["C"].PointAlongSegment(map.nodes["E"], 100 / 255.0);
@@ -547,6 +567,10 @@ TEST(Traffic, CutGeoms) {
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
         EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0]));
         {
@@ -587,6 +611,10 @@ TEST(Traffic, CutGeoms) {
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
         { EXPECT_TRUE(map.nodes["1"].ApproximatelyEqual(shapes[0])); }
         {
@@ -625,6 +653,10 @@ TEST(Traffic, CutGeoms) {
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
         EXPECT_TRUE(map.nodes["F"].ApproximatelyEqual(shapes[0]));
         {
@@ -689,6 +721,10 @@ TEST(Traffic, CutGeoms) {
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
         EXPECT_TRUE(map.nodes["2"].ApproximatelyEqual(shapes[0]));
         {
@@ -793,6 +829,10 @@ TEST(Traffic, CutGeoms) {
         EXPECT_EQ(leg.shape_attributes().time_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().length_size(), shapes.size() - 1);
         EXPECT_EQ(leg.shape_attributes().speed_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().freeflow_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().constrained_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().historical_size(), shapes.size() - 1);
+        EXPECT_EQ(leg.shape_attributes().realtime_size(), shapes.size() - 1);
 
         EXPECT_TRUE(map.nodes["C"].ApproximatelyEqual(shapes[0]));
         {

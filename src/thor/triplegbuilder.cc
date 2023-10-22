@@ -316,25 +316,22 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed()->Reserve(leg.shape_attributes().speed_size() +
                                                              shape.size() + cuts.size());
   }
-  auto freeflow = (edge->free_flow_speed() * kDecimeterPerMeter) + 0.5;
   if (controller(kShapeAttributesFreeflow)) {
     leg.mutable_shape_attributes()->mutable_freeflow()->Reserve(leg.shape_attributes().freeflow_size() +
                                                              shape.size() + cuts.size());
   }
-  auto constrained = (edge->constrained_flow_speed() * kDecimeterPerMeter) + 0.5;
   if (controller(kShapeAttributesConstrained)) {
     leg.mutable_shape_attributes()->mutable_constrained()->Reserve(leg.shape_attributes().constrained_size() +
                                                              shape.size() + cuts.size());
   }
-  double historical = 0.;
+  uint8_t historical = midgard::invalid<uint8_t>();
   if (controller(kShapeAttributesHistorical)) {
-    // TODO: set historical speed using timeinfo
+    historical = tile->predictedspeed(edge, time_info.second_of_week);
     leg.mutable_shape_attributes()->mutable_historical()->Reserve(leg.shape_attributes().historical_size() +
                                                              shape.size() + cuts.size());
   }
-  double realtime = 0.;
+  const volatile TrafficSpeed& realtime = tile->trafficspeed(edge);
   if (controller(kShapeAttributesRealtime)) {
-    // TODO: set current real time
     leg.mutable_shape_attributes()->mutable_realtime()->Reserve(leg.shape_attributes().realtime_size() +
                                                              shape.size() + cuts.size());
   }
@@ -408,22 +405,22 @@ void SetShapeAttributes(const AttributesController& controller,
 
     // Set shape attributes speed per shape point if requested
     if (controller(kShapeAttributesFreeflow)) {
-      leg.mutable_shape_attributes()->add_speed(freeflow);
+      leg.mutable_shape_attributes()->add_freeflow(edge->free_flow_speed());
     }
 
     // Set shape attributes speed per shape point if requested
     if (controller(kShapeAttributesConstrained)) {
-      leg.mutable_shape_attributes()->add_speed(constrained);
+      leg.mutable_shape_attributes()->add_constrained(edge->constrained_flow_speed());
     }
 
     // Set shape attributes speed per shape point if requested
     if (controller(kShapeAttributesHistorical)) {
-      leg.mutable_shape_attributes()->add_speed(historical);
+      leg.mutable_shape_attributes()->add_historical(historical);
     }
 
     // Set shape attributes speed per shape point if requested
     if (controller(kShapeAttributesRealtime)) {
-      leg.mutable_shape_attributes()->add_speed(realtime);
+      leg.mutable_shape_attributes()->add_realtime(realtime.get_overall_speed());
     }
 
     // Set the maxspeed if requested
