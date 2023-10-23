@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/midgard/util.h>
 
 namespace valhalla {
 namespace baldr {
@@ -96,26 +97,12 @@ inline LandmarkType string_to_landmark_type(const std::string& s) {
   return it->second;
 }
 
-inline uint64_t encode_lnglat(double lng, double lat) {
-  return (((uint64_t(lng * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
-         ((uint64_t(lat * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
-}
-
-inline std::pair<double, double> decode_lnglat(uint64_t location) {
-  double lng = (int64_t((location >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7;
-  double lat = (int64_t(location & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7;
-
-  return std::make_pair(lng, lat);
-}
-
 struct Landmark {
   int64_t id;
   std::string name;
   LandmarkType type;
   double lng;
   double lat;
-
-  std::string to_str() const;
 
   Landmark(const int64_t id,
            const std::string name,
@@ -132,52 +119,41 @@ struct Landmark {
    *
    * @param str The string to be converted.
    */
-  Landmark(const std::string& str) {
-    // ensure that the string has the minimum expected size to represent a Landmark
-    if (str.size() < 9) {
+  Landmark(const std::string& str) : id(0) {
+    // needs at least 8 bytes for ll, 1 for type and 1 for the name
+    if (str.size() < 10) {
       throw std::runtime_error("Invalid Landmark string: too short");
     }
+    name = str.substr(9);
 
-    // ensure the first byte is a valid LandmarkType
-    uint8_t uint_type = static_cast<uint8_t>(str[0]);
-    if (uint_type >= LandmarkTypeFirstValue && uint_type <= LandmarkTypeLastValue) {
-      type = static_cast<LandmarkType>(uint_type);
-    } else {
+    // and that the type is valid
+    if (str[8] < LandmarkTypeFirstValue || str[8] > LandmarkTypeLastValue) {
       throw std::logic_error("Invalid landmark type");
     }
+    type = static_cast<LandmarkType>(str[8]);
 
-    id = 0; // fake id
+    // extract the ll
+    uint64_t ll = midgard::unaligned_read<uint64_t>(static_cast<const void*>(str.data()));
+    lat = ((ll >> 32) & ((1ull << 31) - 1)) / static_cast<double>(1e7) - 90;
+    lng = (ll & ((1ull << 32) - 1)) / static_cast<double>(1e7) - 180;
+  }
 
-    // extract the location (next 8 bytes) - lng and lat
-    uint64_t location = 0;
-    std::memcpy(&location, str.data() + 1, 8);
-
-    auto lnglat = decode_lnglat(location);
-    lng = lnglat.first;
-    lat = lnglat.second;
-
-    // extract the name (rest of the string after the first 9 bytes)
-    name = str.substr(9);
+  /**
+   * Convert a Landmark object to a string.
+   * The string consists of 1 byte of kLandmark tag, 1 byte of landmark type,
+   * 8 bytes of location (lng and lat) and some bytes for landmark name at last.
+   *
+   * @param landmark The Landmark object to be converted.
+   */
+  std::string to_str() const {
+    // lon,lat stuffed into 63 bits at 7digit precision
+    uint64_t ll = uint64_t((lng + 180) * 1e7 + .5) | (uint64_t((lat + 90) * 1e7 + .5) << 32);
+    std::string value(static_cast<const char*>(static_cast<void*>(&ll)), sizeof(ll));
+    value.push_back(static_cast<std::string::value_type>(type));
+    value += name;
+    return value;
   }
 };
-
-/**
- * Convert a Landmark object to a string.
- * The string consists of 1 byte of kLandmark tag, 1 byte of landmark type,
- * 8 bytes of location (lng and lat) and some bytes for landmark name at last.
- *
- * @param landmark The Landmark object to be converted.
- */
-inline std::string Landmark::to_str() const {
-  std::string tagged_value(1, static_cast<char>(baldr::TaggedValue::kLandmark));
-  tagged_value.push_back(static_cast<std::string::value_type>(type));
-
-  uint64_t location = encode_lnglat(lng, lat);
-  tagged_value += std::string(static_cast<const char*>(static_cast<void*>(&location)), 8);
-  tagged_value += name;
-
-  return tagged_value;
-}
 
 } // namespace baldr
 } // namespace valhalla

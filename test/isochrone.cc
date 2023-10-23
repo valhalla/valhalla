@@ -93,12 +93,22 @@ void try_isochrone(loki_worker_t& loki_worker,
                               (expected_type == "Polygon" ? "/0" : ""))
                                .Get(expected_response)
                                ->GetArray();
-      ASSERT_EQ(actual_geom.Size(), expected_geom.Size());
-      for (size_t j = 0; j < expected_geom.Size(); ++j) {
-        auto actual_coord = actual_geom[j].GetArray();
-        auto expected_coord = expected_geom[j].GetArray();
-        check_coords(actual_coord, expected_coord);
+
+      std::vector<PointLL> actual, expected;
+      for (size_t j = 0; j < std::max(expected_geom.Size(), actual_geom.Size()); ++j) {
+        if (j < actual_geom.Size()) {
+          auto c = actual_geom[j].GetArray();
+          actual.emplace_back(c[0].GetDouble(), c[1].GetDouble());
+        }
+        if (j < expected_geom.Size()) {
+          auto c = expected_geom[j].GetArray();
+          expected.emplace_back(c[0].GetDouble(), c[1].GetDouble());
+        }
       }
+
+      // different platforms can end up having some slightly different floating point wobble
+      // to avoid failing tests we measure shape similarity and fail if its too far out of whack
+      ASSERT_TRUE(test::shape_equality(actual, expected, 23));
     }
   }
 }

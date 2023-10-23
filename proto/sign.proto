@@ -8,6 +8,7 @@ message TripSignElement {
   bool is_route_number = 2;        // true if sign element is a reference route number such as: I 81 South or US 322 West
   uint32 consecutive_count = 3;    // The frequency of this sign element within a set a consecutive signs
   Pronunciation pronunciation = 4; // The pronunciation associated with this sign element
+  LanguageTag language_tag = 5;
 }
 
 message TripSign {
