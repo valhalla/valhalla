@@ -316,24 +316,26 @@ void SetShapeAttributes(const AttributesController& controller,
     leg.mutable_shape_attributes()->mutable_speed()->Reserve(leg.shape_attributes().speed_size() +
                                                              shape.size() + cuts.size());
   }
-  if (controller(kShapeAttributesFreeflow)) {
-    leg.mutable_shape_attributes()->mutable_freeflow()->Reserve(leg.shape_attributes().freeflow_size() +
-                                                             shape.size() + cuts.size());
+  if (controller(kShapeAttributesFreeflowSpeed)) {
+    leg.mutable_shape_attributes()->mutable_freeflow_speed()->Reserve(
+        leg.shape_attributes().freeflow_speed_size() + shape.size() + cuts.size());
   }
-  if (controller(kShapeAttributesConstrained)) {
-    leg.mutable_shape_attributes()->mutable_constrained()->Reserve(leg.shape_attributes().constrained_size() +
-                                                             shape.size() + cuts.size());
+  if (controller(kShapeAttributesConstrainedSpeed)) {
+    leg.mutable_shape_attributes()->mutable_constrained_speed()->Reserve(
+        leg.shape_attributes().constrained_speed_size() + shape.size() + cuts.size());
   }
-  uint8_t historical = midgard::invalid<uint8_t>();
-  if (controller(kShapeAttributesHistorical)) {
-    historical = tile->predictedspeed(edge, time_info.second_of_week);
-    leg.mutable_shape_attributes()->mutable_historical()->Reserve(leg.shape_attributes().historical_size() +
-                                                             shape.size() + cuts.size());
+  uint8_t predicted = midgard::invalid<uint8_t>();
+  if (controller(kShapeAttributesPredictedSpeed)) {
+    // TODO: why do we need to mod with seconds of week, timeinfo should track this...
+    predicted =
+        tile->predictedspeed(edge, time_info.second_of_week % valhalla::midgard::kSecondsPerWeek);
+    leg.mutable_shape_attributes()->mutable_predicted_speed()->Reserve(
+        leg.shape_attributes().predicted_speed_size() + shape.size() + cuts.size());
   }
-  const volatile TrafficSpeed& realtime = tile->trafficspeed(edge);
-  if (controller(kShapeAttributesRealtime)) {
-    leg.mutable_shape_attributes()->mutable_realtime()->Reserve(leg.shape_attributes().realtime_size() +
-                                                             shape.size() + cuts.size());
+  const volatile TrafficSpeed& current = tile->trafficspeed(edge);
+  if (controller(kShapeAttributesCurrentSpeed)) {
+    leg.mutable_shape_attributes()->mutable_current_speed()->Reserve(
+        leg.shape_attributes().current_speed_size() + shape.size() + cuts.size());
   }
   if (controller(kShapeAttributesSpeedLimit)) {
     leg.mutable_shape_attributes()->mutable_speed_limit()->Reserve(
@@ -404,23 +406,23 @@ void SetShapeAttributes(const AttributesController& controller,
     }
 
     // Set shape attributes speed per shape point if requested
-    if (controller(kShapeAttributesFreeflow)) {
-      leg.mutable_shape_attributes()->add_freeflow(edge->free_flow_speed());
+    if (controller(kShapeAttributesFreeflowSpeed)) {
+      leg.mutable_shape_attributes()->add_freeflow_speed(edge->free_flow_speed());
     }
 
     // Set shape attributes speed per shape point if requested
-    if (controller(kShapeAttributesConstrained)) {
-      leg.mutable_shape_attributes()->add_constrained(edge->constrained_flow_speed());
+    if (controller(kShapeAttributesConstrainedSpeed)) {
+      leg.mutable_shape_attributes()->add_constrained_speed(edge->constrained_flow_speed());
     }
 
     // Set shape attributes speed per shape point if requested
-    if (controller(kShapeAttributesHistorical)) {
-      leg.mutable_shape_attributes()->add_historical(historical);
+    if (controller(kShapeAttributesPredictedSpeed)) {
+      leg.mutable_shape_attributes()->add_predicted_speed(predicted);
     }
 
     // Set shape attributes speed per shape point if requested
-    if (controller(kShapeAttributesRealtime)) {
-      leg.mutable_shape_attributes()->add_realtime(realtime.get_overall_speed());
+    if (controller(kShapeAttributesCurrentSpeed)) {
+      leg.mutable_shape_attributes()->add_current_speed(current.get_overall_speed());
     }
 
     // Set the maxspeed if requested

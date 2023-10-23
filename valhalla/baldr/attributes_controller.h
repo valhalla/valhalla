@@ -142,10 +142,10 @@ const std::string kRawScore = "raw_score";
 const std::string kShapeAttributesTime = "shape_attributes.time";
 const std::string kShapeAttributesLength = "shape_attributes.length";
 const std::string kShapeAttributesSpeed = "shape_attributes.speed";
-const std::string kShapeAttributesFreeflow = "shape_attributes.freeflow";
-const std::string kShapeAttributesConstrained = "shape_attributes.constrained";
-const std::string kShapeAttributesHistorical = "shape_attributes.historical";
-const std::string kShapeAttributesRealtime = "shape_attributes.realtime";
+const std::string kShapeAttributesFreeflowSpeed = "shape_attributes.freeflow_speed";
+const std::string kShapeAttributesConstrainedSpeed = "shape_attributes.constrained_speed";
+const std::string kShapeAttributesPredictedSpeed = "shape_attributes.predicted_speed";
+const std::string kShapeAttributesCurrentSpeed = "shape_attributes.current_speed";
 const std::string kShapeAttributesSpeedLimit = "shape_attributes.speed_limit";
 const std::string kShapeAttributesClosure = "shape_attributes.closure";
 

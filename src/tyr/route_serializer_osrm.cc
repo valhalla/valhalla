@@ -365,6 +365,58 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
     attributes_map->emplace("speed", speeds_array);
   }
 
+  if (trip_leg.shape_attributes().freeflow_speed_size() > 0) {
+    auto freeflow_array = json::array({});
+    freeflow_array->reserve(trip_leg.shape_attributes().freeflow_speed_size());
+    for (const auto& speed : trip_leg.shape_attributes().freeflow_speed()) {
+      // k/h to to m/s
+      if (speed)
+        freeflow_array->push_back(json::fixed_t{speed * kKPHtoMetersPerSec, 0});
+      else
+        freeflow_array->push_back(nullptr);
+    }
+    attributes_map->emplace("freeflow_speed", freeflow_array);
+  }
+
+  if (trip_leg.shape_attributes().constrained_speed_size() > 0) {
+    auto constrained_array = json::array({});
+    constrained_array->reserve(trip_leg.shape_attributes().constrained_speed_size());
+    for (const auto& speed : trip_leg.shape_attributes().constrained_speed()) {
+      // k/h to to m/s
+      if (speed)
+        constrained_array->push_back(json::fixed_t{speed * kKPHtoMetersPerSec, 0});
+      else
+        constrained_array->push_back(nullptr);
+    }
+    attributes_map->emplace("constrained_speed", constrained_array);
+  }
+
+  if (trip_leg.shape_attributes().predicted_speed_size() > 0) {
+    auto predicted_array = json::array({});
+    predicted_array->reserve(trip_leg.shape_attributes().predicted_speed_size());
+    for (const auto& speed : trip_leg.shape_attributes().predicted_speed()) {
+      // k/h to to m/s
+      if (midgard::is_invalid<uint8_t>(speed))
+        predicted_array->push_back(nullptr);
+      else
+        predicted_array->push_back(json::fixed_t{speed * kKPHtoMetersPerSec, 0});
+    }
+    attributes_map->emplace("predicted_speed", predicted_array);
+  }
+
+  if (trip_leg.shape_attributes().current_speed_size() > 0) {
+    auto current_array = json::array({});
+    current_array->reserve(trip_leg.shape_attributes().current_speed_size());
+    for (const auto& speed : trip_leg.shape_attributes().current_speed()) {
+      // k/h to to m/s
+      if (speed == UNKNOWN_TRAFFIC_SPEED_KPH)
+        current_array->push_back(nullptr);
+      else
+        current_array->push_back(json::fixed_t{speed * kKPHtoMetersPerSec, 0});
+    }
+    attributes_map->emplace("current_speed", current_array);
+  }
+
   if (trip_leg.shape_attributes().speed_limit_size() > 0) {
     auto speed_limits_array = json::array({});
     speed_limits_array->reserve(trip_leg.shape_attributes().speed_limit_size());
