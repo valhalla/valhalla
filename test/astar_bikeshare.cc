@@ -84,7 +84,8 @@ void test_request(const std::string& request,
 
   for (const auto& d : directions) {
     if (expected_shape) {
-      EXPECT_EQ(d.shape(), *expected_shape) << "The shape is incorrect";
+      EXPECT_TRUE(test::encoded_shape_equality(d.shape(), *expected_shape))
+          << "The shape is incorrect";
     }
     size_t idx = -1;
     for (const auto& m : d.maneuver()) {

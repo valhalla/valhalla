@@ -365,7 +365,6 @@ GraphId GetGraphId(Transit& transit, const std::string& onestop_id) {
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
   double o_lng, o_lat, d_lng, d_lat;
   std::string o_onestop_id, d_onestop_id, time;
   int tripid;
@@ -392,7 +391,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng"}) {
@@ -413,7 +412,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Read config");
 
   // Bail if no transit dir
-  auto transit_dir = pt.get_optional<std::string>("mjolnir.transit_dir");
+  auto transit_dir = valhalla::config().get_optional<std::string>("mjolnir.transit_dir");
   if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found.");
     return 0;
