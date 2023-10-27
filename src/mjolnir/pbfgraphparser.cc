@@ -2387,10 +2387,12 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
-              boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
+          if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
+          } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
+            mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
+                    kHOVAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
