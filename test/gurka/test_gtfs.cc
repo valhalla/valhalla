@@ -932,9 +932,9 @@ TEST(GtfsExample, route_trip1) {
   req_time.replace(req_time.find('T') + 1, 5, "07:00-");
 
   auto dep_time = transit_info.transit_stops(0).departure_date_time();
-  dep_time.erase(dep_time.rfind("-") + 1);
+  dep_time.erase(dep_time.rfind('-') + 1);
   std::string dep_time_json = ti_json["transit_stops"][0]["departure_date_time"].GetString();
-  dep_time_json.erase(dep_time_json.rfind("-") + 1);
+  dep_time_json.erase(dep_time_json.rfind('-') + 1);
 
   EXPECT_EQ(dep_time, req_time);
   EXPECT_EQ(dep_time_json, req_time);
@@ -943,9 +943,9 @@ TEST(GtfsExample, route_trip1) {
   req_time.replace(req_time.find('T') + 1, 6, "07:06-");
 
   auto arr_time = transit_info.transit_stops(2).arrival_date_time();
-  arr_time.erase(arr_time.rfind("-") + 1);
+  arr_time.erase(arr_time.rfind('-') + 1);
   std::string arr_time_json = ti_json["transit_stops"][2]["arrival_date_time"].GetString();
-  arr_time_json.erase(arr_time_json.rfind("-") + 1);
+  arr_time_json.erase(arr_time_json.rfind('-') + 1);
 
   EXPECT_EQ(arr_time_json, req_time);
   EXPECT_EQ(arr_time, req_time);
