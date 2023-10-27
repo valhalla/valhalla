@@ -584,7 +584,7 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::Init(const midgard::Poin
     astarheuristic_.Init(origll, costing_->AStarCostFactor());
     mincost = astarheuristic_.Get(destll);
   }
-  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCountAstar));
+  edgelabels_.reserve(max_reserved_labels_count_);
 
   // Construct adjacency list, clear edge status.
   // Set bucket size and cost range based on DynamicCost.

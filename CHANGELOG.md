@@ -38,6 +38,7 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
+   * CHANGED: memory utilization by the matrix endpoint to avoid (de-)allocations [#4362](https://github.com/valhalla/valhalla/pull/4334)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

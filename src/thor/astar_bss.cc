@@ -30,8 +30,7 @@ AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
-      travel_type_(0) {
+      mode_(travel_mode_t::kDrive), travel_type_(0) {
 }
 
 // Destructor
@@ -287,11 +286,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
       (*interrupt)();
     }
     total_labels = current_labels;
-
-    // Abort if max label count is exceeded
-    if (total_labels > max_label_count_) {
-      return {};
-    }
 
     // Get next element from adjacency list. Check that it is valid. An
     // invalid label indicates there are no edges that can be expanded.
