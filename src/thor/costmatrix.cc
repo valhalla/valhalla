@@ -49,7 +49,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
       current_cost_threshold_(0), targets_{new TargetMap},
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
-                                                      kInitialEdgeLabelCountBidirDijkstra)) {
+                                                      kInitialEdgeLabelCountBidirDijkstra)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 CostMatrix::~CostMatrix() {
@@ -78,40 +79,33 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void CostMatrix::clear() {
-  // Clear the target edge markings
-  for (auto& iter : *targets_) {
-    iter.second.clear();
-    iter.second.resize(0);
-    iter.second.shrink_to_fit();
+  auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
+  for (auto& iter : source_edgelabel_) {
+    if (iter.size() > reservation) {
+      iter.clear();
+      iter.resize(reservation);
+      iter.shrink_to_fit();
+    }
+  }
+  for (auto& iter : target_edgelabel_) {
+    if (iter.size() > reservation) {
+      iter.clear();
+      iter.resize(reservation);
+      iter.shrink_to_fit();
+    }
+  }
+
+  for (auto& iter : source_adjacency_) {
+    iter.clear();
+  }
+  for (auto& iter : target_adjacency_) {
+    iter.clear();
   }
   targets_->clear();
-
-  // Clear all source adjacency lists, edge labels, and edge status
-  // Resize and shrink_to_fit so all capacity is reduced.
-  source_adjacency_.clear();
-  source_adjacency_.resize(0);
-  source_adjacency_.shrink_to_fit();
-  target_adjacency_.clear();
-  target_adjacency_.resize(0);
-  target_adjacency_.shrink_to_fit();
-  source_edgelabel_.clear();
-  source_edgelabel_.resize(0);
-  source_edgelabel_.shrink_to_fit();
-  target_edgelabel_.clear();
-  target_edgelabel_.resize(0);
-  target_edgelabel_.shrink_to_fit();
   source_edgestatus_.clear();
-  source_edgestatus_.resize(0);
-  source_edgestatus_.shrink_to_fit();
   target_edgestatus_.clear();
-  target_edgestatus_.resize(0);
-  target_edgestatus_.shrink_to_fit();
   source_hierarchy_limits_.clear();
-  source_hierarchy_limits_.resize(0);
-  source_hierarchy_limits_.shrink_to_fit();
   target_hierarchy_limits_.clear();
-  target_hierarchy_limits_.resize(0);
-  target_hierarchy_limits_.shrink_to_fit();
   source_status_.clear();
   target_status_.clear();
   best_connection_.clear();
@@ -228,10 +222,6 @@ void CostMatrix::SourceToTarget(Api& request,
     n++;
   }
 
-  if (has_time) {
-    RecostPaths(graphreader, source_location_list, target_location_list, time_infos, invariant);
-  }
-
   // Form the matrix PBF output
   uint32_t count = 0;
   valhalla::Matrix& matrix = *request.mutable_matrix();
@@ -262,6 +252,8 @@ void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
   source_count_ = source_locations.size();
   target_count_ = target_locations.size();
+
+  targets_->reserve(kInitialEdgeLabelCountBidirDijkstra);
 
   // Add initial sources status
   source_status_.reserve(source_count_);

@@ -107,8 +107,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_forward_.reserve(kInitialEdgeLabelCountBidirAstar);
-  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBidirAstar);
+  edgelabels_forward_.reserve(max_reserved_labels_count_);
+  edgelabels_reverse_.reserve(max_reserved_labels_count_);
 
   // Construct adjacency list and initialize edge status lookup.
   // Set bucket size and cost range based on DynamicCost.

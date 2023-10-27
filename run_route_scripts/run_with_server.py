@@ -3,6 +3,7 @@ import argparse
 import multiprocessing
 import requests
 import json
+from pathlib import Path
 import os
 import shutil
 import datetime
@@ -59,11 +60,13 @@ def make_request(post_body):
 
       # summary json
       elif args.format == 'json':
-        out = {'routes':[{'legs':[]}]}
-        for leg in response['trip']['legs']:
-          out['routes'][-1]['legs'].append({'maneuvers':[]})
-          for man in leg['maneuvers']:
-            out['routes'][-1]['legs'][-1]['maneuvers'].append({'length': man['length'], 'time': man['time'], 'instruction': man['instruction']})
+        out = dict()
+        if args.url.endswith("route"):
+          out['routes'] = [{'legs':[]}]
+          for leg in response['trip']['legs']:
+            out['routes'][-1]['legs'].append({'maneuvers':[]})
+            for man in leg['maneuvers']:
+              out['routes'][-1]['legs'][-1]['maneuvers'].append({'length': man['length'], 'time': man['time'], 'instruction': man['instruction']})
         out['performance'] = {'response_time': elapsed}
         f.write('%s' % json.dumps(out, sort_keys=True, indent=2))
 
@@ -120,3 +123,13 @@ if __name__ == "__main__":
         progress = int(next_progress / increment)
     if progress != 100 / increment:
       print('100%')
+
+    # print total duration
+    if parsed_args.format == "json":
+      output_dir_path = Path(parsed_args.output_dir)
+      duration = 0
+      for out_f in output_dir_path.iterdir():
+        if out_f.is_file() and out_f.suffix == ".json":
+          with open(out_f) as f:
+            duration += json.load(f)["performance"]["response_time"]
+      print(f"Run took {duration} seconds")
