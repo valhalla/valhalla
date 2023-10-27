@@ -279,7 +279,7 @@ void CostMatrix::Initialize(
   // Add initial sources status
   source_status_.reserve(source_count_);
   source_hierarchy_limits_.reserve(source_count_);
-  source_adjacency_.resize(source_count_);
+  source_adjacency_.reserve(source_count_);
   source_edgestatus_.resize(source_count_);
   source_edgelabel_.resize(source_count_);
   for (uint32_t i = 0; i < source_count_; i++) {
@@ -295,7 +295,7 @@ void CostMatrix::Initialize(
   // Add initial targets status
   target_status_.reserve(target_count_);
   target_hierarchy_limits_.reserve(target_count_);
-  target_adjacency_.resize(target_count_);
+  target_adjacency_.reserve(target_count_);
   target_edgestatus_.resize(target_count_);
   target_edgelabel_.resize(target_count_);
   for (uint32_t i = 0; i < target_count_; i++) {
