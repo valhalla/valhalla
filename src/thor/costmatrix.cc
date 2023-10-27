@@ -16,6 +16,7 @@ namespace {
 
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
+constexpr uint32_t kMaxLocationCache = 20;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -79,6 +80,24 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // Clear the temporary information generated during time + distance matrix
 // construction.
 void CostMatrix::clear() {
+  // resize all relevant structures down to 20 locations
+  if (source_count_ > kMaxLocationCache) {
+    source_edgelabel_.resize(kMaxLocationCache);
+    source_edgelabel_.shrink_to_fit();
+    source_adjacency_.resize(kMaxLocationCache);
+    source_adjacency_.shrink_to_fit();
+    source_edgestatus_.resize(kMaxLocationCache);
+    source_edgestatus_.shrink_to_fit();
+  }
+  if (target_count_ > kMaxLocationCache) {
+    target_edgelabel_.resize(kMaxLocationCache);
+    target_edgelabel_.shrink_to_fit();
+    target_adjacency_.resize(kMaxLocationCache);
+    target_adjacency_.shrink_to_fit();
+    target_edgestatus_.resize(kMaxLocationCache);
+    target_edgestatus_.shrink_to_fit();
+  }
+
   auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
   for (auto& iter : source_edgelabel_) {
     if (iter.size() > reservation) {
@@ -102,8 +121,6 @@ void CostMatrix::clear() {
     iter.clear();
   }
   targets_->clear();
-  source_edgestatus_.clear();
-  target_edgestatus_.clear();
   source_hierarchy_limits_.clear();
   target_hierarchy_limits_.clear();
   source_status_.clear();
@@ -222,6 +239,10 @@ void CostMatrix::SourceToTarget(Api& request,
     n++;
   }
 
+  if (has_time) {
+    RecostPaths(graphreader, source_location_list, target_location_list, time_infos, invariant);
+  }
+
   // Form the matrix PBF output
   uint32_t count = 0;
   valhalla::Matrix& matrix = *request.mutable_matrix();
@@ -253,21 +274,20 @@ void CostMatrix::Initialize(
   source_count_ = source_locations.size();
   target_count_ = target_locations.size();
 
-  targets_->reserve(kInitialEdgeLabelCountBidirDijkstra);
+  targets_->reserve(max_reserved_labels_count_);
 
   // Add initial sources status
   source_status_.reserve(source_count_);
   source_hierarchy_limits_.reserve(source_count_);
-  source_adjacency_.reserve(source_count_);
+  source_adjacency_.resize(source_count_);
   source_edgestatus_.resize(source_count_);
   source_edgelabel_.resize(source_count_);
   for (uint32_t i = 0; i < source_count_; i++) {
     // Allocate the adjacency list and hierarchy limits for this source.
     // Use the cost threshold to size the adjacency list.
     source_edgelabel_[i].reserve(max_reserved_labels_count_);
-    source_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                  costing_->UnitSize(),
-                                                                  &source_edgelabel_[i]));
+    source_adjacency_[i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
+                               &source_edgelabel_[i]);
     source_status_.emplace_back(kMaxThreshold);
     source_hierarchy_limits_.emplace_back(costing_->GetHierarchyLimits());
   }
@@ -275,16 +295,15 @@ void CostMatrix::Initialize(
   // Add initial targets status
   target_status_.reserve(target_count_);
   target_hierarchy_limits_.reserve(target_count_);
-  target_adjacency_.reserve(target_count_);
+  target_adjacency_.resize(target_count_);
   target_edgestatus_.resize(target_count_);
   target_edgelabel_.resize(target_count_);
   for (uint32_t i = 0; i < target_count_; i++) {
     // Allocate the adjacency list and hierarchy limits for target location.
     // Use the cost threshold to size the adjacency list.
     target_edgelabel_[i].reserve(max_reserved_labels_count_);
-    target_adjacency_.emplace_back(DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_,
-                                                                  costing_->UnitSize(),
-                                                                  &target_edgelabel_[i]));
+    target_adjacency_[i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
+                               &target_edgelabel_[i]);
     target_status_.emplace_back(kMaxThreshold);
     target_hierarchy_limits_.emplace_back(costing_->GetHierarchyLimits());
   }
