@@ -89,10 +89,9 @@ json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Loca
     if (location.correlation().edges().size() == 0) {
       input_locs->emplace_back(nullptr);
     } else {
-      for (const auto& corr_edge : location.correlation().edges()) {
-        input_locs->emplace_back(json::map({{"lat", json::fixed_t{corr_edge.ll().lat(), 6}},
-                                            {"lon", json::fixed_t{corr_edge.ll().lng(), 6}}}));
-      }
+      auto& corr_ll = location.correlation().edges(0).ll();
+      input_locs->emplace_back(json::map(
+          {{"lat", json::fixed_t{corr_ll.lat(), 6}}, {"lon", json::fixed_t{corr_ll.lng(), 6}}}));
     }
   }
   return input_locs;
