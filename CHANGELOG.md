@@ -37,6 +37,7 @@
    * CHANGED: the boost property tree config is now read into a singleton that doesn't need to be passed around anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
+   * ADDED: `date_times` array to slim matrix response, plus some date_time refactor [#4365](https://github.com/valhalla/valhalla/pull/4365)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
