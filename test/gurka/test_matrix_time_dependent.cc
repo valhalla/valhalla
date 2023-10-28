@@ -49,6 +49,27 @@ void check_matrix(const rapidjson::Document& result,
   const std::string exp_algo = MatrixAlgoToString(matrix_type);
   EXPECT_EQ(algo, exp_algo);
 }
+
+void check_slim_matrix(const rapidjson::Document& result,
+                       const std::vector<float>& exp_dists,
+                       bool valid_traffic,
+                       Matrix::Algorithm matrix_type) {
+  auto distances = result["sources_to_targets"].GetObject()["distances"].GetArray();
+  auto date_times = result["sources_to_targets"].GetObject()["date_times"].GetArray();
+
+  EXPECT_EQ(distances.Size(), date_times.Size());
+
+  for (size_t s = 0; s < distances.Size(); s++) {
+    auto row = distances[s].GetArray();
+    for (size_t t = 0; t < row.Size(); t++) {
+      std::string msg = "Problem at source " + std::to_string(s) + " and target " + std::to_string(t);
+      EXPECT_NEAR(row[t].GetFloat(), exp_dists[s * row.Size() + t], 0.01) << msg;
+      if (valid_traffic) {
+        EXPECT_TRUE(!(date_times[s].GetArray()[t].GetString() == "")) << msg;
+      }
+    }
+  }
+}
 } // namespace
 
 class MatrixTest : public ::testing::Test {
@@ -188,6 +209,14 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
+  res.erase();
+
+  // one for slim matrix
+  options["/verbose"] = "0";
+  result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E", "L"}, "auto", options,
+                            nullptr, &res);
+  res_doc.Parse(res.c_str());
+  check_slim_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, false, Matrix::CostMatrix);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},

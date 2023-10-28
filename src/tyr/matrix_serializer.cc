@@ -12,6 +12,23 @@ using namespace valhalla::thor;
 
 namespace {
 
+json::ArrayPtr serialize_datetime(const valhalla::Matrix& matrix,
+                                  size_t start_td,
+                                  const size_t td_count,
+                                  bool& dt_found) {
+  auto dt = json::array({});
+  for (size_t i = start_td; i < start_td + td_count; ++i) {
+    // no date_time if the connection wasn't found
+    if (!matrix.date_times()[i].empty()) {
+      dt->emplace_back(static_cast<std::string>(matrix.date_times()[i]));
+      dt_found = true;
+    } else {
+      dt->emplace_back(static_cast<std::nullptr_t>(nullptr));
+    }
+  }
+  return dt;
+}
+
 json::ArrayPtr
 serialize_duration(const valhalla::Matrix& matrix, size_t start_td, const size_t td_count) {
   auto time = json::array({});
@@ -149,16 +166,22 @@ std::string serialize(const Api& request, double distance_scale) {
     auto matrix = json::map({});
     auto time = json::array({});
     auto distance = json::array({});
+    auto dt = json::array({});
 
+    bool dt_found = false;
     for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
       time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                             options.targets_size()));
       distance->emplace_back(
           serialize_distance(request.matrix(), source_index * options.targets_size(),
                              options.targets_size(), source_index, 0, distance_scale));
+      dt->emplace_back(serialize_datetime(request.matrix(), source_index * options.targets_size(),
+                                          options.targets_size(), dt_found));
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
+    if (dt_found)
+      matrix->emplace("date_times", dt);
 
     json->emplace("sources_to_targets", matrix);
   }
