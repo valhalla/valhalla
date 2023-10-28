@@ -243,7 +243,7 @@ void CostMatrix::SourceToTarget(Api& request,
     uint32_t origin_idx = count / target_location_list.size();
     float time = connection.cost.secs;
     // no datetime for same locations or unfound connections
-    if (time == kMaxCost) {
+    if (time && time < kMaxCost) {
       auto date_time =
           DateTime::offset_date(source_location_list[origin_idx].date_time(),
                                 time_infos[origin_idx].timezone_index,
