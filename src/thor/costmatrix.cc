@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 
+#include "baldr/datetime.h"
 #include "midgard/logging.h"
 #include "sif/recost.h"
 #include "thor/costmatrix.h"
@@ -233,23 +234,31 @@ void CostMatrix::SourceToTarget(Api& request,
   }
 
   // Form the matrix PBF output
+  graph_tile_ptr tile;
   uint32_t count = 0;
   valhalla::Matrix& matrix = *request.mutable_matrix();
   reserve_pbf_arrays(matrix, best_connection_.size());
   for (const auto& connection : best_connection_) {
     uint32_t target_idx = count % target_location_list.size();
     uint32_t origin_idx = count / target_location_list.size();
-    float time = connection.cost.secs + .5f;
-    auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
-                                   time_infos[origin_idx].timezone_index,
-                                   target_edgelabel_[target_idx].front().edgeid(), graphreader,
-                                   static_cast<uint64_t>(time));
+    float time = connection.cost.secs;
+    // no datetime for same locations or unfound connections
+    if (time == kMaxCost) {
+      auto date_time =
+          DateTime::offset_date(source_location_list[origin_idx].date_time(),
+                                time_infos[origin_idx].timezone_index,
+                                graphreader.GetTimezoneFromEdge(target_edgelabel_[target_idx]
+                                                                    .front()
+                                                                    .edgeid(),
+                                                                tile),
+                                time);
+      auto* pbf_date_time = matrix.mutable_date_times()->Add();
+      *pbf_date_time = date_time;
+    }
     matrix.mutable_from_indices()->Set(count, origin_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);
     matrix.mutable_distances()->Set(count, connection.distance);
     matrix.mutable_times()->Set(count, time);
-    auto* pbf_date_time = matrix.mutable_date_times()->Add();
-    *pbf_date_time = date_time;
     count++;
   }
 }
