@@ -210,7 +210,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       const NodeLabel& node_lab = node_labels[last_label_idx];
       uint32_t idx = node_lab.node_index;
       uint32_t pred_node = node_lab.pred_node_index;
-      uint32_t way_index = node_labels[idx].way_index;
+      uint32_t way_index = node_lab.way_index;
       auto expand_node_itr = nodes[idx];
       auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
       for (auto& edge : bundle2.node_edges) {
