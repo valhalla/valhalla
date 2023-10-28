@@ -928,15 +928,27 @@ TEST(GtfsExample, route_trip1) {
   EXPECT_FALSE(ti_json["transit_stops"][0].HasMember("arrival_date_time"));
   EXPECT_FALSE(ti_json["transit_stops"][2].HasMember("departure_date_time"));
 
-  // determine the right day
-  req_time.append("-04:00"); // TODO: why -04:00, not -05:00??
-  req_time.replace(req_time.find('T') + 1, 5, "07:00");
-  EXPECT_EQ(transit_info.transit_stops(0).departure_date_time(), req_time);
-  EXPECT_EQ(ti_json["transit_stops"][0]["departure_date_time"].GetString(), req_time);
+  // determine the right departure datetimes, keep the timezone "+"
+  req_time.replace(req_time.find('T') + 1, 5, "07:00-");
 
-  req_time.replace(req_time.find('T') + 1, 5, "07:06");
-  EXPECT_EQ(transit_info.transit_stops(2).arrival_date_time(), req_time);
-  EXPECT_EQ(ti_json["transit_stops"][2]["arrival_date_time"].GetString(), req_time);
+  auto dep_time = transit_info.transit_stops(0).departure_date_time();
+  dep_time.erase(dep_time.rfind('-') + 1);
+  std::string dep_time_json = ti_json["transit_stops"][0]["departure_date_time"].GetString();
+  dep_time_json.erase(dep_time_json.rfind('-') + 1);
+
+  EXPECT_EQ(dep_time, req_time);
+  EXPECT_EQ(dep_time_json, req_time);
+
+  // determine the right arrival datetimes, keep the timezone "+"
+  req_time.replace(req_time.find('T') + 1, 6, "07:06-");
+
+  auto arr_time = transit_info.transit_stops(2).arrival_date_time();
+  arr_time.erase(arr_time.rfind('-') + 1);
+  std::string arr_time_json = ti_json["transit_stops"][2]["arrival_date_time"].GetString();
+  arr_time_json.erase(arr_time_json.rfind('-') + 1);
+
+  EXPECT_EQ(arr_time_json, req_time);
+  EXPECT_EQ(arr_time, req_time);
 }
 
 TEST(GtfsExample, route_trip4) {
