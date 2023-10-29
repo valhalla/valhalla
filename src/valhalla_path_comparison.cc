@@ -156,15 +156,13 @@ void walk_edges(const std::string& shape,
 }
 
 // args
-std::string routetype, config;
+std::string routetype, route_config;
 std::string json_str = "";
 std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -189,7 +187,7 @@ int main(int argc, char* argv[]) {
     options.parse_positional({"config"});
     options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {
@@ -267,7 +265,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config().get_child("mjolnir"));
 
   if (!map_match) {
     rapidjson::Document doc;
@@ -292,7 +290,7 @@ int main(int argc, char* argv[]) {
   }
 
   // If JSON is entered we do map matching
-  MapMatcherFactory map_matcher_factory(pt);
+  MapMatcherFactory map_matcher_factory(config());
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(request.options()));
 
   uint32_t i = 0;

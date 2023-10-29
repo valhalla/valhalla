@@ -1,4 +1,4 @@
-name: Publish Docker image
+name: Publish Amd64 Docker Image
 on:
   push:
     branches:
@@ -29,13 +29,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build tagged image
+      - name: Build tag image
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          docker build -t ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
-          docker push ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }}
+          docker buildx build --push --platform linux/amd64 --tag ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
       - name: Build latest image
         if: github.ref == 'refs/heads/master'
         run: |
-          docker build -t ghcr.io/valhalla/valhalla:latest .
-          docker push ghcr.io/valhalla/valhalla:latest
+          docker buildx build --push --platform linux/amd64 --tag ghcr.io/valhalla/valhalla:latest .

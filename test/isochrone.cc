@@ -30,7 +30,7 @@ using rp = rapidjson::Pointer;
 
 namespace {
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
   EXPECT_NEAR(a.GetArray()[0].GetDouble(), b.GetArray()[0].GetDouble(), 0.00002);
@@ -93,12 +93,22 @@ void try_isochrone(loki_worker_t& loki_worker,
                               (expected_type == "Polygon" ? "/0" : ""))
                                .Get(expected_response)
                                ->GetArray();
-      ASSERT_EQ(actual_geom.Size(), expected_geom.Size());
-      for (size_t j = 0; j < expected_geom.Size(); ++j) {
-        auto actual_coord = actual_geom[j].GetArray();
-        auto expected_coord = expected_geom[j].GetArray();
-        check_coords(actual_coord, expected_coord);
+
+      std::vector<PointLL> actual, expected;
+      for (size_t j = 0; j < std::max(expected_geom.Size(), actual_geom.Size()); ++j) {
+        if (j < actual_geom.Size()) {
+          auto c = actual_geom[j].GetArray();
+          actual.emplace_back(c[0].GetDouble(), c[1].GetDouble());
+        }
+        if (j < expected_geom.Size()) {
+          auto c = expected_geom[j].GetArray();
+          expected.emplace_back(c[0].GetDouble(), c[1].GetDouble());
+        }
       }
+
+      // different platforms can end up having some slightly different floating point wobble
+      // to avoid failing tests we measure shape similarity and fail if its too far out of whack
+      ASSERT_TRUE(test::shape_equality(actual, expected, 23));
     }
   }
 }
@@ -131,9 +141,9 @@ std::vector<PointLL> polygon_from_geojson(const std::string& geojson) {
 
 TEST(Isochrones, Basic) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  thor_worker_t thor_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   {
     const auto request =
@@ -269,9 +279,9 @@ TEST(Isochrones, test_max_reserved_labels_count) {
 int main(int argc, char* argv[]) {
   // user wants to try it
   if (argc > 1) {
-    loki_worker_t loki_worker(config);
-    thor_worker_t thor_worker(config);
-    GraphReader reader(config.get_child("mjolnir"));
+    loki_worker_t loki_worker(cfg);
+    thor_worker_t thor_worker(cfg);
+    GraphReader reader(cfg.get_child("mjolnir"));
     Api request;
     ParseApi(argv[1], Options::isochrone, request);
     loki_worker.isochrones(request);

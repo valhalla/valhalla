@@ -51,6 +51,12 @@ public:
   void set_speed_limit(const uint32_t speed_limit);
 
   /**
+   * Sets the elevation flag.
+   * @param  elevation  Flag indicating whether the edge has elevation data.
+   */
+  void set_has_elevation(const bool elevation);
+
+  /**
    * Get the bike network mask for this directed edge.
    * @return  Returns the bike network mask for this directed edge.
    */
@@ -89,6 +95,12 @@ public:
    * @param  encoded_shape  Encoded shape string
    */
   void set_encoded_shape(const std::string& encoded_shape);
+
+  /**
+   * Set encoded elevation.
+   * @param  encoded_elevation  Encoded elevation
+   */
+  void set_encoded_elevation(const std::vector<int8_t>& encoded_elevation);
 
   /**
    * Get the size of this edge info (without padding).
@@ -130,6 +142,9 @@ protected:
 
   // Lat,lng shape of the edge
   std::string encoded_shape_;
+
+  // Encoded elevation
+  std::vector<int8_t> encoded_elevation_;
 
   friend std::ostream& operator<<(std::ostream& os, const EdgeInfoBuilder& id);
 };
