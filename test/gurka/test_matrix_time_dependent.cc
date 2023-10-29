@@ -52,8 +52,7 @@ void check_matrix(const rapidjson::Document& result,
 
 void check_slim_matrix(const rapidjson::Document& result,
                        const std::vector<float>& exp_dists,
-                       bool valid_traffic,
-                       Matrix::Algorithm matrix_type) {
+                       bool valid_traffic) {
   auto distances = result["sources_to_targets"].GetObject()["distances"].GetArray();
   auto date_times = result["sources_to_targets"].GetObject()["date_times"].GetArray();
 
@@ -216,7 +215,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E", "L"}, "auto", options,
                             nullptr, &res);
   res_doc.Parse(res.c_str());
-  check_slim_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, false, Matrix::CostMatrix);
+  check_slim_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, false);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},
