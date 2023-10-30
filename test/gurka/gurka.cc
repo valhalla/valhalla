@@ -443,18 +443,18 @@ map buildtiles(const nodelayout& layout,
                const relations& relations,
                const std::string& workdir,
                const std::unordered_map<std::string, std::string>& config_options) {
-  auto config = test::make_config(workdir, config_options);
-  return buildtiles(layout, ways, nodes, relations, config);
+  auto cfg = test::make_config(workdir, config_options);
+  return buildtiles(layout, ways, nodes, relations, cfg);
 }
 
 map buildtiles(const nodelayout& layout,
                const ways& ways,
                const nodes& nodes,
                const relations& relations,
-               const boost::property_tree::ptree& config) {
+               const boost::property_tree::ptree& cfg) {
 
-  map result{config, layout};
-  auto workdir = config.get<std::string>("mjolnir.tile_dir");
+  map result{cfg, layout};
+  auto workdir = cfg.get<std::string>("mjolnir.tile_dir");
 
   // Sanity check so that we don't blow away / by mistake
   if (workdir == "/") {
