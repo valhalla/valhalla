@@ -5,7 +5,6 @@
 #include "baldr/datetime.h"
 #include "baldr/sign.h"
 #include "baldr/tilehierarchy.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/pointll.h"
