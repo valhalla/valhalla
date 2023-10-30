@@ -654,6 +654,7 @@ public:
     //               speeds into any historic/predictive/average value we'd normally use
 
     static double live_speed_fade = 1. / live_speed_fading_sec_;
+
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
