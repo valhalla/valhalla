@@ -19,19 +19,19 @@ protected:
         // all restrictions should be higher than our defaults, so we can actually see the impact of
         // any single one
         {"BC",
-         {{"highway", "residential"},
-          {"maxheight", "5"},
-          {"maxlength", "25"},
-          {"maxwidth", "3"},
-          {"maxweight", "1"},
-          }},
+         {
+             {"highway", "residential"},
+             {"maxheight", "5"},
+             {"maxlength", "25"},
+             {"maxwidth", "3"},
+             {"maxweight", "1"},
+         }},
         {"CD", {{"highway", "residential"}}},
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/car_restrictions");
     std::cout << gurka::dump_geojson_graph(map) << std::endl;
-
   }
 };
 
@@ -43,13 +43,11 @@ TEST_P(CarRestrictionTest, NotAllowed) {
 
   // "no path could be found for input" should be raised if we exceed this costing option
   try {
-   EXPECT_THROW(
-    gurka::do_action(Options::route, map, {"A", "D"}, "auto",
-                     {{"/costing_options/auto/" + option, v}}),valhalla_exception_t);
+    EXPECT_THROW(gurka::do_action(Options::route, map, {"A", "D"}, "auto",
+                                  {{"/costing_options/auto/" + option, v}}),
+                 valhalla_exception_t);
 
-  } catch (const valhalla_exception_t& err) {
-    EXPECT_EQ(err.code, 442);
-  } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -63,7 +61,6 @@ TEST_F(CarRestrictionTest, Allowed) {
 INSTANTIATE_TEST_SUITE_P(CarRestrictions,
                          CarRestrictionTest,
                          ::testing::Values(std::pair<std::string, std::string>{"height", "7.0"},
-                                           std::pair<std::string, std::string>{"width",  "7.0"},
+                                           std::pair<std::string, std::string>{"width", "7.0"},
                                            std::pair<std::string, std::string>{"length", "30.0"},
-                                           std::pair<std::string, std::string>{"weight", "3.0"}
-                                          ));
+                                           std::pair<std::string, std::string>{"weight", "3.0"}));
