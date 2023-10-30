@@ -653,7 +653,7 @@ public:
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
 
-    static double live_speed_fade = 1. / config().get<float>("baldr.live_speed_fading_sec", 3600);
+    static double live_speed_fade = 1. / live_speed_fading_sec_;
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.
@@ -884,6 +884,9 @@ protected:
 
   // Predicted speeds
   PredictedSpeeds predictedspeeds_;
+
+  // Time (in seconds) over which live speed will be faded into other traffic speed sources
+    loat live_speed_fading_sec_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;
