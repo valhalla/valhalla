@@ -886,7 +886,7 @@ protected:
   PredictedSpeeds predictedspeeds_;
 
   // Time (in seconds) over which live speed will be faded into other traffic speed sources
-    loat live_speed_fading_sec_;
+  float live_speed_fading_sec_;
 
   // Map of stop one stops in this tile.
   std::unordered_map<std::string, GraphId> stop_one_stops;
