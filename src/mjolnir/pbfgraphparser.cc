@@ -729,7 +729,7 @@ public:
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxLength);
       restriction.set_value(std::stof(tag_.second) * 100);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess |  kAutoAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
@@ -737,7 +737,7 @@ public:
       OSMAccessRestriction restriction;
       restriction.set_type(AccessType::kMaxWeight);
       restriction.set_value(std::stof(tag_.second) * 100);
-      restriction.set_modes(kTruckAccess);
+      restriction.set_modes(kTruckAccess | kAutoAccess);
       osmdata_.access_restrictions.insert(
           AccessRestrictionsMultiMap::value_type(osmid_, restriction));
     };
