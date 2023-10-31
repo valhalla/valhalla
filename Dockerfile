@@ -59,6 +59,7 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
+USER root
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
       libcurl4 libczmq4 libluajit-5.1-2 \
