@@ -1,4 +1,4 @@
-name: Publish Amd64 Docker Image
+name: Publish Docker image
 on:
   push:
     branches:
@@ -9,7 +9,6 @@ on:
       - '.gitignore'
       - '**.md'
       - 'test/'
-
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
@@ -32,8 +31,20 @@ jobs:
       - name: Build tag image
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          docker buildx build --provenance=false --sbom=false --push --platform linux/amd64 --tag ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
+          sudo apt update --yes
+          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name mybuilder
+          docker buildx use mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
       - name: Build latest image
         if: github.ref == 'refs/heads/master'
         run: |
-          docker buildx build --provenance=false --sbom=false --push --platform linux/amd64 --tag ghcr.io/valhalla/valhalla:latest .
+          sudo apt update --yes
+          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name mybuilder
+          docker buildx use mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:latest .
