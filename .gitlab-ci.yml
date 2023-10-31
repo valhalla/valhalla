@@ -56,7 +56,7 @@ publish container:
     - 'until docker info; do sleep 1; done'
     - 'docker build -f Dockerfile -t ${CONTAINER_IMAGE} -t ${CONTAINER_IMAGE_LATEST} .'
     - 'echo ${CI_REGISTRY}'
-    - 'docker login -u ${CI_DEPLOY_USER} -p ${CI_DEPLOY_PASSWORD} ${CI_REGISTRY}'
+    - 'docker login -u incidents -p ${CI_DEPLOY_PASSWORD} ${CI_REGISTRY}'
     - 'docker push ${CONTAINER_IMAGE}'
     - 'docker push ${CONTAINER_IMAGE_LATEST}'
 
