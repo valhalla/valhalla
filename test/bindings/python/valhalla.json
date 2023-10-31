@@ -5,17 +5,20 @@
     "use_lru_mem_cache": false,
     "lru_mem_cache_hard_control": false,
     "use_simple_mem_cache": false,
-    "tile_dir": "test/data/utrecht_tiles",
-    "tile_extract": "test/data/utrecht_tiles/tiles.tar",
+    "tile_dir": "/workspaces/valhalla/build/test/data/utrecht_tiles",
+    "tile_extract": "/workspaces/valhalla/build/test/data/utrecht_tiles/tiles.tar",
     "traffic_extract": "/data/valhalla/traffic.tar",
     "admin": "/data/valhalla/admin.sqlite",
     "landmarks": "/data/valhalla/landmarks.sqlite",
     "timezone": "/data/valhalla/tz_world.sqlite",
     "transit_dir": "/data/valhalla/transit",
     "transit_feeds_dir": "/data/valhalla/transit_feeds",
+    "transit_pbf_limit": 20000,
     "hierarchy": true,
     "shortcuts": true,
+    "include_platforms": false,
     "include_driveways": true,
+    "include_construction": false,
     "include_bicycle": true,
     "include_pedestrian": true,
     "include_driving": true,
@@ -93,6 +96,7 @@
     "max_reserved_labels_count_bidir_astar": 1000000,
     "max_reserved_labels_count_dijkstras": 4000000,
     "max_reserved_labels_count_bidir_dijkstras": 2000000,
+    "clear_reserved_memory": false,
     "extended_search": false
   },
   "odin": {
@@ -170,7 +174,8 @@
       "loopback": "ipc:///tmp/loopback",
       "interrupt": "ipc:///tmp/interrupt",
       "drain_seconds": 28,
-      "shutdown_seconds": 1
+      "shutdown_seconds": 1,
+      "timeout_seconds": -1
     }
   },
   "service_limits": {
@@ -213,7 +218,7 @@
       "max_matrix_location_pairs": 2500
     },
     "bicycle": {
-      "max_distance": 500000.0,
+      "max_distance": 1,
       "max_locations": 50,
       "max_matrix_distance": 200000.0,
       "max_matrix_location_pairs": 2500
@@ -251,12 +256,12 @@
       "max_distance_contour": 200
     },
     "trace": {
-      "max_alternates": 3,
-      "max_alternates_shape": 100,
       "max_distance": 200000.0,
       "max_gps_accuracy": 100.0,
       "max_search_radius": 100.0,
-      "max_shape": 16000
+      "max_shape": 16000,
+      "max_alternates": 3,
+      "max_alternates_shape": 100
     },
     "bikeshare": {
       "max_distance": 500000.0,
@@ -272,6 +277,7 @@
     "max_reachability": 100,
     "max_radius": 200,
     "max_timedep_distance": 500000,
+    "max_timedep_distance_matrix": 0,
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
     "max_distance_disable_hierarchy_culling": 0

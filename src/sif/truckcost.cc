@@ -32,6 +32,7 @@ constexpr float kDefaultServicePenalty = 0.0f; // Seconds
 // Other options
 constexpr float kDefaultLowClassPenalty = 30.0f; // Seconds
 constexpr float kDefaultUseTolls = 0.5f;         // Factor between 0 and 1
+constexpr float kDefaultUseTunnels = 0.5f;       // Factor between 0 and 1
 constexpr float kDefaultUseTracks = 0.f;         // Avoid tracks by default. Factor between 0 and 1
 constexpr float kDefaultUseLivingStreets =
     0.f;                                    // Avoid living streets by default. Factor between 0 and 1
@@ -95,6 +96,7 @@ constexpr ranged_default_t<float> kTruckHeightRange{0, kDefaultTruckHeight, 10.0
 constexpr ranged_default_t<float> kTruckWidthRange{0, kDefaultTruckWidth, 10.0f};
 constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseTunnelsRange{0, kDefaultUseTunnels, 1.0f};
 constexpr ranged_default_t<uint8_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 
@@ -290,6 +292,7 @@ public:
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
+  float tunnel_factor_;      // Factor applied when road has a tunnel
   float low_class_penalty_;  // Penalty (seconds) to go to residential or service road
 
   // Vehicle attributes (used for special restrictions and costing)
@@ -357,6 +360,14 @@ TruckCost::TruckCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  // Preference to use tunnel roads. Sets a tunnel factor. A tunnel factor
+  // of 0.5 would indicate no adjustment to weighting for tunnel roads.
+  // use_tunnels = 1 would reduce weighting slightly (a negative delta) while
+  // use_tunnels = 0 would penalize (positive delta to weighting factor).
+  float use_tunnels = costing_options.use_tunnels();
+  tunnel_factor_ = use_tunnels < 0.5f ? (2.0f - 4 * use_tunnels) : // ranges from 2 to 0
+                       (0.5f - use_tunnels) * 0.03f;               // ranges from 0 to -0.15
 
   for (uint32_t d = 0; d < 16; d++) {
     density_factor_[d] = 0.85f + (d * 0.025f);
@@ -508,6 +519,10 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   if (edge->toll()) {
     factor += toll_factor_;
+  }
+
+  if (edge->tunnel()) {
+    factor += tunnel_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -697,6 +712,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kTruckWidthRange, json, "/width", width);
   JSON_PBF_RANGED_DEFAULT(co, kTruckLengthRange, json, "/length", length);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTunnelsRange, json, "/use_tunnels", use_tunnels);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   co->set_axle_count(
       kAxleCountRange(rapidjson::get<uint32_t>(json, "/axle_count", co->axle_count())));

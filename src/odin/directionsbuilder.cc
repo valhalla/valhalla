@@ -443,7 +443,7 @@ void DirectionsBuilder::PopulateDirectionsLeg(const Options& options,
   }
   trip_directions.mutable_summary()->set_has_time_restrictions(has_time_restrictions);
 
-  // Populate toll, highway, ferry tags
+  // Populate toll, tunnel, highway, ferry tags
   trip_directions.mutable_summary()->set_has_toll(has_toll);
   trip_directions.mutable_summary()->set_has_highway(has_highway);
   trip_directions.mutable_summary()->set_has_ferry(has_ferry);

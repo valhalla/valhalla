@@ -10,6 +10,7 @@ namespace {
 const std::vector<std::string> kSupportedCostingModels = {"auto", "bus", "truck", "motorcycle"};
 
 const std::map<std::string, std::string> kParameters = {{"tolls", "toll"},
+                                                        {"tunnels", "tunnel"},
                                                         {"highways", "highway"},
                                                         {"ferry", "ferry"}};
 std::vector<std::string> kUseParameters;
@@ -30,7 +31,7 @@ const std::string ascii_map = R"(
 
 const gurka::ways ways = {
     {"IJ", {{"highway", "trunk"}}},
-    {"JL", {{"highway", "motorway"}, {"toll", "yes"}}},
+    {"JL", {{"highway", "motorway"}, {"toll", "yes"}, {"tunnel", "yes"}}},
     {"LA", {{"highway", "trunk"}}},
     {"ABCD", {{"maxspeed", "50"}, {"route", "ferry"}, {"motor_vehicle", "yes"}}},
     {"AEGFD", {{"highway", "trunk"}, {"maxspeed", "10"}}},
@@ -42,10 +43,12 @@ const gurka::ways ways = {
 const std::vector<std::string> trip = {"I", "D"};
 const std::map<std::string, std::vector<std::string>> waypoints_on =
     {{"tolls", {"IJ", "JL", "LA", "ABCD"}},
+     {"tunnels", {"IJ", "JL", "LA", "ABCD"}},
      {"highways", {"IJ", "JL", "LA", "ABCD"}},
      {"ferry", {"IJ", "JL", "LA", "ABCD"}}};
 const std::map<std::string, std::vector<std::string>> waypoints_off =
     {{"tolls", {"IJ", "JM", "MN", "NL", "LA", "ABCD"}},
+     {"tunnels", {"IJ", "JM", "MN", "NL", "LA", "ABCD"}},
      {"highways", {"IJ", "JM", "MN", "NL", "LA", "ABCD"}},
      {"ferry", {"IJ", "JL", "LA", "AEGFD"}}};
 const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
@@ -69,8 +72,8 @@ protected:
    */
   void
   expect_feature(valhalla::Api& raw_result, const std::string& feature, const bool expected_value) {
-    // std::string json = tyr::serializeDirections(raw_result);
-    // std::cout << json.c_str() << std::endl;
+    std::string json = tyr::serializeDirections(raw_result);
+    std::cout << json.c_str() << std::endl;
     rapidjson::Document result = gurka::convert_to_json(raw_result, valhalla::Options_Format_json);
     if (result.HasParseError()) {
       FAIL() << "Error converting route response to JSON";
