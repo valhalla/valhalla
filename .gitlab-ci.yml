@@ -11,9 +11,9 @@ variables:
   PACKAGE_REGISTERY_PROJ_ID: '32'
   SOURCE_CODE_PATH: 'src/*/'
   VERSION_PREFIX: '1.0'
-  CONTAINER_NAME: 'gis-ops/incidents'
+  CONTAINER_NAME: 'gis-ops/valhalla-incidents'
   NAMESPACE: 'incidents'
-  HELM_DEPLOYMENT_NAME: 'incidents-valhalla'
+  HELM_DEPLOYMENT_NAME: 'valhalla-incidents'
   MANUAL_RELEASE: ''
 
 workflow:

@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "valhalla-with-incidents.fullname" . }}
+  name: {{ include "valhalla-incidents.fullname" . }}
   labels:
-    {{- include "valhalla-with-incidents.labels" . | nindent 4 }}
+    {{- include "valhalla-incidents.labels" . | nindent 4 }}
 spec:
-  serviceName: {{ include "valhalla-with-incidents.fullname" . }}
+  serviceName: {{ include "valhalla-incidents.fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "valhalla-with-incidents.selectorLabels" . | nindent 6 }}
+      {{- include "valhalla-incidents.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "valhalla-with-incidents.selectorLabels" . | nindent 8 }}
+        {{- include "valhalla-incidents.selectorLabels" . | nindent 8 }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
