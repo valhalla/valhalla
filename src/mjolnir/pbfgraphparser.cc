@@ -2391,8 +2391,12 @@ public:
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
-            mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                    kHOVAccess);
+            if (type == kTimedAllowed) {
+              mode = kAutoAccess | kHOVAccess | kTaxiAccess;
+            } else {
+              mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
+                      kHOVAccess);
+            }
           } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
