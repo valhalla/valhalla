@@ -15,10 +15,9 @@ spec:
       labels:
         {{- include "valhalla-incidents.selectorLabels" . | nindent 8 }}
     spec:
-      
+      imagePullSecrets:
+        - name: registry
       containers:
-        - imagePullSecrets:
-          - name: registry
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
