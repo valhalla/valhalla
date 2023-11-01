@@ -1292,7 +1292,7 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->has_time_restrictions()) {
     maneuver.set_has_time_restrictions(true);
   }
-  //Portions Tunnel
+  // Portions Tunnel
   if (prev_edge->tunnel()) {
     maneuver.set_portions_tunnel(true);
   }
