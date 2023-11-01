@@ -2391,7 +2391,7 @@ public:
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
-            if (type == kTimedAllowed) {
+            if (type == AccessType::kTimedAllowed) {
               mode = kAutoAccess | kHOVAccess | kTaxiAccess;
             } else {
               mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
