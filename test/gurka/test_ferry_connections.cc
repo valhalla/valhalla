@@ -438,11 +438,12 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   )";
 
   std::map<std::string, std::string> secondary = {{"highway", "secondary"}};
+  std::map<std::string, std::string> tertiary = {{"highway", "tertiary"}};
 
   const gurka::ways ways = {
       {"AB", secondary},
       {"BC", secondary},
-      {"CD", secondary},
+      {"CD", tertiary},
       {"DE",
        {{"motor_vehicle", "yes"},
         {"motorcar", "yes"},
@@ -464,8 +465,10 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   EXPECT_TRUE(std::get<1>(not_upclassed1)->classification() == valhalla::baldr::RoadClass::kSecondary);
   auto not_upclassed2 = gurka::findEdge(reader, layout, "BC", "C");
   EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() == valhalla::baldr::RoadClass::kSecondary);
+
+  // Looks like an edge that connect to a ferry is automatically set to kPrimary
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
-  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kSecondary);
+  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kPrimary);
 }
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
