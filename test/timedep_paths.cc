@@ -37,7 +37,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,
@@ -70,8 +70,8 @@ void try_path(GraphReader& reader,
 
 TEST(TimeDepPaths, test_depart_at_paths) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   // Simple path along oneway edge in the drivable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
@@ -87,8 +87,8 @@ TEST(TimeDepPaths, test_depart_at_paths) {
 
 TEST(TimeDepPaths, test_arrive_by_paths) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   // Simple path along oneway edge in the drivable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},

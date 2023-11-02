@@ -8,6 +8,9 @@
    * FIXED: missing protobuf CMake configuration to link abseil for protobuf >= 3.22.0 [#4207](https://github.com/valhalla/valhalla/pull/4207)
    * FIXED: broken links on the optimized route API page [#4260](https://github.com/valhalla/valhalla/pull/4260)
    * FIXED: remove clearing of headings while calculating a matrix [#4288](https://github.com/valhalla/valhalla/pull/4288)
+   * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
+   * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
+   * FIXED: respond with correlated edges for format=valhalla and matrix [#4335](https://github.com/valhalla/valhalla/pull/4335)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -28,9 +31,13 @@
    * ADDED: option `--extract-tar` to `valhalla_build_extract` to create extracts from .tar files instead of tile directory [#4255](https://github.com/valhalla/valhalla/pull/4255)
    * ADDED: Support for `bannerInstructions` attribute in OSRM serializer via `banner_instructions` request parameter [#4093](https://github.com/valhalla/valhalla/pull/4093)
    * UPDATED: submodules which had new releases, unless it was a major version change [#4231](https://github.com/valhalla/valhalla/pull/4231)
+   * ADDED: Support for elevation along a route. Add elevation to EdgeInfo within Valhalla tiles [#4279](https://github.com/valhalla/valhalla/pull/4279)
    * ADDED: the workflow to find landmarks in a graph tile, associate them with nearby edges, and update the graph tile to store the associations [#4278](https://github.com/valhalla/valhalla/pull/4278)
    * ADDED: update maneuver generation to add nearby landmarks to maneuvers as direction support [#4293](https://github.com/valhalla/valhalla/pull/4293)
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
+   * CHANGED: the boost property tree config is now read into a singleton that doesn't need to be passed around anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)
+   * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
+   * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

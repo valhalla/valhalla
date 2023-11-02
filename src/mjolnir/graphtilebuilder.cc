@@ -157,10 +157,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // Edge bins are gotten by parent
 
-  // Create an ordered set of edge info offsets
-  std::set<uint32_t> edge_info_offsets;
+  // Create an ordered map with edge info offsets as the key and the edge length
+  // as the value. Length is needed so elevation data can be read (if present).
+  std::map<uint32_t, uint32_t> edge_info_offsets;
   for (auto& diredge : directededges_builder_) {
-    edge_info_offsets.insert(diredge.edgeinfo_offset());
+    edge_info_offsets[diredge.edgeinfo_offset()] = diredge.length();
   }
 
   // At this time, complex restrictions are created AFTER all need for
@@ -174,7 +175,9 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
   edgeinfo_offset_map_.clear();
-  for (auto offset : edge_info_offsets) {
+  for (auto edgemap : edge_info_offsets) {
+    auto offset = edgemap.first;
+
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
       LOG_WARN("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
@@ -182,6 +185,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                " current ei offset= " + std::to_string(edge_info_offset_));
     }
 
+    // At this time, encoded elevation is empty and does not need to be serialized...
     EdgeInfo ei(edgeinfo_ + offset, textlist_, textlist_size_);
     EdgeInfoBuilder eib;
     eib.set_wayid(ei.wayid());
@@ -194,6 +198,14 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
       eib.AddNameInfo(info);
     }
     eib.set_encoded_shape(ei.encoded_shape());
+
+    // Add encoded elevation (if present)
+    if (ei.has_elevation()) {
+      auto length = edgemap.second;
+      double interval = 0.0f;
+      eib.set_encoded_elevation(ei.encoded_elevation(length, interval));
+    }
+
     edge_info_offset_ += eib.SizeOf();
     edgeinfo_list_.emplace_back(std::move(eib));
 
@@ -347,15 +359,17 @@ void GraphTileBuilder::StoreTileData() {
       reverse_restriction_size += complex_restriction.SizeOf();
     }
 
-    // Write the edge data
+    // Write the edge data (update edge_info_offset_)
+    int64_t current_size = in_mem.tellp();
     header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
                                         reverse_restriction_size);
     for (const auto& edgeinfo : edgeinfo_list_) {
       in_mem << edgeinfo;
     }
+    int64_t edge_info_size = in_mem.tellp() - current_size;
 
     // Write the names
-    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_offset_);
+    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_size);
     for (const auto& text : textlistbuilder_) {
       in_mem << text << '\0';
     }
@@ -847,15 +861,22 @@ void GraphTileBuilder::set_mean_elevation(const float elev) {
   edgeinfo.set_mean_elevation(elev);
 }
 
-// Set the mean elevation to the EdgeInfo given the edge info offset. This requires
-// a serialized tile builder.
-void GraphTileBuilder::set_mean_elevation(const uint32_t offset, const float elev) {
+// Set the mean elevation and encoded elevation along an edge to the EdgeInfo given the edge
+// info offset. This requires a serialized tile builder.
+uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
+                                         const float mean_elevation,
+                                         const std::vector<int8_t>& encoded_elevation) {
   auto e = edgeinfo_offset_map_.find(offset);
   if (e == edgeinfo_offset_map_.end()) {
-    LOG_ERROR("set_mean_elevation - could not find the EdgeInfo index given the offset");
-    return;
+    LOG_ERROR("set_elevation - could not find the EdgeInfo index given the offset");
+    return 0;
   }
-  e->second->set_mean_elevation(elev);
+  e->second->set_mean_elevation(mean_elevation);
+  if (!encoded_elevation.empty()) {
+    e->second->set_encoded_elevation(encoded_elevation);
+    e->second->set_has_elevation(true);
+  }
+  return e->second->SizeOf();
 }
 
 // Add a name to the text list
@@ -1274,10 +1295,12 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
 
   if (eib == edgeinfo_offset_map_.end()) {
     throw std::runtime_error("Couldn't find edge info for the given edge: " +
-                             std::to_string(static_cast<int>(edge_id.id())));
+                             std::to_string(edge_id));
   }
 
+  // get the value and prepend the tag to it
   std::string tagged_value = landmark.to_str();
+  tagged_value.insert(tagged_value.begin(), static_cast<char>(baldr::TaggedValue::kLandmark));
 
   auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
   // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)

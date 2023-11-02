@@ -83,11 +83,17 @@ valhalla output looks like this:
 
 */
 
-json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& correlated) {
+json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
   auto input_locs = json::array({});
-  for (size_t i = 0; i < correlated.size(); i++) {
-    input_locs->emplace_back(json::map({{"lat", json::fixed_t{correlated.Get(i).ll().lat(), 6}},
-                                        {"lon", json::fixed_t{correlated.Get(i).ll().lng(), 6}}}));
+  for (const auto& location : locations) {
+    if (location.correlation().edges().size() == 0) {
+      input_locs->emplace_back(nullptr);
+    } else {
+      for (const auto& corr_edge : location.correlation().edges()) {
+        input_locs->emplace_back(json::map({{"lat", json::fixed_t{corr_edge.ll().lat(), 6}},
+                                            {"lon", json::fixed_t{corr_edge.ll().lng(), 6}}}));
+      }
+    }
   }
   return input_locs;
 }
