@@ -82,7 +82,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // Add node to list of node labels, set the node status and add
     // to the adjacency set
     uint32_t nodelabel_index = 0;
-    node_labels.emplace_back(0.0f, node_idx, node_idx, first_edge_destonly);
+    node_labels.emplace_back(0.0f, node_idx, node_idx, 0, first_edge_destonly);
     node_status[node_idx] = {kTemporary, nodelabel_index};
     adjset.push({0.0f, nodelabel_index});
     nodelabel_index++;
@@ -187,7 +187,8 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
         last_label_idx = nodelabel_index;
 
         // Add to the node labels and adjacency set. Skip if this is a loop.
-        node_labels.emplace_back(cost, endnode, expand_node_idx, w.destination_only());
+        node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_,
+                                 w.destination_only());
         node_status[endnode] = {kTemporary, nodelabel_index};
         adjset.push({cost, nodelabel_index});
         nodelabel_index++;
@@ -205,13 +206,17 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // did we find all modes in the path?
     uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
-      // Get the edge between this node and the predecessor
+      // Get the edge with matching wayindex between this node and the predecessor
       const NodeLabel& node_lab = node_labels[last_label_idx];
       uint32_t idx = node_lab.node_index;
       uint32_t pred_node = node_lab.pred_node_index;
+      uint32_t way_index = node_lab.way_index;
       auto expand_node_itr = nodes[idx];
       auto bundle2 = collect_node_edges(expand_node_itr, nodes, edges);
       for (auto& edge : bundle2.node_edges) {
+        if (edge.first.wayindex_ != way_index) {
+          continue;
+        }
         bool forward = edge.first.sourcenode_ == pred_node;
         if (forward || edge.first.targetnode_ == pred_node) {
           sequence<Edge>::iterator element = edges[edge.second];
