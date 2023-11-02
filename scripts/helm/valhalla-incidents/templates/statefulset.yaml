@@ -19,10 +19,32 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.persistence.enabled }}
+      volumes:
+        - name: incidents-vol
+          persistentVolumeClaim:
+            claimName: {{ .Values.volname }}-pvc
+        - name: workdir
+          emptyDir: {}
+      {{- end }}
+      
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           ports:
             - name: http
-              containerPort: 80
-              protocol: TCP 
+              containerPort: 8002
+              protocol: TCP
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: incidents-vol
+              mountPath: "/mnt"
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            {{- if .Values.env }}
+              {{- toYaml .Values.env | nindent 12 }}
+            {{- end }}
+            - name: volume_prefix
+              value: {{ .Values.volume_prefix }}
