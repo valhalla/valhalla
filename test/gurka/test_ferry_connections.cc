@@ -404,21 +404,29 @@ TEST(Standalone, ReclassifyCorrectPath) {
 
   // make sure other edges are not upclassed
   auto not_upclassed1 = gurka::findEdge(reader, layout, "BG", "G");
-  EXPECT_TRUE(std::get<1>(not_upclassed1)->classification() == valhalla::baldr::RoadClass::kResidential);
+  EXPECT_TRUE(std::get<1>(not_upclassed1)->classification() ==
+              valhalla::baldr::RoadClass::kResidential);
   auto not_upclassed2 = gurka::findEdge(reader, layout, "GH", "H");
-  EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() == valhalla::baldr::RoadClass::kResidential);
+  EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() ==
+              valhalla::baldr::RoadClass::kResidential);
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CJ", "J");
-  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kResidential);
+  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() ==
+              valhalla::baldr::RoadClass::kResidential);
   auto not_upclassed4 = gurka::findEdge(reader, layout, "JL", "L");
-  EXPECT_TRUE(std::get<1>(not_upclassed4)->classification() == valhalla::baldr::RoadClass::kResidential);
+  EXPECT_TRUE(std::get<1>(not_upclassed4)->classification() ==
+              valhalla::baldr::RoadClass::kResidential);
   auto not_upclassed5 = gurka::findEdge(reader, layout, "GF", "F");
-  EXPECT_TRUE(std::get<1>(not_upclassed5)->classification() == valhalla::baldr::RoadClass::kServiceOther);
+  EXPECT_TRUE(std::get<1>(not_upclassed5)->classification() ==
+              valhalla::baldr::RoadClass::kServiceOther);
   auto not_upclassed6 = gurka::findEdge(reader, layout, "HI", "I");
-  EXPECT_TRUE(std::get<1>(not_upclassed6)->classification() == valhalla::baldr::RoadClass::kServiceOther);
+  EXPECT_TRUE(std::get<1>(not_upclassed6)->classification() ==
+              valhalla::baldr::RoadClass::kServiceOther);
   auto not_upclassed7 = gurka::findEdge(reader, layout, "JK", "K");
-  EXPECT_TRUE(std::get<1>(not_upclassed7)->classification() == valhalla::baldr::RoadClass::kServiceOther);
+  EXPECT_TRUE(std::get<1>(not_upclassed7)->classification() ==
+              valhalla::baldr::RoadClass::kServiceOther);
   auto not_upclassed8 = gurka::findEdge(reader, layout, "LM", "M");
-  EXPECT_TRUE(std::get<1>(not_upclassed8)->classification() == valhalla::baldr::RoadClass::kServiceOther);
+  EXPECT_TRUE(std::get<1>(not_upclassed8)->classification() ==
+              valhalla::baldr::RoadClass::kServiceOther);
 }
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,

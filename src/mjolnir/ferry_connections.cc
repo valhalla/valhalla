@@ -1,5 +1,6 @@
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
@@ -7,6 +8,12 @@
 
 namespace valhalla {
 namespace mjolnir {
+
+// Invalid index
+const uint32_t kInvalidIndex = std::numeric_limits<uint32_t>::max();
+
+// Unique set of ferry locations that fail reclassification
+std::unordered_set<midgard::PointLL> NoReclassification;
 
 // Get the best classification for any drivable non-ferry and non-link
 // edges from a node. Skip any reclassified ferry edges
@@ -58,6 +65,10 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
   uint32_t edge_count = 0;
 
+  // Get node LL (to log cases where no edges are reclassified)
+  bool path_found = false;
+  auto ferry_ll = (*nodes[start_node_idx]).node.latlng();
+
   uint16_t overall_access_before = baldr::kVehicularAccess;
   uint16_t overall_access_after = 0;
   // find accessible paths for as many modes as we can but stop if we can't find any more
@@ -91,7 +102,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     // is reached
     uint32_t n = 0;
     uint32_t label_idx = 0;
-    uint32_t last_label_idx = 0;
+    uint32_t last_label_idx = kInvalidIndex;
     while (!adjset.empty()) {
       // Get the next node from the adjacency list/priority queue. Gets its
       // current cost and index
@@ -116,8 +127,15 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       // Have seen cases where the immediate connections are high class roads
       // but then there are service roads (lanes) immediately after (like
       // Twawwassen Terminal near Vancouver,BC)
-      if (n > 400 && GetBestNonFerryClass(expanded_bundle.node_edges) <= kFerryUpClass) {
-        break;
+      if (GetBestNonFerryClass(expanded_bundle.node_edges) <= kFerryUpClass) {
+        // Set the last label index - shortest path is recovered backwards from this
+        // label to the ferry start
+        last_label_idx = label_idx;
+
+        // TODO - better termination criteria?!
+        if (n > 400) {
+          break;
+        }
       }
       n++;
 
@@ -183,9 +201,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
           }
         }
 
-        // Get the last label index to form the path
-        last_label_idx = nodelabel_index;
-
         // Add to the node labels and adjacency set. Skip if this is a loop.
         node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_,
                                  w.destination_only());
@@ -202,8 +217,14 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       return 0;
     }
 
+    // Path not found to edge with proper classification
+    if (last_label_idx == kInvalidIndex) {
+      return 0;
+    }
+
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
+    path_found = true;
     uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge with matching wayindex between this node and the predecessor
@@ -246,6 +267,10 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     overall_access_after |= path_access;
   }
 
+  // Add ferry lat,lng if no path to higher classification edge was found
+  if (!path_found) {
+    NoReclassification.insert(ferry_ll);
+  }
   return edge_count;
 }
 
@@ -384,6 +409,13 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     // Go to the next node
     node_itr += bundle.node_count;
   }
+
+  // Log lat,lng of ferries that failed reclassification
+  for (const auto& ll : NoReclassification) {
+    LOG_INFO("No roads from ferry at LL =" + std::to_string(ll.lat()) + "," +
+             std::to_string(ll.lng()) + " reach required classification roadway");
+  }
+
   LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
            std::to_string(ferry_endpoint_count) + ", " + std::to_string(total_count) +
            " edges reclassified.");
