@@ -66,7 +66,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   uint32_t edge_count = 0;
 
   // Get node LL (to log cases where no edges are reclassified)
-  bool path_found = false;
   auto ferry_ll = (*nodes[start_node_idx]).node.latlng();
 
   uint16_t overall_access_before = baldr::kVehicularAccess;
@@ -210,21 +209,21 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
       }
     }
 
-    // If only one label we have immediately found an edge with proper
-    // classification - or we cannot expand due to driveability
-    if (node_labels.size() == 1) {
-      LOG_DEBUG("Only 1 edge reclassified");
+    // Path not found to edge with proper classification
+    if (last_label_idx == kInvalidIndex) {
+      NoReclassification.insert(ferry_ll);
       return 0;
     }
 
-    // Path not found to edge with proper classification
-    if (last_label_idx == kInvalidIndex) {
+    // If only one label we have immediately found an edge with proper
+    // classification - or we cannot expand due to driveability
+    if (node_labels.size() == 1) {
+      LOG_INFO("Only 1 edge reclassified");
       return 0;
     }
 
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
-    path_found = true;
     uint16_t path_access = baldr::kVehicularAccess;
     while (true) {
       // Get the edge with matching wayindex between this node and the predecessor
@@ -267,10 +266,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     overall_access_after |= path_access;
   }
 
-  // Add ferry lat,lng if no path to higher classification edge was found
-  if (!path_found) {
-    NoReclassification.insert(ferry_ll);
-  }
   return edge_count;
 }
 
