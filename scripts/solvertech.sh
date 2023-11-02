@@ -39,5 +39,8 @@ else
   echo "The file '$file_name' doesn't exists. Restoring it from backup"
   sudo cp /mnt/valhalla.json /custom_files
 fi
+echo "Copying traffic tile to local directory"
+sudo cp /custom_files/traffic/traffic.tar /valhalla/
 echo "Starting valhalla"
+
 /valhalla/scripts/run.sh build_tiles
