@@ -344,7 +344,8 @@ TEST(Standalone, ReclassifyFerryNodePair) {
 
   // make sure edge BIJC is not upclassed
   auto not_upclassed = gurka::findEdge(reader, layout, "BIJC", "C");
-  EXPECT_TRUE(std::get<1>(not_upclassed)->classification() == valhalla::baldr::RoadClass::kResidential);
+  EXPECT_TRUE(std::get<1>(not_upclassed)->classification() ==
+              valhalla::baldr::RoadClass::kResidential);
 }
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
