@@ -14,6 +14,7 @@ message DirectionsLeg {
     bool has_toll = 5;
     bool has_ferry = 6;
     bool has_highway = 7;
+    bool has_tunnel = 8;
   }
 
   message GuidanceView {
@@ -141,6 +142,7 @@ message DirectionsLeg {
     bool portions_highway = 39;                           // has portions highway
     bool portions_ferry = 40;                             // has portions ferry
     repeated RouteLandmark landmarks = 41;                // landmarks correlated with the maneuver
+    bool portions_tunnel = 42;                            // has portions tunnel
   }
 
   uint64 trip_id = 1;

@@ -102,6 +102,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   bool has_toll = false;
   bool has_highway = false;
   bool has_ferry = false;
+  bool has_tunnel = false;
   AABB2<PointLL> bbox(10000.0f, 10000.0f, -10000.0f, -10000.0f);
   std::vector<double> recost_times(api.options().recostings_size(), 0);
   for (int leg_index = 0; leg_index < api.directions().routes(route_index).legs_size(); ++leg_index) {
@@ -127,6 +128,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
     bbox.Expand(leg_bbox);
     has_time_restrictions = has_time_restrictions || leg.summary().has_time_restrictions();
     has_toll = has_toll || leg.summary().has_toll();
+    has_tunnel = has_tunnel || leg.summary().has_tunnel();
     has_highway = has_highway || leg.summary().has_highway();
     has_ferry = has_ferry || leg.summary().has_ferry();
   }
@@ -134,6 +136,7 @@ void summary(const valhalla::Api& api, int route_index, rapidjson::writer_wrappe
   writer.start_object("summary");
   writer("has_time_restrictions", has_time_restrictions);
   writer("has_toll", has_toll);
+  writer("has_tunnel", has_tunnel);
   writer("has_highway", has_highway);
   writer("has_ferry", has_ferry);
   writer.set_precision(6);
@@ -218,6 +221,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     writer.start_object(); // leg
     bool has_time_restrictions = false;
     bool has_toll = false;
+    bool has_tunnel = false;
     bool has_highway = false;
     bool has_ferry = false;
 
@@ -286,10 +290,14 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
         ++recost_itr;
       }
 
-      // Portions toll, highway, ferry and rough
+      // Portions toll, tunnel, highway, ferry and rough
       if (maneuver.portions_toll()) {
         writer("toll", maneuver.portions_toll());
         has_toll = true;
+      }
+      if (maneuver.portions_tunnel()) {
+        writer("tunnel", maneuver.portions_tunnel());
+        has_tunnel = true;
       }
       if (maneuver.portions_highway()) {
         writer("highway", maneuver.portions_highway());
@@ -526,6 +534,7 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
     writer.start_object("summary");
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);
+    writer("has_tunnel", has_tunnel);
     writer("has_highway", has_highway);
     writer("has_ferry", has_ferry);
     writer.set_precision(6);

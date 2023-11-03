@@ -28,6 +28,7 @@ namespace {
 // Other options
 constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
+constexpr float kDefaultUseTunnels = 0.5f;  // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
 
 constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
@@ -53,6 +54,7 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
 // Valid ranges and defaults
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
+constexpr ranged_default_t<float> kUseTunnelsRange{0, kDefaultUseTunnels, 1.0f};
 constexpr ranged_default_t<float> kUseTrailsRange{0, kDefaultUseTrails, 1.0f};
 
 constexpr float kHighwayFactor[] = {
@@ -266,6 +268,7 @@ public:
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
+  float tunnel_factor_;      // Factor applied when road has a tunnel
   float surface_factor_;     // How much the surface factors are applied when using trails
   float highway_factor_;     // Factor applied when road is a motorway or trunk
 
@@ -308,6 +311,14 @@ MotorcycleCost::MotorcycleCost(const Costing& costing)
   float use_tolls = costing_options.use_tolls();
   toll_factor_ = use_tolls < 0.5f ? (2.0f - 4 * use_tolls) : // ranges from 2 to 0
                      (0.5f - use_tolls) * 0.03f;             // ranges from 0 to -0.15
+
+  // Set tunnel factor based on preference to use tunnel (value from 0 to 1).
+  // Tunnel factor of 0.5 would indicate no adjustment to weighting for tunnel roads.
+  // use_tunnels = 1 would reduce weighting slightly (a negative delta) while
+  // use_tunnels = 0 would penalize (positive delta to weighting factor).
+  float use_tunnels = costing_options.use_tunnels();
+  tunnel_factor_ = use_tunnels < 0.5f ? (2.0f - 4 * use_tunnels) : // ranges from 2 to 0
+                       (0.5f - use_tunnels) * 0.03f;               // ranges from 0 to -0.15
 
   // Set the surface factor based on the use trails value - this is a
   // preference to use trails/tracks/bad surface types (a value from 0 to 1).
@@ -419,6 +430,10 @@ Cost MotorcycleCost::EdgeCost(const baldr::DirectedEdge* edge,
   factor += SpeedPenalty(edge, tile, time_info, flow_sources, edge_speed);
   if (edge->toll()) {
     factor += toll_factor_;
+  }
+
+  if (edge->tunnel()) {
+    factor += tunnel_factor_;
   }
 
   if (edge->use() == Use::kTrack) {
@@ -577,6 +592,7 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTunnelsRange, json, "/use_tunnels", use_tunnels);
   JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
 }
 

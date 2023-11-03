@@ -32,6 +32,7 @@ constexpr float kDefaultAuto_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultAuto_UseFerry = 0.5f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseHighways = 0.5f;              // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTolls = 0.5f;                 // Factor between 0 and 1
+constexpr float kDefaultAuto_UseTunnels = 0.5f;               // Factor between 0 and 1
 constexpr float kDefaultAuto_UseTracks = 0.f;                 // Factor between 0 and 1
 constexpr float kDefaultAuto_UseLivingStreets = 0.1f;         // Factor between 0 and 1
 constexpr float kDefaultAuto_ServicePenalty = 75.0f;          // Seconds
@@ -494,6 +495,7 @@ void test_default_base_auto_cost_options(const Costing::Type costing_type,
   validate("use_ferry", kDefaultAuto_UseFerry, options.use_ferry());
   validate("use_highways", kDefaultAuto_UseHighways, options.use_highways());
   validate("use_tolls", kDefaultAuto_UseTolls, options.use_tolls());
+  validate("use_tunnels", kDefaultAuto_UseTunnels, options.use_tunnels());
   validate("use_tracks", kDefaultAuto_UseTracks, options.use_tracks());
   validate("use_living_streets", kDefaultAuto_UseLivingStreets, options.use_living_streets());
   validate("service_penalty", kDefaultAuto_ServicePenalty, options.service_penalty());
@@ -942,6 +944,22 @@ void test_use_tolls_parsing(const Costing::Type costing_type,
       get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
   const auto& options = request.options().costings().find(costing_type)->second.options();
   validate(key, expected_value, options.use_tolls());
+}
+
+void test_use_tunnels_parsing(const Costing::Type costing_type,
+                              const float specified_value,
+                              const float expected_value,
+                              const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "use_tunnels";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.use_tunnels());
 }
 
 void test_use_tracks_parsing(const Costing::Type costing_type,
@@ -2414,6 +2432,17 @@ TEST(ParseRequest, test_use_tolls) {
   test_use_tolls_parsing(costing, 0.6f, 0.6f);
   test_use_tolls_parsing(costing, -2.f, default_value);
   test_use_tolls_parsing(costing, 2.f, default_value);
+}
+
+TEST(ParseRequest, test_use_tunnels) {
+  float default_value = kDefaultAuto_UseTunnels;
+  for (auto costing : get_base_auto_costing_list()) {
+    test_use_tunnels_parsing(costing, default_value, default_value);
+    test_use_tunnels_parsing(costing, 0.2f, 0.2f);
+    test_use_tunnels_parsing(costing, 0.6f, 0.6f);
+    test_use_tunnels_parsing(costing, -2.f, default_value);
+    test_use_tunnels_parsing(costing, 2.f, default_value);
+  }
 }
 
 TEST(ParseRequest, test_use_tracks) {

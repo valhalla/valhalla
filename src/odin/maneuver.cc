@@ -125,16 +125,16 @@ Maneuver::Maneuver()
       begin_cardinal_direction_(DirectionsLeg_Maneuver_CardinalDirection_kNorth), begin_heading_(0),
       end_heading_(0), begin_node_index_(0), end_node_index_(0), begin_shape_index_(0),
       end_shape_index_(0), ramp_(false), turn_channel_(false), ferry_(false), rail_ferry_(false),
-      roundabout_(false), portions_toll_(false), portions_unpaved_(false), portions_highway_(false),
-      internal_intersection_(false), internal_right_turn_count_(0), internal_left_turn_count_(0),
-      travel_mode_(TravelMode::kDrive), vehicle_type_(VehicleType::kCar),
-      pedestrian_type_(PedestrianType::kFoot), bicycle_type_(BicycleType::kRoad),
-      transit_type_(TransitType::kRail), transit_connection_(false), rail_(false), bus_(false),
-      fork_(false), begin_intersecting_edge_name_consistency_(false),
-      intersecting_forward_edge_(false), tee_(false), trail_type_(TrailType::kNone),
-      imminent_verbal_multi_cue_(false), distant_verbal_multi_cue_(false), to_stay_on_(false),
-      drive_on_right_(true), has_time_restrictions_(false),
-      has_right_traversable_outbound_intersecting_edge_(false),
+      roundabout_(false), portions_toll_(false), portions_tunnel_(false), portions_unpaved_(false),
+      portions_highway_(false), internal_intersection_(false), internal_right_turn_count_(0),
+      internal_left_turn_count_(0), travel_mode_(TravelMode::kDrive),
+      vehicle_type_(VehicleType::kCar), pedestrian_type_(PedestrianType::kFoot),
+      bicycle_type_(BicycleType::kRoad), transit_type_(TransitType::kRail),
+      transit_connection_(false), rail_(false), bus_(false), fork_(false),
+      begin_intersecting_edge_name_consistency_(false), intersecting_forward_edge_(false),
+      tee_(false), trail_type_(TrailType::kNone), imminent_verbal_multi_cue_(false),
+      distant_verbal_multi_cue_(false), to_stay_on_(false), drive_on_right_(true),
+      has_time_restrictions_(false), has_right_traversable_outbound_intersecting_edge_(false),
       has_left_traversable_outbound_intersecting_edge_(false),
       bss_maneuver_type_(DirectionsLeg_Maneuver_BssManeuverType_kNoneAction),
       include_verbal_pre_transition_length_(false), contains_obvious_maneuver_(false),
@@ -459,6 +459,14 @@ bool Maneuver::portions_toll() const {
 
 void Maneuver::set_portions_toll(bool portionsToll) {
   portions_toll_ = portionsToll;
+}
+
+bool Maneuver::portions_tunnel() const {
+  return portions_tunnel_;
+}
+
+void Maneuver::set_portions_tunnel(bool portionsTunnel) {
+  portions_tunnel_ = portionsTunnel;
 }
 
 bool Maneuver::portions_unpaved() const {
@@ -1263,6 +1271,9 @@ std::string Maneuver::ToString() const {
   man_str += " | portions_toll=";
   man_str += std::to_string(portions_toll_);
 
+  man_str += " | portions_tunnel=";
+  man_str += std::to_string(portions_tunnel_);
+
   man_str += " | portions_unpaved=";
   man_str += std::to_string(portions_unpaved_);
 
@@ -1471,6 +1482,9 @@ std::string Maneuver::ToParameterString() const {
 
   man_str += delim;
   man_str += std::to_string(portions_toll_);
+
+  man_str += delim;
+  man_str += std::to_string(portions_tunnel_);
 
   man_str += delim;
   man_str += std::to_string(portions_unpaved_);

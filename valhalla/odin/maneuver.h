@@ -144,6 +144,9 @@ public:
   bool portions_toll() const;
   void set_portions_toll(bool portionsToll);
 
+  bool portions_tunnel() const;
+  void set_portions_tunnel(bool portionsTunnel);
+
   bool portions_unpaved() const;
   void set_portions_unpaved(bool portionsUnpaved);
 
@@ -429,6 +432,7 @@ protected:
   bool rail_ferry_;
   bool roundabout_;
   bool portions_toll_;
+  bool portions_tunnel_;
   bool portions_unpaved_;
   bool portions_highway_;
   bool internal_intersection_;
