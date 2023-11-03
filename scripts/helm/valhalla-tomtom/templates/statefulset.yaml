@@ -35,6 +35,9 @@ spec:
             - name: http
               containerPort: 8002
               protocol: TCP
+            - name: http-lb
+              containerPort: 8001
+              protocol: TCP
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: incidents-vol
