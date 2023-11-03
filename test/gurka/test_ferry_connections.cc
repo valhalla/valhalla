@@ -462,11 +462,13 @@ TEST(Standalone, ReclassifyNothingReclassified) {
 
   // make sure no edges are upclassed
   auto not_upclassed1 = gurka::findEdge(reader, layout, "AB", "B");
-  EXPECT_TRUE(std::get<1>(not_upclassed1)->classification() == valhalla::baldr::RoadClass::kSecondary);
+  EXPECT_TRUE(std::get<1>(not_upclassed1)->classification() ==
+              valhalla::baldr::RoadClass::kSecondary);
   auto not_upclassed2 = gurka::findEdge(reader, layout, "BC", "C");
-  EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() == valhalla::baldr::RoadClass::kSecondary);
+  EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() ==
+              valhalla::baldr::RoadClass::kSecondary);
 
-  // Looks like an edge that connect to a ferry is automatically set to kPrimary
+  // Looks like the first edge connected to the ferry is automatically set to kPrimary
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
   EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kPrimary);
 }
