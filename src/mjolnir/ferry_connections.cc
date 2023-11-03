@@ -40,13 +40,13 @@ public:
 // Form the shortest path from the start node until a node that
 // touches the specified road classification.
 std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
-                      const uint32_t node_idx,
-                      sequence<OSMWay>& ways,
-                      sequence<OSMWayNode>& way_nodes,
-                      sequence<Edge>& edges,
-                      sequence<Node>& nodes,
-                      const bool inbound,
-                      const bool first_edge_destonly) {
+                                       const uint32_t node_idx,
+                                       sequence<OSMWay>& ways,
+                                       sequence<OSMWayNode>& way_nodes,
+                                       sequence<Edge>& edges,
+                                       sequence<Node>& nodes,
+                                       const bool inbound,
+                                       const bool first_edge_destonly) {
   // Method to get the shape for an edge - since LL is stored as a pair of
   // floats we need to change into PointLL to get length of an edge
   const auto EdgeShape = [&way_nodes](size_t idx, const size_t count) {
@@ -374,32 +374,32 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         if (edge_fwd_access == edge_rev_access) {
           // drivable in both directions - get an inbound path and an
           // outbound path.
-          auto ret1 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                               nodes, true, remove_destonly);
-	  total_count += ret1.first;
-	  if (ret1.second) {
-	    inbound_path_found = true;
-	  }
-          auto ret2 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, false, remove_destonly);
-	  total_count += ret2.first;
-	  if (ret2.second) {
-	    outbound_path_found = true;
-	  }
+          auto ret1 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+                                   true, remove_destonly);
+          total_count += ret1.first;
+          if (ret1.second) {
+            inbound_path_found = true;
+          }
+          auto ret2 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+                                   false, remove_destonly);
+          total_count += ret2.first;
+          if (ret2.second) {
+            outbound_path_found = true;
+          }
         } else {
           // Check if oneway inbound to the ferry
           bool inbound =
               (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
-          auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, inbound, remove_destonly);
-	  total_count += ret.first;
-	  if (ret.second > 0) {
+          auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges, nodes,
+                                  inbound, remove_destonly);
+          total_count += ret.first;
+          if (ret.second > 0) {
             if (inbound) {
               inbound_path_found = true;
             } else {
               outbound_path_found = true;
             }
-	  }
+          }
         }
         ferry_endpoint_count++;
 
@@ -415,13 +415,16 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
       // Log cases where reclassification fails
       if (!inbound_path_found && !outbound_path_found) {
-        LOG_INFO("Reclassification fails both directions to ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+        LOG_INFO("Reclassification fails both directions to ferry at LL =" +
+                 std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
       } else {
         if (!inbound_path_found) {
-          LOG_INFO("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+          LOG_INFO("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
+                   "," + std::to_string(ll.lng()));
         }
         if (!outbound_path_found) {
-          LOG_INFO("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+          LOG_INFO("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
+                   "," + std::to_string(ll.lng()));
         }
       }
     }
