@@ -207,13 +207,6 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       return std::make_pair(0, false);
     }
 
-    // If only one label we have immediately found an edge with proper
-    // classification - or we cannot expand due to driveability
-    if (node_labels.size() == 1) {
-      LOG_INFO("Only 1 edge reclassified");
-      return std::make_pair(0, false);
-    }
-
     // Trace shortest path backwards and upgrade edge classifications
     // did we find all modes in the path?
     uint16_t path_access = baldr::kVehicularAccess;
