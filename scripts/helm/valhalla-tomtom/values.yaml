@@ -20,6 +20,7 @@ imagePullSecrets:
 - name: registry
 nameOverride: ""
 fullnameOverride: ""
+service_name: valhalla-tomtom
 
 serviceAccount:
   # Specifies whether a service account should be created
