@@ -4,7 +4,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.volname }}-pvc
 spec:
-  storageClassName: valhalla-tomtom-client
+  storageClassName: valhalla-client
   accessModes:
   - {{ .Values.persistence.accessMode }}
   resources:
