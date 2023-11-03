@@ -32,7 +32,7 @@ serviceAccount:
   
 volume_prefix: "vol"
 
-volname: incidents-volname
+volname: valhalla-tomtom-volname
 nfs:
   path: /solvertech/lab/valhalla
   server: 10.80.103.100
