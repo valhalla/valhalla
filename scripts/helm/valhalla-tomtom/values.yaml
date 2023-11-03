@@ -90,7 +90,7 @@ ingress:
   #   memory: 128Mi
 resources: 
   limits:
-    memory: 72Gi
+    memory: 128Gi
   requests:
     memory: 8Gi 
 

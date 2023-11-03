@@ -12,8 +12,8 @@ variables:
   SOURCE_CODE_PATH: 'src/*/'
   VERSION_PREFIX: '1.0'
   CONTAINER_NAME: 'gis-ops/incidents'
-  NAMESPACE: 'incidents'
-  HELM_DEPLOYMENT_NAME: 'valhalla-incidents'
+  NAMESPACE: 'valhalla-tomtom'
+  HELM_DEPLOYMENT_NAME: 'valhalla'
   MANUAL_RELEASE: ''
 
 workflow:
@@ -85,7 +85,7 @@ deploy to dev:
   variables:
     VERSION: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'   
   script:
-    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-incidents --set image.tag=${VERSION} --set gitlab.envName="Development" --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --namespace ${NAMESPACE} --debug'
+    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-tomtom --set image.tag=${VERSION} --set gitlab.envName="Development" --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --namespace ${NAMESPACE} --debug'
 
 
 deploy to production:
@@ -102,5 +102,5 @@ deploy to production:
   variables:
     VERSION: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'   
   script:
-    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-incidents --set image.tag=${VERSION} --set gitlab.envName="Production" --set nfs.path=/solvertech/production/valhalla --set nfs.server=10.80.102.100 --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --set ingress.hosts[0].host=incidents.solvertech.cz,ingress.hosts[0].paths[0].path=/,ingress.hosts[0].paths[0].pathType=Prefix --set ingress.tls[0].hosts[0]=incidents.solvertech.cz --set ingress.tls[0].secretName=incidents-tls --namespace ${NAMESPACE} --debug'
+    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-tomtom --set image.tag=${VERSION} --set gitlab.envName="Production" --set nfs.path=/solvertech/production/valhalla --set nfs.server=10.80.102.100 --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --set ingress.hosts[0].host=incidents.solvertech.cz,ingress.hosts[0].paths[0].path=/,ingress.hosts[0].paths[0].pathType=Prefix --set ingress.tls[0].hosts[0]=incidents.solvertech.cz --set ingress.tls[0].secretName=incidents-tls --namespace ${NAMESPACE} --debug'
    
