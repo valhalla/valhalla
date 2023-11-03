@@ -12,9 +12,6 @@ namespace mjolnir {
 // Invalid index
 const uint32_t kInvalidIndex = std::numeric_limits<uint32_t>::max();
 
-// Unique set of ferry locations that fail reclassification
-std::unordered_set<midgard::PointLL> NoReclassification;
-
 // Get the best classification for any drivable non-ferry and non-link
 // edges from a node. Skip any reclassified ferry edges
 uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges) {
@@ -42,7 +39,7 @@ public:
 
 // Form the shortest path from the start node until a node that
 // touches the specified road classification.
-uint32_t ShortestPath(const uint32_t start_node_idx,
+std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
                       const uint32_t node_idx,
                       sequence<OSMWay>& ways,
                       sequence<OSMWayNode>& way_nodes,
@@ -64,9 +61,6 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
   // total edge count for all reclassified paths
   // and determine for how many modes we need to ensure access (hint: only the ones using hierarchies)
   uint32_t edge_count = 0;
-
-  // Get node LL (to log cases where no edges are reclassified)
-  auto ferry_ll = (*nodes[start_node_idx]).node.latlng();
 
   uint16_t overall_access_before = baldr::kVehicularAccess;
   uint16_t overall_access_after = 0;
@@ -211,15 +205,14 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
 
     // Path not found to edge with proper classification
     if (last_label_idx == kInvalidIndex) {
-      NoReclassification.insert(ferry_ll);
-      return 0;
+      return std::make_pair(0, false);
     }
 
     // If only one label we have immediately found an edge with proper
     // classification - or we cannot expand due to driveability
     if (node_labels.size() == 1) {
       LOG_INFO("Only 1 edge reclassified");
-      return 0;
+      return std::make_pair(0, false);
     }
 
     // Trace shortest path backwards and upgrade edge classifications
@@ -266,7 +259,7 @@ uint32_t ShortestPath(const uint32_t start_node_idx,
     overall_access_after |= path_access;
   }
 
-  return edge_count;
+  return std::make_pair(edge_count, true);
 }
 
 // Check if the ferry included in this node bundle is short. Must be
@@ -349,6 +342,10 @@ void ReclassifyFerryConnections(const std::string& ways_file,
     if (bundle.node.ferry_edge_ && bundle.node.non_ferry_edge_ &&
         GetBestNonFerryClass(bundle.node_edges) > kFerryUpClass &&
         !ShortFerry(node_itr.position(), bundle, edges, nodes, way_nodes)) {
+      bool inbound_path_found = false;
+      bool outbound_path_found = false;
+      PointLL ll = (*nodes[node_itr.position()]).node.latlng();
+
       // Form shortest path from node along each edge connected to the ferry,
       // track until the specified RC is reached
       for (const auto& edge : bundle.node_edges) {
@@ -377,16 +374,32 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         if (edge_fwd_access == edge_rev_access) {
           // drivable in both directions - get an inbound path and an
           // outbound path.
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
-                                      nodes, true, remove_destonly);
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+          auto ret1 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+                               nodes, true, remove_destonly);
+	  total_count += ret1.first;
+	  if (ret1.second) {
+	    inbound_path_found = true;
+	  }
+          auto ret2 = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, false, remove_destonly);
+	  total_count += ret2.first;
+	  if (ret2.second) {
+	    outbound_path_found = true;
+	  }
         } else {
           // Check if oneway inbound to the ferry
           bool inbound =
               (edge.first.sourcenode_ == node_itr.position()) ? edge_rev_access : edge_fwd_access;
-          total_count += ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
+          auto ret = ShortestPath(node_itr.position(), end_node_idx, ways, way_nodes, edges,
                                       nodes, inbound, remove_destonly);
+	  total_count += ret.first;
+	  if (ret.second > 0) {
+            if (inbound) {
+              inbound_path_found = true;
+            } else {
+              outbound_path_found = true;
+            }
+	  }
         }
         ferry_endpoint_count++;
 
@@ -399,16 +412,22 @@ void ReclassifyFerryConnections(const std::string& ways_file,
         element = update_edge;
         total_count++;
       }
+
+      // Log cases where reclassification fails
+      if (!inbound_path_found && !outbound_path_found) {
+        LOG_INFO("Reclassification fails both directions to ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+      } else {
+        if (!inbound_path_found) {
+          LOG_INFO("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+        }
+        if (!outbound_path_found) {
+          LOG_INFO("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+        }
+      }
     }
 
     // Go to the next node
     node_itr += bundle.node_count;
-  }
-
-  // Log lat,lng of ferries that failed reclassification
-  for (const auto& ll : NoReclassification) {
-    LOG_INFO("No roads from ferry at LL =" + std::to_string(ll.lat()) + "," +
-             std::to_string(ll.lng()) + " reach required classification roadway");
   }
 
   LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
