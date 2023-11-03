@@ -1,6 +1,5 @@
 #include <queue>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "baldr/graphconstants.h"
 #include "midgard/util.h"
