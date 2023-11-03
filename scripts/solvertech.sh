@@ -41,6 +41,9 @@ else
 fi
 echo "Copying traffic tile to local directory"
 sudo cp /custom_files/traffic-clean.tar /valhalla/traffic.tar
-echo "Starting valhalla"
+#sudo ln -s /valhalla/traffic.tar /custom_files/traffic.tar 
 
+echo "traffic extract before starting Valhalla:"
+grep traffic_extract valhalla.json
+echo "Starting valhalla"
 /valhalla/scripts/run.sh build_tiles
