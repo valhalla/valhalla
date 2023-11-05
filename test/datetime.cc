@@ -632,7 +632,7 @@ TEST(DateTime, TestDayOfWeek) {
 }
 
 TEST(DateTime, TimezoneAliases) {
-  auto dt_db = DateTime::get_tz_db();
+  const auto& dt_db = DateTime::get_tz_db();
   // map of alias and target names (taken from old hand curated list in valhalla_build_timezones)
   std::vector<std::pair<std::string, std::string>> pairs = {{"Etc/Zulu", "Etc/UTC"},
                                                             {"Etc/GMT-0", "Etc/GMT"},
