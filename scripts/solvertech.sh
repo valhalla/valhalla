@@ -53,6 +53,6 @@ grep traffic_extract valhalla.json
 echo "Installing tmux and starting incidents service in tmux session"
 sudo apt update
 sudo apt install tmux -y
-#tmux new-session -Ad -s incidents sleep 180; echo "starting incidents"; sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json &
+tmux new-session -Ad -s incidents sleep 180; echo "starting incidents"; sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json &
 echo "Starting valhalla"
 /valhalla/scripts/run.sh build_tiles
