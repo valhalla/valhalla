@@ -50,7 +50,7 @@ fi
 
 echo "traffic extract before starting Valhalla:"
 grep traffic_extract valhalla.json
-echo "Installing tmux and starting incidents service in tmux session"
+echo "Starting incidents service..."
 sleep 120 && sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json &
-echo "Starting valhalla"
+echo "Starting Valhalla..."
 /valhalla/scripts/run.sh build_tiles

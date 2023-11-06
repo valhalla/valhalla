@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   clusterIP: None
   ports:
-    - port: 8002
-      targetPort: 8002
+    - port: 8001
+      targetPort: 8001
       protocol: TCP
       name: http
   selector:
