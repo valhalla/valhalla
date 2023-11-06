@@ -64,7 +64,7 @@ tag release:
   stage: publish
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules: 
-    - if: '$MANUAL_RELEASE == "dev"'
+    - if: '$MANUAL_RELEASE ==  "dev"'
     - if: '$MANUAL_RELEASE == "prod"'
   script:
     - echo "Creating release"
