@@ -39,7 +39,7 @@ cache:
    
 publish container:
   stage: publish
-  image: docker:latest
+  image: docker:24.0.5
   rules: 
     - if: '$MANUAL_RELEASE == "dev"'
     - if: '$MANUAL_RELEASE == "prod"'
@@ -51,9 +51,13 @@ publish container:
     CONTAINER_IMAGE: '${CI_REGISTRY}/${CONTAINER_NAME}:${VERSION_PREFIX}.${CI_PIPELINE_IID}'
     CONTAINER_IMAGE_LATEST: '${CI_REGISTRY}/${CONTAINER_NAME}:latest'
   services:
-    - docker:dind
+    - docker:24.0.5-dind
   script:
     - 'until docker info; do sleep 1; done'
+<<<<<<< HEAD
+=======
+    - 'docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}'
+>>>>>>> f8d0138f4edecafc50c4c83cbceedbd1d91e98d4
     - 'docker build -f Dockerfile -t ${CONTAINER_IMAGE} -t ${CONTAINER_IMAGE_LATEST} .'
     - 'echo ${CI_REGISTRY}'
     - 'docker login -u incidents -p ${CI_DEPLOY_PASSWORD} ${CI_REGISTRY}'
@@ -64,7 +68,7 @@ tag release:
   stage: publish
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules: 
-    - if: '$MANUAL_RELEASE ==  "dev"'
+    - if: '$MANUAL_RELEASE == "dev"'
     - if: '$MANUAL_RELEASE == "prod"'
   script:
     - echo "Creating release"

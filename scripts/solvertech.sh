@@ -51,6 +51,7 @@ fi
 echo "traffic extract before starting Valhalla:"
 grep traffic_extract valhalla.json
 echo "Starting incidents service..."
-sleep 120 && sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json &
+cd /home/valhalla
+sleep 40 && sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json |& tee log.txt &
 echo "Starting Valhalla..."
 /valhalla/scripts/run.sh build_tiles
