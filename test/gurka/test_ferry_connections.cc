@@ -467,10 +467,8 @@ TEST(Standalone, ReclassifyNothingReclassified) {
   auto not_upclassed2 = gurka::findEdge(reader, layout, "BC", "C");
   EXPECT_TRUE(std::get<1>(not_upclassed2)->classification() ==
               valhalla::baldr::RoadClass::kSecondary);
-
-  // Looks like the first edge connected to the ferry is automatically set to kPrimary
   auto not_upclassed3 = gurka::findEdge(reader, layout, "CD", "D");
-  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kPrimary);
+  EXPECT_TRUE(std::get<1>(not_upclassed3)->classification() == valhalla::baldr::RoadClass::kTertiary);
 }
 
 INSTANTIATE_TEST_SUITE_P(FerryConnectionTest,
