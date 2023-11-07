@@ -1,0 +1,109 @@
+stages:
+  - publish
+  - deploy-dev
+  - deploy-prod
+
+image: mcr.microsoft.com/dotnet/sdk:latest
+
+variables:
+  OBJECTS_DIRECTORY: 'obj'
+  NUGET_PACKAGES_DIRECTORY: '.nuget'
+  PACKAGE_REGISTERY_PROJ_ID: '32'
+  SOURCE_CODE_PATH: 'src/*/'
+  VERSION_PREFIX: '1.0'
+  CONTAINER_NAME: 'gis-ops/incidents'
+  NAMESPACE: 'valhalla-tomtom'
+  HELM_DEPLOYMENT_NAME: 'valhalla'
+  MANUAL_RELEASE: ''
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.*/'
+      variables:
+        MANUAL_RELEASE: 'dev'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      variables:
+        MANUAL_RELEASE: 'dev'
+    - if: '$CI_COMMIT_BRANCH == "prod"'
+      variables:
+        MANUAL_RELEASE: 'prod'
+    - when: always
+
+cache:
+  key: '${CI_JOB_STAGE}-${CI_COMMIT_REF_SLUG}'
+  paths:
+    - '${SOURCE_CODE_PATH}${OBJECTS_DIRECTORY}/project.assets.json'
+    - '${SOURCE_CODE_PATH}${OBJECTS_DIRECTORY}/*.csproj.nuget.*'
+    - '${NUGET_PACKAGES_DIRECTORY}'
+  policy: pull-push
+   
+publish container:
+  stage: publish
+  image: docker:24.0.5
+  rules: 
+    - if: '$MANUAL_RELEASE == "dev"'
+    - if: '$MANUAL_RELEASE == "prod"'
+  variables:
+    DOCKER_HOST: 'tcp://docker:2376'
+    DOCKER_TLS_CERTDIR: '/certs'
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_CERT_PATH: '$DOCKER_TLS_CERTDIR/client'
+    CONTAINER_IMAGE: '${CI_REGISTRY}/${CONTAINER_NAME}:${VERSION_PREFIX}.${CI_PIPELINE_IID}'
+    CONTAINER_IMAGE_LATEST: '${CI_REGISTRY}/${CONTAINER_NAME}:latest'
+  services:
+    - docker:24.0.5-dind
+  script:
+    - 'until docker info; do sleep 1; done'
+<<<<<<< HEAD
+=======
+    - 'docker login -u gitlab-ci-token -p ${CI_JOB_TOKEN} ${CI_REGISTRY}'
+>>>>>>> f8d0138f4edecafc50c4c83cbceedbd1d91e98d4
+    - 'docker build -f Dockerfile -t ${CONTAINER_IMAGE} -t ${CONTAINER_IMAGE_LATEST} .'
+    - 'echo ${CI_REGISTRY}'
+    - 'docker login -u incidents -p ${CI_DEPLOY_PASSWORD} ${CI_REGISTRY}'
+    - 'docker push ${CONTAINER_IMAGE}'
+    - 'docker push ${CONTAINER_IMAGE_LATEST}'
+
+tag release:
+  stage: publish
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules: 
+    - if: '$MANUAL_RELEASE == "dev"'
+    - if: '$MANUAL_RELEASE == "prod"'
+  script:
+    - echo "Creating release"
+  release:
+    name: 'Release ${VERSION_PREFIX}.${CI_PIPELINE_IID}'
+    description: 'Release ${VERSION_PREFIX}.${CI_PIPELINE_IID} ${CI_COMMIT_SHORT_SHA}'
+    tag_name: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'
+
+deploy to dev:
+  stage: deploy-dev
+  image: alpine/k8s:1.20.7
+  rules: 
+    - if: '$MANUAL_RELEASE == "dev"'
+  tags:
+    - runner-dev
+  environment:
+    name: staging 
+  variables:
+    VERSION: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'   
+  script:
+    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-tomtom --set image.tag=${VERSION} --set gitlab.envName="Development" --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --namespace ${NAMESPACE} --debug'
+
+
+deploy to production:
+  stage: deploy-prod
+  image: alpine/k8s:1.20.7
+  rules: 
+    - if: '$MANUAL_RELEASE == "prod"'
+      when: manual
+  allow_failure: false
+  tags:
+    - runner-production
+  environment:
+    name: production
+  variables:
+    VERSION: '${VERSION_PREFIX}.${CI_PIPELINE_IID}'   
+  script:
+    - 'helm upgrade -i ${HELM_DEPLOYMENT_NAME} scripts/helm/valhalla-tomtom --set image.tag=${VERSION} --set gitlab.envName="Production" --set nfs.path=/solvertech/production/valhalla --set nfs.server=10.80.102.100 --set image.repository=${CI_REGISTRY}/${CONTAINER_NAME} --namespace ${NAMESPACE} --debug'
