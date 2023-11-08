@@ -38,12 +38,12 @@ RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; impo
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
 WORKDIR /usr/local/bin
-RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
-RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
-RUN rm -f valhalla_*.debug
-RUN strip --strip-debug --strip-unneeded valhalla_* || true
-RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
+#RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
+#RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
+#RUN rm -f valhalla_*.debug
+#RUN strip --strip-debug --strip-unneeded valhalla_* || true
+#RUN strip /usr/local/lib/libvalhalla.a
+#RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
@@ -62,6 +62,7 @@ COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/d
 USER root
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
+	  screen gdb \
       libcurl4 libczmq4 libluajit-5.1-2 \
       libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
       curl gdb locales parallel python3.10-minimal python3-distutils python-is-python3 \

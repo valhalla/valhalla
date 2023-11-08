@@ -52,6 +52,6 @@ echo "traffic extract before starting Valhalla:"
 grep traffic_extract valhalla.json
 echo "Starting incidents service..."
 cd /home/valhalla
-sleep 40 && sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json |& tee log.txt &
+(sleep 60 && sudo screen -dmS gdb_session gdb -ex 'set follow-fork-mode child' -ex run --args /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json) &
 echo "Starting Valhalla..."
 /valhalla/scripts/run.sh build_tiles
