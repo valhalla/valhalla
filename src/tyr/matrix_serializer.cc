@@ -77,7 +77,7 @@ std::string serialize(const Api& request) {
   json->emplace("sources", osrm::waypoints(options.sources()));
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
-  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+  for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
     time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                           options.targets_size()));
     distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
@@ -152,7 +152,7 @@ std::string serialize(const Api& request, double distance_scale) {
 
   if (options.verbose()) {
     json::ArrayPtr matrix = json::array({});
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       matrix->emplace_back(serialize_row(request.matrix(), source_index * options.targets_size(),
                                          options.targets_size(), source_index, 0, distance_scale));
     }
@@ -169,7 +169,7 @@ std::string serialize(const Api& request, double distance_scale) {
     auto dt = json::array({});
 
     bool dt_found = false;
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                             options.targets_size()));
       distance->emplace_back(
@@ -208,7 +208,6 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeMatrix(Api& request) {
-  auto format = request.options().format();
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
   switch (request.options().format()) {
     case Options_Format_osrm:
