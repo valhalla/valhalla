@@ -27,6 +27,9 @@ std::string thor_worker_t::matrix(Api& request) {
   adjust_scores(options);
   auto costing = parse_costing(request);
 
+  // TODO: do this for others as well
+  costmatrix_.set_interrupt(interrupt);
+
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,

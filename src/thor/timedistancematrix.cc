@@ -72,6 +72,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     return;
   }
   const NodeInfo* nodeinfo = tile->node(node);
+  // TODO(nils): handle deadends in this algo, this should be flagged as one too
   if (!costing_->Allowed(nodeinfo)) {
     return;
   }
