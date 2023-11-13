@@ -72,8 +72,8 @@ public:
   virtual void Clear() override;
 
 protected:
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;

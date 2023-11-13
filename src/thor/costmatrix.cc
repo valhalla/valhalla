@@ -220,8 +220,8 @@ void CostMatrix::SourceToTarget(Api& request,
     float time = connection.cost.secs;
     auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
                                    time_infos[origin_idx].timezone_index,
-                                   edgelabel_[MATRIX_REV][target_idx].front().edgeid(),
-                                   graphreader, static_cast<uint64_t>(time));
+                                   edgelabel_[MATRIX_REV][target_idx].front().edgeid(), graphreader,
+                                   static_cast<uint64_t>(time));
     matrix.mutable_from_indices()->Set(count, origin_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);
     matrix.mutable_distances()->Set(count, connection.distance);
@@ -238,18 +238,18 @@ void CostMatrix::SourceToTarget(Api& request,
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
-    
+
   targets_->reserve(max_reserved_labels_count_);
 
   locs_count_[MATRIX_FORW] = source_locations.size();
   locs_count_[MATRIX_REV] = target_locations.size();
 
   const auto& hlimits = costing_->GetHierarchyLimits();
-  ignore_hierarchy_limits_ = std::all_of(hlimits.begin() + 1,
-                                         hlimits.begin() + TileHierarchy::levels().size(),
-                                         [](const HierarchyLimits& limits) {
-                                           return limits.max_up_transitions == kUnlimitedTransitions;
-                                         });
+  ignore_hierarchy_limits_ =
+      std::all_of(hlimits.begin() + 1, hlimits.begin() + TileHierarchy::levels().size(),
+                  [](const HierarchyLimits& limits) {
+                    return limits.max_up_transitions == kUnlimitedTransitions;
+                  });
 
   // Add initial sources status
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
@@ -264,7 +264,7 @@ void CostMatrix::Initialize(
       // Use the cost threshold to size the adjacency list.
       edgelabel_[exp_dir][i].reserve(max_reserved_labels_count_);
       adjacency_[exp_dir][i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
-                               &edgelabel_[exp_dir][i]);
+                                   &edgelabel_[exp_dir][i]);
       locs_status_[exp_dir].emplace_back(kMaxThreshold);
       hierarchy_limits_[exp_dir][i] = hlimits;
     }
@@ -899,7 +899,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       edgelabel_[MATRIX_REV][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_REV][index].add(idx);
       edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
-                                                graphreader.GetGraphTile(opp_edge_id));
+                                         graphreader.GetGraphTile(opp_edge_id));
       (*targets_)[opp_edge_id].push_back(index);
     }
     index++;
@@ -941,8 +941,7 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     // Work backwards on the forward path
     graph_tile_ptr tile;
     for (auto edgelabel_index = connedge_idx1; edgelabel_index != kInvalidLabel;
-         edgelabel_index =
-             edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
+         edgelabel_index = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
       const BDEdgeLabel& edgelabel = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index];
 
       const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);

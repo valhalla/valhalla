@@ -157,8 +157,8 @@ protected:
    */
   std::vector<PathInfo> FormPath(const uint32_t dest);
 
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;
