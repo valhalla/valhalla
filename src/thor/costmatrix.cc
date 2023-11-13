@@ -217,7 +217,7 @@ void CostMatrix::SourceToTarget(Api& request,
   for (const auto& connection : best_connection_) {
     uint32_t target_idx = count % target_location_list.size();
     uint32_t origin_idx = count / target_location_list.size();
-    float time = connection.cost.secs + .5f;
+    float time = connection.cost.secs;
     auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
                                    time_infos[origin_idx].timezone_index,
                                    edgelabel_[MATRIX_REV][target_idx].front().edgeid(),
