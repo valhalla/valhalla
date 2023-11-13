@@ -225,14 +225,16 @@ protected:
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
 
-  template <const MatrixExpansionType expansion_direction>
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
               const uint32_t n,
               baldr::GraphReader& graphreader,
               const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
               const bool invariant = false);
 
-  template <const MatrixExpansionType expansion_direction>
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool ExpandInner(baldr::GraphReader& graphreader,
                    const uint32_t index,
                    const sif::BDEdgeLabel& pred,

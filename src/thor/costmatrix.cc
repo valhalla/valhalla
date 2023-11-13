@@ -52,7 +52,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       extended_search_(config.get<bool>("extended_search", false)) {
   // TODO: initialize the search_struct classes to glob all search structures
-  // TODO: use extended_search_
+  // TODO: use extended_search_ similar to bidir a*, if even possible
 }
 
 CostMatrix::~CostMatrix() {
@@ -311,7 +311,7 @@ void CostMatrix::Initialize(
   }
 }
 
-template <const MatrixExpansionType expansion_direction>
+template <const MatrixExpansionType expansion_direction, const bool FORWARD>
 bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                              const uint32_t index,
                              const sif::BDEdgeLabel& pred,
@@ -326,8 +326,6 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (shortcuts & meta.edge->superseded()) {
     return false;
   }
-
-  constexpr bool FORWARD = expansion_direction == MatrixExpansionType::forward;
 
   graph_tile_ptr t2 = nullptr;
   baldr::GraphId opp_edge_id;
@@ -465,13 +463,12 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   return true;
 }
 
-template <const MatrixExpansionType expansion_direction>
+template <const MatrixExpansionType expansion_direction, const bool FORWARD>
 bool CostMatrix::Expand(const uint32_t index,
                         const uint32_t n,
                         baldr::GraphReader& graphreader,
                         const baldr::TimeInfo& time_info,
                         const bool invariant) {
-  const bool FORWARD = expansion_direction == MatrixExpansionType::forward;
 
   auto& adj = source_adjacency_[FORWARD][index];
   auto& edgelabels = source_edgelabel_[FORWARD][index];
