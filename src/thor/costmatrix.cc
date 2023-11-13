@@ -1018,24 +1018,35 @@ void CostMatrix::clear() {
     iter.second.resize(0);
     iter.second.shrink_to_fit();
   }
-  // TODO(nils):
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
+  auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    adjacency_[exp_dir].clear();
-    adjacency_[exp_dir].resize(0);
-    adjacency_[exp_dir].shrink_to_fit();
-    edgelabel_[exp_dir].clear();
-    edgelabel_[exp_dir].resize(0);
-    edgelabel_[exp_dir].shrink_to_fit();
-    edgestatus_[exp_dir].clear();
-    edgestatus_[exp_dir].resize(0);
-    edgestatus_[exp_dir].shrink_to_fit();
+    // resize all relevant structures down to 20 locations
+    if (locs_count_[exp_dir] > kMaxLocationCache) {
+      edgelabel_[exp_dir].resize(kMaxLocationCache);
+      edgelabel_[exp_dir].shrink_to_fit();
+      adjacency_[exp_dir].resize(kMaxLocationCache);
+      adjacency_[exp_dir].shrink_to_fit();
+      edgestatus_[exp_dir].resize(kMaxLocationCache);
+      edgestatus_[exp_dir].shrink_to_fit();
+    }
+    for (auto& iter : edgelabel_[exp_dir]) {
+      if (iter.size() > reservation) {
+        iter.resize(reservation);
+        iter.shrink_to_fit();
+        iter.clear();
+      }
+    }
+    for (auto& iter : edgestatus_[exp_dir]) {
+      iter.clear();
+    }
+    for (auto& iter : adjacency_[exp_dir]) {
+      iter.clear();
+    }
     hierarchy_limits_[exp_dir].clear();
-    hierarchy_limits_[exp_dir].resize(0);
-    hierarchy_limits_[exp_dir].shrink_to_fit();
     locs_status_[exp_dir].clear();
   }
   best_connection_.clear();
