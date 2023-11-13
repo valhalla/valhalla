@@ -146,31 +146,23 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
 
   // Number of source and target locations that can be expanded
-  std::array<uint32_t, 2> source_count_;
-  std::array<uint32_t, 2> remaining_sources_;
-  uint32_t target_count_;
-  uint32_t remaining_targets_;
+  std::array<uint32_t, 2> locs_count_;
+  std::array<uint32_t, 2> locs_remaining_;
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
 
   // Status
-  std::array<std::vector<LocationStatus>, 2> source_status_;
-  std::vector<LocationStatus> target_status_;
+  std::array<std::vector<LocationStatus>, 2> locs_status_;
 
   // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
-  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> source_hierarchy_limits_;
-  std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> source_adjacency_;
-  std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> source_edgelabel_;
-  std::array<std::vector<EdgeStatus>, 2> source_edgestatus_;
-
-  std::vector<std::vector<bool>> pruning_disabled_at_origin_;
-
-  // Extends search in one direction if the other direction exhausted, but only if the non-exhausted
-  // end started on a not_thru or closed (due to live-traffic) edge
-  bool extended_search_;
+  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
+  std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
+  std::array<std::vector<EdgeStatus>, 2> edgestatus_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
@@ -337,14 +329,14 @@ protected:
     // Distance threshold optimized for unidirectional search. For bidirectional case
     // they can be lowered.
     // Decrease distance thresholds only for arterial roads for now
-    for (size_t source = 0; source < source_count_[MATRIX_FORW]; source++) {
-      if (source_hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions !=
+    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
+      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions !=
           kUnlimitedTransitions)
-        source_hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 5.f;
     }
-    for (size_t target = 0; target < source_count_[MATRIX_REV]; target++) {
-      if (source_hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        source_hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 5.f;
+    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
+      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
+        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 5.f;
     }
   };
 

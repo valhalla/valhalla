@@ -16,6 +16,7 @@ namespace {
 
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
+constexpr uint32_t kMaxLocationCache = 20;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -45,14 +46,10 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
-    : mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess), source_count_({0, 0}),
-      remaining_sources_({0, 0}), target_count_(0), remaining_targets_(0),
-      current_cost_threshold_(0), targets_{new TargetMap}, interrupt_(nullptr),
+    : targets_{new TargetMap},
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      extended_search_(config.get<bool>("extended_search", false)) {
-  // TODO: initialize the search_struct classes to glob all search structures
-  // TODO: use extended_search_ similar to bidir a*, if even possible
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 CostMatrix::~CostMatrix() {
@@ -122,22 +119,15 @@ void CostMatrix::SourceToTarget(Api& request,
   // spaces is checked during the forward search.
   uint32_t n = 0;
   while (true) {
-    // Allow this process to be aborted
-    if (interrupt_ && (++n % kInterruptIterationsInterval) == 0) {
-      (*interrupt_)();
-    }
-
-    // TODO(nils): try to do it similar to bidir a* and let one direction extend
-
-    for (uint32_t i = 0; i < source_count_[MATRIX_REV]; i++) {
-      if (source_status_[MATRIX_REV][i].threshold > 0) {
-        source_status_[MATRIX_REV][i].threshold--;
+    for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
+      if (locs_status_[MATRIX_REV][i].threshold > 0) {
+        locs_status_[MATRIX_REV][i].threshold--;
         Expand<MatrixExpansionType::reverse>(i, n, graphreader);
         // if we exhausted this search
-        if (source_status_[MATRIX_REV][i].threshold == 0) {
-          for (uint32_t source = 0; source < source_count_[MATRIX_FORW]; source++) {
+        if (locs_status_[MATRIX_REV][i].threshold == 0) {
+          for (uint32_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
             // update the target for each source's remaining targets, if it still exists
-            auto& targets = source_status_[MATRIX_FORW][source].unfound_connections;
+            auto& targets = locs_status_[MATRIX_FORW][source].unfound_connections;
             auto it = targets.find(i);
             if (it != targets.end()) {
               // remove the target so we don't come here again
@@ -145,34 +135,34 @@ void CostMatrix::SourceToTarget(Api& request,
               // if there's no more target and the current source has not exhausted
               // we update the source's threshold so that it doesn't enter its outer "if" statement
               // anymore
-              if (targets.empty() && source_status_[MATRIX_FORW][source].threshold > 0) {
+              if (targets.empty() && locs_status_[MATRIX_FORW][source].threshold > 0) {
                 // TODO(nils): shouldn't we extend the search here similar to bidir A*
                 //   i.e. if pruning was disabled we extend the search in the other direction
-                source_status_[MATRIX_FORW][i].threshold = -1;
-                if (remaining_sources_[MATRIX_FORW] > 0) {
-                  remaining_sources_[MATRIX_FORW]--;
+                locs_status_[MATRIX_FORW][i].threshold = -1;
+                if (locs_remaining_[MATRIX_FORW] > 0) {
+                  locs_remaining_[MATRIX_FORW]--;
                 }
               }
             }
           }
           // in any case make sure this was the last time we looked at this target
-          source_status_[MATRIX_REV][i].threshold = -1;
-          if (remaining_sources_[MATRIX_REV] > 0) {
-            remaining_sources_[MATRIX_REV]--;
+          locs_status_[MATRIX_REV][i].threshold = -1;
+          if (locs_remaining_[MATRIX_REV] > 0) {
+            locs_remaining_[MATRIX_REV]--;
           }
         }
       }
     }
 
-    for (uint32_t i = 0; i < source_count_[MATRIX_FORW]; i++) {
-      if (source_status_[MATRIX_FORW][i].threshold > 0) {
-        source_status_[MATRIX_FORW][i].threshold--;
+    for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
+      if (locs_status_[MATRIX_FORW][i].threshold > 0) {
+        locs_status_[MATRIX_FORW][i].threshold--;
         Expand<MatrixExpansionType::forward>(i, n, graphreader, time_infos[i], invariant);
         // if we exhausted this search
-        if (source_status_[MATRIX_FORW][i].threshold == 0) {
-          for (uint32_t target = 0; target < source_count_[MATRIX_REV]; target++) {
+        if (locs_status_[MATRIX_FORW][i].threshold == 0) {
+          for (uint32_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
             // if we still didn't find the connection between this pair
-            auto& sources = source_status_[MATRIX_REV][target].unfound_connections;
+            auto& sources = locs_status_[MATRIX_REV][target].unfound_connections;
             auto it = sources.find(i);
             if (it != sources.end()) {
               // remove the source so we don't come here again
@@ -180,27 +170,27 @@ void CostMatrix::SourceToTarget(Api& request,
               // if there's no more sources and the current target has not exhausted
               // we update the target's threshold so that it doesn't enter this outer "if" statement
               // anymore
-              if (sources.empty() && source_status_[MATRIX_REV][target].threshold > 0) {
+              if (sources.empty() && locs_status_[MATRIX_REV][target].threshold > 0) {
                 // TODO(nils): shouldn't we extend the search here similar to bidir A*
                 //   i.e. if pruning was disabled we extend the search in the other direction
-                source_status_[MATRIX_REV][i].threshold = -1;
-                if (remaining_sources_[MATRIX_REV] > 0) {
-                  remaining_sources_[MATRIX_REV]--;
+                locs_status_[MATRIX_REV][i].threshold = -1;
+                if (locs_remaining_[MATRIX_REV] > 0) {
+                  locs_remaining_[MATRIX_REV]--;
                 }
               }
             }
           }
           // in any case make sure this was the last time we looked at this source
-          source_status_[MATRIX_FORW][i].threshold = -1;
-          if (remaining_sources_[MATRIX_FORW] > 0) {
-            remaining_sources_[MATRIX_FORW]--;
+          locs_status_[MATRIX_FORW][i].threshold = -1;
+          if (locs_remaining_[MATRIX_FORW] > 0) {
+            locs_remaining_[MATRIX_FORW]--;
           }
         }
       }
     }
 
     // Break out when remaining sources and targets to expand are both 0
-    if (remaining_sources_[MATRIX_FORW] == 0 && remaining_sources_[MATRIX_REV] == 0) {
+    if (locs_remaining_[MATRIX_FORW] == 0 && locs_remaining_[MATRIX_REV] == 0) {
       LOG_DEBUG("SourceToTarget iterations: n = " + std::to_string(n));
       break;
     }
@@ -210,7 +200,10 @@ void CostMatrix::SourceToTarget(Api& request,
     if (n >= kMaxMatrixIterations) {
       throw valhalla_exception_t{430};
     }
-    n++;
+    // Allow this process to be aborted
+    if (interrupt_ && (++n % kInterruptIterationsInterval) == 0) {
+      (*interrupt_)();
+    }
   }
 
   if (has_time) {
@@ -227,7 +220,7 @@ void CostMatrix::SourceToTarget(Api& request,
     float time = connection.cost.secs + .5f;
     auto date_time = get_date_time(source_location_list[origin_idx].date_time(),
                                    time_infos[origin_idx].timezone_index,
-                                   source_edgelabel_[MATRIX_REV][target_idx].front().edgeid(),
+                                   edgelabel_[MATRIX_REV][target_idx].front().edgeid(),
                                    graphreader, static_cast<uint64_t>(time));
     matrix.mutable_from_indices()->Set(count, origin_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);
@@ -245,36 +238,35 @@ void CostMatrix::SourceToTarget(Api& request,
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
+    
+  targets_->reserve(max_reserved_labels_count_);
 
-  source_count_[MATRIX_FORW] = source_locations.size();
-  source_count_[MATRIX_REV] = target_locations.size();
+  locs_count_[MATRIX_FORW] = source_locations.size();
+  locs_count_[MATRIX_REV] = target_locations.size();
 
-  const auto& hierarchy_limits = costing_->GetHierarchyLimits();
-  ignore_hierarchy_limits_ = std::all_of(hierarchy_limits.begin() + 1,
-                                         hierarchy_limits.begin() + TileHierarchy::levels().size(),
+  const auto& hlimits = costing_->GetHierarchyLimits();
+  ignore_hierarchy_limits_ = std::all_of(hlimits.begin() + 1,
+                                         hlimits.begin() + TileHierarchy::levels().size(),
                                          [](const HierarchyLimits& limits) {
                                            return limits.max_up_transitions == kUnlimitedTransitions;
                                          });
 
-  // TODO(nils): collect those into a struct exposing all expansion parameters
-
   // Add initial sources status
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    const auto count = source_count_[exp_dir];
-    source_status_[exp_dir].reserve(count);
-    source_hierarchy_limits_[exp_dir].resize(count);
-    source_adjacency_[exp_dir].reserve(count);
-    source_edgestatus_[exp_dir].resize(count);
-    source_edgelabel_[exp_dir].resize(count);
+    const auto count = locs_count_[exp_dir];
+    locs_status_[exp_dir].reserve(count);
+    hierarchy_limits_[exp_dir].resize(count);
+    adjacency_[exp_dir].resize(count);
+    edgestatus_[exp_dir].resize(count);
+    edgelabel_[exp_dir].resize(count);
     for (uint32_t i = 0; i < count; i++) {
       // Allocate the adjacency list and hierarchy limits for this source.
       // Use the cost threshold to size the adjacency list.
-      source_edgelabel_[exp_dir][i].reserve(max_reserved_labels_count_);
-      source_adjacency_[exp_dir].emplace_back(
-          DoubleBucketQueue<BDEdgeLabel>(0, current_cost_threshold_, costing_->UnitSize(),
-                                         &source_edgelabel_[exp_dir][i]));
-      source_status_[exp_dir].emplace_back(kMaxThreshold);
-      source_hierarchy_limits_[exp_dir][i] = hierarchy_limits;
+      edgelabel_[exp_dir][i].reserve(max_reserved_labels_count_);
+      adjacency_[exp_dir][i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
+                               &edgelabel_[exp_dir][i]);
+      locs_status_[exp_dir].emplace_back(kMaxThreshold);
+      hierarchy_limits_[exp_dir][i] = hlimits;
     }
   }
 
@@ -282,31 +274,31 @@ void CostMatrix::Initialize(
   GraphId empty;
   Cost trivial_cost(0.0f, 0.0f);
   Cost max_cost(kMaxCost, kMaxCost);
-  best_connection_.reserve(source_count_[MATRIX_FORW] * source_count_[MATRIX_REV]);
-  for (uint32_t i = 0; i < source_count_[MATRIX_FORW]; i++) {
-    for (uint32_t j = 0; j < source_count_[MATRIX_REV]; j++) {
+  best_connection_.reserve(locs_count_[MATRIX_FORW] * locs_count_[MATRIX_REV]);
+  for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
+    for (uint32_t j = 0; j < locs_count_[MATRIX_REV]; j++) {
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
       } else {
         best_connection_.emplace_back(empty, empty, max_cost, static_cast<uint32_t>(kMaxCost));
-        source_status_[MATRIX_FORW][i].unfound_connections.insert(j);
-        source_status_[MATRIX_REV][j].unfound_connections.insert(i);
+        locs_status_[MATRIX_FORW][i].unfound_connections.insert(j);
+        locs_status_[MATRIX_REV][j].unfound_connections.insert(i);
       }
     }
   }
 
   // Set the remaining number of sources and targets
-  remaining_sources_[MATRIX_FORW] = 0;
-  for (const auto& s : source_status_[MATRIX_FORW]) {
+  locs_remaining_[MATRIX_FORW] = 0;
+  for (const auto& s : locs_status_[MATRIX_FORW]) {
     if (!s.unfound_connections.empty()) {
-      remaining_sources_[MATRIX_FORW]++;
+      locs_remaining_[MATRIX_FORW]++;
     }
   }
-  remaining_sources_[MATRIX_REV] = 0;
-  for (const auto& t : source_status_[MATRIX_REV]) {
+  locs_remaining_[MATRIX_REV] = 0;
+  for (const auto& t : locs_status_[MATRIX_REV]) {
     if (!t.unfound_connections.empty()) {
-      remaining_sources_[MATRIX_REV]++;
+      locs_remaining_[MATRIX_REV]++;
     }
   }
 }
@@ -348,7 +340,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (source_hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
+    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -377,7 +369,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     opp_edge = t2->directededge(opp_edge_id);
   }
 
-  auto& edgelabels = source_edgelabel_[FORWARD][index];
+  auto& edgelabels = edgelabel_[FORWARD][index];
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
   uint8_t restriction_idx = -1;
@@ -385,7 +377,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
                            time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, true,
-                             &source_edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
       return false;
     }
@@ -393,7 +385,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     if (!costing_->AllowedReverse(meta.edge, pred, opp_edge, t2, opp_edge_id, time_info.local_time,
                                   time_info.timezone_index, restriction_idx) ||
         costing_->Restricted(meta.edge, pred, edgelabels, tile, meta.edge_id, false,
-                             &source_edgestatus_[FORWARD][index], time_info.local_time,
+                             &edgestatus_[FORWARD][index], time_info.local_time,
                              time_info.timezone_index)) {
       return false;
     }
@@ -404,11 +396,11 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint8_t flow_sources;
   Cost newcost = pred.cost() + tc + costing_->EdgeCost(meta.edge, tile, time_info, flow_sources);
 
-  auto& adj = source_adjacency_[FORWARD][index];
+  auto& adj = adjacency_[FORWARD][index];
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated along with new cost and distance.
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
-    BDEdgeLabel& lab = source_edgelabel_[FORWARD][index][meta.edge_status->index()];
+    BDEdgeLabel& lab = edgelabel_[FORWARD][index][meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       adj.decrease(meta.edge_status->index(), newcost.cost);
       lab.Update(pred_idx, newcost, newcost.cost, tc, pred.path_distance() + meta.edge->length(),
@@ -470,32 +462,32 @@ bool CostMatrix::Expand(const uint32_t index,
                         const baldr::TimeInfo& time_info,
                         const bool invariant) {
 
-  auto& adj = source_adjacency_[FORWARD][index];
-  auto& edgelabels = source_edgelabel_[FORWARD][index];
+  auto& adj = adjacency_[FORWARD][index];
+  auto& edgelabels = edgelabel_[FORWARD][index];
   uint32_t pred_idx = adj.pop();
   if (pred_idx == kInvalidLabel) {
     // search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    for (uint32_t st = 0; st < source_count_[!FORWARD]; st++) {
+    for (uint32_t st = 0; st < locs_count_[!FORWARD]; st++) {
       if (FORWARD) {
         UpdateStatus(index, st);
       } else {
         UpdateStatus(st, index);
       }
     }
-    source_status_[FORWARD][index].threshold = 0;
+    locs_status_[FORWARD][index].threshold = 0;
     return false;
   }
 
   // Get edge label and check cost threshold
   auto pred = edgelabels[pred_idx];
   if (pred.cost().secs > current_cost_threshold_) {
-    source_status_[FORWARD][index].threshold = 0;
+    locs_status_[FORWARD][index].threshold = 0;
     return false;
   }
 
   // Settle this edge and log it if requested
-  auto& edgestatus = source_edgestatus_[FORWARD][index];
+  auto& edgestatus = edgestatus_[FORWARD][index];
   edgestatus.Update(pred.edgeid(), EdgeSet::kPermanent);
   if (expansion_callback_) {
     expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
@@ -512,7 +504,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
       (!ignore_hierarchy_limits_ &&
-       source_hierarchy_limits_[FORWARD][index][node.level()].StopExpanding())) {
+       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding())) {
     return false;
   }
 
@@ -584,7 +576,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // Handle transitions - expand from the end node of each transition
   if (nodeinfo->transition_count() > 0) {
     const NodeTransition* trans = tile->transition(nodeinfo->transition_index());
-    auto& hierarchy_limits = source_hierarchy_limits_[FORWARD][index];
+    auto& hierarchy_limits = hierarchy_limits_[FORWARD][index];
     for (uint32_t i = 0; i < nodeinfo->transition_count(); ++i, ++trans) {
       // if this is a downward transition (ups are always allowed) AND we are no longer allowed OR
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
@@ -661,7 +653,7 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
   // Iterate through the targets
   bool found_connection = false;
   for (auto target : targets->second) {
-    uint32_t idx = source * source_count_[MATRIX_REV] + target;
+    uint32_t idx = source * locs_count_[MATRIX_REV] + target;
     if (best_connection_[idx].found) {
       continue;
     }
@@ -675,9 +667,9 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
     // If we came down here, we know this opposing edge is either settled, or it's a
     // target correlated edge which hasn't been pulled out of the queue yet, so a path
     // has been found to the end node of this directed edge
-    const auto& opp_edgestate = source_edgestatus_[MATRIX_REV][target];
+    const auto& opp_edgestate = edgestatus_[MATRIX_REV][target];
     EdgeStatusInfo oppedgestatus = opp_edgestate.Get(oppedge);
-    const auto& opp_edgelabels = source_edgelabel_[MATRIX_REV][target];
+    const auto& opp_edgelabels = edgelabel_[MATRIX_REV][target];
     uint32_t predidx = opp_edgelabels[oppedgestatus.index()].predecessor();
     const BDEdgeLabel& opp_el = opp_edgelabels[oppedgestatus.index()];
 
@@ -712,8 +704,8 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
         best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
-              n + GetThreshold(mode_, source_edgelabel_[MATRIX_FORW][source].size() +
-                                          source_edgelabel_[MATRIX_REV][target].size());
+              n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
+                                          edgelabel_[MATRIX_REV][target].size());
         }
 
         // Update status and update threshold if this is the last location
@@ -737,34 +729,30 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
 // Update status when a connection is found.
 void CostMatrix::UpdateStatus(const uint32_t source, const uint32_t target) {
   // Remove the target from the source status
-  auto& s = source_status_[MATRIX_FORW][source].unfound_connections;
+  auto& s = locs_status_[MATRIX_FORW][source].unfound_connections;
   auto it = s.find(target);
   if (it != s.end()) {
     s.erase(it);
-    // TODO(nils): why the second condition? if we exceeded the max iterations, then
-    // it must've happened right before in this iteration and we should extend it
-    if (s.empty() && source_status_[MATRIX_FORW][source].threshold > 0) {
+    if (s.empty() && locs_status_[MATRIX_FORW][source].threshold > 0) {
       // At least 1 connection has been found to each target for this source.
       // Set a threshold to continue search for a limited number of times.
-      source_status_[MATRIX_FORW][source].threshold =
-          GetThreshold(mode_, source_edgelabel_[MATRIX_FORW][source].size() +
-                                  source_edgelabel_[MATRIX_REV][target].size());
+      locs_status_[MATRIX_FORW][source].threshold =
+          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
+                                  edgelabel_[MATRIX_REV][target].size());
     }
   }
 
   // Remove the source from the target status
-  auto& t = source_status_[MATRIX_REV][target].unfound_connections;
+  auto& t = locs_status_[MATRIX_REV][target].unfound_connections;
   it = t.find(source);
   if (it != t.end()) {
     t.erase(it);
-    // TODO(nils): why the second condition? if we exceeded the max iterations, then
-    // it must've happened right before in this iteration and we should extend it
-    if (t.empty() && source_status_[MATRIX_REV][target].threshold > 0) {
+    if (t.empty() && locs_status_[MATRIX_REV][target].threshold > 0) {
       // At least 1 connection has been found to each source for this target.
       // Set a threshold to continue search for a limited number of times.
-      source_status_[MATRIX_REV][target].threshold =
-          GetThreshold(mode_, source_edgelabel_[MATRIX_FORW][source].size() +
-                                  source_edgelabel_[MATRIX_REV][target].size());
+      locs_status_[MATRIX_REV][target].threshold =
+          GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
+                                  edgelabel_[MATRIX_REV][target].size());
     }
   }
 }
@@ -829,17 +817,10 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path.
-      uint32_t idx = source_edgelabel_[MATRIX_FORW][index].size();
-      source_edgelabel_[MATRIX_FORW][index].push_back(std::move(edge_label));
-      source_adjacency_[MATRIX_FORW][index].add(idx);
-      source_edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
-
-      // TODO(nils): use this to extend the search
-      // pruning_disabled_at_origin_[MATRIX_FORW][index] =
-      // pruning_disabled_at_origin_[MATRIX_FORW][index] ||
-      //                               !source_edgelabel_[MATRIX_FORW][index].back().closure_pruning()
-      //                               ||
-      //                               !source_edgelabel_[MATRIX_REV][index].back().not_thru_pruning();
+      uint32_t idx = edgelabel_[MATRIX_FORW][index].size();
+      edgelabel_[MATRIX_FORW][index].push_back(std::move(edge_label));
+      adjacency_[MATRIX_FORW][index].add(idx);
+      edgestatus_[MATRIX_FORW][index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
     }
     index++;
   }
@@ -914,10 +895,10 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
       // of the path. Set the origin flag
-      uint32_t idx = source_edgelabel_[MATRIX_REV][index].size();
-      source_edgelabel_[MATRIX_REV][index].push_back(std::move(edge_label));
-      source_adjacency_[MATRIX_REV][index].add(idx);
-      source_edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
+      uint32_t idx = edgelabel_[MATRIX_REV][index].size();
+      edgelabel_[MATRIX_REV][index].push_back(std::move(edge_label));
+      adjacency_[MATRIX_REV][index].add(idx);
+      edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
                                                 graphreader.GetGraphTile(opp_edge_id));
       (*targets_)[opp_edge_id].push_back(index);
     }
@@ -947,9 +928,9 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     const auto& target = targets.Get(target_idx);
     // Get the indexes where the connection occurs.
     uint32_t connedge_idx1 =
-        source_edgestatus_[MATRIX_FORW][source_idx].Get(best_connection->edgeid).index();
+        edgestatus_[MATRIX_FORW][source_idx].Get(best_connection->edgeid).index();
     uint32_t connedge_idx2 =
-        source_edgestatus_[MATRIX_REV][target_idx].Get(best_connection->opp_edgeid).index();
+        edgestatus_[MATRIX_REV][target_idx].Get(best_connection->opp_edgeid).index();
 
     // set of edges recovered from shortcuts (excluding shortcut's start edges)
     std::unordered_set<GraphId> recovered_inner_edges;
@@ -961,8 +942,8 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     graph_tile_ptr tile;
     for (auto edgelabel_index = connedge_idx1; edgelabel_index != kInvalidLabel;
          edgelabel_index =
-             source_edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
-      const BDEdgeLabel& edgelabel = source_edgelabel_[MATRIX_FORW][source_idx][edgelabel_index];
+             edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
+      const BDEdgeLabel& edgelabel = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index];
 
       const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
       if (edge == nullptr) {
@@ -983,7 +964,7 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     // Append the reverse path from the destination - use opposing edges
     // The first edge on the reverse path is the same as the last on the forward
     // path, so get the predecessor.
-    auto& target_edgelabels = source_edgelabel_[MATRIX_REV][target_idx];
+    auto& target_edgelabels = edgelabel_[MATRIX_REV][target_idx];
     for (auto edgelabel_index = target_edgelabels[connedge_idx2].predecessor();
          edgelabel_index != kInvalidLabel;
          edgelabel_index = target_edgelabels[edgelabel_index].predecessor()) {
@@ -1043,19 +1024,19 @@ void CostMatrix::clear() {
   // Clear all source adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    source_adjacency_[exp_dir].clear();
-    source_adjacency_[exp_dir].resize(0);
-    source_adjacency_[exp_dir].shrink_to_fit();
-    source_edgelabel_[exp_dir].clear();
-    source_edgelabel_[exp_dir].resize(0);
-    source_edgelabel_[exp_dir].shrink_to_fit();
-    source_edgestatus_[exp_dir].clear();
-    source_edgestatus_[exp_dir].resize(0);
-    source_edgestatus_[exp_dir].shrink_to_fit();
-    source_hierarchy_limits_[exp_dir].clear();
-    source_hierarchy_limits_[exp_dir].resize(0);
-    source_hierarchy_limits_[exp_dir].shrink_to_fit();
-    source_status_[exp_dir].clear();
+    adjacency_[exp_dir].clear();
+    adjacency_[exp_dir].resize(0);
+    adjacency_[exp_dir].shrink_to_fit();
+    edgelabel_[exp_dir].clear();
+    edgelabel_[exp_dir].resize(0);
+    edgelabel_[exp_dir].shrink_to_fit();
+    edgestatus_[exp_dir].clear();
+    edgestatus_[exp_dir].resize(0);
+    edgestatus_[exp_dir].shrink_to_fit();
+    hierarchy_limits_[exp_dir].clear();
+    hierarchy_limits_[exp_dir].resize(0);
+    hierarchy_limits_[exp_dir].shrink_to_fit();
+    locs_status_[exp_dir].clear();
   }
   best_connection_.clear();
   ignore_hierarchy_limits_ = false;
