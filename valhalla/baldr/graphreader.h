@@ -637,16 +637,19 @@ public:
   /**
    * Method to get the begin node of an edge by using its opposing edges end node
    * @param edge    the edge whose begin node you want
-   * @param tile    a const tile to speed up lookups
+   * @param tile    reference to a pointer to a const tile containing the begin node
    * @return        returns GraphId of begin node of the edge (empty if couldn't find)
    */
-  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr tile) {
-    // grab the node
-    if (!GetGraphTile(edge->endnode(), tile))
+  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr& tile) {
+    // grab the end node maybe in an adjacent tile
+    graph_tile_ptr maybe_other_tile = tile;
+    if (!GetGraphTile(edge->endnode(), maybe_other_tile))
       return {};
-    const auto* node = tile->node(edge->endnode());
-    // grab the opp edges end node
-    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+    const auto* node = maybe_other_tile->node(edge->endnode());
+    // grab the opp edge also could be in this adjacent tile
+    const auto* opp_edge = maybe_other_tile->directededge(node->edge_index() + edge->opp_index());
+    // grab the end node of the opp_edge should be in the original tile
+    GetGraphTile(opp_edge->endnode(), tile); // no-op if original tile is already correct
     return opp_edge->endnode();
   }
 
