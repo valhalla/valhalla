@@ -637,10 +637,10 @@ public:
   /**
    * Method to get the begin node of an edge by using its opposing edges end node
    * @param edge    the edge whose begin node you want
-   * @param tile    reference to a pointer to a const tile
+   * @param tile    a const tile to speed up lookups
    * @return        returns GraphId of begin node of the edge (empty if couldn't find)
    */
-  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr& tile) {
+  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr tile) {
     // grab the node
     if (!GetGraphTile(edge->endnode(), tile))
       return {};
