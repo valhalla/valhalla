@@ -152,7 +152,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.ta
       --with-traffic --overwrite
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  DEPENDS build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
+  DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
 add_custom_target(utrecht_tiles DEPENDS ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.tar)
 set_target_properties(utrecht_tiles PROPERTIES FOLDER "Tests")
 
