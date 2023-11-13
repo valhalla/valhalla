@@ -52,6 +52,7 @@ echo "traffic extract before starting Valhalla:"
 grep traffic_extract valhalla.json
 echo "Starting incidents service..."
 cd /home/valhalla
-sleep 40 && sudo /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json |& tee log.txt &
+(sleep 60 && sudo screen -dmS gdb_session gdb -ex 'set follow-fork-mode child' -ex run --args /usr/local/bin/valhalla_incidents_service --config /custom_files/valhalla-incidents.json) &
+#  curl --request POST --url https://solvertech.webhook.office.com/webhookb2/88edc18b-e055-4c9d-bb0a-a96d1d1c0e25@3feda4b5-a7e5-4fdc-be96-d52baad6901b/IncomingWebhook/2d7dc36ca2db4bdd887bc6b888594b59/d3e1a8fa-4cca-4fdc-ba9e-ac62457b7a34 --header 'Content-Type: application/json' --data '{"Text" : "Incident service on '$(hostname)' has crashed and has been restarted."}'
 echo "Starting Valhalla..."
 /valhalla/scripts/run.sh build_tiles
