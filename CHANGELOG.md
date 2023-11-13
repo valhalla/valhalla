@@ -11,6 +11,7 @@
    * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
    * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
    * FIXED: respond with correlated edges for format=valhalla and matrix [#4335](https://github.com/valhalla/valhalla/pull/4335)
+   * FIXED: recover proper shortest path to ferry connections (when multiple edges exist between node pair) [#4361](https://github.com/valhalla/valhalla/pull/4361)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -40,6 +41,7 @@
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * ADDED: the workflow to find landmarks in a graph tile, associate them with nearby edges, and update the graph tile to store the associations [#4278](https://github.com/valhalla/valhalla/pull/4278)
    * ADDED: update maneuver generation to add nearby landmarks to maneuvers as direction support [#4293](https://github.com/valhalla/valhalla/pull/4293)
+   * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
