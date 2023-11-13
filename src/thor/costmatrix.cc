@@ -136,7 +136,7 @@ void CostMatrix::SourceToTarget(Api& request,
         // if we exhausted this search
         if (source_status_[MATRIX_REV][i].threshold == 0) {
           for (uint32_t source = 0; source < source_count_[MATRIX_FORW]; source++) {
-            // if we still didn't find the connection between this pair
+            // update the target for each source's remaining targets, if it still exists
             auto& targets = source_status_[MATRIX_FORW][source].unfound_connections;
             auto it = targets.find(i);
             if (it != targets.end()) {
@@ -170,7 +170,7 @@ void CostMatrix::SourceToTarget(Api& request,
         Expand<MatrixExpansionType::forward>(i, n, graphreader, time_infos[i], invariant);
         // if we exhausted this search
         if (source_status_[MATRIX_FORW][i].threshold == 0) {
-          for (uint32_t target = 0; target < target_count_; target++) {
+          for (uint32_t target = 0; target < source_count_[MATRIX_REV]; target++) {
             // if we still didn't find the connection between this pair
             auto& sources = source_status_[MATRIX_REV][target].unfound_connections;
             auto it = sources.find(i);
@@ -346,20 +346,13 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     if (ignore_hierarchy_limits_ || !get_opp_edge_data())
       return false;
 
-    const auto& opp_edgestatus = source_edgestatus_[!FORWARD][index];
-    const auto opp_edge_set = opp_edgestatus.Get(opp_edge_id).set();
-
-    // Synchronize shortcuts for both directions. If this shortcut has been already
-    // encountered on the opposing search we should do the same now: skip or traverse.
-    // If it wasn't encountered at all, we traverse only if the next level has already
-    // stopped expanding, i.e. no more down transitions
-    if ((opp_edge_set != EdgeSet::kSkipped &&
-         source_hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) ||
-        opp_edge_set == EdgeSet::kPermanent || opp_edge_set == EdgeSet::kTemporary) {
+    // Skip shortcut edges until we have stopped expanding on the next level. Use regular
+    // edges while still expanding on the next level since we can still transition down to
+    // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
+    // edge superseded by a shortcut.
+    if (source_hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
       shortcuts |= meta.edge->shortcut();
     } else {
-      // Mark this edge as "skipped".
-      *meta.edge_status = {EdgeSet::kSkipped, 0};
       return false;
     }
   }
@@ -432,6 +425,10 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     return false;
   }
 
+  if (meta.edge->is_shortcut()) {
+    // std::cerr << "shortcut!" << newcost.cost << std::endl;
+  }
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -454,11 +451,15 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             restriction_idx);
   }
   adj.add(idx);
+  if (!FORWARD) {
+    // mark the edge as settled in the reverse tree for the connection check
+    (*targets_)[pred.edgeid()].push_back(index);
+  }
 
   // setting this edge as reached
   if (expansion_callback_) {
-    expansion_callback_(graphreader, meta.edge_id, "costmatrix", "r", pred.cost().secs,
-                        pred.path_distance(), pred.cost().cost);
+    expansion_callback_(graphreader, meta.edge_id, "costmatrix", "r", newcost.secs,
+                        pred.path_distance() + meta.edge->length(), newcost.cost);
   }
 
   return true;
@@ -478,8 +479,12 @@ bool CostMatrix::Expand(const uint32_t index,
   if (pred_idx == kInvalidLabel) {
     // search is exhausted - mark this and update so we don't
     // extend searches more than we need to
-    for (uint32_t st = 0; st < source_count_[FORWARD]; st++) {
-      UpdateStatus(index, st);
+    for (uint32_t st = 0; st < source_count_[!FORWARD]; st++) {
+      if (FORWARD) {
+        UpdateStatus(index, st);
+      } else {
+        UpdateStatus(st, index);
+      }
     }
     source_status_[FORWARD][index].threshold = 0;
     return false;
@@ -495,18 +500,14 @@ bool CostMatrix::Expand(const uint32_t index,
   // Settle this edge and log it if requested
   auto& edgestatus = source_edgestatus_[FORWARD][index];
   edgestatus.Update(pred.edgeid(), EdgeSet::kPermanent);
-  if (!FORWARD) {
-    // mark the edge as settled in the reverse tree for the connection check
-    (*targets_)[pred.edgeid()].push_back(index);
-  }
   if (expansion_callback_) {
     expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
                         pred.path_distance(), pred.cost().cost);
   }
 
   // don't look for more connections on this branch
-  if (CheckForwardConnections(index, pred, n, graphreader)) {
-    return true;
+  if (FORWARD) {
+    CheckForwardConnections(index, pred, n, graphreader);
   }
 
   GraphId node = pred.endnode();
@@ -572,11 +573,12 @@ bool CostMatrix::Expand(const uint32_t index,
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
+    const bool is_uturn = pred.opp_local_idx() == meta.edge->localedgeidx();
+    uturn_meta = is_uturn ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
     disable_uturn =
-        (pred.opp_local_idx() != meta.edge->localedgeidx() &&
+        (!is_uturn &&
          ExpandInner<expansion_direction>(graphreader, index, pred, opp_pred_edge, nodeinfo, pred_idx,
                                           meta, shortcuts, tile, offset_time)) ||
         disable_uturn;
@@ -591,7 +593,7 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
+           hierarchy_limits[trans->endnode().level()].StopExpanding()) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
@@ -660,8 +662,9 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
   }
 
   // Iterate through the targets
+  bool found_connection = false;
   for (auto target : targets->second) {
-    uint32_t idx = source * target_count_ + target;
+    uint32_t idx = source * source_count_[MATRIX_REV] + target;
     if (best_connection_[idx].found) {
       continue;
     }
@@ -712,13 +715,14 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
         best_connection_[idx].Update(pred.edgeid(), oppedge, Cost(c, s), d);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
-              n + GetThreshold(mode_, source_edgelabel_[source].size() +
+              n + GetThreshold(mode_, source_edgelabel_[MATRIX_FORW][source].size() +
                                           source_edgelabel_[MATRIX_REV][target].size());
         }
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
         UpdateStatus(source, target);
+        // std::cerr << "Found conn " << source << ", " << target << std::endl;
       }
     }
     // setting this edge as connected
@@ -727,10 +731,10 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
                           pred.path_distance(), pred.cost().cost);
     }
 
-    return true;
+    found_connection = true;
   }
 
-  return false;
+  return found_connection;
 }
 
 // Update status when a connection is found.
