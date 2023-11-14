@@ -16,17 +16,13 @@
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
 namespace {
 
-const std::string config_file = "test/test_config_gp";
+const std::string config_file = VALHALLA_BUILD_DIR "test/test_config_gp";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node.osmid_ < b.node.osmid_;

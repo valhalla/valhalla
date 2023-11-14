@@ -54,7 +54,7 @@ bool ApproxEqual(const AABB2<PointLL>& a, const AABB2<PointLL>& b) {
 }
 
 TEST(MinBB, utrecht_bb) {
-  bb_tester t("test/data/utrecht_tiles");
+  bb_tester t(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
   EXPECT_TRUE(t.bb.minpt().IsValid());
   EXPECT_TRUE(t.bb.maxpt().IsValid());

@@ -19,7 +19,7 @@ using namespace valhalla::midgard;
 namespace {
 
 // fake config
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 TEST(ShapeAttributes, test_shape_attributes_included) {
   tyr::actor_t actor(conf);

@@ -35,7 +35,7 @@ namespace {
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
 // projected uniquely on the bss_connection.
 const auto cfg =
-    test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
+    test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
 } // namespace
 
 // The distances returned by route and matrix are not always equal to each other

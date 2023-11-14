@@ -17,7 +17,7 @@ using namespace std::string_literals;
 namespace {
 
 // fake config
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 TEST(ThorWorker, test_parse_filter_attributes_defaults) {
   tyr::actor_t actor(conf, true);

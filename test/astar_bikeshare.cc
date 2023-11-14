@@ -28,7 +28,7 @@ namespace {
 // avoid that we set a radius here to get both sets of edges and let the algorithm take the cheaper
 // one. this only worked before by luck
 const auto conf =
-    test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
+    test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
 
 struct route_tester {
   route_tester()

@@ -12,10 +12,6 @@
 
 #include "test.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
@@ -51,7 +47,7 @@ OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {
 
 TEST(Utrecth, TestBike) {
   boost::property_tree::ptree conf;
-  conf.put<std::string>("mjolnir.tile_dir", "test/data/parser_tiles");
+  conf.put<std::string>("mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/parser_tiles");
   conf.put<unsigned long>("mjolnir.id_table_size", 1000);
 
   sequence<OSMWay> ways(ways_file, false);

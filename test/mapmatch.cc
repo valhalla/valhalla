@@ -65,7 +65,7 @@ std::string to_locations(const std::vector<PointLL>& shape,
 }
 
 // fake config
-const auto conf = test::make_config("test/data/utrecht_tiles",
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles",
                                     {
                                         {"meili.default.max_search_radius", "200"},
                                         {"meili.default.search_radius", "15.0"},

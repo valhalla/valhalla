@@ -23,7 +23,7 @@ using namespace valhalla::tyr;
 
 namespace {
 
-const auto conf = test::make_config("test/data/utrecht_tiles");
+const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 struct route_tester {
   route_tester()

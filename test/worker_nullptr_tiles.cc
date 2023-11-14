@@ -14,7 +14,7 @@ using Seed_t = std::mt19937_64::result_type;
 namespace {
 
 constexpr size_t AttemptsCount = 1000;
-const auto Config = test::make_config("test/data/whitelion_tiles");
+const auto Config = test::make_config(VALHALLA_BUILD_DIR "test/data/whitelion_tiles");
 constexpr auto TestRequest =
     R"({"locations":[{"lat":51.455768530466514,"lon":-2.5954368710517883},{"lat":51.456082740244824,"lon":-2.595050632953644}],"costing":"auto"})";
 

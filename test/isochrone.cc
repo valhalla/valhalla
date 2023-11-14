@@ -30,7 +30,7 @@ using rp = rapidjson::Pointer;
 
 namespace {
 
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
   EXPECT_NEAR(a.GetArray()[0].GetDouble(), b.GetArray()[0].GetDouble(), 0.00002);
@@ -215,7 +215,7 @@ TEST(Isochrones, LongEdge) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/long_edge");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/isochrones/long_edge");
 
   std::string geojson;
   auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",

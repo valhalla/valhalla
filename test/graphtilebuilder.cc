@@ -10,10 +10,6 @@
 #include <string>
 #include <vector>
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace std;
 using namespace valhalla::mjolnir;
 
@@ -104,7 +100,7 @@ TEST(GraphTileBuilder, TestDuplicateEdgeInfo) {
   EXPECT_FALSE(success.second) << "Why on earth would it be found but then insert just fine";
 
   // load a test builder
-  std::string test_dir = "test/data/builder_tiles";
+  std::string test_dir = VALHALLA_BUILD_DIR "test/data/builder_tiles";
   test_graph_tile_builder test(test_dir, GraphId(0, 2, 0), false);
   test.directededges().emplace_back();
   // add edge info for node 0 to node 1
@@ -224,7 +220,7 @@ TEST(GraphTileBuilder, TestAddBins) {
     ASSERT_TRUE(t && t->header()) << "Couldn't load test tile";
 
     // alter the config to point to another dir
-    std::string bin_dir = "test/data/bin_tiles/bin";
+    std::string bin_dir = VALHALLA_BUILD_DIR "test/data/bin_tiles/bin";
 
     // send blank bins
     std::array<std::vector<GraphId>, kBinCount> bins;
@@ -239,7 +235,7 @@ TEST(GraphTileBuilder, TestAddBins) {
       std::string obytes((std::istreambuf_iterator<char>(o)), std::istreambuf_iterator<char>());
       ifstream n;
       n.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-      n.open("test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
+      n.open(VALHALLA_BUILD_DIR "test/data/bin_tiles/bin/2/000/" + test_tile.first, std::ios::binary);
       std::string nbytes((std::istreambuf_iterator<char>(n)), std::istreambuf_iterator<char>());
       EXPECT_EQ(obytes, nbytes) << "Old tile and new tile should be the same if not adding any bins";
     }
