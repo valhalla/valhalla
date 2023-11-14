@@ -13,7 +13,8 @@ public:
 };
 
 auto config_tar = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles",
-                                    {{"mjolnir.tile_extract", VALHALLA_BUILD_DIR "test/data/utrecht_tiles/tiles.tar"}});
+                                    {{"mjolnir.tile_extract",
+                                      VALHALLA_BUILD_DIR "test/data/utrecht_tiles/tiles.tar"}});
 auto config_dir = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 TEST(TarIndexer, TestTrafficTar) {
