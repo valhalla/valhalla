@@ -669,7 +669,8 @@ public:
    * @param   edge2  GraphId of second directed edge.
    * @param   tile    Reference to a pointer to a const tile.
    * @return  Returns true if the directed edges are directly connected
-   *          at a node, false if not.
+   *          at a node, false if not. If successful the tile will be set
+   *          to the one containing the end node of edge1
    */
   bool AreEdgesConnectedForward(const GraphId& edge1, const GraphId& edge2, graph_tile_ptr& tile);
 
@@ -768,7 +769,8 @@ public:
    * @return Returns a pair of GraphIds: the first is the start node
    *         and the second is the end node. An invalid start node
    *         can occur in regional extracts (where the end node tile
-   *         is not available).
+   *         is not available). If successful tile will be set to
+   *         the one containing edgeid
    */
   std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphId& edgeid, graph_tile_ptr& tile) {
     if (tile && tile->id().Tile_Base() == edgeid.Tile_Base()) {
@@ -795,7 +797,8 @@ public:
    * Get the end node of an edge. The current tile is accepted as an
    * argiment.
    * @param  edgeid  Edge Id.
-   * @return  Returns the end node of the edge.
+   * @return  Returns the end node of the edge. If successful tile will point to the one
+   *          containing edgeid
    */
   GraphId edge_endnode(const GraphId& edgeid, graph_tile_ptr& tile) {
     const DirectedEdge* de = directededge(edgeid, tile);
