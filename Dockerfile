@@ -108,8 +108,7 @@ RUN groupadd -g ${VALHALLA_GID} valhalla && \
 	
 COPY scripts/. /valhalla/scripts
 COPY configs/limits.conf /etc/security
-RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh
-RUN sudo chmod 0775 /valhalla/scripts/run.sh
+RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh /valhalla/scripts/run.sh /valhalla/scripts/configure_valhalla.sh /valhalla/scripts/helpers.sh
 WORKDIR /custom_files
 
 # Smoke tests
