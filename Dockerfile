@@ -88,8 +88,8 @@ RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"
 COPY scripts/. /valhalla/scripts
 COPY configs/limits.conf /etc/security
-RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh && sudo chown valhalla:valhalla /valhalla/scripts/solvertech.sh
-USER valhalla
+RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh
+#USER valhalla
 
 EXPOSE 8002
 ENTRYPOINT ["/valhalla/scripts/solvertech.sh"]
