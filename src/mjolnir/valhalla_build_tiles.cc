@@ -31,7 +31,6 @@ int main(int argc, char** argv) {
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
-  boost::property_tree::ptree pt;
 
   try {
 
@@ -58,7 +57,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     // Convert stage strings to BuildStage
@@ -99,7 +98,7 @@ int main(int argc, char** argv) {
   }
 
   // Build some tiles!
-  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
+  if (build_tile_set(valhalla::config(), input_files, start_stage, end_stage)) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

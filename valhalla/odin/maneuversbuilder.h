@@ -319,6 +319,14 @@ protected:
    */
   void CollapseMergeManeuvers(std::list<Maneuver>& maneuvers);
 
+  /**
+   * Add relevant landmarks to maneuvers as direction support.
+   * Each maneuver should get the landmarks accosiated with edges that make up the previous maneuver.
+   *
+   * @param maneuvers The list of maneuvers to add landmarks.
+   */
+  void AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers);
+
   const Options& options_;
   EnhancedTripLeg* trip_path_;
 };

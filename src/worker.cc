@@ -931,6 +931,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // Get the elevation interval for returning elevation along the path in a route or
+  // trace attribute call. Defaults to 0.0 (no elevation is returned)
+  constexpr float kMaxElevationInterval = 1000.0f;
+  auto elevation_interval = rapidjson::get_optional<float>(doc, "/elevation_interval");
+  if (elevation_interval) {
+    options.set_elevation_interval(
+        std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
+    options.set_elevation_interval(
+        std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
+  }
+
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
@@ -1168,6 +1181,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
+
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =

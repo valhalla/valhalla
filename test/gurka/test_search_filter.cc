@@ -261,7 +261,7 @@ protected:
             |
             H
 
-   L-4---5-M-6-N
+   L4----5-M-6-N
   )";
 
     const std::string speed_str = std::to_string(default_speed);

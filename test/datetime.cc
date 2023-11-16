@@ -631,6 +631,24 @@ TEST(DateTime, TestDayOfWeek) {
   EXPECT_EQ(dow, 3) << "DateTime::day_of_week failed: 3 expected";
 }
 
+TEST(DateTime, TimezoneAliases) {
+  const auto& dt_db = DateTime::get_tz_db();
+  // map of alias and target names (taken from old hand curated list in valhalla_build_timezones)
+  std::vector<std::pair<std::string, std::string>> pairs = {{"Etc/Zulu", "Etc/UTC"},
+                                                            {"Etc/GMT-0", "Etc/GMT"},
+                                                            {"ROC", "Asia/Taipei"},
+                                                            {"GB", "Europe/London"},
+                                                            {"NZ-CHAT", "Pacific/Chatham"},
+                                                            {"Asia/Ujung_Pandang", "Asia/Makassar"},
+                                                            {"Africa/Bamako", "Africa/Abidjan"},
+                                                            {"Africa/Kampala", "Africa/Nairobi"}};
+
+  for (const auto& pair : pairs) {
+    auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
+    EXPECT_EQ(alias_idx, dt_db.from_index(dt_db.to_index(pair.second)));
+  }
+}
+
 TEST(DateTime, TestSecondOfWeek) {
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   // 2019-11-06T17:15

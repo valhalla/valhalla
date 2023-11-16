@@ -55,6 +55,10 @@ tz_db_t::tz_db_t() : db(date::get_tzdb()) {
   for (const auto& zone : db.zones) {
     names.emplace(zone.name(), ++idx);
   }
+  // add the aliases of the links here with the index of their targets
+  for (const auto& link : db.links) {
+    names.emplace(link.name(), names.find(link.target())->second);
+  }
 }
 
 size_t tz_db_t::to_index(const std::string& zone) const {

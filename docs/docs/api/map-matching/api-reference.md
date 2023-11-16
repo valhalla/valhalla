@@ -72,7 +72,7 @@ These are the available filter keys. Review their [descriptions](#outputs-of-tra
 ```
 // Edge filter Keys
 edge.names
-edge.length
+edge.length  # can also set source/target_percent_along
 edge.speed
 edge.road_class
 edge.begin_heading
@@ -175,7 +175,9 @@ Each `edge` may include:
 | Edge item | Description |
 | :--------- | :---------- |
 | `names` | List of names. |
-| `length` | Edge length in the units specified. The default is kilometers. |
+| `source_percent_along` | The start of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.
+| `target_percent_along` | The end of an edge's match as percentage of its length in (0, 1) range. If an edge was fully matched, we omit this value.
+| `length` | The **matched** edge length in the units specified (default is kilometers). If `source_percent_along` and/or `target_percent_along` are present, this represents the partially matched edge length, otherwise the full edge length. |
 | `speed` | Edge speed in the units specified. The default is kilometers per hour. |
 | `road_class` | Road class values:<ul><li>`motorway`</li><li>`trunk`</li><li>`primary`</li><li>`secondary`</li><li>`tertiary`</li><li>`unclassified`</li><li>`residential`</li><li>`service_other`</li></ul> |
 | `begin_heading` | The direction at the beginning of an edge. The units are degrees from north in a clockwise direction. |
@@ -216,6 +218,7 @@ Each `edge` may include:
 | `truck_speed` | Edge truck speed in the units specified. The default is kilometers per hour. |
 | `truck_route` | True if edge is part of a truck network/route. |
 | `end_node` | The node at the end of this edge. See the list of [end node items](#end-node-items) for details. |
+| `landmarks` | List of landmarks along the edge. They are used as direction support in navigation. |
 
 #### Sign items
 
