@@ -84,12 +84,41 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
       spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
 
-# python smoke test
-RUN python3 -c "import valhalla,sys; print(sys.version, valhalla)"
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+# export the True defaults
+ENV use_tiles_ignore_pbf=True
+ENV build_tar=True
+ENV serve_tiles=True
+
+# what this does:
+# if the docker user specified a UID/GID (other than 0, would be a ludicrous instruction anyways) in the image build, we will use that to create the valhalla linux user in the image. that ensures that the docker user can edit the created files on the host without sudo and with 664/775 permissions, so that users of that group can also write. the default is to give the valhalla user passwordless sudo. that also means that all commands creating files in the entrypoint script need to be executed with sudo when built with defaults..
+# based on https://jtreminio.com/blog/running-docker-containers-as-current-host-user/, but this use case needed a more customized approach
+
+# with that we can properly test if the default was used or not
+ARG VALHALLA_UID=59999
+ARG VALHALLA_GID=59999
+
+RUN groupadd -g ${VALHALLA_GID} valhalla && \
+  useradd -lmu ${VALHALLA_UID} -g valhalla valhalla && \
+  mkdir /custom_files && \
+  if [ $VALHALLA_UID != 59999 ] || [ $VALHALLA_GID != 59999 ]; then chmod 0775 custom_files && chown valhalla:valhalla /custom_files; else usermod -aG sudo valhalla && echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers; fi
+
+	
 COPY scripts/. /valhalla/scripts
 COPY configs/limits.conf /etc/security
 RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh
-#USER valhalla
+WORKDIR /custom_files
+
+# Smoke tests
+RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
+    && valhalla_build_config | jq type \
+    && cat /usr/local/src/valhalla_version \
+    && valhalla_build_tiles -v \
+    && ls -la /usr/local/bin/valhalla*
+	
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+USER valhalla
 
 EXPOSE 8002
 ENTRYPOINT ["/valhalla/scripts/solvertech.sh"]
