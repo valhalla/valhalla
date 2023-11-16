@@ -70,8 +70,6 @@ LABEL org.opencontainers.image.description = "Open Source Routing Engine for Ope
 LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
 # grab the builder stages artifacts
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
@@ -83,6 +81,10 @@ RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
       curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
       spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
 RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
+
 
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
 # export the True defaults
@@ -107,6 +109,7 @@ RUN groupadd -g ${VALHALLA_GID} valhalla && \
 COPY scripts/. /valhalla/scripts
 COPY configs/limits.conf /etc/security
 RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh
+RUN sudo chmod 0775 /valhalla/scripts/run.sh
 WORKDIR /custom_files
 
 # Smoke tests
