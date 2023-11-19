@@ -392,9 +392,16 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   }
 
   // Get cost. Separate out transition cost.
-  Cost tc = costing_->TransitionCost(meta.edge, nodeinfo, pred);
   uint8_t flow_sources;
-  Cost newcost = pred.cost() + tc + costing_->EdgeCost(meta.edge, tile, time_info, flow_sources);
+  Cost tc = FORWARD
+                ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+                : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge,
+                                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                                  pred.internal_turn());
+  Cost newcost = pred.cost() + tc +
+                 (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                          : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
 
   auto& adj = adjacency_[FORWARD][index];
   // Check if edge is temporarily labeled and this path has less cost. If
@@ -523,13 +530,13 @@ bool CostMatrix::Expand(const uint32_t index,
                          : time_info.reverse(seconds_offset, static_cast<int>(nodeinfo->timezone()));
 
   // Get the opposing predecessor directed edge if this is reverse.
-  DirectedEdge* opp_pred_edge = nullptr;
+  const DirectedEdge* opp_pred_edge = nullptr;
   if (!FORWARD) {
     const auto rev_pred_tile = graphreader.GetGraphTile(pred.opp_edgeid(), tile);
     if (rev_pred_tile == nullptr) {
       return false;
     }
-    const DirectedEdge* opp_pred_edge = rev_pred_tile->directededge(pred.opp_edgeid());
+    opp_pred_edge = rev_pred_tile->directededge(pred.opp_edgeid());
   }
 
   // keep track of shortcuts
