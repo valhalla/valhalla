@@ -350,7 +350,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Skip this edge if permanently labeled (best path already found to this
   // directed edge) or if no access for this mode.
   if (meta.edge_status->set() == EdgeSet::kPermanent) {
-    return false;
+    return true;
   }
 
   const baldr::DirectedEdge* opp_edge = nullptr;
