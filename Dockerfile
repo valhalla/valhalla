@@ -76,7 +76,7 @@ LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 # install all the posix locales that we support
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
-	  screen sudo jq \
+	  screen sudo jq moreutils \
       libcurl4 libczmq4 libluajit-5.1-2 \
       libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
       curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
