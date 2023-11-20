@@ -1,12 +1,22 @@
+# TODO: we should make use of BUILDPLATFORM and TARGETPLATFORM to figure out cross compiling
+#  as mentioned here: docker.com/blog/faster-multi-platform-builds-dockerfile-cross-compilation-guide
+#  then we could use the host architecture to simply compile to the target architecture without
+#  emulating the target architecture (thereby making the build hyper slow). the general gist is
+#  we add arm (or whatever architecture) repositories to apt and then install our dependencies
+#  with the architecture suffix, eg. :arm64. then we just need to set a bunch of cmake variables
+#  probably with the use of a cmake toolchain file so that cmake can make sure to use the
+#  binaries that can target the target architecture. from there bob is your uncle maybe..
+
 ####################################################################
-FROM ubuntu:22.04 as builder 
+FROM ubuntu:23.04 as builder
 MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
 
 ARG CONCURRENCY
 
 # set paths
-ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
-ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
+RUN export DEBIAN_FRONTEND=noninteractive && apt update && apt install -y sudo
 
 # install deps
 WORKDIR /usr/local/src/valhalla
@@ -22,11 +32,13 @@ RUN rm -rf build && mkdir build
 
 # upgrade Conan again, to avoid using an outdated version:
 # https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN pip install --upgrade "conan<2.0.0"
+RUN sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc
+# switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
+RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off
+#RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off
 RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
@@ -37,7 +49,7 @@ RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; impo
 #RUN rm -rf valhalla
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
-WORKDIR /usr/local/bin
+#WORKDIR /usr/local/bin
 #RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
 #RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
 #RUN rm -f valhalla_*.debug
@@ -47,34 +59,68 @@ WORKDIR /usr/local/bin
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
-#FROM ubuntu:22.04 as runner
-FROM ghcr.io/gis-ops/docker-valhalla/valhalla:manually_triggered_build as runner
+FROM ubuntu:23.04 as runner
+MAINTAINER Kevin Kreiser <kevinkreiser@gmail.com>
+
+# basic paths
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 
 # github packaging niceties
 LABEL org.opencontainers.image.description = "Open Source Routing Engine for OpenStreetMap and Other Datasources"
 LABEL org.opencontainers.image.source = "https://github.com/valhalla/valhalla"
 
-COPY --from=builder /usr/local /usr/local
-COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
+# grab the builder stages artifacts
 
 # we need to add back some runtime dependencies for binaries and scripts
 # install all the posix locales that we support
-USER root
 RUN export DEBIAN_FRONTEND=noninteractive && apt update && \
     apt install -y \
-	  screen gdb \
+	  screen sudo jq moreutils \
       libcurl4 libczmq4 libluajit-5.1-2 \
-      libprotobuf-lite23 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
-      curl gdb locales parallel python3.10-minimal python3-distutils python-is-python3 \
-      spatialite-bin unzip wget && \
-    cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen && \
-    rm -rf /var/lib/apt/lists/* && \
-    \
-    # python smoke test
-    python3 -c "import valhalla,sys; print(sys.version, valhalla)"
+      libprotobuf-lite32 libsqlite3-0 libsqlite3-mod-spatialite libzmq5 zlib1g \
+      curl gdb locales parallel python3-minimal python3-distutils python-is-python3 \
+      spatialite-bin unzip wget && rm -rf /var/lib/apt/lists/*
+RUN cat /usr/local/src/valhalla_locales | xargs -d '\n' -n1 locale-gen
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/lib/python3/dist-packages/valhalla/* /usr/lib/python3/dist-packages/valhalla/
+
+
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH}"
+# export the True defaults
+ENV use_tiles_ignore_pbf=True
+ENV build_tar=True
+ENV serve_tiles=True
+
+# what this does:
+# if the docker user specified a UID/GID (other than 0, would be a ludicrous instruction anyways) in the image build, we will use that to create the valhalla linux user in the image. that ensures that the docker user can edit the created files on the host without sudo and with 664/775 permissions, so that users of that group can also write. the default is to give the valhalla user passwordless sudo. that also means that all commands creating files in the entrypoint script need to be executed with sudo when built with defaults..
+# based on https://jtreminio.com/blog/running-docker-containers-as-current-host-user/, but this use case needed a more customized approach
+
+# with that we can properly test if the default was used or not
+ARG VALHALLA_UID=59999
+ARG VALHALLA_GID=59999
+
+RUN groupadd -g ${VALHALLA_GID} valhalla && \
+  useradd -lmu ${VALHALLA_UID} -g valhalla valhalla && \
+  mkdir /custom_files && \
+  if [ $VALHALLA_UID != 59999 ] || [ $VALHALLA_GID != 59999 ]; then chmod 0775 custom_files && chown valhalla:valhalla /custom_files; else usermod -aG sudo valhalla && echo "ALL            ALL = (ALL) NOPASSWD: ALL" >> /etc/sudoers; fi
+
+	
 COPY scripts/. /valhalla/scripts
 COPY configs/limits.conf /etc/security
-RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh && sudo chown valhalla:valhalla /valhalla/scripts/solvertech.sh
+RUN sudo chmod 0775 /valhalla/scripts/solvertech.sh /valhalla/scripts/run.sh /valhalla/scripts/configure_valhalla.sh /valhalla/scripts/helpers.sh
+WORKDIR /custom_files
+
+# Smoke tests
+RUN python -c "import valhalla,sys; print (sys.version, valhalla)" \
+    && valhalla_build_config | jq type \
+    && cat /usr/local/src/valhalla_version \
+    && valhalla_build_tiles -v \
+    && ls -la /usr/local/bin/valhalla*
+	
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH
+ENV LD_LIBRARY_PATH /usr/local/lib:/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu:/lib32:/usr/lib32
 USER valhalla
 
 EXPOSE 8002

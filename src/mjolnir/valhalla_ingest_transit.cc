@@ -8,8 +8,6 @@
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -27,7 +25,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -37,6 +35,8 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
+
+  const auto& pt = valhalla::config();
 
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs

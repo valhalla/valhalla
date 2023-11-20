@@ -39,10 +39,11 @@ struct NodeLabel {
   float cost;
   uint32_t node_index;
   uint32_t pred_node_index;
+  uint32_t way_index;
   bool dest_only;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p, const bool d)
-      : cost(c), node_index(n), pred_node_index(p), dest_only(d) {
+  NodeLabel(const float c, const uint32_t n, const uint32_t p, const uint32_t w, const bool d)
+      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d) {
   }
 };
 
@@ -57,7 +58,7 @@ struct NodeStatusInfo {
 };
 
 /**
- * Get the best classification for any driveable non-ferry and non-link
+ * Get the best classification for any drivable non-ferry and non-link
  * edges from a node. Skip any reclassified ferry edges
  * @param  edges The file backed list of edges in the graph.
  * @return  Returns the best (most important) classification
