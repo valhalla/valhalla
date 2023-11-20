@@ -168,7 +168,7 @@ config = {
         'tiling_scheme': {
             'minpt': { 'lng': -180.0, 'lat': -90.0 },
             'maxpt': { 'lng': 180.0, 'lat': 90.0 },
-            'tilesizes': [ 4, 1, 0.25 ]
+            'tilesizes': [ 2.8125, 0.703125, 0.17578125 ]        
         } 
     },
     'httpd': {
