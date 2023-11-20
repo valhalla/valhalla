@@ -164,6 +164,13 @@ config = {
         'service': {'proxy': 'ipc:///tmp/meili'},
         'grid': {'size': 500, 'cache_size': 100240},
     },
+    'baldr': {
+        'tiling_scheme': {
+            'minpt': { 'lng': -180.0, 'lat': -90.0 },
+            'maxpt': { 'lng': 180.0, 'lat': 90.0 },
+            'tilesizes': [ 4, 1, 0.25 ]
+        } 
+    },
     'httpd': {
         'service': {
             'listen': 'tcp://*:8002',
@@ -427,6 +434,13 @@ help_text = {
             'size': 'TODO: Resolution of the grid used in finding match candidates',
             'cache_size': 'TODO: number of grids to keep in cache',
         },
+    },
+    'baldr': {
+        'tiling_scheme': {
+            'minpt': { 'lng': 'Longitude of bottom-left coordinate of bounding box', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
+            'maxpt': { 'lng': 'Longitude of top-right coordinate of bounding box', 'lat': 'Latitude of top-right coordinate of bounding box' },
+            'tilesizes': 'Size of the different tile levels. (In this order: highway, arterial, local)'
+        } 
     },
     'httpd': {
         'service': {
