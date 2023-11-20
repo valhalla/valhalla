@@ -393,15 +393,16 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // Get cost. Separate out transition cost.
   uint8_t flow_sources;
-  Cost tc = FORWARD
+  Cost newcost = pred.cost() +
+                 (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                          : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+  sif::Cost tc = FORWARD
                 ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
                 : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
-  Cost newcost = pred.cost() + tc +
-                 (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                          : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+  newcost += tc;
 
   auto& adj = adjacency_[FORWARD][index];
   // Check if edge is temporarily labeled and this path has less cost. If
@@ -425,6 +426,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   if (meta.edge->is_shortcut()) {
     // std::cerr << "shortcut!" << newcost.cost << std::endl;
   }
+  if ((index == 0 || index == 19) && pred.edgeid() == 6209448993776)
+    std::cout << std::endl;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
@@ -501,7 +504,6 @@ bool CostMatrix::Expand(const uint32_t index,
                         pred.path_distance(), pred.cost().cost);
   }
 
-  // don't look for more connections on this branch
   if (FORWARD) {
     CheckForwardConnections(index, pred, n, graphreader);
   }
@@ -677,11 +679,11 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
     const auto& opp_edgestate = edgestatus_[MATRIX_REV][target];
     EdgeStatusInfo oppedgestatus = opp_edgestate.Get(oppedge);
     const auto& opp_edgelabels = edgelabel_[MATRIX_REV][target];
-    uint32_t predidx = opp_edgelabels[oppedgestatus.index()].predecessor();
+    uint32_t opp_predidx = opp_edgelabels[oppedgestatus.index()].predecessor();
     const BDEdgeLabel& opp_el = opp_edgelabels[oppedgestatus.index()];
 
     // Special case - common edge for source and target are both initial edges
-    if (pred.predecessor() == kInvalidLabel && predidx == kInvalidLabel) {
+    if (pred.predecessor() == kInvalidLabel && opp_predidx == kInvalidLabel) {
       // TODO: shouldnt this use seconds? why is this using cost!?
       float s = std::abs(pred.cost().secs + opp_el.cost().secs - opp_el.transition_cost().cost);
 
@@ -697,13 +699,13 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
       // to find for this source or target
       UpdateStatus(source, target);
     } else {
-      float oppcost = (predidx == kInvalidLabel) ? 0 : opp_edgelabels[predidx].cost().cost;
+      float oppcost = (opp_predidx == kInvalidLabel) ? 0.f : opp_edgelabels[opp_predidx].cost().cost;
       float c = pred.cost().cost + oppcost + opp_el.transition_cost().cost;
 
       // Check if best connection
       if (c < best_connection_[idx].cost.cost) {
-        float oppsec = (predidx == kInvalidLabel) ? 0 : opp_edgelabels[predidx].cost().secs;
-        uint32_t oppdist = (predidx == kInvalidLabel) ? 0 : opp_edgelabels[predidx].path_distance();
+        float oppsec = (opp_predidx == kInvalidLabel) ? 0.f : opp_edgelabels[opp_predidx].cost().secs;
+        uint32_t oppdist = (opp_predidx == kInvalidLabel) ? 0U : opp_edgelabels[opp_predidx].path_distance();
         float s = pred.cost().secs + oppsec + opp_el.transition_cost().secs;
         uint32_t d = pred.path_distance() + oppdist;
 
@@ -1019,11 +1021,6 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
 // construction.
 void CostMatrix::clear() {
   // Clear the target edge markings
-  for (auto& iter : *targets_) {
-    iter.second.clear();
-    iter.second.resize(0);
-    iter.second.shrink_to_fit();
-  }
   targets_->clear();
 
   // Clear all source adjacency lists, edge labels, and edge status
