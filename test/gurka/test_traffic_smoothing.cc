@@ -544,7 +544,8 @@ protected:
                               {"BC", {{"highway", "primary"}}},
                               {"CD", {{"highway", "primary"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/mapmatch_traffic_depends_on_time",
+    map = gurka::buildtiles(layout, ways, {}, {},
+                            VALHALLA_BUILD_DIR "test/data/mapmatch_traffic_depends_on_time",
                             {
                                 {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             });

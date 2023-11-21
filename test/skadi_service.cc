@@ -155,9 +155,8 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
-const auto cfg =
-    test::make_config("test" +
-                      std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
+const auto cfg = test::make_config("test" + std::string(1, filesystem::path::preferred_separator) +
+                                   "skadi_service_tmp");
 
 void create_tile() {
   // its annoying to have to get actual data but its also very boring to test with fake data

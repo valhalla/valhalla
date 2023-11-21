@@ -55,7 +55,7 @@ TEST_F(TimeDependentTags, HourRestrictions) {
   const gurka::relations restrictions = {{restriction_members, hour_only}};
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, restrictions,
-                        VALHALLA_BUILD_DIR"test/data/gurka_time_dependent_restrictions_hour",
+                        VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_hour",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   for (size_t x = 0; x < working_hours.size(); ++x) {
