@@ -386,7 +386,11 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
   )";
 
   // force the paths to be different
-  boost::replace_all(defaults, "%%", path_prefix);
+  std::string absolute;
+  if (path_prefix.find("test/") == 0) {
+    absolute = VALHALLA_BUILD_DIR;
+  }
+  boost::replace_all(defaults, "%%", absolute + path_prefix);
 
   // make ptree and override defaults
   auto pt = json_to_pt(defaults);

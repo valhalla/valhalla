@@ -30,7 +30,7 @@ using rp = rapidjson::Pointer;
 
 namespace {
 
-const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
   EXPECT_NEAR(a.GetArray()[0].GetDouble(), b.GetArray()[0].GetDouble(), 0.00002);

@@ -156,7 +156,7 @@ const std::vector<std::string> responses{
 };
 
 const auto cfg =
-    test::make_config(VALHALLA_BUILD_DIR "test" +
+    test::make_config("test" +
                       std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
 
 void create_tile() {

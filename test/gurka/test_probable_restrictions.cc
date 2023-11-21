@@ -67,7 +67,7 @@ public:
               {gurka::node_member, "I", "via"},
           },
           {{"type", "restriction"}, {"restriction:probable", "no_left_turn @ probability=0"}}}};
-    map = gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_time_probable_restrictions",
+    map = gurka::buildtiles(layout, ways, {}, relations, VALHALLA_BUILD_DIR "test/data/gurka_time_probable_restrictions",
                             {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
   }
 };

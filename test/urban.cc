@@ -22,7 +22,7 @@ namespace {
 
 struct route_tester {
   route_tester()
-      : conf(test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles")),
+      : conf(test::make_config("test/data/utrecht_tiles")),
         reader(new GraphReader(conf.get_child("mjolnir"))), loki_worker(conf, reader),
         thor_worker(conf, reader), odin_worker(conf) {
   }

@@ -20,7 +20,7 @@ namespace vs = valhalla::sif;
 
 namespace {
 
-const auto conf = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
+const auto conf = test::make_config("test/data/utrecht_tiles");
 
 GraphId begin_node(GraphReader& reader, const DirectedEdge* edge) {
   // grab the node

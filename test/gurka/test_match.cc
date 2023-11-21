@@ -199,12 +199,12 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/match_timedep",
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/match_timedep",
                             {
                                 {"mjolnir.shortcuts", "false"},
                                 {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             });
-    map.config.put("mjolnir.traffic_extract", "test/data/match_timedep/traffic.tar");
+    map.config.put("mjolnir.traffic_extract", VALHALLA_BUILD_DIR "test/data/match_timedep/traffic.tar");
 
     // add live traffic
     test::build_live_traffic_data(map.config);

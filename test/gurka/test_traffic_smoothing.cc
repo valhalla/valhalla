@@ -544,12 +544,12 @@ protected:
                               {"BC", {{"highway", "primary"}}},
                               {"CD", {{"highway", "primary"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/mapmatch_traffic_depends_on_time",
+    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/mapmatch_traffic_depends_on_time",
                             {
                                 {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
                             });
     map.config.put("mjolnir.traffic_extract",
-                   "test/data/mapmatch_traffic_depends_on_time/traffic.tar");
+                   VALHALLA_BUILD_DIR "test/data/mapmatch_traffic_depends_on_time/traffic.tar");
     test::build_live_traffic_data(map.config);
     test::customize_live_traffic_data(map.config, [&](baldr::GraphReader&, baldr::TrafficTile&, int,
                                                       valhalla::baldr::TrafficSpeed* traffic_speed) {

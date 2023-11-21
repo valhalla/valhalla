@@ -34,7 +34,7 @@ namespace {
 // of the existing way on which the bike share sation is projected. It would be advisable to not set
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
 // projected uniquely on the bss_connection.
-const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/paris_bss_tiles",
+const auto cfg = test::make_config("test/data/paris_bss_tiles",
                                    {{"loki.service_defaults.radius", "10"}});
 } // namespace
 
