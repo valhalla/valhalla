@@ -49,7 +49,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       remaining_sources_(0), target_count_(0), remaining_targets_(0),
       current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap},
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
-                                                      kInitialEdgeLabelCountBidirDijkstra)) {
+                                                      kInitialEdgeLabelCountBidirDijkstra)),
+      check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)) {
 }
 
 CostMatrix::~CostMatrix() {
@@ -79,12 +80,14 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 // construction.
 void CostMatrix::clear() {
   // Clear the source/target edge markings
-  for (auto& iter : *sources_) {
-    iter.second.clear();
-    iter.second.resize(0);
-    iter.second.shrink_to_fit();
+  if (check_reverse_connections_) {
+    for (auto& iter : *sources_) {
+      iter.second.clear();
+      iter.second.resize(0);
+      iter.second.shrink_to_fit();
+    }
+    sources_->clear();
   }
-  sources_->clear();
   for (auto& iter : *targets_) {
     iter.second.clear();
     iter.second.resize(0);
@@ -473,7 +476,8 @@ void CostMatrix::ForwardSearch(const uint32_t index,
       adj.add(idx);
 
       // Add to the list of sources that have reached this edge
-      (*sources_)[edgeid].push_back(index);
+      if (check_reverse_connections_)
+        (*sources_)[edgeid].push_back(index);
 
       // setting this edge as reached
       if (expansion_callback_) {
@@ -674,7 +678,8 @@ void CostMatrix::BackwardSearch(const uint32_t index, GraphReader& graphreader, 
   edgestate.Update(pred.edgeid(), EdgeSet::kPermanent);
 
   // Check for connections to forward search.
-  CheckReverseConnections(index, pred, n, graphreader);
+  if (check_reverse_connections_) 
+    CheckReverseConnections(index, pred, n, graphreader);
 
   // Prune path if predecessor is not a through edge
   if (pred.not_thru() && pred.not_thru_pruning()) {
@@ -989,7 +994,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       source_edgelabel_[index].push_back(std::move(edge_label));
       source_adjacency_[index].add(idx);
       source_edgestatus_[index].Set(edgeid, EdgeSet::kUnreachedOrReset, idx, tile);
-      (*sources_)[edgeid].push_back(index);
+      if (check_reverse_connections_)
+        (*sources_)[edgeid].push_back(index);
     }
     index++;
   }

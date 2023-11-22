@@ -132,6 +132,7 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   uint32_t max_reserved_labels_count_;
+  bool check_reverse_connections_;
 
   // Number of source and target locations that can be expanded
   uint32_t source_count_;
