@@ -50,6 +50,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+  // Note, most things are being initialized in Initialize() or before
 }
 
 CostMatrix::~CostMatrix() {
@@ -73,6 +74,45 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
   // Increase the cost threshold to make sure requests near the max distance succeed.
   // Some costing models and locations require higher thresholds to succeed.
   return cost_threshold * 2.0f;
+}
+
+// Clear the temporary information generated during time + distance matrix
+// construction.
+void CostMatrix::clear() {
+  // Clear the target edge markings
+  targets_->clear();
+
+  // Clear all source adjacency lists, edge labels, and edge status
+  // Resize and shrink_to_fit so all capacity is reduced.
+  auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
+  for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
+    // resize all relevant structures down to 20 locations
+    if (locs_count_[exp_dir] > kMaxLocationCache) {
+      edgelabel_[exp_dir].resize(kMaxLocationCache);
+      edgelabel_[exp_dir].shrink_to_fit();
+      adjacency_[exp_dir].resize(kMaxLocationCache);
+      adjacency_[exp_dir].shrink_to_fit();
+      edgestatus_[exp_dir].resize(kMaxLocationCache);
+      edgestatus_[exp_dir].shrink_to_fit();
+    }
+    for (auto& iter : edgelabel_[exp_dir]) {
+      if (iter.size() > reservation) {
+        iter.resize(reservation);
+        iter.shrink_to_fit();
+      }
+      iter.clear();
+    }
+    for (auto& iter : edgestatus_[exp_dir]) {
+      iter.clear();
+    }
+    for (auto& iter : adjacency_[exp_dir]) {
+      iter.clear();
+    }
+    hierarchy_limits_[exp_dir].clear();
+    locs_status_[exp_dir].clear();
+  }
+  best_connection_.clear();
+  ignore_hierarchy_limits_ = false;
 }
 
 // Form a time distance matrix from the set of source locations
@@ -423,12 +463,6 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     return false;
   }
 
-  if (meta.edge->is_shortcut()) {
-    // std::cerr << "shortcut!" << newcost.cost << std::endl;
-  }
-  if ((index == 0 || index == 19) && pred.edgeid() == 6209448993776)
-    std::cout << std::endl;
-
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
@@ -633,21 +667,21 @@ bool CostMatrix::Expand(const uint32_t index,
 
 // Check if the edge on the forward search connects to a reached edge
 // on the reverse search trees.
-bool CostMatrix::CheckForwardConnections(const uint32_t source,
+void CostMatrix::CheckForwardConnections(const uint32_t source,
                                          const BDEdgeLabel& pred,
                                          const uint32_t n,
                                          GraphReader& graphreader) {
 
   // Disallow connections that are part of an uturn on an internal edge
   if (pred.internal_turn() != InternalTurn::kNoTurn) {
-    return false;
+    return;
   }
   // Disallow connections that are part of a complex restriction.
   // TODO - validate that we do not need to "walk" the paths forward
   // and backward to see if they match a restriction.
   if (pred.on_complex_rest()) {
     // TODO(nils): bidir a* is digging deeper
-    return false;
+    return;
   }
 
   // Get the opposing edge. Get a list of target locations whose reverse
@@ -656,11 +690,10 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
   auto targets = targets_->find(oppedge);
   auto a = targets_->size();
   if (targets == targets_->end()) {
-    return false;
+    return;
   }
 
   // Iterate through the targets
-  bool found_connection = false;
   for (auto target : targets->second) {
     uint32_t idx = source * locs_count_[MATRIX_REV] + target;
     if (best_connection_[idx].found) {
@@ -720,7 +753,6 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
         // Update status and update threshold if this is the last location
         // to find for this source or target
         UpdateStatus(source, target);
-        // std::cerr << "Found conn " << source << ", " << target << std::endl;
       }
     }
     // setting this edge as connected
@@ -728,11 +760,9 @@ bool CostMatrix::CheckForwardConnections(const uint32_t source,
       expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "c", pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }
-
-    found_connection = true;
   }
 
-  return found_connection;
+  return;
 }
 
 // Update status when a connection is found.
@@ -1015,45 +1045,6 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
     // update the existing best_connection cost
     best_connection->cost = new_cost;
   }
-}
-
-// Clear the temporary information generated during time + distance matrix
-// construction.
-void CostMatrix::clear() {
-  // Clear the target edge markings
-  targets_->clear();
-
-  // Clear all source adjacency lists, edge labels, and edge status
-  // Resize and shrink_to_fit so all capacity is reduced.
-  auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
-  for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    // resize all relevant structures down to 20 locations
-    if (locs_count_[exp_dir] > kMaxLocationCache) {
-      edgelabel_[exp_dir].resize(kMaxLocationCache);
-      edgelabel_[exp_dir].shrink_to_fit();
-      adjacency_[exp_dir].resize(kMaxLocationCache);
-      adjacency_[exp_dir].shrink_to_fit();
-      edgestatus_[exp_dir].resize(kMaxLocationCache);
-      edgestatus_[exp_dir].shrink_to_fit();
-    }
-    for (auto& iter : edgelabel_[exp_dir]) {
-      if (iter.size() > reservation) {
-        iter.resize(reservation);
-        iter.shrink_to_fit();
-      }
-      iter.clear();
-    }
-    for (auto& iter : edgestatus_[exp_dir]) {
-      iter.clear();
-    }
-    for (auto& iter : adjacency_[exp_dir]) {
-      iter.clear();
-    }
-    hierarchy_limits_[exp_dir].clear();
-    locs_status_[exp_dir].clear();
-  }
-  best_connection_.clear();
-  ignore_hierarchy_limits_ = false;
 }
 
 } // namespace thor

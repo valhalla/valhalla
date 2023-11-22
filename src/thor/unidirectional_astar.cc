@@ -19,6 +19,9 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)) {
+  mode_ = travel_mode_t::kDrive;
+  travel_type_ = 0;
+  access_mode_ = kAutoAccess;
 }
 
 // Default constructor

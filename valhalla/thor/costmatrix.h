@@ -212,7 +212,7 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    */
-  bool CheckForwardConnections(const uint32_t source,
+  void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
