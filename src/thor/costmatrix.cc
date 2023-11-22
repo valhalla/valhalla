@@ -433,15 +433,14 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // Get cost. Separate out transition cost.
   uint8_t flow_sources;
-  Cost newcost = pred.cost() +
-                 (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
-                          : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
-  sif::Cost tc = FORWARD
-                ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
-                : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
-                                                  opp_pred_edge,
-                                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                                  pred.internal_turn());
+  Cost newcost = pred.cost() + (FORWARD ? costing_->EdgeCost(meta.edge, tile, time_info, flow_sources)
+                                        : costing_->EdgeCost(opp_edge, t2, time_info, flow_sources));
+  sif::Cost tc =
+      FORWARD ? costing_->TransitionCost(meta.edge, nodeinfo, pred)
+              : costing_->TransitionCostReverse(meta.edge->localedgeidx(), nodeinfo, opp_edge,
+                                                opp_pred_edge,
+                                                static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                                pred.internal_turn());
   newcost += tc;
 
   auto& adj = adjacency_[FORWARD][index];
@@ -738,7 +737,8 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // Check if best connection
       if (c < best_connection_[idx].cost.cost) {
         float oppsec = (opp_predidx == kInvalidLabel) ? 0.f : opp_edgelabels[opp_predidx].cost().secs;
-        uint32_t oppdist = (opp_predidx == kInvalidLabel) ? 0U : opp_edgelabels[opp_predidx].path_distance();
+        uint32_t oppdist =
+            (opp_predidx == kInvalidLabel) ? 0U : opp_edgelabels[opp_predidx].path_distance();
         float s = pred.cost().secs + oppsec + opp_el.transition_cost().secs;
         uint32_t d = pred.path_distance() + oppdist;
 
