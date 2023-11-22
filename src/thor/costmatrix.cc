@@ -201,7 +201,7 @@ void CostMatrix::SourceToTarget(Api& request,
       throw valhalla_exception_t{430};
     }
     // Allow this process to be aborted
-    if (interrupt_ && (++n % kInterruptIterationsInterval) == 0) {
+    if (interrupt_ && (n++ % kInterruptIterationsInterval) == 0) {
       (*interrupt_)();
     }
   }
@@ -453,7 +453,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   adj.add(idx);
   if (!FORWARD) {
     // mark the edge as settled in the reverse tree for the connection check
-    (*targets_)[pred.edgeid()].push_back(index);
+    (*targets_)[meta.edge_id].push_back(index);
   }
 
   // setting this edge as reached
@@ -1040,8 +1040,8 @@ void CostMatrix::clear() {
       if (iter.size() > reservation) {
         iter.resize(reservation);
         iter.shrink_to_fit();
-        iter.clear();
       }
+      iter.clear();
     }
     for (auto& iter : edgestatus_[exp_dir]) {
       iter.clear();
