@@ -21,7 +21,7 @@ constexpr uint32_t kMaxLocationCache = 20;
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
 int GetThreshold(const travel_mode_t mode, const int n) {
-  return (mode == travel_mode_t::kDrive) ? std::min(2700, std::max(100, n / 3)) : 500;
+  return (mode == travel_mode_t::kDrive) ? std::min(2800, std::max(100, n / 3)) : 500;
 }
 
 bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
