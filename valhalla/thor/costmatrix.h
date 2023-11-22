@@ -175,7 +175,7 @@ protected:
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
 
-  const std::function<void()>* interrupt_;
+  const std::function<void()>* interrupt_ = nullptr;
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
