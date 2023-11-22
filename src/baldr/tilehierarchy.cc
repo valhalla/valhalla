@@ -3,6 +3,7 @@
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
+#include "midgard/aabb2.h"
 #include "config.h"
 
 using namespace valhalla::midgard;
@@ -13,29 +14,46 @@ namespace baldr {
 const std::vector<TileLevel>& TileHierarchy::levels() {
 
   std::vector<float> tilesizevector;
-  const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
+  bool bSizesInConfigOk = false;
+  AABB2<midgard::PointLL> wholemapbb{{-180, -90}, {180, 90}};
 
-  if (tilesizesptree) {
-    BOOST_FOREACH (auto& v, *tilesizesptree) {
-      tilesizevector.push_back( v.second.get<float>("") );
-    } }
-  else {
+  try {
+    wholemapbb = 
+    {
+      {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}, 
+      {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180), config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}
+    };
+
+    const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
+    
+    if (tilesizesptree) {
+      BOOST_FOREACH (auto& v, *tilesizesptree) {
+        tilesizevector.push_back( v.second.get<float>("") );
+      }
+      if (tilesizevector.size()>=3) {
+        bSizesInConfigOk = true;
+      }
+    }
+  } catch (const ConfigUninitializedException& e) { ; }
+
+  if (!bSizesInConfigOk) {
     tilesizevector = {4.0, 1.0, 0.25};
   }
+
   static const std::vector<TileLevel> levels_ = {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                midgard::Tiles<midgard::PointLL>{wholemapbb,
                                                  tilesizevector[0],
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                midgard::Tiles<midgard::PointLL>{wholemapbb,
                                                  tilesizevector[1],
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
+                midgard::Tiles<midgard::PointLL>{wholemapbb,
                                                  tilesizevector[2],
                                                  static_cast<unsigned short>(kBinsDim)}},
 
