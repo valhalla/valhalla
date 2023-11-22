@@ -28,4 +28,4 @@ jobs:
         docker buildx create --name mybuilder
         docker buildx use mybuilder
         docker buildx inspect --bootstrap
-        docker buildx build --push --platform linux/arm64 --tag ghcr.io/valhalla/valhalla:manually_triggered_build .
+        docker buildx build --push --platform linux/arm64 --tag ghcr.io/valhalla/valhalla:manually_triggered_build_arm64 .
