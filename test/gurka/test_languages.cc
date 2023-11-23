@@ -4,10 +4,6 @@
 #include "gurka.h"
 #include "test/test.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 using namespace valhalla::baldr;
 using namespace valhalla::gurka;

@@ -199,13 +199,13 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
-    map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/match_timedep",
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/match_timedep",
                             {
                                 {"mjolnir.shortcuts", "false"},
-                                {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
+                                {"mjolnir.timezone", "test/data/tz.sqlite"},
                             });
     map.config.put("mjolnir.traffic_extract",
-                   VALHALLA_BUILD_DIR "test/data/match_timedep/traffic.tar");
+                   "test/data/match_timedep/traffic.tar");
 
     // add live traffic
     test::build_live_traffic_data(map.config);
@@ -335,7 +335,7 @@ TEST(MapMatchRoute, IgnoreRestrictions) {
                                        },
                                        {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
   const gurka::map map =
-      gurka::buildtiles(layout, ways, {}, relations, "test/data/mapmatch_restrictions",
+      gurka::buildtiles(layout, ways, {}, relations, VALHALLA_BUILD_DIR "test/data/mapmatch_restrictions",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   // ignore_restrictions when route with map_matching

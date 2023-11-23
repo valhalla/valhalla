@@ -3,10 +3,6 @@
 
 #include "odin/enhancedtrippath.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 
 class InstructionsUturn : public ::testing::Test {

@@ -6,10 +6,6 @@
 
 #include "odin/util.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 
 class RouteWithNarrativeLanguages : public ::testing::Test {

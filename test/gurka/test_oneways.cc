@@ -13,10 +13,6 @@
 #include "sif/costfactory.h"
 #include "worker.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 
 const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",

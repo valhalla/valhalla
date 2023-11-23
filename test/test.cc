@@ -385,11 +385,13 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
     }
   )";
 
-  // force the paths to be different
+  // we should use absolute paths so the binaries work regardless of CWD
   std::string absolute;
   if (path_prefix.find("test/") == 0) {
     absolute = VALHALLA_BUILD_DIR;
   }
+
+  // force the paths to be different
   boost::replace_all(defaults, "%%", absolute + path_prefix);
 
   // make ptree and override defaults
