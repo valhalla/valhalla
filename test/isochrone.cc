@@ -215,8 +215,7 @@ TEST(Isochrones, LongEdge) {
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/long_edge");
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/isochrones/long_edge");
 
   std::string geojson;
   auto result = gurka::do_action(valhalla::Options::isochrone, map, {"a"}, "pedestrian",

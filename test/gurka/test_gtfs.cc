@@ -152,10 +152,8 @@ const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", 
 boost::property_tree::ptree get_config() {
 
   return test::make_config("test/data/transit_tests",
-                           {{"mjolnir.transit_feeds_dir",
-                             "test/data/transit_tests/gtfs_feeds"},
-                            {"mjolnir.transit_dir",
-                             "test/data/transit_tests/transit_tiles"},
+                           {{"mjolnir.transit_feeds_dir", "test/data/transit_tests/gtfs_feeds"},
+                            {"mjolnir.transit_dir", "test/data/transit_tests/transit_tiles"},
                             {"mjolnir.transit_pbf_limit",
                              "1"}, // so we create more than one file per tile
                             {"mjolnir.hierarchy", "1"},
