@@ -84,10 +84,6 @@ public:
   valhalla::config(const std::string& config_file_or_inline);
 };
 } // namespace
-
 namespace valhalla {
-inline const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "") {
-  static config_singleton_t instance(config_file_or_inline);
-  return instance.config_;
-}
+  const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "");
 } // namespace valhalla

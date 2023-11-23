@@ -15,26 +15,22 @@ const std::vector<TileLevel>& TileHierarchy::levels() {
 
   std::vector<float> tilesizevector;
   bool bSizesInConfigOk = false;
-  AABB2<midgard::PointLL> wholemapbb{{-180, -90}, {180, 90}};
 
-  try {
-    wholemapbb = 
-    {
-      {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}, 
-      {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180), config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}
-    };
+  AABB2<midgard::PointLL> wholemapbb{
+    {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}, 
+    {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180), config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}
+  };
 
-    const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
-    
-    if (tilesizesptree) {
-      BOOST_FOREACH (auto& v, *tilesizesptree) {
-        tilesizevector.push_back( v.second.get<float>("") );
-      }
-      if (tilesizevector.size()>=3) {
-        bSizesInConfigOk = true;
-      }
+  const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
+  
+  if (tilesizesptree) {
+    BOOST_FOREACH (auto& v, *tilesizesptree) {
+      tilesizevector.push_back( v.second.get<float>("") );
     }
-  } catch (const ConfigUninitializedException& e) { ; }
+    if (tilesizevector.size()>=3) {
+      bSizesInConfigOk = true;
+    }
+  }
 
   if (!bSizesInConfigOk) {
     tilesizevector = {4.0, 1.0, 0.25};
