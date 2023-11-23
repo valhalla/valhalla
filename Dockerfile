@@ -36,7 +36,8 @@ RUN sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip install --upgrade "conan<2.0.0"
 
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
-RUN cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off
+# switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DENABLE_SINGLE_FILES_WERROR=Off -DBENCHMARK_ENABLE_WERROR=Off
 RUN make all -j${CONCURRENCY:-$(nproc)}
 RUN make install
 
@@ -47,13 +48,13 @@ RUN for f in valhalla/locales/*.json; do cat ${f} | python3 -c 'import sys; impo
 RUN rm -rf valhalla
 
 # the binaries are huge with all the symbols so we strip them but keep the debug there if we need it
-WORKDIR /usr/local/bin
-RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
-RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
-RUN rm -f valhalla_*.debug
-RUN strip --strip-debug --strip-unneeded valhalla_* || true
-RUN strip /usr/local/lib/libvalhalla.a
-RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
+#WORKDIR /usr/local/bin
+#RUN for f in valhalla_*; do objcopy --only-keep-debug $f $f.debug; done
+#RUN tar -cvf valhalla.debug.tar valhalla_*.debug && gzip -9 valhalla.debug.tar
+#RUN rm -f valhalla_*.debug
+#RUN strip --strip-debug --strip-unneeded valhalla_* || true
+#RUN strip /usr/local/lib/libvalhalla.a
+#RUN strip /usr/lib/python3/dist-packages/valhalla/python_valhalla*.so
 
 ####################################################################
 # copy the important stuff from the build stage to the runner image
