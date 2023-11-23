@@ -175,7 +175,7 @@ protected:
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
 
-  const std::function<void()>* interrupt_;
+  const std::function<void()>* interrupt_ = nullptr;
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -212,7 +212,7 @@ protected:
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
    */
-  bool CheckForwardConnections(const uint32_t source,
+  void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
                                baldr::GraphReader& graphreader);

@@ -30,7 +30,7 @@ constexpr float kDefaultUseHighways = 0.5f; // Factor between 0 and 1
 constexpr float kDefaultUseTolls = 0.5f;    // Factor between 0 and 1
 constexpr float kDefaultUseTrails = 0.0f;   // Factor between 0 and 1
 
-constexpr Surface kMinimumMotorcycleSurface = Surface::kDirt;
+constexpr Surface kMinimumMotorcycleSurface = Surface::kImpassable;
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
