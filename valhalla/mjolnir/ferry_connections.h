@@ -58,39 +58,6 @@ struct NodeStatusInfo {
 };
 
 /**
- * Get the best classification for any drivable non-ferry and non-link
- * edges from a node. Skip any reclassified ferry edges
- * @param  edges The file backed list of edges in the graph.
- * @return  Returns the best (most important) classification
- */
-uint32_t GetBestNonFerryClass(const std::map<Edge, size_t>& edges);
-
-/**
- * Form the shortest path from the start node until a node that
- * touches the specified road classification.
- */
-uint32_t ShortestPath(const uint32_t start_node_idx,
-                      const uint32_t node_idx,
-                      sequence<OSMWay>& ways,
-                      sequence<OSMWayNode>& way_nodes,
-                      sequence<Edge>& edges,
-                      sequence<Node>& nodes,
-                      const bool inbound,
-                      const bool remove_dest_only);
-
-/**
- * Check if the ferry included in this node bundle is short. Must be
- * just one edge and length < 2 km. This prevents forming connections
- * to what are most likely river crossing ferries.
- */
-bool ShortFerry(const uint32_t node_index,
-                node_bundle& bundle,
-                sequence<Edge>& edges,
-                sequence<Node>& nodes,
-                sequence<OSMWay>& ways,
-                sequence<OSMWayNode>& way_nodes);
-
-/**
  * Reclassify edges from a ferry along the shortest path to the
  * specified road classification.
  */

@@ -467,6 +467,8 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta,
                                      shortcuts, tile, offset_time);
   }
+
+  return;
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -663,7 +665,6 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
     // the origin and destination and provides valid conditions for the reach-based pruning.
     bool force_forward = false;
     bool force_reverse = false;
-    // TODO: this is forcing if _any_ level is different, it doesn't distinguish levels
     if (!ignore_hierarchy_limits_) {
       for (size_t level = TileHierarchy::levels().size() - 1; level > 0; --level) {
         if (hierarchy_limits_reverse_[level].StopExpanding(rev_pred.distance()) &&

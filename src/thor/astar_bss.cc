@@ -30,6 +30,7 @@ AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)) {
+  mode_ = travel_mode_t::kDrive;
 }
 
 // Destructor
