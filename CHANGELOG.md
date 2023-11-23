@@ -11,10 +11,10 @@
    * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
    * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
    * FIXED: respond with correlated edges for format=valhalla and matrix [#4335](https://github.com/valhalla/valhalla/pull/4335)
-   * FIXED: matrix response times off by 1 second, plus some date_time refactor [#4365](https://github.com/valhalla/valhalla/pull/4365)
    * FIXED: recover proper shortest path to ferry connections (when multiple edges exist between node pair) [#4361](https://github.com/valhalla/valhalla/pull/4361)
    * FIXED: recover proper shortest path to ferry connections (make sure correct label index is used) [#4378](https://github.com/valhalla/valhalla/pull/4378)
    * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
+   * FIXED: matrix response times off by 1 second, plus some date_time refactor [#4365](https://github.com/valhalla/valhalla/pull/4365)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
