@@ -86,5 +86,5 @@ public:
 } // namespace
 
 namespace valhalla {
-  const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "");
+const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "");
 } // namespace valhalla
