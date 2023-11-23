@@ -296,6 +296,7 @@ void CostMatrix::Initialize(
     const auto count = locs_count_[exp_dir];
     locs_status_[exp_dir].reserve(count);
     hierarchy_limits_[exp_dir].resize(count);
+    dist_approx_[exp_dir].reserve(count);
     adjacency_[exp_dir].resize(count);
     edgestatus_[exp_dir].resize(count);
     edgelabel_[exp_dir].resize(count);
@@ -316,8 +317,11 @@ void CostMatrix::Initialize(
   Cost max_cost(kMaxCost, kMaxCost);
   best_connection_.reserve(locs_count_[MATRIX_FORW] * locs_count_[MATRIX_REV]);
   for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
+    const auto source_ll = source_locations.Get(i).ll();
+    dist_approx_[MATRIX_FORW].emplace_back(midgard::PointLL(source_ll.lng(), source_ll.lat()));
+
     for (uint32_t j = 0; j < locs_count_[MATRIX_REV]; j++) {
-      if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
+      if (equals(source_ll, target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
       } else {
@@ -326,6 +330,10 @@ void CostMatrix::Initialize(
         locs_status_[MATRIX_REV][j].unfound_connections.insert(i);
       }
     }
+  }
+  for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
+    const auto target_ll = target_locations.Get(i).ll();
+    dist_approx_[MATRIX_REV].emplace_back(PointLL(target_ll.lng(), target_ll.lat()));
   }
 
   // Set the remaining number of sources and targets
@@ -380,7 +388,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     // edges while still expanding on the next level since we can still transition down to
     // that level. If using a shortcut, set the shortcuts mask. Skip if this is a regular
     // edge superseded by a shortcut.
-    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding()) {
+    if (hierarchy_limits_[FORWARD][index][meta.edge_id.level() + 1].StopExpanding(pred.distance())) {
       shortcuts |= meta.edge->shortcut();
     } else {
       return false;
@@ -465,17 +473,30 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
+
+  float dist2loc = 0.0f;
+
   if (FORWARD) {
-    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred.path_distance() + meta.edge->length(),
+    if (hierarchy_limits_[MATRIX_FORW][index][meta.edge_id.level()].max_up_transitions !=
+        kUnlimitedTransitions) {
+      // will be used by hierarchy limits
+      dist2loc = dist_approx_[MATRIX_FORW][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    }
+    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, dist2loc, mode_,
+                            tc, pred.path_distance() + meta.edge->length(),
                             (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                             restriction_idx);
   } else {
-    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred.path_distance() + meta.edge->length(),
+    if (hierarchy_limits_[MATRIX_REV][index][meta.edge_id.level()].max_up_transitions !=
+        kUnlimitedTransitions) {
+      // will be used by hierarchy limits
+      dist2loc = dist_approx_[MATRIX_REV][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
+    }
+    edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, dist2loc, mode_,
+                            tc, pred.path_distance() + meta.edge->length(),
                             (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -546,7 +567,7 @@ bool CostMatrix::Expand(const uint32_t index,
   // number of upward transitions has been exceeded on this hierarchy level.
   if ((pred.not_thru() && pred.not_thru_pruning()) ||
       (!ignore_hierarchy_limits_ &&
-       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding())) {
+       hierarchy_limits_[FORWARD][index][node.level()].StopExpanding(pred.distance()))) {
     return false;
   }
 
@@ -624,7 +645,7 @@ bool CostMatrix::Expand(const uint32_t index,
       // we cant get the tile at that level (local extracts could have this problem) THEN bail
       graph_tile_ptr trans_tile = nullptr;
       if ((!trans->up() && !ignore_hierarchy_limits_ &&
-           hierarchy_limits[trans->endnode().level()].StopExpanding()) ||
+           hierarchy_limits[trans->endnode().level()].StopExpanding(pred.distance())) ||
           !(trans_tile = graphreader.GetGraphTile(trans->endnode()))) {
         continue;
       }
@@ -848,8 +869,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             true, static_cast<bool>(flow_sources & kDefaultFlowMask),
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, 0.f, mode_, ec, d,
+                             false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, -1);
       edge_label.set_not_thru(false);
 
@@ -926,8 +947,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
       // Set the initial not_thru flag to false. There is an issue with not_thru
       // flags on small loops. Set this to false here to override this for now.
-      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
+      BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, 0.f, mode_, ec,
+                             d, false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, -1);
       edge_label.set_not_thru(false);
 

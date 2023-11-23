@@ -508,7 +508,7 @@ public:
    * @param oppedgeid           Opposing directed edge Id.
    * @param edge                Directed edge.
    * @param cost                True cost (cost and time in seconds) to the edge.
-   * @param sortcost            Cost for sorting (includes A* heuristic)n
+   * @param sortcost            Cost for sorting (includes A* heuristic)
    * @param dist                Distance to the destination in meters.
    * @param mode                Mode of travel along this edge.
    * @param tc                  Transition cost entering this edge.
@@ -562,6 +562,7 @@ public:
    * @param oppedgeid           Opposing directed edge Id.
    * @param edge                End node of the directed edge.
    * @param cost                True cost (cost and time in seconds) to the edge.
+   * @param dist                Distance from the location in meters, for hierarchy checks
    * @param mode                Mode of travel along this edge.
    * @param tc                  Transition cost entering this edge.
    * @param path_distance       Accumulated path distance.
@@ -579,6 +580,7 @@ public:
               const baldr::GraphId& oppedgeid,
               const baldr::DirectedEdge* edge,
               const sif::Cost& cost,
+              const float dist,
               const sif::TravelMode mode,
               const sif::Cost& transition_cost,
               const uint32_t path_distance,
@@ -593,7 +595,7 @@ public:
                   edge,
                   cost,
                   cost.cost,
-                  0,
+                  dist,
                   mode,
                   path_distance,
                   transition_cost,

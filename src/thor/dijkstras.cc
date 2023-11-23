@@ -246,7 +246,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, 0.f, mode_,
                                transition_cost, path_dist, false,
                                (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
@@ -805,7 +805,7 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
       int restriction_idx = -1;
-      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
+      bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, 0.f, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
@@ -894,7 +894,7 @@ void Dijkstras::SetDestinationLocations(
       // we want is for the expansion to continue when it encounters the first
       // closure and stop when it exits the closure (which can span multiple
       // consecutive edges)
-      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
+      bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, 0.f, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
