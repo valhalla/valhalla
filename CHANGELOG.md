@@ -11,6 +11,9 @@
    * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
    * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
    * FIXED: respond with correlated edges for format=valhalla and matrix [#4335](https://github.com/valhalla/valhalla/pull/4335)
+   * FIXED: recover proper shortest path to ferry connections (when multiple edges exist between node pair) [#4361](https://github.com/valhalla/valhalla/pull/4361)
+   * FIXED: recover proper shortest path to ferry connections (make sure correct label index is used) [#4378](https://github.com/valhalla/valhalla/pull/4378)
+   * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -38,6 +41,7 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * ADDED: Make livespeed fading time configurable in valhalla.json [#4177](https://github.com/valhalla/valhalla/pull/4177)
+   * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
