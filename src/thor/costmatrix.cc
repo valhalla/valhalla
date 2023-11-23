@@ -308,7 +308,7 @@ void CostMatrix::Initialize(
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
       } else {
-        best_connection_.emplace_back(empty, empty, max_cost, kMaxCost);
+        best_connection_.emplace_back(empty, empty, max_cost, static_cast<uint32_t>(kMaxCost));
         source_status_[i].remaining_locations.insert(j);
         target_status_[j].remaining_locations.insert(i);
       }
@@ -977,8 +977,8 @@ void CostMatrix::RecostPaths(GraphReader& graphreader,
   uint32_t idx = 0;
   for (auto best_connection = best_connection_.begin(); best_connection != best_connection_.end();
        ++best_connection, ++idx) {
-    // no need to look at 0 paths, i.e. source == target
-    if (best_connection->cost.secs == 0.f) {
+    // no need to look at source == target or missing connectivity
+    if (best_connection->cost.secs == 0.f || best_connection->distance == kMaxCost) {
       continue;
     }
 

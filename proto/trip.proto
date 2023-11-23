@@ -177,6 +177,9 @@ message TripLeg {
     bool shoulder = 52;
     bool indoor = 53;
     repeated RouteLandmark landmarks = 54;   // landmarks in the trip leg
+    repeated StreetName tunnel_name = 55;
+    float elevation_sampling_interval = 56;
+    repeated float elevation = 57;
   }
 
   message IntersectingEdge {

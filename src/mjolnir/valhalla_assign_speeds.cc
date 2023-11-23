@@ -78,8 +78,6 @@ void assign(const boost::property_tree::ptree& config,
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  bpt::ptree config;
 
   try {
     // clang-format off
@@ -97,7 +95,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -107,6 +105,8 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
+
+  auto config = valhalla::config();
 
   // configure logging
   config.get_child("mjolnir").erase("tile_extract");

@@ -26,7 +26,6 @@
 bool parse_common_args(const std::string& program,
                        const cxxopts::Options& opts,
                        const cxxopts::ParseResult& result,
-                       boost::property_tree::ptree& pt,
                        const std::string& log,
                        const bool use_threads = false) {
   if (result.count("help")) {
@@ -40,19 +39,18 @@ bool parse_common_args(const std::string& program,
   }
 
   // Read the config file
+  boost::property_tree::ptree conf;
   if (result.count("inline-config")) {
-    std::stringstream ss;
-    ss << result["inline-config"].as<std::string>();
-    rapidjson::read_json(ss, pt);
+    conf = valhalla::config(result["inline-config"].as<std::string>());
   } else if (result.count("config") &&
              filesystem::is_regular_file(result["config"].as<std::string>())) {
-    rapidjson::read_json(result["config"].as<std::string>(), pt);
+    conf = valhalla::config(result["config"].as<std::string>());
   } else {
     throw cxxopts::OptionException("Configuration is required\n\n" + opts.help() + "\n\n");
   }
 
   // configure logging
-  auto logging_subtree = pt.get_child_optional(log);
+  auto logging_subtree = conf.get_child_optional(log);
   if (logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
@@ -64,9 +62,9 @@ bool parse_common_args(const std::string& program,
     // override concurrency config if specified as arg
     auto num_threads = std::max(1U, result.count("concurrency")
                                         ? result["concurrency"].as<uint32_t>()
-                                        : pt.get<uint32_t>("mjolnir.concurrency",
-                                                           std::thread::hardware_concurrency()));
-    pt.put<uint32_t>("mjolnir.concurrency", num_threads);
+                                        : conf.get<uint32_t>("mjolnir.concurrency",
+                                                             std::thread::hardware_concurrency()));
+    conf.put<uint32_t>("mjolnir.concurrency", num_threads);
 
     LOG_INFO("Running " + std::string(program) + " with " + std::to_string(num_threads) +
              " thread(s).");
