@@ -17,7 +17,7 @@ using namespace valhalla::thor;
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kCostMatrixThreshold = 5;
+constexpr ::google::protobuf::int32 kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
