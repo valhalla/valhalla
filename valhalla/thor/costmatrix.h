@@ -65,7 +65,7 @@ struct BestCandidate {
       : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
   }
 
-  void Update(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
+  void Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
     edgeid = e1;
     opp_edgeid = e2;
     cost = c;
@@ -147,6 +147,7 @@ protected:
 
   uint32_t max_reserved_labels_count_;
   bool clear_reserved_memory_;
+  bool check_reverse_connections_;
 
   // Number of source and target locations that can be expanded
   std::array<uint32_t, 2> locs_count_;
@@ -211,11 +212,25 @@ protected:
    * @param  source  Source index.
    * @param  pred    Edge label of the predecessor.
    * @param  n       Iteration counter.
+   * @param  graphreader the graph reader instance
    */
   void CheckForwardConnections(const uint32_t source,
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
+
+  /**
+   * Check if the edge on the backward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  target      target index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
+   */
+  void CheckReverseConnections(const uint32_t target,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader);                               
 
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
@@ -340,10 +355,11 @@ protected:
   };
 
 private:
-  class TargetMap;
+  class ReachedMap;
 
   // Mark each target edge with a list of target indexes that have reached it
-  std::unique_ptr<TargetMap> targets_;
+  std::unique_ptr<ReachedMap> targets_;
+  std::unique_ptr<ReachedMap> sources_;
 };
 
 } // namespace thor
