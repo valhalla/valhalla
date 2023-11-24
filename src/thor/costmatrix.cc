@@ -687,7 +687,6 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
   auto targets = targets_->find(oppedge);
-  auto a = targets_->size();
   if (targets == targets_->end()) {
     return;
   }
