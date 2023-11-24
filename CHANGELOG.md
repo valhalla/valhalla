@@ -42,6 +42,7 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
+   * CHANGED: CostMatrix is now using distance from location for hierarchy limits []()
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

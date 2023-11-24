@@ -14,6 +14,7 @@
 #include <valhalla/proto/common.pb.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
+#include <valhalla/thor/astarheuristic.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
 // this is only for EdgeMetadata. one day we should move to a global interface
@@ -163,6 +164,10 @@ protected:
   std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
   std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
   std::array<std::vector<EdgeStatus>, 2> edgestatus_;
+
+  // we use the heuristics to get the distance of an expanded edge to origin/destination
+  // so we can ignore hierarchy limits around the locations for quality reasons
+  std::array<std::vector<AStarHeuristic>, 2> dist_approx_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;

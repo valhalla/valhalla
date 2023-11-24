@@ -15,9 +15,13 @@ namespace thor {
 class AStarHeuristic {
 public:
   /**
-   * Constructor.
+   * Constructors
    */
   AStarHeuristic() : distapprox_({}), costfactor_(1.0f) {
+  }
+
+  AStarHeuristic(const midgard::PointLL& ll) : distapprox_({}), costfactor_(1.0f) {
+    Init(ll, costfactor_);
   }
 
   /**
