@@ -413,7 +413,6 @@ void TimeDistanceMatrix::InitDestinations(
 
       // Form a threshold cost (the total cost to traverse the edge), also based on forward path for
       // REVERSE
-      GraphId id(static_cast<GraphId>(edge.graph_id()));
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       float c = costing_->EdgeCost(directededge, tile).cost;
