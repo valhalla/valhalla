@@ -211,7 +211,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
   // reserve the PBF vectors
   reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
 
-  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+  for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
     edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
