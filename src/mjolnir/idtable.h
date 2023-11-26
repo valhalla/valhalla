@@ -71,7 +71,7 @@ public:
   /**
    * Deserializes the table from file
    * @param file_name  the file from which to deserialize the table
-   * @return true if it was succesfully deserialized
+   * @return true if it was successfully deserialized
    */
   bool deserialize(const std::string& file_name) {
     std::ifstream file(file_name, std::ios::in | std::ios::binary | std::ios::ate);

@@ -370,6 +370,13 @@ void parse_location(valhalla::Location* location,
   if (street_side_max_distance) {
     location->set_street_side_max_distance(*street_side_max_distance);
   }
+  auto street_side_cutoff = rapidjson::get_optional<std::string>(r_loc, "/street_side_cutoff");
+  if (street_side_cutoff) {
+    valhalla::RoadClass cutoff_street_side;
+    if (RoadClass_Enum_Parse(*street_side_cutoff, &cutoff_street_side)) {
+      location->set_street_side_cutoff(cutoff_street_side);
+    }
+  }
 
   boost::optional<bool> exclude_closures;
   // is it json?
@@ -534,7 +541,7 @@ void parse_locations(const rapidjson::Document& doc,
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
   catch (const valhalla_exception_t& e) {
     throw e;
-  } // generic execptions and other stuff get a generic message
+  } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
   }
@@ -637,10 +644,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // so that we serialize correctly at the end we fix up any request discrepancies
   if (options.format() == Options::pbf) {
-    const std::unordered_set<Options::Action> pbf_actions{
-        Options::route,    Options::optimized_route,  Options::trace_route,
-        Options::centroid, Options::trace_attributes, Options::status,
-    };
+    const std::unordered_set<Options::Action> pbf_actions{Options::route,
+                                                          Options::optimized_route,
+                                                          Options::trace_route,
+                                                          Options::centroid,
+                                                          Options::trace_attributes,
+                                                          Options::status,
+                                                          Options::sources_to_targets};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -921,6 +931,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // Get the elevation interval for returning elevation along the path in a route or
+  // trace attribute call. Defaults to 0.0 (no elevation is returned)
+  constexpr float kMaxElevationInterval = 1000.0f;
+  auto elevation_interval = rapidjson::get_optional<float>(doc, "/elevation_interval");
+  if (elevation_interval) {
+    options.set_elevation_interval(
+        std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
+    options.set_elevation_interval(
+        std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
+  }
+
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
@@ -1158,6 +1181,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
+
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =

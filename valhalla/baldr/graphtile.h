@@ -466,27 +466,39 @@ public:
   std::string GetName(const uint32_t textlist_offset) const;
 
   /**
-   * Convenience method to get the signs for an edge given the directed
-   * edge index.
+   * Given either a DirectedEdge or Node index, returns all the signs including
+   * languages and phonemes.
+   *
+   * To retrieve signs/languages/phonemes for a node, pass signs_on_node=true. Note
+   * that the sign-types specific to nodes are Sign::Type::kJunctionName and
+   * Sign::Type::kTollName.
+   *
+   * The sign types Sign::Type::kPronunciation and Sign::Type::kLanguage can apply
+   * to either node or edge.
+   *
+   * All other sign types are specific to edges.
+   *
    * @param  idx  Directed edge or node index. Used to lookup list of signs.
-   * @param  signs_on_node Are we looking for signs at the node?  These are the
-   *                       intersection names.
-   * @return  Returns a list (vector) of signs.
+   * @param  signs_on_node Are we looking for signs at the node?
+   * @return  Returns a vector of signs.
    */
   std::vector<SignInfo> GetSigns(const uint32_t idx, bool signs_on_node = false) const;
 
   /**
-   * Convenience method to get the signs for an edge given the directed
-   * edge index.
-   * @param  idx  Directed edge or node index. Used to lookup list of signs.
-   * @param  signs_on_node Are we looking for signs at the node?  These are the
+   * Given either a DirectedEdge or Node index, returns all the signs.
+   *
+   * @param   idx  Directed edge or node index. Used to lookup list of signs.
+   * @param   index_linguistic_map unordered_map in which the key is a index into the vector of
+   * shields and the tuple contains a pronunciation (w/wo a language) or no pronunciation and just a
+   * language
+   * @param   signs_on_node Are we looking for signs at the node?  These are the
    *                       intersection names.
    * @return  Returns a list (vector) of signs.
    */
-  std::vector<SignInfo>
-  GetSigns(const uint32_t idx,
-           std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
-           bool signs_on_node = false) const;
+  std::vector<SignInfo> GetSigns(
+      const uint32_t idx,
+      std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>& index_linguistic_map,
+      bool signs_on_node = false) const;
 
   /**
    * Get the next departure given the directed edge Id and the current
@@ -495,7 +507,7 @@ public:
    * @param   current_time      Current time (seconds from midnight).
    * @param   day               Days since the tile creation date.
    * @param   dow               Day of week (see graphconstants.h)
-   * @param   date_before_tile  Is the date that was inputed before
+   * @param   date_before_tile  Is the date that was input before
    *                            the tile creation date?
    * @param   wheelchair        Only find departures with wheelchair access if true
    * @param   bicycle           Only find departures with bicycle access if true
@@ -584,7 +596,7 @@ public:
                                                        const uint32_t access) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  column the bin's column
    * @param  row the bin's row
    * @return iterable container of graphids contained in the bin
@@ -592,7 +604,7 @@ public:
   midgard::iterable_t<GraphId> GetBin(size_t column, size_t row) const;
 
   /**
-   * Get an iteratable list of GraphIds given a bin in the tile
+   * Get an iterable list of GraphIds given a bin in the tile
    * @param  index the bin's index in the row major array
    * @return iterable container of graphids contained in the bin
    */

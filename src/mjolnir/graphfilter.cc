@@ -149,7 +149,7 @@ void FilterTiles(GraphReader& reader,
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
                                     edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTaggedValues(true),
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
@@ -225,8 +225,6 @@ void FilterTiles(GraphReader& reader,
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
   LOG_INFO("Update end nodes of directed edges");
 
-  int found = 0;
-
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
@@ -257,7 +255,6 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         LOG_ERROR("UpdateEndNodes - failed to find associated node");
       } else {
         end_node = iter->second;
-        found++;
       }
 
       // Copy the edge to the directededges vector and update the end node

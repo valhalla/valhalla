@@ -39,8 +39,6 @@ public:
   using typename std::pair<PrecisionT, PrecisionT>::second_type;
   using value_type = typename std::pair<PrecisionT, PrecisionT>::first_type;
 
-  virtual ~PointXY() = default;
-
   /**
    * Get the x component.
    * @return  Returns the x component of the point.
@@ -78,7 +76,7 @@ public:
    * @param   x   x coordinate position.
    * @param   y   y coordinate position.
    */
-  virtual void Set(const PrecisionT x, const PrecisionT y) {
+  void Set(const PrecisionT x, const PrecisionT y) {
     first = x;
     second = y;
   }
@@ -174,7 +172,7 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns true if this point is left of the segment.
    */
-  virtual PrecisionT IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
+  PrecisionT IsLeft(const PointXY<PrecisionT>& p1, const PointXY<PrecisionT>& p2) const {
     return (p2.x() - p1.x()) * (y() - p1.y()) - (x() - p1.x()) * (p2.y() - p1.y());
   }
 

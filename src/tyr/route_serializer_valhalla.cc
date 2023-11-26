@@ -508,6 +508,21 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
       writer.end_array(); // maneuvers
     }
 
+    // Store elevation for the leg
+    if (api.options().elevation_interval() > 0.0f) {
+      writer.set_precision(1);
+      float unit_factor = api.options().units() == Options::miles ? kFeetPerMeter : 1.0f;
+      float interval = api.options().elevation_interval();
+      writer("elevation_interval", interval * unit_factor);
+      auto elevation = tyr::get_elevation(*trip_leg_itr, interval);
+
+      writer.start_array("elevation");
+      for (const auto& h : elevation) {
+        writer(h * unit_factor);
+      }
+      writer.end_array(); // elevation
+    }
+
     writer.start_object("summary");
     writer("has_time_restrictions", has_time_restrictions);
     writer("has_toll", has_toll);

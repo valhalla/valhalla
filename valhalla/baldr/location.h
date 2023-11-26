@@ -35,7 +35,7 @@ public:
    * Optional filters supplied in the request.
    *
    * NOTE: this struct must be kept in sync with the protobuf defined
-   * valhalla::Location::SearchFilter in tripcommon.proto.
+   * valhalla::Location::SearchFilter in common.proto.
    */
   struct SearchFilter {
   public:
@@ -71,6 +71,7 @@ public:
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
+           valhalla::RoadClass street_side_cutoff = valhalla::RoadClass::kServiceOther,
            const SearchFilter& search_filter = SearchFilter(),
            std::optional<int8_t> preferred_layer = {});
 
@@ -109,6 +110,7 @@ public:
   float search_cutoff_;
   float street_side_tolerance_;
   float street_side_max_distance_;
+  valhalla::RoadClass street_side_cutoff_;
   SearchFilter search_filter_;
 
   // coordinates of the location as used for altering the side of street

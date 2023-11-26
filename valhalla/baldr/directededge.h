@@ -237,7 +237,7 @@ public:
   void set_curvature(const uint32_t factor);
 
   /**
-   * Flag indicating the edge is a dead end (no other driveable
+   * Flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
    */
@@ -246,7 +246,7 @@ public:
   }
 
   /**
-   * Set the flag indicating the edge is a dead end (no other driveable
+   * Set the flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @param d  True if this edge is a dead end.
    */
@@ -862,16 +862,16 @@ public:
   void set_dismount(const bool dismount);
 
   /**
-   * Get if a sidepath for bicycling should be preffered instead of this edge
-   * @return  Returns if a sidepath should be preffered for cycling
+   * Get if a sidepath for bicycling should be preferred instead of this edge
+   * @return  Returns if a sidepath should be preferred for cycling
    */
   bool use_sidepath() const {
     return use_sidepath_;
   }
 
   /**
-   * Set if a sidepath for bicycling should be preffered instead of this edge
-   * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
+   * Set if a sidepath for bicycling should be preferred instead of this edge
+   * @param  use_sidepath  true if sidepath should be preferred for cycling over this edge
    */
   void set_use_sidepath(const bool use_sidepath);
 
@@ -1234,7 +1234,7 @@ protected:
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
-  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge

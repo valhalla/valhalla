@@ -145,7 +145,7 @@ struct LocationReferencePoint {
   /**
    * Strict equality here is ok because the floating point values came from integers
    * @param lrp
-   * @return true if the provided lrp exactly matchs this lrp
+   * @return true if the provided lrp exactly matches this lrp
    */
   bool operator==(const LocationReferencePoint& lrp) const {
     return longitude == lrp.longitude && latitude == lrp.latitude && bearing == lrp.bearing &&

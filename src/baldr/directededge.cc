@@ -165,12 +165,12 @@ void DirectedEdge::set_dismount(const bool dismount) {
   dismount_ = dismount;
 }
 
-// Set if a sidepath should be preffered when cycling over this one
+// Set if a sidepath should be preferred when cycling over this one
 void DirectedEdge::set_use_sidepath(const bool use_sidepath) {
   use_sidepath_ = use_sidepath;
 }
 
-// Set the flag indicating the edge is a dead end (no other driveable
+// Set the flag indicating the edge is a dead end (no other drivable
 // roads at the end node of this edge).
 void DirectedEdge::set_deadend(const bool d) {
   deadend_ = d;
