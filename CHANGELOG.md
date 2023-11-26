@@ -15,6 +15,7 @@
    * FIXED: recover proper shortest path to ferry connections (make sure correct label index is used) [#4378](https://github.com/valhalla/valhalla/pull/4378)
    * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
    * FIXED: motorcar:conditional should not apply to motorcycle and moped [#4359](https://github.com/valhalla/valhalla/pull/4359)
+   * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
