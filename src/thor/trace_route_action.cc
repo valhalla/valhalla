@@ -273,7 +273,9 @@ void thor_worker_t::build_trace(
                high = (segment->last_match_idx >= 0 ? segment->last_match_idx
                                                     : segment->first_match_idx);
            low >= 0 && low <= high; ++low) {
-        match_results[low].edge_index = edge_index;
+        // assign edge_index if edgeid is correct
+        if (match_results[low].edgeid == segment->edgeid)
+          match_results[low].edge_index = edge_index;
       }
       if (last_id != segment->edgeid) {
         ++edge_index;
