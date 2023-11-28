@@ -300,31 +300,36 @@ TEST(Shortcuts, ShortcutRestrictions) {
   M--N--O--P--Q--R
   )";
   const gurka::ways ways = {
-    {"AB", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"BC", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"CD", {{"highway", "motorway"}, {"name", "highway"}, {"maxweight", "3.5"}}},
-    {"DE", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"EF", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"FG", {{"highway", "residential"}}},  // only to build all ways
-    {"GH", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"HI", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"IJ", {{"highway", "motorway"}, {"name", "highway"}, {"hazmat", "yes"}}},
-    {"JK", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"KL", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"LM", {{"highway", "residential"}}},  // only to build all ways
-    {"MN", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"NO", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"OP", {{"highway", "motorway"}, {"name", "highway"}, {"motorcar:conditional", {"destination @ 08:00-16:00"}}}},
-    {"PQ", {{"highway", "motorway"}, {"name", "highway"}}},
-    {"QR", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"AB", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"BC", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"CD", {{"highway", "motorway"}, {"name", "highway"}, {"maxweight", "3.5"}}},
+      {"DE", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"EF", {{"highway", "motorway"}, {"name", "highway"}}},
+
+      {"GH", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"HI", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"IJ", {{"highway", "motorway"}, {"name", "highway"}, {"hazmat", "yes"}}},
+      {"JK", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"KL", {{"highway", "motorway"}, {"name", "highway"}}},
+
+      {"MN", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"NO", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"OP",
+       {{"highway", "motorway"},
+        {"name", "highway"},
+        {"motorcar:conditional", {"destination @ 08:00-16:00"}}}},
+      {"PQ", {{"highway", "motorway"}, {"name", "highway"}}},
+      {"QR", {{"highway", "motorway"}, {"name", "highway"}}},
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 500);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/gurka_shortcut_restrictions");
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_shortcut_restrictions");
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
-  
+
   // test we got the right shortcuts edges, implicitly means they were broken at the center ways
   for (const auto& end_node : {"C", "F", "I", "L", "O", "R"}) {
-    const auto shortcut = gurka::findEdge(reader, layout, "highway", end_node, baldr::GraphId{}, 0, true);
+    const auto shortcut =
+        gurka::findEdge(reader, layout, "highway", end_node, baldr::GraphId{}, 0, true);
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
     EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
   }
@@ -335,4 +340,3 @@ TEST(Shortcuts, ShortcutRestrictions) {
     EXPECT_EQ(std::get<3>(edge)->superseded(), 0);
   }
 }
-
