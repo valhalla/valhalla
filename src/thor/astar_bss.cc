@@ -296,11 +296,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
 
-#if 0
-    graph_tile_ptr tile = graphreader.GetGraphTile(pred.endnode());
-    auto ll = tile->get_node_ll(pred.endnode());
-#endif
-
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
         pred.mode() == travel_mode_t::kPedestrian) {
       // Check if a trivial path. Skip if no predecessor and not
@@ -527,10 +522,6 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
                       edgelabel.transition_cost());
 
     graph_tile_ptr tile = graphreader.GetGraphTile(edgelabel.edgeid());
-#if 0
-    const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());
-    auto ll = tile->get_node_ll(directededge->endnode());
-#endif
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {
