@@ -334,6 +334,7 @@ TEST(Shortcuts, ShortcutRestrictions) {
     EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
   }
 
+  // test the center ways are really not superseded by a shortcut
   for (const auto& end_node : {"D", "J", "P"}) {
     const auto edge = gurka::findEdge(reader, layout, "highway", end_node);
     EXPECT_EQ(std::get<1>(edge)->superseded(), 0);
