@@ -356,7 +356,6 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-// TODO - need to add access restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
@@ -427,8 +426,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       auto types = edgeinfo.GetTypes();
 
-      // Add any access restriction records. TODO - make sure we don't contract
-      // across edges with different restrictions.
+      // Add any access restriction records. We don't contract if they differ, so if
+      // there's any, they're the same for all involved edges
       if (newedge.access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
