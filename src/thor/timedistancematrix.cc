@@ -169,7 +169,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     sif::InternalTurn turn_type =
-        FORWARD ? turn_type = costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+        FORWARD ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
                 : costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
 
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
