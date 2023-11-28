@@ -11,50 +11,62 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-const std::vector<TileLevel>& TileHierarchy::levels() {
+static std::vector<TileLevel> levels_;
 
-  std::vector<float> tilesizevector;
+void getLevels_once() {
+  std::vector<int32_t> columnsvector;
   bool bSizesInConfigOk = false;
 
-  AABB2<midgard::PointLL> wholemapbb{
+  const AABB2<midgard::PointLL> wholemapbb{
     {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}, 
     {config().get<float>("baldr.tiling_scheme.maxpt.lng", 180), config().get<float>("baldr.tiling_scheme.maxpt.lat", 90)}
   };
 
-  const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
+  const boost::optional<const boost::property_tree::ptree &> columnsptree = config().get_child_optional("baldr.tiling_scheme.columns");
   
-  if (tilesizesptree) {
-    BOOST_FOREACH (auto& v, *tilesizesptree) {
-      tilesizevector.push_back( v.second.get<float>("") );
+  if (columnsptree) {
+    BOOST_FOREACH (auto& v, *columnsptree) {
+      columnsvector.push_back( v.second.get<int32_t>("") );
     }
-    if (tilesizevector.size()>=3) {
+    if (columnsvector.size()>=3) {
       bSizesInConfigOk = true;
     }
   }
 
   if (!bSizesInConfigOk) {
-    tilesizevector = {4.0, 1.0, 0.25};
+    // Default OSM tile-grid
+    columnsvector = {90, 360, 1440};
   }
 
-  static const std::vector<TileLevel> levels_ = {
+  levels_ = {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
-                midgard::Tiles<midgard::PointLL>{wholemapbb,
-                                                 tilesizevector[0],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
+                                                 (float)wholemapbb.Width()/columnsvector[0],
+                                                 columnsvector[0],
+                                                 columnsvector[0]/2,  
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
-                midgard::Tiles<midgard::PointLL>{wholemapbb,
-                                                 tilesizevector[1],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
+                                                 (float)wholemapbb.Width()/columnsvector[1],
+                                                 columnsvector[1],
+                                                 columnsvector[1]/2,
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
-                midgard::Tiles<midgard::PointLL>{wholemapbb,
-                                                 tilesizevector[2],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(),
+                                                 (float)wholemapbb.Width()/columnsvector[2],
+                                                 columnsvector[2],
+                                                 columnsvector[2]/2,
                                                  static_cast<unsigned short>(kBinsDim)}},
 
   };
+}
 
+const std::vector<TileLevel>& TileHierarchy::levels() {
+  static std::once_flag flag;
+  std::call_once(flag, getLevels_once);
   return levels_;
 }
 

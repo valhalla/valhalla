@@ -168,7 +168,7 @@ config = {
         'tiling_scheme': {
             'minpt': { 'lng': -180.0, 'lat': -90.0 },
             'maxpt': { 'lng': 180.0, 'lat': 90.0 },
-            'tilesizes': [ 2.8125, 0.703125, 0.17578125 ]        
+            'columns': [ 128, 512, 2048 ]
         } 
     },
     'httpd': {
@@ -437,9 +437,9 @@ help_text = {
     },
     'baldr': {
         'tiling_scheme': {
-            'minpt': { 'lng': 'Longitude of bottom-left coordinate of bounding box', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
-            'maxpt': { 'lng': 'Longitude of top-right coordinate of bounding box', 'lat': 'Latitude of top-right coordinate of bounding box' },
-            'tilesizes': 'Size of the different tile levels. (In this order: highway, arterial, local)'
+            'minpt': { 'lng': 'Longitude of bottom-left coordinate of whole map area', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
+            'maxpt': { 'lng': 'Longitude of top-right coordinate of whole map area', 'lat': 'Latitude of top-right coordinate of bounding box' },
+            'columns': 'Number of columns in the tile grid. (In this order: highway, arterial, local)',
         } 
     },
     'httpd': {
