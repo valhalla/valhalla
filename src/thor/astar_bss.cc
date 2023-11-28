@@ -472,7 +472,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
 
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
@@ -481,8 +481,6 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
-  // For each edge
-  uint32_t density = 0;
   for (const auto& edge : dest.correlation().edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && edge.begin_node()) {
@@ -505,11 +503,8 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
-
-    // Get the tile relative density
-    density = tile->header()->density();
   }
-  return density;
+  return;
 }
 
 // Form the path from the adjacency list.
