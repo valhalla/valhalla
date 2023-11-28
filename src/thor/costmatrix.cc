@@ -46,10 +46,10 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
-    : targets_{new TargetMap},
-      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
+    : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), targets_{
+                                                                                    new TargetMap} {
   // Note, most things are being initialized in Initialize() or before
 }
 
@@ -687,7 +687,6 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
   // search has reached this edge.
   GraphId oppedge = pred.opp_edgeid();
   auto targets = targets_->find(oppedge);
-  auto a = targets_->size();
   if (targets == targets_->end()) {
     return;
   }
