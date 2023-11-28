@@ -1163,7 +1163,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     uint32_t idx1 = edgestatus_forward_.Get(best_connection->edgeid).index();
     uint32_t idx2 = edgestatus_reverse_.Get(best_connection->opp_edgeid).index();
 
-#ifdef LOGGING_LEVEL_TRACE
+#ifdef LOGGING_LEVEL_DEBUG
     // Metrics (TODO - more accurate cost)
     uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
     LOG_DEBUG("path_cost::" + std::to_string(pathcost));
