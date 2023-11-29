@@ -340,13 +340,13 @@ TEST(Shortcuts, ShortcutRestrictions) {
 
   // test that without those restrictions we're still building all shortcuts
 
-  // remove those access restrictions 
+  // remove those access restrictions
   ways["CD"].erase("maxweight");
   ways["DE"].erase("maxweight");
   ways["HI"].erase("hazmat");
   ways["IJ"].erase("hazmat");
   auto map2 = gurka::buildtiles(layout, ways, {}, {},
-                               VALHALLA_BUILD_DIR "test/data/gurka_shortcut_without_restrictions");
+                                VALHALLA_BUILD_DIR "test/data/gurka_shortcut_without_restrictions");
   baldr::GraphReader reader2(map2.config.get_child("mjolnir"));
 
   // we don't have those small shortcuts anymore
