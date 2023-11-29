@@ -22,11 +22,11 @@ TEST(TarIndexer, TestTrafficTar) {
   GraphReader reader_dir(config_dir.get_child("mjolnir"));
 
   for (const auto& tile_id : reader_dir.GetTileSet()) {
-    auto dir_tile = reader_dir.GetGraphTile(tile_id);
-    auto tar_tile = reader_tar.GetGraphTile(tile_id);
+    auto dir_tile_header = reader_dir.GetGraphTile(tile_id)->header();
+    auto tar_tile_header = reader_tar.GetGraphTile(tile_id)->header();
 
-    ASSERT_EQ(memcmp(reinterpret_cast<const char*>(dir_tile->header()),
-                     reinterpret_cast<const char*>(tar_tile->header()), sizeof(vb::GraphTileHeader)),
+    ASSERT_EQ(memcmp(reinterpret_cast<const char*>(dir_tile_header),
+                     reinterpret_cast<const char*>(tar_tile_header), sizeof(vb::GraphTileHeader)),
               0);
   }
 }
