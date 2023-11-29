@@ -93,9 +93,8 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     if (res1.size() != res2.size())
       return false;
     for (size_t i = 0; i < res1.size(); ++i) {
-      res1[i].set_edgeindex(0);
-      res2[i].set_edgeindex(0);
-      if (res1[i].value() != res2[i].value())
+      if (res1[i].type() != res2[i].type() || res1[i].modes() != res2[i].modes() ||
+          res1[i].value() != res2[i].value())
         return false;
     }
   }
