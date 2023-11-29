@@ -430,8 +430,8 @@ public:
    */
   inline uint32_t heading(const uint32_t localidx) const {
     if (localidx > kMaxLocalEdgeIndex) {
-      LOG_WARN("Local index " + std::to_string(localidx) + " exceeds max value of " +
-               std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
+      LOG_DEBUG("Local index " + std::to_string(localidx) + " exceeds max value of " +
+                std::to_string(kMaxLocalEdgeIndex) + ", returning heading of 0");
       return 0;
     }
     // Make sure everything is 64 bit!
