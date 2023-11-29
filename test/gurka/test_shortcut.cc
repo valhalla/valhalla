@@ -299,7 +299,7 @@ TEST(Shortcuts, ShortcutRestrictions) {
 
   M--N--O--P--Q--R
   )";
-  const gurka::ways ways = {
+  gurka::ways ways = {
       {"AB", {{"highway", "motorway"}, {"name", "highway"}}},
       {"BC", {{"highway", "motorway"}, {"name", "highway"}}},
       {"CD", {{"highway", "motorway"}, {"name", "highway"}, {"maxweight", "3.5"}}},
@@ -339,5 +339,37 @@ TEST(Shortcuts, ShortcutRestrictions) {
     const auto edge = gurka::findEdge(reader, layout, "highway", end_node);
     EXPECT_EQ(std::get<1>(edge)->superseded(), 0);
     EXPECT_EQ(std::get<3>(edge)->superseded(), 0);
+  }
+
+  // remove those access restrictions 
+  ways["CD"].erase("maxweight");
+  ways["IJ"].erase("hazmat");
+  ways["OP"].erase("motorcar:conditional");
+  auto map2 = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/gurka_shortcut_without_restrictions");
+  baldr::GraphReader reader2(map2.config.get_child("mjolnir"));
+
+  // we don't have those shortcuts anymore
+  for (const auto& end_node : {"C", "I", "O"}) {
+    const auto shortcut =
+        gurka::findEdge(reader2, layout, "highway", end_node, baldr::GraphId{}, 0, true);
+    EXPECT_EQ(std::get<1>(shortcut), nullptr);
+    EXPECT_EQ(std::get<3>(shortcut), nullptr);
+  }
+
+  // we did build the long shorcuts across all edges
+  for (const auto& end_node : {"F", "L", "R"}) {
+    const auto shortcut =
+        gurka::findEdge(reader2, layout, "highway", end_node, baldr::GraphId{}, 0, true);
+    EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
+    EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
+  }
+
+  // the center ways are superseded now
+  for (const auto& end_node : {"D", "J", "P"}) {
+    const auto edge =
+        gurka::findEdge(reader2, layout, "highway", end_node);
+    EXPECT_NE(std::get<1>(edge)->superseded(), 0);
+    EXPECT_NE(std::get<3>(edge)->superseded(), 0);
   }
 }
