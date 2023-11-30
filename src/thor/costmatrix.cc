@@ -16,7 +16,7 @@ namespace {
 
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
-constexpr uint32_t kMaxLocationCache = 20;
+constexpr uint32_t kMaxLocationCacheDefault = 25;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -48,8 +48,10 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), targets_{
-                                                                                    new TargetMap} {
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
+      max_reserved_locations_count_(
+          config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationCacheDefault)),
+      targets_{new TargetMap} {
   // Note, most things are being initialized in Initialize() or before
 }
 
@@ -84,20 +86,21 @@ void CostMatrix::clear() {
 
   // Clear all source adjacency lists, edge labels, and edge status
   // Resize and shrink_to_fit so all capacity is reduced.
-  auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
+  auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+  auto locs_reservation = clear_reserved_memory_ ? 0 : max_reserved_locations_count_;
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
     // resize all relevant structures down to 20 locations
-    if (locs_count_[exp_dir] > kMaxLocationCache) {
-      edgelabel_[exp_dir].resize(kMaxLocationCache);
+    if (locs_count_[exp_dir] > locs_reservation) {
+      edgelabel_[exp_dir].resize(locs_reservation);
       edgelabel_[exp_dir].shrink_to_fit();
-      adjacency_[exp_dir].resize(kMaxLocationCache);
+      adjacency_[exp_dir].resize(locs_reservation);
       adjacency_[exp_dir].shrink_to_fit();
-      edgestatus_[exp_dir].resize(kMaxLocationCache);
+      edgestatus_[exp_dir].resize(locs_reservation);
       edgestatus_[exp_dir].shrink_to_fit();
     }
     for (auto& iter : edgelabel_[exp_dir]) {
-      if (iter.size() > reservation) {
-        iter.resize(reservation);
+      if (iter.size() > label_reservation) {
+        iter.resize(label_reservation);
         iter.shrink_to_fit();
       }
       iter.clear();
