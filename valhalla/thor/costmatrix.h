@@ -146,8 +146,8 @@ protected:
   std::shared_ptr<sif::DynamicCost> costing_;
 
   uint32_t max_reserved_labels_count_;
-  uint32_t max_reserved_locations_count_;
   bool clear_reserved_memory_;
+  uint32_t max_reserved_locations_count_;
 
   // Number of source and target locations that can be expanded
   std::array<uint32_t, 2> locs_count_;
