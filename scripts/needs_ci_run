@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import fnmatch
+import json
 from os import path, environ
-import urllib3
-from urllib3.exceptions import HTTPError
+from urllib import request
+from urllib.error import HTTPError
 import sys
 import subprocess
 
@@ -48,12 +49,11 @@ def last_build_successful():
     # run, while the rest will be from the last run:
     cci_api_url = f'https://circleci.com/api/v1.1/project/github/valhalla/valhalla/tree/{branch}?circle-token={token}&shallow=true&limit={len(JOBS)*2}'
 
-    http_pool = urllib3.PoolManager()
-    resp = http_pool.request("GET", cci_api_url, redirect=True)
-    if resp.status >= 400:
-        raise HTTPError(resp.data)
-
-    builds = resp.json()
+    try:
+        with request.urlopen(cci_api_url) as response:
+            builds = json.loads(response.read())
+    except HTTPError as e:
+        print(f"{e.reason}: {e.read()}")
 
     # this should never happen. since this script is run from within a CI run
     # there should be at least 1 entry (i.e this run)
