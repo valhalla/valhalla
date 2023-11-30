@@ -37,7 +37,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,

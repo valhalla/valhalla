@@ -15,6 +15,8 @@
    * FIXED: recover proper shortest path to ferry connections (when multiple edges exist between node pair) [#4361](https://github.com/valhalla/valhalla/pull/4361)
    * FIXED: recover proper shortest path to ferry connections (make sure correct label index is used) [#4378](https://github.com/valhalla/valhalla/pull/4378)
    * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
+   * FIXED: motorcar:conditional should not apply to motorcycle and moped [#4359](https://github.com/valhalla/valhalla/pull/4359)
+   * FIXED: break shortcuts when there are different restrictions on base edges [#4326](https://github.com/valhalla/valhalla/pull/4326)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -42,6 +44,8 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
+   * CHANGED: less aggressive logging for nodes' headings & ferry connections [#4420][https://github.com/valhalla/valhalla/pull/4420]
+   * ADDED: add documentation about historical traffic [#4259](https://github.com/valhalla/valhalla/pull/4259)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
