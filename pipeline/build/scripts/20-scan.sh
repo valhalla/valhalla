@@ -4,9 +4,9 @@ if [[ "${BLACKDUCK_ENABLED}" == true ]]
 then
   curl -s -L https://detect.synopsys.com/detect7.sh | \
   bash -s - \
-    --blackduck.url=${BLACKDUCK_URL} \
+    --blackduck.url=${BLACKDUCK_PLATFORM_URL} \
     --blackduck.api.token=${BLACKDUCK_API_TOKEN} \
-    --detect.project.name=MICWAY \
+    --detect.project.name=${BLACKDUCK_PROJECT_PREFIX}${APP_NAME} \
     --detect.project.version.name=${APP_VERSION} \
     --detect.project.codelocation.unmap=true \
     --detect.timeout=36000
