@@ -53,6 +53,7 @@ stages:
             name: scan
             displayName: Scanners
             env:
+              BLACKDUCK_ENABLED: $(blackduck.enabled)
               BLACKDUCK_API_TOKEN: $(blackduck.api.token)
 
           - bash: |
