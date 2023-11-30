@@ -54,10 +54,10 @@ def last_build_successful():
             res_data = response.read()
             builds = json.loads(res_data)
     except HTTPError as e:
-        print(f"{e.reason}: {e.read()}")
+        print(f"{e.reason}: {e.read()}", file=sys.stderr)
         raise e
     except json.JSONDecodeError as e:
-        print(res_data)
+        print(res_data, file=sys.stderr)
         raise e
 
     # this should never happen. since this script is run from within a CI run
