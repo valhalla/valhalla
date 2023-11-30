@@ -59,9 +59,9 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Neither edge can be part of a complex turn restriction
+  // Neither edge can be part of a complex turn restriction or differ on access restrictions
   if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
-      edge2->end_restriction()) {
+      edge2->end_restriction() || edge1->access_restriction() != edge2->access_restriction()) {
     return false;
   }
 
@@ -81,21 +81,24 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // TODO - should allow near matches?
   std::vector<std::string> edge1names = tile->GetNames(edge1);
   std::vector<std::string> edge2names = tile->GetNames(edge2);
-  if (edge1names.size() != edge2names.size()) {
+  std::sort(edge1names.begin(), edge1names.end());
+  std::sort(edge2names.begin(), edge2names.end());
+  if (edge1names != edge2names)
     return false;
-  }
-  for (const auto& name1 : edge1names) {
-    bool found = false;
-    for (const auto& name2 : edge2names) {
-      if (name1 == name2) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
+
+  // if they have access restrictions those must match (for modes that use shortcuts)
+  if (edge1->access_restriction()) {
+    auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
+    auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
+    if (res1.size() != res2.size())
       return false;
+    for (size_t i = 0; i < res1.size(); ++i) {
+      if (res1[i].type() != res2[i].type() || res1[i].modes() != res2[i].modes() ||
+          res1[i].value() != res2[i].value())
+        return false;
     }
   }
+
   return true;
 }
 
@@ -212,7 +215,7 @@ bool CanContract(GraphReader& reader,
     return false;
 
   // Exactly one pair of edges match. Check if any other remaining edges
-  // are driveable outbound from the node. If so this cannot be contracted.
+  // are drivable outbound from the node. If so this cannot be contracted.
   // NOTE-this seems to cause issues on PA Tpke / Breezewood
   /*  for (uint32_t i = 0; i < n; i++) {
       if (i != match.first && i != match.second) {
@@ -264,14 +267,14 @@ bool CanContract(GraphReader& reader,
   // and there are other edges at the node (forward intersecting edge or a
   // 'T' intersection
   if (nodeinfo->local_edge_count() > 2) {
-    // Find number of driveable edges
-    uint32_t driveable = 0;
+    // Find number of drivable edges
+    uint32_t drivable = 0;
     for (uint32_t i = 0; i < nodeinfo->local_edge_count(); i++) {
       if (nodeinfo->local_driveability(i) != Traversability::kNone) {
-        driveable++;
+        drivable++;
       }
     }
-    if (driveable > 2) {
+    if (drivable > 2) {
       uint32_t heading1 = (nodeinfo->heading(edge1->localedgeidx()) + 180) % 360;
       uint32_t turn_degree = GetTurnDegree(heading1, nodeinfo->heading(edge2->localedgeidx()));
       if (turn_degree > 60 && turn_degree < 300) {
@@ -352,7 +355,6 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-// TODO - need to add access restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
@@ -419,12 +421,12 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       // Get names - they apply over all edges of the shortcut
       auto names = edgeinfo.GetNames();
       auto tagged_values = edgeinfo.GetTaggedValues();
-      auto pronunciations = edgeinfo.GetTaggedValues(true);
+      auto linguistics = edgeinfo.GetLinguisticTaggedValues();
 
       auto types = edgeinfo.GetTypes();
 
-      // Add any access restriction records. TODO - make sure we don't contract
-      // across edges with different restrictions.
+      // Add any access restriction records. We don't contract if they differ, so if
+      // there's any, they're the same for all involved edges
       if (newedge.access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {
@@ -454,7 +456,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
           next_edge_id = edgepairs.edge2.second;
         } else {
           // Break out of loop. This case can happen when a shortcut edge
-          // enters another shortcut edge (but is not driveable in reverse
+          // enters another shortcut edge (but is not drivable in reverse
           // direction from the node).
           const DirectedEdge* de = tile->directededge(next_edge_id);
           LOG_ERROR("Edge not found in edge pairs. WayID = " +
@@ -485,7 +487,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, pronunciations,
+                                  edgeinfo.speed_limit(), shape, names, tagged_values, linguistics,
                                   types, forward, diff_names);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
@@ -678,8 +680,9 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.wayid(), edgeinfo.mean_elevation(),
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTaggedValues(true),
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
                                     edgeinfo.GetTypes(), added);
+
         newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Set the superseded mask - this is the shortcut mask that supersedes this edge

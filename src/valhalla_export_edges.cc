@@ -144,7 +144,6 @@ void extend(GraphReader& reader,
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
   std::string bbox;
 
   try {
@@ -169,7 +168,7 @@ int main(int argc, char* argv[]) {
     options.parse_positional({"config"});
     options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -181,7 +180,7 @@ int main(int argc, char* argv[]) {
   }
 
   // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(valhalla::config().get_child("mjolnir"));
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

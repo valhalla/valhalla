@@ -468,7 +468,6 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str, json_file;
 
-  boost::property_tree::ptree pt;
   bool match_test, verbose_lanes;
   bool multi_run = false;
   uint32_t iterations;
@@ -501,7 +500,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (iterations > 1) {
@@ -541,6 +540,9 @@ int main(int argc, char* argv[]) {
   if (locations.size() < 2) {
     throw;
   }
+
+  // Get the config
+  boost::property_tree::ptree pt = valhalla::config();
 
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;

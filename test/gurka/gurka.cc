@@ -487,6 +487,7 @@ map buildtiles(const nodelayout& layout,
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
+ * @param way_id optional way_id to limit the search to
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -497,7 +498,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
-         const baldr::GraphId& tile_id) {
+         baldr::GraphId tile_id,
+         uint64_t way_id,
+         const bool is_shortcut) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
       tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
@@ -509,23 +512,49 @@ findEdge(valhalla::baldr::GraphReader& reader,
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
+      // if we requested a shortcut, but it's not, bail
+      if (forward_directed_edge->is_shortcut() != is_shortcut) {
+        continue;
+      }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
       graph_tile_ptr reverse_tile = tile;
       auto de_endnode_coordinates =
           reader.GetGraphTile(de_endnode, reverse_tile)->get_node_ll(de_endnode);
+
       const auto threshold = 0.00001; // Degrees.  About 1m at the equator
       if (std::abs(de_endnode_coordinates.lng() - end_node_coordinates.lng()) < threshold &&
           std::abs(de_endnode_coordinates.lat() - end_node_coordinates.lat()) < threshold) {
-        auto names = tile->GetNames(forward_directed_edge);
-        for (const auto& name : names) {
-          if (name == way_name) {
-            auto forward_edge_id = tile_id;
-            forward_edge_id.set_id(i);
-            GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
-            auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
-            return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
-                                   reverse_directed_edge);
+
+        if (way_name.empty()) {
+          if (way_id != 0) {
+            if (tile->edgeinfo(forward_directed_edge).wayid() == way_id) {
+
+              // Skip any edges that are not drivable inbound.
+              if (!(forward_directed_edge->forwardaccess() & kVehicularAccess))
+                continue;
+
+              auto forward_edge_id = tile_id;
+              forward_edge_id.set_id(i);
+              graph_tile_ptr reverse_tile = nullptr;
+              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
+              return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                     reverse_directed_edge);
+            }
+          }
+        } else {
+          auto names = tile->GetNames(forward_directed_edge);
+          for (const auto& name : names) {
+            if (name == way_name) {
+              auto forward_edge_id = tile_id;
+              forward_edge_id.set_id(i);
+              graph_tile_ptr reverse_tile = nullptr;
+              GraphId reverse_edge_id = reader.GetOpposingEdgeId(forward_edge_id, reverse_tile);
+              auto* reverse_directed_edge = reverse_tile->directededge(reverse_edge_id.id());
+              return std::make_tuple(forward_edge_id, forward_directed_edge, reverse_edge_id,
+                                     reverse_directed_edge);
+            }
           }
         }
       }
@@ -543,7 +572,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,

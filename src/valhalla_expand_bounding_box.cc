@@ -15,7 +15,6 @@ namespace bpt = boost::property_tree;
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
   std::string bbox;
 
   try {
@@ -35,7 +34,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("bounding-box")) {
@@ -68,7 +67,7 @@ int main(int argc, char** argv) {
 
   valhalla::midgard::AABB2<valhalla::midgard::PointLL> bb{{result[0], result[1]},
                                                           {result[2], result[3]}};
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(valhalla::config().get_child("mjolnir"));
   bb = reader.GetMinimumBoundingBox(bb);
 
   std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()
