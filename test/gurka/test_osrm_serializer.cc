@@ -4,6 +4,37 @@
 
 using namespace valhalla;
 
+namespace {
+
+void test_headings(const std::vector<int>& expected_headings, const rapidjson::Document& json) {
+  int index{0};
+  for (const auto& step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
+    for (const auto& intersection : step["intersections"].GetArray()) {
+      ASSERT_EQ(expected_headings[index++], intersection["bearings"].GetArray().Size());
+    }
+  }
+  ASSERT_EQ(index, expected_headings.size());
+}
+
+void test_bannerInstructions(const rapidjson::Document& json) {
+  // Validate that each step has bannerInstructions with primary
+  for (const auto& step : json["routes"][0]["legs"][0]["steps"].GetArray()) {
+    ASSERT_TRUE(step.HasMember("bannerInstructions"));
+    ASSERT_TRUE(step["bannerInstructions"].IsArray());
+    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
+    for (const auto& instr : step["bannerInstructions"].GetArray()) {
+      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
+      ASSERT_TRUE(instr.HasMember("primary"));
+      ASSERT_TRUE(instr["primary"].HasMember("type"));
+      ASSERT_TRUE(instr["primary"].HasMember("text"));
+      ASSERT_TRUE(instr["primary"].HasMember("components"));
+      ASSERT_TRUE(instr["primary"]["components"].IsArray());
+    }
+  }
+}
+
+} // namespace
+
 TEST(Standalone, OsrmSerializerShape) {
   const std::string ascii_map = R"(
     B---C---D
@@ -55,11 +86,7 @@ TEST(Standalone, HeadingNumberTurnLeft) {
   //
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 2, 1};
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i)
-    ASSERT_EQ(expected_headings[i],
-              json["routes"][0]["legs"][0]["steps"][i]["intersections"][0]["bearings"]
-                  .GetArray()
-                  .Size());
+  test_headings(expected_headings, json);
 }
 
 TEST(Standalone, HeadingNumberTRoute) {
@@ -83,15 +110,7 @@ TEST(Standalone, HeadingNumberTRoute) {
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 3, 1};
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (rapidjson::SizeType j = 0;
-         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
-      ASSERT_EQ(expected_headings[i],
-                json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
-                    .GetArray()
-                    .Size());
-    }
-  }
+  test_headings(expected_headings, json);
 }
 
 TEST(Standalone, HeadingNumberForkRoute) {
@@ -113,15 +132,7 @@ TEST(Standalone, HeadingNumberForkRoute) {
 
   auto json = gurka::convert_to_json(result, valhalla::Options_Format_osrm);
   std::vector<int> expected_headings{1, 3, 3, 1};
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (rapidjson::SizeType j = 0;
-         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
-      ASSERT_EQ(expected_headings[i],
-                json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
-                    .GetArray()
-                    .Size());
-    }
-  }
+  test_headings(expected_headings, json);
 }
 
 TEST(Standalone, HeadingNumberCrossRoad) {
@@ -148,15 +159,7 @@ TEST(Standalone, HeadingNumberCrossRoad) {
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 4, 1};
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (rapidjson::SizeType j = 0;
-         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
-      ASSERT_EQ(expected_headings[i],
-                json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
-                    .GetArray()
-                    .Size());
-    }
-  }
+  test_headings(expected_headings, json);
 }
 
 TEST(Standalone, HeadingNumber2CrossRoadPedestrian) {
@@ -183,29 +186,11 @@ TEST(Standalone, HeadingNumber2CrossRoadPedestrian) {
 
   auto json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
   std::vector<int> expected_headings{1, 4, 4, 1};
-  int index{0};
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (size_t j = 0;
-         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
-      ASSERT_EQ(expected_headings[index++],
-                json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
-                    .GetArray()
-                    .Size());
-    }
-  }
+  test_headings(expected_headings, json);
 
   result = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "pedestrian");
   json = gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
-  index = 0;
-  for (rapidjson::SizeType i = 0; i < json["routes"][0]["legs"][0]["steps"].GetArray().Size(); ++i) {
-    for (rapidjson::SizeType j = 0;
-         j < json["routes"][0]["legs"][0]["steps"][i]["intersections"].GetArray().Size(); ++j) {
-      ASSERT_EQ(expected_headings[index++],
-                json["routes"][0]["legs"][0]["steps"][i]["intersections"][j]["bearings"]
-                    .GetArray()
-                    .Size());
-    }
-  }
+  test_headings(expected_headings, json);
 }
 
 TEST(Standalone, HeadingNumber2CrossRoadAuto) {
@@ -569,20 +554,7 @@ TEST(Standalone, BannerInstructions) {
 
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
-  // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
-    ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
-    ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
-    EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("text"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
-    }
-  }
+  test_bannerInstructions(json);
 
   // validate first step has two bannerInstruction
   // validate first step's distance of first bannerInstruction
@@ -661,9 +633,9 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_0.HasMember("components"));
   ASSERT_TRUE(sub_0["components"].IsArray());
   EXPECT_EQ(sub_0["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_0["components"].GetArray().Size(); ++component) {
-    EXPECT_STREQ(sub_0["components"][component]["type"].GetString(), "lane");
-    ASSERT_TRUE(sub_0["components"][component]["directions"].IsArray());
+  for (const auto& component : sub_0["components"].GetArray()) {
+    EXPECT_STREQ(component["type"].GetString(), "lane");
+    ASSERT_TRUE(component["directions"].IsArray());
   }
   EXPECT_STREQ(sub_0["components"][0]["directions"][0].GetString(), "straight");
   ASSERT_FALSE(sub_0["components"][0]["active"].GetBool());
@@ -715,9 +687,9 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_1.HasMember("components"));
   ASSERT_TRUE(sub_1["components"].IsArray());
   EXPECT_EQ(sub_1["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_1["components"].GetArray().Size(); ++component) {
-    EXPECT_STREQ(sub_1["components"][component]["type"].GetString(), "lane");
-    ASSERT_TRUE(sub_1["components"][component]["directions"].IsArray());
+  for (const auto& component : sub_1["components"].GetArray()) {
+    EXPECT_STREQ(component["type"].GetString(), "lane");
+    ASSERT_TRUE(component["directions"].IsArray());
   }
   EXPECT_STREQ(sub_1["components"][0]["directions"][0].GetString(), "left");
   ASSERT_TRUE(sub_1["components"][0]["active"].GetBool());
@@ -778,19 +750,7 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
   // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
-    ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
-    ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
-    EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("text"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
-    }
-  }
+  test_bannerInstructions(json);
 
   // validate first step's primary instructions
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();

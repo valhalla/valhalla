@@ -135,8 +135,6 @@ const std::unordered_map<std::string, float> kMaxDistances = {
     {"pedestrian", 7200.0f}, {"transit", 14400.0f},       {"truck", 43200.0f},
     {"taxi", 43200.0f},
 };
-// a scale factor to apply to the score so that we bias towards closer results more
-constexpr float kDistanceScale = 10.f;
 
 const auto cfg = test::make_config("test/data/utrecht_tiles");
 
@@ -174,7 +172,7 @@ const auto test_request_osrm = R"({
   })";
 
 // clang-format off
-std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
                                                      {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
                                                      {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
                                                      {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
@@ -220,7 +218,12 @@ TEST(Matrix, test_matrix) {
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  EXPECT_EQ(matrix_answers.size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
                " to expected value for CostMatrix";
@@ -237,8 +240,10 @@ TEST(Matrix, test_matrix) {
 
   matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
-    if (matrix.distances()[i] < kMaxCost) {
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (const auto& t : matrix.times()) {
+    if (t < kMaxCost) {
       ++found;
     }
   }
@@ -251,8 +256,10 @@ TEST(Matrix, test_matrix) {
 
   matrix = request.matrix();
   found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
-    if (matrix.distances()[i] < kMaxCost) {
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (const auto& d : matrix.distances()) {
+    if (d < kMaxCost) {
       ++found;
     }
   }
@@ -263,7 +270,11 @@ TEST(Matrix, test_matrix) {
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
 
   matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  EXPECT_EQ(matrix_answers.size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -309,12 +320,16 @@ TEST(Matrix, test_timedistancematrix_forward) {
 
   // expected results are the same as `matrix_answers`, but without the last origin
   // clang-format off
-  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
                                                       {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
                                                       {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626}};
   // clang-format on
 
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  EXPECT_EQ(expected_results.size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -360,13 +375,17 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 
   // expected results are the same as `matrix_answers`, but without the last target
   // clang-format off
-  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, 
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213},
                                                       {1519, 1398}, {1808, 1638}, {2061, 1951},
                                                       {2311, 2111}, {701, 641},   {0, 0},
                                                       {5562, 5177}, {3952, 3707}, {4367, 4107}};
   // clang-format on
 
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  EXPECT_EQ(expected_results.size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -437,8 +456,11 @@ TEST(Matrix, partial_matrix) {
                                  request.options().matrix_locations());
   auto& matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
-    if (matrix.distances()[i] > 0) {
+
+  EXPECT_EQ(matrix.distances().size(), matrix.times().size())
+      << "sizes should be the same for cycle tests";
+  for (const auto d : matrix.distances()) {
+    if (d > 0) {
       ++found;
     }
   }
