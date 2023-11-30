@@ -188,6 +188,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
+  res.erase();
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},
