@@ -51,9 +51,14 @@ def last_build_successful():
 
     try:
         with request.urlopen(cci_api_url) as response:
-            builds = json.loads(response.read())
+            res_data = response.read()
+            builds = json.loads(res_data)
     except HTTPError as e:
         print(f"{e.reason}: {e.read()}")
+        raise e
+    except json.JSONDecodeError as e:
+        print(res_data)
+        raise e
 
     # this should never happen. since this script is run from within a CI run
     # there should be at least 1 entry (i.e this run)
