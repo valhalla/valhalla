@@ -1,6 +1,6 @@
 #!/bin/bash
 
-curl -s -L https://detect.synopsys.com/detect7.sh | \
+curl -s -L https://detect.synopsys.com/detect9.sh | \
 bash -s - \
   --blackduck.url=${BLACKDUCK_PLATFORM_URL} \
   --blackduck.api.token=${BLACKDUCK_API_TOKEN} \
