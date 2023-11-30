@@ -43,7 +43,7 @@ def last_build_successful():
         return False, None
 
     # jobs defined in .circleci/config.yml
-    JOBS = ['lint-build-debug', 'build-release', 'build-osx']
+    JOBS = ['lint-build-debug', 'build-release']
 
     # Get twice the number of jobs configured. There would be len(JOBS) from this
     # run, while the rest will be from the last run:
