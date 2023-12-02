@@ -333,11 +333,11 @@ protected:
     // Decrease distance thresholds only for arterial roads for now
     for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
       if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
     }
     for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
       if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
     }
   };
 

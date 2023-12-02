@@ -16,7 +16,7 @@ namespace {
 
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
-constexpr uint32_t kMaxLocationCache = 20;
+constexpr uint32_t kMaxLocationReservation = 20;
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -48,9 +48,9 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), targets_{
-                                                                                    new TargetMap} {
-  // Note, most things are being initialized in Initialize() or before
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), locs_count_{0, 0},
+      locs_remaining_{0, 0}, mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess),
+      current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -87,12 +87,12 @@ void CostMatrix::clear() {
   auto reservation = clear_reserved_memory_ ? 0U : max_reserved_labels_count_;
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
     // resize all relevant structures down to 20 locations
-    if (locs_count_[exp_dir] > kMaxLocationCache) {
-      edgelabel_[exp_dir].resize(kMaxLocationCache);
+    if (locs_count_[exp_dir] > kMaxLocationReservation) {
+      edgelabel_[exp_dir].resize(kMaxLocationReservation);
       edgelabel_[exp_dir].shrink_to_fit();
-      adjacency_[exp_dir].resize(kMaxLocationCache);
+      adjacency_[exp_dir].resize(kMaxLocationReservation);
       adjacency_[exp_dir].shrink_to_fit();
-      edgestatus_[exp_dir].resize(kMaxLocationCache);
+      edgestatus_[exp_dir].resize(kMaxLocationReservation);
       edgestatus_[exp_dir].shrink_to_fit();
     }
     for (auto& iter : edgelabel_[exp_dir]) {
@@ -159,6 +159,9 @@ void CostMatrix::SourceToTarget(Api& request,
   // spaces is checked during the forward search.
   uint32_t n = 0;
   while (true) {
+    // First iterate over all targets, then over all sources: we only for sure
+    // check the connection between both trees on the forward search, so reverse
+    // has to come first
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;
