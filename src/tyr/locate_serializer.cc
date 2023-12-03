@@ -25,7 +25,7 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
   return OpenLR::LocationReferencePoint::OTHER;
 }
 
-json::ArrayPtr get_access_restrictions(const graph_tile_ptr tile, uint32_t edge_idx) {
+json::ArrayPtr get_access_restrictions(const graph_tile_ptr& tile, uint32_t edge_idx) {
   auto arr = json::array({});
   for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
     arr->emplace_back(res.json());
