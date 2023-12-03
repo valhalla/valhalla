@@ -5,7 +5,7 @@
 namespace vb = valhalla::baldr;
 
 namespace {
-std::unordered_map<const vb::AccessType, std::string> type_to_string = {
+std::unordered_map<vb::AccessType, std::string> type_to_string = {
     {vb::AccessType::kHazmat, "hazmat"},
     {vb::AccessType::kMaxHeight, "max_height"},
     {vb::AccessType::kMaxWidth, "max_width"},
@@ -63,7 +63,7 @@ void AccessRestriction::set_value(const uint64_t v) {
 
 const json::MapPtr AccessRestriction::json() const {
   auto map = json::map({{"type", type_to_string[type()]},
-                        {"edge_index", edgeindex_},
+                        {"edge_index", static_cast<uint64_t>(edgeindex())},
                         {"bus", static_cast<bool>(modes_ & kBusAccess)},
                         {"car", static_cast<bool>(modes_ & kAutoAccess)},
                         {"emergency", static_cast<bool>(modes_ & kEmergencyAccess)},
@@ -83,10 +83,10 @@ const json::MapPtr AccessRestriction::json() const {
       map->emplace("value", nullptr);
       break;
     case AccessType::kMaxAxles:
-      map->emplace("value", value_);
+      map->emplace("value", value());
       break;
     default:
-      map->emplace("value", json::fixed_t{static_cast<double>(value_) * 0.01, 2});
+      map->emplace("value", json::fixed_t{static_cast<double>(value()) * 0.01, 2});
   }
 
   return map;
