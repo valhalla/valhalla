@@ -361,7 +361,7 @@ enum VehicleType {
   kCar = 0;
   kMotorcycle = 1;
   kAutoBus = 2;
-  kTractorTrailer = 3;
+  kTruck = 3;
   kMotorScooter = 4;
 }
 
@@ -369,7 +369,7 @@ enum VehicleType {
 enum PedestrianType {
   kFoot = 0;
   kWheelchair = 1;
-  kSegway = 2;
+  // kSegway = 2;  // deprecated
 }
 
 enum BicycleType {
