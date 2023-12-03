@@ -18,12 +18,18 @@ TEST(locate, basic_properties) {
     G-a--H--b-I)";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "motorway"}}},    {"BC", {{"highway", "primary"}}},
-      {"AD", {{"highway", "residential"}}}, {"BE", {{"highway", "motorway_link"}}},
-      {"CF", {{"highway", "pedestrian"}}},  {"DE", {{"highway", "trunk"}}},
-      {"EF", {{"highway", "secondary"}}},   {"DG", {{"highway", "trunk_link"}}},
-      {"EH", {{"highway", "cycleway"}}},    {"FI", {{"highway", "service"}}},
-      {"GH", {{"highway", "tertiary"}}},    {"HI", {{"highway", "unclassified"}}},
+      {"AB", {{"highway", "motorway"}, {"maxweight", "3.5"}}},
+      {"BC", {{"highway", "primary"}, {"maxheight", "4.8"}}},
+      {"AD", {{"highway", "residential"}, {"maxaxles", "3"}}},
+      {"BE", {{"highway", "motorway_link"}, {"hgv:conditional", "no @ 23:00-05:00"}}},
+      {"CF", {{"highway", "pedestrian"}}},
+      {"DE", {{"highway", "trunk"}}},
+      {"EF", {{"highway", "secondary"}}},
+      {"DG", {{"highway", "trunk_link"}}},
+      {"EH", {{"highway", "cycleway"}}},
+      {"FI", {{"highway", "service"}}},
+      {"GH", {{"highway", "tertiary"}}},
+      {"HI", {{"highway", "unclassified"}}},
   };
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
@@ -116,6 +122,11 @@ TEST(locate, basic_properties) {
       // make sure the heading was determined correctly
       auto heading = static_cast<int>(rapidjson::Pointer("/heading").Get(edge)->GetDouble());
       ASSERT_TRUE(std::count(allowed_headings.begin(), allowed_headings.end(), heading));
+
+      // are there access restrictions
+      if (ways.find(way_name)->second.size() == 2) {
+        ASSERT_EQ(rapidjson::Pointer("/access_restrictions").Get(edge)->GetArray().Size(), 1);
+      }
     }
   }
 
