@@ -136,6 +136,9 @@ public:
   }
 
 protected:
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
+  
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -144,9 +147,6 @@ protected:
 
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
-
-  uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
 
   // TODO(nils): instead of these array based structures, rather do this:
   // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444

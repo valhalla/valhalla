@@ -534,7 +534,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // portion of the graph) rather than strictly alternating.
   // TODO - CostMatrix alternates, maybe should try alternating here?
   int n = 0;
-  uint32_t forward_pred_idx, reverse_pred_idx;
+  uint32_t forward_pred_idx{0}, reverse_pred_idx{0};
   BDEdgeLabel fwd_pred, rev_pred;
   bool expand_forward = true;
   bool expand_reverse = true;

@@ -79,7 +79,7 @@ bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& grap
               : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     pred.set_deadend(true);

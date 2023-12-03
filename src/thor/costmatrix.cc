@@ -48,8 +48,8 @@ class CostMatrix::TargetMap : public robin_hood::unordered_map<uint64_t, std::ve
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
     : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)), locs_count_{0, 0},
-      locs_remaining_{0, 0}, mode_(travel_mode_t::kDrive), access_mode_(kAutoAccess),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
       current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
