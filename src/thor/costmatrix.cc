@@ -1073,6 +1073,13 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
       float total = static_cast<float>(de->length());
       if (is_first_edge && is_last_edge) {
+        // TODO(nils): https://github.com/valhalla/valhalla/issues/4433
+        // remove the whole block below once that's fixed
+        if (source_pct > target_pct) {
+          std::reverse(edge_shp.begin(), edge_shp.end());
+          source_pct = 1.f - source_pct;
+          target_pct = 1.f - target_pct;
+        }
         trim_shape(source_pct * total, source_vertex, target_pct * total, target_vertex, edge_shp);
       } else if (is_first_edge) {
         trim_shape(source_pct * total, source_vertex, total, edge_shp.back(), edge_shp);
