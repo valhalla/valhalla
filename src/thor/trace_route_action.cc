@@ -263,7 +263,7 @@ void thor_worker_t::build_trace(
   // here we enumerate the discontinuities and set the edge index of each input trace point
   std::unordered_map<size_t, std::pair<EdgeTrimmingInfo, EdgeTrimmingInfo>> edge_trimming;
   baldr::GraphId last_id;
-  int edge_index = -1;
+  size_t edge_index = -1;
   for (const auto& path : paths) {
     // remember the global edge index of every input point
     for (const auto* segment : path.second) {
