@@ -806,10 +806,17 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.set_shape_format(polyline5);
     } else if (*shape_format == "geojson") {
       options.set_shape_format(geojson);
+    } else if (*shape_format == "none") {
+      if (action == Options::height) {
+        throw valhalla_exception_t{164};
+      }
+      options.set_shape_format(no_shape);
     } else {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
+  } else if (action == Options::sources_to_targets) { 
+    options.set_shape_format(options.has_shape_format_case() ? options.shape_format() : no_shape);
   }
 
   // whether or not to output b64 encoded openlr
