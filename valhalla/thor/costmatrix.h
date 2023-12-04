@@ -308,14 +308,14 @@ protected:
    * @param   invariant    Whether time is invariant
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
-                  BestCandidate& connection,
-                  const valhalla::Location& source,
-                  const valhalla::Location& target,
-                  const uint32_t source_idx,
-                  const uint32_t target_idx,
-                  const baldr::TimeInfo& time_info,
-                  const bool invariant,
-                  const ShapeFormat shape_format);
+                             BestCandidate& connection,
+                             const valhalla::Location& source,
+                             const valhalla::Location& target,
+                             const uint32_t source_idx,
+                             const uint32_t target_idx,
+                             const baldr::TimeInfo& time_info,
+                             const bool invariant,
+                             const ShapeFormat shape_format);
 
   /**
    * Sets the date_time on the origin locations.

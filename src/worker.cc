@@ -815,7 +815,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
-  } else if (action == Options::sources_to_targets) { 
+  } else if (action == Options::sources_to_targets) {
     options.set_shape_format(options.has_shape_format_case() ? options.shape_format() : no_shape);
   }
 

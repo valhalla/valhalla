@@ -281,10 +281,10 @@ void trim_shape(float start,
 
 /**
  * Turns a line into a GeoJSON LineString geometry.
- * 
+ *
  * @param shape  The points making up the line.
  * @returns The GeoJSON geometry of the LineString
-*/
+ */
 baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape);
 
 /**

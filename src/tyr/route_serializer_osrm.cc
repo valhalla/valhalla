@@ -305,7 +305,7 @@ void route_geometry(json::MapPtr& route,
   if (options.shape_format() == no_shape) {
     return;
   }
-  
+
   std::vector<PointLL> shape;
   if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);

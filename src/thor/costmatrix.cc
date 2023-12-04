@@ -2,8 +2,8 @@
 #include <cmath>
 #include <vector>
 
-#include "midgard/logging.h"
 #include "midgard/encoded.h"
+#include "midgard/logging.h"
 #include "sif/recost.h"
 #include "thor/costmatrix.h"
 #include "worker.h"
@@ -30,7 +30,8 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
-inline valhalla::PathEdge find_correlated_edge(const valhalla::Location& location, const GraphId& edge_id) {
+inline valhalla::PathEdge find_correlated_edge(const valhalla::Location& location,
+                                               const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
       return e;
@@ -262,16 +263,10 @@ void CostMatrix::SourceToTarget(Api& request,
     uint32_t source_idx = count / target_location_list.size();
 
     // first recost and form the path, if desired (either time and/or geometry requested)
-    const auto shape = RecostFormPath(graphreader,
-                  connection,
-                  source_location_list[source_idx],
-                  target_location_list[target_idx],
-                  source_idx,
-                  target_idx,
-                  time_infos[source_idx],
-                  invariant,
-                  shape_format);
-                                      
+    const auto shape = RecostFormPath(graphreader, connection, source_location_list[source_idx],
+                                      target_location_list[target_idx], source_idx, target_idx,
+                                      time_infos[source_idx], invariant, shape_format);
+
     float time = connection.cost.secs;
     auto date_time = get_date_time(source_location_list[source_idx].date_time(),
                                    time_infos[source_idx].timezone_index,
@@ -963,24 +958,23 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
 
 // Form the path from the edfge labels and optionally return the shape
 std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
-                            BestCandidate& connection,
-                            const valhalla::Location& source,
-                            const valhalla::Location& target,
-                            const uint32_t source_idx,
-                            const uint32_t target_idx,
-                            const baldr::TimeInfo& time_info,
-                            const bool invariant,
-                            const ShapeFormat shape_format) {
+                                       BestCandidate& connection,
+                                       const valhalla::Location& source,
+                                       const valhalla::Location& target,
+                                       const uint32_t source_idx,
+                                       const uint32_t target_idx,
+                                       const baldr::TimeInfo& time_info,
+                                       const bool invariant,
+                                       const ShapeFormat shape_format) {
   // no need to look at source == target or missing connectivity
-  if ((!has_time_ && shape_format == no_shape) || connection.cost.secs == 0.f || connection.distance == kMaxCost) {
+  if ((!has_time_ && shape_format == no_shape) || connection.cost.secs == 0.f ||
+      connection.distance == kMaxCost) {
     return "";
   }
 
   // Get the indices where the connection occurs.
-  uint32_t connedge_idx1 =
-      edgestatus_[MATRIX_FORW][source_idx].Get(connection.edgeid).index();
-  uint32_t connedge_idx2 =
-      edgestatus_[MATRIX_REV][target_idx].Get(connection.opp_edgeid).index();
+  uint32_t connedge_idx1 = edgestatus_[MATRIX_FORW][source_idx].Get(connection.edgeid).index();
+  uint32_t connedge_idx2 = edgestatus_[MATRIX_REV][target_idx].Get(connection.opp_edgeid).index();
 
   // set of edges recovered from shortcuts (excluding shortcut's start edges)
   std::unordered_set<GraphId> recovered_inner_edges;
@@ -991,7 +985,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   // Work backwards on the forward path
   graph_tile_ptr tile;
   for (auto edgelabel_index = connedge_idx1; edgelabel_index != kInvalidLabel;
-        edgelabel_index = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
+       edgelabel_index = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = edgelabel_[MATRIX_FORW][source_idx][edgelabel_index];
 
     const DirectedEdge* edge = graphreader.directededge(edgelabel.edgeid(), tile);
@@ -1015,8 +1009,8 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   // path, so get the predecessor.
   auto& target_edgelabels = edgelabel_[MATRIX_REV][target_idx];
   for (auto edgelabel_index = target_edgelabels[connedge_idx2].predecessor();
-        edgelabel_index != kInvalidLabel;
-        edgelabel_index = target_edgelabels[edgelabel_index].predecessor()) {
+       edgelabel_index != kInvalidLabel;
+       edgelabel_index = target_edgelabels[edgelabel_index].predecessor()) {
     const BDEdgeLabel& edgelabel = target_edgelabels[edgelabel_index];
     const DirectedEdge* opp_edge = nullptr;
     GraphId opp_edge_id = graphreader.GetOpposingEdgeId(edgelabel.edgeid(), opp_edge, tile);
@@ -1086,7 +1080,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       else {
         trim_shape(0, edge_shp.front(), target_pct * total, target_vertex, edge_shp);
       }
-    
+
       points.insert(points.end(), edge_shp.begin() + !is_first_edge, edge_shp.end());
     } else {
       if (de->forward()) {

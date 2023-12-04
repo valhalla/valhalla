@@ -134,8 +134,8 @@ baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
   auto coords = baldr::json::array({});
   coords->reserve(shape.size());
   for (const auto& p : shape) {
-    coords->emplace_back(baldr::json::array(
-        {baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
+    coords->emplace_back(
+        baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
   }
   geojson->emplace("type", std::string("LineString"));
   geojson->emplace("coordinates", std::move(coords));
