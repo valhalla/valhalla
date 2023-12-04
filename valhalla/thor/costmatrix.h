@@ -177,6 +177,10 @@ protected:
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
 
+  // whether time was specified
+  bool has_time_;
+  bool has_geometry_;
+
   const std::function<void()>* interrupt_ = nullptr;
 
   /**
@@ -301,11 +305,14 @@ protected:
    * @param   time_infos   The time info objects for the sources
    * @param   invariant    Whether time is invariant
    */
-  void RecostPaths(baldr::GraphReader& graphreader,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                   const std::vector<baldr::TimeInfo>& time_infos,
-                   bool invariant);
+  void RecostFormPath(baldr::GraphReader& graphreader,
+                  BestCandidate& connection,
+                  const valhalla::Location& source,
+                  const valhalla::Location& target,
+                  const uint32_t source_idx,
+                  const uint32_t target_idx,
+                  baldr::TimeInfo& time_info,  // TODO: const?
+                  bool invariant);
 
   /**
    * Sets the date_time on the origin locations.
