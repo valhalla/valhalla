@@ -1030,6 +1030,17 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   auto target_edge = find_correlated_edge(target, path_edges.back());
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
+
+  // TODO(nils): bug with trivial routes https://github.com/valhalla/valhalla/issues/4433
+  // remove this whole block below once that's fixed
+  if (path_edges.size() == 1 && source_pct > target_pct) {
+    // it found the wrong direction, so let's turn that around
+    auto opp_id = graphreader.GetOpposingEdgeId(path_edges[0]);
+    path_edges.clear();
+    path_edges.emplace_back(opp_id);
+    source_pct = 1.f - source_pct;
+    target_pct = 1.f - target_pct;
+  }
   // recost the path if this was a time-dependent expansion
   if (has_time_) {
     auto edge_itr = path_edges.begin();
@@ -1073,13 +1084,6 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
       float total = static_cast<float>(de->length());
       if (is_first_edge && is_last_edge) {
-        // TODO(nils): https://github.com/valhalla/valhalla/issues/4433
-        // remove the whole block below once that's fixed
-        if (source_pct > target_pct) {
-          std::reverse(edge_shp.begin(), edge_shp.end());
-          source_pct = 1.f - source_pct;
-          target_pct = 1.f - target_pct;
-        }
         trim_shape(source_pct * total, source_vertex, target_pct * total, target_vertex, edge_shp);
       } else if (is_first_edge) {
         trim_shape(source_pct * total, source_vertex, total, edge_shp.back(), edge_shp);

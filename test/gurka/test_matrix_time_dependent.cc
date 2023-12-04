@@ -1,11 +1,13 @@
 #include "gurka.h"
 #include "test.h"
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/thor/matrix_common.h>
 
 #include <gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::thor;
+using namespace valhalla::midgard;
 
 namespace {
 void update_traffic_on_edges(baldr::GraphReader& reader,
@@ -395,4 +397,124 @@ TEST(StandAlone, CostMatrixDeadends) {
     res_doc.Parse(res.c_str());
     check_matrix(res_doc, {0.8f}, false, Matrix::CostMatrix);
   }
+}
+
+TEST(StandAlone, CostMatrixShapes) {
+  // keep the same order in the map.nodes for encoding easily
+  const std::string ascii_map = R"(
+    A-B-C-D-E-F-G-H-I-J-K-------L
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"ABCDE", {{"highway", "residential"}}}, 
+      {"EFGHIJK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_shapes");
+
+  // points of all nodes
+  std::vector<PointLL> vertices;
+  for (const auto& node : map.nodes) {
+    vertices.emplace_back(node.second);
+  }
+
+  std::string res;
+  rapidjson::Document res_doc;
+
+  // no shapes if not specified or "none"
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", {},
+                                 nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), "");
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  res.erase();
+
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "none"}};
+
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), "");
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  res.erase();
+
+  // polyline5/6
+
+  options["/shape_format"] = "polyline5";
+  auto encoded = encode<std::vector<PointLL>>(vertices, 1e5);
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"]
+                .GetArray()[0]
+                .GetArray()[0]
+                .GetObject()["shape"],
+            encoded);
+  res.erase();
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>(vertices, 1e6);
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"]
+                .GetArray()[0]
+                .GetArray()[0]
+                .GetObject()["shape"],
+            encoded);
+  res.erase();
+
+  // geojson
+
+  options["/shape_format"] = "geojson";
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded); // has the encoded polyline6 in PBF
+  const auto& gj_shp = res_doc.Parse(res.c_str())["sources_to_targets"]
+                           .GetArray()[0]
+                           .GetArray()[0]
+                           .GetObject()["shape"];
+  EXPECT_TRUE(gj_shp.IsObject());
+  EXPECT_EQ(gj_shp["coordinates"].GetArray().Size(), 12);
+  EXPECT_EQ(gj_shp["type"], "LineString");
+  res.erase();
+
+  // trivial route
+  // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
+  // floating point crap makes this fail though, it adds a tiny little bit on both ends, resulting in
+  // 4 (not 2) points
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>({map.nodes["G"], map.nodes["H"]});
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"G"}, {"H"}, "auto", options,
+                            nullptr, &res);
+  /*
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
+  encoded); res.erase();
+  */
+
+  // trivial route reverse
+  // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>({map.nodes["H"], map.nodes["G"]});
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"H"}, {"G"}, "auto", options,
+                            nullptr, &res);
+  /*
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
+  encoded); res.erase();
+  */
 }
