@@ -27,7 +27,7 @@ serialize_duration(const valhalla::Matrix& matrix, size_t start_td, const size_t
 }
 
 json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
-                                  size_t start_td,
+                                  const size_t start_td,
                                   const size_t td_count,
                                   const size_t /* source_index */,
                                   const size_t /* target_index */,
@@ -42,6 +42,32 @@ json::ArrayPtr serialize_distance(const valhalla::Matrix& matrix,
     }
   }
   return distance;
+}
+
+json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
+                    const size_t start_td,
+                    const size_t td_count,
+                    const ShapeFormat shape_format) {
+  // TODO(nils): shapes aren't implemented yet in TDMatrix
+  auto shapes = json::array({});
+  if (shape_format == no_shape)
+    return shapes;
+    
+  for (size_t i = start_td; i < start_td + td_count; ++i) {
+    switch(shape_format) {
+      // even if it source == target or no route found, we want to emplace an element
+      case geojson:
+        if (!matrix.shapes()[i].empty())
+          shapes->emplace_back(geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+        else
+          shapes->emplace_back(json::map({}));
+        break;
+      default:
+        // this covers the polylines
+        shapes->emplace_back(matrix.shapes()[i]);
+    }
+  }
+  return shapes;
 }
 } // namespace
 
@@ -102,7 +128,8 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
                              const size_t td_count,
                              const size_t source_index,
                              const size_t target_index,
-                             double distance_scale) {
+                             const double distance_scale,
+                             const ShapeFormat shape_format) {
   auto row = json::array({});
   for (size_t i = start_td; i < start_td + td_count; ++i) {
     // check to make sure a route was found; if not, return null for distance & time in matrix
@@ -120,7 +147,13 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
       }
       // TODO(nils): shapes aren't implemented yet in TDMatrix
       if (matrix.shapes().size() && !matrix.shapes()[i].empty()) {
-        map->emplace("shape", matrix.shapes()[i]);
+        switch(shape_format) {
+          case geojson:
+            map->emplace("shape", geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+            break;
+          default:
+            map->emplace("shape", matrix.shapes()[i]);
+        }
       }
     } else {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
@@ -141,7 +174,7 @@ std::string serialize(const Api& request, double distance_scale) {
     json::ArrayPtr matrix = json::array({});
     for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       matrix->emplace_back(serialize_row(request.matrix(), source_index * options.targets_size(),
-                                         options.targets_size(), source_index, 0, distance_scale));
+                                         options.targets_size(), source_index, 0, distance_scale, options.shape_format()));
     }
 
     json->emplace("sources_to_targets", matrix);
@@ -153,16 +186,23 @@ std::string serialize(const Api& request, double distance_scale) {
     auto matrix = json::map({});
     auto time = json::array({});
     auto distance = json::array({});
+    auto shapes = json::array({});
 
     for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
-      time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
+      const auto first_td = source_index * options.targets_size();
+      time->emplace_back(serialize_duration(request.matrix(), first_td,
                                             options.targets_size()));
       distance->emplace_back(
-          serialize_distance(request.matrix(), source_index * options.targets_size(),
+          serialize_distance(request.matrix(), first_td,
                              options.targets_size(), source_index, 0, distance_scale));
+      shapes->emplace_back(
+          serialize_shape(request.matrix(), first_td, options.targets_size(), options.shape_format())
+      );
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
+    if (!(options.shape_format() == no_shape))
+      matrix->emplace("shapes", shapes);
 
     json->emplace("sources_to_targets", matrix);
   }

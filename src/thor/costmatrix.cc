@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "midgard/logging.h"
+#include "midgard/encoded.h"
 #include "sif/recost.h"
 #include "thor/costmatrix.h"
 #include "worker.h"
@@ -29,10 +30,10 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
-inline float find_percent_along(const valhalla::Location& location, const GraphId& edge_id) {
+inline valhalla::PathEdge find_correlated_edge(const valhalla::Location& location, const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
-      return static_cast<float>(e.percent_along());
+      return e;
   }
 
   throw std::logic_error("Could not find candidate edge used for label");
@@ -1031,6 +1032,10 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       path_edges.emplace_back(std::move(opp_edge_id));
   }
 
+  auto source_edge = find_correlated_edge(source, path_edges.front());
+  auto target_edge = find_correlated_edge(target, path_edges.back());
+  float source_pct = static_cast<float>(source_edge.percent_along());
+  float target_pct = static_cast<float>(target_edge.percent_along());
   // recost the path if this was a time-dependent expansion
   if (has_time_) {
     auto edge_itr = path_edges.begin();
@@ -1040,9 +1045,6 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
 
     Cost new_cost{0.f, 0.f};
     const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
-
-    float source_pct = find_percent_along(source, path_edges.front());
-    float target_pct = find_percent_along(target, path_edges.back());
 
     // recost edges in final path; ignore access restrictions
     try {
@@ -1058,11 +1060,45 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   }
 
   // return the shape of the path if requested
-  if (shape_format != no_shape) {
+  if (shape_format == no_shape)
+    return "";
 
+  auto source_vertex = PointLL{source_edge.ll().lng(), source_edge.ll().lat()};
+  auto target_vertex = PointLL{target_edge.ll().lng(), target_edge.ll().lat()};
+  std::vector<PointLL> points;
+  for (const auto& path_edge : path_edges) {
+    auto is_first_edge = path_edge == path_edges.front();
+    auto is_last_edge = path_edge == path_edges.back();
+
+    const auto* de = graphreader.directededge(path_edge, tile);
+    auto edge_shp = tile->edgeinfo(de).shape();
+
+    if (is_first_edge || is_last_edge) {
+      if (!de->forward())
+        std::reverse(edge_shp.begin(), edge_shp.end());
+
+      float total = static_cast<float>(de->length());
+      if (is_first_edge && is_last_edge) {
+        trim_shape(source_pct * total, source_vertex, target_pct * total, target_vertex, edge_shp);
+      } else if (is_first_edge) {
+        trim_shape(source_pct * total, source_vertex, total, edge_shp.back(), edge_shp);
+      } // last edge
+      else {
+        trim_shape(0, edge_shp.front(), target_pct * total, target_vertex, edge_shp);
+      }
+    
+      points.insert(points.end(), edge_shp.begin() + !is_first_edge, edge_shp.end());
+    } else {
+      if (de->forward()) {
+        points.insert(points.end(), edge_shp.begin() + 1, edge_shp.end());
+      } else {
+        points.insert(points.end(), edge_shp.rbegin() + 1, edge_shp.rend());
+      }
+    }
   }
 
-  return "";
+  // encode to 6 precision for geojson as well, which the serializer expects
+  return encode<decltype(points)>(points, shape_format != polyline5 ? 1e6 : 1e5);
 }
 
 } // namespace thor

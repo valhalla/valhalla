@@ -247,20 +247,6 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   }
 }
 
-// Generate leg shape in geojson format.
-json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
-  auto geojson = json::map({});
-  auto coords = json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(json::array(
-        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
-  return geojson;
-}
-
 // Generate full shape of the route.
 std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
                                 const valhalla::Options& options) {

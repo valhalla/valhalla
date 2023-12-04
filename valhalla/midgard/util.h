@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>
@@ -277,6 +278,14 @@ void trim_shape(float start,
                 float end,
                 PointLL end_vertex, // NOLINT
                 std::vector<PointLL>& shape);
+
+/**
+ * Turns a line into a GeoJSON LineString geometry.
+ * 
+ * @param shape  The points making up the line.
+ * @returns The GeoJSON geometry of the LineString
+*/
+baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape);
 
 /**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
