@@ -124,7 +124,8 @@ void CostMatrix::SourceToTarget(Api& request,
                                 const sif::travel_mode_t mode,
                                 const float max_matrix_distance,
                                 const bool has_time,
-                                const bool invariant) {
+                                const bool invariant,
+                                const ShapeFormat shape_format) {
 
   LOG_INFO("matrix::CostMatrix");
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
@@ -260,14 +261,15 @@ void CostMatrix::SourceToTarget(Api& request,
     uint32_t source_idx = count / target_location_list.size();
 
     // first recost and form the path, if desired (either time and/or geometry requested)
-    RecostFormPath(graphreader,
+    const auto shape = RecostFormPath(graphreader,
                   connection,
                   source_location_list[source_idx],
                   target_location_list[target_idx],
                   source_idx,
                   target_idx,
                   time_infos[source_idx],
-                  invariant);
+                  invariant,
+                  shape_format);
                                       
     float time = connection.cost.secs;
     auto date_time = get_date_time(source_location_list[source_idx].date_time(),
@@ -278,6 +280,8 @@ void CostMatrix::SourceToTarget(Api& request,
     matrix.mutable_to_indices()->Set(count, target_idx);
     matrix.mutable_distances()->Set(count, connection.distance);
     matrix.mutable_times()->Set(count, time);
+    auto* pbf_shape = matrix.mutable_shapes()->Add();
+    *pbf_shape = shape;
     auto* pbf_date_time = matrix.mutable_date_times()->Add();
     *pbf_date_time = date_time;
     count++;
@@ -956,20 +960,19 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
   }
 }
 
-// Form the path from the adjacency list.
-// TODO: move this function to PathInfo header or so, where both bidir A* and CostMatrix
-// can see it
-void CostMatrix::RecostFormPath(GraphReader& graphreader,
+// Form the path from the edfge labels and optionally return the shape
+std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
                             BestCandidate& connection,
                             const valhalla::Location& source,
                             const valhalla::Location& target,
                             const uint32_t source_idx,
                             const uint32_t target_idx,
-                            baldr::TimeInfo& time_info,  // TODO: const?
-                            bool invariant) {
+                            const baldr::TimeInfo& time_info,
+                            const bool invariant,
+                            const ShapeFormat shape_format) {
   // no need to look at source == target or missing connectivity
-  if (!has_time_ || connection.cost.secs == 0.f || connection.distance == kMaxCost) {
-    return;
+  if ((!has_time_ && shape_format == no_shape) || connection.cost.secs == 0.f || connection.distance == kMaxCost) {
+    return "";
   }
 
   // Get the indices where the connection occurs.
@@ -1028,28 +1031,38 @@ void CostMatrix::RecostFormPath(GraphReader& graphreader,
       path_edges.emplace_back(std::move(opp_edge_id));
   }
 
-  auto edge_itr = path_edges.begin();
-  const auto edge_cb = [&edge_itr, &path_edges]() {
-    return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
-  };
+  // recost the path if this was a time-dependent expansion
+  if (has_time_) {
+    auto edge_itr = path_edges.begin();
+    const auto edge_cb = [&edge_itr, &path_edges]() {
+      return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
+    };
 
-  Cost new_cost{0.f, 0.f};
-  const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
+    Cost new_cost{0.f, 0.f};
+    const auto label_cb = [&new_cost](const EdgeLabel& label) { new_cost = label.cost(); };
 
-  float source_pct = find_percent_along(source, path_edges.front());
-  float target_pct = find_percent_along(target, path_edges.back());
+    float source_pct = find_percent_along(source, path_edges.front());
+    float target_pct = find_percent_along(target, path_edges.back());
 
-  // recost edges in final path; ignore access restrictions
-  try {
-    sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
-                        time_info, invariant, true);
-  } catch (const std::exception& e) {
-    LOG_ERROR(std::string("CostMatrix failed to recost final paths: ") + e.what());
-    return;
+    // recost edges in final path; ignore access restrictions
+    try {
+      sif::recost_forward(graphreader, *costing_, edge_cb, label_cb, source_pct, target_pct,
+                          time_info, invariant, true);
+    } catch (const std::exception& e) {
+      LOG_ERROR(std::string("CostMatrix failed to recost final paths: ") + e.what());
+      return "";
+    }
+
+    // update the existing best_connection cost
+    connection.cost = new_cost;
   }
 
-  // update the existing best_connection cost
-  connection.cost = new_cost;
+  // return the shape of the path if requested
+  if (shape_format != no_shape) {
+
+  }
+
+  return "";
 }
 
 } // namespace thor

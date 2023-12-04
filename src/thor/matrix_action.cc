@@ -36,7 +36,7 @@ std::string thor_worker_t::matrix(Api& request) {
   auto costmatrix = [&](const bool has_time) {
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                       max_matrix_distance.find(costing)->second, has_time,
-                                      options.date_time_type() == Options::invariant);
+                                      options.date_time_type() == Options::invariant, options.shape_format());
   };
   auto timedistancematrix = [&]() {
     return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,

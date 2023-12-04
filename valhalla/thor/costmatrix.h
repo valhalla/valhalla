@@ -93,12 +93,14 @@ public:
   /**
    * Forms a time distance matrix from the set of source locations
    * to the set of target locations.
-   * @param  source_location_list  List of source/origin locations.
-   * @param  target_location_list  List of target/destination locations.
-   * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  mode_costing          Costing methods.
-   * @param  mode                  Travel mode to use.
+   * @param  request               the full request
+   * @param  graphreader           List of source/origin locations.
+   * @param  mode_costing          List of target/destination locations.
+   * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  has_time              whether time-dependence was requested
+   * @param  invariant             whether invariant time-dependence was requested
+   * @param  shape_format          which shape_format, if any
    */
   void SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
@@ -106,7 +108,8 @@ public:
                       const sif::travel_mode_t mode,
                       const float max_matrix_distance,
                       const bool has_time = false,
-                      const bool invariant = false);
+                      const bool invariant = false,
+                      const ShapeFormat shape_format = no_shape);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -179,7 +182,6 @@ protected:
 
   // whether time was specified
   bool has_time_;
-  bool has_geometry_;
 
   const std::function<void()>* interrupt_ = nullptr;
 
@@ -305,14 +307,15 @@ protected:
    * @param   time_infos   The time info objects for the sources
    * @param   invariant    Whether time is invariant
    */
-  void RecostFormPath(baldr::GraphReader& graphreader,
+  std::string RecostFormPath(baldr::GraphReader& graphreader,
                   BestCandidate& connection,
                   const valhalla::Location& source,
                   const valhalla::Location& target,
                   const uint32_t source_idx,
                   const uint32_t target_idx,
-                  baldr::TimeInfo& time_info,  // TODO: const?
-                  bool invariant);
+                  const baldr::TimeInfo& time_info,
+                  const bool invariant,
+                  const ShapeFormat shape_format);
 
   /**
    * Sets the date_time on the origin locations.
