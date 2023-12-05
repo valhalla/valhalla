@@ -16,7 +16,7 @@ namespace {
 
 constexpr uint32_t kMaxMatrixIterations = 2000000;
 constexpr uint32_t kMaxThreshold = std::numeric_limits<int>::max();
-constexpr uint32_t kMaxLocationCacheDefault = 25;
+constexpr uint32_t kMaxLocationReservation = 25; // the default config for max matrix locations
 
 // Find a threshold to continue the search - should be based on
 // the max edge cost in the adjacency set?
@@ -50,9 +50,10 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
                                                       kInitialEdgeLabelCountBidirDijkstra)),
       clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
       max_reserved_locations_count_(
-          config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationCacheDefault)),
-      targets_{new TargetMap} {
-  // Note, most things are being initialized in Initialize() or before
+          config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
+      access_mode_(kAutoAccess),
+      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
+      current_cost_threshold_(0), targets_{new TargetMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -89,7 +90,7 @@ void CostMatrix::clear() {
   auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
   auto locs_reservation = clear_reserved_memory_ ? 0 : max_reserved_locations_count_;
   for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    // resize all relevant structures down to 20 locations
+    // resize all relevant structures down to configured amount of locations (25 default)
     if (locs_count_[exp_dir] > locs_reservation) {
       edgelabel_[exp_dir].resize(locs_reservation);
       edgelabel_[exp_dir].shrink_to_fit();
@@ -162,6 +163,9 @@ void CostMatrix::SourceToTarget(Api& request,
   // spaces is checked during the forward search.
   uint32_t n = 0;
   while (true) {
+    // First iterate over all targets, then over all sources: we only for sure
+    // check the connection between both trees on the forward search, so reverse
+    // has to come first
     for (uint32_t i = 0; i < locs_count_[MATRIX_REV]; i++) {
       if (locs_status_[MATRIX_REV][i].threshold > 0) {
         locs_status_[MATRIX_REV][i].threshold--;

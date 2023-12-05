@@ -136,6 +136,10 @@ public:
   }
 
 protected:
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
+  uint32_t max_reserved_locations_count_;
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -145,10 +149,8 @@ protected:
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
 
-  uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
-  uint32_t max_reserved_locations_count_;
-
+  // TODO(nils): instead of these array based structures, rather do this:
+  // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444
   // Number of source and target locations that can be expanded
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
@@ -332,11 +334,11 @@ protected:
     // Decrease distance thresholds only for arterial roads for now
     for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
       if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
     }
     for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
       if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
     }
   };
 
