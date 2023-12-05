@@ -5,8 +5,8 @@
 
 #include "midgard/encoded.h"
 #include "midgard/util.h"
-#include "route_serializer_osrm.cc"
 #include "route_serializer_valhalla.cc"
+#include "tyr/route_serializer_osrm.h"
 #include "tyr/serializers.h"
 
 #include "proto/directions.pb.h"
