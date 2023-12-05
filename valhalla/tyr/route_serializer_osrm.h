@@ -41,4 +41,4 @@ std::string serialize(valhalla::Api& api);
 
 } // namespace osrm_serializers
 
-#endif VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
+#endif // VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
