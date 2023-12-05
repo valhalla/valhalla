@@ -1,4 +1,5 @@
-#pragma once
+#ifndef VALHALLA_TYR_ROUTE_SUMMARY_CACHE_H_
+#define VALHALLA_TYR_ROUTE_SUMMARY_CACHE_H_
 
 #include "proto/directions.pb.h"
 #include "proto/options.pb.h"
@@ -91,3 +92,5 @@ public:
 };
 } // namespace tyr
 } // namespace valhalla
+
+#endif // VALHALLA_TYR_ROUTE_SUMMARY_CACHE_H_
