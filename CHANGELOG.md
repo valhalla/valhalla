@@ -17,7 +17,6 @@
    * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
    * FIXED: motorcar:conditional should not apply to motorcycle and moped [#4359](https://github.com/valhalla/valhalla/pull/4359)
    * FIXED: break shortcuts when there are different restrictions on base edges [#4326](https://github.com/valhalla/valhalla/pull/4326)
-   * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
    * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
    * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
 * **Enhancement**
