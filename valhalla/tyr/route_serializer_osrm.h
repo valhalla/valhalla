@@ -210,28 +210,6 @@ std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
 // Generate simplified shape of the route.
 std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& directions);
 
-void route_geometry(json::MapPtr& route,
-                    const valhalla::DirectionsRoute& directions,
-                    const valhalla::Options& options) {
-  if (options.shape_format() == no_shape) {
-    return;
-  }
-
-  std::vector<PointLL> shape;
-  if (options.has_generalize_case() && options.generalize() == 0.0f) {
-    shape = simplified_shape(directions);
-  } else if (!options.has_generalize_case() ||
-             (options.has_generalize_case() && options.generalize() > 0.0f)) {
-    shape = full_shape(directions, options);
-  }
-  if (options.shape_format() == geojson) {
-    route->emplace("geometry", geojson_shape(shape));
-  } else {
-    int precision = options.shape_format() == polyline6 ? 1e6 : 1e5;
-    route->emplace("geometry", midgard::encode(shape, precision));
-  }
-}
-
 json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg);
 
 // Serialize waypoints for optimized route. Note that OSRM retains the
@@ -275,34 +253,6 @@ valhalla::baldr::json::RawJSON serializeIncident(const TripLeg::Incident& incide
 void serializeIncidents(const google::protobuf::RepeatedPtrField<TripLeg::Incident>& incidents,
                         json::Jmap& doc);
 
-void serializeClosures(const valhalla::TripLeg& leg, json::Jmap& doc);
-
-// Compile and return the refs of the specified list
-// TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_refs(
-    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
-    const std::string& delimiter = kSignElementDelimiter);
-
-// Compile and return the nonrefs of the specified list
-// TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_element_nonrefs(
-    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
-    const std::string& delimiter = kSignElementDelimiter);
-
-// Compile and return the sign elements of the specified list
-// TODO we could enhance by limiting results by using consecutive count
-std::string get_sign_elements(
-    const google::protobuf::RepeatedPtrField<::valhalla::TripSignElement>& sign_elements,
-    const std::string& delimiter = kSignElementDelimiter);
-
-bool exit_destinations_exist(const valhalla::TripSign& sign);
-
-// Return the exit destinations
-std::string exit_destinations(const valhalla::TripSign& sign);
-
-// Return the guide destinations
-std::string guide_destinations(const valhalla::TripSign& sign);
-
 // Add destinations along a step/maneuver. Constructs a destinations string.
 // Here are the destinations formats:
 //   1. <ref>
@@ -311,42 +261,6 @@ std::string guide_destinations(const valhalla::TripSign& sign);
 // Each <ref> or <non-ref> could have one or more items and will separated with ", "
 //   for example: "I 99, US 220, US 30: Altoona, Johnstown"
 std::string destinations(const valhalla::TripSign& sign);
-
-// Get the turn modifier based on incoming edge bearing and outgoing edge
-// bearing.
-std::string turn_modifier(const uint32_t in_brg, const uint32_t out_brg);
-
-// Get the turn modifier based on the maneuver type
-// or if needed, the incoming edge bearing and outgoing edge bearing.
-std::string turn_modifier(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                          const uint32_t in_brg,
-                          const uint32_t out_brg,
-                          const bool arrive_maneuver);
-
-// Ramp cases - off ramp transitions from a motorway.
-// On ramp ends in a motorway.
-std::string ramp_type(const valhalla::DirectionsLeg::Maneuver& maneuver);
-
-// Determine the OSRM type of a maneuver in a step and in bannerInstructions
-std::string maneuver_type(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                          valhalla::odin::EnhancedTripLeg* etp,
-                          const bool depart_maneuver,
-                          const bool arrive_maneuver,
-                          const std::string& modifier,
-                          const uint32_t prev_intersection_count,
-                          const std::string& mode,
-                          const std::string& prev_mode,
-                          const bool rotary,
-                          const bool prev_rotary);
-
-// Populate the OSRM maneuver record within a step.
-json::MapPtr osrm_maneuver(const valhalla::DirectionsLeg::Maneuver& maneuver,
-                           const std::string& maneuver_type,
-                           const std::string& modifier,
-                           const uint32_t in_brg,
-                           const uint32_t out_brg,
-                           const PointLL& man_ll,
-                           const bool emplace_instructions);
 
 const ::google::protobuf::RepeatedPtrField<::valhalla::StreetName>&
 get_maneuver_street_names(const valhalla::DirectionsLeg::Maneuver& maneuver);
@@ -374,8 +288,6 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
 //     TripLeg protocol buffer
 //     DirectionsLeg protocol buffer
 std::string serialize(valhalla::Api& api);
-#if 0
-#endif
 
 } // namespace osrm_serializers
 
