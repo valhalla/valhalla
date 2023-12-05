@@ -1,3 +1,5 @@
+#ifndef VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
+#define VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
 #pragma once
 
 #include "proto_conversions.h"
@@ -38,3 +40,5 @@ OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
 std::string serialize(valhalla::Api& api);
 
 } // namespace osrm_serializers
+
+#endif VALHALLA_TYR_ROUTE_SERIALIZER_OSRM_
