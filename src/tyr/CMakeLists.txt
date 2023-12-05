@@ -6,6 +6,7 @@ set(sources
   isochrone_serializer.cc
   matrix_serializer.cc
   serializers.cc
+  route_summary_cache.cc
   transit_available_serializer.cc)
 
 set(sources_with_warnings

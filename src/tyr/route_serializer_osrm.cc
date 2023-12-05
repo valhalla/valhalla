@@ -11,7 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
-#include "route_summary_cache.h"
+#include "tyr/route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
 #include "worker.h"
