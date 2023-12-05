@@ -6,13 +6,13 @@ set(sources
   isochrone_serializer.cc
   matrix_serializer.cc
   serializers.cc
+  route_serializer_osrm.cc
   route_summary_cache.cc
   transit_available_serializer.cc)
 
 set(sources_with_warnings
   locate_serializer.cc
   route_serializer.cc
-  route_serializer_osrm.cc
   route_serializer_valhalla.cc
   trace_serializer.cc)
 
