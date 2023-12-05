@@ -138,6 +138,7 @@ public:
 protected:
   uint32_t max_reserved_labels_count_;
   bool clear_reserved_memory_;
+  uint32_t max_reserved_locations_count_;
 
   // Access mode used by the costing method
   uint32_t access_mode_;
