@@ -327,3 +327,72 @@ TEST_F(MatrixTest, TDTargets) {
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
 }
+
+TEST(StandAlone, CostMatrixDeadends) {
+  // ABI has a turn restriction
+  // F is a blocking node
+  const std::string ascii_map = R"(
+       I
+       |
+    A--B--C
+       |  |
+       |  D
+       E
+      1|
+       |
+       F--H
+       .
+       G
+
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}}, 
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"BE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FH", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"BI", {{"highway", "residential"}}}
+  };
+  // clang-format on
+  const gurka::nodes nodes = {{"F", {{"barrier", "block"}}}};
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "AB", "from"},
+           {gurka::node_member, "B", "via"},
+           {gurka::way_member, "BI", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_left_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, nodes, relations,
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_deadends");
+
+  rapidjson::Document res_doc;
+  std::string res;
+
+  // test that the we're taking the u-turn at D to get from A -> I
+  // because of the ABI turn restriction
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto",
+                                   {}, nullptr, &res);
+    res_doc.Parse(res.c_str());
+    check_matrix(res_doc, {1.5f}, false, Matrix::CostMatrix);
+    res.erase();
+  }
+
+  // then we force to go 1 -> F to hit a blocking node, doing a u-turn and go back the same way
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                                   {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
+    res_doc.Parse(res.c_str());
+    check_matrix(res_doc, {0.8f}, false, Matrix::CostMatrix);
+  }
+}
