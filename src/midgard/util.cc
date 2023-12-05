@@ -128,20 +128,6 @@ void trim_shape(float start,
   }
 }
 
-// Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
-  auto geojson = baldr::json::map({});
-  auto coords = baldr::json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(
-        baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
-  return geojson;
-}
-
 float tangent_angle(size_t index,
                     const PointLL& point,
                     const std::vector<PointLL>& shape,

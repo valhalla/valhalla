@@ -109,7 +109,7 @@ public:
                       const float max_matrix_distance,
                       const bool has_time = false,
                       const bool invariant = false,
-                      const ShapeFormat shape_format = no_shape);
+                      const ShapeFormat& shape_format = no_shape);
 
   /**
    * Clear the temporary information generated during time+distance

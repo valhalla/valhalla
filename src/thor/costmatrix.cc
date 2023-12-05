@@ -30,8 +30,8 @@ bool equals(const valhalla::LatLng& a, const valhalla::LatLng& b) {
          (!a.has_lat_case() || a.lat() == b.lat()) && (!a.has_lng_case() || a.lng() == b.lng());
 }
 
-inline valhalla::PathEdge find_correlated_edge(const valhalla::Location& location,
-                                               const GraphId& edge_id) {
+inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& location,
+                                                      const GraphId& edge_id) {
   for (const auto& e : location.correlation().edges()) {
     if (e.graph_id() == edge_id)
       return e;
@@ -130,7 +130,7 @@ void CostMatrix::SourceToTarget(Api& request,
                                 const float max_matrix_distance,
                                 const bool has_time,
                                 const bool invariant,
-                                const ShapeFormat shape_format) {
+                                const ShapeFormat& shape_format) {
 
   LOG_INFO("matrix::CostMatrix");
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);

@@ -280,14 +280,6 @@ void trim_shape(float start,
                 std::vector<PointLL>& shape);
 
 /**
- * Turns a line into a GeoJSON LineString geometry.
- *
- * @param shape  The points making up the line.
- * @returns The GeoJSON geometry of the LineString
- */
-baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape);
-
-/**
  * Estimate the angle of the tangent at a point along a discretised curve. We attempt
  * to mostly use the shape coming into the point on the curve but if there
  * isn't enough there we will use the shape coming out of the it.

@@ -58,7 +58,7 @@ json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
       // even if it source == target or no route found, we want to emplace an element
       case geojson:
         if (!matrix.shapes()[i].empty())
-          shapes->emplace_back(geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+          shapes->emplace_back(tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
         else
           shapes->emplace_back(json::map({}));
         break;
@@ -149,7 +149,8 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
       if (matrix.shapes().size() && !matrix.shapes()[i].empty()) {
         switch (shape_format) {
           case geojson:
-            map->emplace("shape", geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+            map->emplace("shape",
+                         tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
             break;
           default:
             map->emplace("shape", matrix.shapes()[i]);
