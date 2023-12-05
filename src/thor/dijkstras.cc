@@ -78,7 +78,7 @@ void Dijkstras::Initialize(label_container_t& labels,
   uint32_t edge_label_reservation;
   uint32_t bucket_count;
   GetExpansionHints(bucket_count, edge_label_reservation);
-  labels.reserve(std::min(max_reserved_labels_count_, edge_label_reservation));
+  labels.reserve(max_reserved_labels_count_);
 
   // Set up lambda to get sort costs
   float range = bucket_count * bucket_size;
@@ -786,7 +786,6 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       if (!opp_edge_id.Is_Valid()) {
         continue;
       }
-      const DirectedEdge* opp_dir_edge = opp_tile->directededge(opp_edge_id);
 
       // Get cost
       uint8_t flow_sources;

@@ -72,7 +72,9 @@ inline std::string get_date_time(const std::string& origin_dt,
   if (pred_id.Is_Valid()) {
     // get the timezone of the output location
     auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
-    dest_tz = reader.GetTimezone(out_nodes.first, tile) || reader.GetTimezone(out_nodes.second, tile);
+    dest_tz = reader.GetTimezone(out_nodes.first, tile);
+    if (dest_tz == 0)
+      dest_tz = reader.GetTimezone(out_nodes.second, tile);
   }
 
   auto in_epoch =

@@ -71,19 +71,9 @@ public:
    */
   virtual void Clear() override;
 
-  /**
-   * Set a maximum label count. The path algorithm terminates if this
-   * is exceeded.
-   * @param  max_count  Maximum number of labels to allow.
-   */
-  void set_max_label_count(const uint32_t max_count) {
-    max_label_count_ = max_count;
-  }
-
 protected:
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;
@@ -150,9 +140,8 @@ protected:
    * Set the destination edge(s).
    * @param   graphreader  Graph tile reader.
    * @param   dest         Location information of the destination.
-   * @return  Returns the relative density near the destination (0-15)
    */
-  uint32_t SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
+  void SetDestination(baldr::GraphReader& graphreader, const valhalla::Location& dest);
 
   /**
    * Form the path from the adjacency list. Recovers the path from the

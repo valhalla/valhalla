@@ -16,10 +16,16 @@
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
+// this is only for EdgeMetadata. one day we should move to a global interface
+#include <valhalla/thor/pathalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
 namespace thor {
+
+enum class MatrixExpansionType { reverse = 0, forward = 1 };
+constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
+constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
 
 // These cost thresholds are in addition to the distance thresholds. If either forward or reverse
 // costs exceed the threshold the search is terminated.
@@ -37,7 +43,7 @@ constexpr float kCostThresholdPedestrianDivisor =
  */
 struct LocationStatus {
   int threshold;
-  std::set<uint32_t> remaining_locations;
+  std::set<uint32_t> unfound_connections;
 
   LocationStatus(const int t) : threshold(t) {
   }
@@ -53,10 +59,10 @@ struct BestCandidate {
   baldr::GraphId opp_edgeid;
   sif::Cost cost;
   uint32_t distance;
-  uint32_t threshold;
+  uint32_t max_iterations;
 
   BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d)
-      : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), threshold(0) {
+      : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
   }
 
   void Update(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
@@ -120,7 +126,19 @@ public:
     expansion_callback_ = expansion_callback;
   }
 
+  /**
+   * Set a callback that will throw when the path computation should be aborted
+   * @param interrupt_callback  the function to periodically call to see if
+   *                            we should abort
+   */
+  void set_interrupt(const std::function<void()>* interrupt_callback) {
+    interrupt_ = interrupt_callback;
+  }
+
 protected:
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -130,43 +148,36 @@ protected:
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
 
-  uint32_t max_reserved_labels_count_;
-
+  // TODO(nils): instead of these array based structures, rather do this:
+  // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444
   // Number of source and target locations that can be expanded
-  uint32_t source_count_;
-  uint32_t remaining_sources_;
-  uint32_t target_count_;
-  uint32_t remaining_targets_;
+  std::array<uint32_t, 2> locs_count_;
+  std::array<uint32_t, 2> locs_remaining_;
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
 
   // Status
-  std::vector<LocationStatus> source_status_;
-  std::vector<LocationStatus> target_status_;
+  std::array<std::vector<LocationStatus>, 2> locs_status_;
 
-  // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
-  // source location (forward traversal)
-  std::vector<std::vector<sif::HierarchyLimits>> source_hierarchy_limits_;
-  std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> source_adjacency_;
-  std::vector<std::vector<sif::BDEdgeLabel>> source_edgelabel_;
-  std::vector<EdgeStatus> source_edgestatus_;
-
-  // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each
-  // target location (reverse traversal)
-  std::vector<std::vector<sif::HierarchyLimits>> target_hierarchy_limits_;
-  std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>> target_adjacency_;
-  std::vector<std::vector<sif::BDEdgeLabel>> target_edgelabel_;
-  std::vector<EdgeStatus> target_edgestatus_;
+  // Adjacency lists, EdgeLabels, EdgeStatus, and hierarchy limits for each location
+  std::array<std::vector<std::vector<sif::HierarchyLimits>>, 2> hierarchy_limits_;
+  std::array<std::vector<baldr::DoubleBucketQueue<sif::BDEdgeLabel>>, 2> adjacency_;
+  std::array<std::vector<std::vector<sif::BDEdgeLabel>>, 2> edgelabel_;
+  std::array<std::vector<EdgeStatus>, 2> edgestatus_;
 
   // List of best connections found so far
   std::vector<BestCandidate> best_connection_;
+
+  bool ignore_hierarchy_limits_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
+
+  const std::function<void()>* interrupt_ = nullptr;
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
@@ -207,6 +218,27 @@ protected:
                                const sif::BDEdgeLabel& pred,
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
+
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  bool Expand(const uint32_t index,
+              const uint32_t n,
+              baldr::GraphReader& graphreader,
+              const baldr::TimeInfo& time_info = baldr::TimeInfo::invalid(),
+              const bool invariant = false);
+
+  template <const MatrixExpansionType expansion_direction,
+            const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
+  bool ExpandInner(baldr::GraphReader& graphreader,
+                   const uint32_t index,
+                   const sif::BDEdgeLabel& pred,
+                   const baldr::DirectedEdge* opp_pred_edge,
+                   const baldr::NodeInfo* nodeinfo,
+                   const uint32_t pred_idx,
+                   const EdgeMetadata& meta,
+                   uint32_t& shortcuts,
+                   const graph_tile_ptr& tile,
+                   const baldr::TimeInfo& time_info);
 
   /**
    * Update status when a connection is found.
@@ -293,6 +325,20 @@ protected:
     }
 
     return infos;
+  };
+
+  void ModifyHierarchyLimits() {
+    // Distance threshold optimized for unidirectional search. For bidirectional case
+    // they can be lowered.
+    // Decrease distance thresholds only for arterial roads for now
+    for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
+      if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
+        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
+    }
+    for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
+      if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
+        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
+    }
   };
 
 private:
