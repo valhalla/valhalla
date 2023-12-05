@@ -169,32 +169,6 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
-/*
-   OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-   {
-   "code":"Ok"
-   "waypoints": [{ }, { }...],
-   "routes": [
-   {
-   "geometry":"....."
-   "distance":xxx.y
-   "duration":yyy.z
-   "legs":[
-   {
-   "steps":[
-   "intersections":[
-   ]
-   "geometry":" "
-   "maneuver":{
-   }
-   ]
-   }
-   ]
-   },
-   ...
-   ]
-   }
-   */
 
 std::string destinations(const valhalla::TripSign& sign);
 
