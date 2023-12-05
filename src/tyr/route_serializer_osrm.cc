@@ -382,11 +382,8 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // the optimized sequence.
 json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
-  uint32_t i = 0;
-  std::vector<uint32_t> indexes;
-  for (const auto& loc : locs) {
-    indexes.push_back(i++);
-  }
+  std::vector<uint32_t> indexes(locs.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
