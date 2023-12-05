@@ -49,6 +49,7 @@
    * CHANGED: less aggressive logging for nodes' headings & ferry connections [#4420][https://github.com/valhalla/valhalla/pull/4420]
    * ADDED: add documentation about historical traffic [#4259](https://github.com/valhalla/valhalla/pull/4259)
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
+   * ADDED: config option to control how much memory we'll reserve for CostMatrix locations [#4424](https://github.com/valhalla/valhalla/pull/4424)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
