@@ -25,7 +25,7 @@ struct NamedSegment {
 
   NamedSegment& operator=(const NamedSegment& ns);
 
-  NamedSegment& operator=(NamedSegment&& ns);
+  NamedSegment& operator=(NamedSegment&& ns) noexcept;
 };
 
 //=============================================================================

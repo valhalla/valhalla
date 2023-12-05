@@ -15,7 +15,7 @@ NamedSegment& NamedSegment::operator=(const NamedSegment& ns) {
   return *this;
 }
 
-NamedSegment& NamedSegment::operator=(NamedSegment&& ns) {
+NamedSegment& NamedSegment::operator=(NamedSegment&& ns) noexcept {
   name = std::move(ns.name);
   index = ns.index;
   distance = ns.distance;
