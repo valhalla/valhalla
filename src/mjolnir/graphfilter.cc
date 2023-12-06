@@ -40,7 +40,7 @@ constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess
 bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
   // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
   // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  const NodeInfo* nodeinfo = tile->node(edge->endnode());
   const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
   for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
     // Return true if the edge info matches (same name, shape, etc.)
