@@ -29,9 +29,8 @@ constexpr uint32_t kMaxIterationsWithoutConvergence = 200000;
 AStarBSSAlgorithm::AStarBSSAlgorithm(const boost::property_tree::ptree& config)
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
-                    config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
-      travel_type_(0) {
+                    config.get<bool>("clear_reserved_memory", false)) {
+  mode_ = travel_mode_t::kDrive;
 }
 
 // Destructor
@@ -271,26 +270,18 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
   // Initialize the origin and destination locations. Initialize the
   // destination first in case the origin edge includes a destination edge.
-  uint32_t density = SetDestination(graphreader, destination);
+  SetDestination(graphreader, destination);
   SetOrigin(graphreader, origin, destination);
 
   // Find shortest path
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  size_t total_labels = 0;
+  size_t n = 0;
   while (true) {
     // Allow this process to be aborted
-    size_t current_labels = edgelabels_.size();
-    if (interrupt &&
-        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
+    if (interrupt && (++n % kInterruptIterationsInterval) == 0) {
       (*interrupt)();
-    }
-    total_labels = current_labels;
-
-    // Abort if max label count is exceeded
-    if (total_labels > max_label_count_) {
-      return {};
     }
 
     // Get next element from adjacency list. Check that it is valid. An
@@ -304,9 +295,6 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
     EdgeLabel pred = edgelabels_[predindex];
-
-    graph_tile_ptr tile = graphreader.GetGraphTile(pred.endnode());
-    auto ll = tile->get_node_ll(pred.endnode());
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
         pred.mode() == travel_mode_t::kPedestrian) {
@@ -479,7 +467,7 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
 }
 
 // Add a destination edge
-uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
+void AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valhalla::Location& dest) {
 
   // Only skip outbound edges if we have other options
   bool has_other_edges = false;
@@ -488,8 +476,6 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
                   has_other_edges = has_other_edges || !e.begin_node();
                 });
 
-  // For each edge
-  uint32_t density = 0;
   for (const auto& edge : dest.correlation().edges()) {
     // If destination is at a node skip any outbound edges
     if (has_other_edges && edge.begin_node()) {
@@ -512,11 +498,8 @@ uint32_t AStarBSSAlgorithm::SetDestination(GraphReader& graphreader, const valha
         pedestrian_costing_->EdgeCost(directededge, tile) * (1.0f - edge.percent_along());
 
     // Edge score (penalty) is handled within GetPath. Do not add score here.
-
-    // Get the tile relative density
-    density = tile->header()->density();
   }
-  return density;
+  return;
 }
 
 // Form the path from the adjacency list.
@@ -539,8 +522,6 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
                       edgelabel.transition_cost());
 
     graph_tile_ptr tile = graphreader.GetGraphTile(edgelabel.edgeid());
-    const DirectedEdge* directededge = tile->directededge(edgelabel.edgeid());
-    auto ll = tile->get_node_ll(directededge->endnode());
 
     // Check if this is a ferry
     if (edgelabel.use() == Use::kFerry) {

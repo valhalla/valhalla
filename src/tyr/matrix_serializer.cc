@@ -60,7 +60,7 @@ std::string serialize(const Api& request) {
   json->emplace("sources", osrm::waypoints(options.sources()));
   json->emplace("destinations", osrm::waypoints(options.targets()));
 
-  for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+  for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
     time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                           options.targets_size()));
     distance->emplace_back(serialize_distance(request.matrix(), source_index * options.targets_size(),
@@ -89,10 +89,9 @@ json::ArrayPtr locations(const google::protobuf::RepeatedPtrField<valhalla::Loca
     if (location.correlation().edges().size() == 0) {
       input_locs->emplace_back(nullptr);
     } else {
-      for (const auto& corr_edge : location.correlation().edges()) {
-        input_locs->emplace_back(json::map({{"lat", json::fixed_t{corr_edge.ll().lat(), 6}},
-                                            {"lon", json::fixed_t{corr_edge.ll().lng(), 6}}}));
-      }
+      auto& corr_ll = location.correlation().edges(0).ll();
+      input_locs->emplace_back(json::map(
+          {{"lat", json::fixed_t{corr_ll.lat(), 6}}, {"lon", json::fixed_t{corr_ll.lng(), 6}}}));
     }
   }
   return input_locs;
@@ -136,22 +135,22 @@ std::string serialize(const Api& request, double distance_scale) {
 
   if (options.verbose()) {
     json::ArrayPtr matrix = json::array({});
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       matrix->emplace_back(serialize_row(request.matrix(), source_index * options.targets_size(),
                                          options.targets_size(), source_index, 0, distance_scale));
     }
 
     json->emplace("sources_to_targets", matrix);
 
-    json->emplace("targets", json::array({locations(options.targets())}));
-    json->emplace("sources", json::array({locations(options.sources())}));
+    json->emplace("targets", locations(options.targets()));
+    json->emplace("sources", locations(options.sources()));
   } // slim it down
   else {
     auto matrix = json::map({});
     auto time = json::array({});
     auto distance = json::array({});
 
-    for (size_t source_index = 0; source_index < options.sources_size(); ++source_index) {
+    for (int source_index = 0; source_index < options.sources_size(); ++source_index) {
       time->emplace_back(serialize_duration(request.matrix(), source_index * options.targets_size(),
                                             options.targets_size()));
       distance->emplace_back(
@@ -186,7 +185,6 @@ namespace valhalla {
 namespace tyr {
 
 std::string serializeMatrix(Api& request) {
-  auto format = request.options().format();
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
   switch (request.options().format()) {
     case Options_Format_osrm:

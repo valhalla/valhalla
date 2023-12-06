@@ -14,10 +14,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
+namespace {
+constexpr uint32_t kCostMatrixThreshold = 5;
+}
+
 namespace valhalla {
 namespace thor {
-
-constexpr uint32_t kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
@@ -26,6 +28,9 @@ std::string thor_worker_t::matrix(Api& request) {
   auto& options = *request.mutable_options();
   adjust_scores(options);
   auto costing = parse_costing(request);
+
+  // TODO: do this for others as well
+  costmatrix_.set_interrupt(interrupt);
 
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
@@ -56,8 +61,8 @@ std::string thor_worker_t::matrix(Api& request) {
         case travel_mode_t::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
-          if (options.sources().size() <= kCostMatrixThreshold ||
-              options.targets().size() <= kCostMatrixThreshold) {
+          if (static_cast<uint32_t>(options.sources().size()) <= kCostMatrixThreshold ||
+              static_cast<uint32_t>(options.targets().size()) <= kCostMatrixThreshold) {
             matrix_algo = Matrix::TimeDistanceMatrix;
           }
           break;
