@@ -670,6 +670,9 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
+        bool diff_names = directededge->endnode().tileid() == edgeid.tileid() &&
+                          !OpposingEdgeInfoMatches(tile, directededge);
+
         // Get edge info, shape, and names from the old tile and add
         // to the new. Use prior edgeinfo offset as the key to make sure
         // edges that have the same end nodes are differentiated (this
@@ -681,7 +684,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTypes(), added, diff_names);
 
         newedge.set_edgeinfo_offset(edge_info_offset);
 

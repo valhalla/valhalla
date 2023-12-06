@@ -32,6 +32,26 @@ uint32_t can_aggregate = 0;
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
 /**
+ * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+ * must be in the same tile as the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
+  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+  // true if a matching edgeinfo offset if found.
+  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    // Return true if the edge info matches (same name, shape, etc.)
+    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Filter edges to optionally remove edges by access.
  * @param  reader  Graph reader.
  * @param  old_to_new  Map of original node Ids to new nodes Ids (after filtering).
@@ -74,6 +94,8 @@ void FilterTiles(GraphReader& reader,
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      bool diff_names = false;
+
       // Count of edges added for this node
       uint32_t edge_count = 0;
 
@@ -137,6 +159,9 @@ void FilterTiles(GraphReader& reader,
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
+        diff_names = directededge->endnode().tile_value() == tile_id.tile_value() &&
+                     !OpposingEdgeInfoMatches(tile, directededge);
+
         // Get edge info, shape, and names from the old tile and add to the
         // new. Cannot use edge info offset since edges in arterial and
         // highway hierarchy can cross base tiles! Use a hash based on the
@@ -150,7 +175,7 @@ void FilterTiles(GraphReader& reader,
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
                                     edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
         endnode.push_back(directededge->endnode());
@@ -187,7 +212,7 @@ void FilterTiles(GraphReader& reader,
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
         // edge attributes should match), don't end at same node (no loops).
-        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1]) {
+        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] && diff_names) {
           ++can_aggregate;
         }
       } else {
