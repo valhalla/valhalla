@@ -27,6 +27,13 @@ protected:
                  D
     )";
 
+    /*
+     * Notice that we have a different name in the forward
+     * and backward direction.  This test confirms that
+     * if we filter out footways (i.e., pedestrian edges),
+     * the names are still created correctly in the forward
+     * and backward direction
+     */
     const gurka::ways ways = {
         {"ABC",
          {{"highway", "residential"},
@@ -77,7 +84,7 @@ TEST_F(FilterData, CheckStreetNamesAfterFilter) {
   std::vector<std::string> input_files = {workdir + "/map.pbf"};
 
   build_tile_set(the_map.config, input_files, mjolnir::BuildStage::kInitialize,
-                 mjolnir::BuildStage::kValidate, false);
+                 mjolnir::BuildStage::kCleanup, false);
 
   GraphReader graph_reader(the_map.config.get_child("mjolnir"));
 
