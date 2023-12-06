@@ -38,15 +38,17 @@ constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess
  * @param  directededge  Directed edge to match.
  */
 bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
-  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-  // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // Return true if the edge info matches (same name, shape, etc.)
-    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
-      return true;
-    }
+  if (edge->endnode().tile_value() == tile->id().tile_value()) {
+	  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+	  // true if a matching edgeinfo offset if found.
+	  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+	  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
+	  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+		// Return true if the edge info matches (same name, shape, etc.)
+		if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
+		  return true;
+		}
+	  }
   }
   return false;
 }
@@ -159,8 +161,7 @@ void FilterTiles(GraphReader& reader,
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
-        diff_names = directededge->endnode().tile_value() == tile_id.tile_value() &&
-                     !OpposingEdgeInfoMatches(tile, directededge);
+        diff_names = !OpposingEdgeInfoMatches(tile, directededge);
 
         // Get edge info, shape, and names from the old tile and add to the
         // new. Cannot use edge info offset since edges in arterial and
