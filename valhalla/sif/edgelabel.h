@@ -471,7 +471,6 @@ public:
                 const baldr::DirectedEdge* edge,
                 const Cost& cost,
                 const float sortcost,
-                const float dist,
                 const TravelMode mode,
                 const uint32_t path_distance,
                 const Cost& transition_cost,
@@ -778,7 +777,7 @@ protected:
 /**
  * EdgeLabel used for multi-modal A* path algorithm.
  */
-class MMEdgeLabel : public PathEdgeLabel {
+class MMEdgeLabel : public EdgeLabel {
 public:
   // Default constructor
   MMEdgeLabel() {
@@ -823,23 +822,21 @@ public:
               const Cost& transition_cost,
               const uint8_t restriction_idx,
               const uint8_t path_id = 0)
-      : PathEdgeLabel(predecessor,
-                      edgeid,
-                      edge,
-                      cost,
-                      sortcost,
-                      dist,
-                      mode,
-                      path_distance,
-                      transition_cost,
-                      restriction_idx,
-                      true,
-                      false,
-                      InternalTurn::kNoTurn,
-                      path_id),
-        prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
+      : EdgeLabel(predecessor,
+                  edgeid,
+                  edge,
+                  cost,
+                  sortcost,
+                  mode,
+                  path_distance,
+                  restriction_idx,
+                  true,
+                  false,
+                  InternalTurn::kNoTurn,
+                  path_id),
+        transition_cost_(transition_cost), prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
         transit_operator_(transit_operator), has_transit_(has_transit),
-        walking_distance_(walking_distance) {
+        walking_distance_(walking_distance), distance_(dist) {
   }
 
   /**
@@ -944,8 +941,6 @@ public:
   }
 
 protected:
-  float distance_; // Distance to the destination.
-
   // Was originally used for reverse search path to remove extra time where paths intersected
   // but its now used everywhere to measure the difference in time along the edge vs at the node
   Cost transition_cost_;
@@ -965,6 +960,8 @@ protected:
 
   // Accumulated walking distance to prune the expansion
   uint32_t walking_distance_;
+
+  float distance_; // Distance to the destination.
 };
 
 } // namespace sif
