@@ -10,7 +10,7 @@ using namespace valhalla::sif;
 constexpr size_t kEdgeLabelExpectedSize = 40;
 constexpr size_t kPathEdgeLabelExpectedSize = 48;
 constexpr size_t kBDEdgeLabelExpectedSize = 64;
-constexpr size_t kMMEdgeLabelExpectedSize = 80;
+constexpr size_t kMMEdgeLabelExpectedSize = 72;
 
 namespace {
 
