@@ -752,6 +752,14 @@ public:
     return not_thru_pruning_;
   }
 
+  /**
+   * Sets the path distance for this EdgeLabel.
+   * @param distance  Path distance.
+   */
+  void set_path_distance(const float distance) {
+    path_distance_ = distance;
+  }
+
 protected:
   float distance_; // Distance to the destination.
 

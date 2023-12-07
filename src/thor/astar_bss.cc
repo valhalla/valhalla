@@ -98,7 +98,7 @@ void AStarBSSAlgorithm::Init(const midgard::PointLL& origll, const midgard::Poin
 // edges if from_transition is false.
 void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
                                       const GraphId& node,
-                                      const EdgeLabel& pred,
+                                      const BDEdgeLabel& pred,
                                       const uint32_t pred_idx,
                                       const bool from_transition,
                                       const bool from_bss,
@@ -194,7 +194,7 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     // less cost the predecessor is updated and the sort cost is decremented
     // by the difference in real cost (A* heuristic doesn't change)
     if (current_es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[current_es->index()];
+      auto& lab = edgelabels_[current_es->index()];
       if (newcost.cost < lab.cost().cost) {
         float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
         adjacencylist_.decrease(current_es->index(), newsortcost);
@@ -220,9 +220,9 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, sortcost, dist, mode, 0,
-                             transition_cost, baldr::kInvalidRestriction, true, false,
-                             InternalTurn::kNoTurn);
+    edgelabels_.emplace_back(pred_idx, edgeid, GraphId(), directededge, newcost, sortcost, dist, mode,
+                             transition_cost, false, true, false, InternalTurn::kNoTurn,
+                             baldr::kInvalidRestriction);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -294,7 +294,7 @@ AStarBSSAlgorithm::GetBestPath(valhalla::Location& origin,
 
     // Copy the EdgeLabel for use in costing. Check if this is a destination
     // edge and potentially complete the path.
-    EdgeLabel pred = edgelabels_[predindex];
+    auto pred = edgelabels_[predindex];
 
     if (destinations_.find(pred.edgeid()) != destinations_.end() &&
         pred.mode() == travel_mode_t::kPedestrian) {
@@ -445,11 +445,12 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
-    EdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                         travel_mode_t::kPedestrian, d, Cost{}, baldr::kInvalidRestriction, true,
-                         false, sif::InternalTurn::kNoTurn);
-    // Set the origin flag
+    BDEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
+                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction,
+                           true, false, sif::InternalTurn::kNoTurn);
+    // Set the origin flag and path distance
     edge_label.set_origin();
+    edge_label.set_path_distance(d);
 
     // Add EdgeLabel to the adjacency list
     uint32_t idx = edgelabels_.size();
@@ -516,7 +517,7 @@ std::vector<PathInfo> AStarBSSAlgorithm::FormPath(baldr::GraphReader& graphreade
 
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
-    const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+    const auto& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
                       edgelabel.path_distance(), edgelabel.restriction_idx(),
                       edgelabel.transition_cost());
