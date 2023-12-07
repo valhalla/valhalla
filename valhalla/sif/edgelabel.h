@@ -834,8 +834,8 @@ public:
                   false,
                   InternalTurn::kNoTurn,
                   path_id),
-        transition_cost_(transition_cost), prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
-        transit_operator_(transit_operator), has_transit_(has_transit),
+        transition_cost_(transition_cost), prior_stopid_(prior_stopid), tripid_(tripid),
+        blockid_(blockid), transit_operator_(transit_operator), has_transit_(has_transit),
         walking_distance_(walking_distance), distance_(dist) {
   }
 
