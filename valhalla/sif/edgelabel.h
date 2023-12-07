@@ -571,8 +571,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id),
-        distance_(dist), transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning) {
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
+        not_thru_pruning_(not_thru_pruning), distance_(dist) {
   }
 
   /**
@@ -622,8 +622,8 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id),
-        distance_(0.0f), transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning) {
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
+        not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
   }
 
   /**
@@ -668,7 +668,7 @@ public:
                   has_measured_speed,
                   internal_turn,
                   path_id),
-        distance_(dist), transition_cost_({}), not_thru_pruning_(!edge->not_thru()) {
+        transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
     opp_edgeid_ = {};
   }
 
@@ -761,8 +761,6 @@ public:
   }
 
 protected:
-  float distance_; // Distance to the destination.
-
   // Was originally used for reverse search path to remove extra time where paths intersected
   // but its now used everywhere to measure the difference in time along the edge vs at the node
   Cost transition_cost_;
@@ -773,6 +771,8 @@ protected:
   // TODO: Move not_thru_prunin to the base class - EdgeLabel so that we can
   // consolidate all pruning related properties at 1 place
   uint64_t not_thru_pruning_ : 1;
+
+  float distance_; // Distance to the destination.
 };
 
 /**
