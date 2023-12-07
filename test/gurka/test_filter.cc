@@ -21,10 +21,10 @@ protected:
 
     const std::string ascii_map = R"(
 		A--------B--------C
-                 |
-                 |
-                 |
-                 D
+                         |
+                         |
+                         |
+                         D
     )";
 
     /*
