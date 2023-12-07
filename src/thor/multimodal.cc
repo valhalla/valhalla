@@ -752,7 +752,7 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
     uint32_t idx = edgelabels.size();
     edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
                             walking_distance, baldr::kInvalidRestriction, true, false,
-			    InternalTurn::kNoTurn);
+                            InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }

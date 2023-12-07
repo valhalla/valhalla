@@ -446,8 +446,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     BDEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction,
-                           true, false, sif::InternalTurn::kNoTurn);
+                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, true, false,
+                           sif::InternalTurn::kNoTurn);
     // Set the origin flag and path distance
     edge_label.set_origin();
     edge_label.set_path_distance(d);

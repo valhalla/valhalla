@@ -515,7 +515,7 @@ protected:
  * NOTE - despite the name, this is also used by unidirectional A* algorithms
  * (not simply bidirectional A*).
  * transition_cost, distance (from the destination), and opposing edge index
- * are included in the derived class. 
+ * are included in the derived class.
  */
 class BDEdgeLabel : public EdgeLabel {
 public:

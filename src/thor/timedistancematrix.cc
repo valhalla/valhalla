@@ -369,12 +369,12 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // of the path. Set the origin flag
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
-		               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
-		               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn);
     }
