@@ -1,9 +1,6 @@
 #ifndef VALHALLA_TYR_ROUTE_SUMMARY_CACHE_H_
 #define VALHALLA_TYR_ROUTE_SUMMARY_CACHE_H_
 
-#include "proto/directions.pb.h"
-#include "proto/options.pb.h"
-#include "proto/trip.pb.h"
 #include "proto_conversions.h"
 
 namespace valhalla {
