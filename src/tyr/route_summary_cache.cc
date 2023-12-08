@@ -8,14 +8,16 @@
 namespace valhalla {
 namespace tyr {
 
-NamedSegment& NamedSegment::operator=(const NamedSegment& ns) {
+route_summary_cache::route_summary_cache::NamedSegment&
+route_summary_cache::NamedSegment::operator=(const NamedSegment& ns) {
   name = ns.name;
   index = ns.index;
   distance = ns.distance;
   return *this;
 }
 
-NamedSegment& NamedSegment::operator=(NamedSegment&& ns) noexcept {
+route_summary_cache::NamedSegment&
+route_summary_cache::NamedSegment::operator=(NamedSegment&& ns) noexcept {
   name = std::move(ns.name);
   index = ns.index;
   distance = ns.distance;

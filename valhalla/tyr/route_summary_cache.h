@@ -9,25 +9,6 @@
 namespace valhalla {
 namespace tyr {
 
-struct NamedSegment {
-  std::string name;
-  uint32_t index;
-  float distance;
-
-  NamedSegment(const std::string& _n, uint32_t _i, float _d) : name(_n), index(_i), distance(_d) {
-  }
-
-  NamedSegment(const NamedSegment& ns) : name(ns.name), index(ns.index), distance(ns.distance) {
-  }
-
-  NamedSegment(NamedSegment&& ns) : name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
-  }
-
-  NamedSegment& operator=(const NamedSegment& ns);
-
-  NamedSegment& operator=(NamedSegment&& ns) noexcept;
-};
-
 //=============================================================================
 // Cache the summaries by route/leg/#-of-named-segs. Has a couple benefits:
 // 1) lets the business logic be business-y (ask for the same thing repeatedly
@@ -67,6 +48,25 @@ struct NamedSegment {
 // 4 (index 3)                        R0, R1, R2, R3
 //=============================================================================
 class route_summary_cache {
+  struct NamedSegment {
+    std::string name;
+    uint32_t index;
+    float distance;
+
+    NamedSegment(const std::string& _n, uint32_t _i, float _d) : name(_n), index(_i), distance(_d) {
+    }
+
+    NamedSegment(const NamedSegment& ns) : name(ns.name), index(ns.index), distance(ns.distance) {
+    }
+
+    NamedSegment(NamedSegment&& ns)
+        : name(std::move(ns.name)), index(ns.index), distance(ns.distance) {
+    }
+
+    NamedSegment& operator=(const NamedSegment& ns);
+
+    NamedSegment& operator=(NamedSegment&& ns) noexcept;
+  };
   // vector 1: routes
   // vector 2: legs for the route
   // vector 3: named segments sorted by longest segment distance
