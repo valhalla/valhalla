@@ -1,7 +1,7 @@
 #include "baldr/double_bucket_queue.h"
-#include "sif/edgelabel.h"
 #include "config.h"
 #include "midgard/util.h"
+#include "sif/edgelabel.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
