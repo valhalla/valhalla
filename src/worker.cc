@@ -806,7 +806,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.set_shape_format(polyline5);
     } else if (*shape_format == "geojson") {
       options.set_shape_format(geojson);
-    } else if (*shape_format == "none") {
+    } else if (*shape_format == "no_shape") {
       if (action == Options::height) {
         throw valhalla_exception_t{164};
       }
