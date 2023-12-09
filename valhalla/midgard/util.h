@@ -15,7 +15,6 @@
 #include <utility>
 #include <vector>
 
-#include <valhalla/baldr/json.h>
 #include <valhalla/midgard/aabb2.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/distanceapproximator.h>

@@ -301,12 +301,14 @@ protected:
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need
    * to form the paths the sources & targets generated, and recost them to
-   * update the best connections, before returning the result.
+   * update the best connections, before returning the result. Optionally
+   * returns the path's shape.
    * @param   graphreader  Graph tile reader
    * @param   origins      The source locations
    * @param   targets      The target locations
    * @param   time_infos   The time info objects for the sources
    * @param   invariant    Whether time is invariant
+   * @return  optionally the path's shape or ""
    */
   std::string RecostFormPath(baldr::GraphReader& graphreader,
                              BestCandidate& connection,

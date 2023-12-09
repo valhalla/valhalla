@@ -260,7 +260,7 @@ baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
         baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
   }
   geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
+  geojson->emplace("coordinates", coords);
   return geojson;
 }
 } // namespace tyr
