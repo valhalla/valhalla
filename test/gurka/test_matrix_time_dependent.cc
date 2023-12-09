@@ -517,4 +517,22 @@ TEST(StandAlone, CostMatrixShapes) {
   EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
   encoded); res.erase();
   */
+
+  // timedistancematrix
+
+  options["/shape_format"] = "geojson";
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "pedestrian",
+                            options, nullptr, &res);
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 207);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["warnings"].GetArray().Size(), 1);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["warnings"].GetArray()[0].GetObject()["code"].GetUint64(),
+            207);
+
+  res.erase();
 }
