@@ -1452,6 +1452,38 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
+// Populate the voiceInstructions within a step.
+// voiceInstructions are a unified object of maneuvers name, dest, ref and intersection.lanes
+json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* maneuver, 
+                                   const double distance) {
+  // voiceInstructions is an array, because there may be multiple similar voice instruction
+  // objects. When the step is long enough, there may be multiple voice instructions.
+  json::ArrayPtr voice_instructions_array = json::array({});
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // voice instruction should be heard. The first voice instruction starts shortly after the beginning.
+
+  if (!maneuver->verbal_transition_alert_instruction().empty()) {
+    json::MapPtr voice_instruction_alert = json::map({});
+    voice_instruction_alert->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
+    voice_instruction_alert->emplace("announcement", maneuver->verbal_transition_alert_instruction());
+    voice_instruction_alert->emplace("verbal_transition_alert_instruction", maneuver->verbal_transition_alert_instruction());
+    voice_instruction_alert->emplace("ssmlAnnouncement", maneuver->verbal_transition_alert_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_alert));
+  }
+
+  if (!maneuver->verbal_succinct_transition_instruction().empty()) {
+    json::MapPtr voice_instruction_succinct = json::map({});
+    voice_instruction_succinct->emplace("distanceAlongGeometry", json::fixed_t{distance / 3, 3});
+    voice_instruction_succinct->emplace("announcement", maneuver->verbal_succinct_transition_instruction());
+    voice_instruction_succinct->emplace("verbal_succinct_transition_instruction", maneuver->verbal_succinct_transition_instruction());
+    voice_instruction_succinct->emplace("ssmlAnnouncement", maneuver->verbal_succinct_transition_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_succinct));
+  }
+
+  return voice_instructions_array;
+}
+
 // Get the mode
 std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
@@ -1725,6 +1757,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           step->emplace("bannerInstructions",
                         banner_instructions(name, dest, ref, prev_maneuver, maneuver, arrive_maneuver,
                                             &etp, mnvr_type, modifier, ex, distance, drive_side));
+        }
+      }
+
+      // Add voice instructions if the user requested them
+      if (options.voice_instructions()) {
+        // if (prev_maneuver) {
+        //   step->emplace("voiceInstructions", voice_instructions(prev_maneuver, prev_distance));
+        // } else {
+        if (prev_step) {
+          prev_step->emplace("voiceInstructions", voice_instructions(&maneuver, distance));
+        }
+        if (arrive_maneuver) {
+          step->emplace("voiceInstructions", voice_instructions(&maneuver, distance));
         }
       }
 
