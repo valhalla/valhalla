@@ -1029,8 +1029,8 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
       path_edges.emplace_back(std::move(opp_edge_id));
   }
 
-  auto source_edge = find_correlated_edge(source, path_edges.front());
-  auto target_edge = find_correlated_edge(target, path_edges.back());
+  const auto source_edge = find_correlated_edge(source, path_edges.front());
+  const auto target_edge = find_correlated_edge(target, path_edges.back());
   float source_pct = static_cast<float>(source_edge.percent_along());
   float target_pct = static_cast<float>(target_edge.percent_along());
 
