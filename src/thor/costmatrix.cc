@@ -1067,7 +1067,7 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
     connection.cost = new_cost;
   }
 
-  // return the shape of the path if requested
+  // bail if no shape was requested
   if (shape_format == no_shape)
     return "";
 

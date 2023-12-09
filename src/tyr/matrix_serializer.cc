@@ -60,7 +60,7 @@ json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
         if (!matrix.shapes()[i].empty())
           shapes->emplace_back(tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
         else
-          shapes->emplace_back(json::map({}));
+          shapes->emplace_back(nullptr);
         break;
       default:
         // this covers the polylines
