@@ -437,7 +437,7 @@ TEST(StandAlone, CostMatrixShapes) {
                    .HasMember("shape"));
   res.erase();
 
-  std::unordered_map<std::string, std::string> options = {{"/shape_format", "none"}};
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "no_shape"}};
 
   result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
                             nullptr, &res);
