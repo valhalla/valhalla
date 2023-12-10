@@ -1456,7 +1456,7 @@ void maneuver_geometry(json::MapPtr& step,
 json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
                                    const valhalla::DirectionsLeg::Maneuver& maneuver,
                                    const double distance,
-                                   const bool depart_maneuver) {
+                                   const uint32_t maneuver_index) {
   // voiceInstructions is an array, because there may be similar voice instructions.
   // When the step is long enough, there may be multiple voice instructions.
   json::ArrayPtr voice_instructions_array = json::array({});
@@ -1465,18 +1465,27 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
   // voice instruction should be heard.
   // The voice_instruction_beginning starts shortly after the beginning of the step.
   // The voice_instruction_end starts shortly before the end of the step.
-
-  if (prev_maneuver && distance > 125 && !prev_maneuver->verbal_post_transition_instruction().empty()) {
-    json::MapPtr voice_instruction_beginning = json::map({});
-    voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{25, 3});
-    voice_instruction_beginning->emplace("announcement", prev_maneuver->verbal_post_transition_instruction());
-    voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
+  if (prev_maneuver) {
+    // This is the the case for the depart maneuver
+    if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+      json::MapPtr voice_instruction_start = json::map({});
+      voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
+      voice_instruction_start->emplace("announcement", prev_maneuver->verbal_pre_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_start));
+    } else if (distance > 125 && !prev_maneuver->verbal_post_transition_instruction().empty()) {
+      json::MapPtr voice_instruction_beginning = json::map({});
+      voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 25, 3});
+      voice_instruction_beginning->emplace("announcement", prev_maneuver->verbal_post_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
+    }
   }
 
   if (!maneuver.verbal_pre_transition_instruction().empty()) {
     json::MapPtr voice_instruction_end = json::map({});
     if (distance > 100) {
-      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance - 100, 3});
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{100, 3});
+    } else if (maneuver_index == 1 ) {
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 3});
     } else {
       voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance, 3});
     }
@@ -1766,7 +1775,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       // Add voice instructions if the user requested them
       if (options.voice_instructions()) {
         if (prev_step) {
-          prev_step->emplace("voiceInstructions", voice_instructions(prev_maneuver, maneuver, prev_distance, depart_maneuver));
+          prev_step->emplace("voiceInstructions", voice_instructions(prev_maneuver, maneuver, prev_distance, maneuver_index));
         }
       }
 
