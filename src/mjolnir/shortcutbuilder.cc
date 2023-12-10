@@ -59,9 +59,9 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Neither edge can be part of a complex turn restriction
+  // Neither edge can be part of a complex turn restriction or differ on access restrictions
   if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
-      edge2->end_restriction()) {
+      edge2->end_restriction() || edge1->access_restriction() != edge2->access_restriction()) {
     return false;
   }
 
@@ -81,21 +81,24 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // TODO - should allow near matches?
   std::vector<std::string> edge1names = tile->GetNames(edge1);
   std::vector<std::string> edge2names = tile->GetNames(edge2);
-  if (edge1names.size() != edge2names.size()) {
+  std::sort(edge1names.begin(), edge1names.end());
+  std::sort(edge2names.begin(), edge2names.end());
+  if (edge1names != edge2names)
     return false;
-  }
-  for (const auto& name1 : edge1names) {
-    bool found = false;
-    for (const auto& name2 : edge2names) {
-      if (name1 == name2) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
+
+  // if they have access restrictions those must match (for modes that use shortcuts)
+  if (edge1->access_restriction()) {
+    auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
+    auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
+    if (res1.size() != res2.size())
       return false;
+    for (size_t i = 0; i < res1.size(); ++i) {
+      if (res1[i].type() != res2[i].type() || res1[i].modes() != res2[i].modes() ||
+          res1[i].value() != res2[i].value())
+        return false;
     }
   }
+
   return true;
 }
 
@@ -352,7 +355,6 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-// TODO - need to add access restrictions?
 uint32_t AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
@@ -423,8 +425,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
 
       auto types = edgeinfo.GetTypes();
 
-      // Add any access restriction records. TODO - make sure we don't contract
-      // across edges with different restrictions.
+      // Add any access restriction records. We don't contract if they differ, so if
+      // there's any, they're the same for all involved edges
       if (newedge.access_restriction()) {
         auto restrictions = tile->GetAccessRestrictions(edge_id.id(), kAllAccess);
         for (const auto& res : restrictions) {

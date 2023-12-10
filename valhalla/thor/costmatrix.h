@@ -65,7 +65,8 @@ struct BestCandidate {
       : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
   }
 
-  void Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
+  void
+  Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
     edgeid = e1;
     opp_edgeid = e2;
     cost = c;
@@ -93,12 +94,14 @@ public:
   /**
    * Forms a time distance matrix from the set of source locations
    * to the set of target locations.
-   * @param  source_location_list  List of source/origin locations.
-   * @param  target_location_list  List of target/destination locations.
-   * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  mode_costing          Costing methods.
-   * @param  mode                  Travel mode to use.
+   * @param  request               the full request
+   * @param  graphreader           List of source/origin locations.
+   * @param  mode_costing          List of target/destination locations.
+   * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  has_time              whether time-dependence was requested
+   * @param  invariant             whether invariant time-dependence was requested
+   * @param  shape_format          which shape_format, if any
    */
   void SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
@@ -106,7 +109,8 @@ public:
                       const sif::travel_mode_t mode,
                       const float max_matrix_distance,
                       const bool has_time = false,
-                      const bool invariant = false);
+                      const bool invariant = false,
+                      const ShapeFormat& shape_format = no_shape);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -136,6 +140,11 @@ public:
   }
 
 protected:
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
+  uint32_t max_reserved_locations_count_;
+  bool check_reverse_connections_;
+
   // Access mode used by the costing method
   uint32_t access_mode_;
 
@@ -145,10 +154,8 @@ protected:
   // Current costing mode
   std::shared_ptr<sif::DynamicCost> costing_;
 
-  uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
-  bool check_reverse_connections_;
-
+  // TODO(nils): instead of these array based structures, rather do this:
+  // https://github.com/valhalla/valhalla/pull/4372#discussion_r1402163444
   // Number of source and target locations that can be expanded
   std::array<uint32_t, 2> locs_count_;
   std::array<uint32_t, 2> locs_remaining_;
@@ -175,6 +182,9 @@ protected:
 
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
+
+  // whether time was specified
+  bool has_time_;
 
   const std::function<void()>* interrupt_ = nullptr;
 
@@ -219,19 +229,6 @@ protected:
                                const uint32_t n,
                                baldr::GraphReader& graphreader);
 
-  /**
-   * Check if the edge on the backward search connects to a reached edge
-   * on the reverse search tree.
-   * @param  target      target index.
-   * @param  pred        Edge label of the predecessor.
-   * @param  n           Iteration counter.
-   * @param  graphreader the graph reader instance
-   */
-  void CheckReverseConnections(const uint32_t target,
-                               const sif::BDEdgeLabel& pred,
-                               const uint32_t n,
-                               baldr::GraphReader& graphreader);                               
-
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
   bool Expand(const uint32_t index,
@@ -252,6 +249,19 @@ protected:
                    uint32_t& shortcuts,
                    const graph_tile_ptr& tile,
                    const baldr::TimeInfo& time_info);
+
+  /**
+   * Check if the edge on the backward search connects to a reached edge
+   * on the reverse search tree.
+   * @param  target      target index.
+   * @param  pred        Edge label of the predecessor.
+   * @param  n           Iteration counter.
+   * @param  graphreader the graph reader instance
+   */
+  void CheckReverseConnections(const uint32_t target,
+                               const sif::BDEdgeLabel& pred,
+                               const uint32_t n,
+                               baldr::GraphReader& graphreader);
 
   /**
    * Update status when a connection is found.
@@ -307,18 +317,24 @@ protected:
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need
    * to form the paths the sources & targets generated, and recost them to
-   * update the best connections, before returning the result.
+   * update the best connections, before returning the result. Optionally
+   * returns the path's shape.
    * @param   graphreader  Graph tile reader
    * @param   origins      The source locations
    * @param   targets      The target locations
    * @param   time_infos   The time info objects for the sources
    * @param   invariant    Whether time is invariant
+   * @return  optionally the path's shape or ""
    */
-  void RecostPaths(baldr::GraphReader& graphreader,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                   const std::vector<baldr::TimeInfo>& time_infos,
-                   bool invariant);
+  std::string RecostFormPath(baldr::GraphReader& graphreader,
+                             BestCandidate& connection,
+                             const valhalla::Location& source,
+                             const valhalla::Location& target,
+                             const uint32_t source_idx,
+                             const uint32_t target_idx,
+                             const baldr::TimeInfo& time_info,
+                             const bool invariant,
+                             const ShapeFormat shape_format);
 
   /**
    * Sets the date_time on the origin locations.
@@ -346,11 +362,11 @@ protected:
     // Decrease distance thresholds only for arterial roads for now
     for (size_t source = 0; source < locs_count_[MATRIX_FORW]; source++) {
       if (hierarchy_limits_[MATRIX_FORW][source][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_FORW][source][1].expansion_within_dist /= 2.f;
     }
     for (size_t target = 0; target < locs_count_[MATRIX_REV]; target++) {
       if (hierarchy_limits_[MATRIX_REV][target][1].max_up_transitions != kUnlimitedTransitions)
-        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 5.f;
+        hierarchy_limits_[MATRIX_REV][target][1].expansion_within_dist /= 2.f;
     }
   };
 

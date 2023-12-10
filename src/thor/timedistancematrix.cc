@@ -29,10 +29,11 @@ namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
-    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0),
+    : settled_count_(0), current_cost_threshold_(0),
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
                                                       kInitialEdgeLabelCountDijkstras)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
+      mode_(travel_mode_t::kDrive) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -150,17 +151,15 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;
-    uint32_t distance = pred.path_distance() + directededge->length();
+    uint32_t path_distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
+    // less cost the cost and predecessor are updated.
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
+      auto& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
+        adjacencylist_.decrease(es->index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, path_distance, restriction_idx);
       }
       continue;
     }
@@ -168,11 +167,11 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     sif::InternalTurn turn_type =
-        FORWARD ? turn_type = costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+        FORWARD ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
                 : costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
 
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, restriction_idx,
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                             path_distance, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type);
     *es = {EdgeSet::kTemporary, idx};
@@ -211,7 +210,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
   // reserve the PBF vectors
   reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
 
-  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+  for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
     edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
@@ -369,15 +368,13 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     if (FORWARD) {
-      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_,
-                               dist, Cost{}, baldr::kInvalidRestriction,
-                               !costing_->IsClosed(directededge, tile),
+      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn);
     } else {
-      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_,
-                               dist, Cost{}, baldr::kInvalidRestriction,
-                               !costing_->IsClosed(directededge, tile),
+      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn);
     }
@@ -413,7 +410,6 @@ void TimeDistanceMatrix::InitDestinations(
 
       // Form a threshold cost (the total cost to traverse the edge), also based on forward path for
       // REVERSE
-      GraphId id(static_cast<GraphId>(edge.graph_id()));
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       float c = costing_->EdgeCost(directededge, tile).cost;
