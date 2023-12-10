@@ -328,6 +328,7 @@ void ReclassifyFerryConnections(const std::string& ways_file,
   // regular (non-ferry) edge. Skip short ferry edges (river crossing?)
   uint32_t ferry_endpoint_count = 0;
   uint32_t total_count = 0;
+  uint32_t missed_both = 0;
   sequence<Node>::iterator node_itr = nodes.begin();
   while (node_itr != nodes.end()) {
     auto bundle = collect_node_edges(node_itr, nodes, edges);
@@ -411,15 +412,14 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
       // Log cases where reclassification fails
       if (!inbound_path_found && !outbound_path_found) {
-        LOG_INFO("Reclassification fails both directions to ferry at LL =" +
-                 std::to_string(ll.lat()) + "," + std::to_string(ll.lng()));
+        missed_both++;
       } else {
         if (!inbound_path_found) {
-          LOG_INFO("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
+          LOG_WARN("Reclassification fails inbound to ferry at LL =" + std::to_string(ll.lat()) +
                    "," + std::to_string(ll.lng()));
         }
         if (!outbound_path_found) {
-          LOG_INFO("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
+          LOG_WARN("Reclassification fails outbound from ferry at LL =" + std::to_string(ll.lat()) +
                    "," + std::to_string(ll.lng()));
         }
       }
@@ -431,7 +431,8 @@ void ReclassifyFerryConnections(const std::string& ways_file,
 
   LOG_INFO("Finished ReclassifyFerryEdges: ferry_endpoint_count = " +
            std::to_string(ferry_endpoint_count) + ", " + std::to_string(total_count) +
-           " edges reclassified.");
+           " edges reclassified. Failed both directions for " + std::to_string(missed_both) +
+           " connections.");
 }
 
 } // namespace mjolnir

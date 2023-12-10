@@ -107,8 +107,8 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_forward_.reserve(kInitialEdgeLabelCountBidirAstar);
-  edgelabels_reverse_.reserve(kInitialEdgeLabelCountBidirAstar);
+  edgelabels_forward_.reserve(max_reserved_labels_count_);
+  edgelabels_reverse_.reserve(max_reserved_labels_count_);
 
   // Construct adjacency list and initialize edge status lookup.
   // Set bucket size and cost range based on DynamicCost.
@@ -136,23 +136,14 @@ void BidirectionalAStar::Init(const PointLL& origll, const PointLL& destll) {
   cost_threshold_ = std::numeric_limits<float>::max();
   iterations_threshold_ = std::numeric_limits<uint32_t>::max();
 
-  // Support for hierarchy transitions
-  hierarchy_limits_forward_ = costing_->GetHierarchyLimits();
-  hierarchy_limits_reverse_ = costing_->GetHierarchyLimits();
-  bool ignore_forward_limits =
-      std::all_of(hierarchy_limits_forward_.begin() + 1,
-                  hierarchy_limits_forward_.begin() + TileHierarchy::levels().size(),
-                  [](const HierarchyLimits& limits) {
-                    return limits.max_up_transitions == kUnlimitedTransitions;
-                  });
-  bool ignore_reverse_limits =
-      std::all_of(hierarchy_limits_reverse_.begin() + 1,
-                  hierarchy_limits_reverse_.begin() + TileHierarchy::levels().size(),
-                  [](const HierarchyLimits& limits) {
-                    return limits.max_up_transitions == kUnlimitedTransitions;
-                  });
-  // Set this flag to 'true' if we can expand edges at all hierarchy levels without limits
-  ignore_hierarchy_limits_ = ignore_forward_limits && ignore_reverse_limits;
+  auto& hierarchy_limits = costing_->GetHierarchyLimits();
+  ignore_hierarchy_limits_ = std::all_of(hierarchy_limits.begin() + 1,
+                                         hierarchy_limits.begin() + TileHierarchy::levels().size(),
+                                         [](const HierarchyLimits& limits) {
+                                           return limits.max_up_transitions == kUnlimitedTransitions;
+                                         });
+  hierarchy_limits_forward_ = hierarchy_limits;
+  hierarchy_limits_reverse_ = hierarchy_limits;
 }
 
 // Runs in the inner loop of `Expand`, essentially evaluating if
@@ -367,7 +358,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction>
-bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
+void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
                                 const baldr::GraphId& node,
                                 sif::BDEdgeLabel& pred,
                                 const uint32_t pred_idx,
@@ -379,7 +370,7 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
   // with regional data sets) or if no access at the node.
   graph_tile_ptr tile = graphreader.GetGraphTile(node);
   if (tile == nullptr) {
-    return false;
+    return;
   }
   const NodeInfo* nodeinfo = tile->node(node);
 
@@ -403,11 +394,12 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // is labelled
     pred.set_deadend(true);
     // Check if edge is null before using it (can happen with regional data sets)
-    return opp_edge &&
-           ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                            {opp_edge, opp_edge_id,
-                                             edgestatus.GetPtr(opp_edge_id, tile)},
-                                            shortcuts, tile, offset_time);
+    if (opp_edge) {
+      ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
+                                       {opp_edge, opp_edge_id, edgestatus.GetPtr(opp_edge_id, tile)},
+                                       shortcuts, tile, offset_time);
+    }
+    return;
   }
 
   bool disable_uturn = false;
@@ -472,13 +464,11 @@ bool BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // Decide if we should expand a shortcut or the non-shortcut edge...
 
     // Expand the uturn possibility
-    disable_uturn =
-        ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx,
-                                         uturn_meta, shortcuts, tile, offset_time) ||
-        disable_uturn;
+    ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, uturn_meta,
+                                     shortcuts, tile, offset_time);
   }
 
-  return disable_uturn;
+  return;
 }
 
 // Calculate best path using bi-directional A*. No hierarchies or time
@@ -544,7 +534,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
   // portion of the graph) rather than strictly alternating.
   // TODO - CostMatrix alternates, maybe should try alternating here?
   int n = 0;
-  uint32_t forward_pred_idx, reverse_pred_idx;
+  uint32_t forward_pred_idx{0}, reverse_pred_idx{0};
   BDEdgeLabel fwd_pred, rev_pred;
   bool expand_forward = true;
   bool expand_reverse = true;
@@ -581,8 +571,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         if (opp_status.set() == EdgeSet::kPermanent ||
             (opp_status.set() == EdgeSet::kTemporary &&
              edgelabels_reverse_[opp_status.index()].predecessor() == kInvalidLabel)) {
-          if (SetForwardConnection(graphreader, fwd_pred) &&
-              opp_status.set() == EdgeSet::kPermanent) {
+          if (SetForwardConnection(graphreader, fwd_pred)) {
             continue;
           }
         }
@@ -631,8 +620,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
         if (opp_status.set() == EdgeSet::kPermanent ||
             (opp_status.set() == EdgeSet::kTemporary &&
              edgelabels_forward_[opp_status.index()].predecessor() == kInvalidLabel)) {
-          if (SetReverseConnection(graphreader, rev_pred) &&
-              opp_status.set() == EdgeSet::kPermanent) {
+          if (SetReverseConnection(graphreader, rev_pred)) {
             continue;
           }
         }
@@ -1176,8 +1164,8 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
     uint32_t idx2 = edgestatus_reverse_.Get(best_connection->opp_edgeid).index();
 
     // Metrics (TODO - more accurate cost)
-    uint32_t pathcost = edgelabels_forward_[idx1].cost().cost + edgelabels_reverse_[idx2].cost().cost;
-    LOG_DEBUG("path_cost::" + std::to_string(pathcost));
+    LOG_DEBUG("path_cost::" + std::to_string(edgelabels_forward_[idx1].cost().cost +
+                                             edgelabels_reverse_[idx2].cost().cost));
     LOG_DEBUG("FormPath path_iterations::" + std::to_string(edgelabels_forward_.size()) + "," +
               std::to_string(edgelabels_reverse_.size()));
 
@@ -1256,7 +1244,7 @@ std::vector<std::vector<PathInfo>> BidirectionalAStar::FormPath(GraphReader& gra
       return (edge_itr == path_edges.end()) ? GraphId{} : (*edge_itr++);
     };
 
-    const auto label_cb = [&path, &recovered_inner_edges](const EdgeLabel& label) {
+    const auto label_cb = [&path, &recovered_inner_edges](const PathEdgeLabel& label) {
       path.emplace_back(label.mode(), label.cost(), label.edgeid(), 0, label.path_distance(),
                         label.restriction_idx(), label.transition_cost(),
                         recovered_inner_edges.count(label.edgeid()));

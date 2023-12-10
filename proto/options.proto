@@ -41,6 +41,7 @@ enum ShapeFormat {
   polyline6 = 0;
   polyline5 = 1;
   geojson = 2;
+  no_shape = 3;  // to omit returning the geometry, e.g. default in matrix
 }
 
 // use this to select which top level fields should be present in the pbf output
@@ -444,7 +445,9 @@ message Options {
   oneof has_use_timestamps {
     bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   }
-  ShapeFormat shape_format = 38;                                   // Shape format (defaults to polyline6 encoding)
+  oneof has_shape_format {
+    ShapeFormat shape_format = 38;                                 // Shape format, defaults to polyline6 encoding for OSRM/height, and no_shape for matrix
+  }
   oneof has_alternates {
     uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   }
