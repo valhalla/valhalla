@@ -20,6 +20,16 @@ foreach(tz_db_file ${tz_db_files})
     DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds)
 endforeach()
 
+# Process the windowsZones.xml file
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
+  ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
+  --variable-name date_time_windows_zones_xml --skip 1 --raw
+  WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
+  COMMENT "Compiling date_time/windowsZones.xml to date_time_windows_zones.h"
+  DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml)
+
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
@@ -86,7 +96,8 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h)
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
+    ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
 list(APPEND sources_with_warnings
     tz_alt.cpp)
