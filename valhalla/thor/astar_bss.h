@@ -84,10 +84,10 @@ protected:
   std::shared_ptr<sif::DynamicCost> bicycle_costing_;
 
   // Vector of edge labels (requires access by index).
-  std::vector<sif::EdgeLabel> edgelabels_;
+  std::vector<sif::BDEdgeLabel> edgelabels_;
 
   // Adjacency list - approximate double bucket sort
-  baldr::DoubleBucketQueue<sif::EdgeLabel> adjacencylist_;
+  baldr::DoubleBucketQueue<sif::BDEdgeLabel> adjacencylist_;
 
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus pedestrian_edgestatus_;
@@ -118,7 +118,7 @@ protected:
    */
   void ExpandForward(baldr::GraphReader& graphreader,
                      const baldr::GraphId& node,
-                     const sif::EdgeLabel& pred,
+                     const sif::BDEdgeLabel& pred,
                      const uint32_t pred_idx,
                      const bool from_transition,
                      const bool from_bss,

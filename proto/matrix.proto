@@ -15,4 +15,5 @@ message Matrix {
   repeated uint32 to_indices = 5;
   repeated string date_times = 6;
   Algorithm algorithm = 7;
+  repeated string shapes = 8;
 }

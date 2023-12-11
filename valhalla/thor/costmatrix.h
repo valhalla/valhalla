@@ -93,12 +93,14 @@ public:
   /**
    * Forms a time distance matrix from the set of source locations
    * to the set of target locations.
-   * @param  source_location_list  List of source/origin locations.
-   * @param  target_location_list  List of target/destination locations.
-   * @param  graphreader           Graph reader for accessing routing graph.
-   * @param  mode_costing          Costing methods.
-   * @param  mode                  Travel mode to use.
+   * @param  request               the full request
+   * @param  graphreader           List of source/origin locations.
+   * @param  mode_costing          List of target/destination locations.
+   * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
+   * @param  has_time              whether time-dependence was requested
+   * @param  invariant             whether invariant time-dependence was requested
+   * @param  shape_format          which shape_format, if any
    */
   void SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
@@ -106,7 +108,8 @@ public:
                       const sif::travel_mode_t mode,
                       const float max_matrix_distance,
                       const bool has_time = false,
-                      const bool invariant = false);
+                      const bool invariant = false,
+                      const ShapeFormat& shape_format = no_shape);
 
   /**
    * Clear the temporary information generated during time+distance
@@ -120,8 +123,14 @@ public:
    * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  using expansion_callback_t = std::function<
-      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  using expansion_callback_t = std::function<void(baldr::GraphReader&,
+                                                  const baldr::GraphId,
+                                                  const baldr::GraphId,
+                                                  const char*,
+                                                  const char*,
+                                                  float,
+                                                  uint32_t,
+                                                  float)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }
@@ -177,6 +186,9 @@ protected:
 
   // for tracking the expansion of the Dijkstra
   expansion_callback_t expansion_callback_;
+
+  // whether time was specified
+  bool has_time_;
 
   const std::function<void()>* interrupt_ = nullptr;
 
@@ -295,18 +307,24 @@ protected:
   /**
    * If time awareness was requested for the CostMatrix algorithm, we need
    * to form the paths the sources & targets generated, and recost them to
-   * update the best connections, before returning the result.
+   * update the best connections, before returning the result. Optionally
+   * returns the path's shape.
    * @param   graphreader  Graph tile reader
    * @param   origins      The source locations
    * @param   targets      The target locations
    * @param   time_infos   The time info objects for the sources
    * @param   invariant    Whether time is invariant
+   * @return  optionally the path's shape or ""
    */
-  void RecostPaths(baldr::GraphReader& graphreader,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& sources,
-                   google::protobuf::RepeatedPtrField<valhalla::Location>& targets,
-                   const std::vector<baldr::TimeInfo>& time_infos,
-                   bool invariant);
+  std::string RecostFormPath(baldr::GraphReader& graphreader,
+                             BestCandidate& connection,
+                             const valhalla::Location& source,
+                             const valhalla::Location& target,
+                             const uint32_t source_idx,
+                             const uint32_t target_idx,
+                             const baldr::TimeInfo& time_info,
+                             const bool invariant,
+                             const ShapeFormat shape_format);
 
   /**
    * Sets the date_time on the origin locations.
