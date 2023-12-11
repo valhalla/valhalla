@@ -367,11 +367,12 @@ message Options {
   }
 
   enum ExpansionProperties {
-    costs = 0;
-    durations = 1;
-    distances = 2;
-    statuses = 3;
-    edge_ids = 4;
+    cost = 0;
+    duration = 1;
+    distance = 2;
+    edge_status = 3;
+    edge_id = 4;
+    pred_edge_id = 5;
   }
 
   Units units = 1;                                                 // kilometers or miles
