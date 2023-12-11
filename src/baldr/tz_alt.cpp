@@ -108,6 +108,7 @@
 #include "date_time_leapseconds.h"
 #include "date_time_northamerica.h"
 #include "date_time_southamerica.h"
+#include "date_time_windows_zones.h"
 
 #ifdef __APPLE__
 #  include "date/ios.h"
