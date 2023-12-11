@@ -82,6 +82,7 @@ nav:
     - Elevation influenced bicycle routing: sif/elevation_costing.md
     - elevation.md
     - testing.md
+    - tzdb_update.md
   - Internal components:
     - Baldr (routing data strutures/algorithms): baldr.md
     - Loki (associate locations with graph edges): loki.md
