@@ -1526,7 +1526,7 @@ void AccumulateRecostingInfoForward(const valhalla::Options& options,
 
   // setup a callback for the recosting to tell us about the new label each made
   auto out_itr = leg.mutable_node()->begin();
-  sif::LabelCallback label_cb = [&out_itr](const sif::EdgeLabel& label) -> void {
+  sif::LabelCallback label_cb = [&out_itr](const sif::PathEdgeLabel& label) -> void {
     // get the turn cost at this node
     out_itr->mutable_recosts()->rbegin()->mutable_transition_cost()->set_seconds(
         label.transition_cost().secs);
