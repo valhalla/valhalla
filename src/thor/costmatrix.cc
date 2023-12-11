@@ -782,7 +782,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     if (expansion_callback_) {
       auto prev_pred = pred.predecessor() == kInvalidLabel
                            ? GraphId{}
-                           : opp_edgelabels[pred.predecessor()].edgeid();
+                           : edgelabel_[MATRIX_FORW][source][pred.predecessor()].edgeid();
       expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "c", pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }
@@ -878,8 +878,11 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
       }
       // setting this edge as connected
       if (expansion_callback_) {
-        expansion_callback_(graphreader, rev_pred.edgeid(), "costmatrix", "c", rev_pred.cost().secs,
-                            rev_pred.path_distance(), rev_pred.cost().cost);
+        auto prev_pred = rev_pred.predecessor() == kInvalidLabel
+                             ? GraphId{}
+                             : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
+        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix", "c",
+                            rev_pred.cost().secs, rev_pred.path_distance(), rev_pred.cost().cost);
       }
     }
   }
