@@ -14,10 +14,12 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 using namespace valhalla::thor;
 
+namespace {
+constexpr uint32_t kCostMatrixThreshold = 5;
+}
+
 namespace valhalla {
 namespace thor {
-
-constexpr uint32_t kCostMatrixThreshold = 5;
 
 std::string thor_worker_t::matrix(Api& request) {
   // time this whole method and save that statistic
@@ -27,13 +29,19 @@ std::string thor_worker_t::matrix(Api& request) {
   adjust_scores(options);
   auto costing = parse_costing(request);
 
+  // TODO: do this for others as well
+  costmatrix_.set_interrupt(interrupt);
+
   // lambdas to do the real work
   auto costmatrix = [&](const bool has_time) {
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                       max_matrix_distance.find(costing)->second, has_time,
-                                      options.date_time_type() == Options::invariant);
+                                      options.date_time_type() == Options::invariant,
+                                      options.shape_format());
   };
   auto timedistancematrix = [&]() {
+    if (options.shape_format() != no_shape)
+      add_warning(request, 207);
     return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                                 max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations(),
@@ -41,6 +49,8 @@ std::string thor_worker_t::matrix(Api& request) {
   };
 
   if (costing == "bikeshare") {
+    if (options.shape_format() != no_shape)
+      add_warning(request, 207);
     time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                              max_matrix_distance.find(costing)->second,
                                              options.matrix_locations());
@@ -56,8 +66,8 @@ std::string thor_worker_t::matrix(Api& request) {
         case travel_mode_t::kBicycle:
           // Use CostMatrix if number of sources and number of targets
           // exceeds some threshold
-          if (options.sources().size() <= kCostMatrixThreshold ||
-              options.targets().size() <= kCostMatrixThreshold) {
+          if (static_cast<uint32_t>(options.sources().size()) <= kCostMatrixThreshold ||
+              static_cast<uint32_t>(options.targets().size()) <= kCostMatrixThreshold) {
             matrix_algo = Matrix::TimeDistanceMatrix;
           }
           break;

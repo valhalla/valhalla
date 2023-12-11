@@ -344,7 +344,7 @@ TEST(recosting, all_algorithms) {
         double length = 0;
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
-                                       reverse](const sif::EdgeLabel& label) -> void {
+                                       reverse](const sif::PathEdgeLabel& label) -> void {
           length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
@@ -433,7 +433,7 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::EdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& label) -> void { called = true; };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);
