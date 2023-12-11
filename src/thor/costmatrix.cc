@@ -56,7 +56,8 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0), has_time_(false), targets_{new ReachedMap} {
+      current_cost_threshold_(0),
+      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -296,10 +297,6 @@ void CostMatrix::SourceToTarget(Api& request,
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
     const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
-
-  targets_->reserve(max_reserved_labels_count_);
-  if (check_reverse_connections_)
-    sources_->reserve(max_reserved_labels_count_);
 
   locs_count_[MATRIX_FORW] = source_locations.size();
   locs_count_[MATRIX_REV] = target_locations.size();
