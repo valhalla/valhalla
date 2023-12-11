@@ -458,6 +458,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                                 pred.internal_turn());
   newcost += tc;
 
+  const auto pred_dist = pred.path_distance() + meta.edge->length();
   auto& adj = adjacency_[FORWARD][index];
   // Check if edge is temporarily labeled and this path has less cost. If
   // less cost the predecessor is updated along with new cost and distance.
@@ -465,8 +466,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     BDEdgeLabel& lab = edgelabel_[FORWARD][index][meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
       adj.decrease(meta.edge_status->index(), newcost.cost);
-      lab.Update(pred_idx, newcost, newcost.cost, tc, pred.path_distance() + meta.edge->length(),
-                 restriction_idx);
+      lab.Update(pred_idx, newcost, newcost.cost, tc, pred_dist, restriction_idx);
     }
     // Returning true since this means we approved the edge
     return true;
@@ -482,16 +482,14 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred.path_distance() + meta.edge->length(),
-                            (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                             restriction_idx);
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred.path_distance() + meta.edge->length(),
-                            (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
@@ -506,8 +504,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // setting this edge as reached
   if (expansion_callback_) {
-    expansion_callback_(graphreader, meta.edge_id, "costmatrix", "r", newcost.secs,
-                        pred.path_distance() + meta.edge->length(), newcost.cost);
+    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix", "r", newcost.secs,
+                        pred_dist, newcost.cost);
   }
 
   return true;
@@ -548,7 +546,9 @@ bool CostMatrix::Expand(const uint32_t index,
   auto& edgestatus = edgestatus_[FORWARD][index];
   edgestatus.Update(pred.edgeid(), EdgeSet::kPermanent);
   if (expansion_callback_) {
-    expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "s", pred.cost().secs,
+    auto prev_pred =
+        pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
                         pred.path_distance(), pred.cost().cost);
   }
 
@@ -771,7 +771,10 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     }
     // setting this edge as connected
     if (expansion_callback_) {
-      expansion_callback_(graphreader, pred.edgeid(), "costmatrix", "c", pred.cost().secs,
+      auto prev_pred = pred.predecessor() == kInvalidLabel
+                           ? GraphId{}
+                           : opp_edgelabels[pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "c", pred.cost().secs,
                           pred.path_distance(), pred.cost().cost);
     }
   }
