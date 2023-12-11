@@ -526,9 +526,7 @@ protected:
   uint64_t private_access_ : 1;      // Is the access private?
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
   uint64_t elevation_ : 15;          // Encoded elevation (meters)
-  uint64_t
-      timezone_ext_1_ : 1; // To keep compatibility when new timezones are added, see
-                           // https://github.com/mapbox/valhalla-internal/pull/2706#issuecomment-1816564118
+  uint64_t timezone_ext_1_ : 1;      // To keep compatibility when new timezones are added
   // uncomment a new timezone ever gets created from a previously new
   // timezone (reference release is 2023c)
   // uint64_t timezone_ext_2_ : 1;
