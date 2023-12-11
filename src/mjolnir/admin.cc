@@ -24,6 +24,7 @@ sqlite3* GetDBHandle(const std::string& database) {
       sqlite3_close(db_handle);
       return nullptr;
     }
+    // sqlite3_extended_result_codes(db_handle, 1);
   }
   return db_handle;
 }
@@ -53,6 +54,7 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
+    // TODO: we recently discovered that boost::geometry doesn't do bbox checks to speed things up
     if (boost::geometry::covered_by(p, poly.second))
       return poly.first;
   }
@@ -135,7 +137,7 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
   uint32_t ret;
   uint32_t result = 0;
 
-  std::string sql = "select TZID, st_astext(geom) from tz_world where ";
+  std::string sql = "select TZID, st_astext(geom) as geom_text from tz_world where ";
   sql += "ST_Intersects(geom, BuildMBR(" + std::to_string(aabb.minx()) + ",";
   sql += std::to_string(aabb.miny()) + ", " + std::to_string(aabb.maxx()) + ",";
   sql += std::to_string(aabb.maxy()) + ")) ";
@@ -153,6 +155,8 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
       std::string tz_id;
       std::string geom;
 
+      LOG_DEBUG(sqlite3_expanded_sql(stmt));
+
       if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         tz_id = (char*)sqlite3_column_text(stmt, 0);
       }
@@ -162,8 +166,8 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
 
       uint32_t idx = DateTime::get_tz_db().to_index(tz_id);
       if (idx == 0) {
-        result = sqlite3_step(stmt);
-        continue;
+        sqlite3_finalize(stmt);
+        throw std::runtime_error("Can't find timezone ID " + std::string(tz_id));
       }
 
       multi_polygon_type multi_poly;
@@ -171,6 +175,8 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
       polys.emplace(idx, multi_poly);
       result = sqlite3_step(stmt);
     }
+  } else {
+    LOG_ERROR("Spatialite error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   if (stmt) {
     sqlite3_finalize(stmt);
@@ -449,6 +455,8 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 
       result = sqlite3_step(stmt);
     }
+  } else {
+    LOG_ERROR("Spatialite error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   if (stmt) {
     sqlite3_finalize(stmt);

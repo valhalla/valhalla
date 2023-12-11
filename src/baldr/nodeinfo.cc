@@ -34,13 +34,7 @@ json::MapPtr admin_json(const AdminInfo& admin, uint16_t tz_index) {
   // timezone
   auto tz = DateTime::get_tz_db().from_index(tz_index);
   if (tz) {
-    // TODO: so much to do but posix tz has pretty much all the info
-    // TODO: need to include ptz.h from HowardHinnant
-    // m->emplace("time_zone_posix", tz->to_posix_string());
     m->emplace("time_zone_name", tz->name());
-    // TODO: need to include ptz.h from HowardHinnant
-    // if (tz->has_dst())
-    //  m->emplace("daylight_savings_time_zone_name", tz->dst_zone_name());
   }
 
   return m;
@@ -154,14 +148,15 @@ void NodeInfo::set_admin_index(const uint16_t admin_index) {
 }
 
 // Set the timezone index.
-void NodeInfo::set_timezone(const uint32_t timezone) {
-  if (timezone > kMaxTimeZonesPerTile) {
-    // Log an error and set count to max.
-    LOG_ERROR("NodeInfo: timezone index exceeds max: " + std::to_string(timezone));
-    timezone_ = kMaxTimeZonesPerTile;
-  } else {
-    timezone_ = timezone;
-  }
+void NodeInfo::set_timezone(const uint32_t tz_idx) {
+  if (tz_idx > kMaxTimeZoneIdExt1)
+    throw std::runtime_error("NodeInfo: timezone index exceeds max: " + std::to_string(tz_idx));
+  timezone_ = tz_idx & ((1 << 9) - 1); // first 9 bits for backwards compat
+  timezone_ext_1_ =
+      (tz_idx & (1 << 9)) >> 9; // 10th bit for new timezones carved out of old ones in 2023
+  // uncomment if a new timezone ever gets created from a previously new
+  // timezone (reference release is 2023c)
+  // timezone_ext_2_ = (tz_idx & (1 << 10)) >> 10;
 }
 
 // Set the driveability of the local directed edge given a local
