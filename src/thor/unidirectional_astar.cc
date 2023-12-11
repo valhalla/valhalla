@@ -19,8 +19,7 @@ UnidirectionalAStar<expansion_direction, FORWARD>::UnidirectionalAStar(
     : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
                                          kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_label_count_(std::numeric_limits<uint32_t>::max()), mode_(travel_mode_t::kDrive),
-      travel_type_(0), access_mode_{kAutoAccess} {
+      mode_(travel_mode_t::kDrive), travel_type_(0), access_mode_(kAutoAccess) {
 }
 
 // Default constructor
@@ -80,7 +79,7 @@ bool UnidirectionalAStar<expansion_direction, FORWARD>::Expand(GraphReader& grap
               : time_info.reverse(pred.cost().secs, static_cast<int>(nodeinfo->timezone()));
 
   if (!costing_->Allowed(nodeinfo)) {
-    const DirectedEdge* opp_edge;
+    const DirectedEdge* opp_edge = nullptr;
     const GraphId opp_edge_id = graphreader.GetOpposingEdgeId(pred.edgeid(), opp_edge, tile);
     // Check if edge is null before using it (can happen with regional data sets)
     pred.set_deadend(true);
@@ -368,7 +367,7 @@ std::vector<PathInfo> UnidirectionalAStar<ExpansionType::forward>::FormPath(cons
   std::vector<PathInfo> path;
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
-    const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+    const auto& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
                       edgelabel.path_distance(), edgelabel.restriction_idx(),
                       edgelabel.transition_cost());
@@ -483,19 +482,11 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   uint32_t nc = 0; // Count of iterations with no convergence
                    // towards destination
   std::pair<int32_t, float> best_path = std::make_pair(-1, 0.0f);
-  size_t total_labels = 0;
+  size_t n = 0;
   while (true) {
     // Allow this process to be aborted
-    size_t current_labels = edgelabels_.size();
-    if (interrupt &&
-        total_labels / kInterruptIterationsInterval < current_labels / kInterruptIterationsInterval) {
+    if (interrupt && (++n % kInterruptIterationsInterval) == 0) {
       (*interrupt)();
-    }
-    total_labels = current_labels;
-
-    // Abort if max label count is exceeded
-    if (total_labels > max_label_count_) {
-      return {};
     }
 
     // Get next element from adjacency list. Check that it is valid. An

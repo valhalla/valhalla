@@ -162,7 +162,8 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const std::string& way_name,
          const std::string& end_node,
          baldr::GraphId tile_id = baldr::GraphId{},
-         uint64_t way_id = 0);
+         uint64_t way_id = 0,
+         const bool is_shortcut = false);
 
 /**
  * Finds an edge in the graph based on its begin and end node names
@@ -172,7 +173,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,
