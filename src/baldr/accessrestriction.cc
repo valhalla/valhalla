@@ -79,8 +79,8 @@ const json::MapPtr AccessRestriction::json() const {
     case AccessType::kTimedAllowed:
     case AccessType::kTimedDenied:
     case AccessType::kDestinationAllowed:
-      // TODO(nils): turn the time domain into a map
-      map->emplace("value", nullptr);
+      // TODO(nils): turn the time domain into a proper map
+      map->emplace("value", json::map({{std::string("time_domain"), value()}}));
       break;
     case AccessType::kMaxAxles:
       map->emplace("value", value());
