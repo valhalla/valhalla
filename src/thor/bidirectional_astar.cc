@@ -310,6 +310,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+  bool destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = 0;
@@ -325,7 +326,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                                     restriction_idx);
+                                     restriction_idx, 0, destonly);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -340,7 +341,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
-                                     restriction_idx);
+                                     restriction_idx, 0, destonly);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -1009,7 +1010,9 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      -1, !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn);
+                                     sif::InternalTurn::kNoTurn, 0,
+                                     directededge->destonly() ||
+                                         (costing_->is_hgv() && directededge->destonly_hgv()));
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1103,7 +1106,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      dist, mode_, c, !opp_dir_edge->not_thru(),
                                      !(costing_->IsClosed(directededge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, -1);
+                                     sif::InternalTurn::kNoTurn, -1,
+                                     opp_dir_edge->destonly() ||
+                                         (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree

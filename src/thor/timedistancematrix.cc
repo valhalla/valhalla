@@ -173,7 +173,9 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
                              path_distance, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type, 0,
+                             directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv()));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -371,12 +373,16 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv()));
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               opp_dir_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);

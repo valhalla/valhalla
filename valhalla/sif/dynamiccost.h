@@ -771,6 +771,12 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const;
+
+  /**
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */

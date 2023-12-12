@@ -480,13 +480,14 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
+  bool destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                            restriction_idx);
+                            restriction_idx, 0, destonly);
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
@@ -494,7 +495,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
-                            restriction_idx);
+                            restriction_idx, 0, destonly);
   }
   adj.add(idx);
   if (!FORWARD) {
@@ -867,7 +868,9 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
                              true, static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             InternalTurn::kNoTurn, -1);
+                             InternalTurn::kNoTurn, -1, 0,
+                             directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv()));
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -945,7 +948,9 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       // flags on small loops. Set this to false here to override this for now.
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
                              false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             InternalTurn::kNoTurn, -1);
+                             InternalTurn::kNoTurn, -1, 0,
+                             opp_dir_edge->destonly() ||
+                                 (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

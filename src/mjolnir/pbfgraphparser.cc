@@ -347,6 +347,10 @@ public:
       if (tag_.second == "true")
         way_.set_destination_only(true);
     };
+    tag_handlers_["private_hgv"] = [this]() {
+      if (tag_.second == "true")
+        way_.set_destination_only_hgv(true);
+    };
     tag_handlers_["service"] = [this]() {
       if (tag_.second == "rest_area") {
         service_ = tag_.second;

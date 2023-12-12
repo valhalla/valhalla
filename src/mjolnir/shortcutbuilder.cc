@@ -71,8 +71,9 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // bridge and tunnel here
   if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
       edge1->use() != edge2->use() || edge1->toll() != edge2->toll() ||
-      edge1->destonly() != edge2->destonly() || edge1->unpaved() != edge2->unpaved() ||
-      edge1->surface() != edge2->surface() || edge1->roundabout() != edge2->roundabout()) {
+      edge1->destonly() != edge2->destonly() || edge1->destonly_hgv() != edge2->destonly_hgv() ||
+      edge1->unpaved() != edge2->unpaved() || edge1->surface() != edge2->surface() ||
+      edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
