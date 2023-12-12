@@ -480,22 +480,24 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
-  bool destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                            restriction_idx, 0, destonly);
+                            restriction_idx, 0,
+                            meta.edge->destonly() ||
+                                (costing_->is_hgv() && meta.edge->destonly_hgv()));
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                            (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                            (pred.closure_pruning() || !costing_->IsClosed(opp_edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
-                            restriction_idx, 0, destonly);
+                            restriction_idx, 0,
+                            opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()));
   }
   adj.add(idx);
   if (!FORWARD) {

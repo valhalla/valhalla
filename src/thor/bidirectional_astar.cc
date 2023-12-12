@@ -310,7 +310,6 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
   // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
-  bool destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = 0;
@@ -326,7 +325,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                                     restriction_idx, 0, destonly);
+                                     restriction_idx, 0,
+                                     meta.edge->destonly() ||
+                                         (costing_->is_hgv() && meta.edge->destonly_hgv()));
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -337,11 +338,13 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     }
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, thru,
-                                     (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                     (pred.closure_pruning() || !costing_->IsClosed(opp_edge, tile)),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
-                                     restriction_idx, 0, destonly);
+                                     restriction_idx, 0,
+                                     opp_edge->destonly() ||
+                                         (costing_->is_hgv() && opp_edge->destonly_hgv()));
     adjacencylist_reverse_.add(idx);
   }
 

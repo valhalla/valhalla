@@ -251,7 +251,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                 : opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
     bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                transition_cost, path_dist, false,
-                               (pred.closure_pruning() || !costing_->IsClosed(opp_edge, tile)),
+                               (pred.closure_pruning() ||
+                                !costing_->IsClosed(FORWARD ? directededge : opp_edge, tile)),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                FORWARD
                                    ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)

@@ -267,7 +267,6 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       best_path.second = cost.cost;
     }
 
-    bool destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
     if (FORWARD) {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -275,16 +274,20 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                               restriction_idx, 0, destonly);
+                               restriction_idx, 0,
+                               meta.edge->destonly() ||
+                                   (costing_->is_hgv() && meta.edge->destonly_hgv()));
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                               (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                               (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
-                               restriction_idx, 0, destonly);
+                               restriction_idx, 0,
+                               opp_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_edge->destonly_hgv()));
     }
 
     auto& edge_label = edgelabels_.back();
