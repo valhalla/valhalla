@@ -367,7 +367,7 @@ std::vector<PathInfo> UnidirectionalAStar<ExpansionType::forward>::FormPath(cons
   std::vector<PathInfo> path;
   for (auto edgelabel_index = dest; edgelabel_index != kInvalidLabel;
        edgelabel_index = edgelabels_[edgelabel_index].predecessor()) {
-    const EdgeLabel& edgelabel = edgelabels_[edgelabel_index];
+    const auto& edgelabel = edgelabels_[edgelabel_index];
     path.emplace_back(edgelabel.mode(), edgelabel.cost(), edgelabel.edgeid(), 0,
                       edgelabel.path_distance(), edgelabel.restriction_idx(),
                       edgelabel.transition_cost());
