@@ -286,7 +286,7 @@ void FormTilesInNewLevel(GraphReader& reader,
       }
 
       // Names can be different in the forward and backward direction
-      bool diff_names = tile->OpposingEdgeInfoDiffers(directededge);
+      bool diff_names = tilebuilder->OpposingEdgeInfoDiffers(tile, directededge);
 
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and

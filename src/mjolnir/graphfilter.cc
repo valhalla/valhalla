@@ -140,7 +140,7 @@ void FilterTiles(GraphReader& reader,
         }
 
         // Names can be different in the forward and backward direction
-        diff_names = tile->OpposingEdgeInfoDiffers(directededge);
+        diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
         // Get edge info, shape, and names from the old tile and add to the
         // new. Cannot use edge info offset since edges in arterial and

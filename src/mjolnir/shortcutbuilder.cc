@@ -452,7 +452,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
                                average_density, total_duration, total_truck_duration);
       }
       // Names can be different in the forward and backward direction
-      bool diff_names = tile->OpposingEdgeInfoDiffers(directededge);
+      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -647,7 +647,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
         }
 
         // Names can be different in the forward and backward direction
-        bool diff_names = tile->OpposingEdgeInfoDiffers(directededge);
+        bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
         // Get edge info, shape, and names from the old tile and add
         // to the new. Use prior edgeinfo offset as the key to make sure

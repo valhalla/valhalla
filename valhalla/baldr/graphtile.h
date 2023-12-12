@@ -795,28 +795,6 @@ public:
     return traffic_tile;
   }
 
-  /**
-   * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
-   * must be in the same tile as the directed edge.  This is called during the building of the
-   * tiles; therefore, we can't use GetOpposingEdgeId as it has not been set yet.
-   * @param  directededge  Directed edge to check.
-   */
-  bool OpposingEdgeInfoDiffers(const DirectedEdge* edge) const {
-    if (edge->endnode().tile_value() == header_->graphid().tile_value()) {
-      // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-      // true if a matching edgeinfo offset if found.
-      const NodeInfo* nodeinfo = node(edge->endnode().id());
-      const DirectedEdge* de = directededge(nodeinfo->edge_index());
-      for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, de++) {
-        // Return true if the edge info matches (same name, shape, etc.)
-        if (de->edgeinfo_offset() == edge->edgeinfo_offset()) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
 protected:
   // Graph tile memory. A Graph tile owns its memory.
   std::unique_ptr<const GraphMemory> memory_;
