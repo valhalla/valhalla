@@ -136,26 +136,6 @@ GraphId GetOpposingEdge(const GraphId& node,
   return GraphId(0, 0, 0);
 }
 
-/**
- * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
- * must be in the same tile as the directed edge.
- * @param  tile          Graph tile of the edge
- * @param  directededge  Directed edge to match.
- */
-bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
-  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-  // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // Return true if the edge info matches (same name, shape, etc.)
-    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // Get the ISO country code at the end node
 std::string EndNodeIso(const DirectedEdge* edge, GraphReader& reader) {
   graph_tile_ptr tile = reader.GetGraphTile(edge->endnode());
@@ -472,12 +452,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                                average_density, total_duration, total_truck_duration);
       }
-
-      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
-      // If end node is in the same tile and opposing edge does not have matching
-      // edge_info_offset).
-      bool diff_names = directededge->endnode().tileid() == edge_id.tileid() &&
-                        !OpposingEdgeInfoMatches(tile, directededge);
+      // Names can be different in the forward and backward direction
+      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -671,6 +647,9 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
+        // Names can be different in the forward and backward direction
+        bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
         // Get edge info, shape, and names from the old tile and add
         // to the new. Use prior edgeinfo offset as the key to make sure
         // edges that have the same end nodes are differentiated (this
@@ -682,7 +661,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTypes(), added, diff_names);
 
         newedge.set_edgeinfo_offset(edge_info_offset);
 
