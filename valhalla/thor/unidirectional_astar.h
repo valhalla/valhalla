@@ -73,15 +73,6 @@ public:
     }
   }
 
-  /**
-   * Set a maximum label count. The path algorithm terminates if this
-   * is exceeded.
-   * @param  max_count  Maximum number of labels to allow.
-   */
-  void set_max_label_count(const uint32_t max_count) {
-    max_label_count_ = max_count;
-  }
-
 protected:
   /**
    * Initializes the hierarchy limits, A* heuristic, and adjacency list.
@@ -166,9 +157,8 @@ protected:
    */
   std::vector<PathInfo> FormPath(const uint32_t dest);
 
-  uint32_t max_label_count_; // Max label count to allow
-  sif::TravelMode mode_;     // Current travel mode
-  uint8_t travel_type_;      // Current travel type
+  sif::TravelMode mode_; // Current travel mode
+  uint8_t travel_type_;  // Current travel type
 
   // Hierarchy limits.
   std::vector<sif::HierarchyLimits> hierarchy_limits_;

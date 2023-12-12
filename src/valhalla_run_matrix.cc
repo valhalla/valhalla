@@ -88,7 +88,6 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str;
   uint32_t iterations;
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -115,7 +114,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
@@ -138,7 +137,7 @@ int main(int argc, char* argv[]) {
   auto& options = *request.mutable_options();
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config().get_child("mjolnir"));
 
   // Construct costing
   CostFactory factory;
@@ -153,7 +152,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto t0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(config());
   lw.matrix(request);
   auto t1 = std::chrono::high_resolution_clock::now();
   uint32_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -161,7 +160,7 @@ int main(int argc, char* argv[]) {
 
   // Get the max matrix distances for construction of the CostMatrix and TimeDistanceMatrix classes
   std::unordered_map<std::string, float> max_matrix_distance;
-  for (const auto& kv : pt.get_child("service_limits")) {
+  for (const auto& kv : config().get_child("service_limits")) {
     // Skip over any service limits that are not for a costing method
     if (kv.first == "max_exclude_locations" || kv.first == "max_reachability" ||
         kv.first == "max_radius" || kv.first == "max_timedep_distance" || kv.first == "skadi" ||
@@ -171,8 +170,8 @@ int main(int argc, char* argv[]) {
         kv.first == "max_distance_disable_hierarchy_culling") {
       continue;
     }
-    max_matrix_distance.emplace(kv.first,
-                                pt.get<float>("service_limits." + kv.first + ".max_matrix_distance"));
+    max_matrix_distance.emplace(kv.first, config().get<float>("service_limits." + kv.first +
+                                                              ".max_matrix_distance"));
   }
 
   if (max_matrix_distance.empty()) {

@@ -572,8 +572,6 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -591,7 +589,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
       return EXIT_SUCCESS;
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
@@ -602,7 +600,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  BuildStatistics(pt);
+  BuildStatistics(valhalla::config());
 
   return EXIT_SUCCESS;
 }
