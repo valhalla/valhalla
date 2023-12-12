@@ -75,6 +75,7 @@ void FilterTiles(GraphReader& reader,
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       bool diff_names = false;
+
       // Count of edges added for this node
       uint32_t edge_count = 0;
 
