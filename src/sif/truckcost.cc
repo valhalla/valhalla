@@ -437,8 +437,6 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
                                const uint32_t tz_index,
                                uint8_t& restriction_idx) const {
   // Check access, U-turn, and simple turn restriction.
-  if (edge->destonly_hgv())
-    std::cout << "" << std::endl;
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||

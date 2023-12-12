@@ -5,11 +5,10 @@ using namespace valhalla;
 
 TEST(Standalone, DestinationOnly) {
   const std::string ascii_map = R"(
-      A----B----C----D----E----J---L
-           |         |    |    |
-           |         |    |    |
-           |         |    |    |
-           I----H----G----F----K
+      A----B----C----D----E
+           |         |    |
+           |         |    |
+           I----H----G----F
   )";
 
   const gurka::ways ways = {
@@ -23,38 +22,59 @@ TEST(Standalone, DestinationOnly) {
       {"HI", {{"highway", "residential"}}},
       {"DG", {{"highway", "residential"}, {"motor_vehicle", "destination"}}},
       {"BI", {{"highway", "residential"}, {"access", "private"}}},
-      {"JK", {{"highway", "residential"}, {"hgv", "destination"}}},
-      {"JL", {{"highway", "residential"}}},
-      {"EJ", {{"highway", "residential"}}},
-      {"FK", {{"highway", "residential"}}},
+
   };
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination");
-  baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
-  EXPECT_TRUE(std::get<1>(gurka::findEdge(reader, layout, "JK", "K"))->destonly_hgv());
-  EXPECT_TRUE(std::get<3>(gurka::findEdge(reader, layout, "JK", "K"))->destonly_hgv());
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+}
 
-  // auto
+TEST(Standalone, DestinationOnlyHGV) {
+  const std::string ascii_map = R"(
+      A----B----C----D----E
+           |         |    |
+           |         |    |
+           I----H----G----F
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"GH", {{"highway", "residential"}}},
+      {"HI", {{"highway", "residential"}}},
+      {"DG", {{"highway", "residential"}, {"hgv", "destination"}}},
+      {"BI", {{"highway", "residential"}, {"access", "private"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_destination_hgv");
+
+  // hgv route
   {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
-    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-    auto leg = result.trip().routes(0).legs(0);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "truck");
     gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
-
-    result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto");
-    ASSERT_EQ(result.matrix().distances(0), 3900);
+  }
+  // hgv matrix
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "truck");
+    EXPECT_EQ(result.matrix().distances(0), 3800);
   }
 
-  // hgv
+  // car route - doesn't take the hgv=destination road
   {
-    auto result = gurka::do_action(valhalla::Options::route, map, {"K", "L"}, "truck");
-    ASSERT_EQ(result.trip().routes(0).legs_size(), 1);
-    auto leg = result.trip().routes(0).legs(0);
-    gurka::assert::raw::expect_path(result, {"JL", "EJ", "EF", "FK"});
-
-    result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"K"}, {"L"}, "truck");
-    ASSERT_EQ(result.matrix().distances(0), 1700);
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DG", "GH", "HI"});
+  }
+  // car matrix - doesn't take the hgv=destination road
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto");
+    EXPECT_EQ(result.matrix().distances(0), 2800);
   }
 }
 

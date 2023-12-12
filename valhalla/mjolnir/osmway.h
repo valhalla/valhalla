@@ -1627,7 +1627,7 @@ struct OSMWay {
    * @return  Returns private hgv flag.
    */
   bool destination_only_hgv() const {
-    return destination_only_;
+    return destination_only_hgv_;
   }
 
   /**

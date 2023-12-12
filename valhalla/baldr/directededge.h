@@ -301,7 +301,7 @@ public:
 
   /**
    * Is this edge part of a private or no through road for HGV that allows access
-   * only if required to get to a destination?
+   * only if required to get to a destination? If destonly() is true, this is true.
    * @return  Returns true if the edge is destination only / private access for HGV.
    */
   bool destonly_hgv() const {
@@ -1260,7 +1260,7 @@ protected:
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
   uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
-  uint64_t spare4_ : 4;
+  uint64_t spare4_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
