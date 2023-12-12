@@ -30,6 +30,8 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
   COMMENT "Compiling date_time/windowsZones.xml to date_time_windows_zones.h"
   DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml)
 
+file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
+
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
