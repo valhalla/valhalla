@@ -36,9 +36,12 @@ std::string thor_worker_t::matrix(Api& request) {
   auto costmatrix = [&](const bool has_time) {
     return costmatrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                       max_matrix_distance.find(costing)->second, has_time,
-                                      options.date_time_type() == Options::invariant);
+                                      options.date_time_type() == Options::invariant,
+                                      options.shape_format());
   };
   auto timedistancematrix = [&]() {
+    if (options.shape_format() != no_shape)
+      add_warning(request, 207);
     return time_distance_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                                 max_matrix_distance.find(costing)->second,
                                                 options.matrix_locations(),
@@ -46,6 +49,8 @@ std::string thor_worker_t::matrix(Api& request) {
   };
 
   if (costing == "bikeshare") {
+    if (options.shape_format() != no_shape)
+      add_warning(request, 207);
     time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
                                              max_matrix_distance.find(costing)->second,
                                              options.matrix_locations());

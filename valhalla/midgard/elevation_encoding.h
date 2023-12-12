@@ -86,14 +86,12 @@ inline std::vector<int8_t> encode_elevation(const std::vector<double>& elevation
     auto delta = v - prior;
     if (delta > 127) {
       if (delta > 256) {
-        LOG_WARN("Elevation delta " + std::to_string(delta) + " exceeds limit!");
         error = true;
       }
       delta = 127;
       prior += 127;
     } else if (delta < -128) {
       if (delta < -256) {
-        LOG_WARN("Elevation delta " + std::to_string(delta) + " exceeds limit!");
         error = true;
       }
       delta = -128;
