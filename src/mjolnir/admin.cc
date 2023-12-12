@@ -155,8 +155,6 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
       std::string tz_id;
       std::string geom;
 
-      LOG_DEBUG(sqlite3_expanded_sql(stmt));
-
       if (sqlite3_column_type(stmt, 0) == SQLITE_TEXT) {
         tz_id = (char*)sqlite3_column_text(stmt, 0);
       }
@@ -175,8 +173,6 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
       polys.emplace(idx, multi_poly);
       result = sqlite3_step(stmt);
     }
-  } else {
-    LOG_ERROR("Spatialite error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   if (stmt) {
     sqlite3_finalize(stmt);
@@ -455,8 +451,6 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 
       result = sqlite3_step(stmt);
     }
-  } else {
-    LOG_ERROR("Spatialite error: " + std::string(sqlite3_errmsg(db_handle)));
   }
   if (stmt) {
     sqlite3_finalize(stmt);
