@@ -54,15 +54,6 @@ public:
   static GraphId GetGraphId(const midgard::PointLL& pointll, const uint8_t level);
 
   /**
-   * Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
-   * The grid Id within the tile is used to sort nodes spatially within the tile.
-   * @param pointll  Lat,lng location within the tile.
-   * @param level    Level of the requested tile.
-   * @return  Returns a grid id used for sorting nodes.
-   */
-  static uint32_t GetGridId(const midgard::PointLL& pointll, const uint8_t level);
-
-  /**
    * Returns bounding box for the given GraphId .
    * @param id corresponding GraphId.
    * @return Bounding box of the tile which corresponding GraphId stands for.

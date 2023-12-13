@@ -1352,17 +1352,41 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla {
 namespace mjolnir {
 
+// Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
+// The grid Id within the tile is used to sort nodes spatially.
+const int32_t kGridDivisions = 64;
+const float kGridFactor = 1.0f/ static_cast<float>(kGridDivisions);
+uint32_t GetGridId(const midgard::PointLL& pointll, const midgard::Tiles<midgard::PointLL>& tiling) {
+  auto tile_id = tiling.TileId(pointll);
+  if (tile_id >= 0) {
+    auto base_ll = tiling.Base(tile_id);
+    float grid_size = tiling.TileSize() * kGridFactor;
+    int32_t row = static_cast<int32_t>((pointll.lat() - base_ll.lat()) / grid_size);
+    int32_t col = static_cast<int32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+    if (row < 0 || row > kGridDivisions || col < 0 || col > kGridDivisions) {
+      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
+      return 0;
+    }
+    return (row * kGridDivisions + col);
+  } else {
+    LOG_ERROR("GetGridId: Invalid tile id");
+    return 0;
+  }
+}
+
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
+  auto tiling = TileHierarchy::get_tiling(level);
+
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
-      [&level](const OSMNode& node) { return TileHierarchy::GetGridId(node.latlng(), level); },
+      [&tiling](const OSMNode& node) { return GetGridId(node.latlng(), tiling); },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
