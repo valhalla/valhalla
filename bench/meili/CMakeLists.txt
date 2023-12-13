@@ -1,1 +1,2 @@
+add_valhalla_benchmark(candidate_search)
 add_valhalla_benchmark(mapmatch)
