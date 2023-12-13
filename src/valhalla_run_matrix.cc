@@ -45,20 +45,23 @@ std::string GetFormattedTime(uint32_t secs) {
 // Log results
 void LogResults(const bool optimize,
                 const valhalla::Options& options,
-                const valhalla::Matrix& matrix) {
-  LOG_INFO("Results:");
-  uint32_t idx1 = 0;
-  uint32_t idx2 = 0;
-  uint32_t nlocs = options.sources_size();
-  for (uint32_t i = 0; i < matrix.times().size(); i++) {
-    auto distance = matrix.distances().Get(i);
-    LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
-             std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
-             " secs = " + std::to_string(distance));
-    idx2++;
-    if (idx2 == nlocs) {
-      idx2 = 0;
-      idx1++;
+                const valhalla::Matrix& matrix,
+                const bool log_details) {
+
+  if (log_details) {
+    LOG_INFO("Results:");
+    uint32_t idx1 = 0;
+    uint32_t idx2 = 0;
+    for (uint32_t i = 0; i < matrix.times().size(); i++) {
+      auto distance = matrix.distances().Get(i);
+      LOG_INFO(std::to_string(idx1) + "," + std::to_string(idx2) + ": Distance= " +
+               std::to_string(distance) + " Time= " + GetFormattedTime(matrix.times().Get(i)) +
+               " secs = " + std::to_string(distance));
+      idx2++;
+      if (idx2 == options.sources_size()) {
+        idx2 = 0;
+        idx1++;
+      }
     }
   }
   if (optimize) {
@@ -71,7 +74,7 @@ void LogResults(const bool optimize,
     }
 
     Optimizer opt;
-    auto tour = opt.Solve(nlocs, costs);
+    auto tour = opt.Solve(static_cast<uint32_t>(options.sources_size()), costs);
     LOG_INFO("Optimal Tour:");
     for (auto& loc : tour) {
       LOG_INFO("   : " + std::to_string(loc));
@@ -88,6 +91,8 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str;
   uint32_t iterations;
+  bool log_details;
+  bool optimize;
 
   try {
     // clang-format off
@@ -109,6 +114,8 @@ int main(int argc, char* argv[]) {
         "York\",\"state\":\"NY\",\"postal_code\":\"10017-3507\",\"country\":\"US\"}],\"costing\":"
         "\"auto\",\"directions_options\":{\"units\":\"miles\"}}'", cxxopts::value<std::string>())
       ("m,multi-run", "Generate the route N additional times before exiting.", cxxopts::value<uint32_t>()->default_value("1"))
+      ("l,log-details", "Logs details about the solution", cxxopts::value<bool>()->default_value("false"))
+      ("o,optimize", "Run optimization", cxxopts::value<bool>()->default_value("false"))
       ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>());
     // clang-format on
@@ -120,9 +127,11 @@ int main(int argc, char* argv[]) {
     if (!result.count("json")) {
       throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
     }
-    json_str = result["json"].as<std::string>();
 
+    json_str = result["json"].as<std::string>();
     iterations = result["multi-run"].as<uint32_t>();
+    log_details = result["log-details"].as<bool>();
+    optimize = result["optimize"].as<bool>();
   } catch (cxxopts::OptionException& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
@@ -187,11 +196,11 @@ int main(int argc, char* argv[]) {
   }
 
   // If the sources and targets are equal we can run optimize
-  bool optimize = true;
-  if (options.sources_size() == options.targets_size()) {
+  if (optimize && options.sources_size() == options.targets_size()) {
     for (uint32_t i = 0; i < options.sources_size(); ++i) {
       if (options.sources(i).ll().lat() != options.targets(i).ll().lat() ||
           options.sources(i).ll().lng() != options.targets(i).ll().lng()) {
+        LOG_WARN("Targets differ from sources, skipping optimization...");
         optimize = false;
         break;
       }
@@ -215,7 +224,7 @@ int main(int argc, char* argv[]) {
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   float avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("CostMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, request.matrix());
+  LogResults(optimize, options, request.matrix(), log_details);
 
   // Run with TimeDistanceMatrix
   TimeDistanceMatrix tdm;
@@ -228,7 +237,7 @@ int main(int argc, char* argv[]) {
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
   avg = (static_cast<float>(ms) / static_cast<float>(iterations)) * 0.001f;
   LOG_INFO("TimeDistanceMatrix average time to compute: " + std::to_string(avg) + " sec");
-  LogResults(optimize, options, request.matrix());
+  LogResults(optimize, options, request.matrix(), log_details);
 
   // Shutdown protocol buffer library
   google::protobuf::ShutdownProtobufLibrary();
