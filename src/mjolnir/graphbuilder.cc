@@ -43,11 +43,16 @@ namespace {
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
-  // Sort nodes by graphid then by osmid, so its basically a set of tiles
+  // Sort nodes by graphid then by grid within the tile. This sorts nodes geo-spatially which
+  // helps performance by improving memory coherence.
   sequence<Node> nodes(nodes_file, false);
   nodes.sort([](const Node& a, const Node& b) {
     if (a.graph_id == b.graph_id) {
-      return a.node.osmid_ < b.node.osmid_;
+      if (a.grid_id == b.grid_id) {
+        return a.node.osmid_ < b.node.osmid_;
+      } else {
+        return a.grid_id < b.grid_id;
+      }
     }
     return a.graph_id < b.graph_id;
   });
@@ -149,6 +154,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
+                    const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
                     const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
@@ -200,7 +206,7 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.link_edge_ = way.link();
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
-                     graph_id_predicate(way_node.node)});
+                     graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -220,8 +226,8 @@ void ConstructEdges(const std::string& ways_file,
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
-        nodes.push_back(
-            {way_node.node, static_cast<uint32_t>(-1), end_of, graph_id_predicate(way_node.node)});
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), end_of,
+                         graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -1356,6 +1362,7 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
+      [&level](const OSMNode& node) { return TileHierarchy::GetGridId(node.latlng(), level); },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
@@ -1381,13 +1388,16 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_WARN("Not reclassifying link graph edges");
   }
 
-  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
-  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  // Reclassify ferry connection edges if hierarchies are being built. This uses
+  // RoadClass::kPrimary (highway classification) as cutoff
+  if (pt.get<bool>("mjolnir.hierarchy", true)) {
+    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  }
+
+  // Build tiles at the local level. Form connected graph from nodes and edges.
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-
-  // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,

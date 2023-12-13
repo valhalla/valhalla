@@ -60,6 +60,32 @@ GraphId TileHierarchy::GetGraphId(const midgard::PointLL& pointll, const uint8_t
   return id;
 }
 
+// Returns the grid Id within the tile. A tile is subdivided into a 32x32 grid.
+// The grid Id within the tile is used to sort nodes spatially.
+const int32_t kGridDivisions = 32;
+const float kGridFactor = 1.0f / static_cast<float>(kGridDivisions);
+uint32_t TileHierarchy::GetGridId(const midgard::PointLL& pointll, const uint8_t level) {
+  uint32_t grid_id = 0;
+  if (level < levels().size()) {
+    auto tile_id = levels()[level].tiles.TileId(pointll);
+    if (tile_id >= 0) {
+      const auto& tiling = get_tiling(level);
+      float grid_size = tiling.TileSize() * kGridFactor;
+      auto base_ll = tiling.Base(tile_id);
+      int32_t row = static_cast<int32_t>((pointll.lat() - base_ll.lat()) / grid_size);
+      int32_t col = static_cast<int32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+      if (row < 0 || row > kGridDivisions || col < 0 || col > kGridDivisions) {
+        LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
+        return 0;
+      }
+      grid_id = (row * kGridDivisions + col);
+    } else {
+      LOG_ERROR("TileHierarchy::GetGridId: Invalid tile id");
+    }
+  }
+  return grid_id;
+}
+
 // Gets the hierarchy level given the road class.
 uint8_t TileHierarchy::get_level(const RoadClass roadclass) {
   if (roadclass <= levels()[0].importance) {
