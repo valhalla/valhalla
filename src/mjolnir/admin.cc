@@ -24,7 +24,7 @@ sqlite3* GetDBHandle(const std::string& database) {
       sqlite3_close(db_handle);
       return nullptr;
     }
-    // sqlite3_extended_result_codes(db_handle, 1);
+    sqlite3_extended_result_codes(db_handle, 1);
   }
   return db_handle;
 }
