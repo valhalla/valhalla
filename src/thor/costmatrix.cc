@@ -492,7 +492,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                            (pred.closure_pruning() || !costing_->IsClosed(opp_edge, tile)),
+                            (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
