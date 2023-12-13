@@ -1388,16 +1388,13 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
     LOG_WARN("Not reclassifying link graph edges");
   }
 
-  // Reclassify ferry connection edges if hierarchies are being built. This uses
-  // RoadClass::kPrimary (highway classification) as cutoff
-  if (pt.get<bool>("mjolnir.hierarchy", true)) {
-    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
-  }
-
-  // Build tiles at the local level. Form connected graph from nodes and edges.
+  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
+  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
+
+  // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
