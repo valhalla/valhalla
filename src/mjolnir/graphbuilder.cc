@@ -1354,20 +1354,25 @@ namespace mjolnir {
 
 // Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
 // The grid Id within the tile is used to sort nodes spatially.
-const int32_t kGridDivisions = 64;
-const float kGridFactor = 1.0f/ static_cast<float>(kGridDivisions);
-uint32_t GetGridId(const midgard::PointLL& pointll, const midgard::Tiles<midgard::PointLL>& tiling) {
+uint32_t GetGridId(const midgard::PointLL& pointll,
+                   const midgard::Tiles<midgard::PointLL>& tiling,
+                   const uint32_t grid_divisions) {
+  // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
+  if (grid_divisions == 0) {
+    return 0;
+  }
+
   auto tile_id = tiling.TileId(pointll);
   if (tile_id >= 0) {
     auto base_ll = tiling.Base(tile_id);
-    float grid_size = tiling.TileSize() * kGridFactor;
-    int32_t row = static_cast<int32_t>((pointll.lat() - base_ll.lat()) / grid_size);
-    int32_t col = static_cast<int32_t>((pointll.lng() - base_ll.lng()) / grid_size);
-    if (row < 0 || row > kGridDivisions || col < 0 || col > kGridDivisions) {
+    float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
+    uint32_t row = static_cast<uint32_t>((pointll.lat() - base_ll.lat()) / grid_size);
+    uint32_t col = static_cast<uint32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+    if (row > grid_divisions || col > grid_divisions) {
       LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
       return 0;
     }
-    return (row * kGridDivisions + col);
+    return (row * grid_divisions + col);
   } else {
     LOG_ERROR("GetGridId: Invalid tile id");
     return 0;
@@ -1381,12 +1386,15 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
+  uint32_t grid_divisions = pt.get<unsigned int>("mjolnir.data_processing.grid_divisions", 0);
 
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
-      [&tiling](const OSMNode& node) { return GetGridId(node.latlng(), tiling); },
+      [&tiling, &grid_divisions](const OSMNode& node) {
+        return GetGridId(node.latlng(), tiling, grid_divisions);
+      },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
