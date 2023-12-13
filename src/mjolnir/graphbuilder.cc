@@ -1387,6 +1387,12 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
   uint8_t level = TileHierarchy::levels().back().level;
   auto tiling = TileHierarchy::get_tiling(level);
   uint32_t grid_divisions = pt.get<unsigned int>("mjolnir.data_processing.grid_divisions", 0);
+  if (grid_divisions > 0) {
+    LOG_INFO("Sort nodes spatially within each tile using nxn grids where n = " +
+             std::to_string(grid_divisions));
+  } else {
+    LOG_INFO("Spatial sorting of nodes within each tile is disabled");
+  }
 
   // Make the edges and nodes in the graph
   ConstructEdges(
