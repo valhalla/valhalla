@@ -499,7 +499,8 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const std::string& way_name,
          const std::string& end_node,
          baldr::GraphId tile_id,
-         uint64_t way_id) {
+         uint64_t way_id,
+         const bool is_shortcut) {
   // if the tile was specified use it otherwise scan everything
   auto tileset =
       tile_id.Is_Valid() ? std::unordered_set<baldr::GraphId>{tile_id} : reader.GetTileSet();
@@ -511,6 +512,10 @@ findEdge(valhalla::baldr::GraphReader& reader,
     // Iterate over all directed edges to find one with the name we want
     for (uint32_t i = 0; i < tile->header()->directededgecount(); i++) {
       const auto* forward_directed_edge = tile->directededge(i);
+      // if we requested a shortcut, but it's not, bail
+      if (forward_directed_edge->is_shortcut() != is_shortcut) {
+        continue;
+      }
       // Now, see if the endnode for this edge is our end_node
       auto de_endnode = forward_directed_edge->endnode();
       graph_tile_ptr reverse_tile = tile;
@@ -567,7 +572,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,

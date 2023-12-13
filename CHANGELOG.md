@@ -11,6 +11,15 @@
    * FIXED: only recost matrix pairs which have connections found [#4344](https://github.com/valhalla/valhalla/pull/4344)
    * FIXED: arm builds. tons of errors due to floating point issues mostly [#4213](https://github.com/valhalla/valhalla/pull/4213)
    * FIXED: respond with correlated edges for format=valhalla and matrix [#4335](https://github.com/valhalla/valhalla/pull/4335)
+   * FIXED: `sources` & `targets` for verbose matrix response was kinda broken due to #4335 above [#4366](https://github.com/valhalla/valhalla/pull/4366)
+   * FIXED: recover proper shortest path to ferry connections (when multiple edges exist between node pair) [#4361](https://github.com/valhalla/valhalla/pull/4361)
+   * FIXED: recover proper shortest path to ferry connections (make sure correct label index is used) [#4378](https://github.com/valhalla/valhalla/pull/4378)
+   * FIXED: Allow all roads for motorcycles [#4348](https://github.com/valhalla/valhalla/pull/4348)
+   * FIXED: motorcar:conditional should not apply to motorcycle and moped [#4359](https://github.com/valhalla/valhalla/pull/4359)
+   * FIXED: break shortcuts when there are different restrictions on base edges [#4326](https://github.com/valhalla/valhalla/pull/4326)
+   * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
+   * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
+   * FIXED: diff_names check was missing for Graphfilter and Shortcutbuilder for AddEdgeInfo call.  [#4436](https://github.com/valhalla/valhalla/pull/4436)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -37,6 +46,13 @@
    * CHANGED: the boost property tree config is now read into a singleton that doesn't need to be passed around anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
+   * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
+   * CHANGED: less aggressive logging for nodes' headings & ferry connections [#4420][https://github.com/valhalla/valhalla/pull/4420]
+   * ADDED: add documentation about historical traffic [#4259](https://github.com/valhalla/valhalla/pull/4259)
+   * ADDED: config option to control how much memory we'll reserve for CostMatrix locations [#4424](https://github.com/valhalla/valhalla/pull/4424)
+   * CHANGED: refactor EdgeLabel (and derived classes) to reduce memory use. [#4439](https://github.com/valhalla/valhalla/pull/4439)
+   * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
+   * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
    * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0

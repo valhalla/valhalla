@@ -47,13 +47,14 @@ void AccessRestriction::set_value(const uint64_t v) {
 bool AccessRestriction::operator<(const AccessRestriction& other) const {
   if (edgeindex() == other.edgeindex()) {
     if (modes() == other.modes()) {
-      return value() < other.value();
-    } else {
-      return modes() < other.modes();
+      if (type() == other.type()) {
+        return value() < other.value();
+      }
+      return type() < other.type();
     }
-  } else {
-    return edgeindex() < other.edgeindex();
+    return modes() < other.modes();
   }
+  return edgeindex() < other.edgeindex();
 }
 
 } // namespace baldr
