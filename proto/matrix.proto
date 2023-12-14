@@ -16,4 +16,5 @@ message Matrix {
   repeated string date_times = 6;
   Algorithm algorithm = 7;
   repeated string shapes = 8;
+  repeated string time_zones = 9;
 }

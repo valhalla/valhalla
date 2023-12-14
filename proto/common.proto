@@ -159,6 +159,7 @@ message Location {
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
+  string time_zone = 91;
 }
 
 message TransitEgressInfo {

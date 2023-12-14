@@ -219,7 +219,7 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
  * @param offset   the offset in seconds from the input date time string
  * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
  */
-std::string
+std::pair<std::string, std::string>
 offset_date(const std::string& in_dt, const uint32_t in_tz, const uint32_t out_tz, float offset);
 
 /**

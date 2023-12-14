@@ -137,6 +137,7 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
     json::MapPtr map;
     const auto time = matrix.times()[i];
     const auto& date_time = matrix.date_times()[i];
+    const auto& time_zone = matrix.time_zones()[i];
     if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
@@ -144,6 +145,10 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
                        {"distance", json::fixed_t{matrix.distances()[i] * distance_scale, 3}}});
       if (!date_time.empty()) {
         map->emplace("date_time", date_time);
+      }
+
+      if (!time_zone.empty()) {
+        map->emplace("time_zone", time_zone);
       }
       if (matrix.shapes().size() && shape_format != no_shape) {
         switch (shape_format) {
