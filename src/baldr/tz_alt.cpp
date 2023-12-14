@@ -107,9 +107,7 @@
 #include "date_time_europe.h"
 #include "date_time_leapseconds.h"
 #include "date_time_northamerica.h"
-#include "date_time_pacificnew.h"
 #include "date_time_southamerica.h"
-#include "date_time_systemv.h"
 #include "date_time_windows_zones.h"
 
 #ifdef __APPLE__
@@ -3462,7 +3460,7 @@ init_tzdb()
     CONSTDATA char*const files[] =
     {
         "africa", "antarctica", "asia", "australasia", "backward", "etcetera", "europe",
-        "pacificnew", "northamerica", "southamerica", "systemv", "leapseconds"
+        "northamerica", "southamerica", "leapseconds"
     };
 
     for (const auto& filename : files)
@@ -4065,13 +4063,10 @@ static std::vector<std::string> get_tz_data_file_list() {
   tz_data_file_list.emplace_back(date_time_backward, date_time_backward + date_time_backward_len);
   tz_data_file_list.emplace_back(date_time_etcetera, date_time_etcetera + date_time_etcetera_len);
   tz_data_file_list.emplace_back(date_time_europe, date_time_europe + date_time_europe_len);
-  tz_data_file_list.emplace_back(date_time_pacificnew,
-                                 date_time_pacificnew + date_time_pacificnew_len);
   tz_data_file_list.emplace_back(date_time_northamerica,
                                  date_time_northamerica + date_time_northamerica_len);
   tz_data_file_list.emplace_back(date_time_southamerica,
                                  date_time_southamerica + date_time_southamerica_len);
-  tz_data_file_list.emplace_back(date_time_systemv, date_time_systemv + date_time_systemv_len);
   tz_data_file_list.emplace_back(date_time_leapseconds,
                                  date_time_leapseconds + date_time_leapseconds_len);
   return tz_data_file_list;

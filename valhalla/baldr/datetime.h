@@ -46,8 +46,7 @@ struct tz_db_t {
   const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::unordered_map<std::string, size_t> names;
-  const date::tzdb& db;
+  std::unordered_map<size_t, const date::time_zone*> zones;
 };
 
 /**
