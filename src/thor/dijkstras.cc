@@ -246,18 +246,28 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
-    auto destonly =
-        FORWARD ? directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv())
-                : opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
-    bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                               transition_cost, path_dist, false,
-                               (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                               static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               FORWARD
-                                   ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
-                                   : costing_->TurnType(directededge->localedgeidx(), nodeinfo,
-                                                        opp_edge, opp_pred_edge),
-                               restriction_idx, pred.path_id(), destonly);
+    if (FORWARD) {
+      bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+                                 transition_cost, path_dist, false,
+                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+                                     restriction_idx,
+                                 pred.path_id(),
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+
+    } else {
+      bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
+                                 transition_cost, path_dist, false,
+                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                    opp_pred_edge),
+                                 restriction_idx, pred.path_id(),
+                                 opp_edge->destonly() ||
+                                     (costing_->is_hgv() && opp_edge->destonly_hgv()));
+    }
     adjacencylist_.add(idx);
   }
 
