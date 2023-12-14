@@ -251,9 +251,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  transition_cost, path_dist, false,
                                  (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
-                                     restriction_idx,
-                                 pred.path_id(),
+                                 costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
+                                 restriction_idx, pred.path_id(),
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()));
 

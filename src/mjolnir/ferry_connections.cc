@@ -102,6 +102,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
       float current_cost = expand_node.first;
       label_idx = expand_node.second;
       uint32_t expand_node_idx = node_labels[label_idx].node_index;
+      const bool pred_destonly = node_labels[label_idx].dest_only;
       adjset.pop();
 
       // Skip if already labeled - this can happen if an edge is already in
@@ -176,12 +177,11 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
         }
 
         // if the first edge was destonly and the previous edge was as well, add no penalty
-        const bool destonly =
-            (edge.fwd_access & baldr::kTruckAccess) ? w.destination_only_hgv() : w.destination_only();
-        const bool pred_destonly = (edge.fwd_access & baldr::kTruckAccess)
-                                       ? node_labels[label_idx].dest_only_hgv
-                                       : node_labels[label_idx].dest_only;
-        float penalty = (first_edge_destonly ? (!pred_destonly && destonly) : destonly) ? 300 : 0;
+        // TODO(nils): this would have to take into account HGV destonly to be accurate
+        float penalty =
+            (first_edge_destonly ? (!pred_destonly && w.destination_only()) : w.destination_only())
+                ? 300
+                : 0;
         // Get cost - need the length and speed of the edge;
         auto shape = EdgeShape(edge.llindex_, edge.attributes.llcount);
         float cost = current_cost + ((valhalla::midgard::length(shape) * 3.6f) / w.speed()) + penalty;
@@ -195,8 +195,8 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
         }
 
         // Add to the node labels and adjacency set. Skip if this is a loop.
-        node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_, w.destination_only(),
-                                 w.destination_only_hgv());
+        node_labels.emplace_back(cost, endnode, expand_node_idx, edge.wayindex_,
+                                 w.destination_only());
         node_status[endnode] = {kTemporary, nodelabel_index};
         adjset.push({cost, nodelabel_index});
         nodelabel_index++;
