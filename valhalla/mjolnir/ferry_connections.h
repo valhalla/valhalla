@@ -41,9 +41,15 @@ struct NodeLabel {
   uint32_t pred_node_index;
   uint32_t way_index;
   bool dest_only;
+  bool dest_only_hgv;
 
-  NodeLabel(const float c, const uint32_t n, const uint32_t p, const uint32_t w, const bool d)
-      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d) {
+  NodeLabel(const float c,
+            const uint32_t n,
+            const uint32_t p,
+            const uint32_t w,
+            const bool d,
+            const bool dh)
+      : cost(c), node_index(n), pred_node_index(p), way_index(w), dest_only(d), dest_only_hgv(dh) {
   }
 };
 
