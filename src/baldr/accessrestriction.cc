@@ -62,7 +62,12 @@ void AccessRestriction::set_value(const uint64_t v) {
 }
 
 const json::MapPtr AccessRestriction::json() const {
-  auto map = json::map({{"type", type_to_string[type()]},
+  auto maybe_found = type_to_string.find(type());
+  std::string restriction_type = "unsupported";
+  if (maybe_found != type_to_string.cend()) {
+    restriction_type = maybe_found->second;
+  }
+  auto map = json::map({{"type", restriction_type},
                         {"edge_index", static_cast<uint64_t>(edgeindex())},
                         {"bus", static_cast<bool>(modes_ & kBusAccess)},
                         {"car", static_cast<bool>(modes_ & kAutoAccess)},
