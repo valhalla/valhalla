@@ -5,7 +5,7 @@
 namespace vb = valhalla::baldr;
 
 namespace {
-std::unordered_map<vb::AccessType, std::string> type_to_string = {
+const std::unordered_map<vb::AccessType, std::string> type_to_string = {
     {vb::AccessType::kHazmat, "hazmat"},
     {vb::AccessType::kMaxHeight, "max_height"},
     {vb::AccessType::kMaxWidth, "max_width"},
