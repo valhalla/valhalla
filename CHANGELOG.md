@@ -20,6 +20,7 @@
    * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
    * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
    * FIXED: diff_names check was missing for Graphfilter and Shortcutbuilder for AddEdgeInfo call.  [#4436](https://github.com/valhalla/valhalla/pull/4436)
+   * FIXED: updated timezone database and added code to keep compatibility with old servers/new data and vice versa [#4446](https://github.com/valhalla/valhalla/pull/4446)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -53,7 +54,8 @@
    * CHANGED: refactor EdgeLabel (and derived classes) to reduce memory use. [#4439](https://github.com/valhalla/valhalla/pull/4439)
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
-   * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431)
+   * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
+   * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
