@@ -12,10 +12,12 @@
 namespace valhalla {
 namespace baldr {
 
-constexpr uint32_t kMaxEdgesPerNode = 127;     // Maximum edges per node
-constexpr uint32_t kMaxAdminsPerTile = 4095;   // Maximum Admins per tile
-constexpr uint32_t kMaxTimeZonesPerTile = 511; // Maximum TimeZones index
-constexpr uint32_t kMaxLocalEdgeIndex = 7;     // Max. index of edges on local level
+constexpr uint32_t kMaxEdgesPerNode = 127;    // Maximum edges per node
+constexpr uint32_t kMaxAdminsPerTile = 4095;  // Maximum Admins per tile
+constexpr uint32_t kMaxTimeZoneIdExt1 = 1023; // Maximum TimeZones index for first extension level
+// constexpr uint32_t kMaxTimeZoneIdExt2 =
+//    2047; // Maximum TimeZones index for second extension level; not needed yet
+constexpr uint32_t kMaxLocalEdgeIndex = 7; // Max. index of edges on local level
 
 // Elevation precision. Elevation is clamped to a range of -500 meters to 7683 meters
 constexpr uint32_t kNodeMaxStoredElevation = 32767; // 15 bits
@@ -156,7 +158,10 @@ public:
    * @return  Returns the timezone index.
    */
   uint32_t timezone() const {
-    return timezone_;
+    return timezone_ | (timezone_ext_1_ << 9);
+    // replace with this if a new timezone ever gets created from a previously new
+    // timezone (reference release is 2023c)
+    // return timezone_ | (timezone_ext_1_ << 9) | (time_zone_ext_2_ << 10);
   }
 
   /**
@@ -521,7 +526,12 @@ protected:
   uint64_t private_access_ : 1;      // Is the access private?
   uint64_t cash_only_toll_ : 1;      // Is this toll cash only?
   uint64_t elevation_ : 15;          // Encoded elevation (meters)
-  uint64_t spare2_ : 2;
+  uint64_t timezone_ext_1_ : 1;      // To keep compatibility when new timezones are added
+  // uncomment a new timezone ever gets created from a previously new
+  // timezone (reference release is 2023c)
+  // uint64_t timezone_ext_2_ : 1;
+
+  uint64_t spare2_ : 1;
 
   // For not transit levels its the headings of up to kMaxLocalEdgeIndex+1 local edges (rounded to
   // nearest 2 degrees)for all other levels.
