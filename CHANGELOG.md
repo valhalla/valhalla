@@ -54,6 +54,7 @@
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
    * ADDED: hgv=destination and friends for truck-specific "destination_only" logic [#4450](https://github.com/valhalla/valhalla/issues/4450)
+   * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
