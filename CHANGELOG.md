@@ -54,8 +54,8 @@
    * CHANGED: refactor EdgeLabel (and derived classes) to reduce memory use. [#4439](https://github.com/valhalla/valhalla/pull/4439)
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
-   * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
    * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
+   * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
