@@ -25,6 +25,15 @@ OpenLR::LocationReferencePoint::FormOfWay get_fow(const baldr::DirectedEdge* de)
   return OpenLR::LocationReferencePoint::OTHER;
 }
 
+json::ArrayPtr get_access_restrictions(const graph_tile_ptr& tile, uint32_t edge_idx) {
+  auto arr = json::array({});
+  for (const auto& res : tile->GetAccessRestrictions(edge_idx, kAllAccess)) {
+    arr->emplace_back(res.json());
+  };
+
+  return arr;
+}
+
 std::string
 linear_reference(const baldr::DirectedEdge* de, float percent_along, const EdgeInfo& edgeinfo) {
   const auto fow = get_fow(de);
@@ -99,6 +108,7 @@ json::ArrayPtr serialize_edges(const PathLocation& location, GraphReader& reader
             {"linear_reference", linear_reference(directed_edge, edge.percent_along, edge_info)},
             {"predicted_speeds", predicted_speeds},
             {"live_speed", live_speed},
+            {"access_restrictions", get_access_restrictions(tile, edge.id.id())},
         }));
       } // they want it lean and mean
       else {
