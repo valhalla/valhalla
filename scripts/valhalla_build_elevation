@@ -246,10 +246,11 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
     LOGGER.info(f"Downloading tile {tile.name}")
 
     download_status = DownloadStatus.FAILED
-    # tries up to 4.3 hours with exponentially increasing sleeps in between
     for i in range(15):
         try:
             LOGGER.debug(f"Downloading tile {tile.dir}/{tile.name} for the {i}th time.")
+
+            # tries up to 4.3 hours with exponentially increasing sleeps in between
             sleep((i**2) / 2 * 30)
             with request.urlopen(url) as res, open(filepath, "wb") as f:
 
