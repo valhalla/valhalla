@@ -285,6 +285,7 @@ def download(tile: Tile, output_dir, compression: TileCompression) -> bool:
 
             download_status = DownloadStatus.OK
             LOGGER.debug(f"Successfully downloaded tile {tile.dir}/{tile.name}")
+            break
         except HTTPError as e:
             LOGGER.error(f"Download failed with HTTP error {e.code}: {e.reason}.\nTrying again...")
             continue
