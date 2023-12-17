@@ -44,7 +44,6 @@
    * ADDED: Support for elevation along a route. Add elevation to EdgeInfo within Valhalla tiles [#4279](https://github.com/valhalla/valhalla/pull/4279)
    * ADDED: the workflow to find landmarks in a graph tile, associate them with nearby edges, and update the graph tile to store the associations [#4278](https://github.com/valhalla/valhalla/pull/4278)
    * ADDED: update maneuver generation to add nearby landmarks to maneuvers as direction support [#4293](https://github.com/valhalla/valhalla/pull/4293)
-   * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
    * CHANGED: the boost property tree config is now read into a singleton that doesn't need to be passed around anymore [#4220](https://github.com/valhalla/valhalla/pull/4220)
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
@@ -56,8 +55,8 @@
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
    * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
-   * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431
-   * ADDED: check bidirectional connection on reverse tree in CostMatrix [#4418](https://github.com/valhalla/valhalla/pull/4418)
+   * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431)
+   * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
