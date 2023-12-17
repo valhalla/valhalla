@@ -60,8 +60,8 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<sif::TravelMode>(0), 0,
-                         {}, kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, static_cast<sif::TravelMode>(0), 0,
+                         kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -156,15 +156,13 @@ void walk_edges(const std::string& shape,
 }
 
 // args
-std::string routetype, config;
+std::string routetype, route_config;
 std::string json_str = "";
 std::string shape = "";
 
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
@@ -189,7 +187,7 @@ int main(int argc, char* argv[]) {
     options.parse_positional({"config"});
     options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {
@@ -267,7 +265,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config().get_child("mjolnir"));
 
   if (!map_match) {
     rapidjson::Document doc;
@@ -292,7 +290,7 @@ int main(int argc, char* argv[]) {
   }
 
   // If JSON is entered we do map matching
-  MapMatcherFactory map_matcher_factory(pt);
+  MapMatcherFactory map_matcher_factory(config());
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(request.options()));
 
   uint32_t i = 0;

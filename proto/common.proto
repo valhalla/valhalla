@@ -217,19 +217,97 @@ message TransitRouteInfo {
 
 message Pronunciation {
   enum Alphabet {
-    kIpa = 0;
-    kXKatakana = 1;
-    kXJeita = 2;
-    kNtSampa = 3;
+    kNone = 0;
+    kIpa = 1;
+    kKatakana = 2;
+    kJeita = 3;
+    kNtSampa = 4;
   }
   Alphabet alphabet = 1;
   string value = 2;
+}
+
+enum LanguageTag {
+  kUnspecified = 0;
+  kAb = 1;
+  kAm = 2;
+  kAr = 3;
+  kAz = 4;
+  kBe = 5;
+  kBg = 6;
+  kBn = 7;
+  kBs = 8;
+  kCa = 9;
+  kCkb = 10;
+  kCs = 11;
+  kDa = 12;
+  kDe = 13;
+  kDv = 14;
+  kDz = 15;
+  kEl = 16;
+  kEn = 17;
+  kEs = 18;
+  kEt = 19;
+  kFa = 20;
+  kFi = 21;
+  kFr = 22;
+  kFy = 23;
+  kGl = 24;
+  kHe = 25;
+  kHr = 26;
+  kHu = 27;
+  kHy = 28;
+  kId = 29;
+  kIs = 30;
+  kIt = 31;
+  kJa = 32;
+  kKa = 33;
+  kKl = 34;
+  kKm = 35;
+  kKo = 36;
+  kLo = 37;
+  kLt = 38;
+  kLv = 39;
+  kMg = 40;
+  kMk = 41;
+  kMn = 42;
+  kMo = 43;
+  kMt = 44;
+  kMy = 45;
+  kNe = 46;
+  kNl = 47;
+  kNo = 48;
+  kOc = 49;
+  kPap = 50;
+  kPl = 51;
+  kPs = 52;
+  kPt = 53;
+  kRm = 54;
+  kRo = 55;
+  kRu = 56;
+  kSk = 57;
+  kSl = 58;
+  kSq = 59;
+  kSr = 60;
+  kSrLatn = 61;
+  kSv = 62;
+  kTg = 63;
+  kTh = 64;
+  kTk = 65;
+  kTr = 66;
+  kUk = 67;
+  kUr = 68;
+  kUz = 69;
+  kVi = 70;
+  kZh = 71;
+  kCy = 72;
 }
 
 message StreetName {
   string value = 1;                // The actual street name value, examples: I 95 North or Derry Street
   bool is_route_number = 2;        // true if the street name is a reference route number such as: I 81 South or US 322 West
   Pronunciation pronunciation = 3; // The pronunciation associated with this street name
+  LanguageTag language_tag = 4;
 }
 
 message TurnLane {

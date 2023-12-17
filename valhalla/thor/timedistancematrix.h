@@ -79,7 +79,7 @@ public:
   inline void clear() {
     auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
     if (edgelabels_.size() > reservation) {
-      edgelabels_.resize(max_reserved_labels_count_);
+      edgelabels_.resize(reservation);
       edgelabels_.shrink_to_fit();
     }
     reset();

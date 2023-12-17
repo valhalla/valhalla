@@ -201,7 +201,6 @@ int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
-  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -218,7 +217,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("version")) {
@@ -233,6 +232,8 @@ int main(int argc, char** argv) {
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
+
+  auto config = valhalla::config();
 
   // Configure logging
   auto logging_subtree = config.get_child_optional("mjolnir.logging");

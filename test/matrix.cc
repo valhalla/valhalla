@@ -138,7 +138,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[
@@ -204,14 +204,14 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
 }
 
 TEST(Matrix, test_matrix) {
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -290,14 +290,14 @@ TEST(Matrix, test_timedistancematrix_forward) {
     "costing":"auto"
   })";
 
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -341,14 +341,14 @@ TEST(Matrix, test_timedistancematrix_reverse) {
     "costing":"auto"
   })";
 
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_more_sources, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -377,7 +377,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
 }
 
 TEST(Matrix, test_matrix_osrm) {
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
@@ -385,7 +385,7 @@ TEST(Matrix, test_matrix_osrm) {
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -419,14 +419,14 @@ const auto test_request_partial = R"({
   })";
 
 TEST(Matrix, partial_matrix) {
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_partial, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
@@ -460,7 +460,7 @@ const auto test_matrix_default = R"({
   })";
 
 TEST(Matrix, default_matrix) {
-  tyr::actor_t actor(config, true);
+  tyr::actor_t actor(cfg, true);
 
   auto response = actor.matrix(test_matrix_default);
 
@@ -488,7 +488,7 @@ TEST(Matrix, default_matrix) {
   // first values in the object
   EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
                    5.88);
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 474);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 473);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
 
@@ -512,7 +512,7 @@ const auto test_matrix_verbose_false = R"({
   })";
 
 TEST(Matrix, slim_matrix) {
-  tyr::actor_t actor(config, true);
+  tyr::actor_t actor(cfg, true);
 
   auto response = actor.matrix(test_matrix_verbose_false);
 
@@ -540,7 +540,7 @@ TEST(Matrix, slim_matrix) {
   EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
 
   // first value of "durations" array
-  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 474);
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 473);
 
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));

@@ -138,26 +138,23 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     // Compute the cost to the end of this edge
     Cost newcost = pred.cost() + normalized_edge_cost + transition_cost;
 
-    uint32_t distance = pred.path_distance() + directededge->length();
+    uint32_t path_distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
+    // less cost the cost and predecessor are updated.
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
+      auto& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, transition_cost, restriction_idx);
+        adjacencylist_.decrease(es->index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, path_distance, restriction_idx);
       }
       continue;
     }
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode,
-                             distance, transition_cost, restriction_idx, true, false,
-                             InternalTurn::kNoTurn);
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode,
+                             path_distance, restriction_idx, true, false, InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -346,13 +343,13 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     if (FORWARD) {
-      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f,
-                               travel_mode_t::kPedestrian, dist, Cost{}, baldr::kInvalidRestriction,
-                               true, false, InternalTurn::kNoTurn);
+      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               false, InternalTurn::kNoTurn);
     } else {
-      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f,
-                               travel_mode_t::kPedestrian, dist, Cost{}, baldr::kInvalidRestriction,
-                               true, false, InternalTurn::kNoTurn);
+      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost,
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
+                               false, InternalTurn::kNoTurn);
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);

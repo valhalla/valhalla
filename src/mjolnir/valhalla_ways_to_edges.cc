@@ -34,18 +34,16 @@ struct EdgeAndDirection {
 };
 
 // Main application to create a list wayids and directed edges belonging
-// to ways that are driveable.
+// to ways that are drivable.
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
-  // args
-  boost::property_tree::ptree pt;
 
   try {
     // clang-format off
     cxxopts::Options options(
       program,
       program + " " + VALHALLA_VERSION + "\n\n"
-      "a program that creates a list of edges for each auto-driveable OSM way.\n\n");
+      "a program that creates a list of edges for each auto-drivable OSM way.\n\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
@@ -55,7 +53,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
   } catch (cxxopts::OptionException& e) {
@@ -70,7 +68,7 @@ int main(int argc, char** argv) {
   // Create an unordered map of OSM ways Ids and their associated graph edges
   std::unordered_map<uint64_t, std::vector<EdgeAndDirection>> ways_edges;
 
-  GraphReader reader(pt.get_child("mjolnir"));
+  GraphReader reader(valhalla::config().get_child("mjolnir"));
   // Iterate through all tiles
   for (auto edge_id : reader.GetTileSet()) {
     // If tile exists add it to the queue
@@ -102,7 +100,7 @@ int main(int argc, char** argv) {
   }
 
   std::ofstream ways_file;
-  std::string fname = pt.get<std::string>("mjolnir.tile_dir") +
+  std::string fname = valhalla::config().get<std::string>("mjolnir.tile_dir") +
                       filesystem::path::preferred_separator + "way_edges.txt";
   ways_file.open(fname, std::ofstream::out | std::ofstream::trunc);
   for (const auto& way : ways_edges) {
