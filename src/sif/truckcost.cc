@@ -534,7 +534,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -607,7 +607,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
