@@ -54,6 +54,7 @@ stages:
             displayName: Scanners
             env:
               BLACKDUCK_API_TOKEN: $(blackduck.api.token)
+            condition: and(succeeded(), eq(variables['blackduck.enabled'], 'true'))
 
           - bash: |
               source pipeline/build/scripts/21-acr-cleanup.sh
