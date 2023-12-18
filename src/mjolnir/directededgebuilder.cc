@@ -58,6 +58,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if (remove_destonly && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   }
+  set_dest_only_hgv(way.destination_only_hgv());
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());
