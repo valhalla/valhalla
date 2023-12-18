@@ -177,6 +177,7 @@ std::pair<uint32_t, bool> ShortestPath(const uint32_t start_node_idx,
         }
 
         // if the first edge was destonly and the previous edge was as well, add no penalty
+        // TODO(nils): this would have to take into account HGV destonly to be accurate
         float penalty =
             (first_edge_destonly ? (!pred_destonly && w.destination_only()) : w.destination_only())
                 ? 300
