@@ -1,7 +1,6 @@
 ## Release Date: 2023-??-?? Valhalla 3.4.1
 * **Removed**
 * **Bug Fix**
-   * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
    * FIXED: typo in use value of map matching API (`platform_connection` was misspelled) [#4174](https://github.com/valhalla/valhalla/pull/4174)
@@ -22,6 +21,7 @@
    * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
    * FIXED: diff_names check was missing for Graphfilter and Shortcutbuilder for AddEdgeInfo call.  [#4436](https://github.com/valhalla/valhalla/pull/4436)
    * FIXED: updated timezone database and added code to keep compatibility with old servers/new data and vice versa [#4446](https://github.com/valhalla/valhalla/pull/4446)
+   * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
