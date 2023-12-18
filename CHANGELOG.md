@@ -56,6 +56,7 @@
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
    * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
    * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431
+   * ADDED: hgv=destination and friends for truck-specific "destination_only" logic [#4450](https://github.com/valhalla/valhalla/issues/4450)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

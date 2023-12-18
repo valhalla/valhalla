@@ -274,7 +274,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                               restriction_idx);
+                               restriction_idx, 0,
+                               meta.edge->destonly() ||
+                                   (costing_->is_hgv() && meta.edge->destonly_hgv()));
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -283,7 +285,9 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
-                               restriction_idx);
+                               restriction_idx, 0,
+                               opp_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_edge->destonly_hgv()));
     }
 
     auto& edge_label = edgelabels_.back();
@@ -752,13 +756,17 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
                                  mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction);
+                                 kInvalidRestriction, 0,
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()));
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
                                  !(costing_->IsClosed(directededge, tile)),
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction);
+                                 kInvalidRestriction, 0,
+                                 opp_dir_edge->destonly() ||
+                                     (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
       }
 
       auto& edge_label = edgelabels_.back();
