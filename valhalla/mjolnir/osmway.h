@@ -1599,7 +1599,7 @@ struct OSMWay {
   }
 
   /**
-   * Sets the destination_only flag.
+   * Sets the destination_only flag for cars or motor vehicles.
    * @param  destination_only   Is private?
    */
   void set_destination_only(const bool destination_only) {
@@ -1607,11 +1607,27 @@ struct OSMWay {
   }
 
   /**
-   * Get the destination only/private flag.
+   * Get the destination only/private flag for cars or motor vehicles.
    * @return  Returns private flag.
    */
   bool destination_only() const {
     return destination_only_;
+  }
+
+  /**
+   * Sets the destination_only flag specifically for HGV.
+   * @param  destination_only   Is private for HGV?
+   */
+  void set_destination_only_hgv(const bool destination_only) {
+    destination_only_hgv_ = destination_only;
+  }
+
+  /**
+   * Get the destination only/private flag for HGV.
+   * @return  Returns private hgv flag.
+   */
+  bool destination_only_hgv() const {
+    return destination_only_hgv_;
   }
 
   /**
@@ -2663,8 +2679,9 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
-  bool lit_ : 1;
-  uint16_t spare2_ : 3;
+  uint16_t lit_ : 1;
+  uint16_t destination_only_hgv_ : 1;
+  uint16_t spare2_ : 2;
 
   uint16_t nodecount_;
 
