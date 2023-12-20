@@ -426,6 +426,7 @@ Cost MotorScooterCost::EdgeCost(const baldr::DirectedEdge* edge,
     return {sec * ferry_factor_, sec};
   }
 
+  // prevent scooter speed to become 0
   uint32_t scooter_speed =
       std::max(1.f, (std::min(top_speed_, speed) *
                      kSurfaceSpeedFactors[static_cast<uint32_t>(edge->surface())] *
