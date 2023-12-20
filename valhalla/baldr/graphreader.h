@@ -953,6 +953,7 @@ public:
    * @param edge   GraphId of the edge to get the timezone index.
    * @param tile   Current tile. Can be changed to the tile of the edge's end node.
    * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
+   *         It's possible that the tile changes to the edge's end node's tile.
    */
   int GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile);
 
