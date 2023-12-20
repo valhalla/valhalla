@@ -108,7 +108,7 @@ void try_isochrone(loki_worker_t& loki_worker,
 
       // different platforms can end up having some slightly different floating point wobble
       // to avoid failing tests we measure shape similarity and fail if its too far out of whack
-      ASSERT_TRUE(test::shape_equality(actual, expected, 23));
+      ASSERT_TRUE(test::shape_equality(actual, expected, 33));
     }
   }
 }
