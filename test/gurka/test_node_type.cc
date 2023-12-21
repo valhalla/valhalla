@@ -7,9 +7,6 @@
 #endif
 
 using namespace valhalla;
-const std::unordered_map<std::string, std::string> build_config{
-    {"mjolnir.data_processing.use_admin_db", "true"}};
-
 class NodeType : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -40,7 +37,7 @@ protected:
                                 {"D", {{"highway", "toll_gantry"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_type", build_config);
+    map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_type");
   }
 };
 gurka::map NodeType::map = {};

@@ -62,6 +62,9 @@ int main(int argc, char** argv) {
   }
 
   auto all_tiles = valhalla::mjolnir::convert_transit(pt);
+  if (!all_tiles.size()) {
+    return EXIT_FAILURE;
+  }
   valhalla::mjolnir::ValidateTransit::Validate(pt, all_tiles, onestoptests);
-  return 0;
+  return EXIT_SUCCESS;
 }

@@ -228,7 +228,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "apply_country_overrides": true,
           "infer_internal_intersections": true,
           "infer_turn_channels": true,
-          "use_admin_db": true,
           "use_direction_on_ways": false,
           "use_rest_area": false,
           "use_urban_tag": false

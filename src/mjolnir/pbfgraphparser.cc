@@ -169,17 +169,11 @@ public:
     allow_alt_name_ = pt.get<bool>("data_processing.allow_alt_name", false);
     use_urban_tag_ = pt.get<bool>("data_processing.use_urban_tag", false);
     use_rest_area_ = pt.get<bool>("data_processing.use_rest_area", false);
-    use_admin_db_ = pt.get<bool>("data_processing.use_admin_db", true);
 
     empty_node_results_ = lua_.Transform(OSMType::kNode, 0, {});
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
 
-    tag_handlers_["driving_side"] = [this]() {
-      if (!use_admin_db_) {
-        way_.set_drive_on_right(tag_.second == "right" ? true : false);
-      }
-    };
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
         way_.set_internal(tag_.second == "true" ? true : false);
@@ -1917,12 +1911,12 @@ public:
       // TODO: instead of checking this, we should delete these tag/values completely in lua
       // and save our CPUs the wasted time of iterating over them again for nothing
       auto hasTag = !tag.second.empty();
-      if (tag.first == "iso:3166_1" && !use_admin_db_ && hasTag) {
+      if (tag.first == "iso:3166_1" && hasTag) {
         // Add the country iso code to the unique node names list and store its index in the OSM
         // node
         n.set_country_iso_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_name_count;
-      } else if ((tag.first == "state_iso_code" && !use_admin_db_) && hasTag) {
+      } else if (tag.first == "state_iso_code" && hasTag) {
         // Add the state iso code to the unique node names list and store its index in the OSM
         // node
         n.set_state_iso_index(osmdata_.node_names.index(tag.second));
@@ -4204,10 +4198,6 @@ public:
                       std::string& name_w_lang,
                       std::string& language,
                       bool is_lang_pronunciation = false) {
-    // If we start to use admin tags for HERE, then put use_admin_db_ check back
-    // if (!use_admin_db_)
-    //  return;
-
     std::string t = tag.first;
     std::size_t found = t.find(":pronunciation");
     if (found != std::string::npos && !is_lang_pronunciation)
@@ -4266,9 +4256,6 @@ public:
                                std::string& name_left_right_w_lang,
                                std::string& lang_left_right,
                                bool is_lang_pronunciation = false) {
-    if (!use_admin_db_)
-      return;
-
     std::string t = tag.first;
     std::size_t found = t.find(":pronunciation");
     if (found != std::string::npos && !is_lang_pronunciation)
@@ -4412,9 +4399,6 @@ public:
   }
 
   void ProcessName(const std::string& name_w_lang, std::string& name, std::string& language) {
-    if (!use_admin_db_)
-      return;
-
     if (!name.empty()) {
       if (name_w_lang.empty())
         return;
@@ -4432,9 +4416,6 @@ public:
                        const std::string& language,
                        std::string& name_lr_fb,
                        std::string& lang_lr_fb) {
-    if (!use_admin_db_)
-      return;
-
     if (!name_lr_fb.empty()) {
 
       if (name_lr_fb_w_lang.empty())
@@ -4785,10 +4766,6 @@ public:
   // Configuration option indicating whether or not to process the rest/service area keys on the ways
   // during the parsing phase
   bool use_rest_area_;
-
-  // Configuration option indicating whether or not to process the admin iso code keys on the
-  // nodes during the parsing phase or to get the admin info from the admin db
-  bool use_admin_db_;
 
   // Road class assignment needs to be set to the highway cutoff for ferries and auto trains.
   RoadClass highway_cutoff_rc_;

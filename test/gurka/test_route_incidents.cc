@@ -55,10 +55,7 @@ protected:
     // make the tiles
     std::string tile_dir = "test/data/route_incidents";
     map = gurka::buildtiles(layout, ways, nodes, {}, tile_dir,
-                            {
-                                {"mjolnir.traffic_extract", tile_dir + "/traffic.tar"},
-                                {"mjolnir.data_processing.use_admin_db", "false"},
-                            });
+                            {{"mjolnir.traffic_extract", tile_dir + "/traffic.tar"}});
 
     // stage up some live traffic data
     test::build_live_traffic_data(map.config);
