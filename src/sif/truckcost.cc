@@ -270,6 +270,12 @@ public:
   virtual uint8_t travel_type() const override;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const override;
+
+  /**
    * Function to be used in location searching which will
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
@@ -434,7 +440,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
@@ -458,7 +464,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly_hgv()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;
@@ -534,7 +540,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -607,7 +613,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -676,6 +682,10 @@ float TruckCost::AStarCostFactor() const {
 // Returns the current travel type.
 uint8_t TruckCost::travel_type() const {
   return static_cast<uint8_t>(type_);
+}
+
+bool TruckCost::is_hgv() const {
+  return true;
 }
 
 void ParseTruckCostOptions(const rapidjson::Document& doc,

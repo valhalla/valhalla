@@ -369,11 +369,12 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
                                             Options::ExpansionProperties* a) {
   static const std::unordered_map<std::string, Options::ExpansionProperties>
-      actions{{"costs", Options_ExpansionProperties_costs},
-              {"durations", Options_ExpansionProperties_durations},
-              {"distances", Options_ExpansionProperties_distances},
-              {"statuses", Options_ExpansionProperties_statuses},
-              {"edge_ids", Options::ExpansionProperties::Options_ExpansionProperties_edge_ids}};
+      actions{{"cost", Options_ExpansionProperties_cost},
+              {"duration", Options_ExpansionProperties_duration},
+              {"distance", Options_ExpansionProperties_distance},
+              {"edge_status", Options_ExpansionProperties_edge_status},
+              {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
+              {"pred_edge_id", Options_ExpansionProperties_pred_edge_id}};
   auto i = actions.find(prop);
   if (i == actions.cend())
     return false;
