@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 
+#include "baldr/datetime.h"
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 #include "sif/recost.h"
@@ -258,6 +259,7 @@ void CostMatrix::SourceToTarget(Api& request,
   }
 
   // Form the matrix PBF output
+  graph_tile_ptr tile;
   uint32_t count = 0;
   valhalla::Matrix& matrix = *request.mutable_matrix();
   reserve_pbf_arrays(matrix, best_connection_.size());
@@ -271,18 +273,24 @@ void CostMatrix::SourceToTarget(Api& request,
                                       time_infos[source_idx], invariant, shape_format);
 
     float time = connection.cost.secs;
-    auto date_time = get_date_time(source_location_list[source_idx].date_time(),
-                                   time_infos[source_idx].timezone_index,
-                                   edgelabel_[MATRIX_REV][target_idx].front().edgeid(), graphreader,
-                                   static_cast<uint64_t>(time));
+    if (time < kMaxCost) {
+      auto date_time =
+          DateTime::offset_date(source_location_list[source_idx].date_time(),
+                                time_infos[source_idx].timezone_index,
+                                graphreader.GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
+                                                                    .front()
+                                                                    .edgeid(),
+                                                                tile),
+                                time);
+      auto* pbf_date_time = matrix.mutable_date_times()->Add();
+      *pbf_date_time = date_time;
+    }
     matrix.mutable_from_indices()->Set(count, source_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);
     matrix.mutable_distances()->Set(count, connection.distance);
     matrix.mutable_times()->Set(count, time);
     auto* pbf_shape = matrix.mutable_shapes()->Add();
     *pbf_shape = shape;
-    auto* pbf_date_time = matrix.mutable_date_times()->Add();
-    *pbf_date_time = date_time;
     count++;
   }
 }
