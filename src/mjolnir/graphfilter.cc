@@ -74,6 +74,8 @@ void FilterTiles(GraphReader& reader,
     std::hash<std::string> hasher;
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      bool diff_names = false;
+
       // Count of edges added for this node
       uint32_t edge_count = 0;
 
@@ -137,6 +139,9 @@ void FilterTiles(GraphReader& reader,
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
+        // Names can be different in the forward and backward direction
+        diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
         // Get edge info, shape, and names from the old tile and add to the
         // new. Cannot use edge info offset since edges in arterial and
         // highway hierarchy can cross base tiles! Use a hash based on the
@@ -149,8 +154,8 @@ void FilterTiles(GraphReader& reader,
             tilebuilder.AddEdgeInfo(w, nodeid, directededge->endnode(), edgeinfo.wayid(),
                                     edgeinfo.mean_elevation(), edgeinfo.bike_network(),
                                     edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(), edgeinfo.GetTaggedValues(true),
-                                    edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
+                                    edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
         endnode.push_back(directededge->endnode());
@@ -187,7 +192,7 @@ void FilterTiles(GraphReader& reader,
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
         // edge attributes should match), don't end at same node (no loops).
-        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1]) {
+        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] && !diff_names) {
           ++can_aggregate;
         }
       } else {
@@ -225,8 +230,6 @@ void FilterTiles(GraphReader& reader,
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
   LOG_INFO("Update end nodes of directed edges");
 
-  int found = 0;
-
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
@@ -257,7 +260,6 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         LOG_ERROR("UpdateEndNodes - failed to find associated node");
       } else {
         end_node = iter->second;
-        found++;
       }
 
       // Copy the edge to the directededges vector and update the end node

@@ -27,11 +27,12 @@ constexpr int kIsStraightestBuffer = 10;                   // Buffer between str
 constexpr uint32_t kBackwardTurnDegreeLowerBound = 124;
 constexpr uint32_t kBackwardTurnDegreeUpperBound = 236;
 
+#ifdef LOGGING_LEVEL_TRACE
 const std::string& Pronunciation_Alphabet_Name(valhalla::Pronunciation_Alphabet alphabet) {
   static const std::unordered_map<valhalla::Pronunciation_Alphabet, std::string>
       values{{valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kIpa, "kIpa"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXKatakana, "kXKatakana"},
-             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kXJeita, "kXJeita"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kKatakana, "kKatakana"},
+             {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kJeita, "kJeita"},
              {valhalla::Pronunciation_Alphabet::Pronunciation_Alphabet_kNtSampa, "kNtSampa"}};
   auto f = values.find(alphabet);
   if (f == values.cend())
@@ -191,6 +192,7 @@ const std::string& TripLeg_Sidewalk_Name(int v) {
     throw std::runtime_error("Missing value in protobuf enum to string");
   return f->second;
 }
+#endif
 
 // TODO: in the future might have to have dynamic angle based on road class and lane count
 bool is_fork_forward(uint32_t turn_degree) {
@@ -528,7 +530,7 @@ std::vector<std::pair<std::string, bool>> EnhancedTripLeg_Edge::GetNameList() co
 std::string EnhancedTripLeg_Edge::GetLevelRef() const {
   std::string level_ref;
   if (!tagged_value().empty()) {
-    for (uint32_t t = 0; t < tagged_value().size(); ++t) {
+    for (int t = 0; t < tagged_value().size(); ++t) {
       if (tagged_value().Get(t).type() == TaggedValue_Type_kLevelRef) {
         level_ref = tagged_value().Get(t).value();
         break;
@@ -1549,7 +1551,7 @@ void EnhancedTripLeg_Node::CalculateRightLeftIntersectingEdgeCounts(
   }
 }
 
-bool EnhancedTripLeg_Node::HasFowardIntersectingEdge(uint32_t from_heading) {
+bool EnhancedTripLeg_Node::HasForwardIntersectingEdge(uint32_t from_heading) {
 
   for (int i = 0; i < intersecting_edge_size(); ++i) {
     if (is_forward(GetTurnDegree(from_heading, intersecting_edge(i).begin_heading()))) {

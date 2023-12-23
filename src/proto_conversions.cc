@@ -4,6 +4,9 @@
 using namespace valhalla;
 
 namespace valhalla {
+std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo) {
+  return algo == valhalla::Matrix::CostMatrix ? "costmatrix" : "timedistancematrix";
+};
 
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type) {
   switch (incident_type) {
@@ -123,9 +126,10 @@ bool Options_Action_Enum_Parse(const std::string& action, Options::Action* a) {
 }
 
 bool Options_ExpansionAction_Enum_Parse(const std::string& action, Options::Action* a) {
-  static const std::unordered_map<std::string, Options::Action> actions{{"route", Options::route},
-                                                                        {"isochrone",
-                                                                         Options::isochrone}};
+  static const std::unordered_map<std::string, Options::Action>
+      actions{{"route", Options::route},
+              {"isochrone", Options::isochrone},
+              {"sources_to_targets", Options::sources_to_targets}};
   auto i = actions.find(action);
   if (i == actions.cend())
     return false;
@@ -367,11 +371,12 @@ bool RoadClass_Enum_Parse(const std::string& rc_name, valhalla::RoadClass* rc) {
 bool Options_ExpansionProperties_Enum_Parse(const std::string& prop,
                                             Options::ExpansionProperties* a) {
   static const std::unordered_map<std::string, Options::ExpansionProperties>
-      actions{{"costs", Options_ExpansionProperties_costs},
-              {"durations", Options_ExpansionProperties_durations},
-              {"distances", Options_ExpansionProperties_distances},
-              {"statuses", Options_ExpansionProperties_statuses},
-              {"edge_ids", Options::ExpansionProperties::Options_ExpansionProperties_edge_ids}};
+      actions{{"cost", Options_ExpansionProperties_cost},
+              {"duration", Options_ExpansionProperties_duration},
+              {"distance", Options_ExpansionProperties_distance},
+              {"edge_status", Options_ExpansionProperties_edge_status},
+              {"edge_id", Options::ExpansionProperties::Options_ExpansionProperties_edge_id},
+              {"pred_edge_id", Options_ExpansionProperties_pred_edge_id}};
   auto i = actions.find(prop);
   if (i == actions.cend())
     return false;

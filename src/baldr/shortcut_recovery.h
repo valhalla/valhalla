@@ -158,6 +158,7 @@ protected:
             edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
             edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
             edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
+            edge.destonly_hgv() == shortcut->destonly_hgv() &&
             edge.unpaved() == shortcut->unpaved() && edge.surface() == shortcut->surface() &&
             edge.use() != Use::kConstruction /*&& edge.speed() == shortcut->speed()*/) {
           // we are going to keep this edge
@@ -206,7 +207,7 @@ public:
    * the reader is nullptr then the cache will not be filled and recovery will be on the fly
    *
    * @param reader       the reader used to initialize the cache the first time
-   * @return a filled cache mapping shortcuts to superceeded edges
+   * @return a filled cache mapping shortcuts to superseded edges
    */
   static shortcut_recovery_t& get_instance(valhalla::baldr::GraphReader* reader = nullptr) {
     static shortcut_recovery_t cache{reader};
@@ -214,11 +215,11 @@ public:
   }
 
   /**
-   * returns the list of graphids of the edges superceded by the provided shortcut. saddly because we
+   * returns the list of graphids of the edges superseded by the provided shortcut. sadly because we
    * may have to recover the shortcut on the fly we cannot return const reference here
    *
    * @param shortcut_id   the shortcuts edge id
-   * @return the list of superceded edges
+   * @return the list of superseded edges
    */
   std::vector<valhalla::baldr::GraphId> get(const valhalla::baldr::GraphId& shortcut_id,
                                             valhalla::baldr::GraphReader& reader) const {

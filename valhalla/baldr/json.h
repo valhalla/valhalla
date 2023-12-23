@@ -196,12 +196,12 @@ inline void applyOutputVisitor(std::ostream& stream, Visitable& visitable) {
 
 inline std::ostream& operator<<(std::ostream& stream, const Jmap& json) {
   stream << '{';
-  bool seprator = false;
+  bool separator = false;
   for (const auto& key_value : json) {
-    if (seprator) {
+    if (separator) {
       stream << ',';
     }
-    seprator = true;
+    separator = true;
     stream << '"' << key_value.first << "\":";
     applyOutputVisitor(stream, key_value.second);
   }
@@ -211,12 +211,12 @@ inline std::ostream& operator<<(std::ostream& stream, const Jmap& json) {
 
 inline std::ostream& operator<<(std::ostream& stream, const Jarray& json) {
   stream << '[';
-  bool seprator = false;
+  bool separator = false;
   for (const auto& element : json) {
-    if (seprator) {
+    if (separator) {
       stream << ',';
     }
-    seprator = true;
+    separator = true;
     applyOutputVisitor(stream, element);
   }
   stream << ']';

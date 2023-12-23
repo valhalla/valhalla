@@ -222,6 +222,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
       "mjolnir": {
         "concurrency": 1,
         "admin": "%%/admin.sqlite",
+        "landmarks": "%%/landmarks.sqlite",
         "data_processing": {
           "allow_alt_name": false,
           "apply_country_overrides": true,

@@ -70,8 +70,14 @@ public:
    * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
    *                             on a given edge
    */
-  using expansion_callback_t = std::function<
-      void(baldr::GraphReader&, baldr::GraphId, const char*, const char*, float, uint32_t, float)>;
+  using expansion_callback_t = std::function<void(baldr::GraphReader&,
+                                                  const baldr::GraphId,
+                                                  const baldr::GraphId,
+                                                  const char*,
+                                                  const char*,
+                                                  float,
+                                                  uint32_t,
+                                                  float)>;
   void set_track_expansion(const expansion_callback_t& expansion_callback) {
     expansion_callback_ = expansion_callback;
   }

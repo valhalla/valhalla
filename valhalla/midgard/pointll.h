@@ -55,9 +55,6 @@ public:
   GeoPoint(const PointXY<PrecisionT>& p) : PointXY<PrecisionT>(p) {
   }
 
-  virtual ~GeoPoint() {
-  }
-
   /**
    * cast the lon lat to a 64bit value with 7 decimals places of precision the layout is:
    * bitfield {
@@ -242,10 +239,9 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns a positive value if this point is left of the segment.
    */
-  virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
+  value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
   }
-  using PointXY<PrecisionT>::IsLeft;
 
   /**
    * Tests whether this point is within a polygon.

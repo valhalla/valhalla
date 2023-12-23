@@ -45,11 +45,12 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 site_name: Valhalla Docs
 repo_url: https://github.com/valhalla/valhalla/
+edit_uri: edit/master/docs/docs/
 site_url: https://valhalla.github.io/valhalla
 docs_dir: docs
 nav:
@@ -81,6 +82,7 @@ nav:
     - Elevation influenced bicycle routing: sif/elevation_costing.md
     - elevation.md
     - testing.md
+    - tzdb_update.md
   - Internal components:
     - Baldr (routing data strutures/algorithms): baldr.md
     - Loki (associate locations with graph edges): loki.md
@@ -104,11 +106,11 @@ nav:
       - mjolnir/map_roulette.md
       - mjolnir/map_roulette_blog.md
       - mjolnir/tag_parsing.md
+      - mjolnir/historical_traffic.md
     - Thor (routing algorithms):
       - thor.md
       - thor/isochrones.md
       - thor/path-algorithm.md
-      - thor/simple_traffic.md 
       - incidents.md
   - Data sources:
     - Data sources: mjolnir/data_sources.md

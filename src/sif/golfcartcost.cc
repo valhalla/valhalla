@@ -331,7 +331,7 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
       (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
       // NOTE: Parking aisles are baked as destination-only, but for golf carts we actually need
-      // to ignore this according to Peachtree City's assistant manager.
+      // to ignore this (per the GIS department of Peachtree City, GA).
       (!allow_destination_only_ && (!pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle)) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {

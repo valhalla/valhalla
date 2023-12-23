@@ -22,6 +22,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <regex>
 
 using namespace valhalla::midgard;
 
@@ -71,6 +72,14 @@ std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) 
   boost::algorithm::split(tokens, tag_value,
                           std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
                           boost::algorithm::token_compress_off);
+  return tokens;
+}
+
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str) {
+  std::regex regex_str(delim_str);
+  std::vector<std::string> tokens(std::sregex_token_iterator(tag_value.begin(), tag_value.end(),
+                                                             regex_str, -1),
+                                  std::sregex_token_iterator());
   return tokens;
 }
 
@@ -226,7 +235,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string edges_bin = tile_dir + edges_file;
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
-  std::string pronunciation_bin = tile_dir + pronunciation_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
@@ -240,7 +248,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   if (start_stage <= BuildStage::kParseWays && BuildStage::kParseWays <= end_stage) {
     // Read the OSM protocol buffer file. Callbacks for ways are defined within the PBFParser class
     osm_data = PBFGraphParser::ParseWays(config.get_child("mjolnir"), input_files, ways_bin,
-                                         way_nodes_bin, access_bin, pronunciation_bin);
+                                         way_nodes_bin, access_bin);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory && BuildStage::kParseWays == end_stage) {
@@ -321,7 +329,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, pronunciation_bin, tiles);
+                        cr_to_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -401,7 +409,6 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(nodes_bin);
     remove_temp_file(edges_bin);
     remove_temp_file(access_bin);
-    remove_temp_file(pronunciation_bin);
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);

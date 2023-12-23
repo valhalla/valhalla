@@ -167,6 +167,17 @@ public:
            std::equal(pts_.begin(), pts_.end(), other.pts_.begin());
   }
 
+  /**
+   * Computes the hausdorff distance between the two linestring features
+   * @tparam container_t  a container of point features comprising the linestring feature
+   * @param a  linestring feature
+   * @param b  linestring feature
+   * @return  the hausdorff metric
+   */
+  template <typename container_t>
+  static typename container_t::value_type::first_type HausdorffDistance(const container_t& l1,
+                                                                        const container_t& l2);
+
 protected:
   // Polyline points
   std::vector<coord_t> pts_;

@@ -61,7 +61,7 @@ Check your architecture typing `arch` in the terminal. In case the result is `ar
 3. Rename the duplicated app `Rosetta Terminal`.
 4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
 5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
-6. Make shure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
+6. Make sure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
 7. Now it fully supports Homebrew and other x86_64 command line applications.
 
 Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.
@@ -114,21 +114,19 @@ It's recommended to work with the following toolset:
 - [vcpkg](https://github.com/Microsoft/vcpkg) to install packages
 - [CMake](https://cmake.org/download/)
 
-1. Install the following packages with `vcpkg` and your platform triplet (e.g. `x64-windows`). Note, you can remove all packages after `zlib` in `.\.vcpkg_deps.txt` if you don't want to build `TOOLS` & `DATA_TOOLS`:
+1. Install the dependencies with `vcpkg`:
 ```
-# Basic packages
-git -C C:\path\to\vcpkg checkout f4bd6423
-cd C:\path\to\project
-C:\path\to\vcpkg.exe --triplet x64-windows install "@.vcpkg_deps.txt"
+git -C C:\path\to\vcpkg checkout f330a32
+cd C:\path\to\valhalla
+C:\path\to\vcpkg.exe install
 ```
-2. Let CMake configure the build with the required modules enabled. **Note**, you have to manually link LuaJIT for some reason, e.g. the final command for `x64` could look like
+2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```
-"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DLUA_LIBRARIES=path\to\vcpkg\installed\x64-windows\lib\lua51.lib -DLUA_INCLUDE_DIR=path\to\vcpkg\installed\x64-windows\include\luajit -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/project -Bpath/to/project/build -G "Visual Studio 16 2019" -T host=x64 -A x64
+"C:\Program Files\CMake\bin\cmake.EXE" --no-warn-unused-cli -DENABLE_TOOLS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_HTTP=ON -DENABLE_CCACHE=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF -DENABLE_TESTS=OFF -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -Hpath/to/valhalla -Bpath/to/valhalla/build -G "Visual Studio 16 2019" -T host=x64 -A x64
 ```
 3. Run the build for all targets.
 ```
-cd C:\path\to\project
-cmake -B build .
+cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:8
 ```
 
 The artifacts will be built to `./build/Release`.

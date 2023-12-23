@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <valhalla/baldr/graphconstants.h>
+#include <valhalla/baldr/json.h>
 
 namespace valhalla {
 namespace baldr {
@@ -53,6 +54,8 @@ public:
    * @param  v  Value for this restriction.
    */
   void set_value(const uint64_t v);
+
+  const json::MapPtr json() const;
 
   /**
    * operator < - for sorting. Sort by edge Id.

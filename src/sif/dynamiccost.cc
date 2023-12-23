@@ -117,7 +117,7 @@ constexpr ranged_default_t<uint32_t> kFixedSpeedRange{0, baldr::kDisableFixedSpe
 
 /*
  * Assign default values for costing options in constructor. In case of different
- * default values they should be overrided in "<type>cost.cc" file.
+ * default values they should be overridden in "<type>cost.cc" file.
  */
 BaseCostingOptionsConfig::BaseCostingOptionsConfig()
     : dest_only_penalty_{0.f, kDefaultDestinationOnlyPenalty, kMaxPenalty},
@@ -297,6 +297,10 @@ bool DynamicCost::wheelchair() const {
 
 // Get the bicycle required flag.
 bool DynamicCost::bicycle() const {
+  return false;
+}
+
+bool DynamicCost::is_hgv() const {
   return false;
 }
 

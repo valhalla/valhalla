@@ -69,7 +69,9 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
     : service_worker_t(config), mode(valhalla::sif::TravelMode::kPedestrian),
       bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
       multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
-      timedep_reverse(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
+      timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
+      time_distance_matrix_(config.get_child("thor")),
+      time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
       matcher_factory(config, reader), controller{} {

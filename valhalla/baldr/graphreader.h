@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -157,13 +158,14 @@ protected:
   }
   inline uint32_t get_index(const GraphId& graphid) const {
     auto offset = get_offset(graphid);
-    return offset < cache_indices_.size() ? cache_indices_[offset] : -1;
+    // using max value to indicate invalid
+    return offset < cache_indices_.size() ? cache_indices_[offset] : midgard::invalid<uint32_t>();
   }
 
   // The actual cached GraphTile objects
   std::vector<graph_tile_ptr> cache_;
 
-  // Indicies into the array of actual cached items
+  // Indices into the array of actual cached items
   std::vector<uint32_t> cache_indices_;
 
   // Offsets in the indices list for where a set of tile indices begin
@@ -423,7 +425,7 @@ class TileCacheFactory final {
 public:
   /**
    * Constructs tile cache.
-   * @param pt  Property tree listing the configuration for the cahce configuration
+   * @param pt  Property tree listing the configuration for the cache configuration
    */
   static TileCache* createTileCache(const boost::property_tree::ptree& pt);
 };
@@ -559,7 +561,8 @@ public:
    * @return  Returns the graph Id of the opposing directed edge. An
    *          invalid graph Id is returned if the opposing edge does not
    *          exist (can occur with a regional extract where adjacent tile
-   *          is missing).
+   *          is missing). If successful the opp_tile will point to the
+   *          tile containing the opp_edge
    */
   GraphId GetOpposingEdgeId(const GraphId& edgeid, graph_tile_ptr& opp_tile);
 
@@ -571,13 +574,14 @@ public:
    * @return  Returns the graph Id of the opposing directed edge. An
    *          invalid graph Id is returned if the opposing edge does not
    *          exist (can occur with a regional extract where adjacent tile
-   *          is missing).
+   *          is missing). If successful the opp_tile will point to the
+   *          tile containing the opp_edge
    */
   GraphId
-  GetOpposingEdgeId(const GraphId& edgeid, const DirectedEdge*& opp_edge, graph_tile_ptr& tile) {
-    GraphId opp_edgeid = GetOpposingEdgeId(edgeid, tile);
+  GetOpposingEdgeId(const GraphId& edgeid, const DirectedEdge*& opp_edge, graph_tile_ptr& opp_tile) {
+    GraphId opp_edgeid = GetOpposingEdgeId(edgeid, opp_tile);
     if (opp_edgeid)
-      opp_edge = tile->directededge(opp_edgeid);
+      opp_edge = opp_tile->directededge(opp_edgeid);
     return opp_edgeid;
   }
 
@@ -599,11 +603,12 @@ public:
    * @param  tile    Reference to a pointer to a const tile.
    * @return  Returns the opposing directed edge or nullptr if the
    *          opposing edge does not exist (can occur with a regional extract
-   *          where the adjacent tile is missing)
+   *          where the adjacent tile is missing). If successful the opp_tile
+   *          will point to the tile containing the opp_edge
    */
-  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, graph_tile_ptr& tile) {
-    GraphId oppedgeid = GetOpposingEdgeId(edgeid, tile);
-    return oppedgeid.Is_Valid() ? tile->directededge(oppedgeid) : nullptr;
+  const DirectedEdge* GetOpposingEdge(const GraphId& edgeid, graph_tile_ptr& opp_tile) {
+    GraphId oppedgeid = GetOpposingEdgeId(edgeid, opp_tile);
+    return oppedgeid.Is_Valid() ? opp_tile->directededge(oppedgeid) : nullptr;
   }
 
   /**
@@ -612,12 +617,13 @@ public:
    * @param  tile    Reference to a pointer to a const tile.
    * @return  Returns the opposing directed edge or nullptr if the
    *          opposing edge does not exist (can occur with a regional extract
-   *          where the adjacent tile is missing)
+   *          where the adjacent tile is missing). If successful the opp_tile
+   *             will point to the tile containing the opp_edge
    */
-  const DirectedEdge* GetOpposingEdge(const DirectedEdge* edge, graph_tile_ptr& tile) {
-    if (GetGraphTile(edge->endnode(), tile)) {
-      const auto* node = tile->node(edge->endnode());
-      return tile->directededge(node->edge_index() + edge->opp_index());
+  const DirectedEdge* GetOpposingEdge(const DirectedEdge* edge, graph_tile_ptr& opp_tile) {
+    if (GetGraphTile(edge->endnode(), opp_tile)) {
+      const auto* node = opp_tile->node(edge->endnode());
+      return opp_tile->directededge(node->edge_index() + edge->opp_index());
     }
     return nullptr;
   }
@@ -626,25 +632,32 @@ public:
    * Convenience method to get an end node.
    * @param edge  the edge whose end node you want
    * @param  tile    Reference to a pointer to a const tile.
-   * @return returns the end node of edge or nullptr if it couldn't
+   * @return returns the end node of edge or nullptr if it couldn't. if successful the end_node_tile
+   *                 will point to the tile containing the end_node of edge
    */
-  const NodeInfo* GetEndNode(const DirectedEdge* edge, graph_tile_ptr& tile) {
-    return GetGraphTile(edge->endnode(), tile) ? tile->node(edge->endnode()) : nullptr;
+  const NodeInfo* GetEndNode(const DirectedEdge* edge, graph_tile_ptr& end_node_tile) {
+    return GetGraphTile(edge->endnode(), end_node_tile) ? end_node_tile->node(edge->endnode())
+                                                        : nullptr;
   }
 
   /**
    * Method to get the begin node of an edge by using its opposing edges end node
    * @param edge    the edge whose begin node you want
-   * @param tile    reference to a pointer to a const tile
-   * @return        returns GraphId of begin node of the edge (empty if couldn't find)
+   * @param tile    reference to a pointer to a const tile containing the begin node
+   * @return        returns GraphId of begin node of the edge (empty if couldn't find).
+   *                if successful begin_node_tile will point to the tile containing the
+   *                begin_node of edge
    */
-  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr& tile) {
-    // grab the node
-    if (!GetGraphTile(edge->endnode(), tile))
+  GraphId GetBeginNodeId(const DirectedEdge* edge, graph_tile_ptr& begin_node_tile) {
+    // grab the end node maybe in an adjacent tile
+    graph_tile_ptr maybe_other_tile = begin_node_tile;
+    if (!GetGraphTile(edge->endnode(), maybe_other_tile))
       return {};
-    const auto* node = tile->node(edge->endnode());
-    // grab the opp edges end node
-    const auto* opp_edge = tile->directededge(node->edge_index() + edge->opp_index());
+    const auto* node = maybe_other_tile->node(edge->endnode());
+    // grab the opp edge also could be in this adjacent tile
+    const auto* opp_edge = maybe_other_tile->directededge(node->edge_index() + edge->opp_index());
+    // grab the end node of the opp_edge, it should be in the original tile
+    GetGraphTile(opp_edge->endnode(), begin_node_tile); // no-op if original tile is already correct
     return opp_edge->endnode();
   }
 
@@ -664,9 +677,12 @@ public:
    * @param   edge2  GraphId of second directed edge.
    * @param   tile    Reference to a pointer to a const tile.
    * @return  Returns true if the directed edges are directly connected
-   *          at a node, false if not.
+   *          at a node, false if not. If successful the edge1_end_node_tile will point
+   *          to the tile containing the end node of edge1
    */
-  bool AreEdgesConnectedForward(const GraphId& edge1, const GraphId& edge2, graph_tile_ptr& tile);
+  bool AreEdgesConnectedForward(const GraphId& edge1,
+                                const GraphId& edge2,
+                                graph_tile_ptr& edge1_end_node_tile);
 
   /**
    * Convenience method to determine if 2 directed edges are connected from
@@ -709,10 +725,11 @@ public:
    * Get node information for the specified node.
    * @param  nodeid  Node Id (GraphId)
    * @param  tile    Reference to a pointer to a const tile.
-   * @return Returns a pointer to the node information.
+   * @return Returns a pointer to the node information. If successful node_tile will
+   *                 point to the tile containing nodeid
    */
-  const NodeInfo* nodeinfo(const GraphId& nodeid, graph_tile_ptr& tile) {
-    return GetGraphTile(nodeid, tile) ? tile->node(nodeid) : nullptr;
+  const NodeInfo* nodeinfo(const GraphId& nodeid, graph_tile_ptr& node_tile) {
+    return GetGraphTile(nodeid, node_tile) ? node_tile->node(nodeid) : nullptr;
   }
 
   /**
@@ -729,10 +746,11 @@ public:
    * Get the directed edge given its GraphId.
    * @param  edgeid  Directed edge Id.
    * @param  tile    Reference to a pointer to a const tile.
-   * @return Returns a pointer to the directed edge.
+   * @return Returns a pointer to the directed edge. If successful edge_tile will point to the tile
+   *                 which contains edgeid
    */
-  const DirectedEdge* directededge(const GraphId& edgeid, graph_tile_ptr& tile) {
-    return GetGraphTile(edgeid, tile) ? tile->directededge(edgeid) : nullptr;
+  const DirectedEdge* directededge(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
+    return GetGraphTile(edgeid, edge_tile) ? edge_tile->directededge(edgeid) : nullptr;
   }
 
   /**
@@ -763,16 +781,17 @@ public:
    * @return Returns a pair of GraphIds: the first is the start node
    *         and the second is the end node. An invalid start node
    *         can occur in regional extracts (where the end node tile
-   *         is not available).
+   *         is not available). If successful edge_tile will point to
+   *         the one containing edgeid
    */
-  std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphId& edgeid, graph_tile_ptr& tile) {
-    if (tile && tile->id().Tile_Base() == edgeid.Tile_Base()) {
-      return GetDirectedEdgeNodes(tile, tile->directededge(edgeid));
+  std::pair<GraphId, GraphId> GetDirectedEdgeNodes(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
+    if (edge_tile && edge_tile->id().Tile_Base() == edgeid.Tile_Base()) {
+      return GetDirectedEdgeNodes(edge_tile, edge_tile->directededge(edgeid));
     } else {
-      tile = GetGraphTile(edgeid);
-      if (!tile)
+      edge_tile = GetGraphTile(edgeid);
+      if (!edge_tile)
         return {};
-      return GetDirectedEdgeNodes(tile, tile->directededge(edgeid));
+      return GetDirectedEdgeNodes(edge_tile, edge_tile->directededge(edgeid));
     }
   }
 
@@ -790,10 +809,11 @@ public:
    * Get the end node of an edge. The current tile is accepted as an
    * argiment.
    * @param  edgeid  Edge Id.
-   * @return  Returns the end node of the edge.
+   * @return  Returns the end node of the edge. If successful edge_tile will point to the one
+   *          containing edgeid
    */
-  GraphId edge_endnode(const GraphId& edgeid, graph_tile_ptr& tile) {
-    const DirectedEdge* de = directededge(edgeid, tile);
+  GraphId edge_endnode(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
+    const DirectedEdge* de = directededge(edgeid, edge_tile);
     if (de) {
       return de->endnode();
     } else {
@@ -805,7 +825,8 @@ public:
    * Get the start node of an edge.
    * @param edgeid Edge Id (Graph Id)
    * @param tile   Current tile.
-   * @return  Returns the start node of the edge.
+   * @return  Returns the start node of the edge. If successful end_node_tile will point to the tile
+   *                  containing the end_node of the input edge
    */
   GraphId edge_startnode(const GraphId& edgeid, graph_tile_ptr& tile) {
     GraphId opp_edgeid = GetOpposingEdgeId(edgeid, tile);
@@ -832,14 +853,15 @@ public:
    * Get the edgeinfo of an edge
    * @param edgeid Edge Id (Graph Id)
    * @param tile   Current tile.
-   * @returns Returns the edgeinfo for the specified id.
+   * @returns Returns the edgeinfo for the specified id. If successful edge_tile will point to the
+   *                  tile containing edgeid
    */
-  EdgeInfo edgeinfo(const GraphId& edgeid, graph_tile_ptr& tile) {
-    auto* edge = directededge(edgeid, tile);
+  EdgeInfo edgeinfo(const GraphId& edgeid, graph_tile_ptr& edge_tile) {
+    auto* edge = directededge(edgeid, edge_tile);
     if (edge == nullptr) {
       throw std::runtime_error("Cannot find edgeinfo for edge: " + std::to_string(edgeid));
     }
-    return tile->edgeinfo(edge);
+    return edge_tile->edgeinfo(edge);
   }
 
   /**
@@ -926,6 +948,16 @@ public:
   int GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile);
 
   /**
+   * Convenience method to get the timezone index from an edge. Preferably it returns
+   * the start's node's timezone.
+   * @param edge   GraphId of the edge to get the timezone index.
+   * @param tile   Current tile. Can be changed to the tile of the edge's end node.
+   * @return Returns the timezone index. A value of 0 indicates an invalid timezone.
+   *         It's possible that the tile changes to the edge's end node's tile.
+   */
+  int GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile);
+
+  /**
    * Returns an incident tile for the given tile id
    * @param tile_id  the tile id for which incidents should be returned
    * @return the incident tile for the tile id
@@ -936,9 +968,9 @@ public:
    * Returns a vector of incidents for the given edge
    * @param edge_id   which edge you need incidents for
    * @param tile      which tile the edge lives in, is updated if not correct
-   * @return IncidentResult
+   * @return IncidentResult. If successful edge_tile will point to the tile containing the edge_id
    */
-  IncidentResult GetIncidents(const GraphId& edge_id, graph_tile_ptr& tile);
+  IncidentResult GetIncidents(const GraphId& edge_id, graph_tile_ptr& edge_tile);
 
 protected:
   // (Tar) extract of tiles - the contents are empty if not being used

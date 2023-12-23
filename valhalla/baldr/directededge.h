@@ -237,7 +237,7 @@ public:
   void set_curvature(const uint32_t factor);
 
   /**
-   * Flag indicating the edge is a dead end (no other driveable
+   * Flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
    */
@@ -246,7 +246,7 @@ public:
   }
 
   /**
-   * Set the flag indicating the edge is a dead end (no other driveable
+   * Set the flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @param d  True if this edge is a dead end.
    */
@@ -298,6 +298,24 @@ public:
    *                   destination only), false if not.
    */
   void set_dest_only(const bool destonly);
+
+  /**
+   * Is this edge part of a private or no through road for HGV that allows access
+   * only if required to get to a destination? If destonly() is true, this is true.
+   * @return  Returns true if the edge is destination only / private access for HGV.
+   */
+  bool destonly_hgv() const {
+    return dest_only_hgv_;
+  }
+
+  /**
+   * Sets the destination only (private) flag for HGV. This indicates the
+   * edge should allow access only to locations that are destinations and
+   * not allow HGV "through" traffic
+   * @param  destonly_hgv  True if the edge is private for HGV (allows access to
+   *                       destination only), false if not.
+   */
+  void set_dest_only_hgv(const bool destonly_hgv);
 
   /**
    * Is this edge part of a tunnel?
@@ -570,9 +588,9 @@ public:
    * @return true if the edge is not a shortcut, not related to transit and not under construction
    */
   bool can_form_shortcut() const {
-    return !is_shortcut() && !bss_connection() && !start_restriction() && !end_restriction() &&
-           use() != Use::kTransitConnection && use() != Use::kEgressConnection &&
-           use() != Use::kPlatformConnection && use() != Use::kConstruction;
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
   }
 
   /**
@@ -862,16 +880,16 @@ public:
   void set_dismount(const bool dismount);
 
   /**
-   * Get if a sidepath for bicycling should be preffered instead of this edge
-   * @return  Returns if a sidepath should be preffered for cycling
+   * Get if a sidepath for bicycling should be preferred instead of this edge
+   * @return  Returns if a sidepath should be preferred for cycling
    */
   bool use_sidepath() const {
     return use_sidepath_;
   }
 
   /**
-   * Set if a sidepath for bicycling should be preffered instead of this edge
-   * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
+   * Set if a sidepath for bicycling should be preferred instead of this edge
+   * @param  use_sidepath  true if sidepath should be preferred for cycling over this edge
    */
   void set_use_sidepath(const bool use_sidepath);
 
@@ -1228,35 +1246,36 @@ protected:
   uint64_t has_predicted_speed_ : 1;    // Does this edge have a predicted speed records?
 
   // 4th 8-byte word
-  uint64_t forwardaccess_ : 12;        // Access (bit mask) in forward direction (see graphconstants.h)
-  uint64_t reverseaccess_ : 12;        // Access (bit mask) in reverse direction (see graphconstants.h)
-  uint64_t max_up_slope_ : 5;          // Maximum upward slope
-  uint64_t max_down_slope_ : 5;        // Maximum downward slope
-  uint64_t sac_scale_ : 3;             // Is this edge for hiking and if so how difficult is the hike?
-  uint64_t cycle_lane_ : 2;            // Does this edge have bicycle lanes?
-  uint64_t bike_network_ : 1;          // Edge that is part of a bicycle network
-  uint64_t use_sidepath_ : 1;          // Is there a cycling path to the side that should be preferred?
-  uint64_t dismount_ : 1;              // Do you need to dismount when biking on this edge?
-  uint64_t sidewalk_left_ : 1;         // Sidewalk to the left of the edge
-  uint64_t sidewalk_right_ : 1;        // Sidewalk to the right of the edge
-  uint64_t shoulder_ : 1;              // Does the edge have a shoulder?
-  uint64_t lane_conn_ : 1;             // 1 if has lane connectivity, 0 otherwise
-  uint64_t turnlanes_ : 1;             // Does this edge have turn lanes (end of edge)
-  uint64_t sign_ : 1;                  // Exit signs exist for this edge
-  uint64_t internal_ : 1;              // Edge that is internal to an intersection
-  uint64_t tunnel_ : 1;                // Is this edge part of a tunnel
-  uint64_t bridge_ : 1;                // Is this edge part of a bridge?
-  uint64_t traffic_signal_ : 1;        // Traffic signal at end of the directed edge
-  uint64_t seasonal_ : 1;              // Seasonal access (ex. no access in winter)
-  uint64_t deadend_ : 1;               // Leads to a dead-end (no other driveable roads) TODO
-  uint64_t bss_connection_ : 1;        // Does this lead to(come out from) a bike share station?
-  uint64_t stop_sign_ : 1;             // Stop sign at end of the directed edge
-  uint64_t yield_sign_ : 1;            // Yield/give way sign at end of the directed edge
-  uint64_t hov_type_ : 1;              // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
-  uint64_t indoor_ : 1;                // Is this edge indoor
-  uint64_t lit_ : 1;                   // Is the edge lit?
+  uint64_t forwardaccess_ : 12; // Access (bit mask) in forward direction (see graphconstants.h)
+  uint64_t reverseaccess_ : 12; // Access (bit mask) in reverse direction (see graphconstants.h)
+  uint64_t max_up_slope_ : 5;   // Maximum upward slope
+  uint64_t max_down_slope_ : 5; // Maximum downward slope
+  uint64_t sac_scale_ : 3;      // Is this edge for hiking and if so how difficult is the hike?
+  uint64_t cycle_lane_ : 2;     // Does this edge have bicycle lanes?
+  uint64_t bike_network_ : 1;   // Edge that is part of a bicycle network
+  uint64_t use_sidepath_ : 1;   // Is there a cycling path to the side that should be preferred?
+  uint64_t dismount_ : 1;       // Do you need to dismount when biking on this edge?
+  uint64_t sidewalk_left_ : 1;  // Sidewalk to the left of the edge
+  uint64_t sidewalk_right_ : 1; // Sidewalk to the right of the edge
+  uint64_t shoulder_ : 1;       // Does the edge have a shoulder?
+  uint64_t lane_conn_ : 1;      // 1 if has lane connectivity, 0 otherwise
+  uint64_t turnlanes_ : 1;      // Does this edge have turn lanes (end of edge)
+  uint64_t sign_ : 1;           // Exit signs exist for this edge
+  uint64_t internal_ : 1;       // Edge that is internal to an intersection
+  uint64_t tunnel_ : 1;         // Is this edge part of a tunnel
+  uint64_t bridge_ : 1;         // Is this edge part of a bridge?
+  uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
+  uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
+  uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
+  uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
+  uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
+  uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
+  uint64_t indoor_ : 1;         // Is this edge indoor
+  uint64_t lit_ : 1;            // Is the edge lit?
+  uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
   uint64_t golf_cart_designated_ : 1;  // Is this a designated golf cart edge?
-  uint64_t spare3_ : 3;
+  uint64_t spare4_ : 2;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

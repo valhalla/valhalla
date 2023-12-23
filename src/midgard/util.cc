@@ -325,7 +325,7 @@ resample_spherical_polyline<std::list<Point2>>(const std::list<Point2>&, double,
 
 /* Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * This method makes use of several computations explained and demonstrated at:
  *   http://williams.best.vwh.net/avform.htm (reference no longer active)

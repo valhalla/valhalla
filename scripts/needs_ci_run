@@ -95,7 +95,7 @@ if not path.isfile(CI_IGNORE_FILE):
 status, last_pr_gitsha = last_build_successful()
 print(f'last build successful?, gitsha: {status}, {last_pr_gitsha}', file=sys.stderr)
 
-# if last build was not successfull, dont skip
+# if last build was not successful, dont skip
 # TODO: even on first build we shouldn't run CI for irrelevant files..
 if not status:
     print('needs CI: last build was not successful', file=sys.stderr)
@@ -110,7 +110,7 @@ if 'commit' not in git_type:
     sys.exit(0)
 
 
-# Get all changes since the last succesful CI run
+# Get all changes since the last successful CI run
 GIT_CMD = ['git', 'diff', f'HEAD..{last_pr_gitsha}', '--name-only']
 
 # Get list of changed files staged for commit

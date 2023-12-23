@@ -3,7 +3,7 @@ if (ENABLE_SANITIZERS)
   set(ENABLE_UNDEFINED_SANITIZER ON)
 endif()
 
-# Inlclude build macros for updating configuration variables
+# Include build macros for updating configuration variables
 include(HandleLibcxxFlags)
 
 set (SANITIZER_FLAGS_LIST "")

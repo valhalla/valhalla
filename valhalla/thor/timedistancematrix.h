@@ -13,7 +13,6 @@
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
@@ -28,7 +27,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceMatrix();
+  TimeDistanceMatrix(const boost::property_tree::ptree& config = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -42,35 +41,34 @@ public:
    * @param  matrix_locations      Number of matrix locations to satisfy a one to many or many to
    *                               one request. This allows partial results: e.g. find time/distance
    *                               to the closest 20 out of 50 locations).
+   * @param  has_time              Whether the request had valid date_time.
    * @param  invariant             Whether invariant time was requested.
    *
    * @return time/distance from all sources to all targets
    */
-  inline std::vector<TimeDistance>
-  SourceToTarget(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t mode,
-                 const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations,
-                 const bool invariant = false) {
+  inline void SourceToTarget(Api& request,
+                             baldr::GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const sif::travel_mode_t mode,
+                             const float max_matrix_distance,
+                             const uint32_t matrix_locations = kAllLocations,
+                             const bool invariant = false) {
 
     LOG_INFO("matrix::TimeDistanceMatrix");
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
 
     // Set the mode and costing
     mode_ = mode;
     costing_ = mode_costing[static_cast<uint32_t>(mode_)];
 
-    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    const bool forward_search =
+        request.options().sources().size() <= request.options().targets().size();
     if (forward_search) {
-      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance, matrix_locations,
-                                                   invariant);
+      return ComputeMatrix<ExpansionType::forward>(request, graphreader, max_matrix_distance,
+                                                   matrix_locations, invariant);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(target_location_list, source_location_list,
-                                                   graphreader, max_matrix_distance, matrix_locations,
-                                                   invariant);
+      return ComputeMatrix<ExpansionType::reverse>(request, graphreader, max_matrix_distance,
+                                                   matrix_locations, invariant);
     }
   };
 
@@ -79,6 +77,11 @@ public:
    * matrix construction.
    */
   inline void clear() {
+    auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+    if (edgelabels_.size() > reservation) {
+      edgelabels_.resize(reservation);
+      edgelabels_.shrink_to_fit();
+    }
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -91,6 +94,9 @@ protected:
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
+
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
 
   // List of destinations
   std::vector<Destination> destinations_;
@@ -111,7 +117,7 @@ protected:
   // Edge status. Mark edges that are in adjacency list or settled.
   EdgeStatus edgestatus_;
 
-  sif::TravelMode mode_;
+  sif::travel_mode_t mode_;
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
@@ -120,12 +126,13 @@ protected:
    * Reset all origin-specific information
    */
   inline void reset() {
-    // Clear the edge labels and destination list
-    edgelabels_.clear();
     // Clear the per-origin information
     for (auto& dest : destinations_) {
       dest.reset();
     }
+
+    // Clear the edge labels
+    edgelabels_.clear();
 
     // Clear elements from the adjacency list
     adjacencylist_.clear();
@@ -140,13 +147,11 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance>
-  ComputeMatrix(google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                baldr::GraphReader& graphreader,
-                const float max_matrix_distance,
-                const uint32_t matrix_locations = kAllLocations,
-                const bool invariant = false);
+  void ComputeMatrix(Api& request,
+                     baldr::GraphReader& graphreader,
+                     const float max_matrix_distance,
+                     const uint32_t matrix_locations = kAllLocations,
+                     const bool invariant = false);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -257,17 +262,21 @@ protected:
 
   /**
    * Form a time/distance matrix from the results.
+   *
+   * @param request   The full request object
    * @param reader    GraphReader instance
    * @param origin_dt The origin's date_time string
    * @param origin_tz The origin's timezone index
    * @param pred_id   The destination edge's GraphId
-   *
-   * @return  Returns a time distance matrix among locations.
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix(baldr::GraphReader& reader,
-                                                   const std::string& origin_dt,
-                                                   const uint64_t& origin_tz,
-                                                   const baldr::GraphId& pred_id);
+  void FormTimeDistanceMatrix(Api& request,
+                              baldr::GraphReader& reader,
+                              const bool forward,
+                              const uint32_t origin_index,
+                              const std::string& origin_dt,
+                              const uint64_t& origin_tz,
+                              const baldr::GraphId& pred_id,
+                              std::vector<std::string>& out_date_times);
 };
 
 } // namespace thor

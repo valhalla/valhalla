@@ -58,7 +58,7 @@ cat "${TMP}" | parallel --progress -k -C '\|' -P "${CONCURRENCY}" "valhalla_run_
 # "-e" suffix, even though -i arg is empty. The wildcard below will ensure that
 # that file is deleted as well.
 rm -f ${TMP}*
-echo "orgLat, orgLng, destLat, destLng, result, #Passes, runtime, trip time, length, arcDistance, #Manuevers, elapsedCostSeconds, elapsedCostCost" > ${RESULTS_OUTDIR}/statistics.csv
+echo "orgLat, orgLng, destLat, destLng, result, #Passes, runtime, trip time, length, arcDistance, #Maneuvers, elapsedCostSeconds, elapsedCostCost" > ${RESULTS_OUTDIR}/statistics.csv
 cat `ls -1v ${RESULTS_OUTDIR}/*_statistics.csv` >> ${RESULTS_OUTDIR}/statistics.csv
 rm -f ${RESULTS_OUTDIR}/*_statistics.csv
 

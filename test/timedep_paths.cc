@@ -37,7 +37,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,
@@ -70,15 +70,15 @@ void try_path(GraphReader& reader,
 
 TEST(TimeDepPaths, test_depart_at_paths) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
-  // Simple path along oneway edge in the driveable direction - should return a single edge
+  // Simple path along oneway edge in the drivable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto","date_time":{"type":1,"value":"2018-06-28T07:00"}})";
   try_path(reader, loki_worker, true, test_request1, 1);
 
-  // Simple path along oneway edge opposing the driveable direction -must not
+  // Simple path along oneway edge opposing the drivable direction -must not
   // return a single edge (edge count is 10)
   const auto test_request2 = R"({"locations":[{"lat":52.078937,"lon":5.115321},
                {"lat":52.079079,"lon":5.115197}],"costing":"auto","date_time":{"type":1,"value":"2018-06-28T07:00"}})";
@@ -87,10 +87,10 @@ TEST(TimeDepPaths, test_depart_at_paths) {
 
 TEST(TimeDepPaths, test_arrive_by_paths) {
   // Test setup
-  loki_worker_t loki_worker(config);
-  GraphReader reader(config.get_child("mjolnir"));
+  loki_worker_t loki_worker(cfg);
+  GraphReader reader(cfg.get_child("mjolnir"));
 
-  // Simple path along oneway edge in the driveable direction - should return a single edge
+  // Simple path along oneway edge in the drivable direction - should return a single edge
   const auto test_request1 = R"({"locations":[{"lat":52.079079,"lon":5.115197},
                {"lat":52.078937,"lon":5.115321}],"costing":"auto","date_time":{"type":2,"value":"2018-06-28T07:00"}})";
   try_path(reader, loki_worker, false, test_request1, 1);
@@ -122,7 +122,7 @@ TEST(TimeDepPaths, test_forward_clear_reserved_memory) {
 
 TEST(TimeDepPaths, test_forward_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_astar", 10);
 
   TimeDepForwardTest time_dep(config);
   time_dep.Clear();
@@ -154,7 +154,7 @@ TEST(TimeDepPaths, test_reverse_clear_reserved_memory) {
 
 TEST(TimeDepPaths, test_reverse_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_dijkstras", 10);
 
   TimeDepReverseTest time_dep(config);
   time_dep.Clear();

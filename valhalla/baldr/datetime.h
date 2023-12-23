@@ -46,8 +46,7 @@ struct tz_db_t {
   const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::unordered_map<std::string, size_t> names;
-  const date::tzdb& db;
+  std::unordered_map<size_t, const date::time_zone*> zones;
 };
 
 /**
@@ -84,7 +83,7 @@ uint32_t days_from_pivot_date(const date::local_seconds& seconds);
 /**
  * Get the iso date and time from the current date and time.
  * @param   time_zone        Timezone.
- * @return  Returns the formated date 2015-05-06.
+ * @return  Returns the formatted date 2015-05-06.
  */
 std::string iso_date_time(const date::time_zone* time_zone);
 
@@ -138,7 +137,7 @@ void seconds_to_date(const uint64_t origin_seconds,
 /**
  * Get utc formatted timestamp, skip using zoned times since we have utc special case
  * @param seconds since epoch in UTC zone
- * @return formated string like: 2020-08-12T14:17:09Z
+ * @return formatted string like: 2020-08-12T14:17:09Z
  */
 inline std::string seconds_to_date_utc(const uint64_t seconds) {
   std::stringstream ss;
@@ -208,6 +207,19 @@ bool is_conditional_active(const bool type,
  * @return the second of the week accounting for timezone transformation from epoch time
  */
 uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
+
+/**
+ * Offset a time by some number of seconds, optionally taking into account timezones at the origin &
+ * destination.
+ *
+ * @param in_dt    the input date time string
+ * @param in_tz    the start timezone
+ * @param out_tz   the end timezone
+ * @param offset   the offset in seconds from the input date time string
+ * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
+ */
+std::string
+offset_date(const std::string& in_dt, const uint32_t in_tz, const uint32_t out_tz, float offset);
 
 /**
  * Convert ISO 8601 time into std::tm.

@@ -150,6 +150,7 @@ map buildtiles(const nodelayout& layout,
  * @param way_name the way name you want a directed edge for
  * @param end_node the node that should be the target of the directed edge you want
  * @param tile_id optional tile_id to limit the search to
+ * @param way_id optional way_id to limit the search to
  * @return the directed edge that matches, or nullptr if there was no match
  */
 std::tuple<const baldr::GraphId,
@@ -160,7 +161,9 @@ findEdge(valhalla::baldr::GraphReader& reader,
          const nodelayout& nodes,
          const std::string& way_name,
          const std::string& end_node,
-         const baldr::GraphId& tile_id = baldr::GraphId{});
+         baldr::GraphId tile_id = baldr::GraphId{},
+         uint64_t way_id = 0,
+         const bool is_shortcut = false);
 
 /**
  * Finds an edge in the graph based on its begin and end node names
@@ -170,7 +173,7 @@ findEdge(valhalla::baldr::GraphReader& reader,
  * @param end_node_name    name of the end node
  * @return the edge_id and its edge
  */
-std::tuple<const baldr::GraphId, const baldr::DirectedEdge*>
+std::tuple<baldr::GraphId, const baldr::DirectedEdge*>
 findEdgeByNodes(valhalla::baldr::GraphReader& reader,
                 const nodelayout& nodes,
                 const std::string& begin_node_name,
