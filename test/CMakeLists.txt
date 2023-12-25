@@ -91,6 +91,7 @@ set(tests_with_warnings
   parse_request
   routing
   sample
+  search
   sequence
   statsd
   traffictile
