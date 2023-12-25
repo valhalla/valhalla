@@ -15,6 +15,7 @@ if(ENABLE_DATA_TOOLS)
     test_admin_sidewalk_crossing_override.cc
     test_admin_uk_override.cc
     test_elevation.cc
+    test_ferry_connections.cc
     test_gtfs.cc
     test_guidance_views.cc
     test_guidance_views_signposts.cc
