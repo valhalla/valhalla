@@ -74,6 +74,7 @@ set(tests_with_warnings
   compression
   countryaccess
   encode
+  edgecollapser
   edgeinfobuilder
   filesystem
   graphbuilder
