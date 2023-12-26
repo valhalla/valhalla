@@ -96,6 +96,7 @@ set(tests_with_warnings
   statsd
   traffictile
   util_midgard
+  util_odin
   utrecht
   timedep_paths
   vector2
