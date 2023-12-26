@@ -107,23 +107,23 @@ void make_tile() {
     tile.directededges().emplace_back(edge_builder);
   };
 
-  // this is what it looks like
-  //    b 0
-  //    |\
-  //  1 | \ 0
-  //    |  \
-  //  2 |   \ 7
-  //    |    \
-  //   1a-3-8-d 3
-  //    |    /
-  //  4 |   / 9
-  //    |  /
-  //  5 | / 6
-  //    |/
-  //    c 2
+  /* this is what it looks like
+      b 0
+      |\
+    1 | \ 0
+      |  \
+    2 |   \ 7
+      |    \
+     1a-3-8-d 3
+      |    /
+    4 |   / 9
+      |  /
+    5 | / 6
+      |/
+      c 2
 
-  // NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
-  // on
+   NOTE: edge ids are in the order the edges are added, so b->d is 0, b->a is 1, a->b is 2 and so
+   */
 
   // B
   {
