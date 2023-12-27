@@ -1,7 +1,9 @@
-#include "thor/timedistancematrix.h"
-#include "midgard/logging.h"
 #include <algorithm>
 #include <vector>
+
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
+#include "thor/timedistancematrix.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -567,6 +569,7 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
   // when it's forward, origin_index will be the source_index
   // when it's reverse, origin_index will be the target_index
   valhalla::Matrix& matrix = *request.mutable_matrix();
+  graph_tile_ptr tile;
   for (uint32_t i = 0; i < destinations_.size(); i++) {
     auto& dest = destinations_[i];
     float time = dest.best_cost.secs + .5f;
@@ -580,7 +583,8 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
     // this logic doesn't work with string repeated fields, gotta collect them
     // and process them later
     auto date_time =
-        get_date_time(origin_dt, origin_tz, pred_id, reader, static_cast<uint64_t>(time));
+        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(pred_id, tile),
+                              static_cast<uint64_t>(time));
     out_date_times[pbf_idx] = date_time;
   }
 }

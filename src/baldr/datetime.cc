@@ -1192,6 +1192,19 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone) {
   return day * midgard::kSecondsPerDay + since_midnight.count();
 }
 
+std::string
+offset_date(const std::string& in_dt, const uint32_t in_tz, const uint32_t out_tz, float offset) {
+  if (in_dt.empty()) {
+    return "";
+  } else if (!offset) {
+    return in_dt;
+  }
+  // get the input UTC time, add the offset and translate to the out timezone
+  auto iepoch = DateTime::seconds_since_epoch(in_dt, DateTime::get_tz_db().from_index(in_tz));
+  auto oepoch =
+      static_cast<uint64_t>(static_cast<double>(iepoch) + static_cast<double>(offset + .5f));
+  return DateTime::seconds_to_date(oepoch, DateTime::get_tz_db().from_index(out_tz), false);
+}
 } // namespace DateTime
 } // namespace baldr
 } // namespace valhalla

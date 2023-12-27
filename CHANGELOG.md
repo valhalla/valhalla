@@ -61,6 +61,8 @@
    * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431)
    * ADDED: hgv=destination and friends for truck-specific "destination_only" logic [#4450](https://github.com/valhalla/valhalla/issues/4450)
    * UPDATED: updated country access overrides [#4460](https://github.com/valhalla/valhalla/pull/4460)
+   * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
+   * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
