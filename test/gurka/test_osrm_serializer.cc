@@ -520,6 +520,101 @@ TEST(Standalone, HeadingNumberAutoRoute) {
   // clang-format on
 }
 
+class VoiceInstructions : public ::testing::Test {
+protected:
+  static gurka::map map;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize_metres = 1000;
+
+    const std::string ascii_map = R"(
+             G
+             |    C--D
+          A--B<
+             |    E--F
+             H
+    )";
+
+    const gurka::ways ways =
+        {{"AB", {{"highway", "primary"}, {"maxspeed", "50"}, {"name", "9th Street"}}},
+         {"BC", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Hayes Street"}}},
+         {"CD", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Hayes Street"}}},
+         {"BE", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Larkin Street"}}},
+         {"EF", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Larkin Street"}}},
+         {"HBG", {{"highway", "primary"}, {"name", "Market Street"}, {"oneway", "yes"}}}};
+
+    const auto layout =
+        gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {5.1079374, 52.0887174});
+
+    const std::unordered_map<std::string, std::string> build_config{
+        {"mjolnir.data_processing.use_admin_db", "false"}};
+
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/osrm_serializer_voice", build_config);
+  }
+
+  rapidjson::Document json_request(const std::string& from, const std::string& to) {
+    const std::string& request =
+        (boost::format(
+             R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s}],"costing":"auto","voice_instructions":true})") %
+         std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+         std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+            .str();
+    auto result = gurka::do_action(valhalla::Options::route, map, request);
+    // return gurka::convert_to_json(result, Options::Format::Options_Format_osrm);
+
+    result.mutable_options()->set_format(Options::Format::Options_Format_osrm);
+    std::string json_string = tyr::serializeDirections(result);
+    rapidjson::Document json;
+    json.Parse(json_string.c_str());
+
+    std::cout << json_string << std::endl;
+    return json;
+  }
+};
+
+gurka::map VoiceInstructions::map = {};
+
+TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
+  auto json = json_request("A", "F");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+  // Validate that each step has voiceInstructions with announcement and distanceAlongGeometry
+  for (int step = 0; step < steps.Size(); ++step) {
+    ASSERT_TRUE(steps[step].HasMember("voiceInstructions"));
+    ASSERT_TRUE(steps[step]["voiceInstructions"].IsArray());
+
+    EXPECT_GT(steps[step]["voiceInstructions"].Size(), 0);
+    for (int instr = 0; instr < steps[step]["voiceInstructions"].GetArray().Size(); ++instr) {
+      ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("announcement"));
+      ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("distanceAlongGeometry"));
+    }
+  }
+}
+
+TEST_F(VoiceInstructions, DepartVoiceInstructions) {
+  auto json = json_request("A", "F");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+
+  auto depart_instruction = steps[0]["voiceInstructions"][0].GetObject();
+  EXPECT_STREQ(depart_instruction["announcement"].GetString(), "Drive east on 9th Street.");
+  EXPECT_EQ(depart_instruction["distanceAlongGeometry"].GetFloat(), 1844.0);
+
+  auto bear_right_instruction = steps[0]["voiceInstructions"][1].GetObject();
+  EXPECT_STREQ(bear_right_instruction["announcement"].GetString(), "Bear right onto Larkin Street.");
+  EXPECT_EQ(bear_right_instruction["distanceAlongGeometry"].GetFloat(), 100.0);
+
+  auto continue_instruction = steps[1]["voiceInstructions"][0].GetObject();
+  EXPECT_STREQ(continue_instruction["announcement"].GetString(), "Continue for 5 kilometers.");
+  EXPECT_EQ(continue_instruction["distanceAlongGeometry"].GetFloat(), 5051.0);
+
+  auto arrive_instruction = steps[1]["voiceInstructions"][1].GetObject();
+  EXPECT_STREQ(arrive_instruction["announcement"].GetString(), "You have arrived at your destination.");
+  EXPECT_EQ(arrive_instruction["distanceAlongGeometry"].GetFloat(), 100.0);
+
+  auto arrive_instruction_final = steps[2]["voiceInstructions"][0].GetObject();
+  EXPECT_STREQ(arrive_instruction_final["announcement"].GetString(), "You have arrived at your destination.");
+  EXPECT_EQ(arrive_instruction_final["distanceAlongGeometry"].GetFloat(), 0.0);
+}
+
 TEST(Standalone, BannerInstructions) {
   const std::string ascii_map = R"(
     A-------------1-B---X

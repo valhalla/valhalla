@@ -1777,6 +1777,9 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         if (prev_step) {
           prev_step->emplace("voiceInstructions", voice_instructions(prev_maneuver, maneuver, prev_distance, maneuver_index));
         }
+        if (arrive_maneuver) {
+          step->emplace("voiceInstructions", voice_instructions(prev_maneuver, maneuver, distance, maneuver_index));
+        }
       }
 
       // Add junction_name if not the start maneuver
