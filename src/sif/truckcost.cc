@@ -292,7 +292,7 @@ public:
   }
 
 public:
-  VehicleType type_; // Vehicle type: tractor trailer
+  VehicleType type_; // Vehicle type: truck
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
@@ -319,7 +319,7 @@ TruckCost::TruckCost(const Costing& costing)
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   const auto& costing_options = costing.options();
 
-  type_ = VehicleType::kTractorTrailer;
+  type_ = VehicleType::kTruck;
 
   // Get the base costs
   get_base_costs(costing);

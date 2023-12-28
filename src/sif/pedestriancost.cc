@@ -578,22 +578,17 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   // Get the pedestrian type - enter as string and convert to enum
   const std::string& type = costing_options.transport_type();
   if (type == "wheelchair") {
+    // TODO(nils): this needs to control much more in costing, e.g.
+    // we could add more AccessRestrictions for curb height or so
     type_ = PedestrianType::kWheelchair;
-  } else if (type == "segway") {
-    type_ = PedestrianType::kSegway;
-  } else {
-    type_ = PedestrianType::kFoot;
-  }
-
-  // Set type specific defaults, override with URL inputs
-  if (type_ == PedestrianType::kWheelchair) {
     access_mask_ = kWheelchairAccess;
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
-    // Assume type = foot
+    type_ = PedestrianType::kFoot;
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }
+
   max_distance_ = costing_options.max_distance();
   speed_ = costing_options.walking_speed();
   step_penalty_ = costing_options.step_penalty();
