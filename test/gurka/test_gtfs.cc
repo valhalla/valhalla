@@ -856,21 +856,13 @@ TEST(GtfsExample, MakeTile) {
 }
 
 TEST(GtfsExample, route_trip1) {
-  // here we request with the relative current time for tmrw 05:50 am
-  auto req_time = DateTime::iso_date_time(DateTime::get_tz_db().from_index(145));
-  size_t tmrw_int = std::stoul(std::string(&req_time[8], &req_time[10])) + 1;
-  // wrap around the next month if it's getting critical
-  if (tmrw_int > 27) {
-    auto new_month = std::to_string(std::stoul(std::string(&req_time[5], &req_time[7])) + 1);
-    new_month = std::string(2 - std::min(2UL, new_month.length()), '0') + new_month;
-    req_time.replace(req_time.find('T') - 5, 2, new_month);
-    tmrw_int -= 20;
-  }
-  auto tmrw_str = std::to_string(tmrw_int);
-  tmrw_str = std::string(2 - std::min(2UL, tmrw_str.length()), '0') + tmrw_str;
-  // replace the day and the time
-  req_time.replace(req_time.find('T') - 2, 2, tmrw_str);
-  req_time.replace(req_time.find('T') + 1, 5, "05:50");
+  // here we request with tmrw 05:50 am
+  const auto tmrw_time =
+      date::floor<date::days>(std::chrono::system_clock::now() + std::chrono::hours(24)) +
+      std::chrono::hours(5) + std::chrono::minutes(50);
+  std::ostringstream iso_date_time;
+  iso_date_time << date::format("%FT%R", tmrw_time);
+  std::string req_time = iso_date_time.str();
 
   std::string res_json;
   valhalla::Api res =
