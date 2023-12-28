@@ -187,14 +187,14 @@ const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 // intermediate hikers. This will bring the uphill values quite close to the
 // ones from the exponential while still keeping downhill speed below flat speed.
 //
-// For negative angles (downhill), as per DIN 33466, speed decreases rapidly 
-// as the slope becomes steeper. This behavior may hold true for mountain hikers 
-// due to unpaved paths. However, it contradicts common sense for city walkers 
-// when the speed factor drops below 1.0 (the walking speed on flat terrain) 
-// even on a slight downhill slope. To address this, we employ a modified Tobler's 
-// function to correct the factor for negative angles. Consequently, walk speed 
-// slightly increases (faster than on flat terrain) when the angle is between 
-// 0% and -5%, and then decreases as indicated by DIN 33466. 
+// For negative angles (downhill), as per DIN 33466, speed decreases rapidly
+// as the slope becomes steeper. This behavior may hold true for mountain hikers
+// due to unpaved paths. However, it contradicts common sense for city walkers
+// when the speed factor drops below 1.0 (the walking speed on flat terrain)
+// even on a slight downhill slope. To address this, we employ a modified Tobler's
+// function to correct the factor for negative angles. Consequently, walk speed
+// slightly increases (faster than on flat terrain) when the angle is between
+// 0% and -5%, and then decreases as indicated by DIN 33466.
 // see https://gist.github.com/xlqian/0b25c8db6f45fb2c8bf68494e1ea54f1
 
 constexpr float kGradeBasedSpeedFactor[] = {
