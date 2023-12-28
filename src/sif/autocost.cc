@@ -68,7 +68,6 @@ constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
-// const std::string kDefaultAutoType = "car";
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
@@ -684,7 +683,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  // JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);

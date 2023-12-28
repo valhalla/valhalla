@@ -369,7 +369,6 @@ enum VehicleType {
 enum PedestrianType {
   kFoot = 0;
   kWheelchair = 1;
-  // kSegway = 2;  // deprecated
 }
 
 enum BicycleType {
