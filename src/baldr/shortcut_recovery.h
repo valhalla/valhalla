@@ -158,6 +158,7 @@ protected:
             edge.use() == shortcut->use() && edge.classification() == shortcut->classification() &&
             edge.roundabout() == shortcut->roundabout() && edge.link() == shortcut->link() &&
             edge.toll() == shortcut->toll() && edge.destonly() == shortcut->destonly() &&
+            edge.destonly_hgv() == shortcut->destonly_hgv() &&
             edge.unpaved() == shortcut->unpaved() && edge.surface() == shortcut->surface() &&
             edge.use() != Use::kConstruction /*&& edge.speed() == shortcut->speed()*/) {
           // we are going to keep this edge

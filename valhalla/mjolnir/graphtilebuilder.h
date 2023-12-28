@@ -510,6 +510,15 @@ public:
    */
   void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
 
+  /**
+   * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+   * must be in the same tile as the directed edge.  This is called during the building of the
+   * tiles; therefore, we can't use GetOpposingEdgeId as it has not been set yet.
+   * @param  tile          Graph tile of the edge
+   * @param  directededge  Directed edge to check.
+   */
+  bool OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge);
+
 protected:
   struct EdgeTupleHasher {
     std::size_t operator()(const edge_tuple& k) const {

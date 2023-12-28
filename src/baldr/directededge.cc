@@ -193,6 +193,13 @@ void DirectedEdge::set_dest_only(const bool destonly) {
   dest_only_ = destonly;
 }
 
+// Sets the destination only (private) flag for HGV. This indicates the edge should
+// allow access only to locations that are destinations and not allow
+// "through" traffic for HGV
+void DirectedEdge::set_dest_only_hgv(const bool destonly_hgv) {
+  dest_only_hgv_ = destonly_hgv;
+}
+
 // Sets the flag indicating this edge has is a tunnel of part of a tunnel.
 void DirectedEdge::set_tunnel(const bool tunnel) {
   tunnel_ = tunnel;
