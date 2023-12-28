@@ -23,6 +23,7 @@
    * FIXED: updated timezone database and added code to keep compatibility with old servers/new data and vice versa [#4446](https://github.com/valhalla/valhalla/pull/4446)
    * FIXED: retry elevation tile download if the download failed for some reason or the downloaded tile was corrupt [#4461](https://github.com/valhalla/valhalla/pull/4461)
    * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
+   * FIXED: insane ETAs for `motor_scooter` on `track`s [#4468](https://github.com/valhalla/valhalla/pull/4468)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
