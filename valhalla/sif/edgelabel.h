@@ -60,6 +60,7 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -72,19 +73,21 @@ public:
             const bool closure_pruning,
             const bool has_measured_speed,
             const InternalTurn internal_turn,
-            const uint8_t path_id = 0)
+            const uint8_t path_id = 0,
+            const bool destonly = false)
       : predecessor_(predecessor), path_distance_(path_distance), restrictions_(edge->restrictions()),
         edgeid_(edgeid), opp_index_(edge->opp_index()), opp_local_idx_(edge->opp_local_idx()),
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        dest_only_(edge->destonly()), origin_(0), destination_(0), toll_(edge->toll()),
-        not_thru_(edge->not_thru()), deadend_(edge->deadend()),
+        origin_(0), destination_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
+        deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
         has_measured_speed_(has_measured_speed), cost_(cost), sortcost_(sortcost) {
+    dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -465,6 +468,7 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
    */
   PathEdgeLabel(const uint32_t predecessor,
                 const baldr::GraphId& edgeid,
@@ -478,7 +482,8 @@ public:
                 const bool closure_pruning,
                 const bool has_measured_speed,
                 const InternalTurn internal_turn,
-                const uint8_t path_id = 0)
+                const uint8_t path_id = 0,
+                const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -490,7 +495,8 @@ public:
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
+                  path_id,
+                  destonly),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -542,6 +548,7 @@ public:
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -557,7 +564,8 @@ public:
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -569,7 +577,8 @@ public:
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
+                  path_id,
+                  destonly),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(dist) {
   }
@@ -594,6 +603,7 @@ public:
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -608,7 +618,8 @@ public:
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -620,7 +631,8 @@ public:
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
+                  path_id,
+                  destonly),
         transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
         not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
   }
@@ -642,6 +654,7 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
+   * @param destonly            Destination only, either mode-specific or general
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -654,7 +667,8 @@ public:
               const bool closure_pruning,
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -666,7 +680,8 @@ public:
                   closure_pruning,
                   has_measured_speed,
                   internal_turn,
-                  path_id),
+                  path_id,
+                  destonly),
         transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
     opp_edgeid_ = {};
   }
@@ -804,6 +819,7 @@ public:
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
    * @param path_id          When searching more than one path at a time this denotes which path the
    *                         this label is tracking
+   * @param destonly         Destination only, either mode-specific or general
    */
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -821,7 +837,8 @@ public:
               const bool has_transit,
               const Cost& transition_cost,
               const uint8_t restriction_idx,
-              const uint8_t path_id = 0)
+              const uint8_t path_id = 0,
+              const bool destonly = false)
       : EdgeLabel(predecessor,
                   edgeid,
                   edge,
@@ -833,7 +850,8 @@ public:
                   true,
                   false,
                   InternalTurn::kNoTurn,
-                  path_id),
+                  path_id,
+                  destonly),
         transition_cost_(transition_cost), prior_stopid_(prior_stopid), tripid_(tripid),
         blockid_(blockid), transit_operator_(transit_operator), has_transit_(has_transit),
         walking_distance_(walking_distance), distance_(dist) {

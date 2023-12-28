@@ -46,8 +46,7 @@ struct tz_db_t {
   const date::time_zone* from_index(size_t index) const;
 
 protected:
-  std::unordered_map<std::string, size_t> names;
-  const date::tzdb& db;
+  std::unordered_map<size_t, const date::time_zone*> zones;
 };
 
 /**
@@ -208,6 +207,19 @@ bool is_conditional_active(const bool type,
  * @return the second of the week accounting for timezone transformation from epoch time
  */
 uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
+
+/**
+ * Offset a time by some number of seconds, optionally taking into account timezones at the origin &
+ * destination.
+ *
+ * @param in_dt    the input date time string
+ * @param in_tz    the start timezone
+ * @param out_tz   the end timezone
+ * @param offset   the offset in seconds from the input date time string
+ * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
+ */
+std::string
+offset_date(const std::string& in_dt, const uint32_t in_tz, const uint32_t out_tz, float offset);
 
 /**
  * Convert ISO 8601 time into std::tm.

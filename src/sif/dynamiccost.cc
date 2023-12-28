@@ -299,6 +299,10 @@ bool DynamicCost::bicycle() const {
   return false;
 }
 
+bool DynamicCost::is_hgv() const {
+  return false;
+}
+
 // Add to the exclude list.
 void DynamicCost::AddToExcludeList(const graph_tile_ptr&) {
 }

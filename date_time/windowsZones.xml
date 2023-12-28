@@ -233,7 +233,7 @@ For terms of use, see http://www.unicode.org/copyright.html
 			<!-- (UTC-03:00) Montevideo -->
 			<mapZone other="Montevideo Standard Time" territory="001" type="America/Montevideo"/>
 			<mapZone other="Montevideo Standard Time" territory="UY" type="America/Montevideo"/>
-			
+
 			<!--  (UTC-03:00) Punta Arenas  -->
 			<mapZone other="Magallanes Standard Time" territory="001" type="America/Punta_Arenas"/>
 			<mapZone other="Magallanes Standard Time" territory="AQ" type="Antarctica/Palmer"/>
@@ -336,7 +336,7 @@ For terms of use, see http://www.unicode.org/copyright.html
 			<mapZone other="Romance Standard Time" territory="DK" type="Europe/Copenhagen"/>
 			<mapZone other="Romance Standard Time" territory="ES" type="Europe/Madrid Africa/Ceuta"/>
 			<mapZone other="Romance Standard Time" territory="FR" type="Europe/Paris"/>
-			
+
 			<!-- (UTC+01:00) Sao Tome -->
 			<mapZone other="Sao Tome Standard Time" territory="001" type="Africa/Sao_Tome"/>
 			<mapZone other="Sao Tome Standard Time" territory="ST" type="Africa/Sao_Tome"/>
@@ -427,11 +427,11 @@ For terms of use, see http://www.unicode.org/copyright.html
 			<!-- (UTC+02:00) Kaliningrad -->
 			<mapZone other="Kaliningrad Standard Time" territory="001" type="Europe/Kaliningrad"/>
 			<mapZone other="Kaliningrad Standard Time" territory="RU" type="Europe/Kaliningrad"/>
-			
+
 			<!-- (UTC+02:00) Khartoum -->
 			<mapZone other="Sudan Standard Time" territory="001" type="Africa/Khartoum"/>
 			<mapZone other="Sudan Standard Time" territory="SD" type="Africa/Khartoum"/>
-			
+
 			<!-- (UTC+02:00) Tripoli -->
 			<mapZone other="Libya Standard Time" territory="001" type="Africa/Tripoli"/>
 			<mapZone other="Libya Standard Time" territory="LY" type="Africa/Tripoli"/>
@@ -508,7 +508,7 @@ For terms of use, see http://www.unicode.org/copyright.html
 			<mapZone other="Mauritius Standard Time" territory="MU" type="Indian/Mauritius"/>
 			<mapZone other="Mauritius Standard Time" territory="RE" type="Indian/Reunion"/>
 			<mapZone other="Mauritius Standard Time" territory="SC" type="Indian/Mahe"/>
-			
+
 			<!--  (UTC+04:00) Saratov  -->
 			<mapZone other="Saratov Standard Time" territory="001" type="Europe/Saratov"/>
 			<mapZone other="Saratov Standard Time" territory="RU" type="Europe/Saratov"/>
@@ -762,7 +762,7 @@ For terms of use, see http://www.unicode.org/copyright.html
 			<!-- (UTC+12:45) Chatham Islands -->
 			<mapZone other="Chatham Islands Standard Time" territory="001" type="Pacific/Chatham"/>
 			<mapZone other="Chatham Islands Standard Time" territory="NZ" type="Pacific/Chatham"/>
-			
+
 			<!--  (UTC+13:00) Coordinated Universal Time+13  -->
 			<mapZone other="UTC+13" territory="001" type="Etc/GMT-13"/>
 			<mapZone other="UTC+13" territory="KI" type="Pacific/Enderbury"/>

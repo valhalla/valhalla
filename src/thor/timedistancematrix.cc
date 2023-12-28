@@ -1,7 +1,9 @@
-#include "thor/timedistancematrix.h"
-#include "midgard/logging.h"
 #include <algorithm>
 #include <vector>
+
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
+#include "thor/timedistancematrix.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -173,7 +175,9 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
                              path_distance, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type, 0,
+                             directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv()));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -371,12 +375,16 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv()));
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               opp_dir_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -561,6 +569,7 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
   // when it's forward, origin_index will be the source_index
   // when it's reverse, origin_index will be the target_index
   valhalla::Matrix& matrix = *request.mutable_matrix();
+  graph_tile_ptr tile;
   for (uint32_t i = 0; i < destinations_.size(); i++) {
     auto& dest = destinations_[i];
     float time = dest.best_cost.secs + .5f;
@@ -574,7 +583,8 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
     // this logic doesn't work with string repeated fields, gotta collect them
     // and process them later
     auto date_time =
-        get_date_time(origin_dt, origin_tz, pred_id, reader, static_cast<uint64_t>(time));
+        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(pred_id, tile),
+                              static_cast<uint64_t>(time));
     out_date_times[pbf_idx] = date_time;
   }
 }
