@@ -753,10 +753,9 @@ std::string GraphTile::GetName(const uint32_t textlist_offset) const {
   }
 }
 
-// Convenience method to process the signs for an edge given the
-// directed edge or node index.
+// Return the signs for a given directed edge or node index.
 std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node) const {
-  uint32_t count = header_->signcount();
+  const int32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
     return signs;
@@ -767,7 +766,7 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  auto found = count;
+  int32_t found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -788,31 +787,51 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
   for (; found < count && signs_[found].index() == idx; ++found) {
     if (signs_[found].text_offset() < textlist_size_) {
 
-      std::string text = (textlist_ + signs_[found].text_offset());
+      const char* text = (textlist_ + signs_[found].text_offset());
+
+      bool isLinguistic = (signs_[found].type() == Sign::Type::kLinguistic);
+
+      bool is_node_sign_type = signs_[found].type() == Sign::Type::kJunctionName ||
+                               signs_[found].type() == Sign::Type::kTollName;
 
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
       // is_route_num_type indicates if this phonome is for a node or not; therefore,
-      // we only return a node phoneme when is_route_num_type and signs_on_node are both true and
-      // we only return an edge phoneme when is_route_num_type and signs_on_node are both false
-      if (((signs_[found].type() == Sign::Type::kJunctionName ||
-            (signs_[found].type() == Sign::Type::kPronunciation &&
-             signs_[found].is_route_num_type())) &&
+      // we only return a node phoneme when is_route_num_type and signs_on_node are both true
+      // and we only return an edge phoneme when is_route_num_type and signs_on_node are both
+      // false
+      if (((is_node_sign_type || (isLinguistic && signs_[found].is_route_num_type())) &&
            signs_on_node) ||
-          (((signs_[found].type() != Sign::Type::kJunctionName &&
-             signs_[found].type() != Sign::Type::kPronunciation) ||
-            (signs_[found].type() == Sign::Type::kPronunciation &&
-             !signs_[found].is_route_num_type())) &&
-           !signs_on_node))
+          (((!is_node_sign_type && !isLinguistic) ||
+            (isLinguistic && !signs_[found].is_route_num_type())) &&
+           !signs_on_node)) {
+        std::string sign_text = text;
+        if (isLinguistic) {
+          sign_text.clear();
+          while (*text != '\0') {
+            if (signs_[found].type() == Sign::Type::kLinguistic) {
+              const auto header = midgard::unaligned_read<linguistic_text_header_t>(text);
+              sign_text.append(
+                  std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) +
+                  std::string((text + kLinguisticHeaderSize), header.length_));
+
+              text += header.length_ + kLinguisticHeaderSize;
+            }
+          }
+        }
+
         signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
-                           signs_[found].tagged(), false, 0, 0, text);
+                           signs_[found].tagged(), false, 0, 0, sign_text);
+      }
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }
   }
+
   if (signs.size() == 0) {
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   }
+
   return signs;
 }
 
@@ -820,21 +839,20 @@ std::vector<SignInfo> GraphTile::GetSigns(const uint32_t idx, bool signs_on_node
 // directed edge index.
 std::vector<SignInfo> GraphTile::GetSigns(
     const uint32_t idx,
-    std::unordered_map<uint32_t, std::pair<uint8_t, std::string>>& index_pronunciation_map,
+    std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>& index_linguistic_map,
     bool signs_on_node) const {
-  uint32_t count = header_->signcount();
+  const int32_t count = header_->signcount();
   std::vector<SignInfo> signs;
   if (count == 0) {
     return signs;
   }
-  index_pronunciation_map.reserve(count);
 
   // Signs are sorted by edge index.
   // Binary search to find a sign with matching edge index.
   int32_t low = 0;
   int32_t high = count - 1;
   int32_t mid;
-  auto found = count;
+  int32_t found = count;
   while (low <= high) {
     mid = (low + high) / 2;
     const auto& sign = signs_[mid];
@@ -856,43 +874,62 @@ std::vector<SignInfo> GraphTile::GetSigns(
     if (signs_[found].text_offset() < textlist_size_) {
 
       const auto* text = (textlist_ + signs_[found].text_offset());
-      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kPronunciation) {
+      if (signs_[found].tagged() && signs_[found].type() == Sign::Type::kLinguistic) {
 
         // is_route_num_type indicates if this phonome is for a node or not
         if ((signs_[found].is_route_num_type() && signs_on_node) ||
             (!signs_[found].is_route_num_type() && !signs_on_node)) {
-          size_t pos = 0;
-          while (pos < strlen(text)) {
-            const auto header = midgard::unaligned_read<linguistic_text_header_t>(text + pos);
-            pos += 3;
+          while (*text != '\0') {
+            std::tuple<uint8_t, uint8_t, std::string> liguistic_attributes;
+            uint8_t name_index = 0;
+            if (signs_[found].type() == Sign::Type::kLinguistic) {
+              const auto header = midgard::unaligned_read<linguistic_text_header_t>(text);
 
-            auto iter = index_pronunciation_map.insert(
-                std::make_pair(header.name_index_,
-                               std::make_pair(header.phonetic_alphabet_,
-                                              std::string((text + pos), header.length_))));
+              std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) =
+                  header.phonetic_alphabet_;
+              std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) = header.language_;
+
+              std::get<kLinguisticMapTuplePronunciationIndex>(liguistic_attributes) =
+                  std::string(text + kLinguisticHeaderSize, header.length_);
+              text += header.length_ + kLinguisticHeaderSize;
+              name_index = header.name_index_;
+
+            } else
+              continue;
+
+            // Edge case.  Sometimes when phonemes exist but the language for that phoneme is not
+            // supported in that area, we toss the phoneme but add the default language for that
+            // name/destination key.  We only want to return the highest ranking phoneme type
+            // over the language.
+            auto iter = index_linguistic_map.insert(std::make_pair(name_index, liguistic_attributes));
             if (!iter.second) {
-              if (header.phonetic_alphabet_ > iter.first->second.first) {
-                iter.first->second = std::make_pair(header.phonetic_alphabet_,
-                                                    std::string((text + pos), header.length_));
+              if ((std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) >
+                   std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter.first->second)) &&
+                  (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) !=
+                   static_cast<uint8_t>(PronunciationAlphabet::kNone)) &&
+                  (std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) ==
+                   std::get<kLinguisticMapTupleLanguageIndex>(iter.first->second))) {
+                iter.first->second = liguistic_attributes;
               }
             }
-
-            pos += header.length_;
           }
         }
         continue;
       }
 
+      bool is_node_sign_type = signs_[found].type() == Sign::Type::kJunctionName ||
+                               signs_[found].type() == Sign::Type::kTollName;
+
       // only add named signs when asking for signs at the node and
       // only add edge signs when asking for signs at the edges.
-      if ((signs_[found].type() == Sign::Type::kJunctionName && signs_on_node) ||
-          (signs_[found].type() != Sign::Type::kJunctionName && !signs_on_node))
+      if ((is_node_sign_type && signs_on_node) || (!is_node_sign_type && !signs_on_node))
         signs.emplace_back(signs_[found].type(), signs_[found].is_route_num_type(),
                            signs_[found].tagged(), false, 0, 0, text);
     } else {
       throw std::runtime_error("GetSigns: offset exceeds size of text list");
     }
   }
+
   if (signs.size() == 0) {
     LOG_ERROR("No signs found for idx = " + std::to_string(idx));
   }

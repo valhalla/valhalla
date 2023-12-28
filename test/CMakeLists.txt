@@ -34,7 +34,7 @@ endif()
 
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
@@ -338,6 +338,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
+  add_dependencies(run-graphbuilder build_timezones)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

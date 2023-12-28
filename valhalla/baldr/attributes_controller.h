@@ -59,6 +59,7 @@ const std::string kEdgeWeightedGrade = "edge.weighted_grade";
 const std::string kEdgeMaxUpwardGrade = "edge.max_upward_grade";
 const std::string kEdgeMaxDownwardGrade = "edge.max_downward_grade";
 const std::string kEdgeMeanElevation = "edge.mean_elevation";
+const std::string kEdgeElevation = "edge.elevation";
 const std::string kEdgeLaneCount = "edge.lane_count";
 const std::string kEdgeLaneConnectivity = "edge.lane_connectivity";
 const std::string kEdgeCycleLane = "edge.cycle_lane";

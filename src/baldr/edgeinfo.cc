@@ -1,15 +1,17 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/graphconstants.h"
 
+#include "midgard/elevation_encoding.h"
+
 using namespace valhalla::baldr;
 
 namespace {
 
-// should return true for any tags which we should consider "named"
-// do not return TaggedValue::kPronunciation
-bool IsNameTag(char ch) {
-  static const std::unordered_set<TaggedValue> kNameTags = {TaggedValue::kBridge,
-                                                            TaggedValue::kTunnel};
+// should return true if not equal to TaggedValue::kLinguistic
+bool IsNonLiguisticTagValue(char ch) {
+  static const std::unordered_set<TaggedValue> kNameTags =
+      {TaggedValue::kBridge, TaggedValue::kTunnel,   TaggedValue::kBssInfo, TaggedValue::kLayer,
+       TaggedValue::kLevel,  TaggedValue::kLevelRef, TaggedValue::kLandmark};
   return kNameTags.count(static_cast<TaggedValue>(static_cast<uint8_t>(ch))) > 0;
 }
 
@@ -40,24 +42,12 @@ std::vector<std::string> parse_tagged_value(const char* ptr) {
     case TaggedValue::kTunnel:
     case TaggedValue::kBridge:
       return {std::string(ptr)};
-    case TaggedValue::kPronunciation: {
-      std::vector<std::string> names{};
-      size_t pos = 1;
-      while (pos < strlen(ptr)) {
-        const auto header = valhalla::midgard::unaligned_read<linguistic_text_header_t>(ptr + pos);
-        pos += 3;
-        names.emplace_back((std::string(reinterpret_cast<const char*>(&header), 3) +
-                            std::string((ptr + pos), header.length_)));
-
-        pos += header.length_;
-      }
-      return names;
-    }
     case TaggedValue::kLandmark: {
       std::string landmark_name = ptr + 10;
       size_t landmark_size = landmark_name.size() + 10;
       return {std::string(ptr, landmark_size)};
     }
+    case TaggedValue::kLinguistic:
     default:
       return {};
   }
@@ -92,6 +82,9 @@ EdgeInfo::EdgeInfo(char* ptr, const char* names_list, const size_t names_list_le
     extended_wayid3_ = static_cast<uint8_t>(*ptr);
     ptr += sizeof(uint8_t);
   }
+
+  // Set encoded elevation pointer
+  encoded_elevation_ = reinterpret_cast<int8_t*>(ptr);
 }
 
 EdgeInfo::~EdgeInfo() {
@@ -141,7 +134,7 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged
     if (ni->tagged_) {
       if (ni->name_offset_ < names_list_length_) {
         const char* name = names_list_ + ni->name_offset_;
-        if (IsNameTag(name[0])) {
+        if (IsNonLiguisticTagValue(name[0])) {
           name_type_pairs.push_back({std::string(name + 1), false});
         }
       } else
@@ -153,6 +146,41 @@ std::vector<std::pair<std::string, bool>> EdgeInfo::GetNames(bool include_tagged
     }
   }
   return name_type_pairs;
+}
+
+// Get the linguistic, tagged names for an edge
+std::vector<std::string> EdgeInfo::GetLinguisticTaggedValues() const {
+  // Get each name
+  std::vector<std::string> names;
+
+  names.reserve(name_count());
+  const NameInfo* ni = name_info_list_;
+  for (uint32_t i = 0; i < name_count(); i++, ni++) {
+    if (!ni->tagged_)
+      continue;
+
+    if (ni->name_offset_ < names_list_length_) {
+      const auto* name = names_list_ + ni->name_offset_;
+      try {
+        TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
+        if (tv == baldr::TaggedValue::kLinguistic) {
+          name += 1;
+          while (*name != '\0') {
+            const auto header = midgard::unaligned_read<linguistic_text_header_t>(name);
+            names.emplace_back(
+                std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) +
+                std::string((name + kLinguisticHeaderSize), header.length_));
+            name += header.length_ + kLinguisticHeaderSize;
+          }
+        }
+      } catch (const std::invalid_argument& arg) {
+        LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
+      }
+    } else {
+      throw std::runtime_error("GetTaggedNames: offset exceeds size of text list");
+    }
+  }
+  return names;
 }
 
 // Get a list of names
@@ -173,7 +201,7 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
       if (ni->name_offset_ < names_list_length_) {
         const char* name = names_list_ + ni->name_offset_;
         auto tag = name[0];
-        if (IsNameTag(tag)) {
+        if (IsNonLiguisticTagValue(tag)) {
           name_type_pairs.push_back({std::string(name + 1), false, static_cast<uint8_t>(tag)});
         }
       } else
@@ -187,8 +215,9 @@ EdgeInfo::GetNamesAndTypes(bool include_tagged_values) const {
   return name_type_pairs;
 }
 
-// Get a list of tagged values
-std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) const {
+// Get a list of tagged values.  We do not return linguistic tagged values here.  Use
+// GetLinguisticTaggedValues to obtain those
+std::vector<std::string> EdgeInfo::GetTaggedValues() const {
   // Get each name
   std::vector<std::string> tagged_values;
   tagged_values.reserve(name_count());
@@ -200,12 +229,11 @@ std::vector<std::string> EdgeInfo::GetTaggedValues(bool only_pronunciations) con
     if (ni->name_offset_ < names_list_length_) {
       const char* value = names_list_ + ni->name_offset_;
       try {
-        // due to short sightedness on pronunciations we have a dichotomy here
-        // basically you can either get other stuff OR pronunciations not both..
         TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-        if ((tv == baldr::TaggedValue::kPronunciation) != only_pronunciations) {
+        if (tv == baldr::TaggedValue::kLinguistic) {
           continue;
         }
+
         // add a per tag parser that returns 0 or more strings, parser skips tags it doesnt know
         std::vector<std::string> contents = parse_tagged_value(value);
         std::move(contents.begin(), contents.end(), std::back_inserter(tagged_values));
@@ -235,7 +263,7 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
           try {
             // no pronunciations for some reason...
             TaggedValue tv = static_cast<baldr::TaggedValue>(value[0]);
-            if (tv == baldr::TaggedValue::kPronunciation) {
+            if (tv == baldr::TaggedValue::kLinguistic) {
               continue;
             }
             // get whatever tag value was in there
@@ -261,9 +289,10 @@ const std::multimap<TaggedValue, std::string>& EdgeInfo::GetTags() const {
   return tag_cache_;
 }
 
-std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronunciationsMap() const {
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> index_pronunciation_map;
-  index_pronunciation_map.reserve(name_count());
+std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>
+EdgeInfo::GetLinguisticMap() const {
+  std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> index_linguistic_map;
+  index_linguistic_map.reserve(name_count());
   const NameInfo* ni = name_info_list_;
   for (uint32_t i = 0; i < name_count(); i++, ni++) {
     if (!ni->tagged_)
@@ -273,38 +302,48 @@ std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> EdgeInfo::GetPronun
       const auto* name = names_list_ + ni->name_offset_;
       try {
         TaggedValue tv = static_cast<baldr::TaggedValue>(name[0]);
-        if (tv == baldr::TaggedValue::kPronunciation) {
-          size_t pos = 1;
-          while (pos < strlen(name)) {
-            const auto header = midgard::unaligned_read<linguistic_text_header_t>(name + pos);
-            pos += 3;
-            std::unordered_map<uint8_t, std::pair<uint8_t, std::string>>::iterator iter =
-                index_pronunciation_map.find(header.name_index_);
+        if (tv == baldr::TaggedValue::kLinguistic) {
+          name += 1;
+          while (*name != '\0') {
+            std::tuple<uint8_t, uint8_t, std::string> liguistic_attributes;
+            uint8_t name_index = 0;
+            const auto header = midgard::unaligned_read<linguistic_text_header_t>(name);
 
-            if (iter == index_pronunciation_map.end())
-              index_pronunciation_map.emplace(
-                  std::make_pair(header.name_index_,
-                                 std::make_pair(header.phonetic_alphabet_,
-                                                std::string((name + pos), header.length_))));
-            else {
-              if (header.phonetic_alphabet_ > (iter->second).first) {
-                iter->second = std::make_pair(header.phonetic_alphabet_,
-                                              std::string((name + pos), header.length_));
-              }
+            std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) =
+                header.phonetic_alphabet_;
+            std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) = header.language_;
+
+            std::get<kLinguisticMapTuplePronunciationIndex>(liguistic_attributes) =
+                std::string(name + kLinguisticHeaderSize, header.length_);
+            name += header.length_ + kLinguisticHeaderSize;
+            name_index = header.name_index_;
+
+            auto iter = index_linguistic_map.insert(std::make_pair(name_index, liguistic_attributes));
+
+            // Edge case.  Sometimes when phonemes exist but the language for that phoneme is not
+            // supported in that area, we toss the phoneme but add the default language for that
+            // name/destination key.  We only want to return the highest ranking phoneme type
+            // over the language.
+            if (!iter.second &&
+                (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) >
+                 std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter.first->second)) &&
+                (std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(liguistic_attributes) !=
+                 static_cast<uint8_t>(PronunciationAlphabet::kNone)) &&
+                (std::get<kLinguisticMapTupleLanguageIndex>(liguistic_attributes) ==
+                 std::get<kLinguisticMapTupleLanguageIndex>(iter.first->second))) {
+              iter.first->second = liguistic_attributes;
             }
-
-            pos += header.length_;
           }
         }
       } catch (const std::invalid_argument& arg) {
         LOG_DEBUG("invalid_argument thrown for name: " + std::string(name));
       }
     } else {
-      throw std::runtime_error("GetPronunciationsMap: offset exceeds size of text list");
+      throw std::runtime_error("GetLinguisticMap: offset exceeds size of text list");
     }
   }
 
-  return index_pronunciation_map;
+  return index_linguistic_map;
 }
 
 // Get the types.  Are these names route numbers or not?
@@ -332,6 +371,24 @@ const std::vector<midgard::PointLL>& EdgeInfo::shape() const {
 std::string EdgeInfo::encoded_shape() const {
   return encoded_shape_ == nullptr ? midgard::encode7(shape_)
                                    : std::string(encoded_shape_, ei_.encoded_shape_size_);
+}
+
+// Returns the encoded elevation along the edge as well as the sampling interval.
+// The sampling interval is uniform (based on the length of the edge).
+std::vector<int8_t> EdgeInfo::encoded_elevation(const uint32_t length, double& interval) const {
+  if (!has_elevation()) {
+    // If no elevation then the edge length is shorter than the sampling interval...set the
+    // interval to the edge length. The elevation at the nodes will be used in this case.
+    interval = length;
+    return std::vector<int8_t>();
+  }
+
+  // Set the sampling interval
+  interval = midgard::sampling_interval(length);
+
+  // Number of elevations encoded (start and end of the edge are stored in NodeInfo)
+  uint32_t n = midgard::encoded_elevation_count(length);
+  return std::vector<int8_t>(encoded_elevation_, encoded_elevation_ + n);
 }
 
 int8_t EdgeInfo::layer() const {

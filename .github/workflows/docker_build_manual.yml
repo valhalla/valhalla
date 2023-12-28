@@ -1,4 +1,4 @@
-name: Build manual Docker image
+name: Build Manual Amd64 Docker Image
 
 on:
   workflow_dispatch:
@@ -22,5 +22,4 @@ jobs:
 
     - name: Build latest image
       run: |
-        docker build -t ghcr.io/valhalla/valhalla:manually_triggered_build .
-        docker push ghcr.io/valhalla/valhalla:manually_triggered_build
+        docker buildx build --push --platform linux/amd64 --tag ghcr.io/valhalla/valhalla:manually_triggered_build_amd64 .
