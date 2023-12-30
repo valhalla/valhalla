@@ -122,7 +122,7 @@ const std::string& TripLeg_TravelMode_Name(int v) {
 
 const std::string& TripLeg_VehicleType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
-      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTractorTrailer"}, {4, "kMotorScooter"},
+      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTruck"}, {4, "kMotorScooter"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -134,7 +134,6 @@ const std::string& TripLeg_PedestrianType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
       {0, "kFoot"},
       {1, "kWheelchair"},
-      {2, "kSegway"},
   };
   auto f = values.find(v);
   if (f == values.cend())

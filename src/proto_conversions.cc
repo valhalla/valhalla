@@ -386,14 +386,13 @@ const std::unordered_map<int, std::string> vehicle_to_string{
     {static_cast<int>(VehicleType::kCar), "car"},
     {static_cast<int>(VehicleType::kMotorcycle), "motorcycle"},
     {static_cast<int>(VehicleType::kAutoBus), "bus"},
-    {static_cast<int>(VehicleType::kTractorTrailer), "tractor_trailer"},
+    {static_cast<int>(VehicleType::kTruck), "truck"},
     {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
 };
 
 const std::unordered_map<int, std::string> pedestrian_to_string{
     {static_cast<int>(PedestrianType::kFoot), "foot"},
     {static_cast<int>(PedestrianType::kWheelchair), "wheelchair"},
-    {static_cast<int>(PedestrianType::kSegway), "segway"},
 };
 
 const std::unordered_map<int, std::string> bicycle_to_string{

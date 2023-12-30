@@ -960,3 +960,14 @@ TEST_F(Rotary, BannerInstructionsRotaryEastWest) {
   EXPECT_STREQ(primary_1["driving_side"].GetString(), "right");
   EXPECT_STREQ(primary_1["text"].GetString(), "Eastern Road");
 }
+
+TEST_F(Rotary, EndOnRotary) {
+  // This is just a test that ending on the rotary doesn't cause a segfault :D
+  auto json = json_request("Q", "F");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+
+  auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
+
+  EXPECT_STREQ(primary_0["type"].GetString(), "rotary");
+  ASSERT_TRUE(primary_0.HasMember("degrees"));
+}
