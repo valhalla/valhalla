@@ -9,7 +9,7 @@
 #include "sif/osrm_car_duration.h"
 #include <cassert>
 
-// TODO: Inline tests
+// TODO: Inline tests like other profiles have
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -48,7 +48,6 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCFavorable,        kTCSlight};
 
 // Minimum and maximum golf cart top speed (to validate input).
-// Maximum is based on Eddie Connell's somewhat joking claim of being able to hit ~40mph
 constexpr uint32_t kMinimumTopSpeed = 20; // KPH
 constexpr uint32_t kDefaultTopSpeed = 35; // KPH (21.75mph)
 constexpr uint32_t kMaximumTopSpeed = 60; // KPH
@@ -72,9 +71,7 @@ constexpr ranged_default_t<uint32_t> kMaxAllowedSpeedLimit{kMinimumAllowedSpeedL
 constexpr float kGolfCartDesignatedFactor = 3.f;
 
 // Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are additive based on other penalties - further
-// avoiding higher class roads for those with low propensity for using
-// more major roads.
+// roads. These penalties are additive based on other penalties.
 constexpr float kRoadClassPenaltyFactor[] = {
     1.0f,  // Motorway
     1.0f,  // Trunk
@@ -86,14 +83,14 @@ constexpr float kRoadClassPenaltyFactor[] = {
     0.05f  // Service, other
 };
 
-// TODO: hills?
-
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
   cfg.dest_only_penalty_.def = kDefaultDestinationOnlyPenalty;
   cfg.disable_toll_booth_ = true;
   cfg.disable_rail_ferry_ = true;
+  cfg.service_penalty_.def = 0;
+  cfg.use_ferry_.def = 0;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
   return cfg;
 }
@@ -279,11 +276,8 @@ public:
 
   // Road speed penalty factor. Penalties apply above a threshold
   float speedpenalty_[kMaxSpeedKph + 1];
-  float density_factor_[16]; // Density factor
   std::vector<float> trans_density_factor_; // Density factor used in edge transition costing
   uint32_t max_allowed_speed_limit_;
-
-  // TODO: hills?
 };
 
 GolfCartCost::GolfCartCost(const Costing& costing)
@@ -291,6 +285,12 @@ GolfCartCost::GolfCartCost(const Costing& costing)
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   const auto& costing_options = costing.options();
+  max_allowed_speed_limit_ = costing_options.max_allowed_speed_limit();
+
+  // Set hierarchy to allow unlimited transitions
+  for (auto& h : hierarchy_limits_) {
+    h.max_up_transitions = kUnlimitedTransitions;
+  }
 
   // Get the base costs
   get_base_costs(costing);
@@ -302,18 +302,9 @@ GolfCartCost::GolfCartCost(const Costing& costing)
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
 
     // Severely penalize anything above the max speed, but don't block it since the
-    // maxspeed hasn't been explicitly tagged if we got this far...
-    speedpenalty_[s] = s < max_allowed_speed_limit_ ? 1 : 3;
+    // maxspeed hasn't been explicitly tagged if this is applied (it was allowed via access)
+    speedpenalty_[s] = s <= max_allowed_speed_limit_ ? 1 : 3;
   }
-
-  // Set density factors - used to penalize edges in dense, urban areas
-  for (uint32_t d = 0; d < 16; d++) {
-    density_factor_[d] = 0.85f + (d * 0.018f);
-  }
-
-  max_allowed_speed_limit_ = costing_options.max_allowed_speed_limit();
-
-  // TODO: hills?
 }
 
 // Check if access is allowed on the specified edge.
@@ -332,7 +323,7 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
       (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
       // NOTE: Parking aisles are baked as destination-only, but for golf carts we actually need
       // to ignore this (per the GIS department of Peachtree City, GA).
-      (!allow_destination_only_ && (!pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle)) ||
+      (!allow_destination_only_ && !pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
     return false;
@@ -357,9 +348,9 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
       (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly() && opp_edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
+      (opp_edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(opp_edge).speed_limit() > max_allowed_speed_limit_)) {
     return false;
   }
 
@@ -376,7 +367,6 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
                                     time_info.seconds_from_now)
                    : fixed_speed_;
 
-  // TODO: Surface or grade?
   uint32_t final_speed = std::min(top_speed_, speed);
 
   assert(final_speed < speedfactor_.size());
@@ -392,26 +382,25 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
   if (edge->use() == Use::kLivingStreet) {
     avoidance_factor = living_street_factor_;
   } else {
-    avoidance_factor += (density_factor_[edge->density()] - 0.85f);
     avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())];
 
     // Multiply by speed so that higher classified roads are more severely punished for being fast.
     // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't
-    // use it here. High speed penalized edges so we want the "default" speed rather than a traffic
+    // use it here. High speed penalized edges, so we want the "default" speed rather than a traffic
     // influenced speed anyway.
     avoidance_factor *= speedpenalty_[edge->speed()];
   }
 
-  // Favor golf cart paths
+  // Favor designated golf cart paths by penalizing everything else
   if (!edge->golf_cart_designated()) {
     if (edge->classification() == valhalla::baldr::RoadClass::kServiceOther) {
+      // Penalize minor roads slightly less
       avoidance_factor *= kGolfCartDesignatedFactor / 2.0f;
     } else {
       avoidance_factor *= kGolfCartDesignatedFactor;
     }
   }
 
-  // TODO: Grade penalty?
   float factor = 1.0f +
                  avoidance_factor +
                  SpeedPenalty(edge, tile, time_info, flow_sources, speed);
@@ -443,13 +432,6 @@ Cost GolfCartCost::TransitionCost(const baldr::DirectedEdge* edge,
       turn_cost = (node->drive_on_right())
                       ? kRightSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))]
                       : kLeftSideTurnCosts[static_cast<uint32_t>(edge->turntype(idx))];
-    }
-
-    if ((edge->use() != Use::kRamp && pred.use() == Use::kRamp) ||
-        (edge->use() == Use::kRamp && pred.use() != Use::kRamp)) {
-      turn_cost += 1.5f;
-      if (edge->roundabout())
-        turn_cost += 0.5f;
     }
 
     float seconds = turn_cost;
@@ -559,8 +541,6 @@ void ParseGolfCartCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
   JSON_PBF_RANGED_DEFAULT(co, kMaxAllowedSpeedLimit, json, "/max_allowed_speed_limit", max_allowed_speed_limit);
-  // TODO: hills?
-//  JSON_PBF_RANGED_DEFAULT(co, kUseHillsRange, json, "/use_hills", use_hills);
 }
 
 cost_ptr_t CreateGolfCartCost(const Costing& costing_options) {
@@ -569,5 +549,3 @@ cost_ptr_t CreateGolfCartCost(const Costing& costing_options) {
 
 } // namespace sif
 } // namespace valhalla
-
-// TODO: Inline tests?
