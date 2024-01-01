@@ -59,7 +59,7 @@ protected:
   uint64_t value_;
 
   struct Attributes {
-    uint16_t type_ : 4;
+    uint16_t type_ : 6;
     uint16_t modes_ : 12;
   };
   Attributes attributes_;
