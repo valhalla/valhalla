@@ -139,7 +139,7 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       meili::MapMatcherFactory factory(root);
       options.set_costing_type(Costing::pedestrian);
       auto matcher = factory.Create(options);
-      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_NE(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should not have custom costing options when not set in preferences";
 
       delete matcher;
@@ -147,10 +147,10 @@ TEST(MapMatcherFactory, TestMapMatcherFactory) {
       options.mutable_costings()
           ->find(Costing::pedestrian)
           ->second.mutable_options()
-          ->set_transport_type("segway");
+          ->set_transport_type("wheelchair");
       matcher = factory.Create(options);
 
-      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kSegway)
+      EXPECT_EQ(matcher->costing()->travel_type(), (int)sif::PedestrianType::kWheelchair)
           << "should read custom costing options in preferences correctly";
 
       delete matcher;

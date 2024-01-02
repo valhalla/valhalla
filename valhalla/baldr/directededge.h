@@ -300,6 +300,24 @@ public:
   void set_dest_only(const bool destonly);
 
   /**
+   * Is this edge part of a private or no through road for HGV that allows access
+   * only if required to get to a destination? If destonly() is true, this is true.
+   * @return  Returns true if the edge is destination only / private access for HGV.
+   */
+  bool destonly_hgv() const {
+    return dest_only_hgv_;
+  }
+
+  /**
+   * Sets the destination only (private) flag for HGV. This indicates the
+   * edge should allow access only to locations that are destinations and
+   * not allow HGV "through" traffic
+   * @param  destonly_hgv  True if the edge is private for HGV (allows access to
+   *                       destination only), false if not.
+   */
+  void set_dest_only_hgv(const bool destonly_hgv);
+
+  /**
    * Is this edge part of a tunnel?
    * @return  Returns true if this edge is part of a tunnel, false if not.
    */
@@ -1241,7 +1259,8 @@ protected:
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
-  uint64_t spare4_ : 4;
+  uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
+  uint64_t spare4_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)
