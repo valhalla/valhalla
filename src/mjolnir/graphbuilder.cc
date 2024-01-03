@@ -1368,23 +1368,29 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::map<GraphId, size_t>& tiles) {
-  // Reclassify links (ramps). Cannot do this when building tiles since the
-  // edge list needs to be modified
-  DataQuality stats;
-  if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
-                    pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  // Do not reclassify links (ramps, turn channels) or ferry connection edges if no
+  // hierarchies are built.
+  if (pt.get<bool>("mjolnir.hierarchy", true)) {
+    // Reclassify links (ramps). Cannot do this when building tiles since the
+    // edge list needs to be modified
+    if (pt.get<bool>("mjolnir.reclassify_links", true)) {
+      ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
+                      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+    } else {
+      LOG_WARN("Not reclassifying link graph edges");
+    }
+
+    // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
+    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
   } else {
-    LOG_WARN("Not reclassifying link graph edges");
+    LOG_WARN("Not reclassifying links or ferry connections since no hierarches are being created");
   }
 
-  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
-  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  // Build tiles at the local level. Form connected graph from nodes and edges.
+  DataQuality stats;
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-
-  // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
