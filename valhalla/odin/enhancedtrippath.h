@@ -794,7 +794,7 @@ const std::unordered_map<uint8_t, std::string> TripLeg_VehicleType_Strings{
     {static_cast<uint8_t>(VehicleType::kCar), "car"},
     {static_cast<uint8_t>(VehicleType::kMotorcycle), "motorcycle"},
     {static_cast<uint8_t>(VehicleType::kAutoBus), "bus"},
-    {static_cast<uint8_t>(VehicleType::kTractorTrailer), "tractor_trailer"},
+    {static_cast<uint8_t>(VehicleType::kTruck), "truck"},
 };
 inline std::string to_string(VehicleType vehicle_type) {
   auto i = TripLeg_VehicleType_Strings.find(static_cast<uint8_t>(vehicle_type));
@@ -807,7 +807,6 @@ inline std::string to_string(VehicleType vehicle_type) {
 const std::unordered_map<uint8_t, std::string> TripLeg_PedestrianType_Strings{
     {static_cast<uint8_t>(PedestrianType::kFoot), "foot"},
     {static_cast<uint8_t>(PedestrianType::kWheelchair), "wheelchair"},
-    {static_cast<uint8_t>(PedestrianType::kSegway), "segway"},
 };
 inline std::string to_string(PedestrianType pedestrian_type) {
   auto i = TripLeg_PedestrianType_Strings.find(static_cast<uint8_t>(pedestrian_type));

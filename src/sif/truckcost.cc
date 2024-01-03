@@ -292,7 +292,7 @@ public:
   }
 
 public:
-  VehicleType type_; // Vehicle type: tractor trailer
+  VehicleType type_; // Vehicle type: truck
   std::vector<float> speedfactor_;
   float density_factor_[16]; // Density factor
   float toll_factor_;        // Factor applied when road has a toll
@@ -319,7 +319,7 @@ TruckCost::TruckCost(const Costing& costing)
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   const auto& costing_options = costing.options();
 
-  type_ = VehicleType::kTractorTrailer;
+  type_ = VehicleType::kTruck;
 
   // Get the base costs
   get_base_costs(costing);
@@ -540,7 +540,7 @@ Cost TruckCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
@@ -613,7 +613,7 @@ Cost TruckCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Penalty to transition onto low class roads.
   if (edge->classification() == baldr::RoadClass::kResidential ||
