@@ -16,7 +16,7 @@
  * @param program The executable's name
  * @param opts    The command line options
  * @param result  The parsed result
- * @param pt      The config which will be populated here
+ * @param config  The config which will be populated here
  * @param log     The logging config node's key
  * @param use_threads Whether this program multi-threads
  *
@@ -26,6 +26,7 @@
 bool parse_common_args(const std::string& program,
                        const cxxopts::Options& opts,
                        const cxxopts::ParseResult& result,
+                       boost::property_tree::ptree& conf,
                        const std::string& log,
                        const bool use_threads = false) {
   if (result.count("help")) {
@@ -39,7 +40,6 @@ bool parse_common_args(const std::string& program,
   }
 
   // Read the config file
-  boost::property_tree::ptree conf;
   if (result.count("inline-config")) {
     conf = valhalla::config(result["inline-config"].as<std::string>());
   } else if (result.count("config") &&

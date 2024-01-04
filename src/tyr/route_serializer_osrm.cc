@@ -1315,7 +1315,9 @@ uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* p
     }
 
     uint32_t end_index = maneuver.end_path_index();
-    bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    if (etp->GetCurrEdge(end_index) != nullptr) {
+      bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    }
   }
 
   if (prev_maneuver != nullptr && maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
