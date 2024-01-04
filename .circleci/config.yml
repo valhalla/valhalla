@@ -3,7 +3,7 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 13.4.1
+      xcode: 14.2.0
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
       CXXFLAGS: -DGEOS_INLINE
