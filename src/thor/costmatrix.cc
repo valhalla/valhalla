@@ -55,10 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0),
-      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_cost_threshold_(0), has_time_(false), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -278,7 +277,7 @@ void CostMatrix::SourceToTarget(Api& request,
 
     float time = connection.cost.secs;
     if (time < kMaxCost) {
-      auto date_time =
+      auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
                                 time_infos[source_idx].timezone_index,
                                 graphreader.GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
@@ -287,7 +286,13 @@ void CostMatrix::SourceToTarget(Api& request,
                                                                 tile),
                                 time);
       auto* pbf_date_time = matrix.mutable_date_times()->Add();
-      *pbf_date_time = date_time;
+      *pbf_date_time = dt_info.date_time;
+
+      auto* pbf_time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
+      *pbf_time_zone_offset = dt_info.time_zone_offset;
+
+      auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
+      *pbf_time_zone_name = dt_info.time_zone_name;
     }
     matrix.mutable_from_indices()->Set(count, source_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);

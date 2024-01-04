@@ -997,3 +997,159 @@ TEST(AlgorithmTestDest, TestAlgoMultiOriginDestination) {
 
   check("8", "8", {"CD"});
 }
+
+class DateTimeTest : public ::testing::Test {
+protected:
+  // check both with and without time zones present
+  static gurka::map map;
+  static gurka::map map_tz;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 1500;
+
+    // ~ are approximate time zone crossings
+    const std::string ascii_map = R"(
+      A----------B
+      |          |
+      C          D
+      |          |
+      ~          ~
+      |          |
+      |          |
+      E          F
+      |          |
+      G----------H
+    )";
+
+    const gurka::ways ways = {{"AC", {{"highway", "residential"}}},
+                              {"CE", {{"highway", "residential"}}},
+                              {"EG", {{"highway", "residential"}}},
+                              {"GH", {{"highway", "residential"}}},
+                              {"HF", {{"highway", "residential"}}},
+                              {"FD", {{"highway", "residential"}}},
+                              {"DB", {{"highway", "residential"}}},
+                              {"BA", {{"highway", "residential"}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route_no_tz");
+    map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_route",
+                               {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+  }
+};
+gurka::map DateTimeTest::map = {};
+gurka::map DateTimeTest::map_tz = {};
+
+TEST_F(DateTimeTest, DepartAt) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T08:23");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+  }
+  {
+    // no time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "B"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:21");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+01:00");
+  }
+  {
+    // two time zone crossings
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G", "H", "B"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T08:23");
+    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T08:44");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T10:07");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "+01:00");
+  }
+}
+
+TEST_F(DateTimeTest, DepartAtNoTz) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(1).date_time(), "");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+  }
+}
+
+TEST_F(DateTimeTest, ArriveBy) {
+  {
+    // one time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T09:37");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+  }
+  {
+    // no time zone crossing
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "B"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T08:39");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+01:00");
+  }
+  {
+    // two time zone crossings
+    auto api = gurka::do_action(valhalla::Options::route, map_tz, {"A", "G", "H", "B"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "2020-10-30T07:53");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T07:16");
+    EXPECT_EQ(api.options().locations(2).date_time(), "2020-10-30T07:37");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "+01:00");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "+00:00");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "+01:00");
+  }
+}
+
+TEST_F(DateTimeTest, ArriveByNoTz) {
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "");
+    EXPECT_EQ(api.options().locations(1).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+  }
+  {
+    // multiple locations to check we do not propagate date time
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G", "F", "D"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.options().locations(0).date_time(), "");
+    EXPECT_EQ(api.options().locations(1).date_time(), "");
+    EXPECT_EQ(api.options().locations(2).date_time(), "");
+    EXPECT_EQ(api.options().locations(3).date_time(), "2020-10-30T09:00");
+    EXPECT_EQ(api.options().locations(0).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(1).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(2).time_zone_offset(), "");
+    EXPECT_EQ(api.options().locations(3).time_zone_offset(), "");
+  }
+}
+
+TEST_F(DateTimeTest, Invariant) {
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "G", "D", "B"}, "auto",
+                                {{"/date_time/type", "3"}, {"/date_time/value", "2020-10-30T09:00"}});
+    for (int i = 0; i < 4; ++i) {
+      EXPECT_EQ(api.options().locations(i).date_time(), "2020-10-30T09:00");
+      EXPECT_EQ(api.options().locations(i).time_zone_offset(), "");
+    }
+  }
+}
