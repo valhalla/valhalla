@@ -34,7 +34,8 @@ inline TripLeg_Surface GetTripLegSurface(const baldr::Surface surface) {
 constexpr VehicleType kTripLegVehicleType[] = {
     VehicleType::kCar,          VehicleType::kMotorcycle,
     VehicleType::kAutoBus,      VehicleType::kTractorTrailer,
-    VehicleType::kMotorScooter, VehicleType::kGolfCart,
+    VehicleType::kMotorScooter, VehicleType::kFourWheelDrive,
+    VehicleType::kGolfCart,
 };
 inline VehicleType GetTripLegVehicleType(const uint8_t type) {
   return (type <= static_cast<uint8_t>(sif::VehicleType::kGolfCart)) ? kTripLegVehicleType[type]

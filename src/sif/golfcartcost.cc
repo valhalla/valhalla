@@ -22,6 +22,7 @@ namespace {
 
 // Base transition costs
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
+constexpr float kParkingAislePenalty = 30.0f;     // Seconds
 
 // Minimum acceptable surface class
 constexpr Surface kMinimumGolfCartSurface = Surface::kCompacted;
@@ -375,11 +376,15 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Represents negative traits without looking at special accommodations for golf carts
   float avoidance_factor = 1.0f;
 
+  // Parking aisles get special treatment in golf cart costing.
+  // Confirming with several sources including the municipality of Peachtree City, GA,
+  // these should be routable without much penalty.
+  bool is_parking_aisle = edge->use() == Use::kParkingAisle;
+
   // Add penalties based on road class.
   // The dest only penalty (for private roads) is normally just a one-time fixed penalty on transitions.
   // However, in the case of golf cart routing, this is usually not sufficient to avoid large areas such as private golf courses which are not routable except as a destination.
-  // We increase the penalty here so that it is both significant (multiplied into the actual edge cost) AND
-  avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())] + (edge->destonly() * 10);
+  avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())] + (edge->destonly() * !is_parking_aisle * 10);
 
   // Multiply by speed so that roads are more severely punished for having traffic faster than the golf cart's speed.
   // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't use it here.
@@ -457,6 +462,12 @@ Cost GolfCartCost::TransitionCost(const baldr::DirectedEdge* edge,
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
     }
+
+    if (edge->destonly() && !pred.destonly() && edge->use() == Use::kParkingAisle) {
+      // Replace the usual destination only penalty with a lower parking aisle penalty
+      c.cost += -destination_only_penalty_ + kParkingAislePenalty;
+    }
+
     c.cost += seconds;
   }
   return c;
@@ -520,6 +531,12 @@ Cost GolfCartCost::TransitionCostReverse(const uint32_t idx,
         seconds *= edge->stopimpact(idx);
       seconds *= trans_density_factor_[node->density()];
     }
+
+    if (edge->destonly() && !pred->destonly() && edge->use() == Use::kParkingAisle) {
+      // Replace the usual destination only penalty with a lower parking aisle penalty
+      c.cost += -destination_only_penalty_ + kParkingAislePenalty;
+    }
+
     c.cost += seconds;
   }
   return c;
