@@ -55,9 +55,10 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
-      locs_remaining_{0, 0}, current_cost_threshold_(0), has_time_(false), targets_{new ReachedMap},
-      sources_{new ReachedMap} {
+      access_mode_(kAutoAccess),
+      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
+      current_cost_threshold_(0),
+      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
