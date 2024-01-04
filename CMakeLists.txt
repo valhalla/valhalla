@@ -195,7 +195,7 @@ if(NOT Protobuf_FOUND)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 endif()
 
-message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
+message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIRS}")
 message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARY}")
 message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
 message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")

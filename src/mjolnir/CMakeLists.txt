@@ -77,7 +77,7 @@ valhalla_module(NAME mjolnir
       ${VALHALLA_SOURCE_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-      ${PROTOBUF_INCLUDE_DIR}
+      ${PROTOBUF_INCLUDE_DIRS}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
