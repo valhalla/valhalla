@@ -20,10 +20,7 @@ namespace sif {
 // Default options/values
 namespace {
 
-// Base transition costs (not toll booth penalties since golf carts likely don't take toll roads)
-constexpr float kDefaultDestinationOnlyPenalty = 30.0f; // Seconds
-
-// Other options
+// Base transition costs
 constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
 
 // Minimum acceptable surface class
@@ -86,7 +83,6 @@ constexpr float kRoadClassPenaltyFactor[] = {
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
   // override defaults
-  cfg.dest_only_penalty_.def = kDefaultDestinationOnlyPenalty;
   cfg.disable_toll_booth_ = true;
   cfg.disable_rail_ferry_ = true;
   cfg.service_penalty_.def = 0;
@@ -379,19 +375,20 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Represents negative traits without looking at special accommodations for golf carts
   float avoidance_factor = 1.0f;
 
-  if (edge->use() == Use::kLivingStreet) {
-    avoidance_factor = living_street_factor_;
-  } else {
-    avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())];
+  // Add penalties based on road class.
+  // The dest only penalty (for private roads) is normally just a one-time fixed penalty on transitions.
+  // However, in the case of golf cart routing, this is usually not sufficient to avoid large areas such as private golf courses which are not routable except as a destination.
+  // We increase the penalty here so that it is both significant (multiplied into the actual edge cost) AND
+  avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())] + (edge->destonly() * 10);
 
-    // Multiply by speed so that higher classified roads are more severely punished for being fast.
-    // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't
-    // use it here. High speed penalized edges, so we want the "default" speed rather than a traffic
-    // influenced speed anyway.
-    avoidance_factor *= speedpenalty_[edge->speed()];
-  }
+  // Multiply by speed so that roads are more severely punished for having traffic faster than the golf cart's speed.
+  // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't use it here.
+  avoidance_factor *= speedpenalty_[edge->speed()];
 
-  // Favor designated golf cart paths by penalizing everything else
+  // Golf cart paths marked as designated should be favored over edges which are merely traversable.
+  // This is because in many areas, local ordinances specifically require use of designated paths
+  // where possible, even if another route is available.
+  // We favor these designated paths by penalizing everything else.
   if (!edge->golf_cart_designated()) {
     if (edge->classification() == valhalla::baldr::RoadClass::kServiceOther) {
       // Penalize minor roads slightly less

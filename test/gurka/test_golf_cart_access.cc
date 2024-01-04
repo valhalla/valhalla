@@ -26,8 +26,8 @@ protected:
                                 Q---R
                                 |\
                                 S-T
-                                |  \
-                                U---V
+                                | |
+                                U-V
     )";
     const gurka::ways ways = {{"AB",
                                {{"highway", "residential"}
@@ -79,10 +79,11 @@ protected:
                               // Second set of N/S connectors
                               {"MO",
                                {{"highway", "residential"},
+                                 {"maxspeed", "30mph"}
                                }},
                               {"OQ",
                                {{"highway", "residential"},
-                                   {"maxspeed", "40mph"}  // Exceeds allowable speed of 60kph
+                                   {"maxspeed", "40mph"}  // Exceeds default max legal speed of road for golf cart use
                                }},
                               {"PR",
                                {{"highway", "residential"},
@@ -142,7 +143,7 @@ gurka::map GolfCartAccess::map = {};
 
 TEST_F(GolfCartAccess, CheckGolfCartAccess) {
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart");
-  gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "UV"});
+  gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TV", "UV"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TV", "UV"});
 }
 

@@ -82,7 +82,7 @@ message Costing {
     taxi = 9;
     auto_ = 10;
     bikeshare = 11;    // turns into pedestrian + bike
-    golf_cart = 100;
+    golf_cart = 12;
   }
 
   message Options {
@@ -315,7 +315,7 @@ message Costing {
     bool disable_hierarchy_pruning = 83;
 
     oneof has_max_allowed_speed_limit {
-      uint32 max_allowed_speed_limit = 200;
+      uint32 max_allowed_speed_limit = 84;
     }
   }
 

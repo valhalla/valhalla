@@ -427,9 +427,7 @@ golf_cart = {
 ["designated"] = "true",
 ["no"] = "false",
 ["permissive"] = "true",
--- This is different from some other profiles, but people familiar with the matter indicate
--- that private ways generally indicate private golf courses which should not be routed over.
-["private"] = "false",
+["private"] = "true",
 ["destination"] = "true",
 ["delivery"] = "true",
 ["customers"] = "true"
@@ -636,7 +634,7 @@ golf_cart_node = {
 ["designated"] = 2048,
 ["no"] = 0,
 ["permissive"] = 2048,
-["private"] = 0,
+["private"] = 2048,
 ["destination"] = 2048,
 ["delivery"] = 2048,
 ["customers"] = 2048
@@ -1019,10 +1017,6 @@ function filter_tags_generic(kv)
     --check for golf cart forward overrides
     kv["golf_cart_forward"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or kv["golf_cart_forward"]
     kv["golf_cart_tag"] = golf_cart[kv["golf_cart"]] or golf[kv["golf"]] or motor_vehicle[kv["motor_vehicle"]] or nil
-
-    if kv["access"] == "private" then
-      kv["golf_cart_forward"] = "false"
-    end
 
     if kv["bike_tag"] == nil then
       if kv["sac_scale"] == "hiking" then
@@ -1761,7 +1755,7 @@ function filter_tags_generic(kv)
      kv["link_type"] = kv["link_type"]
   end
 
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or private[kv["golf_cart"]] or "false"
   kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
@@ -2308,7 +2302,7 @@ function nodes_proc (kv, nokeys)
     end
   end
 
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["golf_cart"]] or "false"
 
   --store a mask denoting access
   kv["access_mask"] = bit.bor(auto, emergency, truck, bike, foot, wheelchair, bus, hov, moped, motorcycle, taxi, golf_cart)

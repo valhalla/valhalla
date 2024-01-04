@@ -78,7 +78,8 @@ const json::MapPtr AccessRestriction::json() const {
                         {"truck", static_cast<bool>(modes_ & kTruckAccess)},
                         {"wheelchair", static_cast<bool>(modes_ & kWheelchairAccess)},
                         {"moped", static_cast<bool>(modes_ & kMopedAccess)},
-                        {"motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess)}});
+                        {"motorcycle", static_cast<bool>(modes_ & kMotorcycleAccess)},
+                        {"golf_cart", static_cast<bool>(modes_ & kGolfCartAccess)}});
 
   switch (type()) {
     case AccessType::kTimedAllowed:
