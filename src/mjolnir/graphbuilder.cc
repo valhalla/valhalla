@@ -1368,22 +1368,25 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
                          const std::map<GraphId, size_t>& tiles) {
-  // Do not reclassify links (ramps, turn channels) or ferry connection edges if no
-  // hierarchies are built.
-  if (pt.get<bool>("mjolnir.hierarchy", true)) {
-    // Reclassify links (ramps). Cannot do this when building tiles since the
-    // edge list needs to be modified
-    if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-      ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
-                      pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
-    } else {
-      LOG_WARN("Not reclassifying link graph edges");
-    }
+  // Reclassify links (ramps). Cannot do this when building tiles since the
+  // edge list needs to be modified. ReclassifyLinks also infers turn channels
+  // so we always want to do this unless reclassify_links and infer_turn_channels
+  // are both false.
+  bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
+  bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
+  if (reclassify_links || infer_turn_channels) {
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, reclassify_links,
+                    infer_turn_channels);
+  } else {
+    LOG_WARN("Not reclassifying link graph edges or inferring turn channels");
+  }
 
-    // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
+  // Do not reclassify ferry connection edges if no hierarchies are built. If reclassifying,
+  // we use RoadClass::kPrimary (highway classification) as cutoff.
+  if (pt.get<bool>("mjolnir.hierarchy", true)) {
     ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
   } else {
-    LOG_WARN("Not reclassifying links or ferry connections since no hierarches are being created");
+    LOG_WARN("Not reclassifying ferry connections since no hierarches are being created");
   }
 
   // Build tiles at the local level. Form connected graph from nodes and edges.
