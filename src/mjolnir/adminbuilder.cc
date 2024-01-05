@@ -287,7 +287,7 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
 
 struct polygon_data {
   polygon_t polygon;
-  polygon_t::inner_container_type postponed_inners;
+  polygon_t::inner_container_type postponed_inners{};
   double area;
   bool operator<(const polygon_data& p) const {
     return area < p.area;
