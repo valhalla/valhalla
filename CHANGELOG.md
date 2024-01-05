@@ -66,9 +66,9 @@
    * UPDATED: updated country access overrides [#4460](https://github.com/valhalla/valhalla/pull/4460)
    * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
    * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
-   * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
    * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
+   * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
