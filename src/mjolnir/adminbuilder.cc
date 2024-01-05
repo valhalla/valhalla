@@ -142,8 +142,15 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
   std::vector<GEOSGeometry*> inner_rings;
   inner_rings.reserve(polygon.inners().size());
-  for (const auto& inner : polygon.inners())
+  for (const auto& inner : polygon.inners()) {
+    // some weird clang osx behavior where it gets into this loop without any inners()
+    // TODO(nils): remove the log
+    if (!inner.size()) {
+      std::cerr << "FAIL: polygon.inners() has size " << polygon.inners().size() << std::endl;
+      continue;
+    }
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  }
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   GEOSNormalize(buffered);
@@ -287,7 +294,7 @@ void to_rings(const std::pair<std::string, uint64_t>& admin_info,
 
 struct polygon_data {
   polygon_t polygon;
-  polygon_t::inner_container_type postponed_inners{};
+  polygon_t::inner_container_type postponed_inners;
   double area;
   bool operator<(const polygon_data& p) const {
     return area < p.area;
