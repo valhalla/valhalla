@@ -6,12 +6,12 @@
 #include <future>
 #include <limits>
 #include <list>
+#include <optional>
 #include <regex>
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
 
-#include <boost/optional.hpp>
 #include <lz4frame.h>
 #include <sys/stat.h>
 
@@ -23,7 +23,7 @@
 #include "valhalla/baldr/curl_tilegetter.h"
 
 namespace {
-// srtmgl1 holds 1x1 degree tiles but oversamples the egde of the tile
+// srtmgl1 holds 1x1 degree tiles but oversamples the edge of the tile
 // by .5 seconds on all sides. that means that the center of pixel 0 is
 // located at the tiles lat,lon (which is important for bilinear filtering)
 // it also means that there are 3601 pixels per row and per column
@@ -158,7 +158,7 @@ public:
     return true;
   }
 
-  static boost::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
+  static std::optional<std::pair<uint16_t, format_t>> parse_hgt_name(const std::string& name) {
     std::smatch m;
     std::regex e(".*/([NS])([0-9]{2})([WE])([0-9]{3})\\.hgt(\\.(gz|lz4))?$");
     if (std::regex_search(name, m, e)) {
@@ -182,7 +182,7 @@ public:
         return std::make_pair(uint16_t(lat * 360 + lon), fmt);
       }
     }
-    return boost::none;
+    return std::nullopt;
   }
 };
 
@@ -195,7 +195,7 @@ private:
   bool reusable;
 
 public:
-  tile_data() : c(nullptr), index(TILE_COUNT), reusable(false), data(nullptr) {
+  tile_data() : c(nullptr), data(nullptr), index(TILE_COUNT), reusable(false) {
   }
 
   tile_data(const tile_data& other) : c(nullptr) {
@@ -303,17 +303,17 @@ struct cache_t {
   }
 
   // no need for synchronization as size is constant(set in constructor
-  // and never change after thatn)
+  // and never change after that)
   std::size_t size() const noexcept {
     return cache.size();
   }
 
-  bool insert(int pos, const std::string& path, format_t format);
+  bool insert(size_t pos, const std::string& path, format_t format);
 
   tile_data source(uint16_t index);
 };
 
-bool cache_t::insert(int pos, const std::string& path, format_t format) {
+bool cache_t::insert(size_t pos, const std::string& path, format_t format) {
   if (pos >= cache.size())
     return false;
 

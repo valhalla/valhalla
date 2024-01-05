@@ -17,7 +17,7 @@ set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(VALHALLA_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 list(INSERT CMAKE_MODULE_PATH 0 ${VALHALLA_SOURCE_DIR}/cmake)
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "C++ language version to use (default is 14)")
+set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ language version to use (default is 17)")
 option(ENABLE_TOOLS "Enable Valhalla tools" ON)
 option(ENABLE_DATA_TOOLS "Enable Valhalla data tools" ON)
 option(ENABLE_SERVICES "Enable Valhalla services" ON)
@@ -145,8 +145,8 @@ if (NOT Boost_FOUND)
   endif()
 
   # build dir needs to be added, that's where conan writes some info
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
-  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
+  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR})
   include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
 
   conan_cmake_autodetect(settings)
@@ -157,6 +157,8 @@ if (NOT Boost_FOUND)
 endif()
 find_package(Boost ${boost_VERSION} REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
+add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
@@ -178,7 +180,16 @@ else()
 endif()
 
 if(NOT Protobuf_FOUND)
+  # prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf fuckups
+  # NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
+  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
+  # newer protobuf versions require a compat bool
+  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
   find_package(Protobuf REQUIRED)
+
+  # and turn it off again
+  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 endif()
 
 message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
@@ -187,33 +198,6 @@ message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
 message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
 if(TARGET protobuf::libprotobuf-lite)
   message(STATUS "Using pbf-lite")
-endif()
-
-# TODO: remove after switching to CMake >= 3.9
-if(CMAKE_VERSION VERSION_LESS 3.9)
-  if(NOT TARGET protobuf::libprotobuf-lite)
-    add_library(protobuf::libprotobuf-lite UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-      FOLDER "Dependencies"
-      INTERFACE_INCLUDE_DIRECTORIES "${PROTOBUF_INCLUDE_DIR}")
-
-    if(EXISTS "${PROTOBUF_LIBRARY}")
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION "${PROTOBUF_LIBRARY}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_RELEASE}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS RELEASE)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_RELEASE "${PROTOBUF_LIBRARY_RELEASE}")
-    endif()
-    if(EXISTS "${PROTOBUF_LIBRARY_DEBUG}")
-      set_property(TARGET protobuf::libprotobuf-lite APPEND PROPERTY
-        IMPORTED_CONFIGURATIONS DEBUG)
-      set_target_properties(protobuf::libprotobuf-lite PROPERTIES
-        IMPORTED_LOCATION_DEBUG "${PROTOBUF_LIBRARY_DEBUG}")
-    endif()
-  endif()
 endif()
 
 # Allow linking against full or lite version of Protobuf library
@@ -296,8 +280,8 @@ set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_be
 ## Valhalla data tools
 set(valhalla_data_tools valhalla_build_statistics valhalla_ways_to_edges valhalla_validate_transit
   valhalla_benchmark_admins valhalla_build_connectivity	valhalla_build_tiles valhalla_build_admins
-  valhalla_convert_transit valhalla_fetch_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
-  valhalla_assign_speeds valhalla_add_elevation)
+  valhalla_convert_transit valhalla_ingest_transit valhalla_query_transit valhalla_add_predicted_traffic
+  valhalla_assign_speeds valhalla_add_elevation valhalla_build_landmarks valhalla_add_landmarks)
 
 ## Valhalla services
 set(valhalla_services valhalla_loki_worker valhalla_odin_worker valhalla_thor_worker)
@@ -356,7 +340,7 @@ if(ENABLE_SERVICES)
 endif()
 
 # add the scripts to the build folder as well
-foreach(script valhalla_build_config valhalla_build_elevation valhalla_build_transit
+foreach(script valhalla_build_config valhalla_build_elevation
   valhalla_build_extract valhalla_build_timezones)
   configure_file(${VALHALLA_SOURCE_DIR}/scripts/${script} ${CMAKE_BINARY_DIR}/${script} COPYONLY)
   
@@ -398,7 +382,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${VALHALLA_SOURCE_DIR}/LICENSE.md")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenStreetMap Routing API
  A set of routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure")
-  set(CPACK_COMPONENT_PYHON_DESCRIPTION "OpenStreetMap Routing Python Bindings
+  set(CPACK_COMPONENT_PYTHON_DESCRIPTION "OpenStreetMap Routing Python Bindings
  A set routing APIs designed around OSM map data using
  dynamic costing and a tiled data structure and
  accompanying tools and services used to analyse and

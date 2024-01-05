@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_GRAPHCONSTANTS_H_
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <string>
 #include <unordered_map>
@@ -44,7 +45,7 @@ constexpr uint16_t kMotorcycleAccess = 1024;
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
-constexpr uint32_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
+constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
                                       kTaxiAccess | kBusAccess | kHOVAccess;
 
 // Maximum number of transit records per tile and other max. transit
@@ -102,6 +103,11 @@ constexpr uint32_t kMaxSpeedKph = std::max(kMaxTrafficSpeed, kMaxAssumedSpeed);
 // to measure a probe going this slow via stop and go traffic over a long enough
 // stretch, its unlikely to be good signal below this value
 constexpr uint32_t kMinSpeedKph = 5; // ~3 MPH
+
+// Default Fixed Speed. This is the default fixed speed that is assumed.
+// Unless otherwised specified no fixed speed will be assumed and speed will be
+// calculated from costing algorithm.
+constexpr uint32_t kDisableFixedSpeed = 0; // ~0 MPH
 
 inline bool valid_speed(float speed) {
   return speed > kMinSpeedKph && speed < kMaxAssumedSpeed;
@@ -303,12 +309,13 @@ enum class Use : uint8_t {
   kPedestrianCrossing = 32, // cross walks
   kElevator = 33,
   kEscalator = 34,
+  kPlatform = 35,
 
   // Rest/Service Areas
   kRestArea = 30,
   kServiceArea = 31,
 
-  // Other...
+  // Other... currently, either BSS Connection or unspecified service road
   kOther = 40,
 
   // Ferry and rail ferry
@@ -320,9 +327,9 @@ enum class Use : uint8_t {
   // Transit specific uses. Must be last in the list
   kRail = 50,               // Rail line
   kBus = 51,                // Bus line
-  kEgressConnection = 52,   // Connection to a egress node
-  kPlatformConnection = 53, // Connection to a platform node
-  kTransitConnection = 54,  // Connection to multi-use transit stop
+  kEgressConnection = 52,   // Connection egress <-> station
+  kPlatformConnection = 53, // Connection station <-> platform
+  kTransitConnection = 54,  // Connection osm <-> egress
 };
 inline std::string to_string(Use u) {
   static const std::unordered_map<uint8_t, std::string> UseStrings = {
@@ -357,7 +364,7 @@ inline std::string to_string(Use u) {
       {static_cast<uint8_t>(Use::kRail), "rail"},
       {static_cast<uint8_t>(Use::kBus), "bus"},
       {static_cast<uint8_t>(Use::kEgressConnection), "egress_connection"},
-      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connnection"},
+      {static_cast<uint8_t>(Use::kPlatformConnection), "platform_connection"},
       {static_cast<uint8_t>(Use::kTransitConnection), "transit_connection"},
       {static_cast<uint8_t>(Use::kConstruction), "construction"},
   };
@@ -371,26 +378,173 @@ inline std::string to_string(Use u) {
 
 enum class TaggedValue : uint8_t { // must start at 1 due to nulls
   kLayer = 1,
-  kPronunciation = 2,
+  kLinguistic = 2,
   kBssInfo = 3,
   kLevel = 4,
   kLevelRef = 5,
+  kLandmark = 6,
   // we used to have bug when we encoded 1 and 2 as their ASCII codes, but not actual 1 and 2 values
   // see https://github.com/valhalla/valhalla/issues/3262
   kTunnel = static_cast<uint8_t>('1'),
   kBridge = static_cast<uint8_t>('2'),
-
 };
 
 enum class PronunciationAlphabet : uint8_t {
-  kNone = 0,
+  // kNone = 0 has been deprecated as this introduced a bug while processing the linguistic records.
   kIpa = 1,
-  kXKatakana = 2,
-  kXJeita = 3,
-  kNtSampa = 4
+  kKatakana = 2,
+  kJeita = 3,
+  kNtSampa = 4,
+  kNone = 5
 };
 // must start at 1 due to nulls
-enum class Language : uint8_t { kNone = 1 };
+// must start at 1 due to nulls
+enum class Language : uint8_t {
+  kAb = 1,
+  kAm = 2,
+  kAr = 3,
+  kAz = 4,
+  kBe = 5,
+  kBg = 6,
+  kBn = 7,
+  kBs = 8,
+  kCa = 9,
+  kCkb = 10,
+  kCs = 11,
+  kDa = 12,
+  kDe = 13,
+  kDv = 14,
+  kDz = 15,
+  kEl = 16,
+  kEn = 17,
+  kEs = 18,
+  kEt = 19,
+  kFa = 20,
+  kFi = 21,
+  kFr = 22,
+  kFy = 23,
+  kGl = 24,
+  kHe = 25,
+  kHr = 26,
+  kHu = 27,
+  kHy = 28,
+  kId = 29,
+  kIs = 30,
+  kIt = 31,
+  kJa = 32,
+  kKa = 33,
+  kKl = 34,
+  kKm = 35,
+  kKo = 36,
+  kLo = 37,
+  kLt = 38,
+  kLv = 39,
+  kMg = 40,
+  kMk = 41,
+  kMn = 42,
+  kMo = 43,
+  kMt = 44,
+  kMy = 45,
+  kNe = 46,
+  kNl = 47,
+  kNo = 48,
+  kOc = 49,
+  kPap = 50,
+  kPl = 51,
+  kPs = 52,
+  kPt = 53,
+  kRm = 54,
+  kRo = 55,
+  kRu = 56,
+  kSk = 57,
+  kSl = 58,
+  kSq = 59,
+  kSr = 60,
+  kSrLatn = 61,
+  kSv = 62,
+  kTg = 63,
+  kTh = 64,
+  kTk = 65,
+  kTr = 66,
+  kUk = 67,
+  kUr = 68,
+  kUz = 69,
+  kVi = 70,
+  kZh = 71,
+  kCy = 72,
+  kTa = 73,
+  kMs = 74,
+  kNone = 255
+};
+
+inline Language stringLanguage(const std::string& s) {
+  static const std::unordered_map<std::string, Language> stringToLanguage =
+      {{"ab", Language::kAb},          {"am", Language::kAm},   {"ar", Language::kAr},
+       {"az", Language::kAz},          {"be", Language::kBe},   {"bg", Language::kBg},
+       {"bn", Language::kBn},          {"bs", Language::kBs},   {"ca", Language::kCa},
+       {"ckb", Language::kCkb},        {"cs", Language::kCs},   {"da", Language::kDa},
+       {"de", Language::kDe},          {"dv", Language::kDv},   {"dz", Language::kDz},
+       {"el", Language::kEl},          {"en", Language::kEn},   {"es", Language::kEs},
+       {"et", Language::kEt},          {"fa", Language::kFa},   {"fi", Language::kFi},
+       {"fr", Language::kFr},          {"fy", Language::kFy},   {"gl", Language::kGl},
+       {"he", Language::kHe},          {"hr", Language::kHr},   {"hu", Language::kHu},
+       {"hy", Language::kHy},          {"id", Language::kId},   {"is", Language::kIs},
+       {"it", Language::kIt},          {"ja", Language::kJa},   {"ka", Language::kKa},
+       {"kl", Language::kKl},          {"km", Language::kKm},   {"ko", Language::kKo},
+       {"lo", Language::kLo},          {"lt", Language::kLt},   {"lv", Language::kLv},
+       {"mg", Language::kMg},          {"mk", Language::kMk},   {"mn", Language::kMn},
+       {"mo", Language::kMo},          {"mt", Language::kMt},   {"my", Language::kMy},
+       {"ne", Language::kNe},          {"nl", Language::kNl},   {"no", Language::kNo},
+       {"oc", Language::kOc},          {"pap", Language::kPap}, {"pl", Language::kPl},
+       {"ps", Language::kPs},          {"pt", Language::kPt},   {"rm", Language::kRm},
+       {"ro", Language::kRo},          {"ru", Language::kRu},   {"sk", Language::kSk},
+       {"sl", Language::kSl},          {"sq", Language::kSq},   {"sr", Language::kSr},
+       {"sr-Latn", Language::kSrLatn}, {"sv", Language::kSv},   {"tg", Language::kTg},
+       {"th", Language::kTh},          {"tk", Language::kTk},   {"tr", Language::kTr},
+       {"uk", Language::kUk},          {"ur", Language::kUr},   {"uz", Language::kUz},
+       {"vi", Language::kVi},          {"zh", Language::kZh},   {"cy", Language::kCy},
+       {"ta", Language::kTa},          {"ms", Language::kMs},   {"none", Language::kNone}};
+
+  auto i = stringToLanguage.find(s);
+  if (i == stringToLanguage.cend()) {
+    return Language::kNone;
+  }
+  return i->second;
+}
+inline std::string to_string(Language l) {
+  static const std::unordered_map<Language, std::string> LanguageStrings =
+      {{Language::kAb, "ab"},          {Language::kAm, "am"},   {Language::kAr, "ar"},
+       {Language::kAz, "az"},          {Language::kBe, "be"},   {Language::kBg, "bg"},
+       {Language::kBn, "bn"},          {Language::kBs, "bs"},   {Language::kCa, "ca"},
+       {Language::kCkb, "ckb"},        {Language::kCs, "cs"},   {Language::kDa, "da"},
+       {Language::kDe, "de"},          {Language::kDv, "dv"},   {Language::kDz, "dz"},
+       {Language::kEl, "el"},          {Language::kEn, "en"},   {Language::kEs, "es"},
+       {Language::kEt, "et"},          {Language::kFa, "fa"},   {Language::kFi, "fi"},
+       {Language::kFr, "fr"},          {Language::kFy, "fy"},   {Language::kGl, "gl"},
+       {Language::kHe, "he"},          {Language::kHr, "hr"},   {Language::kHu, "hu"},
+       {Language::kHy, "hy"},          {Language::kId, "id"},   {Language::kIs, "is"},
+       {Language::kIt, "it"},          {Language::kJa, "ja"},   {Language::kKa, "ka"},
+       {Language::kKl, "kl"},          {Language::kKm, "km"},   {Language::kKo, "ko"},
+       {Language::kLo, "lo"},          {Language::kLt, "lt"},   {Language::kLv, "lv"},
+       {Language::kMg, "mg"},          {Language::kMk, "mk"},   {Language::kMn, "mn"},
+       {Language::kMo, "mo"},          {Language::kMt, "mt"},   {Language::kMy, "my"},
+       {Language::kNe, "ne"},          {Language::kNl, "nl"},   {Language::kNo, "no"},
+       {Language::kOc, "oc"},          {Language::kPap, "pap"}, {Language::kPl, "pl"},
+       {Language::kPs, "ps"},          {Language::kPt, "pt"},   {Language::kRm, "rm"},
+       {Language::kRo, "ro"},          {Language::kRu, "ru"},   {Language::kSk, "sk"},
+       {Language::kSl, "sl"},          {Language::kSq, "sq"},   {Language::kSr, "sr"},
+       {Language::kSrLatn, "sr-Latn"}, {Language::kSv, "sv"},   {Language::kTg, "tg"},
+       {Language::kTh, "th"},          {Language::kTk, "tk"},   {Language::kTr, "tr"},
+       {Language::kUk, "uk"},          {Language::kUr, "ur"},   {Language::kUz, "uz"},
+       {Language::kVi, "vi"},          {Language::kZh, "zh"},   {Language::kCy, "cy"},
+       {Language::kTa, "ta"},          {Language::kMs, "ms"},   {Language::kNone, "none"}};
+
+  auto i = LanguageStrings.find((l));
+  if (i == LanguageStrings.cend()) {
+    return "none";
+  }
+  return i->second;
+}
 
 // Speed type
 enum class SpeedType : uint8_t {
@@ -582,7 +736,8 @@ enum class AccessType : uint8_t {
   kMaxAxleLoad = 5,
   kTimedAllowed = 6,
   kTimedDenied = 7,
-  kDestinationAllowed = 8
+  kDestinationAllowed = 8,
+  kMaxAxles = 9
 };
 
 // Minimum meters offset from start/end of shape for finding heading
@@ -646,7 +801,8 @@ constexpr uint8_t kDefaultFlowMask =
     kFreeFlowMask | kConstrainedFlowMask | kPredictedFlowMask | kCurrentFlowMask;
 constexpr uint32_t kFreeFlowSecondOfDay = 60 * 60 * 0;         // midnight
 constexpr uint32_t kConstrainedFlowSecondOfDay = 60 * 60 * 12; // noon
-constexpr uint32_t kInvalidSecondsOfWeek = -1;                 // invalid
+constexpr uint64_t kInvalidSecondsOfWeek =
+    1048575; // invalid (20 bits - 1), Sunday 23:59:59 is 604799
 
 // There is only 1 bit to store these values, do not exceed the value 1.
 enum class HOVEdgeType : uint8_t { kHOV2 = 0, kHOV3 = 1 };

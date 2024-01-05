@@ -48,6 +48,25 @@
   }
 
 /**
+ * same as above, but for costing options without pbf's awful oneof
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param range            ranged_default_t object which will check any provided values are in range
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the jsonn
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name)              \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
+                                                  costing_options->option_name()                     \
+                                                      ? costing_options->option_name()               \
+                                                      : range.def)));                                \
+  }
+
+/**
  * this macro takes a default value and uses it when no user provided values exist (in json or in pbf)
  * to set the option on the costing options object
  *
@@ -89,6 +108,9 @@ constexpr float kMaxFerryPenalty = 6.0f * midgard::kSecPerHour; // 6 hours
 // Default uturn costs
 constexpr float kTCUnfavorablePencilPointUturn = 15.f;
 constexpr float kTCUnfavorableUturn = 600.f;
+
+// Maximum highway avoidance bias (modulates the highway factors based on road class)
+constexpr float kMaxHighwayBiasFactor = 8.0f;
 
 /**
  * Mask values used in the allowed function by loki::reach to control how conservative
@@ -171,15 +193,6 @@ public:
    * @return  mode factor
    */
   virtual float GetModeFactor();
-
-  /**
-   * This method overrides the max_distance with the max_distance_mm per segment
-   * distance. An example is a pure walking route may have a max distance of
-   * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-   * meters per segment (e.g. from origin to a transit stop or from the last
-   * transit stop to the destination).
-   */
-  virtual void UseMaxMultiModalDistance();
 
   /**
    * Get the access mode used by this costing method.
@@ -408,11 +421,11 @@ public:
       return next_pred;
     };
     auto reset_edge_status =
-        [&edgestatus, &forward](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
+        [&edgestatus](const std::vector<baldr::GraphId>& edge_ids_in_complex_restriction) {
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
-          // hav already been evaluated. I.e. B is now marked as kPermanent since
+          // have already been evaluated. I.e. B is now marked as kPermanent since
           // we didn't know at the time of B's evaluation that A to B would eventually
           // form a restricted path
           //
@@ -512,7 +525,7 @@ public:
             }
             continue;
           }
-          // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
+          // TODO: If a user runs a non-time dependent route, we need to provide Maneuver Notes for
           // the timed restriction.
           else if (!current_time && cr->has_dt()) {
             return false;
@@ -758,6 +771,12 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const;
+
+  /**
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
@@ -869,7 +888,7 @@ public:
                      const baldr::TimeInfo& time_info,
                      uint8_t flow_sources,
                      float edge_speed) const {
-    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    // TODO: speed_penalty hasn't been extensively tested, might alter this in future
     float average_edge_speed = edge_speed;
     // dont use current speed layer for penalties as live speeds might be too low/too high
     // better to use layers with smoothed/constant speeds
@@ -895,6 +914,12 @@ protected:
    * @param use_living_streets value of living streets preference in range [0; 1]
    */
   virtual void set_use_living_streets(float use_living_streets);
+
+  /**
+   * Calculate `lit` costs based on lit preference.
+   * @param use_lit value of lit preference in range [0; 1]
+   */
+  virtual void set_use_lit(float use_lit);
 
   // Algorithm pass
   uint32_t pass_;
@@ -927,6 +952,7 @@ protected:
   float living_street_factor_; // Avoid living streets factor.
   float service_factor_;       // Avoid service roads factor.
   float closure_factor_;       // Avoid closed edges factor.
+  float unlit_factor_;         // Avoid unlit edges factor.
 
   // Transition costs
   sif::Cost country_crossing_cost_;
@@ -960,6 +986,7 @@ protected:
   bool ignore_access_{false};
   bool ignore_closures_{false};
   uint32_t top_speed_;
+  uint32_t fixed_speed_;
   // if ignore_closures_ is set to true by the user request, filter_closures_ is forced to false
   bool filter_closures_{true};
 
@@ -1049,6 +1076,9 @@ protected:
     // Get living street factor from costing options.
     set_use_living_streets(costing_options.use_living_streets());
 
+    // Calculate lit factor from costing options.
+    set_use_lit(costing_options.use_lit());
+
     // Penalty and factor to use service roads
     service_penalty_ = costing_options.service_penalty();
     service_factor_ = costing_options.service_factor();
@@ -1057,8 +1087,11 @@ protected:
 
     // Set the speed mask to determine which speed data types are allowed
     flow_mask_ = costing_options.flow_mask();
+    // Set the fixed speed a vehicle can go
+    fixed_speed_ = costing_options.fixed_speed();
     // Set the top speed a vehicle wants to go
-    top_speed_ = costing_options.top_speed();
+    top_speed_ =
+        fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 
@@ -1104,7 +1137,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost += destination_only_penalty_ *
+              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1164,6 +1198,7 @@ struct BaseCostingOptionsConfig {
 
   ranged_default_t<float> use_tracks_;
   ranged_default_t<float> use_living_streets_;
+  ranged_default_t<float> use_lit_;
 
   ranged_default_t<float> closure_factor_;
 

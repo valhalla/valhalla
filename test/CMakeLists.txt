@@ -34,7 +34,7 @@ endif()
 
 
 ## Lists tests
-set(tests aabb2 access_restriction actor admin attributes_controller datetime directededge
+set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
   enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
@@ -46,12 +46,14 @@ set(tests aabb2 access_restriction actor admin attributes_controller datetime di
   incident_loading worker_nullptr_tiles tar_index curl_tilegetter)
 
 if(ENABLE_DATA_TOOLS)
-  list(APPEND tests astar astar_bss complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
+  list(APPEND tests astar astar_bikeshare complexrestriction countryaccess edgeinfobuilder graphbuilder graphparser
     graphtilebuilder graphreader isochrone predictive_traffic idtable mapmatch matrix matrix_bss minbb multipoint_routes
     names node_search reach recover_shortcut refs search servicedays shape_attributes signinfo summary urban
     thor_worker timedep_paths timeparsing trivial_paths uniquenames util_mjolnir utrecht lua alternates)
   if(ENABLE_HTTP)
-    list(APPEND tests http_tiles elevation_builder)
+    list(APPEND tests http_tiles)
+    # TODO: fix https://github.com/valhalla/valhalla/issues/3740
+    # list(APPEND tests http_tiles elevation_builder)
   endif()
 endif()
 
@@ -64,19 +66,56 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    openlr.cc
-    incidents.cc
-    incident_loading.cc
-    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif()
+# tests files that have warning,
+# any other file not int this list will be processed with the
+# "-Werror" flag
+# Avoid adding a test to this list
+set(tests_with_warnings
+  compression
+  countryaccess
+  encode
+  edgecollapser
+  edgeinfobuilder
+  filesystem
+  graphbuilder
+  graphparser
+  graphtilebuilder
+  gridded_data
+  logging
+  maneuversbuilder
+  mapmatch
+  matrix
+  narrativebuilder
+  node_search
+  polyline2
+  parse_request
+  routing
+  sample
+  search
+  sequence
+  statsd
+  traffictile
+  util_midgard
+  util_odin
+  utrecht
+  timedep_paths
+  vector2
+  viterbi_search
+  worker
+  )
 
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    if (${test} IN_LIST tests_with_warnings)
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
+    else()
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+    endif()
+  endif()
+
+
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
   target_compile_definitions(${test} PRIVATE
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
@@ -147,7 +186,7 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/utrecht_tiles/traffic.ta
       -t ${VALHALLA_SOURCE_DIR}/test/data/traffic_tiles/
   COMMAND ${CMAKE_BINARY_DIR}/valhalla_build_extract
       --inline-config '{"mjolnir":{"tile_dir":"test/data/utrecht_tiles","tile_extract":"test/data/utrecht_tiles/tiles.tar","traffic_extract":"test/data/utrecht_tiles/traffic.tar","concurrency":1,"logging":{"type":""}}}'
-      --with-traffic
+      --with-traffic --overwrite
   COMMENT "Building Utrecht Tiles..."
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
   DEPENDS valhalla_build_tiles valhalla_add_predicted_traffic build_timezones ${VALHALLA_SOURCE_DIR}/test/data/utrecht_netherlands.osm.pbf ${CMAKE_BINARY_DIR}/valhalla_build_extract)
@@ -277,18 +316,19 @@ set_target_properties(test_directories PROPERTIES FOLDER "Tests")
 
 set (source "${CMAKE_BINARY_DIR}/test/data/utrecht_tiles")
 set (destination "${CMAKE_BINARY_DIR}/test/data/tile_src")
-set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
-add_custom_command(
-        TARGET utrecht_tiles POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
-        DEPENDS ${destination}
-        COMMENT "tiles copied from ${source} to ${destination}"
-)
+# TODO: fix https://github.com/valhalla/valhalla/issues/3740
+#set (elevationbuild_test "${CMAKE_BINARY_DIR}/test/data/elevationbuild/tile_dir")
+#add_custom_command(
+#        TARGET utrecht_tiles POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory ${elevationbuild_test}
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_dst"
+#        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/test/data/elevation_src"
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${destination}
+#        COMMAND ${CMAKE_COMMAND} -E copy_directory ${source} ${elevationbuild_test}
+#        DEPENDS ${destination}
+#        COMMENT "tiles copied from ${source} to ${destination}"
+#)
 
 ## Test run targets
 foreach(test ${tests} ${cost_tests} ${tyr_tests})
@@ -331,10 +371,11 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-thor_worker utrecht_tiles)
   add_dependencies(run-recover_shortcut utrecht_tiles)
   add_dependencies(run-minbb utrecht_tiles)
-  add_dependencies(run-astar_bss paris_bss_tiles)
+  add_dependencies(run-astar_bikeshare paris_bss_tiles)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
+  add_dependencies(run-graphbuilder build_timezones)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

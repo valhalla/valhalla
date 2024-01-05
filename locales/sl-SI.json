@@ -1120,7 +1120,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Zapeljite na sosednjo pot."
+          "Merge."
         ],
         "1": [
           "Zapeljite levo na sosednjo pot."
@@ -1149,8 +1149,8 @@
       },
       "example_phrases": {
         "0": [
-          "Potujte 1 postanek.",
-          "Potujte 3 postanke."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2006,7 +2006,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Zavijte levo."
+          "Turn left."
         ],
         "1": [
           "Zavijte desno na Flatbush Avenue."
@@ -2223,7 +2223,7 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail",
+        "stezo za gorsko kolo",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2243,7 +2243,7 @@
       "empty_street_name_labels": [
         "the walkway",
         "the cycleway",
-        "the mountain bike trail",
+        "stezo za gorsko kolo",
         "the crosswalk"
       ],
       "example_phrases": {

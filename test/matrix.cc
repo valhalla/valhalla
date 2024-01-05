@@ -4,12 +4,14 @@
 #include <string>
 #include <vector>
 
+#include "baldr/rapidjson_utils.h"
 #include "loki/worker.h"
 #include "midgard/logging.h"
 #include "sif/dynamiccost.h"
 #include "thor/costmatrix.h"
 #include "thor/timedistancematrix.h"
 #include "thor/worker.h"
+#include "tyr/serializers.h"
 
 using namespace valhalla;
 using namespace valhalla::thor;
@@ -136,7 +138,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto config = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[
@@ -167,13 +169,33 @@ const auto test_request_osrm = R"({
       {"lat":52.103105,"lon":5.081005},
       {"lat":52.094273,"lon":5.075254}
     ],
-    "costing":"auto"
-  }&format=osrm)";
+    "costing":"auto",
+    "format": "osrm"
+  })";
 
-std::vector<TimeDistance> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838},
-                                            {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
-                                            {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
-                                            {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
+// clang-format off
+std::vector<std::vector<uint32_t>> matrix_answers = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+                                                     {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
+                                                     {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626},
+                                                     {5562, 5177}, {3952, 3707}, {4367, 4107}, {1825, 1680}};
+// clang-format on
+
+void check_osrm_response(std::string& res, std::string& algo) {
+  rapidjson::Document res_doc;
+  res_doc.Parse(res);
+
+  ASSERT_FALSE(res_doc.HasParseError());
+
+  std::string status = "Ok";
+  EXPECT_EQ(res_doc["code"].GetString(), status) << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["algorithm"].GetString(), algo) << "Didn't work for " + algo;
+
+  EXPECT_NEAR(res_doc["distances"].GetArray()[0][0].GetDouble(), 28, 1) << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["durations"].GetArray()[0][0].GetInt64(), 28) << "Didn't work for " + algo;
+  EXPECT_NEAR(res_doc["distances"].GetArray()[3][3].GetDouble(), 1680, 1)
+      << "Didn't work for " + algo;
+  EXPECT_EQ(res_doc["durations"].GetArray()[3][3].GetInt64(), 1825) << "Didn't work for " + algo;
+}
 } // namespace
 
 const uint32_t kThreshold = 1;
@@ -182,76 +204,180 @@ bool within_tolerance(const uint32_t v1, const uint32_t v2) {
 }
 
 TEST(Matrix, test_matrix) {
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results =
-      cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                 mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
+  cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
                " to expected value for CostMatrix";
 
-    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
+    EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
         << "result " + std::to_string(i) + "'s time is not close enough" +
                " to expected value for CostMatrix";
   }
+  request.clear_matrix();
 
   CostMatrix cost_matrix_abort_source;
-  results = cost_matrix_abort_source.SourceToTarget(request.options().sources(),
-                                                    request.options().targets(), reader, mode_costing,
-                                                    sif::TravelMode::kDrive, 100000.0);
+  cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
+                                          90000.0);
 
+  matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist < kMaxCost) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
   }
   EXPECT_EQ(found, 15) << " not the number of results as expected";
+  request.clear_matrix();
 
   CostMatrix cost_matrix_abort_target;
-  results = cost_matrix_abort_target.SourceToTarget(request.options().sources(),
-                                                    request.options().targets(), reader, mode_costing,
-                                                    sif::TravelMode::kDrive, 50000.0);
+  cost_matrix_abort_target.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
+                                          50000.0);
 
+  matrix = request.matrix();
   found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist < kMaxCost) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
   }
   EXPECT_EQ(found, 10) << " not the number of results as expected";
+  request.clear_matrix();
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_NEAR(results[i].dist, matrix_answers[i].dist, kThreshold)
-        << "result " + std::to_string(i) + "'s distance is not equal to" +
-               " the expected value for TimeDistMatrix";
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
 
-    EXPECT_NEAR(results[i].time, matrix_answers[i].time, kThreshold)
-        << "result " + std::to_string(i) +
-               "'s time is not equal to the expected value for TimeDistMatrix";
+  matrix = request.matrix();
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal" +
+               " to expected value for TDMatrix";
+
+    EXPECT_NEAR(matrix.times()[i], matrix_answers[i][0], kThreshold)
+        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
   }
 }
 
-// TODO: it was commented before. Why?
-TEST(Matrix, DISABLED_test_matrix_osrm) {
-  loki_worker_t loki_worker(config);
+TEST(Matrix, test_timedistancematrix_forward) {
+  // Input request is the same as `test_request`, but without the last target
+  const auto test_request_more_sources = R"({
+    "sources":[
+      {"lat":52.106337,"lon":5.101728},
+      {"lat":52.111276,"lon":5.089717},
+      {"lat":52.103105,"lon":5.081005}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto"
+  })";
+
+  loki_worker_t loki_worker(cfg);
+
+  Api request;
+  ParseApi(test_request_more_sources, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  GraphReader reader(cfg.get_child("mjolnir"));
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+
+  TimeDistanceMatrix timedist_matrix;
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto& matrix = request.matrix();
+
+  // expected results are the same as `matrix_answers`, but without the last origin
+  // clang-format off
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, {4163, 3838}, 
+                                                      {1519, 1398}, {1808, 1638}, {2061, 1951}, {3944, 3639},
+                                                      {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626}};
+  // clang-format on
+
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal" +
+               " to expected value for TDMatrix";
+
+    EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
+        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+  }
+}
+
+TEST(Matrix, test_timedistancematrix_reverse) {
+  // Input request is the same as `test_request`, but without the last target
+  const auto test_request_more_sources = R"({
+    "sources":[
+      {"lat":52.106337,"lon":5.101728},
+      {"lat":52.111276,"lon":5.089717},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005}
+    ],
+    "costing":"auto"
+  })";
+
+  loki_worker_t loki_worker(cfg);
+
+  Api request;
+  ParseApi(test_request_more_sources, Options::sources_to_targets, request);
+  loki_worker.matrix(request);
+  thor_worker_t::adjust_scores(*request.mutable_options());
+
+  GraphReader reader(cfg.get_child("mjolnir"));
+
+  sif::mode_costing_t mode_costing;
+  mode_costing[0] =
+      CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
+
+  TimeDistanceMatrix timedist_matrix;
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto& matrix = request.matrix();
+
+  // expected results are the same as `matrix_answers`, but without the last target
+  // clang-format off
+  std::vector<std::vector<uint32_t>> expected_results = {{28, 28},     {2027, 1837}, {2403, 2213}, 
+                                                      {1519, 1398}, {1808, 1638}, {2061, 1951},
+                                                      {2311, 2111}, {701, 641},   {0, 0},
+                                                      {5562, 5177}, {3952, 3707}, {4367, 4107}};
+  // clang-format on
+
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
+        << "result " + std::to_string(i) + "'s distance is not equal" +
+               " to expected value for TDMatrix";
+
+    EXPECT_NEAR(matrix.times()[i], expected_results[i][0], kThreshold)
+        << "result " + std::to_string(i) + "'s time is not equal" + " to expected value for TDMatrix";
+  }
+}
+
+TEST(Matrix, test_matrix_osrm) {
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_osrm, Options::sources_to_targets, request);
@@ -259,38 +385,23 @@ TEST(Matrix, DISABLED_test_matrix_osrm) {
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   CostMatrix cost_matrix;
-  std::vector<TimeDistance> results;
-  results = cost_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                       reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
-        << "result " + std::to_string(i) +
-               "'s distance is not close enough to expected value for CostMatrix.";
-
-    EXPECT_EQ(results[i].time, matrix_answers[i].time)
-        << "result " + std::to_string(i) +
-               "'s time is not close enough to expected value for CostMatrix.";
-  }
+  cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  auto json_res = tyr::serializeMatrix(request);
+  std::string algo = "costmatrix";
+  check_osrm_response(json_res, algo);
 
   TimeDistanceMatrix timedist_matrix;
-  results = timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(),
-                                           reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    EXPECT_EQ(results[i].dist, matrix_answers[i].dist)
-        << "result " + std::to_string(i) +
-               "'s distance is not equal to the expected value for TimeDistMatrix.";
-
-    EXPECT_EQ(results[i].time, matrix_answers[i].time)
-        << "result " + std::to_string(i) +
-               "'s time is not equal to the expected value for TimeDistMatrix";
-  }
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
+  json_res = tyr::serializeMatrix(request);
+  algo = "timedistancematrix";
+  check_osrm_response(json_res, algo);
 }
 
 const auto test_request_partial = R"({
@@ -308,31 +419,132 @@ const auto test_request_partial = R"({
   })";
 
 TEST(Matrix, partial_matrix) {
-  loki_worker_t loki_worker(config);
+  loki_worker_t loki_worker(cfg);
 
   Api request;
   ParseApi(test_request_partial, Options::sources_to_targets, request);
   loki_worker.matrix(request);
   thor_worker_t::adjust_scores(*request.mutable_options());
 
-  GraphReader reader(config.get_child("mjolnir"));
+  GraphReader reader(cfg.get_child("mjolnir"));
 
   sif::mode_costing_t mode_costing;
   mode_costing[0] =
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   TimeDistanceMatrix timedist_matrix;
-  std::vector<TimeDistance> results =
-      timedist_matrix.SourceToTarget(request.options().sources(), request.options().targets(), reader,
-                                     mode_costing, sif::TravelMode::kDrive, 400000.0,
-                                     request.options().matrix_locations());
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0,
+                                 request.options().matrix_locations());
+  auto& matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < results.size(); ++i) {
-    if (results[i].dist > 0) {
+  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+    if (matrix.distances()[i] > 0) {
       ++found;
     }
   }
   EXPECT_EQ(found, 2) << " partial result did not find 2 results as expected";
+}
+
+// slim dowm matrix response: https://github.com/valhalla/valhalla/pull/3987
+const auto test_matrix_default = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005},
+      {"lat":52.094273,"lon":5.075254}
+    ],
+    "costing":"auto"
+  })";
+
+TEST(Matrix, default_matrix) {
+  tyr::actor_t actor(cfg, true);
+
+  auto response = actor.matrix(test_matrix_default);
+
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+
+  // contains 4 keys i.e, "distance", "time", "to_index" and "from_index"
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCount(), 4);
+
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("distance"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("time"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("to_index"));
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].HasMember("from_index"));
+
+  EXPECT_TRUE(json["sources_to_targets"].GetArray()[0][0].IsObject());
+
+  // all objects must have equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetArray()[0][0].MemberCapacity(),
+            json["sources_to_targets"].GetArray()[0][1].MemberCapacity());
+
+  // first values in the object
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
+                   5.88);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 473);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
+
+  EXPECT_TRUE(json.HasMember("sources"));
+  EXPECT_TRUE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
+}
+
+const auto test_matrix_verbose_false = R"({
+    "sources":[
+      {"lat":52.103948,"lon":5.06813},
+      {"lat":52.111276,"lon":5.089717}
+    ],
+    "targets":[
+      {"lat":52.106126,"lon":5.101497},
+      {"lat":52.100469,"lon":5.087099},
+      {"lat":52.103105,"lon":5.081005}
+    ],
+    "costing":"auto",
+    "verbose":false
+  })";
+
+TEST(Matrix, slim_matrix) {
+  tyr::actor_t actor(cfg, true);
+
+  auto response = actor.matrix(test_matrix_verbose_false);
+
+  rapidjson::Document json;
+  json.Parse(response);
+
+  ASSERT_FALSE(json.HasParseError());
+
+  EXPECT_TRUE(json.HasMember("sources_to_targets"));
+
+  // contains two array i.e, "durations" and  "distances"
+  EXPECT_EQ(json["sources_to_targets"].GetObject().MemberCount(), 2);
+
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("durations"));
+  EXPECT_TRUE(json["sources_to_targets"].GetObject().HasMember("distances"));
+
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["durations"].IsArray());
+  EXPECT_TRUE(json["sources_to_targets"].GetObject()["distances"].IsArray());
+
+  // "durations" and "distances" are array of equal sizes
+  ASSERT_EQ(json["sources_to_targets"].GetObject()["durations"][0].Size(),
+            json["sources_to_targets"].GetObject()["distances"][0].Size());
+
+  // first value of "distances" array
+  EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
+
+  // first value of "durations" array
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 473);
+
+  EXPECT_FALSE(json.HasMember("sources"));
+  EXPECT_FALSE(json.HasMember("targets"));
+  EXPECT_TRUE(json.HasMember("units"));
 }
 
 int main(int argc, char* argv[]) {

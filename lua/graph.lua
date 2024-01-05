@@ -31,7 +31,8 @@ highway = {
 ["bus_guideway"] =      {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["busway"] =            {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "true",  ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "false", ["bike_forward"] = "false"},
 ["corridor"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
-["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
+["elevator"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"},
+["platform"] =          {["auto_forward"] = "false", ["truck_forward"] = "false", ["bus_forward"] = "false", ["taxi_forward"] = "false", ["moped_forward"] = "false", ["motorcycle_forward"] = "false", ["pedestrian_forward"] = "true",  ["bike_forward"] = "false"}
 }
 
 road_class = {
@@ -231,7 +232,8 @@ bus = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false"
+["official"] = "false",
+["permit"] = "true"
 }
 
 taxi = {
@@ -243,7 +245,8 @@ taxi = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false"
+["official"] = "false",
+["permit"] = "true"
 }
 
 psv = {
@@ -281,8 +284,8 @@ hazmat = {
 ["designated"] = "true",
 ["yes"] = "true",
 ["no"] = "false",
-["destination"] = "true",
-["delivery"] = "true"
+["destination"] = "false",
+["delivery"] = "false"
 }
 
 shoulder = {
@@ -408,6 +411,17 @@ toll = {
 ["snowmobile"] = "true"
 }
 
+lit = {
+  ["yes"] = "true",
+  ["no"] = "false",
+  ["24/7"] = "true",
+  ["automatic"] = "true",
+  ["limited"] = "false",
+  ["disused"] = "false",
+  ["dusk-dawn"] = "true",
+  ["sunset-sunrise"] = "true"
+}
+
 --node proc needs the same info as above but in the form of a mask so duplicate..
 motor_vehicle_node = {
 ["yes"] = 1,
@@ -526,7 +540,8 @@ motor_cycle_node = {
 ["official"] = 0,
 ["public"] = 1024,
 ["restricted"] = 1024,
-["allowed"] = 1024
+["allowed"] = 1024,
+["permit"] = 1024
 }
 
 bus_node = {
@@ -539,6 +554,7 @@ bus_node = {
 ["destination"] = 64,
 ["delivery"] = 0,
 ["official"] = 0,
+["permit"] = 64
 }
 
 taxi_node = {
@@ -550,7 +566,8 @@ taxi_node = {
 ["restricted"] = 32,
 ["destination"] = 32,
 ["delivery"] = 0,
-["official"] = 0
+["official"] = 0,
+["permit"] = 32
 }
 
 truck_node = {
@@ -772,7 +789,7 @@ function normalize_measurement(measurement)
     -- more complicated case, try some Lua patterns. they're almost like regular
     -- expressions, so there'll probably be some unintended consequences!
     --
-    -- because we want to parse compount expressions such as 3ft6in, then we use
+    -- because we want to parse compound expressions such as 3ft6in, then we use
     -- an accumulator to sum up each term in meters. this has the unintended
     -- side-effect that 10m6ft would also be valid... but whatever.
     local sum = 0
@@ -853,6 +870,11 @@ end
 function filter_tags_generic(kv)
 
   if (kv["highway"] == "construction" and kv["construction"] == nil) or kv["highway"] == "proposed" then
+    return 1
+  end
+
+  --toss actual areas
+  if kv["area"] == "yes" then
     return 1
   end
 
@@ -974,7 +996,7 @@ function filter_tags_generic(kv)
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
-
+  -- its not a highway type that we know of
   else
     --if its a ferry and these tags dont show up we want to set them to true
     local default_val = tostring(ferry)
@@ -1239,6 +1261,10 @@ function filter_tags_generic(kv)
     else
       kv["pedestrian_backward"] = kv["pedestrian_forward"]
     end
+
+  -- what on earth is going on here? if there is no oneway tagging we say the way is bidirectional despite all the
+  -- backward/forward crap we did above? this has to be the most common case (no oneway tag) so why on earth does it
+  -- reset any of the other directional tagging that is parsed above?
   elseif oneway_norm == nil or oneway_norm == "false" then
     kv["auto_backward"] = kv["auto_forward"]
     kv["truck_backward"] = kv["truck_forward"]
@@ -1286,6 +1312,42 @@ function filter_tags_generic(kv)
   if (kv["busway"] == "lane" or (kv["busway:left"] == "lane" and kv["busway:right"] == "lane")) then
     kv["bus_forward"] = "true"
     kv["bus_backward"] = "true"
+  end
+
+  --let all the :forward overrides through
+  local mv_forward = kv["motor_vehicle:forward"] or kv["vehicle:forward"]
+  if mv_forward ~= nil then
+    kv["auto_forward"] = motor_vehicle[mv_forward]
+    kv["truck_forward"] = motor_vehicle[mv_forward]
+    kv["bus_forward"] = motor_vehicle[mv_forward]
+    kv["taxi_forward"] = motor_vehicle[mv_forward]
+    kv["moped_forward"] = motor_vehicle[mv_forward]
+    kv["motorcycle_forward"] = motor_vehicle[mv_forward]
+  end
+  if kv["foot:forward"] ~= nil then
+    kv["pedestrian_forward"] = foot[kv["foot:forward"]]
+  end
+  local bk_forward = kv["bicycle:forward"] or kv["vehicle:forward"]
+  if bk_forward ~= nil then
+    kv["bike_forward"] = bicycle[bk_forward]
+  end
+
+  --let all the :backward overrides through, some of this is redundant but the code is a mess...
+  local mv_backward = kv["motor_vehicle:backward"] or kv["vehicle:backward"]
+  if mv_backward ~= nil then
+    kv["auto_backward"] = motor_vehicle[mv_backward]
+    kv["truck_backward"] = motor_vehicle[mv_backward]
+    kv["bus_backward"] = motor_vehicle[mv_backward]
+    kv["taxi_backward"] = motor_vehicle[mv_backward]
+    kv["moped_backward"] = motor_vehicle[mv_backward]
+    kv["motorcycle_backward"] = motor_vehicle[mv_backward]
+  end
+  if kv["foot:backward"] ~= nil then
+    kv["pedestrian_backward"] = foot[kv["foot:backward"]]
+  end
+  local bk_backward = kv["bicycle:backward"] or kv["vehicle:backward"]
+  if bk_backward ~= nil then
+    kv["bike_backward"] = bicycle[bk_backward]
   end
 
   kv["oneway_reverse"] = "false"
@@ -1396,13 +1458,7 @@ function filter_tags_generic(kv)
        end
   end
 
-   --toss actual areas
-   if kv["area"] == "yes" then
-     return 1
-   end
-
    delete_tags = { 'FIXME', 'note', 'source' }
-
    for i,k in ipairs(delete_tags) do
       kv[k] = nil
    end
@@ -1429,6 +1485,8 @@ function filter_tags_generic(kv)
   if kv["service"] == "driveway" then
      kv["default_speed"] = math.floor(tonumber(kv["default_speed"]) * 0.5)
   end
+
+  kv["lit"] = lit[kv["lit"]]
 
   local use = use[kv["service"]]
 
@@ -1461,6 +1519,8 @@ function filter_tags_generic(kv)
         use = 27
      elseif kv["highway"] == "pedestrian" then
         use = 28
+     elseif kv["highway"] == "platform" then
+        use = 35
      elseif kv["pedestrian_forward"] == "true" and
             kv["auto_forward"] == "false" and kv["auto_backward"] == "false" and
             kv["truck_forward"] == "false" and kv["truck_backward"] == "false" and
@@ -1598,7 +1658,8 @@ function filter_tags_generic(kv)
      kv["link_type"] = kv["link_type"]
   end
 
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
+  kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
   kv["rail"] = tostring(kv["auto_forward"] == "true" and (kv["railway"] == "rail" or kv["route"] == "shuttle_train"))
@@ -1768,6 +1829,7 @@ function filter_tags_generic(kv)
 
   kv["maxweight"] = normalize_weight(kv["maxweight"])
   kv["maxaxleload"] = normalize_weight(kv["maxaxleload"])
+  kv["maxaxles"] = tonumber(kv["maxaxles"])
 
   --TODO: hazmat really should have subcategories
   kv["hazmat"] = hazmat[kv["hazmat"]] or hazmat[kv["hazmat:water"]] or hazmat[kv["hazmat:A"]] or hazmat[kv["hazmat:B"]] or
@@ -2145,6 +2207,20 @@ function nodes_proc (kv, nokeys)
   return 0, kv
 end
 
+-- useful for dumping the main kv table to see before and after tag filtering
+-- function dump(o)
+--    if type(o) == 'table' then
+--       local s = '{ '
+--       for k,v in pairs(o) do
+--          if type(k) ~= 'number' then k = '"'..k..'"' end
+--          s = s .. '['..k..'] = ' .. dump(v) .. ','
+--       end
+--       return s .. '} '
+--    else
+--       return tostring(o)
+--    end
+-- end
+
 function ways_proc (kv, nokeys)
   --if there were no tags passed in, ie keyvalues is empty
   if nokeys == 0 then
@@ -2154,7 +2230,7 @@ function ways_proc (kv, nokeys)
   --does it at least have some interesting tags
   filter = filter_tags_generic(kv)
 
-  --let the caller know if its a keeper or not and give back the  modified tags
+  --let the caller know if its a keeper or not and give back the modified tags
   --also tell it whether or not its a polygon or road
   return filter, kv, 0, 0
 end
@@ -2235,7 +2311,7 @@ function rels_proc (kv, nokeys)
        kv["restriction"] = nil
 
        return 0, kv
-  --has a restiction but type is not restriction...ignore
+  --has a restriction but type is not restriction...ignore
      elseif restrict ~= nil then
        return 1, kv
      else

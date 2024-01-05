@@ -89,6 +89,8 @@ const std::string kDefaultPedestrianType = "foot";
 // hills) to 1 (take hills when they offer a more direct, less time, path).
 constexpr float kDefaultUseHills = 0.5f;
 
+constexpr float kDefaultUseLit = 0.f;
+
 // Valid ranges and defaults
 constexpr ranged_default_t<uint32_t> kMaxDistanceWheelchairRange{0, kMaxDistanceWheelchair,
                                                                  kMaxDistanceFoot};
@@ -157,34 +159,61 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   cfg.service_penalty_.def = kDefaultServicePenalty;
   cfg.use_ferry_.def = kDefaultUseFerry;
   cfg.use_living_streets_.def = kDefaultUseLivingStreets;
+  cfg.use_lit_.def = kDefaultUseLit;
   return cfg;
 }
 
 const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
-// Speed adjustment factors based on weighted grade. Comments here show an
-// example of speed changes based on "grade", using a base speed of 5 KPH
-// on flat roads.
-// Tobler seems a bit too "fast" uphill so we use
-// but downhill Tobler seems good
+// Cost adjustments based on variation in speed due to changes in altitude.
+// Based on the pen and paper algorithm specified in DIN 33466. For data
+// see https://gist.github.com/hungerburg/4936fa430552d625a0c8677f46492d1e
+//
+// The recipe from DIN 33466 goes: For every 300m ascent/500m descent, add
+// one hour to bucket H. For every 4km distance, add one hour to bucket D.
+// Now add half of the value in the smaller bucket to the bigger bucket
+// to get the estimated duration. The method is recommended by the DAV and
+// the OEAV for casual hiking.
+//
+// For comparison, value researched by the Mountain Tactical Institute
 // https://mtntactical.com/research/yet-calculating-movement-uneven-terrain/
+// https://mtntactical.com/research/walking-uphill-10-grade-cuts-speed-13not-12/
+// The MTNT finding goes: Contrary to some conventional wisdom, instead of
+// halving speed, 10% increase in incline only bring down speed one third.
+// Their approximation "math.exp(-0.04*slope)" below shown as last value per row.
+//
+// When tweaking for users with better performance, do not change flat-speed,
+// instead up the values of ascent/descent, e.g. 400/800 better matches
+// intermediate hikers. This will bring the uphill values quite close to the
+// ones from the exponential while still keeping downhill speed below flat speed.
+//
+// For negative angles (downhill), as per DIN 33466, speed decreases rapidly
+// as the slope becomes steeper. This behavior may hold true for mountain hikers
+// due to unpaved paths. However, it contradicts common sense for city walkers
+// when the speed factor drops below 1.0 (the walking speed on flat terrain)
+// even on a slight downhill slope. To address this, we employ a modified Tobler's
+// function to correct the factor for negative angles. Consequently, walk speed
+// slightly increases (faster than on flat terrain) when the angle is between
+// 0% and -5%, and then decreases as indicated by DIN 33466.
+// see https://gist.github.com/xlqian/0b25c8db6f45fb2c8bf68494e1ea54f1
+
 constexpr float kGradeBasedSpeedFactor[] = {
-    0.67f, // -10%  - 4.71
-    0.71f, // -8%   - 4.4
-    0.75f, // -6.5% - 4.17
-    0.8f,  // -5%   - 3.96
-    0.85f, // -3%   - 3.69
-    0.90f, // -1.5% - 3.5
-    1.0f,  // 0%    - 3.16
-    1.06f, // 1.5%  - 3.15
-    1.12f, // 3%    - 2.99
-    1.21f, // 5%    - 2.79
-    1.30f, // 6.5%  - 2.65
-    1.37f, // 8%    - 2.51
-    1.49f, // 10%   - 2.34
-    1.59f, // 11.5% - 2.22
-    1.69f, // 13%   - 2.11
-    1.82f  // 15%   - 1.97
+    1.33f, // -10.0% - 0.67
+    1.22f, //  -8.0% - 0.73
+    1.08f, //  -6.5% - 0.77
+    0.97f, //  -5.0% - 0.82
+    0.88f, //  -3.0% - 0.89
+    0.92f, //  -1.5% - 0.94
+    1.00f, //   0.0% - 1.00
+    1.10f, //   1.5% - 1.06
+    1.20f, //   3.0% - 1.13
+    1.33f, //   5.0% - 1.22
+    1.43f, //   6.5% - 1.30
+    1.57f, //   8.0% - 1.38
+    1.83f, //  10.0% - 1.49
+    2.03f, //  11.5% - 1.58
+    2.23f, //  13.0% - 1.68
+    2.50f  //  15.0% - 1.82
 };
 
 // Avoid hills "strength". How much do we want to avoid a hill. Combines
@@ -236,17 +265,6 @@ public:
    */
   virtual bool AllowMultiPass() const override {
     return true;
-  }
-
-  /**
-   * This method overrides the max_distance with the max_distance_mm per segment
-   * distance. An example is a pure walking route may have a max distance of
-   * 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-   * meters per segment (e.g. from origin to a transit stop or from the last
-   * transit stop to the destination).
-   */
-  virtual void UseMaxMultiModalDistance() override {
-    max_distance_ = transit_start_end_max_distance_;
   }
 
   /**
@@ -570,22 +588,17 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   // Get the pedestrian type - enter as string and convert to enum
   const std::string& type = costing_options.transport_type();
   if (type == "wheelchair") {
+    // TODO(nils): this needs to control much more in costing, e.g.
+    // we could add more AccessRestrictions for curb height or so
     type_ = PedestrianType::kWheelchair;
-  } else if (type == "segway") {
-    type_ = PedestrianType::kSegway;
-  } else {
-    type_ = PedestrianType::kFoot;
-  }
-
-  // Set type specific defaults, override with URL inputs
-  if (type_ == PedestrianType::kWheelchair) {
     access_mask_ = kWheelchairAccess;
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
-    // Assume type = foot
+    type_ = PedestrianType::kFoot;
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }
+
   max_distance_ = costing_options.max_distance();
   speed_ = costing_options.walking_speed();
   step_penalty_ = costing_options.step_penalty();
@@ -618,7 +631,8 @@ PedestrianCost::PedestrianCost(const Costing& costing)
 
 // Check if access is allowed on the specified edge. Disallow if no
 // access for this pedestrian type, if surface type exceeds (worse than)
-// the minimum allowed surface type, or if max grade is exceeded.
+// the minimum allowed surface type, or if max grade is exceeded
+// (currently disabled bcs of noisy data).
 // Disallow edges where max. distance will be exceeded.
 bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const bool is_dest,
@@ -628,13 +642,13 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
                              const uint64_t current_time,
                              const uint32_t tz_index,
                              uint8_t& restriction_idx) const {
-  if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
+  if (!IsAccessible(edge) || (edge->surface() > minimal_allowed_surface_) || edge->is_shortcut() ||
       IsUserAvoidEdge(edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
-      ((pred.path_distance() + edge->length()) > max_distance_)) {
+      // path_distance for multimodal is currently checked inside the algorithm
+      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) {
     return false;
   }
 
@@ -662,9 +676,9 @@ bool PedestrianCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Do not check max walking distance and assume we are not allowing
   // transit connections. Assume this method is never used in
   // multimodal routes).
-  if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
-      (opp_edge->surface() > minimal_allowed_surface_) || opp_edge->is_shortcut() ||
-      IsUserAvoidEdge(opp_edgeid) || edge->sac_scale() > max_hiking_difficulty_ ||
+  if (!IsAccessible(opp_edge) || (opp_edge->surface() > minimal_allowed_surface_) ||
+      opp_edge->is_shortcut() || IsUserAvoidEdge(opp_edgeid) ||
+      edge->sac_scale() > max_hiking_difficulty_ ||
       (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx() &&
        pred.mode() == TravelMode::kPedestrian) ||
       //      (opp_edge->max_up_slope() > max_grade_ || opp_edge->max_down_slope() > max_grade_) ||
@@ -719,6 +733,8 @@ Cost PedestrianCost::EdgeCost(const baldr::DirectedEdge* edge,
   } else if (edge->roundabout()) {
     factor *= kRoundaboutFactor;
   }
+
+  factor *= edge->lit() + (!edge->lit() * unlit_factor_);
 
   // Slightly favor walkways/paths and penalize alleys and driveways.
   return {sec * factor, sec};

@@ -1063,7 +1063,7 @@
       "phrases": {
         "0": "Liitu sõidurajaga.",
         "1": "Liitu sõidurajaga <RELATIVE_DIRECTION>.",
-        "2": " Liitu sõidurajaga<STREET_NAMES> teel.",
+        "2": "Liitu sõidurajaga <STREET_NAMES> teel.",
         "3": "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel.",
         "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
         "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
@@ -1103,7 +1103,7 @@
       "phrases": {
         "0": "Liitu sõidurajaga.",
         "1": "Liitu sõidurajaga <RELATIVE_DIRECTION>.",
-        "2": " Liitu sõidurajaga<STREET_NAMES> teel.",
+        "2": "Liitu sõidurajaga <STREET_NAMES> teel.",
         "3": "Liitu sõidurajaga <RELATIVE_DIRECTION> <STREET_NAMES> teel.",
         "4": "Liitu sõidurajaga <TOWARD_SIGN> suunas.",
         "5": "Liitu sõidurajaga <RELATIVE_DIRECTION> <TOWARD_SIGN> suunas."
@@ -1120,7 +1120,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Liitu sõidurajaga."
+          "Merge."
         ],
         "1": [
           "Merge left."
@@ -1149,8 +1149,8 @@
       },
       "example_phrases": {
         "0": [
-          "Sõida 1 peatus.",
-          "Sõida 3 peatust."
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2006,7 +2006,7 @@
       ],
       "example_phrases": {
         "0": [
-          "Pööra vasakule."
+          "Turn left."
         ],
         "1": [
           "Turn right onto Flatbush Avenue."
@@ -2175,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Astu lifti.",
+        "1": "Sõida liftiga kuni <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2189,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Mine trepist üles.",
+        "1": "Kõnni treppi mööda kuni <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2203,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Astu eskalaatorile.",
+        "1": "Sõida eskalaatoriga kuni <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,14 +2217,14 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Sisene hoonesse.",
+        "1": "Sisene hoonesse ja jätka kulgemist mööda <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal"
       ],
       "example_phrases": {
         "0": [
@@ -2237,14 +2237,14 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Välju hoonest.",
+        "1": "Välju hoonest ja jätka kulgemist mööda <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
-        "the crosswalk"
+        "läbipääs",
+        "rattatee",
+        "rada mägiratastele",
+        "ülekäigurajal"
       ],
       "example_phrases": {
         "0": [

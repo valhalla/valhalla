@@ -26,6 +26,7 @@ constexpr float kFeetPerMeter = 3.2808399f;
 constexpr float kMetersPerKm = 1000.0f;
 constexpr float kKmPerMeter = 0.001f;
 constexpr float kMilePerKm = 0.621371f;
+constexpr float kMilePerMeter = kMilePerKm / 1000;
 constexpr float kKmPerMile = 1.609344f;
 constexpr float kRadEarthMeters = 6378160.187f;
 constexpr double kMetersPerDegreeLat = 110567.0f;

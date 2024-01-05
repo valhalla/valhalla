@@ -165,12 +165,12 @@ void DirectedEdge::set_dismount(const bool dismount) {
   dismount_ = dismount;
 }
 
-// Set if a sidepath should be preffered when cycling over this one
+// Set if a sidepath should be preferred when cycling over this one
 void DirectedEdge::set_use_sidepath(const bool use_sidepath) {
   use_sidepath_ = use_sidepath;
 }
 
-// Set the flag indicating the edge is a dead end (no other driveable
+// Set the flag indicating the edge is a dead end (no other drivable
 // roads at the end node of this edge).
 void DirectedEdge::set_deadend(const bool d) {
   deadend_ = d;
@@ -191,6 +191,13 @@ void DirectedEdge::set_seasonal(const bool seasonal) {
 // "through" traffic
 void DirectedEdge::set_dest_only(const bool destonly) {
   dest_only_ = destonly;
+}
+
+// Sets the destination only (private) flag for HGV. This indicates the edge should
+// allow access only to locations that are destinations and not allow
+// "through" traffic for HGV
+void DirectedEdge::set_dest_only_hgv(const bool destonly_hgv) {
+  dest_only_hgv_ = destonly_hgv;
 }
 
 // Sets the flag indicating this edge has is a tunnel of part of a tunnel.
@@ -575,6 +582,10 @@ void DirectedEdge::set_max_down_slope(const float slope) {
 
 void DirectedEdge::set_bss_connection(const bool bss_connection) {
   bss_connection_ = bss_connection;
+}
+
+void DirectedEdge::set_lit(const bool lit) {
+  lit_ = lit;
 }
 
 // Json representation

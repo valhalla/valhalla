@@ -17,6 +17,7 @@
 #include "thor/worker.h"
 #include "worker.h"
 
+#include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <cpp-statsd-client/StatsdClient.hpp>
 
@@ -67,7 +68,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {124, {124, "No edge/node costing provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "costing_required"}},
     {125, {125, "No costing method found", 400, HTTP_400, OSRM_INVALID_OPTIONS, "wrong_costing"}},
     {126, {126, "No shape provided", 400, HTTP_400, OSRM_INVALID_OPTIONS, "shape_required"}},
-    {127, {127, "Recostings require both name and costing parameters", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {127, {127, "Recostings require a valid costing parameter", 400, HTTP_400, OSRM_INVALID_OPTIONS, "recosting_parse_failed"}},
+    {128, {128, "Recostings require a unique 'name' field for each recosting", 400, HTTP_400, OSRM_INVALID_OPTIONS, "no_recosting_duplicate_names"}},
     {130, {130, "Failed to parse location", 400, HTTP_400, OSRM_INVALID_VALUE, "location_parse_failed"}},
     {131, {131, "Failed to parse source", 400, HTTP_400, OSRM_INVALID_VALUE, "source_parse_failed"}},
     {132, {132, "Failed to parse target", 400, HTTP_400, OSRM_INVALID_VALUE, "target_parse_failed"}},
@@ -138,6 +140,27 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
 };
 
+// unordered map for warning pairs
+const std::unordered_map<int, std::string> warning_codes = {
+  // 1xx is for deprecations
+  {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
+  {101,
+    R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
+  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
+  {103, R"(best_paths has been deprecated, use "alternates" instead)"},
+  // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
+  {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
+  {201, R"("sources" have date_time set, but "arrive_by" was requested, ignoring date_time)"},
+  {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
+  {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
+  {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
+  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
+  {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  // 3xx is used when costing options were specified but we had to change them internally for some reason
+  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
+  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
+};
 // clang-format on
 
 rapidjson::Document from_string(const std::string& json, const valhalla_exception_t& e) {
@@ -153,27 +176,40 @@ rapidjson::Document from_string(const std::string& json, const valhalla_exceptio
   return d;
 }
 
-void add_date_to_locations(Options& options,
-                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations) {
-  // otherwise we do what the person was asking for
+bool add_date_to_locations(Options& options,
+                           google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
+                           const std::string& node) {
   if (options.has_date_time_case() && !locations.empty()) {
-    switch (options.date_time_type()) {
-      case Options::current:
-        locations.Mutable(0)->set_date_time("current");
-        break;
-      case Options::depart_at:
-        locations.Mutable(0)->set_date_time(options.date_time());
-        break;
-      case Options::arrive_by:
-        locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
-        break;
-      case Options::invariant:
-        for (auto& loc : locations)
-          loc.set_date_time(options.date_time());
-      default:
-        break;
+    auto dt = options.date_time_type();
+    if (options.action() != Options::sources_to_targets) {
+      switch (dt) {
+        case Options::current:
+          locations.Mutable(0)->set_date_time("current");
+          break;
+        case Options::depart_at:
+          locations.Mutable(0)->set_date_time(options.date_time());
+          break;
+        case Options::arrive_by:
+          locations.Mutable(locations.size() - 1)->set_date_time(options.date_time());
+          break;
+        case Options::invariant:
+          for (auto& loc : locations)
+            loc.set_date_time(options.date_time());
+        default:
+          break;
+      }
+    } else {
+      if (node == (dt == Options::arrive_by ? "targets" : "sources")) {
+        for (auto& loc : locations) {
+          loc.set_date_time(dt == Options::current ? "current" : options.date_time());
+        }
+      }
     }
   }
+
+  return std::find_if(locations.begin(), locations.end(), [](valhalla::Location loc) {
+           return !loc.date_time().empty();
+         }) != locations.end();
 }
 
 // Parses JSON rings of the form [[lon1, lat1], [lon2, lat2], ...]] and operates on
@@ -218,8 +254,9 @@ void parse_ring(ring_pbf_t* ring, const rapidjson::Value& coord_array) {
 
 void parse_location(valhalla::Location* location,
                     const rapidjson::Value& r_loc,
-                    Options& options,
-                    const boost::optional<bool>& ignore_closures) {
+                    Api& request,
+                    const boost::optional<bool>& ignore_closures,
+                    bool is_last_loc) {
   auto lat = rapidjson::get_optional<double>(r_loc, "/lat");
   if (location->has_ll() && location->ll().has_lat_case()) {
     lat = location->ll().lat();
@@ -246,7 +283,7 @@ void parse_location(valhalla::Location* location,
 
   // trace attributes does not support legs or breaks at discontinuities
   auto stop_type_json = rapidjson::get_optional<std::string>(r_loc, "/type");
-  if (options.action() == Options::trace_attributes) {
+  if (request.options().action() == Options::trace_attributes) {
     location->set_type(valhalla::Location::kVia);
   } // other actions let you specify whatever type of stop you want
   else if (stop_type_json) {
@@ -254,7 +291,7 @@ void parse_location(valhalla::Location* location,
     Location_Type_Enum_Parse(*stop_type_json, &type);
     location->set_type(type);
   } // and if you didnt set it it defaulted to break which is not the default for trace_route
-  else if (options.action() == Options::trace_route && !location->has_time_case()) {
+  else if (request.options().action() == Options::trace_route && !location->has_time_case()) {
     location->set_type(valhalla::Location::kVia);
   }
 
@@ -334,6 +371,13 @@ void parse_location(valhalla::Location* location,
   if (street_side_max_distance) {
     location->set_street_side_max_distance(*street_side_max_distance);
   }
+  auto street_side_cutoff = rapidjson::get_optional<std::string>(r_loc, "/street_side_cutoff");
+  if (street_side_cutoff) {
+    valhalla::RoadClass cutoff_street_side;
+    if (RoadClass_Enum_Parse(*street_side_cutoff, &cutoff_street_side)) {
+      location->set_street_side_cutoff(cutoff_street_side);
+    }
+  }
 
   boost::optional<bool> exclude_closures;
   // is it json?
@@ -389,13 +433,42 @@ void parse_location(valhalla::Location* location,
   if (!location->search_filter().has_max_road_class_case()) {
     location->mutable_search_filter()->set_max_road_class(valhalla::kMotorway);
   }
+
+  float waiting_secs = rapidjson::get<float>(r_loc, "/waiting", 0.f);
+  switch (location->type()) {
+    case Location_Type_kBreak:
+    case Location_Type_kBreakThrough:
+      // set waiting_time to 0 on origin/destination
+      {
+        auto loc_idx = location->correlation().original_index();
+        // TODO: waiting time can be less than 0
+        location->set_waiting_secs(loc_idx == 0 || is_last_loc || waiting_secs < 0.f ? 0.f
+                                                                                     : waiting_secs);
+        break;
+      }
+    default:
+      if (waiting_secs)
+        add_warning(request, 203);
+  }
 }
 
+/**
+ * Parses the locations and sets some defaults
+ *
+ * @param doc                       The JSON body
+ * @param options                   The request options to be filled in
+ * @param node                      The type of locations passed
+ * @param location_parse_error_code The code raised if this method throws
+ * @param ignore_closures           Whether to ignore closures
+ * @param had_date_time             Gets set to true if any location had a date_time string
+ */
 void parse_locations(const rapidjson::Document& doc,
-                     Options& options,
+                     Api& request,
                      const std::string& node,
                      unsigned location_parse_error_code,
-                     const boost::optional<bool>& ignore_closures) {
+                     const boost::optional<bool>& ignore_closures,
+                     bool& had_date_time) {
+  auto& options = *request.mutable_options();
 
   google::protobuf::RepeatedPtrField<valhalla::Location>* locations = nullptr;
   if (node == "locations") {
@@ -414,28 +487,32 @@ void parse_locations(const rapidjson::Document& doc,
     return;
   }
 
-  bool had_date_time = false;
   bool filter_closures = true;
+  bool loc_had_time = false;
   try {
     // should we parse json?
     auto request_locations =
         rapidjson::get_optional<rapidjson::Value::ConstArray>(doc, std::string("/" + node).c_str());
     if (request_locations) {
+      uint32_t last_loc_idx = request_locations->Size() - 1;
       for (const auto& r_loc : *request_locations) {
         auto* loc = locations->Add();
-        loc->mutable_correlation()->set_original_index(locations->size() - 1);
-        parse_location(loc, r_loc, options, ignore_closures);
-        had_date_time = had_date_time || !loc->date_time().empty();
+        auto loc_idx = locations->size() - 1;
+        loc->mutable_correlation()->set_original_index(loc_idx);
+        parse_location(loc, r_loc, request, ignore_closures, loc_idx == last_loc_idx);
+        loc_had_time = loc_had_time || !loc->date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc->search_filter().exclude_closures();
       }
     } // maybe its deserialized pbf
     else if (!locations->empty()) {
       int i = 0;
+      uint32_t locs_amount = locations->size() - 1;
       for (auto& loc : *locations) {
+        bool is_last_edge = i == locs_amount;
         loc.mutable_correlation()->set_original_index(i++);
-        parse_location(&loc, {}, options, ignore_closures);
-        had_date_time = had_date_time || !loc.date_time().empty();
+        parse_location(&loc, {}, request, ignore_closures, is_last_edge);
+        loc_had_time = loc_had_time || !loc.date_time().empty();
         // turn off filtering closures when any locations search filter allows closures
         filter_closures = filter_closures && loc.search_filter().exclude_closures();
       }
@@ -449,9 +526,10 @@ void parse_locations(const rapidjson::Document& doc,
     locations->Mutable(locations->size() - 1)->set_type(valhalla::Location::kBreak);
 
     // push the date time information down into the locations
-    if (!had_date_time) {
-      add_date_to_locations(options, *locations);
+    if (!loc_had_time) {
+      had_date_time = add_date_to_locations(options, *locations, node) || had_date_time;
     }
+    had_date_time = loc_had_time || had_date_time;
 
     // If any of the locations had search_filter.exclude_closures set to false,
     // we tell the costing to let all closed roads through, so that we can do
@@ -464,7 +542,7 @@ void parse_locations(const rapidjson::Document& doc,
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
   catch (const valhalla_exception_t& e) {
     throw e;
-  } // generic execptions and other stuff get a generic message
+  } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
   }
@@ -567,10 +645,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // so that we serialize correctly at the end we fix up any request discrepancies
   if (options.format() == Options::pbf) {
-    const std::unordered_set<Options::Action> pbf_actions{
-        Options::route,    Options::optimized_route,  Options::trace_route,
-        Options::centroid, Options::trace_attributes, Options::status,
-    };
+    const std::unordered_set<Options::Action> pbf_actions{Options::route,
+                                                          Options::optimized_route,
+                                                          Options::trace_route,
+                                                          Options::centroid,
+                                                          Options::trace_attributes,
+                                                          Options::status,
+                                                          Options::sources_to_targets};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -616,6 +697,9 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_shorter is deprecated and will be turned into
   // shortest=true costing option. maybe remove in v4?
   if (costing_str == "auto_shorter") {
+
+    add_warning(api, 100);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_shorter");
@@ -628,6 +712,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // hov costing is deprecated and will be turned into auto costing with
   // include_hov2=true costing option.
   if (costing_str == "hov") {
+
+    // add warning for hov costing
+    add_warning(api, 101);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/hov");
@@ -640,6 +728,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // auto_data_fix is deprecated and will be turned into
   // ignore all the things costing option. maybe remove in v4?
   if (costing_str == "auto_data_fix") {
+
+    // warning for auto data fix
+    add_warning(api, 102);
+
     costing_str = "auto";
     rapidjson::SetValueByPointer(doc, "/costing", "auto");
     auto json_options = rapidjson::GetValueByPointer(doc, "/costing_options/auto_data_fix");
@@ -715,10 +807,17 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.set_shape_format(polyline5);
     } else if (*shape_format == "geojson") {
       options.set_shape_format(geojson);
+    } else if (*shape_format == "no_shape") {
+      if (action == Options::height) {
+        throw valhalla_exception_t{164};
+      }
+      options.set_shape_format(no_shape);
     } else {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
+  } else if (action == Options::sources_to_targets) {
+    options.set_shape_format(options.has_shape_format_case() ? options.shape_format() : no_shape);
   }
 
   // whether or not to output b64 encoded openlr
@@ -740,6 +839,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       break;
     }
   }
+
+  // if any of the locations params have a date_time object in their locations, we'll remember
+  // only /sources_to_targets will parse more than one location collection and there it's fine
+  bool had_date_time = false;
 
   // parse map matching location input and encoded_polyline for height actions
   auto encoded_polyline = rapidjson::get_optional<std::string>(doc, "/encoded_polyline");
@@ -773,14 +876,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.mutable_shape(options.shape_size() - 1)->set_type(valhalla::Location::kBreak);
     }
     // add the date time
-    add_date_to_locations(options, *options.mutable_shape());
+    add_date_to_locations(options, *options.mutable_shape(), "shape");
   } // fall back from encoded polyline to array of locations
   else {
-    parse_locations(doc, options, "shape", 134, ignore_closures);
+    parse_locations(doc, api, "shape", 134, ignore_closures, had_date_time);
 
     // if no shape then try 'trace'
     if (options.shape().size() == 0) {
-      parse_locations(doc, options, "trace", 135, ignore_closures);
+      parse_locations(doc, api, "trace", 135, ignore_closures, had_date_time);
     }
   }
 
@@ -836,6 +939,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // Get the elevation interval for returning elevation along the path in a route or
+  // trace attribute call. Defaults to 0.0 (no elevation is returned)
+  constexpr float kMaxElevationInterval = 1000.0f;
+  auto elevation_interval = rapidjson::get_optional<float>(doc, "/elevation_interval");
+  if (elevation_interval) {
+    options.set_elevation_interval(
+        std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
+    options.set_elevation_interval(
+        std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
+  }
+
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
   constexpr uint32_t MAX_HEIGHT_PRECISION = 2;
@@ -844,7 +960,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_height_precision(*height_precision);
   }
 
-  options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  // matrix can be slimmed down but shouldn't by default for backwards-compatibility reasons
+  if (options.action() == Options::sources_to_targets) {
+    options.set_verbose(
+        rapidjson::get(doc, "/verbose", options.has_verbose_case() ? options.verbose() : true));
+  } else {
+    options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
+  }
 
   // Parse all of the costing options in their specified order
   sif::ParseCosting(doc, "/costing_options", options);
@@ -852,39 +974,56 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // parse any named costings for re-costing a given path
   auto recostings = rapidjson::get_child_optional(doc, "/recostings");
   if (recostings && recostings->IsArray()) {
+    // make sure we only have unique recosting names in the end
+    std::unordered_set<std::string> names;
+    names.reserve(recostings->GetArray().Size());
     for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
       // parse the options
       std::string key = "/recostings/" + std::to_string(i);
       sif::ParseCosting(doc, key, options.add_recostings());
       if (!options.recostings().rbegin()->has_name_case()) {
         throw valhalla_exception_t{127};
+      } else if (!names.insert(options.recostings().rbegin()->name()).second) {
+        throw valhalla_exception_t{128};
       }
     }
     // TODO: throw if not all names are unique?
   }
 
   // get the locations in there
-  parse_locations(doc, options, "locations", 130, ignore_closures);
+  parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
 
   // get the sources in there
-  parse_locations(doc, options, "sources", 131, ignore_closures);
+  parse_locations(doc, api, "sources", 131, ignore_closures, had_date_time);
 
   // get the targets in there
-  parse_locations(doc, options, "targets", 132, ignore_closures);
+  parse_locations(doc, api, "targets", 132, ignore_closures, had_date_time);
+
+  // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
+  if (options.date_time_type() == Options::no_time && !had_date_time &&
+      (options.shape_size() == 0 || options.shape(0).time() == -1)) {
+    for (auto& costing : *options.mutable_costings()) {
+      costing.second.mutable_options()->set_flow_mask(
+          static_cast<uint8_t>(costing.second.options().flow_mask()) &
+          ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
+    }
+  }
 
   // get the avoids in there
   // TODO: remove "avoid_locations/polygons" after some while
   if (doc.HasMember("avoid_locations"))
-    parse_locations(doc, options, "avoid_locations", 133, ignore_closures);
+    parse_locations(doc, api, "avoid_locations", 133, ignore_closures, had_date_time);
   else
-    parse_locations(doc, options, "exclude_locations", 133, ignore_closures);
+    parse_locations(doc, api, "exclude_locations", 133, ignore_closures, had_date_time);
 
   // Get the matrix_loctions option and set if sources or targets size is one
   // (option is only supported with one to many or many to one matrix requests)
+  // TODO(nils): Why is that? IMO this makes a lot of sense for a many:many call
+  // of timedistancematrix as well no?
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else {
+  } else if (!options.has_matrix_locations_case()) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
 
@@ -893,27 +1032,24 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       rapidjson::get_child_optional(doc, doc.HasMember("avoid_polygons") ? "/avoid_polygons"
                                                                          : "/exclude_polygons");
   if (rings_req) {
-    auto* rings_pbf = options.mutable_exclude_polygons();
-    try {
-      for (const auto& req_poly : rings_req->GetArray()) {
-        auto* ring = rings_pbf->Add();
-        parse_ring(ring, req_poly);
-      }
-    } catch (...) { throw valhalla_exception_t{137}; }
+    if (!rings_req->IsArray()) {
+      add_warning(api, 204);
+    } else {
+      auto* rings_pbf = options.mutable_exclude_polygons();
+      try {
+        for (const auto& req_poly : rings_req->GetArray()) {
+          if (!req_poly.IsArray() || (req_poly.IsArray() && req_poly.GetArray().Empty())) {
+            continue;
+          }
+          auto* ring = rings_pbf->Add();
+          parse_ring(ring, req_poly);
+        }
+      } catch (...) { throw valhalla_exception_t{137}; }
+    }
   } // if it was there in the pbf already
   else if (options.exclude_polygons_size()) {
     for (auto& ring : *options.mutable_exclude_polygons()) {
       parse_ring(&ring, rapidjson::Value{});
-    }
-  }
-
-  // if not a time dependent route/mapmatch disable time dependent edge speed/flow data sources
-  if (options.date_time_type() == Options::no_time &&
-      (options.shape_size() == 0 || options.shape(0).time() == -1)) {
-    for (auto& costing : *options.mutable_costings()) {
-      costing.second.mutable_options()->set_flow_mask(
-          static_cast<uint8_t>(costing.second.options().flow_mask()) &
-          ~(valhalla::baldr::kPredictedFlowMask | valhalla::baldr::kCurrentFlowMask));
     }
   }
 
@@ -1037,6 +1173,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
+  // add warning for deprecated best_paths
+  if (rapidjson::get_optional<uint32_t>(doc, "/best_paths")) {
+    add_warning(api, 103);
+  }
   // deprecated best_paths for map matching top k
   auto best_paths = std::max(uint32_t(1), rapidjson::get<uint32_t>(doc, "/best_paths", 1));
 
@@ -1049,6 +1189,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
+
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
@@ -1073,7 +1217,17 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
     *this = code_itr->second;
   }
   if (!extra.empty())
-    message += ":" + extra;
+    message += ": " + extra;
+}
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, unsigned code) {
+  auto message = warning_codes.find(code);
+  if (message != warning_codes.end()) {
+    auto* warning = api.mutable_info()->mutable_warnings()->Add();
+    warning->set_description(message->second);
+    warning->set_code(message->first);
+  }
 }
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& request) {

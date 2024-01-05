@@ -200,10 +200,9 @@ private:
    * @return Returns the bucket that the cost lies within.
    */
   bucket_t& get_bucket(const float cost) {
-    return (cost < currentcost_)
-               ? *currentbucket_
-               : (cost < maxcost_) ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
-                                   : overflowbucket_;
+    return (cost < currentcost_) ? *currentbucket_
+           : (cost < maxcost_)   ? buckets_[static_cast<uint32_t>((cost - mincost_) * inv_)]
+                                 : overflowbucket_;
   }
 
   /**

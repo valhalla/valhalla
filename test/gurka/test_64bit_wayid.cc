@@ -72,7 +72,7 @@ TEST(WayIds, way_ids1) {
   };
   // keep one for each directed edge
   std::multiset<uint64_t> osm_way_ids;
-  for (int i = 0; i < ids.size(); ++i) {
+  for (size_t i = 0; i < ids.size(); ++i) {
     const auto& id = ids[i];
     osm_way_ids.emplace(std::stoull(id));
     osm_way_ids.emplace(std::stoull(id));

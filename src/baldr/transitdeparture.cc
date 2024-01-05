@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "baldr/transitdeparture.h"
 #include "midgard/logging.h"
 
@@ -7,7 +9,7 @@ namespace baldr {
 // Constructor for a fixed schedule departure
 TransitDeparture::TransitDeparture(const uint32_t lineid,
                                    const uint32_t tripid,
-                                   const uint32_t routeid,
+                                   const uint32_t routeindex,
                                    const uint32_t blockid,
                                    const uint32_t headsign_offset,
                                    const uint32_t departure_time,
@@ -25,10 +27,10 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   }
   lineid_ = lineid;
 
-  if (routeid > kMaxTransitRoutes) {
+  if (routeindex > kMaxTransitRoutes) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum transit routes per tile");
   }
-  routeid_ = routeid;
+  routeindex_ = routeindex;
 
   if (tripid > kMaxTripId) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum trip Id");
@@ -69,7 +71,7 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
 // Constructor for a frequency based schedule departure
 TransitDeparture::TransitDeparture(const uint32_t lineid,
                                    const uint32_t tripid,
-                                   const uint32_t routeid,
+                                   const uint32_t routeindex,
                                    const uint32_t blockid,
                                    const uint32_t headsign_offset,
                                    const uint32_t departure_time,
@@ -89,10 +91,10 @@ TransitDeparture::TransitDeparture(const uint32_t lineid,
   }
   lineid_ = lineid;
 
-  if (routeid > kMaxTransitRoutes) {
+  if (routeindex > kMaxTransitRoutes) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum transit routes per tile");
   }
-  routeid_ = routeid;
+  routeindex_ = routeindex;
 
   if (tripid > kMaxTripId) {
     throw std::runtime_error("TransitDeparture: Exceeded maximum trip Id");

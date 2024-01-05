@@ -1120,7 +1120,7 @@
       ],
       "example_phrases": {
         "0": [
-          "合流です。"
+          "Merge."
         ],
         "1": [
           "Merge left."
@@ -1149,8 +1149,8 @@
       },
       "example_phrases": {
         "0": [
-          "1駅乗車します。",
-          "3駅乗車します。"
+          "Travel 1 stop.",
+          "Travel 3 stops."
         ]
       }
     },
@@ -2006,7 +2006,7 @@
       ],
       "example_phrases": {
         "0": [
-          "左方向です。"
+          "Turn left."
         ],
         "1": [
           "Turn right onto Flatbush Avenue."
@@ -2221,9 +2221,9 @@
         "1": "Enter the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "歩道",
+        "自転車道",
+        "自転車道",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2241,9 +2241,9 @@
         "1": "Exit the building, and continue on <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "歩道",
+        "自転車道",
+        "自転車道",
         "the crosswalk"
       ],
       "example_phrases": {

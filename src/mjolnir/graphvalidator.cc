@@ -621,6 +621,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     if (densities[level].empty()) {
       continue;
     }
+#ifdef LOGGING_LEVEL_DEBUG
     // Get the average density and the max density
     float max_density = 0.0f;
     float sum = 0.0f;
@@ -632,6 +633,7 @@ void GraphValidator::Validate(const boost::property_tree::ptree& pt) {
     }
     LOG_DEBUG("Average density = " + std::to_string(sum / densities[level].size()) +
               " max = " + std::to_string(max_density));
+#endif
   }
 }
 } // namespace mjolnir

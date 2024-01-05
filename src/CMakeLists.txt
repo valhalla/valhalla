@@ -37,7 +37,7 @@ set(LIBCXX_COMPILE_FLAGS "")
 set(LIBCXX_LINK_FLAGS "")
 set(LIBCXX_LIBRARIES "")
 
-# Inlclude build macros for updating configuration variables
+# Include build macros for updating configuration variables
 include(HandleLibcxxFlags)
 
 ## Define libvalhalla sub-modules as OBJECT libraries
@@ -70,8 +70,17 @@ endfunction()
 
 function(valhalla_module)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES HEADERS DEPENDS INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    set_source_files_properties(
+            ${MODULE_SOURCES}
+            PROPERTIES
+            COMPILE_FLAGS
+            "-Werror -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers")
+  endif()
+  list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
   set(library valhalla-${MODULE_NAME})
   if (ENABLE_STATIC_LIBRARY_MODULES)
@@ -98,7 +107,10 @@ function(valhalla_module)
      PRIVATE
        ${VALHALLA_BINARY_DIR}
        ${VALHALLA_BINARY_DIR}/valhalla)
-  
+  if (MODULE_SYSTEM_INCLUDE_DIRECTORIES)
+    target_include_directories(${library} SYSTEM ${MODULE_SYSTEM_INCLUDE_DIRECTORIES})
+  endif()
+
   target_link_libraries(${library} Boost::boost)
 
   if(ENABLE_COVERAGE)
@@ -217,6 +229,7 @@ endif()
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
+    ${VALHALLA_SOURCE_DIR}/src      # For private headers in /src
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
@@ -254,7 +267,7 @@ if(BUILD_SHARED_LIBS)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     COMPONENT development)
-  
+
   if(UNIX)
     add_custom_target(${LIBVALHALLA_SO_LINK} ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})

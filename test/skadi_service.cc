@@ -155,7 +155,7 @@ const std::vector<std::string> responses{
         "244,243,240,239,239,238,239,241,241,239,236,221,221,225,224]}"),
 };
 
-const auto config =
+const auto cfg =
     test::make_config(VALHALLA_BUILD_DIR "test" +
                       std::string(1, filesystem::path::preferred_separator) + "skadi_service_tmp");
 
@@ -173,7 +173,7 @@ void create_tile() {
     tile[p.first] = p.second;
 
   // a place to store it
-  auto tile_dir = config.get<std::string>("additional_data.elevation");
+  auto tile_dir = cfg.get<std::string>("additional_data.elevation");
   if (!filesystem::is_directory(tile_dir) && !filesystem::create_directories(tile_dir))
     throw std::runtime_error("Couldnt make directory to store elevation");
 
@@ -188,26 +188,26 @@ void create_tile() {
 zmq::context_t context;
 void start_service() {
   // need a place to drop our sockets
-  auto run_dir = config.get<std::string>("mjolnir.tile_dir");
+  auto run_dir = cfg.get<std::string>("mjolnir.tile_dir");
   if (!filesystem::is_directory(run_dir) && !filesystem::create_directories(run_dir))
     throw std::runtime_error("Couldnt make directory to run from");
 
   // server
   std::thread server(std::bind(&http_server_t::serve,
-                               http_server_t(context, config.get<std::string>("httpd.service.listen"),
-                                             config.get<std::string>("loki.service.proxy") + "_in",
-                                             config.get<std::string>("httpd.service.loopback"),
-                                             config.get<std::string>("httpd.service.interrupt"))));
+                               http_server_t(context, cfg.get<std::string>("httpd.service.listen"),
+                                             cfg.get<std::string>("loki.service.proxy") + "_in",
+                                             cfg.get<std::string>("httpd.service.loopback"),
+                                             cfg.get<std::string>("httpd.service.interrupt"))));
   server.detach();
 
   // load balancer
   std::thread proxy(std::bind(&proxy_t::forward,
-                              proxy_t(context, config.get<std::string>("loki.service.proxy") + "_in",
-                                      config.get<std::string>("loki.service.proxy") + "_out")));
+                              proxy_t(context, cfg.get<std::string>("loki.service.proxy") + "_in",
+                                      cfg.get<std::string>("loki.service.proxy") + "_out")));
   proxy.detach();
 
   // service worker
-  std::thread worker(valhalla::loki::run_service, config);
+  std::thread worker(valhalla::loki::run_service, cfg);
   worker.detach();
 }
 
@@ -223,24 +223,23 @@ TEST(SkadiService, test_requests) {
   // client makes requests and gets back responses in a batch fashion
   auto request = requests.cbegin();
   std::string request_str;
-  http_client_t client(context, config.get<std::string>("httpd.service.listen"),
-                       [&request, &request_str]() {
-                         // we dont have any more requests so bail
-                         if (request == requests.cend())
-                           return std::make_pair<const void*, size_t>(nullptr, 0);
-                         // get the string of bytes to send formatted for http protocol
-                         request_str = request->to_string();
-                         ++request;
-                         return std::make_pair<const void*, size_t>(request_str.c_str(),
-                                                                    request_str.size());
-                       },
-                       [&request](const void* data, size_t size) {
-                         auto response =
-                             http_response_t::from_string(static_cast<const char*>(data), size);
-                         EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
-                         return request != requests.cend();
-                       },
-                       1);
+  http_client_t client(
+      context, cfg.get<std::string>("httpd.service.listen"),
+      [&request, &request_str]() {
+        // we dont have any more requests so bail
+        if (request == requests.cend())
+          return std::make_pair<const void*, size_t>(nullptr, 0);
+        // get the string of bytes to send formatted for http protocol
+        request_str = request->to_string();
+        ++request;
+        return std::make_pair<const void*, size_t>(request_str.c_str(), request_str.size());
+      },
+      [&request](const void* data, size_t size) {
+        auto response = http_response_t::from_string(static_cast<const char*>(data), size);
+        EXPECT_EQ(response.body, responses[request - requests.cbegin() - 1]);
+        return request != requests.cend();
+      },
+      1);
 
   // make this whole thing bail if it doesnt finish fast
   alarm(120);

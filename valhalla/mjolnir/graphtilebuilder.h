@@ -29,6 +29,7 @@
 #include <valhalla/mjolnir/complexrestrictionbuilder.h>
 #include <valhalla/mjolnir/directededgebuilder.h>
 #include <valhalla/mjolnir/edgeinfobuilder.h>
+#include <valhalla/mjolnir/landmarks.h>
 
 namespace valhalla {
 namespace mjolnir {
@@ -50,7 +51,7 @@ public:
    * @param  graphid                GraphId used to determine the tileid and level
    * @param  deserialize            If true the existing objects in the tile are
    *                                converted into builders so they can be added to.
-   * @param  serialize_turn_lanes   If true, the offsets are truely text offsets.
+   * @param  serialize_turn_lanes   If true, the offsets are truly text offsets.
    *                                If false, the offsets are indexes into unique name file
    */
   GraphTileBuilder(const std::string& tile_dir,
@@ -86,6 +87,12 @@ public:
    * @return  Returns the directed edge builders.
    */
   std::vector<DirectedEdge>& directededges();
+
+  /**
+   * Gets the current list of directed edge extension (builders).
+   * @return  Returns the directed edge extension builders.
+   */
+  std::vector<DirectedEdgeExt>& directededges_ext();
 
   /**
    * Gets the current list of node transition (builders).
@@ -138,7 +145,7 @@ public:
    */
   void AddSigns(const uint32_t idx,
                 const std::vector<baldr::SignInfo>& signs,
-                const std::vector<std::string>& pronunciations);
+                const std::vector<std::string>& linguistics);
 
   /**
    * Add sign information.
@@ -187,6 +194,18 @@ public:
                    uint32_t& edge_info_offset);
 
   /**
+   * Process Tagged values for the edge.
+   * @param  edgeindex      The edgeindex we are processing.
+   * @param  names          The names to add.
+   * @param  name_count     The current name count.
+   * @param  name_info_list The list to add the name infos
+   */
+  void ProcessTaggedValues(const uint32_t edgeindex,
+                           const std::vector<std::string>& names,
+                           size_t& name_count,
+                           std::vector<NameInfo>& name_info_list);
+
+  /**
    * Add the edge info to the tile.
    *
    * @param  edgeindex      The index of the edge - used with nodea and nodeb to
@@ -204,7 +223,7 @@ public:
    * @param  spd            Speed limit. [kph]
    * @param  lls            The shape of the target edge.
    * @param  names          The names of the target edge.
-   * @param  pronunciations The pronunciations of the target edge.
+   * @param  linguistics    The pronunciations and languages of the target edge.
    * @param  types          Bits indicating if the name is a ref vs a name.
    * @param  added          Set to true if the target edge was newly added to the list,
    *                        set to false if the target edge was already in the list.
@@ -214,8 +233,8 @@ public:
    */
   template <class shape_container_t>
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
-                       const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb,
+                       baldr::GraphId nodea,
+                       baldr::GraphId nodeb,
                        const uint64_t wayid,
                        const float elev,
                        const uint32_t bn,
@@ -223,7 +242,7 @@ public:
                        const shape_container_t& lls,
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
-                       const std::vector<std::string>& pronunciations,
+                       const std::vector<std::string>& linguistics,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
@@ -245,8 +264,8 @@ public:
    * @param  spd            Speed limit.
    * @param  llstr          The shape of the target edge as an encoded string.
    * @param  names          The names of the target edge.
-   * @param  tagged_values   The tagged names of the target edge.
-   * @param  pronunciations The pronunciations of the target edge.
+   * @param  tagged_values  The tagged names of the target edge.
+   * @param  linguistics    The pronunciations and languages of the target edge.
    * @param  types          Bits indicating if the name is a ref vs a name.
    * @param  added          Set to true if the target edge was newly added to the list,
    *                        set to false if the target edge was already in the list.
@@ -255,8 +274,8 @@ public:
    * @return  The edge info offset that will be stored in the directed edge.
    */
   uint32_t AddEdgeInfo(const uint32_t edgeindex,
-                       const baldr::GraphId& nodea,
-                       const baldr::GraphId& nodeb,
+                       baldr::GraphId nodea,
+                       baldr::GraphId nodeb,
                        const uint64_t wayid,
                        const float elev,
                        const uint32_t bn,
@@ -264,7 +283,7 @@ public:
                        const std::string& llstr,
                        const std::vector<std::string>& names,
                        const std::vector<std::string>& tagged_values,
-                       const std::vector<std::string>& pronunciations,
+                       const std::vector<std::string>& linguistics,
                        const uint16_t types,
                        bool& added,
                        bool diff_names = false);
@@ -276,12 +295,16 @@ public:
   void set_mean_elevation(const float elev);
 
   /**
-   * Set the mean elevation to the EdgeInfo given the edge info offset. This requires
-   * a serialized tile builder.
+   * Set mean elevation and encoded elevation within the EdgeInfo given the edge info offset.
+   * This requires a serialized tile builder.
    * @param offset Edge info offset.
-   * @param elev Mean elevation.
+   * @param mean_elevation Mean elevation.
+   * @param encoded_elevation Encoded elevation.
+   * @return Returns size of the updated EdgeInfo data.
    */
-  void set_mean_elevation(const uint32_t offset, const float elev);
+  uint32_t set_elevation(const uint32_t offset,
+                         const float mean_elevation,
+                         const std::vector<int8_t>& encoded_elevation);
 
   /**
    * Add a name to the text list.
@@ -334,6 +357,13 @@ public:
   DirectedEdge& directededge(const size_t idx);
 
   /**
+   * Gets a directed edge extension from existing tile data.
+   * @param  idx  Index of the directed edge extension within the tile.
+   * @return  Returns a reference to the directed edge extension.
+   */
+  DirectedEdgeExt& directededge_ext(const size_t idx);
+
+  /**
    * Gets a pointer to directed edges within the list being built.
    * @param  idx  Index of the directed edge within the tile.
    * @return  Returns a pointer to the directed edge builder (allows
@@ -342,14 +372,26 @@ public:
   const DirectedEdge* directededges(const size_t idx) const;
 
   /**
+   * Gets a pointer to directed edge extensions within the list being built.
+   * @param  idx  Index of the directed edge within the tile.
+   * @return  Returns a pointer to the directed edge extension builder (allows
+   *          accessing all directed edge extensions from a node).
+   */
+  const DirectedEdgeExt* directededges_ext(const size_t idx) const;
+
+  /**
    * Get the directed edge builder at the specified index.
    * @param  idx  Index of the directed edge builder.
    * @return  Returns a reference to the directed edge builder.
    */
   DirectedEdge& directededge_builder(const size_t idx);
 
-  // TODO - add access method to directededge_ext_builder if extended directed edge
-  // attributes are needed.
+  /**
+   * Get the directed edge extension builder at the specified index.
+   * @param  idx  Index of the directed edge extension builder.
+   * @return  Returns a reference to the directed edge extension builder.
+   */
+  DirectedEdgeExt& directededge_ext_builder(const size_t idx);
 
   /**
    * Gets a non-const access restriction from existing tile data.
@@ -459,6 +501,23 @@ public:
    * @param  directededges  Updated directed edge information.
    */
   void UpdatePredictedSpeeds(const std::vector<DirectedEdge>& directededges);
+
+  /**
+   * Adds a landmark to the given edge id by modifying its edgeinfo to add a name and tagged value
+   *
+   * @param edge_id  the edge id to modify
+   * @param landmark the landmark to associate to the edge
+   */
+  void AddLandmark(const baldr::GraphId& edge_id, const Landmark& landmark);
+
+  /**
+   * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
+   * must be in the same tile as the directed edge.  This is called during the building of the
+   * tiles; therefore, we can't use GetOpposingEdgeId as it has not been set yet.
+   * @param  tile          Graph tile of the edge
+   * @param  directededge  Directed edge to check.
+   */
+  bool OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge);
 
 protected:
   struct EdgeTupleHasher {

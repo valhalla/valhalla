@@ -132,6 +132,11 @@ std::string serializeIsochrones(const Api& request,
     feature_collection->emplace("id", request.options().id());
   }
 
+  // add warnings to json response
+  if (request.info().warnings_size() >= 1) {
+    feature_collection->emplace("warnings", serializeWarnings(request));
+  }
+
   std::stringstream ss;
   ss << *feature_collection;
 

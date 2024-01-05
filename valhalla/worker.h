@@ -74,6 +74,10 @@ void ParseApi(const prime_server::http_request_t& http_request, Api& api);
 #endif
 
 std::string serialize_error(const valhalla_exception_t& exception, Api& options);
+
+// function to add warnings to proto info object
+void add_warning(valhalla::Api& api, unsigned code);
+
 #ifdef HAVE_HTTP
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                                  prime_server::http_request_info_t& request_info,

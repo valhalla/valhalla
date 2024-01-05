@@ -42,14 +42,14 @@ void try_free_flow_speed(const std::string& encoded_str,
   EXPECT_EQ(constrained_flow_speed, exp_constrained_flow);
 }
 
-TEST(PredicteSpeeds, test_free_flow_speed) {
+TEST(PredictedSpeeds, test_free_flow_speed) {
   try_free_flow_speed("AAie", 8, 158);
 
   // Add additional cases below
   try_free_flow_speed("AACe", 0, 158);
 }
 
-TEST(PredicteSpeeds, test_decoding) {
+TEST(PredictedSpeeds, test_decoding) {
   // base64 encoded string
   std::string encoded_speed_string =
       "AQXFAAkABAAhAAz/+//bABn/3wAMABsAEQAF//gAAAAdABQAEv/wABf//gAsAAkAKgAAACj/+gBDAAQAbAALAQQAKv63AAD/mwAM/87/7P/TAAX/2P/1//P//f/sAAn/z//xAA7//P/y//z/8v/x////+wAMABX/+f/6AA4AGQAEABX/9//vAAf/8gAfAAb/9AAFABH//P/0ABQABv/2////4//7//0AE//+//n/5AATAAcAAQAL/+v//P/3ABMAAAAU//L/+v/8AAAAEP/3AAsABQAE/9f/7AABAAwAAQAGABP//QAJ/+4AB//gABUAAf/+AAv/6P/oABP//gAAABX/5f/5AAT//v/5AAgABv/3AB7/6gAdAAL/+P/r//sACwADAAT/9wAE//MACAAK//cACv/4//sABAAA//j//P/7//H/9v/y//wACwAHAAYABv/4AAL/+QAKAB7//wAHABX/8wAQ/+wAFAAL/+7//AAIAAgADf/9AAz/4gAQ//X/9//+//j/9wAEAAz//wADAAc=";
@@ -188,7 +188,7 @@ TEST(PredicteSpeeds, test_decoding) {
  * where we see a negative speed we should trace it back to the input speeds and change the
  * encoded speed string here to see if the issue is valid.
  */
-TEST(PredicteSpeeds, test_negative_speeds) {
+TEST(PredictedSpeeds, test_negative_speeds) {
   // base64 encoded string
   std::string encoded_speed_string =
       "AQRu//UAEAAC/+4AA//6//gAAwAFAA//9wAHAAH/4AAd/+wACwAH//0AGQAYAA7//wANAAL/9//mAAUACgATAAb/8v/2//8AC//1ABMAAAAGABX/9//0//0AAAAQAAIAAv/6////9gAJAAcACf/zAAQAAwAC//oACf/2//sADQAVABD/+QADAAcACf/2//gABwAHAAAABv/9AAf/+QAM//kAEAAE//r//wAMAAD/9AAN//D/7QAK//EAE//7AAkAAQAF//f/+AAB//z/6f/y//MAAP/6ABL//AATABX//wAFAAMAGv/2AAf//wAI//sACv/5AAb/8gAOAAYADv/5AAMACP////T/7gAH//P/+f/9//n/9f/0//0AAwAP//3/8gAA//8ACv////gAAgAHAAP//QALAAcAFAAA//8ABP/vAAIAEAAM/+3/9QAC//j//v/tABj/+wAA//sAC//6//0ABwAAAAoABgAMAAb/+P/3AAX/9//7//0ADP/sAAwAB//v/+3//wAMABAACgAF//o=";

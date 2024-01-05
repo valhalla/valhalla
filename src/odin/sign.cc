@@ -1,3 +1,5 @@
+#include "midgard/logging.h"
+
 #include "baldr/streetname.h"
 
 #include "odin/sign.h"
@@ -9,7 +11,7 @@ namespace odin {
 // Constructor
 Sign::Sign(const std::string& text,
            const bool is_route_number,
-           const boost::optional<baldr::Pronunciation>& pronunciation)
+           const std::optional<baldr::Pronunciation>& pronunciation)
     : text_(text), is_route_number_(is_route_number), consecutive_count_(0),
       pronunciation_(pronunciation) {
 }
@@ -30,7 +32,7 @@ void Sign::set_consecutive_count(uint32_t consecutive_count) {
   consecutive_count_ = consecutive_count;
 }
 
-const boost::optional<baldr::Pronunciation>& Sign::pronunciation() const {
+const std::optional<baldr::Pronunciation>& Sign::pronunciation() const {
   return pronunciation_;
 }
 

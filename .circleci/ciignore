@@ -1,6 +1,0 @@
-*.md
-.circleci/ciignore
-run_route_scripts/*
-.azure-pipelines.yml
-.vcpkg_deps.txt
-.github/*

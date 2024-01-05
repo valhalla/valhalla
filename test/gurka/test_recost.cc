@@ -26,7 +26,7 @@ TEST(recosting, forward_vs_reverse) {
     if (e.classification() == baldr::RoadClass::kResidential) {
       e.set_constrained_flow_speed(40);
     }
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -133,7 +133,7 @@ TEST(recosting, same_historical) {
     e.set_speed(55);
     e.set_constrained_flow_speed(10);
     // TODO: add historical 5 minutely buckets
-    return boost::none;
+    return std::nullopt;
   });
 
   // run a route and check that the costs are the same for the same options
@@ -196,7 +196,7 @@ TEST(recosting, same_historical) {
     for (const auto& n : api.trip().routes(0).legs(0).node()) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(), 0.0001);
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -280,7 +280,7 @@ TEST(recosting, same_historical) {
       EXPECT_EQ(n.recosts_size(), 1);
       EXPECT_NEAR(n.cost().elapsed_cost().seconds(), n.recosts(0).elapsed_cost().seconds(),
                   kCostThreshold);
-      EXPECT_EQ(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost());
+      EXPECT_NEAR(n.cost().elapsed_cost().cost(), n.recosts(0).elapsed_cost().cost(), 0.0001);
       EXPECT_EQ(n.cost().transition_cost().seconds(), n.recosts(0).transition_cost().seconds());
       EXPECT_EQ(n.cost().transition_cost().cost(), n.recosts(0).transition_cost().cost());
       if (n.has_edge()) {
@@ -344,7 +344,7 @@ TEST(recosting, all_algorithms) {
         double length = 0;
         uint32_t pred = baldr::kInvalidLabel;
         sif::LabelCallback label_cb = [&elapsed_itr, &length, &pred,
-                                       reverse](const sif::EdgeLabel& label) -> void {
+                                       reverse](const sif::PathEdgeLabel& label) -> void {
           length += elapsed_itr->edge().length_km() * 1000.0;
           EXPECT_EQ(elapsed_itr->edge().id(), label.edgeid());
           EXPECT_EQ(pred++, label.predecessor());
@@ -433,7 +433,7 @@ TEST(recosting, throwing) {
 
   // setup a callback for the recosting to tell us about the new label each made
   bool called = false;
-  sif::LabelCallback label_cb = [&called](const sif::EdgeLabel& label) -> void { called = true; };
+  sif::LabelCallback label_cb = [&called](const sif::PathEdgeLabel& label) -> void { called = true; };
 
   // build up the costing object
   auto costing = sif::CostFactory().Create(Costing::auto_);
@@ -442,12 +442,13 @@ TEST(recosting, throwing) {
   EXPECT_THROW(sif::recost_forward(*reader, *costing, edge_cb, label_cb, -90, 476), std::logic_error);
 
   // this edge id is valid but doesnt exist
-  EXPECT_THROW(sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{123456789}; },
-                                   label_cb),
+  EXPECT_THROW(sif::recost_forward(
+                   *reader, *costing, []() { return baldr::GraphId{123456789}; }, label_cb),
                std::runtime_error);
 
   // this edge id is not valid
-  sif::recost_forward(*reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
+  sif::recost_forward(
+      *reader, *costing, []() { return baldr::GraphId{}; }, label_cb);
   EXPECT_EQ(called, false);
 
   // this path isnt possible with a car because the second edge doesnt have auto access
@@ -493,6 +494,18 @@ TEST(recosting, error_request) {
     actor.route(R"({"costing":"auto","locations":[],"recostings":[{"name":"foo"}]})");
     FAIL() << "No costing should have thrown";
   } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 127); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto"},{"costing":"auto"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
+
+  try {
+    actor.route(
+        R"({"costing":"auto","locations":[],"recostings":[{"costing":"auto","name": "same"},{"costing":"auto","name": "same"}]})");
+    FAIL() << "Duplicate names should have thrown";
+  } catch (const valhalla_exception_t& e) { EXPECT_EQ(e.code, 128); }
 }
 
 TEST(recosting, api) {
@@ -519,10 +532,11 @@ TEST(recosting, api) {
                           std::to_string(map.nodes["7"].lng()) + R"(,"lat":)" +
                           std::to_string(map.nodes["7"].lat()) + "}";
 
-  // lets also do a bunch of costings
+  // lets also do a bunch of costings, note that one recosting omits the optional "name" parameter
+  // in which case it'll take the costing name as "name" field
   Api api;
   auto json = actor.route(R"({"costing":"auto","locations":[)" + locations + R"(],"recostings":[
-      {"costing":"auto","name":"same"},
+      {"costing":"auto"},
       {"costing":"auto","name":"avoid_highways","use_highways":0.1},
       {"costing":"bicycle","name":"slower"},
       {"costing":"pedestrian","name":"slower_still"},
@@ -567,7 +581,7 @@ TEST(recosting, api) {
     const auto& trip = d["trip"].GetObject();
     const auto& trip_summary = trip["summary"].GetObject();
     EXPECT_TRUE(trip_summary["time"].IsNumber());
-    EXPECT_TRUE(trip_summary["time_same"].IsNumber());
+    EXPECT_TRUE(trip_summary["time_auto"].IsNumber());
     EXPECT_TRUE(trip_summary["time_avoid_highways"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower"].IsNumber());
     EXPECT_TRUE(trip_summary["time_slower_still"].IsNumber());
@@ -575,14 +589,14 @@ TEST(recosting, api) {
     for (const auto& leg : trip["legs"].GetArray()) {
       const auto& leg_summary = leg["summary"].GetObject();
       EXPECT_TRUE(leg_summary["time"].IsNumber());
-      EXPECT_TRUE(leg_summary["time_same"].IsNumber());
+      EXPECT_TRUE(leg_summary["time_auto"].IsNumber());
       EXPECT_TRUE(leg_summary["time_avoid_highways"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slower_still"].IsNumber());
       EXPECT_TRUE(leg_summary["time_slowest"].IsNumber());
       for (const auto& man : leg["maneuvers"].GetArray()) {
         EXPECT_TRUE(man["time"].IsNumber());
-        EXPECT_TRUE(man["time_same"].IsNumber());
+        EXPECT_TRUE(man["time_auto"].IsNumber());
         EXPECT_TRUE(man["time_avoid_highways"].IsNumber());
         EXPECT_TRUE(man["time_slower"].IsNumber());
         EXPECT_TRUE(man["time_slower_still"].IsNumber());

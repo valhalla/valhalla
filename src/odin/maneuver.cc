@@ -2,14 +2,15 @@
 #include <list>
 #include <utility>
 
-#include "baldr/streetnames.h"
-#include "baldr/streetnames_us.h"
 #include "midgard/constants.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 
 #include "odin/maneuver.h"
 #include "odin/transitrouteinfo.h"
+
+#include "baldr/streetnames.h"
+#include "baldr/streetnames_us.h"
 
 #include "proto/common.pb.h"
 #include "proto/directions.pb.h"
@@ -1179,8 +1180,16 @@ std::string Maneuver::end_level_ref() const {
   return end_level_ref_;
 }
 
-void Maneuver::set_end_level_ref(std::string end_level_ref) {
-  end_level_ref_ = std::move(end_level_ref);
+void Maneuver::set_end_level_ref(const std::string& end_level_ref) {
+  end_level_ref_ = end_level_ref;
+}
+
+const std::vector<RouteLandmark>& Maneuver::landmarks() const {
+  return landmarks_;
+}
+
+void Maneuver::set_landmarks(const std::vector<RouteLandmark>& landmarks) {
+  landmarks_ = landmarks;
 }
 
 #ifdef LOGGING_LEVEL_TRACE

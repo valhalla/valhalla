@@ -3,11 +3,11 @@
 #include "baldr/curl_tilegetter.h"
 #include "baldr/graphtile.h"
 #include "tyr/actor.h"
-#include "valhalla/filesystem.h"
 #include "valhalla/tile_server.h"
 
 #include <prime_server/prime_server.hpp>
 
+#include <filesystem>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -71,10 +71,10 @@ TEST(HttpTiles, test_no_cache_gz) {
 class HttpTilesWithCache : public ::testing::Test {
 protected:
   void SetUp() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
   void TearDown() override {
-    filesystem::remove_all("url_tile_cache");
+    std::filesystem::remove_all("url_tile_cache");
   }
 };
 
@@ -126,9 +126,9 @@ void test_tile_download(size_t tile_count, size_t curler_count, size_t thread_co
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
-  for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
+  for (size_t thread_i = 0; thread_i < thread_count; ++thread_i) {
     threads.emplace_back([&, thread_i]() {
-      for (int tile_i = 0; tile_i < tile_count; ++tile_i) {
+      for (size_t tile_i = 0; tile_i < tile_count; ++tile_i) {
         bool is_for_this_thread = ((tile_i % thread_count) == thread_i);
         if (!is_for_this_thread) {
           continue;
@@ -173,9 +173,9 @@ void test_graphreader_tile_download(size_t tile_count, size_t curler_count, size
 
   std::vector<std::thread> threads;
   threads.reserve(thread_count);
-  for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
+  for (size_t thread_i = 0; thread_i < thread_count; ++thread_i) {
     threads.emplace_back([&, thread_i]() {
-      for (int tile_i = 0; tile_i < tile_count; ++tile_i) {
+      for (size_t tile_i = 0; tile_i < tile_count; ++tile_i) {
         bool is_for_this_thread = ((tile_i % thread_count) == thread_i);
         if (!is_for_this_thread) {
           continue;

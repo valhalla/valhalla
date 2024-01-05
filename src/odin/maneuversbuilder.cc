@@ -3,13 +3,13 @@
 #include <functional>
 #include <iostream>
 #include <iterator>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <boost/format.hpp>
-#include <boost/optional.hpp>
 
 #include "baldr/graphconstants.h"
 #include "baldr/streetname.h"
@@ -142,6 +142,10 @@ std::list<Maneuver> ManeuversBuilder::Build() {
   // Process the turn lanes. Must happen after updating maneuver placement for internal edges so we
   // activate the correct lanes.
   ProcessTurnLanes(maneuvers);
+
+  // Add landmarks to maneuvers as direction guidance support
+  // Each maneuver should get the landmarks associated with edges in the previous maneuver
+  AddLandmarksFromTripLegToManeuvers(maneuvers);
 
   ProcessVerbalSuccinctTransitionInstruction(maneuvers);
 
@@ -1320,10 +1324,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
   if (prev_edge->has_sign()) {
     // Exit number
     for (const auto& exit_number : prev_edge->sign().exit_numbers()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(exit_number.has_pronunciation(),
-                               baldr::Pronunciation{exit_number.pronunciation().alphabet(),
-                                                    exit_number.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          exit_number.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_number.pronunciation().alphabet(),
+                                                        exit_number.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_number_list()
           ->emplace_back(exit_number.text(), exit_number.is_route_number(), pronunciation);
@@ -1331,10 +1336,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
     // Exit branch
     for (const auto& exit_onto_street : prev_edge->sign().exit_onto_streets()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(exit_onto_street.has_pronunciation(),
-                               baldr::Pronunciation{exit_onto_street.pronunciation().alphabet(),
-                                                    exit_onto_street.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          exit_onto_street.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_onto_street.pronunciation().alphabet(),
+                                                        exit_onto_street.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_branch_list()
           ->emplace_back(exit_onto_street.text(), exit_onto_street.is_route_number(), pronunciation);
@@ -1342,10 +1348,12 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
     // Exit toward
     for (const auto& exit_toward_location : prev_edge->sign().exit_toward_locations()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(exit_toward_location.has_pronunciation(),
-                               baldr::Pronunciation{exit_toward_location.pronunciation().alphabet(),
-                                                    exit_toward_location.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          exit_toward_location.has_pronunciation()
+              ? std::make_optional(
+                    baldr::Pronunciation{exit_toward_location.pronunciation().alphabet(),
+                                         exit_toward_location.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_exit_toward_list()
           ->emplace_back(exit_toward_location.text(), exit_toward_location.is_route_number(),
@@ -1354,10 +1362,11 @@ void ManeuversBuilder::UpdateManeuver(Maneuver& maneuver, int node_index) {
 
     // Exit name
     for (const auto& exit_name : prev_edge->sign().exit_names()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(exit_name.has_pronunciation(),
-                               baldr::Pronunciation{exit_name.pronunciation().alphabet(),
-                                                    exit_name.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          exit_name.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{exit_name.pronunciation().alphabet(),
+                                                        exit_name.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()->mutable_exit_name_list()->emplace_back(exit_name.text(),
                                                                        exit_name.is_route_number(),
                                                                        pronunciation);
@@ -1502,10 +1511,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
   if (curr_edge->has_sign()) {
     // Guide branch
     for (const auto& guide_onto_street : curr_edge->sign().guide_onto_streets()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(guide_onto_street.has_pronunciation(),
-                               baldr::Pronunciation{guide_onto_street.pronunciation().alphabet(),
-                                                    guide_onto_street.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          guide_onto_street.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{guide_onto_street.pronunciation().alphabet(),
+                                                        guide_onto_street.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_guide_branch_list()
           ->emplace_back(guide_onto_street.text(), guide_onto_street.is_route_number(),
@@ -1514,10 +1524,12 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Guide toward
     for (const auto& guide_toward_location : curr_edge->sign().guide_toward_locations()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(guide_toward_location.has_pronunciation(),
-                               baldr::Pronunciation{guide_toward_location.pronunciation().alphabet(),
-                                                    guide_toward_location.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          guide_toward_location.has_pronunciation()
+              ? std::make_optional(
+                    baldr::Pronunciation{guide_toward_location.pronunciation().alphabet(),
+                                         guide_toward_location.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_guide_toward_list()
           ->emplace_back(guide_toward_location.text(), guide_toward_location.is_route_number(),
@@ -1526,10 +1538,11 @@ void ManeuversBuilder::FinalizeManeuver(Maneuver& maneuver, int node_index) {
 
     // Junction name
     for (const auto& junction_name : curr_edge->sign().junction_names()) {
-      boost::optional<baldr::Pronunciation> pronunciation =
-          boost::make_optional(junction_name.has_pronunciation(),
-                               baldr::Pronunciation{junction_name.pronunciation().alphabet(),
-                                                    junction_name.pronunciation().value()});
+      std::optional<baldr::Pronunciation> pronunciation =
+          junction_name.has_pronunciation()
+              ? std::make_optional(baldr::Pronunciation{junction_name.pronunciation().alphabet(),
+                                                        junction_name.pronunciation().value()})
+              : std::nullopt;
       maneuver.mutable_signs()
           ->mutable_junction_name_list()
           ->emplace_back(junction_name.text(), junction_name.is_route_number(), pronunciation);
@@ -1621,7 +1634,7 @@ void ManeuversBuilder::SetManeuverType(Maneuver& maneuver, bool none_type_allowe
   // Process Turn Channel
   else if (none_type_allowed && maneuver.turn_channel()) {
     maneuver.set_type(DirectionsLeg_Maneuver_Type_kNone);
-    LOG_TRACE("ManeuverType=TURN_CHANNNEL");
+    LOG_TRACE("ManeuverType=TURN_CHANNEL");
   }
   // Process exit
   // if maneuver is ramp
@@ -2646,7 +2659,7 @@ bool ManeuversBuilder::IsPedestrianFork(int node_index,
     node->CalculateRightLeftIntersectingEdgeCounts(prev_edge->end_heading(), prev_edge->travel_mode(),
                                                    xedge_counts);
 
-    boost::optional<TripLeg_Use> xedge_use;
+    std::optional<TripLeg_Use> xedge_use;
     uint32_t straightest_traversable_xedge_turn_degree =
         node->GetStraightestTraversableIntersectingEdgeTurnDegree(prev_edge->end_heading(),
                                                                   prev_edge->travel_mode(),
@@ -3927,6 +3940,41 @@ void ManeuversBuilder::CollapseMergeManeuvers(std::list<Maneuver>& maneuvers) {
     curr_man = next_man;
     assert(next_man != maneuvers.end());
     ++next_man;
+  }
+}
+
+void ManeuversBuilder::AddLandmarksFromTripLegToManeuvers(std::list<Maneuver>& maneuvers) {
+  std::vector<RouteLandmark> landmarks{};
+  for (auto man = maneuvers.begin(); man != maneuvers.end(); ++man) {
+    // set landmarks correlated with edges in the previous maneuver to the current maneuver
+    if (!landmarks.empty()) {
+      man->set_landmarks(landmarks);
+    }
+    landmarks.clear();
+
+    // accumulate landmarks in the current maneuver
+    double distance_from_begin_to_curr_edge = 0; // distance from the begin point of the whole
+                                                 // manerver to the begin point of the current edge
+    double maneuver_total_distance =
+        man->length() * kMetersPerKm; // total distance of the maneuver in meters
+
+    for (auto node = man->begin_node_index(); node < man->end_node_index(); ++node) {
+      auto curr_edge = trip_path_->GetCurrEdge(node);
+      // multipoint routes with `through` or `via` types can have consecutive copies of the same edge
+      if (curr_edge != trip_path_->GetCurrEdge(node + 1)) {
+        // every time we are about to leave an edge, collect all landmarks in it
+        // and reset distance of each landmark to the distance from the landmark to the maneuver point
+        auto curr_landmarks = curr_edge->landmarks();
+        for (auto& l : curr_landmarks) {
+          double new_distance =
+              maneuver_total_distance - l.distance() - distance_from_begin_to_curr_edge;
+          l.set_distance(new_distance);
+        }
+        std::move(curr_landmarks.begin(), curr_landmarks.end(), std::back_inserter(landmarks));
+        // accumulate the distance from maneuver to the curr edge we are working on
+        distance_from_begin_to_curr_edge += curr_edge->length_km() * kMetersPerKm;
+      }
+    }
   }
 }
 

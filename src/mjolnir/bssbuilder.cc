@@ -52,7 +52,7 @@ struct BSSConnection {
   uint64_t wayid = std::numeric_limits<uint64_t>::max();
   std::vector<std::string> names = {};
   std::vector<std::string> tagged_values = {};
-  std::vector<std::string> pronunciations = {};
+  std::vector<std::string> linguistics = {};
 
   std::vector<PointLL> shape = {};
   // Is the outbound edge from the waynode is forward?
@@ -82,8 +82,8 @@ struct BSSConnection {
     wayid = edgeinfo.wayid();
     names = edgeinfo.GetNames();
     tagged_values = edgeinfo.GetTaggedValues();
-    pronunciations = edgeinfo.GetTaggedValues(true);
 
+    linguistics = edgeinfo.GetLinguisticTaggedValues();
     is_forward_from_waynode = is_forward;
     speed = best.directededge->speed();
     surface = best.directededge->surface();
@@ -135,16 +135,16 @@ void compute_and_fill_shape(const BestProjection& best,
                             BSSConnection& start,
                             BSSConnection& end) {
   const auto& closest_point = std::get<0>(best.closest);
-  auto cloest_index = std::get<2>(best.closest);
+  auto closest_index = std::get<2>(best.closest);
 
-  std::copy(best.shape.begin(), best.shape.begin() + cloest_index + 1,
+  std::copy(best.shape.begin(), best.shape.begin() + closest_index + 1,
             std::back_inserter(start.shape));
   start.shape.push_back(closest_point);
   start.shape.push_back(bss_ll);
 
   end.shape.push_back(bss_ll);
   end.shape.push_back(closest_point);
-  std::copy(best.shape.begin() + cloest_index + 1, best.shape.end(), std::back_inserter(end.shape));
+  std::copy(best.shape.begin() + closest_index + 1, best.shape.end(), std::back_inserter(end.shape));
 }
 
 const static auto VALID_EDGE_USES = std::unordered_set<Use>{
@@ -157,7 +157,8 @@ std::vector<BSSConnection> project(const GraphTile& local_tile, const std::vecto
   auto t1 = std::chrono::high_resolution_clock::now();
   auto scoped_finally = make_finally([&t1, size = osm_bss.size()]() {
     auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    [[maybe_unused]] uint32_t secs =
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     LOG_INFO("Projection Finished - Projection of " + std::to_string(size) + " bike station  took " +
              std::to_string(secs) + " secs");
   });
@@ -330,7 +331,7 @@ void add_bss_nodes_and_edges(GraphTileBuilder& tilebuilder_local,
                                         new_bss_node_graphid, bss_to_waynode.way_node_id,
                                         bss_to_waynode.wayid, 0, 0, 0, bss_to_waynode.shape,
                                         bss_to_waynode.names, bss_to_waynode.tagged_values,
-                                        bss_to_waynode.pronunciations, 0, added);
+                                        bss_to_waynode.linguistics, 0, added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -469,7 +470,7 @@ void create_edges(GraphTileBuilder& tilebuilder_local,
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(tilebuilder_local.directededges().size(), lower->way_node_id,
                                         lower->bss_node_id, lower->wayid, 0, 0, 0, lower->shape,
-                                        lower->names, lower->tagged_values, lower->pronunciations, 0,
+                                        lower->names, lower->tagged_values, lower->linguistics, 0,
                                         added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -516,7 +517,7 @@ namespace valhalla {
 namespace mjolnir {
 
 // Add bss to the graph
-/* The import of bike share staion(BSS) into the tiles is done in two steps with some hypothesis in
+/* The import of bike share station(BSS) into the tiles is done in two steps with some hypothesis in
  * order to simply the problem.
  *
  * We assume that the BSS node and the startnode of projected edge(either the forward edge or its evil
@@ -570,7 +571,7 @@ namespace mjolnir {
  * 2. Now the Bss nodes and their outbound edges are added into the local tiles, it's time to add
  * their inbound edges(in other words, outbound edges of startnodes and endnodes). These edges are
  * just considered as the same outbound edges from a way node (outbound edges of either startnode or
- * endnode are technically the same). We group those edges whose orign are in the same tiles and work
+ * endnode are technically the same). We group those edges whose origin are in the same tiles and work
  * on it in batch.
  *
  *
@@ -589,7 +590,8 @@ void BssBuilder::Build(const boost::property_tree::ptree& pt,
 
   auto scoped_finally = make_finally([&t1]() {
     auto t2 = std::chrono::high_resolution_clock::now();
-    uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+    [[maybe_unused]] uint32_t secs =
+        std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
     LOG_INFO("Finished - BssBuilder took " + std::to_string(secs) + " secs");
   });
 

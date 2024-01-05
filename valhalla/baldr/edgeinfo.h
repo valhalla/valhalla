@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <valhalla/baldr/graphid.h>
@@ -53,6 +54,15 @@ struct NameInfo {
   }
 };
 
+// indexes of linguistic attributes in the linguistic map value-tuple
+constexpr size_t kLinguisticMapTupleLanguageIndex = 0;
+constexpr size_t kLinguisticMapTuplePhoneticAlphabetIndex = 1;
+constexpr size_t kLinguisticMapTuplePronunciationIndex = 2;
+constexpr size_t kLinguisticHeaderSize = 3;
+
+// Unfortunately a bug was found where we were returning a blank phoneme (kNone = 0) for a linguistic
+// record where it just contained a language and no phoneme.  This caused us to stop reading the
+// header and in turn caused the name_index to be off.  This is why kNone is now equal to 5
 struct linguistic_text_header_t {
   uint32_t language_ : 8; // this is just the language as we will derive locale by getting admin info
   uint32_t length_ : 8;   // pronunciation length
@@ -123,6 +133,14 @@ public:
   }
 
   /**
+   * Does this EdgeInfo have elevation data.
+   * @return Returns true if the EdgeInfo record has elevation along the edge.
+   */
+  bool has_elevation() const {
+    return ei_.has_elevation_;
+  }
+
+  /**
    * Get the number of names.
    * @return Returns the name count.
    */
@@ -151,22 +169,40 @@ public:
    */
   std::vector<std::string> GetNames() const;
 
+  /** Convenience method to get the names and route number flags for an edge.
+   *
+   *  This one does not calculate the types
+   *  Like GetNamesAndTypes but without using memory for the types
+   *
+   * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
+   * @return Returns a list (vector) (name, route number flag) pairs
+   */
+  std::vector<std::pair<std::string, bool>> GetNames(bool include_tagged_values) const;
+
   /**
-   * Convenience method to get the names for an edge
-   * @param  only_pronunciations  Bool indicating whether or not to return only the pronunciations
+   * Convenience method to get the non linguistic, tagged values for an edge.
+   *
    *
    * @return   Returns a list (vector) of tagged names.
    */
-  std::vector<std::string> GetTaggedValues(bool only_pronunciations = false) const;
+  std::vector<std::string> GetTaggedValues() const;
 
   /**
-   * Convenience method to get the names and route number flags for an edge.
+   * Convenience method to get the linguistic names for an edge
+   * @param  type  type of linguistic names we are interested in obtaining.
+   *
+   * @return   Returns a list (vector) of linguistic names.
+   */
+  std::vector<std::string> GetLinguisticTaggedValues() const;
+
+  /**
+   * Convenience method to get the names, route number flags and tag value type for an edge.
    * @param  include_tagged_values  Bool indicating whether or not to return the tagged values too
    *
-   * @return   Returns a list (vector) of name/route number pairs.
+   * @return   Returns a list (vector) of name/route number flags/types tuples.
    */
-  std::vector<std::pair<std::string, bool>> GetNamesAndTypes(std::vector<uint8_t>& types,
-                                                             bool include_tagged_names = false) const;
+  std::vector<std::tuple<std::string, bool, uint8_t>>
+  GetNamesAndTypes(bool include_tagged_names = false) const;
 
   /**
    * Convenience method to get tags of the edge.
@@ -176,11 +212,12 @@ public:
   const std::multimap<TaggedValue, std::string>& GetTags() const;
 
   /**
-   * Convenience method to get a pronunciation map for an edge.
-   * @return   Returns a unordered_map of type/name pairs with a key that references the name
-   * index from GetNamesAndTypes
+   * Convenience method to get a Linguistic map for an edge.
+   * @return   Returns a unordered_map in which the key is a index into the name list from
+   * GetNamesAndTypes and the tuple contains a pronunciation (w/wo a language) or no pronunciation and
+   * just a language
    */
-  std::unordered_map<uint8_t, std::pair<uint8_t, std::string>> GetPronunciationsMap() const;
+  std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> GetLinguisticMap() const;
 
   /**
    * Convenience method to get the types for the names.
@@ -204,6 +241,15 @@ public:
    * @return  Returns the encoded shape string.
    */
   std::string encoded_shape() const;
+
+  /**
+   * Returns the encoded elevation along the edge. The sampling interval is uniform
+   * (based on the length of the edge). The sampling interval is returned via argument.
+   * @param  length  Length of the edge. Used to determine sampling interval.
+   * @param  interval  Sampling interval (reference - value is returned).
+   * @return Returns a vector holding delta encoded elevation along the edge.
+   */
+  std::vector<int8_t> encoded_elevation(const uint32_t length, double& interval) const;
 
   /**
    * Get layer index of the edge relatively to other edges(Z-level). Can be negative.
@@ -248,7 +294,8 @@ public:
     uint32_t encoded_shape_size_ : 16; // How many bytes long the encoded shape is
     uint32_t extended_wayid1_ : 8;     // Next next byte of the way id
     uint32_t extended_wayid_size_ : 2; // How many more bytes the way id is stored in
-    uint32_t spare0_ : 2;              // not used
+    uint32_t has_elevation_ : 1;       // Does the edgeinfo have elevation?
+    uint32_t spare0_ : 1;              // not used
   };
 
 protected:
@@ -267,6 +314,9 @@ protected:
 
   // Lng, lat shape of the edge
   mutable std::vector<midgard::PointLL> shape_;
+
+  // Encoded elevation
+  const int8_t* encoded_elevation_;
 
   // The list of names within the tile
   const char* names_list_;

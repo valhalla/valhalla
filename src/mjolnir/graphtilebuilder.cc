@@ -11,6 +11,9 @@
 #include <set>
 #include <stdexcept>
 
+#include "baldr/directededge.h"
+#include "baldr/graphconstants.h"
+
 using namespace valhalla::baldr;
 
 namespace valhalla {
@@ -92,6 +95,14 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   std::copy(directededges_, directededges_ + n, std::back_inserter(directededges_builder_));
 
   // Add extended directededge attributes (if available)
+  if (header_->has_ext_directededge()) {
+    // Copy extended directed edges to the builder list
+    // NOTE: directed edge and directed edge extensions are assumed to have the
+    // same length
+    directededges_ext_builder_.reserve(n);
+    std::copy(ext_directededges_, ext_directededges_ + n,
+              std::back_inserter(directededges_ext_builder_));
+  }
 
   // Create access restriction list
   for (uint32_t i = 0; i < header_->access_restriction_count(); i++) {
@@ -146,10 +157,11 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
   // Edge bins are gotten by parent
 
-  // Create an ordered set of edge info offsets
-  std::set<uint32_t> edge_info_offsets;
+  // Create an ordered map with edge info offsets as the key and the edge length
+  // as the value. Length is needed so elevation data can be read (if present).
+  std::map<uint32_t, uint32_t> edge_info_offsets;
   for (auto& diredge : directededges_builder_) {
-    edge_info_offsets.insert(diredge.edgeinfo_offset());
+    edge_info_offsets[diredge.edgeinfo_offset()] = diredge.length();
   }
 
   // At this time, complex restrictions are created AFTER all need for
@@ -163,7 +175,9 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
   // EdgeInfo. Create list of EdgeInfoBuilders. Add to text offset set.
   edge_info_offset_ = 0;
   edgeinfo_offset_map_.clear();
-  for (auto offset : edge_info_offsets) {
+  for (auto edgemap : edge_info_offsets) {
+    auto offset = edgemap.first;
+
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
       LOG_WARN("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
@@ -171,6 +185,7 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
                " current ei offset= " + std::to_string(edge_info_offset_));
     }
 
+    // At this time, encoded elevation is empty and does not need to be serialized...
     EdgeInfo ei(edgeinfo_ + offset, textlist_, textlist_size_);
     EdgeInfoBuilder eib;
     eib.set_wayid(ei.wayid());
@@ -183,6 +198,14 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
       eib.AddNameInfo(info);
     }
     eib.set_encoded_shape(ei.encoded_shape());
+
+    // Add encoded elevation (if present)
+    if (ei.has_elevation()) {
+      auto length = edgemap.second;
+      double interval = 0.0f;
+      eib.set_encoded_elevation(ei.encoded_elevation(length, interval));
+    }
+
     edge_info_offset_ += eib.SizeOf();
     edgeinfo_list_.emplace_back(std::move(eib));
 
@@ -336,15 +359,17 @@ void GraphTileBuilder::StoreTileData() {
       reverse_restriction_size += complex_restriction.SizeOf();
     }
 
-    // Write the edge data
+    // Write the edge data (update edge_info_offset_)
+    int64_t current_size = in_mem.tellp();
     header_builder_.set_edgeinfo_offset(header_builder_.complex_restriction_reverse_offset() +
                                         reverse_restriction_size);
     for (const auto& edgeinfo : edgeinfo_list_) {
       in_mem << edgeinfo;
     }
+    int64_t edge_info_size = in_mem.tellp() - current_size;
 
     // Write the names
-    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_offset_);
+    header_builder_.set_textlist_offset(header_builder_.edgeinfo_offset() + edge_info_size);
     for (const auto& text : textlistbuilder_) {
       in_mem << text << '\0';
     }
@@ -460,6 +485,11 @@ std::vector<DirectedEdge>& GraphTileBuilder::directededges() {
   return directededges_builder_;
 }
 
+// Gets the current list of directed edge extension (builders).
+std::vector<DirectedEdgeExt>& GraphTileBuilder::directededges_ext() {
+  return directededges_ext_builder_;
+}
+
 // Add a transit departure.
 void GraphTileBuilder::AddTransitDeparture(const TransitDeparture& departure) {
   departure_builder_.emplace_back(std::move(departure));
@@ -495,35 +525,44 @@ void GraphTileBuilder::AddAccessRestrictions(const std::vector<AccessRestriction
 // Add signs
 void GraphTileBuilder::AddSigns(const uint32_t idx,
                                 const std::vector<SignInfo>& signs,
-                                const std::vector<std::string>& pronunciations) {
+                                const std::vector<std::string>& linguistics) {
   // Iterate through the list of sign info (with sign text) and add sign
   // text to the text list. Skip signs with no text.
+
+  auto process_linguistic_header = [](const uint32_t ling_start_index, const uint32_t ling_count,
+                                      const std::vector<std::string>& linguistics,
+                                      const size_t index) {
+    std::string updated_linguistics;
+    for (uint32_t x = ling_start_index; x <= ling_count; x++) {
+      auto* p = const_cast<char*>(linguistics[x].c_str());
+
+      while (*p != '\0') {
+        linguistic_text_header_t header = midgard::unaligned_read<linguistic_text_header_t>(p);
+
+        if (header.name_index_ == index) {
+          updated_linguistics.append(
+              std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) +
+              (p + kLinguisticHeaderSize));
+        }
+        p += header.length_ + kLinguisticHeaderSize;
+      }
+    }
+    return updated_linguistics;
+  };
+
   for (size_t i = 0; i < signs.size(); ++i) {
-    auto sign = signs[i];
+    const auto& sign = signs[i];
     if (!(sign.text().empty())) {
       uint32_t offset = AddName(sign.text());
+
       signs_builder_.emplace_back(idx, sign.type(), sign.is_route_num(), sign.is_tagged(), offset);
-      if (sign.has_phoneme()) {
-        bool phoneme_on_node = sign.type() == Sign::Type::kJunctionName;
-        uint32_t count = (sign.phoneme_start_index() + sign.phoneme_count()) - 1;
-        for (uint32_t x = sign.phoneme_start_index(); x <= count; x++) {
-          auto* p = const_cast<char*>(pronunciations[x].c_str());
-          size_t pos = 0;
-          std::string updated_pronunciation;
-
-          while (pos < strlen(p)) {
-            linguistic_text_header_t header =
-                midgard::unaligned_read<linguistic_text_header_t>(p + pos);
-            pos += 3;
-            header.name_index_ = i;
-            updated_pronunciation.append(std::string(reinterpret_cast<const char*>(&header), 3) +
-                                         (p + pos));
-            pos += header.length_;
-          }
-
-          uint32_t offset = AddName(updated_pronunciation);
-          signs_builder_.emplace_back(idx, Sign::Type::kPronunciation, phoneme_on_node, true, offset);
-        }
+      if (sign.has_linguistic()) {
+        bool linguistic_on_node =
+            sign.type() == Sign::Type::kJunctionName || (sign.type() == Sign::Type::kTollName);
+        uint32_t count = (sign.linguistic_start_index() + sign.linguistic_count()) - 1;
+        uint32_t offset =
+            AddName(process_linguistic_header(sign.linguistic_start_index(), count, linguistics, i));
+        signs_builder_.emplace_back(idx, Sign::Type::kLinguistic, linguistic_on_node, true, offset);
       }
     }
   }
@@ -571,19 +610,45 @@ bool GraphTileBuilder::HasEdgeInfo(const uint32_t edgeindex,
   return false;
 }
 
+void GraphTileBuilder::ProcessTaggedValues([[maybe_unused]] const uint32_t edgeindex,
+                                           const std::vector<std::string>& names,
+                                           size_t& name_count,
+                                           std::vector<NameInfo>& name_info_list) {
+  auto encode_tag =
+      std::string(1, static_cast<std::string::value_type>(valhalla::baldr::TaggedValue::kLinguistic));
+  if (names.size()) {
+    if (name_count != kMaxNamesPerEdge) {
+      std::stringstream ss;
+      for (const auto& name : names) {
+        ss << name;
+      }
+
+      // Add linguistics and add its offset to edge info's list.
+      NameInfo ni{AddName(encode_tag + ss.str())};
+
+      ni.is_route_num_ = 0;
+      ni.tagged_ = 1;
+      name_info_list.emplace_back(ni);
+      ++name_count;
+    } else {
+      LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
+    }
+  }
+}
+
 // Add edge info
 template <class shape_container_t>
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
-                                       const GraphId& nodea,
-                                       const baldr::GraphId& nodeb,
+                                       baldr::GraphId nodea,
+                                       baldr::GraphId nodeb,
                                        const uint64_t wayid,
                                        const float elev,
-                                       const uint32_t bike_network,
-                                       const uint32_t speed_limit,
+                                       const uint32_t bn,
+                                       const uint32_t spd,
                                        const shape_container_t& lls,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
-                                       const std::vector<std::string>& pronunciations,
+                                       const std::vector<std::string>& linguistics,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -596,8 +661,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
-    edgeinfo.set_bike_network(bike_network);
-    edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_bike_network(bn);
+    edgeinfo.set_speed_limit(spd);
     edgeinfo.set_shape(lls);
 
     // Add names to the common text/name list. Skip blank names.
@@ -644,27 +709,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
     }
 
-    if (pronunciations.size()) {
-      if (name_count != kMaxNamesPerEdge) {
-        std::stringstream ss;
-        for (const auto& pronunciation : pronunciations) {
-          ss << pronunciation;
-        }
-
-        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
-          return std::string(1, static_cast<std::string::value_type>(tag));
-        };
-
-        // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
-
-        ni.is_route_num_ = 0;
-        ni.tagged_ = 1;
-        name_info_list.emplace_back(ni);
-        ++name_count;
-      } else
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
-    }
+    ProcessTaggedValues(edgeindex, linguistics, name_count, name_info_list);
 
     edgeinfo.set_name_info_list(name_info_list);
 
@@ -686,9 +731,10 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
   added = false;
   return existing_edge_offset_item->second;
 }
+
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint32_t edgeindex,
-                                                                      const GraphId&,
-                                                                      const baldr::GraphId&,
+                                                                      GraphId,
+                                                                      GraphId,
                                                                       const uint64_t,
                                                                       const float,
                                                                       const uint32_t,
@@ -701,8 +747,8 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::vector<PointLL>>(const uint
                                                                       bool&,
                                                                       bool);
 template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32_t edgeindex,
-                                                                    const GraphId&,
-                                                                    const baldr::GraphId&,
+                                                                    GraphId,
+                                                                    baldr::GraphId,
                                                                     const uint64_t,
                                                                     const float,
                                                                     const uint32_t,
@@ -717,16 +763,16 @@ template uint32_t GraphTileBuilder::AddEdgeInfo<std::list<PointLL>>(const uint32
 
 // AddEdgeInfo - accepts an encoded shape string.
 uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
-                                       const baldr::GraphId& nodea,
-                                       const baldr::GraphId& nodeb,
+                                       baldr::GraphId nodea,
+                                       baldr::GraphId nodeb,
                                        const uint64_t wayid,
                                        const float elev,
-                                       const uint32_t bike_network,
-                                       const uint32_t speed_limit,
+                                       const uint32_t bn,
+                                       const uint32_t spd,
                                        const std::string& llstr,
                                        const std::vector<std::string>& names,
                                        const std::vector<std::string>& tagged_values,
-                                       const std::vector<std::string>& pronunciations,
+                                       const std::vector<std::string>& linguistics,
                                        const uint16_t types,
                                        bool& added,
                                        bool diff_names) {
@@ -739,8 +785,8 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
     EdgeInfoBuilder& edgeinfo = edgeinfo_list_.back();
     edgeinfo.set_wayid(wayid);
     edgeinfo.set_mean_elevation(elev);
-    edgeinfo.set_bike_network(bike_network);
-    edgeinfo.set_speed_limit(speed_limit);
+    edgeinfo.set_bike_network(bn);
+    edgeinfo.set_speed_limit(spd);
     edgeinfo.set_encoded_shape(llstr);
 
     // Add names to the common text/name list. Skip blank names.
@@ -787,28 +833,7 @@ uint32_t GraphTileBuilder::AddEdgeInfo(const uint32_t edgeindex,
       }
     }
 
-    if (pronunciations.size()) {
-      if (name_count != kMaxNamesPerEdge) {
-        std::stringstream ss;
-        for (const auto& pronunciation : pronunciations) {
-          ss << pronunciation;
-        }
-
-        auto encode_tag = [](valhalla::baldr::TaggedValue tag) {
-          return std::string(1, static_cast<std::string::value_type>(tag));
-        };
-
-        // Add pronunciations and add its offset to edge info's list.
-        NameInfo ni{AddName(encode_tag(valhalla::baldr::TaggedValue::kPronunciation) + ss.str())};
-
-        ni.is_route_num_ = 0;
-        ni.tagged_ = 1;
-        name_info_list.emplace_back(ni);
-        ++name_count;
-      } else
-        LOG_WARN("Too many names for edgeindex: " + std::to_string(edgeindex));
-    }
-
+    ProcessTaggedValues(edgeindex, linguistics, name_count, name_info_list);
     edgeinfo.set_name_info_list(name_info_list);
 
     // Add to the map
@@ -836,15 +861,22 @@ void GraphTileBuilder::set_mean_elevation(const float elev) {
   edgeinfo.set_mean_elevation(elev);
 }
 
-// Set the mean elevation to the EdgeInfo given the edge info offset. This requires
-// a serialized tile builder.
-void GraphTileBuilder::set_mean_elevation(const uint32_t offset, const float elev) {
+// Set the mean elevation and encoded elevation along an edge to the EdgeInfo given the edge
+// info offset. This requires a serialized tile builder.
+uint32_t GraphTileBuilder::set_elevation(const uint32_t offset,
+                                         const float mean_elevation,
+                                         const std::vector<int8_t>& encoded_elevation) {
   auto e = edgeinfo_offset_map_.find(offset);
   if (e == edgeinfo_offset_map_.end()) {
-    LOG_ERROR("set_mean_elevation - could not find the EdgeInfo index given the offset");
-    return;
+    LOG_ERROR("set_elevation - could not find the EdgeInfo index given the offset");
+    return 0;
   }
-  e->second->set_mean_elevation(elev);
+  e->second->set_mean_elevation(mean_elevation);
+  if (!encoded_elevation.empty()) {
+    e->second->set_encoded_elevation(encoded_elevation);
+    e->second->set_has_elevation(true);
+  }
+  return e->second->SizeOf();
 }
 
 // Add a name to the text list
@@ -918,6 +950,14 @@ DirectedEdge& GraphTileBuilder::directededge(const size_t idx) {
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Gets a non-const directed edge extension from existing tile data.
+DirectedEdgeExt& GraphTileBuilder::directededge_ext(const size_t idx) {
+  if (idx < header_->directededgecount()) {
+    return ext_directededges_[idx];
+  }
+  throw std::runtime_error("GraphTile DirectedEdgeExt id out of bounds");
+}
+
 // Gets a pointer to directed edges within the list being built.
 const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   if (idx < header_->directededgecount()) {
@@ -926,12 +966,28 @@ const DirectedEdge* GraphTileBuilder::directededges(const size_t idx) const {
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
 }
 
+// Gets a pointer to directed edge extensions within the list being built.
+const DirectedEdgeExt* GraphTileBuilder::directededges_ext(const size_t idx) const {
+  if (idx < header_->directededgecount()) {
+    return &directededges_ext_builder_[idx];
+  }
+  throw std::runtime_error("GraphTile DirectedEdgeExt id out of bounds");
+}
+
 // Get the directed edge builder at the specified index.
 DirectedEdge& GraphTileBuilder::directededge_builder(const size_t idx) {
   if (idx < header_->directededgecount()) {
     return directededges_builder_[idx];
   }
   throw std::runtime_error("GraphTile DirectedEdge id out of bounds");
+}
+
+// Get the directed edge extension builder at the specified index.
+DirectedEdgeExt& GraphTileBuilder::directededge_ext_builder(const size_t idx) {
+  if (idx < header_->directededgecount()) {
+    return directededges_ext_builder_[idx];
+  }
+  throw std::runtime_error("GraphTile DirectedEdgeExt id out of bounds");
 }
 
 // Gets a non-const access restriction from existing tile data.
@@ -1219,6 +1275,83 @@ void GraphTileBuilder::UpdatePredictedSpeeds(const std::vector<DirectedEdge>& di
     // Close the file
     file.close();
   }
+}
+
+void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landmark) {
+  // check the edge id makes sense
+  if (header_builder_.graphid().Tile_Base() != edge_id.Tile_Base()) {
+    throw std::runtime_error(
+        "Can't add landmark: tile id or hierarchy level doesn't match with the current builder");
+  }
+  if (header_builder_.directededgecount() <= edge_id.id()) {
+    throw std::runtime_error(
+        "Given edge doesn't exist: edge id is larger than total edge size in this tile");
+  }
+
+  // get the edge info / edge info builder
+  const auto& edge = directededges_builder_[edge_id.id()];
+  const auto original_offset = edge.edgeinfo_offset();
+  auto eib = edgeinfo_offset_map_.find(original_offset);
+
+  if (eib == edgeinfo_offset_map_.end()) {
+    throw std::runtime_error("Couldn't find edge info for the given edge: " +
+                             std::to_string(edge_id));
+  }
+
+  // get the value and prepend the tag to it
+  std::string tagged_value = landmark.to_str();
+  tagged_value.insert(tagged_value.begin(), static_cast<char>(baldr::TaggedValue::kLandmark));
+
+  auto name_offset = AddName(tagged_value); // where we are storing this tagged_value in the tile
+  // avoid adding existing landmark to edges (e.g. adding the same landmark to twin edges)
+  if (eib->second->has_name_info(name_offset)) {
+    return;
+  }
+
+  // record in the edge info builder of where the tagged_value is
+  NameInfo ni{name_offset, 0, 0, 1};
+  eib->second->AddNameInfo(ni);
+
+  // update edge info offset
+  const auto shift = sizeof(ni);
+  edge_info_offset_ += shift;
+
+  // update edgeinfo_offset for all directededges behind
+  for (auto& e : directededges_builder_) {
+    const auto offset = e.edgeinfo_offset();
+    if (offset > original_offset) {
+      e.set_edgeinfo_offset(offset + shift);
+    }
+  }
+
+  // update edgeinfo_offset_map by updating the offsets (keys)
+  // TODO: optimize this in a better way
+  std::unordered_map<uint32_t, EdgeInfoBuilder*> new_edgeinfo_offset_map_{};
+
+  for (auto& e : edgeinfo_offset_map_) {
+    if (e.first > original_offset) {
+      new_edgeinfo_offset_map_.emplace(e.first + shift, e.second);
+    } else {
+      new_edgeinfo_offset_map_.insert(e);
+    }
+  }
+  edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
+}
+
+bool GraphTileBuilder::OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge) {
+  if (edge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
+    // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+    // true if a matching edgeinfo offset if found.
+    const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+    const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, de++) {
+      // Return true if the edge info matches (same name, shape, etc.)
+      if (de->edgeinfo_offset() == edge->edgeinfo_offset()) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 } // namespace mjolnir

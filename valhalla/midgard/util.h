@@ -299,7 +299,7 @@ float tangent_angle(size_t index,
                     size_t first_segment_index = 0,
                     size_t last_segment_index = std::numeric_limits<size_t>::max());
 
-// useful in converting from one iteratable map to another
+// useful in converting from one iterable map to another
 // for example: ToMap<boost::property_tree::ptree, std::unordered_map<std::string, std::string>
 // >(some_ptree)
 /*
@@ -403,7 +403,7 @@ resample_polyline(const std::vector<PointLL>& polyline, const float length, cons
 /**
  * Resample a polyline at uniform intervals using more accurate spherical interpolation between
  * points. The length and number of samples is specified. The interval is computed based on
- * the number of samples and the algorithm guarantees that the secified number of samples
+ * the number of samples and the algorithm guarantees that the specified number of samples
  * is exactly produced.
  * @param polyline   the list/vector of points in the line
  * @param length     Length (meters) of the polyline
@@ -695,6 +695,30 @@ unaligned_read(const void* ptr) {
   T r;
   std::memcpy(&r, ptr, sizeof(T));
   return r;
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns the invalid value of the type
+ */
+template <typename numeric_t> numeric_t invalid() {
+  return std::numeric_limits<numeric_t>::max();
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is invalid
+ */
+template <typename numeric_t> bool is_invalid(numeric_t value) {
+  return value == invalid<numeric_t>();
+}
+
+/**
+ * For some variables, an invalid value needs to be set as: the maximum value it's type can get
+ * @returns true when the value is valid
+ */
+template <typename numeric_t> bool is_valid(numeric_t value) {
+  return value != invalid<numeric_t>();
 }
 
 } // namespace midgard

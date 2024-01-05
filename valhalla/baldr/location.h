@@ -2,6 +2,7 @@
 #define VALHALLA_BALDR_LOCATION_H_
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include <valhalla/baldr/rapidjson_utils.h>
@@ -34,7 +35,7 @@ public:
    * Optional filters supplied in the request.
    *
    * NOTE: this struct must be kept in sync with the protobuf defined
-   * valhalla::Location::SearchFilter in tripcommon.proto.
+   * valhalla::Location::SearchFilter in common.proto.
    */
   struct SearchFilter {
   public:
@@ -70,8 +71,9 @@ public:
            unsigned int min_inbound_reach = 0,
            unsigned long radius = 0,
            const PreferredSide& side = PreferredSide::EITHER,
+           valhalla::RoadClass street_side_cutoff = valhalla::RoadClass::kServiceOther,
            const SearchFilter& search_filter = SearchFilter(),
-           boost::optional<int8_t> preferred_layer = {});
+           std::optional<int8_t> preferred_layer = {});
 
   /**
    * equality.
@@ -89,8 +91,8 @@ public:
   std::string name_;
   std::string street_;
 
-  boost::optional<std::string> date_time_;
-  boost::optional<float> heading_;
+  std::optional<std::string> date_time_;
+  std::optional<float> heading_;
 
   // try to find candidates who are reachable from/to this many or more nodes
   // if a given candidate edge is reachable to/from less than this number of nodes its considered to
@@ -108,12 +110,13 @@ public:
   float search_cutoff_;
   float street_side_tolerance_;
   float street_side_max_distance_;
+  valhalla::RoadClass street_side_cutoff_;
   SearchFilter search_filter_;
 
   // coordinates of the location as used for altering the side of street
-  boost::optional<midgard::PointLL> display_latlng_;
+  std::optional<midgard::PointLL> display_latlng_;
 
-  boost::optional<int8_t> preferred_layer_;
+  std::optional<int8_t> preferred_layer_;
 
 protected:
 };

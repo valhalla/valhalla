@@ -2175,8 +2175,8 @@
     },
     "elevator": {
       "phrases": {
-        "0": "Take the elevator.",
-        "1": "Take the elevator to <LEVEL>."
+        "0": "Tome el ascensor.",
+        "1": "Tome el ascensor a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2189,8 +2189,8 @@
     },
     "steps": {
       "phrases": {
-        "0": "Take the stairs.",
-        "1": "Take the stairs to <LEVEL>."
+        "0": "Tome las escaleras.",
+        "1": "Tome las escaleras a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2203,8 +2203,8 @@
     },
     "escalator": {
       "phrases": {
-        "0": "Take the escalator.",
-        "1": "Take the escalator to <LEVEL>."
+        "0": "Tome la escalera mecánica.",
+        "1": "Tome la escalera mecánica a <LEVEL>."
       },
       "example_phrases": {
         "0": [
@@ -2217,13 +2217,13 @@
     },
     "enter_building": {
       "phrases": {
-        "0": "Enter the building.",
-        "1": "Enter the building, and continue on <STREET_NAMES>."
+        "0": "Entre al edificio.",
+        "1": "Entre al edificio, y continúe por <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
         "the crosswalk"
       ],
       "example_phrases": {
@@ -2237,13 +2237,13 @@
     },
     "exit_building": {
       "phrases": {
-        "0": "Exit the building.",
-        "1": "Exit the building, and continue on <STREET_NAMES>."
+        "0": "Salga del edificio.",
+        "1": "Salga del edificio, y continúe por <STREET_NAMES>."
       },
       "empty_street_name_labels": [
-        "the walkway",
-        "the cycleway",
-        "the mountain bike trail",
+        "la calzada",
+        "el carril bici",
+        "el sendero para bicicletas de montaña",
         "the crosswalk"
       ],
       "example_phrases": {

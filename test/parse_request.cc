@@ -5,6 +5,7 @@
 #include "proto/options.pb.h"
 #include "proto_conversions.h"
 #include "sif/costconstants.h"
+#include "sif/costfactory.h"
 #include "worker.h"
 
 #include "test.h"
@@ -138,6 +139,7 @@ constexpr float kDefaultTruck_CountryCrossingPenalty = 0.0f;   // Seconds
 constexpr float kDefaultTruck_LowClassPenalty = 30.0f;         // Seconds
 constexpr float kDefaultTruck_TruckWeight = 21.77f;            // Metric Tons (48,000 lbs)
 constexpr float kDefaultTruck_TruckAxleLoad = 9.07f;           // Metric Tons (20,000 lbs)
+constexpr uint32_t kDefaultTruck_TruckAxles = 5;               // Count
 constexpr float kDefaultTruck_TruckHeight = 4.11f;             // Meters (13 feet 6 inches)
 constexpr float kDefaultTruck_TruckWidth = 2.6f;               // Meters (102.36 inches)
 constexpr float kDefaultTruck_TruckLength = 21.64f;            // Meters (71 feet)
@@ -660,6 +662,7 @@ void test_default_truck_cost_options(const Costing::Type costing_type, const Opt
   validate("hazmat", false, options.hazmat());
   validate("weight", kDefaultTruck_TruckWeight, options.weight());
   validate("axle_load", kDefaultTruck_TruckAxleLoad, options.axle_load());
+  validate("axle_count", kDefaultTruck_TruckAxles, options.axle_count());
   validate("height", kDefaultTruck_TruckHeight, options.height());
   validate("width", kDefaultTruck_TruckWidth, options.width());
   validate("length", kDefaultTruck_TruckLength, options.length());
@@ -1340,6 +1343,22 @@ void test_axle_load_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.axle_load());
 }
 
+void test_axle_count_parsing(const Costing::Type costing_type,
+                             const uint32_t specified_value,
+                             const uint32_t expected_value,
+                             const Options::Action action = Options::route) {
+  // Create the costing string
+  auto costing_str = get_costing_str(costing_type);
+  const std::string grandparent_key = "costing_options";
+  const std::string& parent_key = costing_str;
+  const std::string key = "axle_count";
+
+  Api request =
+      get_request(get_request_str(grandparent_key, parent_key, key, specified_value), action);
+  const auto& options = request.options().costings().find(costing_type)->second.options();
+  validate(key, expected_value, options.axle_count());
+}
+
 void test_height_parsing(const Costing::Type costing_type,
                          const float specified_value,
                          const float expected_value,
@@ -1619,6 +1638,41 @@ void test_closure_factor_parsing(const Costing::Type costing_type,
   validate(key, expected_value, options.closure_factor());
 }
 
+// utility functions for testing disable_hierarchy_pruning
+// Create costing options (reference: /test/astar.cc)
+void create_costing_options(Options& options, Costing::Type type) {
+  const rapidjson::Document doc;
+  sif::ParseCosting(doc, "/costing_options", options);
+  options.set_costing_type(type);
+}
+
+// Set disable_hierarchy_pruning to true in costing options
+void set_disable_hierarchy_pruning(Options& options, Costing::Type type) {
+  Costing* costing = &(*options.mutable_costings())[type];
+  auto* co = costing->mutable_options();
+  co->set_disable_hierarchy_pruning(true);
+}
+
+// test disable_hierarchy_pruning
+class HierarchyTest : public ::testing::TestWithParam<Costing::Type> {
+protected:
+  // Test the hierarchy limits are actually disabled when disable_hierarchy_pruning = true
+  void doTest(Costing::Type costing_type) {
+    // Set costing options
+    Options options;
+    set_disable_hierarchy_pruning(options, costing_type);
+    create_costing_options(options, costing_type);
+    valhalla::sif::TravelMode travel_mode;
+    const auto mode_costing = valhalla::sif::CostFactory().CreateModeCosting(options, travel_mode);
+
+    // Check hierarchy limits
+    auto& hierarchy_limits = mode_costing[int(travel_mode)]->GetHierarchyLimits();
+    for (auto& hierarchy : hierarchy_limits) {
+      EXPECT_EQ(hierarchy.max_up_transitions, kUnlimitedTransitions);
+    }
+  }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // test by key methods
 TEST(ParseRequest, test_polygons) {
@@ -1725,11 +1779,6 @@ TEST(ParseRequest, test_default_base_cost_options) {
 
 TEST(ParseRequest, test_transport_type) {
   std::string transport_type_key = "type";
-  std::string transport_type_value = "car";
-  for (auto costing : get_base_auto_costing_list()) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
-  }
 
   Costing::Type costing = Costing::pedestrian;
   for (const auto& transport_type_value : {"foot", "wheelchair"}) {
@@ -2671,6 +2720,15 @@ TEST(ParseRequest, test_axle_load) {
   test_axle_load_parsing(costing, 100.f, default_value);
 }
 
+TEST(ParseRequest, test_axle_count) {
+  Costing::Type costing = Costing::truck;
+  uint32_t default_value = kDefaultTruck_TruckAxles;
+  test_axle_count_parsing(costing, default_value, default_value);
+  test_axle_count_parsing(costing, 2, 2);
+  test_axle_count_parsing(costing, -10, default_value);
+  test_axle_count_parsing(costing, 30, default_value);
+}
+
 TEST(ParseRequest, test_height) {
   Costing::Type costing = Costing::truck;
   float default_value = kDefaultTruck_TruckHeight;
@@ -2810,6 +2868,20 @@ TEST(ParseRequest, test_operators_transit_filter) {
   filter_ids = {"operator10", "operator20", "operator30"};
   test_filter_operator_parsing(costing, filter_action, filter_ids);
 }
+
+// test disable_hierarchy_pruning
+TEST_P(HierarchyTest, TestDisableHierarchy) {
+  doTest(GetParam());
+}
+
+INSTANTIATE_TEST_SUITE_P(disable_hierarchy_pruning,
+                         HierarchyTest,
+                         ::testing::Values(Costing::auto_,
+                                           Costing::bus,
+                                           Costing::motor_scooter,
+                                           Costing::truck,
+                                           Costing::motorcycle,
+                                           Costing::taxi));
 
 } // namespace
 

@@ -37,13 +37,36 @@ public:
    */
   GeoPoint() : PointXY<PrecisionT>(INVALID_LL, INVALID_LL) {
   }
-  virtual ~GeoPoint() {
+  /**
+   * You can encode lon, lat (with 7 digit precision) into 64 bits with the lowest 31 bits for lat and
+   * upper 32 for lon and 1 extra unused bit for whatever you need.. this constructor throws if the
+   * values are out of valid lon and lat ranges
+   * @param encoded
+   */
+  explicit GeoPoint(uint64_t encoded)
+      : PointXY<PrecisionT>(static_cast<PrecisionT>(
+                                (int64_t((encoded >> 31) & ((1ull << 32) - 1)) - 180 * 1e7) * 1e-7),
+                            static_cast<PrecisionT>(
+                                (int64_t(encoded & ((1ull << 31) - 1)) - 90 * 1e7) * 1e-7)) {
   }
-
   /**
    * Parent constructor. Forwards to parent.
    */
   GeoPoint(const PointXY<PrecisionT>& p) : PointXY<PrecisionT>(p) {
+  }
+
+  /**
+   * cast the lon lat to a 64bit value with 7 decimals places of precision the layout is:
+   * bitfield {
+   *  lat  31;
+   *  lon  32;
+   *  spare 1;
+   * }
+   * @return
+   */
+  explicit operator uint64_t() const {
+    return (((uint64_t(first * 1e7) + uint64_t(180 * 1e7)) & ((1ull << 32) - 1)) << 31) |
+           ((uint64_t(second * 1e7) + uint64_t(90 * 1e7)) & ((1ull << 31) - 1));
   }
 
   /**
@@ -69,6 +92,14 @@ public:
   bool IsValid() const {
     return first != INVALID_LL && second != INVALID_LL;
   };
+
+  /**
+   * Checks whether the lon and lat coordinates fall within -180/180 and -90/90 respectively
+   * @return
+   */
+  bool InRange() const {
+    return -180 <= first && first <= 180 && -90 <= second && second <= 90;
+  }
 
   /**
    * Sets the coordinates to an invalid state
@@ -208,10 +239,9 @@ public:
    * @param  p2  End point of the segment.
    * @return  Returns a positive value if this point is left of the segment.
    */
-  virtual value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
+  value_type IsLeft(const GeoPoint& p1, const GeoPoint& p2) const {
     return (p2.lng() - p1.lng()) * (lat() - p1.lat()) - (lng() - p1.lng()) * (p2.lat() - p1.lat());
   }
-  using PointXY<PrecisionT>::IsLeft;
 
   /**
    * Tests whether this point is within a polygon.
