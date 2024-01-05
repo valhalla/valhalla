@@ -588,10 +588,10 @@ void BuildTileSet(const std::string& ways_file,
           }
 
           uint32_t truck_speed = w.truck_speed();
-          if (truck_speed > kMaxAssumedSpeed) {
+          if (truck_speed > kMaxAssumedTruckSpeed) {
             LOG_WARN("Truck Speed = " + std::to_string(truck_speed) +
                      " wayId= " + std::to_string(w.way_id()));
-            truck_speed = kMaxAssumedSpeed;
+            truck_speed = kMaxAssumedTruckSpeed;
           }
 
           // Cul du sac

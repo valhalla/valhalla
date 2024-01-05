@@ -362,9 +362,9 @@ void DirectedEdge::set_speed(const uint32_t speed) {
 
 // Sets the truck speed in KPH.
 void DirectedEdge::set_truck_speed(const uint32_t speed) {
-  if (speed > kMaxAssumedSpeed) {
+  if (speed > kMaxAssumedTruckSpeed) {
     LOG_WARN("Exceeding maximum.  Truck speed: " + std::to_string(speed));
-    truck_speed_ = kMaxAssumedSpeed;
+    truck_speed_ = kMaxAssumedTruckSpeed;
   } else {
     truck_speed_ = speed;
   }
