@@ -275,7 +275,7 @@ protected:
                               const uint32_t origin_index,
                               const std::string& origin_dt,
                               const uint64_t& origin_tz,
-                              std::unordered_map<u_int32_t, valhalla::baldr::GraphId>& edge_ids,
+                              std::unordered_map<u_int32_t, baldr::GraphId>& edge_ids,
                               std::vector<std::string>& out_date_times);
 };
 
