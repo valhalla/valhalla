@@ -26,6 +26,7 @@
    * FIXED: retry elevation tile download if the download failed for some reason or the downloaded tile was corrupt [#4461](https://github.com/valhalla/valhalla/pull/4461)
    * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
    * FIXED: insane ETAs for `motor_scooter` on `track`s [#4468](https://github.com/valhalla/valhalla/pull/4468)
+   * FIXED: -j wasn't taken into account anymore [#4483](https://github.com/valhalla/valhalla/pull/4483)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -66,6 +67,8 @@
    * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
    * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
    * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
+   * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
+   * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
