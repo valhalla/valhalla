@@ -393,6 +393,10 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
     pt.put(override.first, override.second);
   }
 
+  // default the admin db & timezone db
+  pt.put("mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite");
+  pt.put("mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+
   // remove keys we dont want
   for (const auto& remove : removes) {
     remove_child(pt, remove);
