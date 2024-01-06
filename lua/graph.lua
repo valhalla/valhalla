@@ -1038,10 +1038,6 @@ function filter_tags_generic(kv)
     if kv["motorroad"] == "yes" then
       kv["motorroad_tag"] = "true"
     end
-
-    if kv["golf_cart"] == "designated" then
-      kv["golf_cart_designated"] = "true"
-    end
   -- its not a highway type that we know of
   else
     --if its a ferry and these tags dont show up we want to set them to true
@@ -1133,10 +1129,6 @@ function filter_tags_generic(kv)
 
       if kv["motorroad"] == "yes" then
         kv["motorroad_tag"] = "true"
-      end
-
-      if kv["golf_cart"] == "designated" then
-        kv["golf_cart_designated"] = "true"
       end
     end
   end

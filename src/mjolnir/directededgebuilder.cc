@@ -89,8 +89,6 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_lit(way.lit());
 
-  set_golf_cart_designated(way.golf_cart_designated());
-
   // Set forward flag and access modes (based on direction)
   set_forward(forward);
   uint32_t forward_access = 0;

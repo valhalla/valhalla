@@ -9,8 +9,6 @@
 #include "sif/osrm_car_duration.h"
 #include <cassert>
 
-// TODO: Inline tests like other profiles have
-
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 
@@ -64,9 +62,6 @@ constexpr uint32_t kDefaultAllowedSpeedLimit = 57; // KPH (35.42mph)
 constexpr uint32_t kMaximumAllowedSpeedLimit = 80; // KPH
 constexpr ranged_default_t<uint32_t> kMaxAllowedSpeedLimit{kMinimumAllowedSpeedLimit, kDefaultAllowedSpeedLimit,
                                                            kMaximumAllowedSpeedLimit};
-
-// How much to favor golf cart designated roads (factor that is multiplied in later)
-constexpr float kGolfCartDesignatedFactor = 3.f;
 
 // Weighting factor based on road class. These apply penalties to higher class
 // roads. These penalties are additive based on other penalties.
@@ -389,19 +384,6 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
   // Multiply by speed so that roads are more severely punished for having traffic faster than the golf cart's speed.
   // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't use it here.
   avoidance_factor *= speedpenalty_[edge->speed()];
-
-  // Golf cart paths marked as designated should be favored over edges which are merely traversable.
-  // This is because in many areas, local ordinances specifically require use of designated paths
-  // where possible, even if another route is available.
-  // We favor these designated paths by penalizing everything else.
-  if (!edge->golf_cart_designated()) {
-    if (edge->classification() == valhalla::baldr::RoadClass::kServiceOther) {
-      // Penalize minor roads slightly less
-      avoidance_factor *= kGolfCartDesignatedFactor / 2.0f;
-    } else {
-      avoidance_factor *= kGolfCartDesignatedFactor;
-    }
-  }
 
   float factor = 1.0f +
                  avoidance_factor +

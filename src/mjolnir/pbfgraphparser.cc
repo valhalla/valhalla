@@ -1780,7 +1780,6 @@ public:
       way_.set_bwd_signboard_base_index(osmdata_.name_offset_map.index(tag_.second));
     };
     tag_handlers_["lit"] = [this]() { way_.set_lit(tag_.second == "true" ? true : false); };
-    tag_handlers_["golf_cart_designated"] = [this]() { way_.set_golf_cart_designated(tag_.second == "true" ? true : false); };
   }
 
   static std::string get_lua(const boost::property_tree::ptree& pt) {

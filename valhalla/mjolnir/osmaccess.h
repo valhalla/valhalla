@@ -243,8 +243,6 @@ struct OSMAccess {
       uint16_t golf_cart_tag : 1;
       uint16_t spare_ : 5;
     } fields;
-    // TODO: What exactly is 64 bits wide? I'm counting 16 + 32 = 48 bits?
-    uint16_t _spare;
     uint32_t v; // this should be 64bits wide for architectures who require word alignment
   };
   AccessAttributes attributes_;

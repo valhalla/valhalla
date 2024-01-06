@@ -7,7 +7,7 @@
 
 using namespace valhalla;
 
-// Check that golf carts prefer lower classes of roads and designated cart paths
+// Check that golf carts prefer lower classes of roads
 class GolfCartPreference : public ::testing::Test {
 protected:
   static gurka::map map;
@@ -15,7 +15,7 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize = 100;
 
-    // A network with a mixture of road classes and a designated cart path
+    // A network with a mixture of road classes, all of which are legally traversable
     const std::string ascii_map = R"(
         A--B--------------C
            |              |
@@ -44,6 +44,7 @@ protected:
                                }},
                               {"EF",
                                {{"highway", "residential"},
+                               {"golf_cart", "destination"},
                                }},
 
                               // Cart path

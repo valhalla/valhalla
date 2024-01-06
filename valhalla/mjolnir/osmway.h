@@ -2501,22 +2501,6 @@ struct OSMWay {
                              bool allow_empty_tokens = false);
 
   /**
-   * Sets whether the way has golf_cart=designated.
-   * @param  golf_cart_designated Whether the way has golf_cart=designated.
-   */
-  void set_golf_cart_designated(const bool golf_cart_designated) {
-    golf_cart_designated_ = golf_cart_designated;
-  }
-
-  /**
-   * Get the golf cart designated status.
-   * @return  Returns the bike network mask.
-   */
-  bool golf_cart_designated() const {
-    return golf_cart_designated_;
-  }
-
-  /**
    * Get the names for the edge info based on the road class.
    * @param  ref              updated refs from relations.
    * @param  name_offset_map  map of unique names and refs from ways.
@@ -2733,9 +2717,6 @@ struct OSMWay {
   // 2 access flags that didn't fit in the previous 16 bits
   uint16_t golf_cart_forward_ : 1;
   uint16_t golf_cart_backward_ : 1;
-
-  // Sadly this doesn't fit packed into the previous 16 bits so it's on its own for now
-  bool golf_cart_designated_;
 
   uint16_t nodecount_;
 
