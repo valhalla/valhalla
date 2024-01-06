@@ -11,6 +11,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "route_serializer_osrm.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
@@ -168,34 +169,6 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
-
-namespace osrm_serializers {
-/*
-OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-{
-    "code":"Ok"
-    "waypoints": [{ }, { }...],
-    "routes": [
-        {
-            "geometry":"....."
-            "distance":xxx.y
-            "duration":yyy.z
-            "legs":[
-                {
-                    "steps":[
-                        "intersections":[
-                        ]
-                        "geometry":" "
-                        "maneuver":{
-                        }
-                    ]
-                }
-            ]
-        },
-        ...
-    ]
-}
-*/
 
 std::string destinations(const valhalla::TripSign& sign);
 
@@ -1771,7 +1744,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    // #########################################################################
+      // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -1913,6 +1886,9 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   return all_summaries;
 }
 
+} // namespace
+
+namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
@@ -2001,6 +1977,7 @@ std::string serialize(valhalla::Api& api) {
 
 using namespace osrm_serializers;
 
+namespace {
 /// Assert equality of two json documents
 //
 // TODO Improve the diffed view of mismatching documents
@@ -2300,9 +2277,4 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
-#else
-
-} // namespace
-
 #endif
