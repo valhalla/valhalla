@@ -389,13 +389,14 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
 
   // make ptree and override defaults
   auto pt = json_to_pt(defaults);
-  for (const auto& override : overrides) {
-    pt.put(override.first, override.second);
-  }
 
   // default the admin db & timezone db
   pt.put("mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite");
   pt.put("mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+
+  for (const auto& override : overrides) {
+    pt.put(override.first, override.second);
+  }
 
   // remove keys we dont want
   for (const auto& remove : removes) {
