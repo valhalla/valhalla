@@ -32,9 +32,8 @@ inline TripLeg_Surface GetTripLegSurface(const baldr::Surface surface) {
 // Associate vehicle types to TripLeg proto
 // TODO - why doesn't these use an enum input?
 constexpr VehicleType kTripLegVehicleType[] = {
-    VehicleType::kCar,          VehicleType::kMotorcycle,
-    VehicleType::kAutoBus,      VehicleType::kTractorTrailer,
-    VehicleType::kMotorScooter,
+    VehicleType::kCar,   VehicleType::kMotorcycle,   VehicleType::kAutoBus,
+    VehicleType::kTruck, VehicleType::kMotorScooter,
 };
 inline VehicleType GetTripLegVehicleType(const uint8_t type) {
   return (type <= static_cast<uint8_t>(sif::VehicleType::kMotorScooter)) ? kTripLegVehicleType[type]
@@ -45,11 +44,11 @@ inline VehicleType GetTripLegVehicleType(const uint8_t type) {
 constexpr PedestrianType kTripLegPedestrianType[] = {
     PedestrianType::kFoot,
     PedestrianType::kWheelchair,
-    PedestrianType::kSegway,
 };
 inline PedestrianType GetTripLegPedestrianType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(sif::PedestrianType::kSegway)) ? kTripLegPedestrianType[type]
-                                                                      : kTripLegPedestrianType[0];
+  return (type <= static_cast<uint8_t>(sif::PedestrianType::kWheelchair))
+             ? kTripLegPedestrianType[type]
+             : kTripLegPedestrianType[0];
 }
 
 // Associate bicycle types to TripLeg proto

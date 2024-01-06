@@ -1,18 +1,19 @@
+#include <filesystem>
+
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
-#include "filesystem.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
 
 #include "argparse_utils.h"
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
   std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -35,14 +36,12 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
-    pt = valhalla::config();
-
     if (result.count("target_directory")) {
-      pt.get_child("mjolnir").erase("transit_dir");
-      pt.add("mjolnir.transit_dir", result["target_directory"].as<std::string>());
+      config.get_child("mjolnir").erase("transit_dir");
+      config.add("mjolnir.transit_dir", result["target_directory"].as<std::string>());
     }
 
     if (result.count("test_file")) {
@@ -65,6 +64,6 @@ int main(int argc, char** argv) {
   if (!all_tiles.size()) {
     return EXIT_FAILURE;
   }
-  valhalla::mjolnir::ValidateTransit::Validate(pt, all_tiles, onestoptests);
+  valhalla::mjolnir::ValidateTransit::Validate(config, all_tiles, onestoptests);
   return EXIT_SUCCESS;
 }
