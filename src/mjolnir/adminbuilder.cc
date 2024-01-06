@@ -142,14 +142,12 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
   std::vector<GEOSGeometry*> inner_rings;
   inner_rings.reserve(polygon.inners().size());
-  for (const auto& inner : polygon.inners()) {
-    // some weird clang osx behavior where it gets into this loop without any inners()
-    // TODO(nils): remove the log
-    if (!inner.size()) {
-      std::cerr << "FAIL: polygon.inners() has size " << polygon.inners().size() << std::endl;
-      continue;
+  // there is some weird AppleClang bug where it would iterate over non-existing elements
+  // in the inners() vector and eventually segfault in from_striped_container()
+  if (polygon.inners().size()) {
+    for (const auto& inner : polygon.inners()) {
+      inner_rings.push_back(geos_helper_t::from_striped_container(inner));
     }
-    inner_rings.push_back(geos_helper_t::from_striped_container(inner));
   }
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
