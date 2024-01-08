@@ -142,6 +142,7 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
   std::vector<GEOSGeometry*> inner_rings;
   inner_rings.reserve(polygon.inners().size());
+  std::cout << polygon.inners().size() << std::endl;
   for (const auto& inner : polygon.inners())
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
