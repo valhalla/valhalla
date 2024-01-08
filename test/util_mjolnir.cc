@@ -29,10 +29,9 @@ using namespace valhalla::midgard;
 
 // Verify that this function runs
 TEST(UtilMjolnir, BuildTileSet) {
-  ptree config;
   const std::string tile_dir("test/data/util_mjolnir_test_tiles");
-  config.put("mjolnir.tile_dir", tile_dir);
-  config.put("mjolnir.concurrency", 1);
+  const auto config = test::make_config("test/data/utrecht_tiles", {{"mjolnir.tile_dir", tile_dir},
+                                                                    {"mjolnir.concurrency", "1"}});
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
                              mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kCleanup));
   // Clear the tile directory so it doesn't interfere with the next test.
