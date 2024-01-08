@@ -109,6 +109,14 @@ std::string load_binary_file(const std::string& filename) {
   return bytes;
 }
 
+boost::property_tree::ptree json_to_pt(const std::string& json) {
+  std::stringstream ss;
+  ss << json;
+  boost::property_tree::ptree pt;
+  rapidjson::read_json(ss, pt);
+  return pt;
+}
+
 boost::property_tree::ptree make_config(const std::string& path_prefix,
                                         const std::unordered_map<std::string, std::string>& overrides,
                                         const std::unordered_set<std::string>& removes) {
