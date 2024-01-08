@@ -11,7 +11,6 @@
 #include "sif/costfactory.h"
 #include "test.h"
 #include "thor/costmatrix.h"
-#include <valhalla/config.h>
 #include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
