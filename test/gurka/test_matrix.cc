@@ -575,25 +575,82 @@ protected:
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix_no_tz");
     map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix",
                                {{"mjolnir.timezone", "test/data/tz.sqlite"},
-                                {"thor.source_to_target_algorithm", "costmatrix"},
                                 {"service_limits.max_timedep_distance_matrix", "50000"}});
   }
 };
 gurka::map DateTimeTest::map = {};
 gurka::map DateTimeTest::map_tz = {};
 
-TEST_F(DateTimeTest, DepartAt) {
+TEST_F(DateTimeTest, DepartAtCostMatrix) {
   rapidjson::Document res_doc;
   std::string res;
   {
     auto api = gurka::do_action(valhalla::Options::sources_to_targets, map_tz, {"A", "G"}, {"A", "G"},
                                 "auto",
-                                {{"/prioritize_bidirectional", "true"},
+                                {{"/prioritize_bidirectional", "1"},
                                  {"/date_time/type", "1"},
                                  {"/date_time/value", "2020-10-30T09:00"}},
                                 nullptr, &res);
 
     res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
+
+    EXPECT_TRUE(
+        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+  }
+}
+
+TEST_F(DateTimeTest, DepartAtTimeDistanceMatrix) {
+  rapidjson::Document res_doc;
+  std::string res;
+  {
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map_tz, {"A", "G"}, {"A", "G"},
+                                "bicycle",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::TimeDistanceMatrix);
 
     EXPECT_TRUE(
         res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
