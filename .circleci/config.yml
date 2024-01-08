@@ -20,16 +20,11 @@ commands:
   linux_lint_deps:
     steps:
       - run: |
-            apt-get update --assume-yes
-            env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl file
+          apt-get update --assume-yes
+          env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl file
   check_ci_lint:
     steps:
-      - run: |
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-            ./scripts/format.sh && ./scripts/error_on_dirty.sh
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
 jobs:
   lint-build-debug:
