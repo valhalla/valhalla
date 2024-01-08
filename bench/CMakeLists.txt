@@ -33,7 +33,7 @@ macro (add_valhalla_benchmark target_file)
     COMMENT "Running ${target_name} in ${CMAKE_CURRENT_BINARY_DIR}"
     DEPENDS ${target_name})
   set_target_properties(run-${target_name} PROPERTIES FOLDER "Benchmarks")
-  # add_dependencies(run-${target_name} utrecht_tiles)
+  add_dependencies(run-${target_name} utrecht_tiles)
   add_dependencies(run-benchmarks run-${target_name})
 endmacro()
 
