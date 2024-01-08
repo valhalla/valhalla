@@ -917,7 +917,7 @@ void ReclassifyLinks(const std::string& ways_file,
     }
   }
 
-  LOG_INFO("Finished with " + std::to_string(reclass_count) + " reclassified. " +
+  LOG_INFO("Finished with " + std::to_string(reclass_count) + " link edges reclassified. " +
            " Turn channel count = " + std::to_string(tc_count));
 }
 
