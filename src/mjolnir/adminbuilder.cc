@@ -144,6 +144,7 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   inner_rings.reserve(polygon.inners().size());
   // there is some weird AppleClang bug where it would iterate over non-existing elements
   // in the inners() vector and eventually segfault in from_striped_container()
+  std::cout << "Size of polygon.inners(): " << polygon.inners().size() << std::endl;
   if (polygon.inners().size()) {
     for (const auto& inner : polygon.inners()) {
       inner_rings.push_back(geos_helper_t::from_striped_container(inner));
