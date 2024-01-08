@@ -148,7 +148,6 @@ jobs:
     resource_class: macos.m1.medium.gen1
     steps:
       - checkout
-      - check_ci_lint
       - mac_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
