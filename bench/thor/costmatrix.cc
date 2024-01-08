@@ -32,7 +32,8 @@ const auto config = json_to_pt(R"({
       "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
     },
     "thor":{
-      "logging":{"long_request": 100}
+      "logging":{"long_request": 100},
+      "live_speed_fading_sec": 3600,
     },
     "meili":{
       "grid": {
