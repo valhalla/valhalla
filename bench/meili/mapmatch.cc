@@ -10,6 +10,7 @@
 #include "sif/costconstants.h"
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
+#include <valhalla/config.h>
 
 using namespace valhalla::midgard;
 using namespace valhalla::meili;
@@ -106,8 +107,7 @@ const std::vector<std::string> kBenchmarkCases = {
 
 static void BM_ManyCases(benchmark::State& state) {
   logging::Configure({{"type", ""}});
-  boost::property_tree::ptree config;
-  rapidjson::read_json(VALHALLA_SOURCE_DIR "bench/meili/config.json", config);
+  const auto config = valhalla::config(VALHALLA_SOURCE_DIR "bench/meili/config.json");
   valhalla::tyr::actor_t actor(config, true);
   const std::string test_case(LoadFile(kBenchmarkCases[state.range(0)]));
   for (auto _ : state) {
