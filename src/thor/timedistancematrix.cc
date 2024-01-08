@@ -231,7 +231,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     SetDestinationEdges();
 
     // Collect edge_ids used for settling a location
-    std::unordered_map<u_int32_t, baldr::GraphId> dest_edge_ids;
+    std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
 
     // Find shortest path
     graph_tile_ptr tile;
