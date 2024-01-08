@@ -275,7 +275,7 @@ protected:
                               const uint32_t origin_index,
                               const std::string& origin_dt,
                               const uint64_t& origin_tz,
-                              const baldr::GraphId& pred_id,
+                              std::unordered_map<uint32_t, baldr::GraphId>& edge_ids,
                               std::vector<baldr::DateTime::dt_info_t>& out_tz_infos);
 };
 
