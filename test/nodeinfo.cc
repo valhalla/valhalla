@@ -84,6 +84,28 @@ TEST(NodeInfo, WriteRead) {
   EXPECT_EQ(nodeinfo.local_driveability(1), Traversability::kBackward);
 }
 
+// Test elevation
+TEST(NodeInfo, Elevation) {
+  // Test elevation at 0
+  NodeInfo node;
+  node.set_elevation(0);
+  EXPECT_LE(std::abs(node.elevation()), 0.25f);
+
+  // Elevation < -500 is set to -500
+  node.set_elevation(-700.0f);
+  EXPECT_LE(std::abs((node.elevation() - -500.0f)), 0.25f);
+
+  node.set_elevation(700.0f);
+  EXPECT_LE(std::abs((node.elevation() - 700.0f)), 0.25f);
+
+  node.set_elevation(1426.511963f);
+  EXPECT_LE(std::abs((node.elevation() - 1426.511963f)), 0.25f);
+
+  // Highest road elevation is ~5600m, test at 6000m to be safe
+  node.set_elevation(6000.0f);
+  EXPECT_LE(std::abs((node.elevation() - 6000.0f)), 0.25f);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {
