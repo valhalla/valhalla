@@ -230,7 +230,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     SetOrigin<expansion_direction>(graphreader, origin, time_info);
     SetDestinationEdges();
 
-    // Collect edge_ids used for settling a location
+    // Collect edge_ids used for settling a location to determine its time zone
     std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
 
     // Find shortest path
