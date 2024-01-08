@@ -9,60 +9,22 @@
 #include "midgard/pointll.h"
 #include "sif/autocost.h"
 #include "sif/costfactory.h"
+#include "test.h"
 #include "thor/costmatrix.h"
+#include <valhalla/config.h>
 #include <valhalla/proto/options.pb.h>
 
 using namespace valhalla;
 
 namespace {
-
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-const auto config = json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1},
-    "loki":{
-      "actions":["sources_to_targets"],
-      "logging":{"long_request": 100},
-      "service_defaults":{"minimum_reachability": 50,"radius": 0,"search_cutoff": 35000, "node_snap_tolerance": 5, "street_side_tolerance": 5, "street_side_max_distance": 1000, "heading_tolerance": 60}
-    },
-    "thor":{
-      "logging":{"long_request": 100},
-      "live_speed_fading_sec": 3600,
-    },
-    "meili":{
-      "grid": {
-        "cache_size": 100240,
-        "size": 500
-      }
-    },
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
-      "max_exclude_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,"max_exclude_polygons_length":10000,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_location_pairs": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500}
-    }
-  })");
-
 constexpr float kMaxRange = 256;
 
 static void BM_UtrechtCostMatrix(benchmark::State& state) {
   const int size = state.range(0);
+  const auto config =
+      test::make_config("test/data/utrecht_tiles", {},
+                        {"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"});
+  logging::Configure({{"type", ""}});
   baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Generate N random locations within the Utrect bounding box;
