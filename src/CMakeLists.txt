@@ -190,7 +190,6 @@ set(valhalla_hdrs
     )
 
 set(valhalla_src
-    config.cc
     worker.cc
     filesystem.cc
     proto_conversions.cc
