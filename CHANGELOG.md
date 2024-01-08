@@ -54,7 +54,6 @@
    * ADDED: Update the street name and sign data processing include language and pronunciations [#4268](https://github.com/valhalla/valhalla/pull/4268)
    * CHANGED: more sustainable way to work with protobuf in cmake [#4334](https://github.com/valhalla/valhalla/pull/4334)
    * CHANGED: use date_time API to retrieve timezone aliases instead of our own curated list [#4382](https://github.com/valhalla/valhalla/pull/4382)
-   * ADDED: Make livespeed fading time configurable in valhalla.json [#4177](https://github.com/valhalla/valhalla/pull/4177)
    * CHANGED: less aggressive logging for nodes' headings & ferry connections [#4420][https://github.com/valhalla/valhalla/pull/4420]
    * ADDED: add documentation about historical traffic [#4259](https://github.com/valhalla/valhalla/pull/4259)
    * ADDED: config option to control how much memory we'll reserve for CostMatrix locations [#4424](https://github.com/valhalla/valhalla/pull/4424)
@@ -69,6 +68,7 @@
    * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
    * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
+   * CHANGED: Make livespeed fading time configurable in valhalla.json [#4177](https://github.com/valhalla/valhalla/pull/4177)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
