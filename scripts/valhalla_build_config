@@ -121,6 +121,7 @@ config = {
         'max_reserved_locations_costmatrix': 25,
         'clear_reserved_memory': False,
         'extended_search': False,
+        'live_speed_fading_sec': 3600,
     },
     'odin': {
         'logging': {'type': 'std_out', 'color': True, 'file_name': 'path_to_some_file.log'},
@@ -272,7 +273,6 @@ config = {
         'max_exclude_polygons_length': 10000,
         'max_distance_disable_hierarchy_culling': 0,
     },
-    'baldr': {'live_speed_fading_sec': 3600},
     'statsd': {
         'host': Optional(str),
         'port': 8125,
@@ -377,6 +377,7 @@ help_text = {
         'max_reserved_locations_costmatrix': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
+        'live_speed_fading_sec': 'The time (in seconds) over which the live speed will be faded into the traffic speed sources',
     },
     'odin': {
         'logging': {
@@ -553,9 +554,6 @@ help_text = {
         'prefix': 'The statsd prefix to use for each metric',
         'batch_size': 'Approximate maximum size in bytes of each batch of stats to send to statsd',
         'tags': 'List of tags to include with each metric',
-    },
-    'baldr': {
-        'live_speed_fading_sec': 'The time (in seconds) over which the live speed will be faded into the traffic speed sources',
     },
 }
 
