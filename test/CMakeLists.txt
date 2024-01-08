@@ -66,19 +66,56 @@ if(NOT APPLE)
   list(APPEND tests narrativebuilder util_odin)
 endif()
 
-if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-  # Enables stricter compiler checks on a file-by-file basis
-  # which allows us to migrate piecemeal
-  set_source_files_properties(
-    openlr.cc
-    incidents.cc
-    incident_loading.cc
-    PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-endif()
+# tests files that have warning,
+# any other file not int this list will be processed with the
+# "-Werror" flag
+# Avoid adding a test to this list
+set(tests_with_warnings
+  compression
+  countryaccess
+  encode
+  edgecollapser
+  edgeinfobuilder
+  filesystem
+  graphbuilder
+  graphparser
+  graphtilebuilder
+  gridded_data
+  logging
+  maneuversbuilder
+  mapmatch
+  matrix
+  narrativebuilder
+  node_search
+  polyline2
+  parse_request
+  routing
+  sample
+  search
+  sequence
+  statsd
+  traffictile
+  util_midgard
+  util_odin
+  utrecht
+  timedep_paths
+  vector2
+  viterbi_search
+  worker
+  )
 
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    if (${test} IN_LIST tests_with_warnings)
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
+    else()
+      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+    endif()
+  endif()
+
+
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
   target_compile_definitions(${test} PRIVATE
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
@@ -338,6 +375,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-astar whitelion_tiles roma_tiles reversed_whitelion_tiles bayfront_singapore_tiles ny_ar_tiles pa_ar_tiles nh_ar_tiles melborne_tiles utrecht_tiles)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
+  add_dependencies(run-graphbuilder build_timezones)
 if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()

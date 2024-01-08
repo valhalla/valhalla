@@ -54,12 +54,6 @@ public:
 
   static void adjust_scores(valhalla::Options& options);
 
-  static std::string offset_date(baldr::GraphReader& reader,
-                                 const std::string& in_dt,
-                                 const baldr::GraphId& in_edge,
-                                 float offset,
-                                 const baldr::GraphId& out_edge);
-
   void route(Api& request);
   std::string matrix(Api& request);
   void optimized_route(Api& request);

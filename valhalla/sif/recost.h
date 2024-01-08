@@ -12,7 +12,7 @@ namespace sif {
 // what this function calls to get the next edge
 using EdgeCallback = std::function<baldr::GraphId(void)>;
 // what this function calls to emit the next label
-using LabelCallback = std::function<void(const EdgeLabel& label)>;
+using LabelCallback = std::function<void(const PathEdgeLabel& label)>;
 
 /**
  * Will take a sequence of edges and create the set of edge labels that would represent it

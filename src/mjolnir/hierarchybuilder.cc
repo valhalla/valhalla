@@ -101,26 +101,6 @@ OldToNewNodes find_nodes(sequence<OldToNewNodes>& old_to_new, const GraphId& nod
   }
 }
 
-/**
- * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
- * must be in the same tile as the directed edge.
- * @param  tile          Graph tile of the edge
- * @param  directededge  Directed edge to match.
- */
-bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
-  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-  // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // Return true if the edge info matches (same name, shape, etc.)
-    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
-      return true;
-    }
-  }
-  return false;
-}
-
 // Form tiles in the new level.
 void FormTilesInNewLevel(GraphReader& reader,
                          const std::string& new_to_old_file,
@@ -305,11 +285,8 @@ void FormTilesInNewLevel(GraphReader& reader,
         tilebuilder->AddLaneConnectivity(laneconnectivity);
       }
 
-      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
-      // If end node is in the same tile and there is no opposing edge with matching
-      // edge_info_offset).
-      bool diff_names = directededge->endnode().tile_value() == base_edge_id.tile_value() &&
-                        !OpposingEdgeInfoMatches(tile, directededge);
+      // Names can be different in the forward and backward direction
+      bool diff_names = tilebuilder->OpposingEdgeInfoDiffers(tile, directededge);
 
       // Get edge info, shape, and names from the old tile and add to the
       // new. Cannot use edge info offset since edges in arterial and

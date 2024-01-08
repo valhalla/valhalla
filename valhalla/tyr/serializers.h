@@ -123,6 +123,14 @@ std::string serializePbf(Api& request);
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
 baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
 
+/**
+ * Turns a line into a GeoJSON LineString geometry.
+ *
+ * @param shape  The points making up the line.
+ * @returns The GeoJSON geometry of the LineString
+ */
+baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape);
+
 // Elevation serialization support
 
 /**

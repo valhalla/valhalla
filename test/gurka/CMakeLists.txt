@@ -6,19 +6,52 @@ if(ENABLE_DATA_TOOLS)
   add_custom_target(run-gurka)
   set_target_properties(run-gurka PROPERTIES FOLDER "Tests")
 
-  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    # Enables stricter compiler checks on a file-by-file basis
-    # which allows us to migrate piecemeal
-    set_source_files_properties(
-      test_route_incidents.cc
-      test_incident_loading.cc
-      test_closure_annotations.cc
-    PROPERTIES COMPILE_FLAGS "-Werror")
-  endif()
+  # source files that have warning,
+  # any other file not int this list will be processed with the
+  # "-Werror" flag
+  # Avoid adding a filename to this list
+  set(TESTS_WITH_WARNINGS
+    test_access.cc
+    test_admin_sidewalk_crossing_override.cc
+    test_admin_uk_override.cc
+    test_elevation.cc
+    test_ferry_connections.cc
+    test_gtfs.cc
+    test_guidance_views.cc
+    test_guidance_views_signposts.cc
+    test_instructions_named_roundabout.cc
+    test_instructions_roundabout.cc
+    test_landmarks.cc
+    test_languages.cc
+    test_locate.cc
+    test_match.cc
+    test_multi_level_loki.cc
+    test_osrm_serializer.cc
+    test_pbf_api.cc
+    test_phonemes.cc
+    test_phonemes_w_langs.cc
+    test_precision.cc
+    test_recost.cc
+    test_simple_restrictions.cc
+    test_shortcut.cc
+    test_time_tracking.cc
+    test_traffic.cc
+    test_traffic_smoothing.cc
+    test_use_direction_on_ways.cc
+    test_use_lit.cc
+    )
 
   ## Add executable targets
   foreach(FULLFILENAME IN ITEMS ${TEST_FILES})
     file(RELATIVE_PATH FILENAME "${CMAKE_CURRENT_LIST_DIR}" ${FULLFILENAME})
+    if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+      if (${FILENAME} IN_LIST TESTS_WITH_WARNINGS)
+        set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall")
+      else()
+        set_source_files_properties(${FILENAME} PROPERTIES COMPILE_FLAGS "-Wall -Werror")
+      endif()
+    endif()
+
     string(REGEX REPLACE "test_(.*).cc" "gurka_\\1" TESTNAME ${FILENAME})
     add_executable(${TESTNAME} EXCLUDE_FROM_ALL ${FILENAME})
     set_target_properties(${TESTNAME} PROPERTIES FOLDER "Tests")

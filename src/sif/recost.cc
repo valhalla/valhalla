@@ -57,7 +57,7 @@ void recost_forward(baldr::GraphReader& reader,
   const baldr::NodeInfo* node = nullptr;
 
   // keep grabbing edges while we get valid ids
-  EdgeLabel label;
+  PathEdgeLabel label;
   uint32_t predecessor = baldr::kInvalidLabel;
   Cost cost{};
   double length = 0;
@@ -128,9 +128,9 @@ void recost_forward(baldr::GraphReader& reader,
 
     InternalTurn turn =
         node ? costing.TurnType(label.opp_local_idx(), node, edge) : InternalTurn::kNoTurn;
-    label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO, !ignore_access,
-                      static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
+    label = PathEdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, costing.travel_mode(),
+                          length, transition_cost, time_restrictions_TODO, !ignore_access,
+                          static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
     // hand back the label
     label_cb(label);
     // next edge

@@ -247,20 +247,6 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
   }
 }
 
-// Generate leg shape in geojson format.
-json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
-  auto geojson = json::map({});
-  auto coords = json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(json::array(
-        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
-  return geojson;
-}
-
 // Generate full shape of the route.
 std::vector<PointLL> full_shape(const valhalla::DirectionsRoute& directions,
                                 const valhalla::Options& options) {
@@ -316,6 +302,10 @@ std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& direction
 void route_geometry(json::MapPtr& route,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
+  if (options.shape_format() == no_shape) {
+    return;
+  }
+
   std::vector<PointLL> shape;
   if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);
@@ -1325,7 +1315,9 @@ uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* p
     }
 
     uint32_t end_index = maneuver.end_path_index();
-    bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    if (etp->GetCurrEdge(end_index) != nullptr) {
+      bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    }
   }
 
   if (prev_maneuver != nullptr && maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {

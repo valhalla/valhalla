@@ -1,11 +1,13 @@
 #include "gurka.h"
 #include "test.h"
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/thor/matrix_common.h>
 
 #include <gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::thor;
+using namespace valhalla::midgard;
 
 namespace {
 void update_traffic_on_edges(baldr::GraphReader& reader,
@@ -51,7 +53,7 @@ void check_matrix(const rapidjson::Document& result,
 }
 } // namespace
 
-class MatrixTest : public ::testing::Test {
+class MatrixTrafficTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -85,11 +87,13 @@ protected:
                               {"KL", {{"highway", "primary"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    // also turn on the reverse connection search; there's no real test for it
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_traffic_allowed",
                             {{"service_limits.max_timedep_distance_matrix", "50000"},
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
-                             {"mjolnir.timezone", "test/data/tz.sqlite"}});
+                             {"mjolnir.timezone", "test/data/tz.sqlite"},
+                             {"thor.costmatrix_check_reverse_connection", "1"}});
 
     // verify shortcut edges being built
     // TODO: need to hack HierarchyLimits to allow shortcuts being seen by the algo
@@ -112,9 +116,9 @@ protected:
   }
 };
 
-gurka::map MatrixTest::map = {};
+gurka::map MatrixTrafficTest::map = {};
 
-TEST_F(MatrixTest, MatrixNoTraffic) {
+TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   // no traffic, so this is CostMatrix
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E", "L"},
@@ -127,7 +131,7 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
   check_matrix(res_doc, {0.0f, 3.2f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
 }
 
-TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"}};
@@ -174,7 +178,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
   ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
-TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"},
@@ -188,6 +192,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   res_doc.Parse(res.c_str());
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 0);
+  res.erase();
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
   options = {{"/sources/0/date_time", "current"},
@@ -241,7 +246,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   ASSERT_EQ(result.info().warnings(0).code(), 206);
 }
 
-TEST_F(MatrixTest, DisallowedRequest) {
+TEST_F(MatrixTrafficTest, DisallowedRequest) {
   map.config.put("service_limits.max_timedep_distance_matrix", "0");
   const std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"}};
   const auto result =
@@ -259,7 +264,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
   map.config.put("service_limits.max_timedep_distance_matrix", "50000");
 }
 
-TEST_F(MatrixTest, TDSources) {
+TEST_F(MatrixTrafficTest, TDSources) {
   // more sources than targets and arrive_by should work
   rapidjson::Document res_doc;
   std::string res;
@@ -294,7 +299,7 @@ TEST_F(MatrixTest, TDSources) {
   ASSERT_EQ(result.info().warnings().size(), 1);
 }
 
-TEST_F(MatrixTest, TDTargets) {
+TEST_F(MatrixTrafficTest, TDTargets) {
   // more targets than sources are allowed
   rapidjson::Document res_doc;
   std::string res;
@@ -325,4 +330,211 @@ TEST_F(MatrixTest, TDTargets) {
   check_matrix(res_doc, {0.0f, 3.2f}, false, Matrix::CostMatrix);
   ASSERT_EQ(result.info().warnings().size(), 1);
   ASSERT_EQ(result.info().warnings().Get(0).code(), 202);
+}
+
+TEST(StandAlone, CostMatrixDeadends) {
+  // ABI has a turn restriction
+  // F is a blocking node
+  const std::string ascii_map = R"(
+       I
+       |
+    A--B--C
+       |  |
+       |  D
+       E
+      1|
+       |
+       F--H
+       .
+       G
+
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"oneway", "yes"}}}, 
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}}},
+      {"BE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}},
+      {"FH", {{"highway", "residential"}}},
+      {"FG", {{"highway", "residential"}}},
+      {"BI", {{"highway", "residential"}}}
+  };
+  // clang-format on
+  const gurka::nodes nodes = {{"F", {{"barrier", "block"}}}};
+  const gurka::relations relations = {
+      {{
+           {gurka::way_member, "AB", "from"},
+           {gurka::node_member, "B", "via"},
+           {gurka::way_member, "BI", "to"},
+       },
+       {
+           {"type", "restriction"},
+           {"restriction", "no_left_turn"},
+       }},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map = gurka::buildtiles(layout, ways, nodes, relations,
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_deadends");
+
+  rapidjson::Document res_doc;
+  std::string res;
+
+  // test that the we're taking the u-turn at D to get from A -> I
+  // because of the ABI turn restriction
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"I"}, "auto",
+                                   {}, nullptr, &res);
+    res_doc.Parse(res.c_str());
+    check_matrix(res_doc, {1.5f}, false, Matrix::CostMatrix);
+    res.erase();
+  }
+
+  // then we force to go 1 -> F to hit a blocking node, doing a u-turn and go back the same way
+  {
+    auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"B"}, "auto",
+                                   {{"/sources/0/preferred_side", "opposite"}}, nullptr, &res);
+    res_doc.Parse(res.c_str());
+    check_matrix(res_doc, {0.8f}, false, Matrix::CostMatrix);
+  }
+}
+
+TEST(StandAlone, CostMatrixShapes) {
+  // keep the same order in the map.nodes for encoding easily
+  const std::string ascii_map = R"(
+    A-B-C-D-E-F-G-H-I-J-K-------L
+  )";
+  // clang-format off
+  const gurka::ways ways = {
+      {"ABCDE", {{"highway", "residential"}}}, 
+      {"EFGHIJK", {{"highway", "residential"}}},
+      {"KL", {{"highway", "residential"}}},
+  };
+  // clang-format on
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_shapes");
+
+  // points of all nodes
+  std::vector<PointLL> vertices;
+  for (const auto& node : map.nodes) {
+    vertices.emplace_back(node.second);
+  }
+
+  std::string res;
+  rapidjson::Document res_doc;
+
+  // no shapes if not specified or "none"
+  auto result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", {},
+                                 nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), "");
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  res.erase();
+
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "no_shape"}};
+
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), "");
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  res.erase();
+
+  // polyline5/6
+
+  options["/shape_format"] = "polyline5";
+  auto encoded = encode<std::vector<PointLL>>(vertices, 1e5);
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"]
+                .GetArray()[0]
+                .GetArray()[0]
+                .GetObject()["shape"],
+            encoded);
+  res.erase();
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>(vertices, 1e6);
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"]
+                .GetArray()[0]
+                .GetArray()[0]
+                .GetObject()["shape"],
+            encoded);
+  res.erase();
+
+  // geojson
+
+  options["/shape_format"] = "geojson";
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "auto", options,
+                            nullptr, &res);
+  EXPECT_EQ(result.matrix().shapes(0), encoded); // has the encoded polyline6 in PBF
+  const auto& gj_shp = res_doc.Parse(res.c_str())["sources_to_targets"]
+                           .GetArray()[0]
+                           .GetArray()[0]
+                           .GetObject()["shape"];
+  EXPECT_TRUE(gj_shp.IsObject());
+  EXPECT_EQ(gj_shp["coordinates"].GetArray().Size(), 12);
+  EXPECT_EQ(gj_shp["type"], "LineString");
+  res.erase();
+
+  // trivial route
+  // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
+  // floating point crap makes this fail though, it adds a tiny little bit on both ends, resulting in
+  // 4 (not 2) points
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>({map.nodes["G"], map.nodes["H"]});
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"G"}, {"H"}, "auto", options,
+                            nullptr, &res);
+  /*
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
+  encoded); res.erase();
+  */
+
+  // trivial route reverse
+  // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
+
+  options["/shape_format"] = "polyline6";
+  encoded = encode<std::vector<PointLL>>({map.nodes["H"], map.nodes["G"]});
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"H"}, {"G"}, "auto", options,
+                            nullptr, &res);
+  /*
+  EXPECT_EQ(result.matrix().shapes(0), encoded);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
+  encoded); res.erase();
+  */
+
+  // timedistancematrix
+
+  options["/shape_format"] = "geojson";
+  result = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"L"}, "pedestrian",
+                            options, nullptr, &res);
+  EXPECT_FALSE(res_doc.Parse(res.c_str())["sources_to_targets"]
+                   .GetArray()[0]
+                   .GetArray()[0]
+                   .GetObject()
+                   .HasMember("shape"));
+  EXPECT_EQ(result.info().warnings().size(), 1);
+  EXPECT_EQ(result.info().warnings(0).code(), 207);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["warnings"].GetArray().Size(), 1);
+  EXPECT_EQ(res_doc.Parse(res.c_str())["warnings"].GetArray()[0].GetObject()["code"].GetUint64(),
+            207);
+
+  res.erase();
 }

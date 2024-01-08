@@ -1779,11 +1779,6 @@ TEST(ParseRequest, test_default_base_cost_options) {
 
 TEST(ParseRequest, test_transport_type) {
   std::string transport_type_key = "type";
-  std::string transport_type_value = "car";
-  for (auto costing : get_base_auto_costing_list()) {
-    test_transport_type_parsing(costing, transport_type_key, transport_type_value,
-                                transport_type_value);
-  }
 
   Costing::Type costing = Costing::pedestrian;
   for (const auto& transport_type_value : {"foot", "wheelchair"}) {
