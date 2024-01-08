@@ -17,7 +17,7 @@
  * @param opts    The command line options
  * @param result  The parsed result
  * @param config  The config which will be populated here
- * @param log     The logging config node's key
+ * @param log     The logging config node's key. If empty, logging will not be configured.
  * @param use_threads Whether this program multi-threads
  *
  * @returns true if the program should continue, false if we should EXIT_SUCCESS
