@@ -233,7 +233,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     // Collect edge_ids used for settling a location to determine its time zone
     std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
     dest_edge_ids.reserve(destinations.size());
-    
+
     // Find shortest path
     graph_tile_ptr tile;
     while (true) {
