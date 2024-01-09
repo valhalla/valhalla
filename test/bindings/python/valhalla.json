@@ -275,7 +275,7 @@
     "max_alternates": 2,
     "max_exclude_polygons_length": 10000,
     "max_distance_disable_hierarchy_culling": 0,
-    "allow_hard_exclusions": false
+    "allow_hard_exclusions": true
   },
   "statsd": {
     "port": 8125,
