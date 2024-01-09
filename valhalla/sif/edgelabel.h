@@ -37,7 +37,7 @@ public:
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
         origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
         closure_pruning_(0), has_measured_speed_(0), path_id_(0), restriction_idx_(0),
-        internal_turn_(0), unpaved_(0), highway_(0), tunnel_(0), cost_(0, 0), sortcost_(0), distance_(0),
+        internal_turn_(0), unpaved_(0), tunnel_(0), cost_(0, 0), sortcost_(0), distance_(0),
         transition_cost_(0, 0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -87,7 +87,7 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), has_measured_speed_(has_measured_speed), path_id_(path_id),
         restriction_idx_(restriction_idx), internal_turn_(static_cast<uint8_t>(internal_turn)),
-        unpaved_(edge->unpaved()), highway_(edge->highway()), tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost), distance_(dist),
+        unpaved_(edge->unpaved()), tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost), distance_(dist),
         transition_cost_(transition_cost) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -415,13 +415,6 @@ public:
     return unpaved_;
   }
 
-   /**
-   * Get the highway flag.
-   * @return Returns true if the edge is a highway, otherwise false.
-   */
-  bool highway() const {
-    return highway_;
-  }
 
   /**
    * Get the tunnel flag.
@@ -494,8 +487,6 @@ protected:
   uint32_t internal_turn_ : 2;
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
-   // Flag indicating edge is a highway.
-  uint32_t highway_ : 1;
   // Flag indicating edge is a tunnel.
   uint32_t tunnel_ : 1;
   uint32_t spare : 13;

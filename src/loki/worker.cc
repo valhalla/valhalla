@@ -75,7 +75,7 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
   for (auto pair : costings)
   {
     if (!allow_hard_exclusions && (
-      pair.second.options().exclude_bridges() ||
+      pair.second.options().exclude_highways() ||
       pair.second.options().exclude_tolls() ||
       pair.second.options().exclude_tunnels()
     )) {

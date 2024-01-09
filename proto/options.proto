@@ -311,14 +311,14 @@ message Costing {
     uint32 axle_count = 81;
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
-    oneof has_exclude_tunnel {
+    oneof has_exclude_tunnels {
       bool exclude_tunnels = 84;
     }
-    oneof has_exclude_toll {
+    oneof has_exclude_tolls {
       bool exclude_tolls = 85;
     }
     oneof has_exclude_highways {
-      bool exclude_highways = 85;
+      bool exclude_highways = 86;
     }
   }
 
