@@ -71,6 +71,18 @@ void loki_worker_t::parse_costing(Api& api, bool allow_none) {
     throw valhalla_exception_t{124};
   }
 
+  auto costings = options.costings();
+  for (auto pair : costings)
+  {
+    if (!allow_hard_exclusions && (
+      pair.second.options().exclude_bridges() ||
+      pair.second.options().exclude_tolls() ||
+      pair.second.options().exclude_tunnels()
+    )) {
+      throw valhalla_exception_t{145};
+    }
+  }
+
   const auto& costing_str = Costing_Enum_Name(options.costing_type());
   try {
     // For the begin and end of multimodal we expect you to be walking
@@ -163,7 +175,8 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
       max_trace_shape(config.get<size_t>("service_limits.trace.max_shape")),
       sample(config.get<std::string>("additional_data.elevation", "")),
       max_elevation_shape(config.get<size_t>("service_limits.skadi.max_shape")),
-      min_resample(config.get<float>("service_limits.skadi.min_resample")) {
+      min_resample(config.get<float>("service_limits.skadi.min_resample")),
+      allow_hard_exclusions(config.get<bool>("service_limits.allow_hard_exclusions", false)) {
 
   // Keep a string noting which actions we support, throw if one isnt supported
   Options::Action action;
@@ -187,7 +200,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
         kv.first == "max_timedep_distance_matrix" || kv.first == "max_alternates" ||
         kv.first == "max_exclude_polygons_length" ||
         kv.first == "max_distance_disable_hierarchy_culling" || kv.first == "skadi" ||
-        kv.first == "status") {
+        kv.first == "status" || kv.first == "allow_hard_exclusions") {
       continue;
     }
     if (kv.first != "trace") {
@@ -250,7 +263,7 @@ loki_worker_t::loki_worker_t(const boost::property_tree::ptree& config,
   // assign max_distance_disable_hierarchy_culling
   max_distance_disable_hierarchy_culling =
       config.get<float>("service_limits.max_distance_disable_hierarchy_culling", 0.f);
-
+  allow_hard_exclusions = config.get<bool>("service_limits.allow_hard_exclusions", false);
   // signal that the worker started successfully
   started();
 }
