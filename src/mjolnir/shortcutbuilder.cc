@@ -296,10 +296,10 @@ uint32_t ConnectEdges(GraphReader& reader,
 
   // Add edge and turn duration for truck
   total_truck_duration += turn_duration;
-  uint32_t truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+  auto const truck_speed =
+      std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
+               directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
 
-  truck_speed = std::min(truck_speed, directededge->truck_speed() ? directededge->truck_speed()
-                                                                  : kMaxAssumedTruckSpeed);
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
