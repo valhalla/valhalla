@@ -1090,11 +1090,8 @@ protected:
     // Set the fixed speed a vehicle can go
     fixed_speed_ = costing_options.fixed_speed();
     // Set the top speed a vehicle wants to go
-    top_speed_ = fixed_speed_ == baldr::kDisableFixedSpeed
-                     ? (is_hgv() ? (std::min(costing_options.top_speed(),
-                                             static_cast<float>(baldr::kMaxAssumedTruckSpeed)))
-                                 : costing_options.top_speed())
-                     : fixed_speed_;
+    top_speed_ =
+        fixed_speed_ == baldr::kDisableFixedSpeed ? costing_options.top_speed() : fixed_speed_;
 
     exclude_unpaved_ = costing_options.exclude_unpaved();
 
