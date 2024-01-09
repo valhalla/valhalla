@@ -988,6 +988,9 @@ protected:
   bool penalize_uturns_;
 
   bool exclude_unpaved_{false};
+  bool exclude_highways_{false};
+  bool exclude_tunnels_{false};
+  bool exclude_tolls_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1196,6 +1199,9 @@ struct BaseCostingOptionsConfig {
   ranged_default_t<float> closure_factor_;
 
   bool exclude_unpaved_;
+  bool exclude_highways_;
+  bool exclude_tunnels_;
+  bool exclude_tolls_;
 
   bool exclude_cash_only_tolls_ = false;
 
