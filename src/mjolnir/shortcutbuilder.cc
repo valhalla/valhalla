@@ -295,11 +295,13 @@ uint32_t ConnectEdges(GraphReader& reader,
   total_duration += edge_duration;
 
   // Add edge and turn duration for truck
-  // Currently use the same as for cars. TODO: implement for trucks
   total_truck_duration += turn_duration;
-  auto const truck_speed =
-      std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
-               kMaxAssumedTruckSpeed);
+  uint32_t truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+
+  // make sure we don't clamp speed if on ferry
+  if (directededge->use() != valhalla::baldr::Use::kFerry) {
+    truck_speed = std::min(truck_speed, kMaxAssumedTruckSpeed);
+  }
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
