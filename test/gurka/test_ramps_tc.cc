@@ -352,7 +352,7 @@ TEST(RampsNoReclass, test_tc_infer) {
   const gurka::nodes nodes = {{"B", {{"highway", "motorway_junction"}, {"ref", "4"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_tc_infer",
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_ramps_tc_infer_no_reclass",
                                {{"mjolnir.data_processing.infer_internal_intersections", "true"},
                                 {"mjolnir.data_processing.infer_turn_channels", "true"},
                                 {"mjolnir.reclassify_links", "false"}});
