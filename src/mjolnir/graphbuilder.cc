@@ -407,25 +407,14 @@ void BuildTileSet(const std::string& ways_file,
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
-  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
 
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
-  if (!database && use_admin_db) {
-    LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle && use_admin_db) {
-    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
-  }
+  sqlite3* admin_db_handle = GetDBHandle(*database);
   auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   database = pt.get_optional<std::string>("timezone");
   // Initialize the tz DB (if it exists)
-  sqlite3* tz_db_handle = database ? GetDBHandle(*database) : nullptr;
-  if (!database) {
-    LOG_WARN("Time zone db not found.  Not saving time zone information.");
-  } else if (!tz_db_handle) {
-    LOG_WARN("Time zone db " + *database + " not found.  Not saving time zone information.");
-  }
+  sqlite3* tz_db_handle = GetDBHandle(*database);
   auto tz_conn = make_spatialite_cache(tz_db_handle);
 
   const auto& tiling = TileHierarchy::levels().back().tiles;
@@ -518,20 +507,10 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll = node.latlng();
 
         // Get the admin index
-        uint32_t admin_index = 0;
-        bool dor = false;
-        std::vector<std::pair<std::string, bool>> default_languages;
-
-        if (use_admin_db) {
-          admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                : GetMultiPolyId(admin_polys, node_ll, graphtile);
-          dor = drive_on_right[admin_index];
-          default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
-
-        } else {
-          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
-                                           osmdata.node_names.name(node.state_iso_index()));
-        }
+        auto admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
+                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
+        auto dor = drive_on_right[admin_index];
+        auto default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -566,8 +545,7 @@ void BuildTileSet(const std::string& ways_file,
             std::swap(source, target);
           }
 
-          if (!use_admin_db)
-            dor = w.drive_on_right();
+          dor = w.drive_on_right();
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();

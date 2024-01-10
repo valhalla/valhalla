@@ -756,12 +756,8 @@ TEST(Standalone, BannerInstructionsRoundabout) {
                               {"2", {{"highway", "give_way"}, {"direction", "forward"}}},
                               {"3", {{"highway", "give_way"}, {"direction", "forward"}}}};
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 20, {0, 0});
-  const std::unordered_map<std::string, std::string> build_config{
-      {"mjolnir.data_processing.use_admin_db", "false"}};
-
-  auto map =
-      gurka::buildtiles(layout, ways, nodes, {},
-                        "test/data/osrm_serializer_banner_instructions_roundabout", build_config);
+  auto map = gurka::buildtiles(layout, ways, nodes, {},
+                               "test/data/osrm_serializer_banner_instructions_roundabout");
 
   auto from = "A";
   auto to = "B";
@@ -852,11 +848,8 @@ protected:
                                 {"2", {{"highway", "give_way"}, {"direction", "forward"}}},
                                 {"3", {{"highway", "give_way"}, {"direction", "forward"}}}};
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10, {13.34792, 52.51585});
-    const std::unordered_map<std::string, std::string> build_config{
-        {"mjolnir.data_processing.use_admin_db", "false"}};
-
     map = gurka::buildtiles(layout, ways, nodes, {},
-                            "test/data/osrm_serializer_banner_instructions_rotary", build_config);
+                            "test/data/osrm_serializer_banner_instructions_rotary");
   }
 
   rapidjson::Document json_request(const std::string& from, const std::string& to) {

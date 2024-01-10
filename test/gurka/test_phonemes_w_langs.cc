@@ -46,7 +46,6 @@ protected:
     valhalla::gurka::map map;
     pt = map.config;
     pt.put("mjolnir.data_processing.allow_alt_name", "true");
-    pt.put("mjolnir.data_processing.use_admin_db", "true");
     pt.put("mjolnir.tile_dir", workdir + "/tiles");
     pt.put("mjolnir.admin", sqlite);
   }

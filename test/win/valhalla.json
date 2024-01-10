@@ -112,7 +112,7 @@
     "shortcuts": true,
     "tile_dir": "test\\data\\utrecht_tiles",
     "tile_extract": "",
-    "timezone": "",
+    "timezone": "need to download from release page in future on azure CI",
     "transit_dir": "",
     "transit_feeds_dir": ""
   },

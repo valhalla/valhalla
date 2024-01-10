@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,7 +7,6 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
@@ -25,7 +25,7 @@ void list_stages() {
 }
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;

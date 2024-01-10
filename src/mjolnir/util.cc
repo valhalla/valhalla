@@ -1,7 +1,6 @@
-#include "mjolnir/util.h"
+#include <filesystem>
 
 #include "baldr/tilehierarchy.h"
-#include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/logging.h"
 #include "midgard/point2.h"
@@ -18,6 +17,7 @@
 #include "mjolnir/restrictionbuilder.h"
 #include "mjolnir/shortcutbuilder.h"
 #include "mjolnir/transitbuilder.h"
+#include "mjolnir/util.h"
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -187,10 +187,19 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
                     const BuildStage end_stage,
                     const bool release_osmpbf_memory) {
   auto remove_temp_file = [](const std::string& fname) {
-    if (filesystem::exists(fname)) {
-      filesystem::remove(fname);
+    if (std::filesystem::exists(fname)) {
+      std::filesystem::remove(fname);
     }
   };
+
+  // verify there's admin & tz DBs
+  for (const auto& cfg : {"admin", "timezone"}) {
+    const auto db_path = original_config.get<std::string>("mjolnir." + std::string(cfg));
+    if (!std::filesystem::exists(db_path) || std::filesystem::file_size(db_path) == 0) {
+      LOG_ERROR("Graph build requires a valid database for mjolnir." + std::string(cfg));
+      return false;
+    }
+  }
 
   // Take out tile_extract and tile_url from property tree as tiles must only use the tile_dir
   auto config = original_config;
@@ -200,8 +209,8 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
   // Get the tile directory (make sure it ends with the preferred separator
   std::string tile_dir = config.get<std::string>("mjolnir.tile_dir");
-  if (tile_dir.back() != filesystem::path::preferred_separator) {
-    tile_dir.push_back(filesystem::path::preferred_separator);
+  if (tile_dir.back() != std::filesystem::path::preferred_separator) {
+    tile_dir.push_back(std::filesystem::path::preferred_separator);
   }
 
   // During the initialize stage the tile directory will be purged (if it already exists)
@@ -210,22 +219,22 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // set up the directories and purge old tiles if starting at the parsing stage
     for (const auto& level : valhalla::baldr::TileHierarchy::levels()) {
       auto level_dir = tile_dir + std::to_string(level.level);
-      if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+      if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
         LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-        filesystem::remove_all(level_dir);
+        std::filesystem::remove_all(level_dir);
       }
     }
 
     // check for transit level.
     auto level_dir =
         tile_dir + std::to_string(valhalla::baldr::TileHierarchy::GetTransitLevel().level);
-    if (filesystem::exists(level_dir) && !filesystem::is_empty(level_dir)) {
+    if (std::filesystem::exists(level_dir) && !std::filesystem::is_empty(level_dir)) {
       LOG_WARN("Non-empty " + level_dir + " will be purged of tiles");
-      filesystem::remove_all(level_dir);
+      std::filesystem::remove_all(level_dir);
     }
 
     // Create the directory if it does not exist
-    filesystem::create_directories(tile_dir);
+    std::filesystem::create_directories(tile_dir);
   }
 
   // Set up the temporary (*.bin) files used during processing
@@ -317,7 +326,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     if (start_stage == BuildStage::kBuild) {
       // Read OSMData from files if building tiles is the first stage
       osm_data.read_from_temp_files(tile_dir);
-      if (filesystem::exists(tile_manifest)) {
+      if (std::filesystem::exists(tile_manifest)) {
         tiles = TileManifest::ReadFromFile(tile_manifest).tileset;
       } else {
         // TODO: Remove this backfill in the future, and make calling constructedges stage

@@ -236,8 +236,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                             {"ECFG", {{"highway", "trunk"}, {"driving_side", "right"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4",
-                               {{"mjolnir.data_processing.use_admin_db", "false"}});
+  // TODO(nils): make sure tiles are built where driving side is right
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_4");
 
   valhalla::Api result;
 
@@ -298,8 +298,8 @@ TEST(Standalone, TurnLanesMultiLaneShort) {
                               });
 
   // makes the data left side driving.
-  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5",
-                          {{"mjolnir.data_processing.use_admin_db", "true"}});
+  // TODO(nils): make sure tiles are built where driving side is left
+  map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_turn_lanes_5");
 
   // A -> F - takes leftmost right lane (left side driving)
   result = gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "auto");

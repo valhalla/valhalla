@@ -1,14 +1,15 @@
+#include <filesystem>
+
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "filesystem.h"
 #include "mjolnir/convert_transit.h"
 #include "mjolnir/validatetransit.h"
 
 #include "argparse_utils.h"
 
 int main(int argc, char** argv) {
-  const auto program = filesystem::path(__FILE__).stem().string();
+  const auto program = std::filesystem::path(__FILE__).stem().string();
   // args
   boost::property_tree::ptree pt;
   std::vector<valhalla::mjolnir::OneStopTest> onestoptests;
@@ -59,7 +60,10 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  auto all_tiles = valhalla::mjolnir::convert_transit(config);
+  auto all_tiles = valhalla::mjolnir::convert_transit(pt);
+  if (!all_tiles.size()) {
+    return EXIT_FAILURE;
+  }
   valhalla::mjolnir::ValidateTransit::Validate(config, all_tiles, onestoptests);
-  return 0;
+  return EXIT_SUCCESS;
 }

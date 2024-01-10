@@ -1319,20 +1319,14 @@ void enhance(const boost::property_tree::ptree& pt,
   auto less_than = [](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); };
   sequence<OSMAccess> access_tags(access_file, false);
 
-  auto database = pt.get_optional<std::string>("admin");
+  auto database = pt.get<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool infer_turn_channels = pt.get<bool>("data_processing.infer_turn_channels", true);
   bool apply_country_overrides = pt.get<bool>("data_processing.apply_country_overrides", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
-  bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
   // Initialize the admin DB (if it exists)
-  sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
-  if (!database && use_admin_db) {
-    LOG_WARN("Admin db not found.  Not saving admin information.");
-  } else if (!admin_db_handle && use_admin_db) {
-    LOG_WARN("Admin db " + *database + " not found.  Not saving admin information.");
-  }
+  sqlite3* admin_db_handle = GetDBHandle(database);
   auto admin_conn = make_spatialite_cache(admin_db_handle);
 
   std::unordered_map<std::string, std::vector<int>> country_access =

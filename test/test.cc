@@ -228,7 +228,6 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "apply_country_overrides": true,
           "infer_internal_intersections": true,
           "infer_turn_channels": true,
-          "use_admin_db": true,
           "use_direction_on_ways": false,
           "use_rest_area": false,
           "use_urban_tag": false
@@ -390,6 +389,11 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
 
   // make ptree and override defaults
   auto pt = json_to_pt(defaults);
+
+  // default the admin db & timezone db
+  pt.put("mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite");
+  pt.put("mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+
   for (const auto& override : overrides) {
     pt.put(override.first, override.second);
   }
