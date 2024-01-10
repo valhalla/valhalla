@@ -27,6 +27,7 @@
    * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
    * FIXED: insane ETAs for `motor_scooter` on `track`s [#4468](https://github.com/valhalla/valhalla/pull/4468)
    * FIXED: -j wasn't taken into account anymore [#4483](https://github.com/valhalla/valhalla/pull/4483)
+   * FIXED: time distance matrix was always using time zone of last settled edge id [#4494](https://github.com/valhalla/valhalla/pull/4494)
    * FIXED: log to stderr in valhalla_export_edges [#4498](https://github.com/valhalla/valhalla/pull/4498)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
