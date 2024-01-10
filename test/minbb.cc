@@ -15,11 +15,9 @@ using namespace valhalla::baldr;
 namespace {
 
 boost::property_tree::ptree get_conf(const std::string& tile_dir) {
-  std::stringstream ss;
-  ss << R"({"mjolnir":{"tile_dir":")" + tile_dir + R"(", "concurrency": 1}})";
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(ss, conf);
-  return conf;
+  auto config = test::make_config("test/data/utrecht_tiles",
+                                  {{"mjolnir.tile_dir", tile_dir}, {"mjolnir.concurrency", "1"}});
+  return config;
 }
 
 struct bb_tester {

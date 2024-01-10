@@ -25,66 +25,13 @@ void create_costing_options(Options& options) {
   sif::ParseCosting(doc, "/costing_options", options);
 }
 
-boost::property_tree::ptree json_to_pt(const std::string& json) {
-  std::stringstream ss;
-  ss << json;
-  boost::property_tree::ptree pt;
-  rapidjson::read_json(ss, pt);
-  return pt;
-}
-
-boost::property_tree::ptree build_config(const char* live_traffic_tar) {
-  return json_to_pt(R"({
-    "mjolnir":{
-      "traffic_extract": "test/data/utrecht_tiles/)" +
-                    std::string(live_traffic_tar) + R"(",
-      "tile_dir": "test/data/utrecht_tiles",
-      "concurrency": 1
-    },
-    "loki":{
-        "actions":["route"],
-        "logging":{"long_request": 100},
-        "service_defaults":{
-          "minimum_reachability": 10,
-          "radius": 50,
-          "search_cutoff": 35000,
-          "node_snap_tolerance": 5,
-          "street_side_tolerance": 5,
-          "heading_tolerance": 360
-        }
-    },
-    "thor":{
-      "logging":{"long_request": 100}
-    },
-    "meili":{
-      "grid": {
-        "cache_size": 100240,
-        "size": 500
-      }
-    },
-    "service_limits": {
-      "auto": {"max_distance": 5000000.0, "max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "auto_shorter": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "bicycle": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500},
-      "bus": {"max_distance": 5000000.0,"max_locations": 50,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "hov": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "taxi": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500},
-      "isochrone": {"max_contours": 4,"max_distance": 25000.0,"max_locations": 1,"max_time_contour": 120,"max_distance_contour":200},
-      "max_exclude_locations": 50,"max_radius": 200,"max_reachability": 100,"max_alternates":2,"max_exclude_polygons_length":10000,
-      "multimodal": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 0.0,"max_matrix_location_pairs": 0},
-      "pedestrian": {"max_distance": 250000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500,"max_transit_walking_distance": 10000,"min_transit_walking_distance": 1},
-      "skadi": {"max_shape": 750000,"min_resample": 10.0},
-      "trace": {"max_distance": 200000.0,"max_gps_accuracy": 100.0,"max_search_radius": 100,"max_shape": 16000,"max_best_paths":4,"max_best_paths_shape":100},
-      "transit": {"max_distance": 500000.0,"max_locations": 50,"max_matrix_distance": 200000.0,"max_matrix_location_pairs": 2500},
-      "truck": {"max_distance": 5000000.0,"max_locations": 20,"max_matrix_distance": 400000.0,"max_matrix_location_pairs": 2500}
-    }
-  })");
-}
-
 constexpr float kMaxRange = 256;
 
 static void BM_UtrechtBidirectionalAstar(benchmark::State& state) {
-  const auto config = build_config("generated-live-data.tar");
+  const auto config = test::make_config("test/data/utrecht_tiles",
+                                        {{"mjolnir.traffic_extract",
+                                          "test/data/utrecht_tiles/generated-live-data.tar"}},
+                                        {"additional_data", "mjolnir.tile_extract"});
   test::build_live_traffic_data(config);
 
   std::mt19937 gen(0); // Seed with the same value for consistent benchmarking
@@ -311,8 +258,10 @@ void BM_GlobalFixedRandom(benchmark::State& state, const std::string& planet_pat
 
 /** Benchmarks the GetSpeed function */
 static void BM_GetSpeed(benchmark::State& state) {
-
-  const auto config = build_config("get-speed.tar");
+  const auto config =
+      test::make_config("test/data/utrecht_tiles",
+                        {{"mjolnir.traffic_extract", "test/data/utrecht_tiles/get-speed.tar"}},
+                        {"additional_data", "mjolnir.tile_extract"});
   auto tgt_edge_id = baldr::GraphId(3196, 0, 3221);
   const auto tgt_speed = 50;
   customize_traffic(config, tgt_edge_id, tgt_speed);
@@ -344,7 +293,10 @@ BENCHMARK(BM_GetSpeed)->Unit(benchmark::kNanosecond);
 /** Benchmarks the Allowed function */
 static void BM_Sif_Allowed(benchmark::State& state) {
 
-  const auto config = build_config("sif-allowed.tar");
+  const auto config =
+      test::make_config("test/data/utrecht_tiles",
+                        {{"mjolnir.traffic_extract", "test/data/utrecht_tiles/sif-allowed.tar"}},
+                        {"additional_data", "mjolnir.tile_extract"});
   auto tgt_edge_id = baldr::GraphId(3196, 0, 3221);
   auto tgt_speed = 100;
   customize_traffic(config, tgt_edge_id, tgt_speed);

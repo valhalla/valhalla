@@ -184,6 +184,7 @@ endif()
 set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
     )

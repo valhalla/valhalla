@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include "config.h"
 #include "filesystem.h"
 #include "microtar.h"
 
@@ -388,18 +389,18 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
   // force the paths to be different
   boost::replace_all(defaults, "%%", path_prefix);
 
-  // make ptree and override defaults
-  auto pt = json_to_pt(defaults);
+  auto config = valhalla::config(defaults);
+
   for (const auto& override : overrides) {
-    pt.put(override.first, override.second);
+    config.put(override.first, override.second);
   }
 
   // remove keys we dont want
   for (const auto& remove : removes) {
-    remove_child(pt, remove);
+    remove_child(config, remove);
   }
 
-  return pt;
+  return config;
 }
 
 std::shared_ptr<valhalla::baldr::GraphReader>

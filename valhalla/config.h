@@ -40,13 +40,6 @@
 
 namespace valhalla {
 const boost::property_tree::ptree& config(const std::string&);
-
-class ConfigUninitializedException : std::exception {
-public:
-  const char* what() const throw() {
-    return "Config singleton was not initialized before usage";
-  }
-};
 } // namespace valhalla
 
 namespace {
@@ -57,7 +50,7 @@ protected:
   config_singleton_t() = delete;
   config_singleton_t(const std::string& config_file_or_inline) {
     if (config_file_or_inline.empty()) {
-      throw valhalla::ConfigUninitializedException();
+      throw std::runtime_error("Config singleton was not initialized before usage");
     }
 
     try {

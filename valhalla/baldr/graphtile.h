@@ -1,5 +1,6 @@
 #pragma once
 
+#include "config.h"
 #include <valhalla/baldr/accessrestriction.h>
 #include <valhalla/baldr/admininfo.h>
 #include <valhalla/baldr/complexrestriction.h>
@@ -652,7 +653,8 @@ public:
     // TODO(danpat): for short-ish durations along the route, we should fade live
     //               speeds into any historic/predictive/average value we'd normally use
 
-    constexpr double LIVE_SPEED_FADE = 1. / 3600.;
+    static double LIVE_SPEED_FADE = 1. / config().get<float>("thor.live_speed_fading_sec", 3600);
+
     // This parameter describes the weight of live-traffic on a specific edge. In the beginning of the
     // route live-traffic gives more information about current congestion situation. But the further
     // we go the less consistent this traffic is. We prioritize predicted traffic in this case.

@@ -69,7 +69,7 @@ void adjust_scores(Options& options) {
   }
 }
 
-const auto cfg = test::make_config("test/data/utrecht_tiles");
+const auto cfg = test::make_config("test/data", {{"mjolnir.tile_dir", "test/data/utrecht_tiles"}});
 
 void try_path(GraphReader& reader,
               loki_worker_t& loki_worker,
