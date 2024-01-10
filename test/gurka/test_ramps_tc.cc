@@ -389,7 +389,6 @@ TEST(RampsNoReclass, test_tc_infer) {
   EXPECT_EQ(leg.node(4).edge().use(), valhalla::TripLeg_Use::TripLeg_Use_kRoadUse);
   EXPECT_EQ(leg.node(4).edge().internal_intersection(), 0);
 
-  /** This fails if GK is motorway_link but passes if trunk_link (or below)
   gurka::assert::raw::expect_maneuver_begin_path_indexes(result, {0, 1, 4, 5});
 
   // Verify that we are marking the internal edge.  If not, there will be a continue instruction
@@ -398,7 +397,6 @@ TEST(RampsNoReclass, test_tc_infer) {
       result, maneuver_index, "Turn left onto KJ.",
       "Turn left. Then You will arrive at your destination.", "Turn left onto KJ.",
       "Turn left onto KJ. Then You will arrive at your destination.", "Continue for 50 meters.");
-  **/
 }
 
 TEST(LinkReclassification, test_use_refs) {

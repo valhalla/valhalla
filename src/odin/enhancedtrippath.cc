@@ -479,7 +479,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse() && !IsTurnChannelUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
