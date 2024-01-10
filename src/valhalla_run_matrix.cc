@@ -170,9 +170,8 @@ int main(int argc, char* argv[]) {
         kv.first == "max_distance_disable_hierarchy_culling") {
       continue;
     }
-    max_matrix_distance.emplace(kv.first,
-                                config().get<float>("service_limits." + kv.first +
-                                                    ".max_matrix_distance"));
+    max_matrix_distance.emplace(kv.first, config().get<float>("service_limits." + kv.first +
+                                                              ".max_matrix_distance"));
   }
 
   if (max_matrix_distance.empty()) {

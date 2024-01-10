@@ -25,7 +25,6 @@ namespace {
 std::string ways_file = "test_ways_utrecht.bin";
 std::string way_nodes_file = "test_way_nodes_utrecht.bin";
 std::string access_file = "test_access_utrecht.bin";
-std::string pronunciation_file = "test_pronunciation_utrecht.bin";
 std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
 std::string bss_file = "test_bss_nodes_utrecht.bin";
@@ -221,7 +220,7 @@ public:
     auto osmdata =
         PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                   {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                                  ways_file, way_nodes_file, access_file, pronunciation_file);
+                                  ways_file, way_nodes_file, access_file);
 
     PBFGraphParser::ParseRelations(conf.get_child("mjolnir"),
                                    {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},

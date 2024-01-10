@@ -56,7 +56,8 @@ int main(int argc, char** argv) {
     valhalla::midgard::logging::Configure(logging_config);
   }
 
-  if (!valhalla::mjolnir::BuildLandmarkFromPBF(valhalla::config().get_child("mjolnir"), input_files)) {
+  if (!valhalla::mjolnir::BuildLandmarkFromPBF(valhalla::config().get_child("mjolnir"),
+                                               input_files)) {
     return EXIT_FAILURE;
   };
 
