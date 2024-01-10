@@ -353,7 +353,7 @@ TEST(RampsNoReclass, test_tc_infer) {
   check_edge_classification(graph_reader, layout, "B", "E", baldr::RoadClass::kMotorway);
   check_edge_classification(graph_reader, layout, "E", "G", baldr::RoadClass::kMotorway);
   check_edge_classification(graph_reader, layout, "E", "H", baldr::RoadClass::kMotorway);
-  //check_edge_classification(graph_reader, layout, "G", "K", baldr::RoadClass::kMotorway);
+  check_edge_classification(graph_reader, layout, "G", "K", baldr::RoadClass::kMotorway);
   check_edge_classification(graph_reader, layout, "K", "N", baldr::RoadClass::kMotorway);
   check_edge_classification(graph_reader, layout, "L", "N", baldr::RoadClass::kMotorway);
   check_edge_classification(graph_reader, layout, "N", "C", baldr::RoadClass::kMotorway);
