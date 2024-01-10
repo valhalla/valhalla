@@ -17,7 +17,7 @@
  * @param opts    The command line options
  * @param result  The parsed result
  * @param config  The config which will be populated here
- * @param log     The logging config node's key
+ * @param log     The logging config node's key. If empty, logging will not be configured.
  * @param use_threads Whether this program multi-threads
  *
  * @returns true if the program should continue, false if we should EXIT_SUCCESS
@@ -51,7 +51,7 @@ bool parse_common_args(const std::string& program,
 
   // configure logging
   auto logging_subtree = conf.get_child_optional(log);
-  if (logging_subtree) {
+  if (!log.empty() && logging_subtree) {
     auto logging_config =
         valhalla::midgard::ToMap<const boost::property_tree::ptree&,
                                  std::unordered_map<std::string, std::string>>(logging_subtree.get());
