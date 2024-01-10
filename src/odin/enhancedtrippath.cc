@@ -1372,7 +1372,8 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(const TravelMode tr
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
+  return ((road_class() == RoadClass::kMotorway) &&
+          !(use() == TripLeg_Use_kRampUse || use() == TripLeg_Use_kTurnChannelUse));
 }
 
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {
