@@ -28,6 +28,7 @@
    * FIXED: insane ETAs for `motor_scooter` on `track`s [#4468](https://github.com/valhalla/valhalla/pull/4468)
    * FIXED: -j wasn't taken into account anymore [#4483](https://github.com/valhalla/valhalla/pull/4483)
    * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
+   * FIXED: time distance matrix was always using time zone of last settled edge id []()
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
