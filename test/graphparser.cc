@@ -130,7 +130,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_EQ(node.type(), NodeType::kGate);
   EXPECT_EQ(node.access(), (kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                             kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
-                            kBicycleAccess | kMopedAccess | kMotorcycleAccess));
+                            kBicycleAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess));
 
   // block
   node = GetNode(1819036441, way_nodes);
@@ -144,7 +144,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_EQ(node.type(), NodeType::kBorderControl);
   EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
-                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess);
 
   // has bike tag but all should have access
   // Bike access only test
@@ -152,7 +152,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   EXPECT_TRUE(node.intersection());
   EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
-                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess);
 
   // Is a bollard with no flags set.
   node = GetNode(569645326, way_nodes);
@@ -245,7 +245,7 @@ void RemovableBollards(const std::string& config_file) {
   EXPECT_EQ(node.type(), NodeType::kGate);
   EXPECT_EQ(node.access(), kAutoAccess | kHOVAccess | kTaxiAccess | kTruckAccess | kBusAccess |
                                kEmergencyAccess | kPedestrianAccess | kWheelchairAccess |
-                               kBicycleAccess | kMopedAccess | kMotorcycleAccess);
+                               kBicycleAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess);
 
   filesystem::remove(ways_file);
   filesystem::remove(way_nodes_file);

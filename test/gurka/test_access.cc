@@ -519,13 +519,13 @@ TEST(Standalone, NodeAccess) {
       {"KL", {{"highway", "residential"}}},
   };
 
-  const gurka::nodes nodes = {{"F", {{"motor_vehicle", "no"}}}, {"G", {{"motorcar", "no"}}}};
+  const gurka::nodes nodes = {{"F", {{"motor_vehicle", "no"}}}, {"G", {{"motorcar", "no"}, {"golf_cart", "no"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_access");
 
   for (auto& c : costing) {
-    if (c == "auto" || c == "taxi")
+    if (c == "auto" || c == "taxi" || c == "golf_cart")
       validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else if (c == "bicycle" || c == "pedestrian")

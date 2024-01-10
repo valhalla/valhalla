@@ -95,10 +95,10 @@ struct Edge {
     // TODO(nils): include a "motorvehicle_fwd/rev" in lua/OSMWay?
     bool drive_fwd = way.auto_forward() || way.truck_forward() || way.bus_forward() ||
                      way.moped_forward() || way.motorcycle_forward() || way.hov_forward() ||
-                     way.taxi_forward();
+                     way.taxi_forward() || way.golf_cart_forward();
     bool drive_rev = way.auto_backward() || way.truck_backward() || way.bus_backward() ||
                      way.moped_backward() || way.motorcycle_backward() || way.hov_backward() ||
-                     way.taxi_backward();
+                     way.taxi_backward() || way.golf_cart_backward();
     Edge e{wayindex, llindex};
     e.attributes.llcount = 1;
     e.attributes.importance = static_cast<uint32_t>(way.road_class());
@@ -156,6 +156,12 @@ struct Edge {
     }
     if (way.motorcycle_backward()) {
       e.rev_access |= baldr::kMotorcycleAccess;
+    }
+    if (way.golf_cart_forward()) {
+      e.fwd_access |= baldr::kGolfCartAccess;
+    }
+    if (way.golf_cart_backward()) {
+      e.rev_access |= baldr::kGolfCartAccess;
     }
     if (way.hov_forward()) {
       e.fwd_access |= baldr::kHOVAccess;

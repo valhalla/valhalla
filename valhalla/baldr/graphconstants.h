@@ -42,11 +42,12 @@ constexpr uint16_t kHOVAccess = 128;
 constexpr uint16_t kWheelchairAccess = 256;
 constexpr uint16_t kMopedAccess = 512;
 constexpr uint16_t kMotorcycleAccess = 1024;
+constexpr uint16_t kGolfCartAccess = 2048;
 constexpr uint16_t kAllAccess = 4095;
 
 // Constant representing vehicular access types
 constexpr uint16_t kVehicularAccess = kAutoAccess | kTruckAccess | kMopedAccess | kMotorcycleAccess |
-                                      kTaxiAccess | kBusAccess | kHOVAccess;
+                                      kTaxiAccess | kBusAccess | kHOVAccess | kGolfCartAccess;
 
 // Maximum number of transit records per tile and other max. transit
 // field values.

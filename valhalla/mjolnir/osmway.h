@@ -1420,6 +1420,22 @@ struct OSMWay {
   }
 
   /**
+   * Sets the golf_cart_forward flag
+   * @param  golf_cart_forward  Can a golf cart drive in the forward direction?
+   */
+  void set_golf_cart_forward(const bool golf_cart_forward) {
+    golf_cart_forward_ = golf_cart_forward;
+  }
+
+  /**
+   * Get the golf cart forward flag
+   * @return  Returns the golf cart forward flag
+   */
+  bool golf_cart_forward() const {
+    return golf_cart_forward_;
+  }
+
+  /**
    * Sets the pedestrian forward flag.
    * @param  pedestrian_forward   Are pedestrians allowed in the forward direction?
    */
@@ -1580,6 +1596,22 @@ struct OSMWay {
    */
   bool motorcycle_backward() const {
     return motorcycle_backward_;
+  }
+
+  /**
+   * Sets the golf_cart_backward flag
+   * @param  golf_cart_backward  Can a golf cart drive in the reverse direction?
+   */
+  void set_golf_cart_backward(const bool golf_cart_backward) {
+    golf_cart_backward_ = golf_cart_backward;
+  }
+
+  /**
+   * Get the golf cart backward flag
+   * @return  Returns the golf cart backward flag
+   */
+  bool golf_cart_backward() const {
+    return golf_cart_backward_;
   }
 
   /**
@@ -2679,9 +2711,12 @@ struct OSMWay {
   uint16_t use_sidepath_ : 1;
   uint16_t bike_forward_ : 1;
   uint16_t bike_backward_ : 1;
+  // Flags which didn't fit elsewhere
   uint16_t lit_ : 1;
   uint16_t destination_only_hgv_ : 1;
-  uint16_t spare2_ : 2;
+  // 2 access flags that didn't fit in the previous 16 bits
+  uint16_t golf_cart_forward_ : 1;
+  uint16_t golf_cart_backward_ : 1;
 
   uint16_t nodecount_;
 

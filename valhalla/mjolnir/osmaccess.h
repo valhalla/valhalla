@@ -208,6 +208,22 @@ struct OSMAccess {
     return attributes_.fields.motorcycle_tag;
   }
 
+  /**
+   * Sets the golf_cart_tag flag.
+   * @param  golf_cart_tag    golf_cart tag permits access?
+   */
+  void set_golf_cart_tag(const bool golf_cart_tag) {
+    attributes_.fields.golf_cart_tag = golf_cart_tag;
+  }
+
+  /**
+   * Get the golf_cart_tag flag.
+   * @return  Returns golf_cart_tag flag.
+   */
+  bool golf_cart_tag() const {
+    return attributes_.fields.golf_cart_tag;
+  }
+
   // OSM way Id
   uint64_t osmwayid_;
 
@@ -224,7 +240,8 @@ struct OSMAccess {
       uint16_t motorroad_tag : 1;
       uint16_t moped_tag : 1;
       uint16_t motorcycle_tag : 1;
-      uint16_t spare : 6;
+      uint16_t golf_cart_tag : 1;
+      uint16_t spare_ : 5;
     } fields;
     uint32_t v; // this should be 64bits wide for architectures who require word alignment
   };

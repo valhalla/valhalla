@@ -255,6 +255,10 @@ public:
       osm_access_.set_motorcycle_tag(true);
       has_user_tags_ = true;
     };
+    tag_handlers_["golf_cart_tag"] = [this]() {
+      osm_access_.set_golf_cart_tag(true);
+      has_user_tags_ = true;
+    };
     tag_handlers_["hov_tag"] = [this]() {
       osm_access_.set_hov_tag(true);
       has_user_tags_ = true;
@@ -309,6 +313,9 @@ public:
     tag_handlers_["motorcycle_forward"] = [this]() {
       way_.set_motorcycle_forward(tag_.second == "true" ? true : false);
     };
+    tag_handlers_["golf_cart_forward"] = [this]() {
+      way_.set_golf_cart_forward(tag_.second == "true" ? true : false);
+    };
     tag_handlers_["pedestrian_forward"] = [this]() {
       way_.set_pedestrian_forward(tag_.second == "true" ? true : false);
     };
@@ -338,6 +345,9 @@ public:
     };
     tag_handlers_["motorcycle_backward"] = [this]() {
       way_.set_motorcycle_backward(tag_.second == "true" ? true : false);
+    };
+    tag_handlers_["golf_cart_backward"] = [this]() {
+      way_.set_golf_cart_backward(tag_.second == "true" ? true : false);
     };
     tag_handlers_["pedestrian_backward"] = [this]() {
       way_.set_pedestrian_backward(tag_.second == "true" ? true : false);
@@ -2393,7 +2403,7 @@ public:
           uint16_t mode = 0;
           if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
-                    kHOVAccess | kMopedAccess | kMotorcycleAccess);
+                    kHOVAccess | kMopedAccess | kMotorcycleAccess | kGolfCartAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
             if (type == AccessType::kTimedAllowed) {
               mode = kAutoAccess | kHOVAccess | kTaxiAccess;
@@ -2413,6 +2423,8 @@ public:
             mode = kMopedAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "motorcycle:conditional")) {
             mode = kMotorcycleAccess;
+          } else if (boost::algorithm::starts_with(tag_.first, "golf_cart:conditional")) {
+            mode = kGolfCartAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "psv:conditional")) {
             mode = (kTaxiAccess | kBusAccess);
           } else if (boost::algorithm::starts_with(tag_.first, "taxi:conditional")) {
@@ -3667,6 +3679,8 @@ public:
           modes |= (kAutoAccess | kMopedAccess);
         } else if (tag.first == "restriction:motorcycle") {
           modes |= kMotorcycleAccess;
+        } else if (tag.first == "restriction:golf_cart") {
+          modes |= kGolfCartAccess;
         } else if (tag.first == "restriction:taxi") {
           modes |= kTaxiAccess;
         } else if (tag.first == "restriction:bus") {
@@ -3899,7 +3913,7 @@ public:
         if (!isTypeRestriction) {
 
           modes = (kAutoAccess | kMopedAccess | kTaxiAccess | kBusAccess | kBicycleAccess |
-                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess);
+                   kTruckAccess | kEmergencyAccess | kMotorcycleAccess | kGolfCartAccess);
           // remove access as the restriction does not apply to these modes.
           std::vector<std::string> tokens = GetTagTokens(except);
           for (const auto& t : tokens) {
@@ -3907,6 +3921,8 @@ public:
               modes = modes & ~(kAutoAccess | kMopedAccess);
             } else if (t == "motorcycle") {
               modes = modes & ~kMotorcycleAccess;
+            } else if (t == "golf_cart") {
+              modes = modes & ~kGolfCartAccess;
             } else if (t == "psv") {
               modes = modes & ~(kTaxiAccess | kBusAccess);
             } else if (t == "taxi") {

@@ -129,6 +129,12 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
   if ((way.motorcycle_forward() && !forward) || (way.motorcycle_backward() && forward)) {
     reverse_access |= kMotorcycleAccess;
   }
+  if ((way.golf_cart_forward() && forward) || (way.golf_cart_backward() && !forward)) {
+    forward_access |= kGolfCartAccess;
+  }
+  if ((way.golf_cart_forward() && !forward) || (way.golf_cart_backward() && forward)) {
+    reverse_access |= kGolfCartAccess;
+  }
   if ((way.emergency_forward() && forward) || (way.emergency_backward() && !forward)) {
     forward_access |= kEmergencyAccess;
   }

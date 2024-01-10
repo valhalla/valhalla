@@ -70,8 +70,13 @@ uint32_t GetAccess(const uint32_t current_access,
     new_access = ProcessAccess(new_access, country_access, kMopedAccess);
   }
 
-  if (!user_access.motorcycle_tag())
+  if (!user_access.motorcycle_tag()) {
     new_access = ProcessAccess(new_access, country_access, kMotorcycleAccess);
+  }
+
+  if (!user_access.golf_cart_tag()) {
+    new_access = ProcessAccess(new_access, country_access, kGolfCartAccess);
+  }
 
   return new_access;
 }
@@ -91,7 +96,8 @@ void SetCountryAccess(DirectedEdge& directededge,
                            ((forward & kHOVAccess) && !(reverse & kHOVAccess)) ||
                            ((forward & kMopedAccess) && !(reverse & kMopedAccess)) ||
                            ((forward & kMotorcycleAccess) && !(reverse & kMotorcycleAccess)) ||
-                           ((forward & kBusAccess) && !(reverse & kBusAccess)));
+                           ((forward & kBusAccess) && !(reverse & kBusAccess)) ||
+                           ((forward & kGolfCartAccess) && !(reverse & kGolfCartAccess)));
 
   bool r_oneway_vehicle = ((!(forward & kAutoAccess) && (reverse & kAutoAccess)) ||
                            (!(forward & kTruckAccess) && (reverse & kTruckAccess)) ||
@@ -100,7 +106,8 @@ void SetCountryAccess(DirectedEdge& directededge,
                            (!(forward & kHOVAccess) && (reverse & kHOVAccess)) ||
                            (!(forward & kMopedAccess) && (reverse & kMopedAccess)) ||
                            (!(forward & kMotorcycleAccess) && (reverse & kMotorcycleAccess)) ||
-                           (!(forward & kBusAccess) && (reverse & kBusAccess)));
+                           (!(forward & kBusAccess) && (reverse & kBusAccess)) ||
+                           (!(forward & kGolfCartAccess) && (reverse & kGolfCartAccess)));
 
   bool f_oneway_bicycle = ((forward & kBicycleAccess) && !(reverse & kBicycleAccess));
   bool r_oneway_bicycle = (!(forward & kBicycleAccess) && (reverse & kBicycleAccess));

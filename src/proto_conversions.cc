@@ -210,6 +210,7 @@ bool Costing_Enum_Parse(const std::string& costing, Costing::Type* c) {
       {"none", Costing::none_},
       {"", Costing::none_},
       {"bikeshare", Costing::bikeshare},
+      {"golf_cart", Costing::golf_cart},
   };
   auto i = costings.find(costing);
   if (i == costings.cend())
@@ -235,6 +236,7 @@ const std::string& Costing_Enum_Name(const Costing::Type costing) {
       // auto_data_fix is deprecated
       {Costing::none_, "none"},
       {Costing::bikeshare, "bikeshare"},
+      {Costing::golf_cart, "golf_cart"},
   };
   auto i = costings.find(costing);
   return i == costings.cend() ? empty : i->second;
@@ -388,6 +390,7 @@ const std::unordered_map<int, std::string> vehicle_to_string{
     {static_cast<int>(VehicleType::kAutoBus), "bus"},
     {static_cast<int>(VehicleType::kTruck), "truck"},
     {static_cast<int>(VehicleType::kMotorScooter), "motor_scooter"},
+    {static_cast<int>(VehicleType::kGolfCart), "golf_cart"},
 };
 
 const std::unordered_map<int, std::string> pedestrian_to_string{

@@ -11,7 +11,8 @@ set(sources
   transitcost.cc
   truckcost.cc
   dynamiccost.cc
-  recost.cc)
+  recost.cc
+  golfcartcost.cc)
 
 # treat date library as system
 set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
