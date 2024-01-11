@@ -36,8 +36,8 @@ valhalla_module(NAME tyr
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
     PRIVATE
-    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
