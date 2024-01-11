@@ -23,16 +23,16 @@
 // Enable std::string overloads
 #define RAPIDJSON_HAS_STDSTRING 1
 
-#include <rapidjson/allocators.h>
-#include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
-#include <rapidjson/istreamwrapper.h>
-#include <rapidjson/pointer.h>
-#include <rapidjson/prettywriter.h>
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/schema.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/allocators.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/document.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/error/en.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/istreamwrapper.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/pointer.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/prettywriter.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/rapidjson.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/schema.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/stringbuffer.h>
+#include <valhalla/third_party/rapidjson/include/rapidjson/writer.h>
 
 namespace rapidjson {
 

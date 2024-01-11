@@ -7,7 +7,7 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "baldr/directededge.h"
 #include "baldr/edgeinfo.h"

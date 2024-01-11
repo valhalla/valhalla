@@ -1,9 +1,9 @@
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <queue>
 #include <random>
 #include <string>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include "midgard/logging.h"

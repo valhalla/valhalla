@@ -2,7 +2,7 @@
 #include "test.h"
 
 #include <boost/format.hpp>
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 using LiveTrafficCustomize = test::LiveTrafficCustomize;

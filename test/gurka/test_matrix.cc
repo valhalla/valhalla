@@ -3,7 +3,7 @@
 #include <valhalla/midgard/encoded.h>
 #include <valhalla/thor/matrix_common.h>
 
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::thor;

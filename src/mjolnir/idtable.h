@@ -7,7 +7,7 @@
 #include <fstream>
 #include <vector>
 
-#include <robin_hood.h>
+#include <valhalla/third_party/robin-hood-hashing/src/include/robin_hood.h>
 
 #include <midgard/logging.h>
 

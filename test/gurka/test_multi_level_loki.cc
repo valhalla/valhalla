@@ -2,7 +2,7 @@
 #include <unordered_map>
 
 #include <boost/format.hpp>
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 #include "baldr/rapidjson_utils.h"
 #include "gurka.h"

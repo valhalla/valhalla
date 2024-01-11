@@ -15,8 +15,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-#include <date/date.h>
-#include <date/tz.h>
+#include <valhalla/third_party/date/include/date/date.h>
+#include <valhalla/third_party/date/include/date/tz.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #pragma GCC diagnostic pop

@@ -9,7 +9,7 @@
 #include "thor/costmatrix.h"
 #include "worker.h"
 
-#include <robin_hood.h>
+#include <valhalla/third_party/robin-hood-hashing/src/include/robin_hood.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;

@@ -9,10 +9,10 @@
 #include "midgard/logging.h"
 
 #include <algorithm>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <unordered_map>
 #include <utility>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "argparse_utils.h"
 

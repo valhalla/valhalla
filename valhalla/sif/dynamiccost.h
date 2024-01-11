@@ -22,8 +22,8 @@
 #include <valhalla/thor/edgestatus.h>
 
 #include <memory>
-#include <rapidjson/document.h>
 #include <unordered_map>
+#include <valhalla/third_party/rapidjson/include/rapidjson/document.h>
 
 // macros aren't great but writing these out for every option is an abomination worse than this macro
 

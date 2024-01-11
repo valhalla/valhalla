@@ -14,7 +14,7 @@
 #include <boost/archive/iterators/transform_width.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"

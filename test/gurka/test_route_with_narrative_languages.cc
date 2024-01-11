@@ -1,7 +1,7 @@
 #include "gurka.h"
-#include <gtest/gtest.h>
 #include <unordered_map>
 #include <utility>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 #include <vector>
 
 #include "odin/util.h"

@@ -96,7 +96,10 @@
 #  include <windows.h>
 #endif  // _WIN32
 
-#include <date/tz_private.h>
+// date emits a warning otherwise for C++17, see
+// https://github.com/valhalla/valhalla/pull/3878#issuecomment-1365487437
+#define HAS_UNCAUGHT_EXCEPTIONS 1
+#include <valhalla/third_party/date/include/date/tz_private.h>
 
 #include "date_time_africa.h"
 #include "date_time_antarctica.h"

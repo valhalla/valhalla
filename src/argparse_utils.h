@@ -1,5 +1,5 @@
 #include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/config.h>

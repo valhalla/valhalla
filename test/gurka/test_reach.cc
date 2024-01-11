@@ -5,8 +5,8 @@
 #include "test.h"
 
 #include <boost/format.hpp>
-#include <gtest/gtest.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::loki;

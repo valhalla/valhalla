@@ -1,4 +1,4 @@
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
 #include "mjolnir/ingest_transit.h"

@@ -1,11 +1,12 @@
 #include "test.h"
 
-#include "baldr/graphmemory.h"
-#include "baldr/graphreader.h"
-#include "baldr/predictedspeeds.h"
-#include "baldr/rapidjson_utils.h"
-#include "baldr/traffictile.h"
-#include "mjolnir/graphtilebuilder.h"
+#include <valhalla/baldr/graphmemory.h>
+#include <valhalla/baldr/graphreader.h>
+#include <valhalla/baldr/predictedspeeds.h>
+#include <valhalla/baldr/rapidjson_utils.h>
+#include <valhalla/baldr/traffictile.h>
+#include <valhalla/filesystem.h>
+#include <valhalla/mjolnir/graphtilebuilder.h>
 
 #include <cmath>
 #include <fstream>
@@ -18,13 +19,11 @@
 #endif
 #include <sys/stat.h>
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
-
 #include <boost/algorithm/string.hpp>
+#include <valhalla/third_party/googletest/googlemock/include/gmock/gmock.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
-#include "filesystem.h"
-#include "microtar.h"
+#include <valhalla/third_party/microtar/src/microtar.h>
 
 namespace {
 // TODO: this should support boost::property_tree::path

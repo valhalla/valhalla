@@ -16,11 +16,13 @@ set(sources
 valhalla_module(NAME midgard
   SOURCES ${sources}
   HEADERS ${headers}
+  HEADERS_VENDORED
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
   DEPENDS
     Boost::boost
     robin_hood::robin_hood)

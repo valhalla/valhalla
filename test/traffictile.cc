@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 #include "baldr/traffictile.h"
 

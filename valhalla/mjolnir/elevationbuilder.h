@@ -5,7 +5,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "baldr/graphid.h"
+#include <valhalla/baldr/graphid.h>
 
 namespace valhalla {
 namespace mjolnir {

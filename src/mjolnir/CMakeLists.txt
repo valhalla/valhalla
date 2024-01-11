@@ -63,25 +63,27 @@ set(sources
   validatetransit.cc)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include)
 if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include/date)
 endif()
 
 valhalla_module(NAME mjolnir
   SOURCES ${sources}
   HEADERS ${headers}
+  HEADERS_VENDORED
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
       ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/just_gtfs/include
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}

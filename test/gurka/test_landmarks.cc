@@ -1,6 +1,6 @@
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <iomanip>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 #include <vector>
 
 #include "baldr/graphreader.h"

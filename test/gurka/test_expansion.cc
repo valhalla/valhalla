@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include <boost/algorithm/string/join.hpp>
 #include <boost/format.hpp>
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 

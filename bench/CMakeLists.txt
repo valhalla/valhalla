@@ -1,5 +1,5 @@
 set(BENCHMARK_ENABLE_TESTING OFF)
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/benchmark
+add_subdirectory(${VALHALLA_SOURCE_DIR}/valhalla/third_party/benchmark
   ${CMAKE_BINARY_DIR}/benchmark)
 set_target_properties(benchmark PROPERTIES FOLDER "Dependencies")
 set_target_properties(benchmark_main PROPERTIES FOLDER "Dependencies")

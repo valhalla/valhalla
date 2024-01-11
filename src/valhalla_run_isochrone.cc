@@ -1,9 +1,9 @@
 #include <cmath>
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>

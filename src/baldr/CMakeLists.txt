@@ -3,21 +3,21 @@ set(tz_db_files africa antarctica asia australasia backward etcetera europe
   northamerica southamerica leapseconds)
 
 # Process the leap seconds file (it's in .gitignore of the tz repo)
-add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds
+add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz/leapseconds
 COMMAND make leapseconds
-WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/tz
-COMMENT "Compiling third_party/tz/leapseconds with awk"
-DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
+WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz
+COMMENT "Compiling valhalla/third_party/tz/leapseconds with awk"
+DEPENDS ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz/leapseconds.awk)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
     COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-        ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file}
+        ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz/${tz_db_file}
         ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
         --variable-name date_time_${tz_db_file} --skip 1 --raw
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-    COMMENT "Compiling third_party/tz/${tz_db_file} to date_time_${tz_db_file}.h"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds)
+    COMMENT "Compiling valhalla/third_party/tz/${tz_db_file} to date_time_${tz_db_file}.h"
+    DEPENDS ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/valhalla/third_party/tz/leapseconds)
 endforeach()
 
 # Process the windowsZones.xml file
@@ -35,15 +35,15 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
-     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
+     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include)
 if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include/date)
 endif()
 
 set(sources
@@ -106,7 +106,7 @@ list(APPEND sources_with_warnings
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
+  list(APPEND sources ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/src/ios.mm)
 endif()
 
 valhalla_module(NAME baldr
@@ -114,7 +114,10 @@ valhalla_module(NAME baldr
     ${sources}
   SOURCES_WITH_WARNINGS
     ${sources_with_warnings}
-
+  HEADERS_VENDORED
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date
   HEADERS
     ${headers}
   INCLUDE_DIRECTORIES
@@ -122,6 +125,7 @@ valhalla_module(NAME baldr
       ${includes}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}

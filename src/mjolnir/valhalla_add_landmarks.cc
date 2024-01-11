@@ -3,7 +3,7 @@
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "mjolnir/landmarks.h"
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "thor/bidirectional_astar.h"
+#include <valhalla/thor/bidirectional_astar.h>
 
 namespace valhalla {
 namespace thor {

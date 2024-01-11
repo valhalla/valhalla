@@ -31,13 +31,13 @@
 #include "midgard/tiles.h"
 
 #include "filesystem.h"
-#include "just_gtfs/just_gtfs.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/ingest_transit.h"
 #include "mjolnir/servicedays.h"
 #include "mjolnir/util.h"
 #include "proto/transit.pb.h"
+#include <valhalla/third_party/just_gtfs/include/just_gtfs/just_gtfs.h>
 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>

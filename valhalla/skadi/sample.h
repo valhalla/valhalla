@@ -9,7 +9,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#include "valhalla/baldr/tilegetter.h"
+#include <valhalla/baldr/tilegetter.h>
 
 namespace valhalla {
 namespace skadi {

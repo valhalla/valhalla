@@ -1,4 +1,4 @@
-#include <pybind11/pybind11.h>
+#include <valhalla/third_party/pybind11/include/pybind11/pybind11.h>
 
 #include "baldr/rapidjson_utils.h"
 #include <boost/make_shared.hpp>

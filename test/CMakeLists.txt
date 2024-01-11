@@ -1,4 +1,4 @@
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+add_subdirectory(${VALHALLA_SOURCE_DIR}/valhalla/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
@@ -11,21 +11,20 @@ if(ENABLE_DATA_TOOLS)
 endif()
 add_library(valhalla_test
   ${TEST_SRCS}
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/microtar/src/microtar.c
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4.c
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4hc.c
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4frame.c
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/xxhash.c
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
-  ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
-  ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-  ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/protozero/include
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/just_gtfs/include
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/valhalla/third_party/microtar/src)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)
@@ -36,7 +35,7 @@ endif()
 ## Lists tests
 set(tests aabb2 access_restriction actor admin attributes_controller configuration datetime directededge
   distanceapproximator double_bucket_queue edgecollapser edgestatus ellipse encode
-  enhancedtrippath factory graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
+  enhancedtrippath factory geometry graphid graphtile graphtileheader gridded_data grid_range_query grid_traversal instructions
   json laneconnectivity linesegment2 location logging maneuversbuilder map_matcher_factory mapmatch_config
   narrative_dictionary nodeinfo nodetransition obb2 openlr optimizer parse_request point2 pointll pointtileindex
   polyline2 predictedspeeds queue routing sample sequence sign signs statsd streetname streetnames streetnames_factory
@@ -107,21 +106,21 @@ set(tests_with_warnings
 ## Add executable targets
 foreach(test ${tests})
   add_executable(${test} EXCLUDE_FROM_ALL ${test}.cc )
-  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
-    if (${test} IN_LIST tests_with_warnings)
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall")
-    else()
-      set_source_files_properties(${test}.cc PROPERTIES COMPILE_FLAGS "-Wall -Werror")
-    endif()
-  endif()
-
-
   set_target_properties(${test} PROPERTIES FOLDER "Tests")
   target_compile_definitions(${test} PRIVATE
       VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
   create_source_groups("Source Files" ${test}.cc)
   target_link_libraries(${test} valhalla_test)
+
+  if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
+    if (${test} IN_LIST tests_with_warnings)
+      target_compile_options(${test} PRIVATE -Wall)
+    else()
+      target_compile_options(${test} PRIVATE -Wall -Werror)
+    endif()
+  endif()
+
   if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
     # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
     # Any tool that needs interact with Lua will need these flags on macOS

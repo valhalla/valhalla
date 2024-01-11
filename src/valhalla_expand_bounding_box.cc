@@ -1,7 +1,7 @@
 #include <string>
 
 #include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/rapidjson_utils.h"

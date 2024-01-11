@@ -70,7 +70,7 @@ endfunction()
 
 function(valhalla_module)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS HEADERS_VENDORED DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
@@ -133,6 +133,9 @@ function(valhalla_module)
   install(FILES ${MODULE_HEADERS}
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/${MODULE_NAME}"
     COMPONENT development)
+  
+  install(DIRECTORY ${MODULE_HEADERS_VENDORED}
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party/")
 
   if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -161,9 +164,9 @@ function(valhalla_module)
   endif()
 endfunction()
 
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
+add_subdirectory(${VALHALLA_SOURCE_DIR}/valhalla/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/valhalla/third_party/robin-hood-hashing EXCLUDE_FROM_ALL)
 SET(CPP_STATSD_STANDALONE OFF CACHE BOOL "ignore test targets" FORCE)
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/third_party/cpp-statsd-client)
+add_subdirectory(${VALHALLA_SOURCE_DIR}/valhalla/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/valhalla/third_party/cpp-statsd-client EXCLUDE_FROM_ALL)
 
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
@@ -233,10 +236,12 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include
-    ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+    #${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cpp-statsd-client/include
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
+  SYSTEM
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
   PRIVATE
     ${libvalhalla_include_directories})
 

@@ -8,7 +8,7 @@
 #include <cmath>
 #include <fstream>
 #include <list>
-#include <lz4frame.h>
+#include <valhalla/third_party/lz4/lib/lz4frame.h>
 
 #include "test.h"
 

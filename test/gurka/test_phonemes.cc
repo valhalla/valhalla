@@ -3,7 +3,7 @@
 #include "mjolnir/util.h"
 
 #include "gurka.h"
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
 #define VALHALLA_SOURCE_DIR

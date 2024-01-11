@@ -3,9 +3,9 @@
 #include <memory>
 #include <unordered_set>
 
-#include "midgard/linesegment2.h"
-#include "midgard/pointll.h"
-#include "midgard/tiles.h"
+#include <valhalla/midgard/linesegment2.h>
+#include <valhalla/midgard/pointll.h>
+#include <valhalla/midgard/tiles.h>
 
 namespace valhalla {
 

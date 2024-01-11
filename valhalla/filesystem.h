@@ -10,7 +10,13 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+
+#ifdef _WIN32
+#include <valhalla/third_party/dirent/include/dirent.h>
+#else
 #include <dirent.h>
+#endif
+
 #include <fstream>
 #include <iomanip>
 #include <memory>

@@ -5,9 +5,9 @@
 #include "loki/worker.h"
 #include "midgard/pointll.h"
 
-#include <gtest/gtest.h>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 using namespace valhalla::gurka;

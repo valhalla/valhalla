@@ -19,7 +19,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <cpp-statsd-client/StatsdClient.hpp>
+#include <valhalla/third_party/cpp-statsd-client/include/cpp-statsd-client/StatsdClient.hpp>
 
 using namespace valhalla;
 #ifdef HAVE_HTTP

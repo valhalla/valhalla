@@ -29,18 +29,18 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <osmium/builder/attr.hpp>
-#include <osmium/builder/osm_object_builder.hpp>
-#include <osmium/io/output_iterator.hpp>
-#include <osmium/io/pbf_output.hpp>
-#include <osmium/object_pointer_collection.hpp>
-#include <osmium/osm/object_comparisons.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/builder/attr.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/builder/osm_object_builder.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/io/output_iterator.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/io/pbf_output.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/object_pointer_collection.hpp>
+#include <valhalla/third_party/libosmium/include/osmium/osm/object_comparisons.hpp>
 
 #include <regex>
 #include <string>
 #include <tuple>
 
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 namespace valhalla {
 namespace gurka {

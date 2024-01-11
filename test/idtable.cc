@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <unordered_set>
 
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla::mjolnir;
 constexpr uint64_t kTableSize = 40000;

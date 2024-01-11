@@ -4,19 +4,21 @@ valhalla_module(NAME skadi
   SOURCES
     sample.cc
     util.cc
-    ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
-    ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
-    ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
-    ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4.c
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4hc.c
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/lz4frame.c
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib/xxhash.c
   HEADERS
     ${headers}
+  HEADERS_VENDORED
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/lz4/lib
   DEPENDS
     valhalla::baldr
     Boost::boost

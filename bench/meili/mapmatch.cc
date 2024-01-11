@@ -1,8 +1,8 @@
 #include <iostream>
 #include <sstream>
 
-#include <benchmark/benchmark.h>
 #include <boost/property_tree/ptree.hpp>
+#include <valhalla/third_party/benchmark/include/benchmark/benchmark.h>
 
 #include "baldr/rapidjson_utils.h"
 #include "meili/map_matcher_factory.h"

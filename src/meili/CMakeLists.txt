@@ -15,22 +15,24 @@ set(sources_with_warnings
   viterbi_search.cc)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include)
 if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include/date)
 endif()
 
 valhalla_module(NAME meili
   SOURCES ${sources}
   SOURCES_WITH_WARNINGS ${sources_with_warnings}
   HEADERS ${headers}
+  HEADERS_VENDORED
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC

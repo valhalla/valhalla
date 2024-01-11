@@ -17,7 +17,7 @@
 #include <boost/geometry/io/wkt/wkt.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 
 #include "baldr/admininfo.h"
 #include "baldr/graphconstants.h"

@@ -16,8 +16,8 @@ set(protobuf_descriptors
 if(ENABLE_DATA_TOOLS)
   # Only mjolnir needs the OSM PBF descriptors
   list(APPEND protobuf_descriptors
-    ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
-    ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/OSM-binary/src/fileformat.proto
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/OSM-binary/src/osmformat.proto)
 endif()
 
 # TODO: this seems to be deprecated, see https://github.com/valhalla/valhalla/pull/4207

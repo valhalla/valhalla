@@ -2,7 +2,7 @@
 #include "midgard/encoded.h"
 #include "midgard/util.h"
 #include "test.h"
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 

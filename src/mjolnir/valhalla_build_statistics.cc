@@ -5,7 +5,6 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <cxxopts.hpp>
 #include <future>
 #include <iostream>
 #include <list>
@@ -16,6 +15,7 @@
 #include <string>
 #include <thread>
 #include <utility>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include "baldr/graphconstants.h"

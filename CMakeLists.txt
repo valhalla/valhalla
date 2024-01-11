@@ -116,9 +116,9 @@ if(ENABLE_COVERAGE)
     message(FATAL_ERROR "no genhtml installed")
   endif()
 
-  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/third_party/fastcov/fastcov.py)
+  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/valhalla/third_party/fastcov/fastcov.py)
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
-    COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
+    COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ valhalla/third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS check)
 
@@ -293,7 +293,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cxxopts/include)
     if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
@@ -307,7 +307,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla)
     if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
@@ -334,7 +334,6 @@ if(ENABLE_SERVICES)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()

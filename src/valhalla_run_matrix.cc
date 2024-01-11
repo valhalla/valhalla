@@ -1,9 +1,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <string>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include "baldr/rapidjson_utils.h"

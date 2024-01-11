@@ -1,13 +1,13 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
-#include <cxxopts.hpp>
 #include <fstream>
 #include <iostream>
 #include <queue>
 #include <string>
 #include <tuple>
 #include <utility>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include <boost/format.hpp>

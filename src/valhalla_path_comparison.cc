@@ -1,9 +1,9 @@
 #include "baldr/rapidjson_utils.h"
 #include <boost/property_tree/ptree.hpp>
 #include <cstdint>
-#include <cxxopts.hpp>
 #include <iostream>
 #include <string>
+#include <valhalla/third_party/cxxopts/include/cxxopts.hpp>
 #include <vector>
 
 #include "worker.h"

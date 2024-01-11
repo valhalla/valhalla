@@ -2,8 +2,8 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/register/point.hpp>
 #include <boost/geometry/multi/geometries/register/multi_polygon.hpp>
-#include <gtest/gtest.h>
 #include <valhalla/proto/options.pb.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphreader.h"
@@ -137,7 +137,7 @@ TEST_F(AvoidTest, TestMaxPolygonPerimeter) {
   // make sure the right exception is thrown
   try {
     gurka::do_action(Options::route, avoid_map, req);
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167); } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 167UL); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -183,7 +183,7 @@ TEST_P(AvoidTest, TestAvoid2Polygons) {
   // make sure the right exception is thrown
   try {
     gurka::do_action(Options::route, avoid_map, req);
-  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442UL); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
 }
@@ -220,7 +220,7 @@ TEST_F(AvoidTest, TestInvalidAvoidPolygons) {
   auto res = gurka::do_action(Options::route, avoid_map, req_str);
   EXPECT_TRUE(request.options().exclude_polygons_size() == 0);
   EXPECT_EQ(res.info().warnings().size(), 1);
-  EXPECT_EQ(res.info().warnings().Get(0).code(), 204);
+  EXPECT_EQ(res.info().warnings().Get(0).code(), 204ULL);
 
   // array of empty array and empty object
   req_str = req_base + R"("avoid_polygons": [[]]})";
@@ -278,8 +278,8 @@ TEST_F(AvoidTest, TestAvoidShortcutsTruck) {
   }
 
   // 2 shortcuts + 2 edges
-  ASSERT_EQ(avoid_edges.size(), 4);
-  ASSERT_EQ(found_shortcuts, 2);
+  ASSERT_EQ(avoid_edges.size(), 4UL);
+  ASSERT_EQ(found_shortcuts, 2UL);
 }
 
 TEST_P(AvoidTest, TestAvoidLocation) {

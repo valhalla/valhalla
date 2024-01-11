@@ -8,8 +8,8 @@
 #include "sif/costfactory.h"
 #include "tyr/actor.h"
 
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include <valhalla/third_party/googletest/googlemock/include/gmock/gmock.h>
+#include <valhalla/third_party/googletest/googletest/include/gtest/gtest.h>
 
 using namespace valhalla;
 namespace dt = valhalla::baldr::DateTime;

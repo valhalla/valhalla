@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <unordered_map>
 
-#include <lz4frame.h>
 #include <sys/stat.h>
+#include <valhalla/third_party/lz4/lib/lz4frame.h>
 
 #include "baldr/compression_utils.h"
 #include "filesystem.h"

@@ -10,7 +10,7 @@
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 
-#include <robin_hood.h>
+#include <valhalla/third_party/robin-hood-hashing/src/include/robin_hood.h>
 
 namespace {
 

@@ -1,8 +1,8 @@
 #include <array>
-#include <benchmark/benchmark.h>
 #include <iostream>
 #include <random>
 #include <string>
+#include <valhalla/third_party/benchmark/include/benchmark/benchmark.h>
 
 #include "baldr/graphreader.h"
 #include "loki/reach.h"
