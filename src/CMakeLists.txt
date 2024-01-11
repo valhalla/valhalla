@@ -243,8 +243,8 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
-  PRIVATE
     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cpp-statsd-client/include
+  PRIVATE
     ${libvalhalla_include_directories})
 
 target_link_libraries(valhalla
