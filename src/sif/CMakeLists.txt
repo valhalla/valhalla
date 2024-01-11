@@ -24,7 +24,7 @@ valhalla_module(NAME sif
   HEADERS ${headers}
   HEADERS_VENDORED
     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
-    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}

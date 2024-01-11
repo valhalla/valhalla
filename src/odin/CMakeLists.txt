@@ -44,7 +44,7 @@ valhalla_module(NAME odin
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
       ${CMAKE_CURRENT_BINARY_DIR}

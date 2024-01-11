@@ -73,7 +73,7 @@ valhalla_module(NAME mjolnir
   HEADERS ${headers}
   HEADERS_VENDORED
     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent>
   INCLUDE_DIRECTORIES
     PUBLIC
       ${VALHALLA_SOURCE_DIR}

@@ -135,7 +135,11 @@ function(valhalla_module)
     COMPONENT development)
   
   install(DIRECTORY ${MODULE_HEADERS_VENDORED}
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party/")
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party/"
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "include")
 
   if(BUILD_SHARED_LIBS OR ENABLE_PYTHON_BINDINGS)
     set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -236,13 +240,11 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    #${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include
-    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cpp-statsd-client/include
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
-  SYSTEM
     ${VALHALLA_SOURCE_DIR}/valhalla/third_party/rapidjson/include
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/date/include
+    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/valhalla/third_party/dirent/include>
   PRIVATE
+    ${VALHALLA_SOURCE_DIR}/valhalla/third_party/cpp-statsd-client/include
     ${libvalhalla_include_directories})
 
 target_link_libraries(valhalla
