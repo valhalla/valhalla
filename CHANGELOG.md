@@ -71,6 +71,7 @@
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
    * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
+   * CHANGED: Change directory for vendored libraries and properly install public headers [#4504](https://github.com/valhalla/valhalla/pull/4504)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
