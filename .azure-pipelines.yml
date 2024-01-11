@@ -85,14 +85,14 @@ jobs:
         condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
-          move /Y valhalla/third_party\OSM-binary\src\fileformat.proto valhalla/third_party\OSM-binary\src\fileformat.proto.orig
-          move /Y valhalla/third_party\OSM-binary\src\osmformat.proto valhalla/third_party\OSM-binary\src\osmformat.proto.orig
-          echo syntax = "proto2"; > valhalla/third_party\OSM-binary\src\fileformat.proto
-          type valhalla/third_party\OSM-binary\src\fileformat.proto.orig >> valhalla/third_party\OSM-binary\src\fileformat.proto
-          echo syntax = "proto2"; > valhalla/third_party\OSM-binary\src\osmformat.proto
-          type valhalla/third_party\OSM-binary\src\osmformat.proto.orig >> valhalla/third_party\OSM-binary\src\osmformat.proto
-          del /Q valhalla/third_party\OSM-binary\src\fileformat.proto.orig
-          del /Q valhalla/third_party\OSM-binary\src\osmformat.proto.orig
+          move /Y valhalla\third_party\OSM-binary\src\fileformat.proto valhalla\third_party\OSM-binary\src\fileformat.proto.orig
+          move /Y valhalla\third_party\OSM-binary\src\osmformat.proto valhalla\third_party\OSM-binary\src\osmformat.proto.orig
+          echo syntax = "proto2"; > valhalla\third_party\OSM-binary\src\fileformat.proto
+          type valhalla\third_party\OSM-binary\src\fileformat.proto.orig >> valhalla\third_party\OSM-binary\src\fileformat.proto
+          echo syntax = "proto2"; > valhalla\third_party\OSM-binary\src\osmformat.proto
+          type valhalla\third_party\OSM-binary\src\osmformat.proto.orig >> valhalla\third_party\OSM-binary\src\osmformat.proto
+          del /Q valhalla\third_party\OSM-binary\src\fileformat.proto.orig
+          del /Q valhalla\third_party\OSM-binary\src\osmformat.proto.orig
         displayName: 'Patch .proto files of OSMPBF with syntax=proto2'
 
       - script: |
