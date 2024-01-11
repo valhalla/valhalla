@@ -1454,8 +1454,13 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
-// From the end of the maneuver going backwards
-// how many meters is the given number of seconds
+// The idea is that the instructions come a fixed amount of seconds before the maneuver takes place.
+// For whatever reasons, a distance in meters from the end of the maneuver needs to be provided though.
+// When different speeds are used on the road, they all need to be taken into account.
+// This function calculates the distance before the end of the maneuver by checking the
+// elapsed_cost seconds of each edges and accumulates their distances until the seconds
+// threshold is passed. The speed of this last edge is then used to subtract the distance
+// so that the the seconds until the end are exactly the provided amount of seconds.
 float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
                               valhalla::odin::EnhancedTripLeg* etp,
                               const double distance,
