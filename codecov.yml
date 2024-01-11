@@ -1,7 +1,7 @@
 coverage:
 
   ignore:
-    - third_party/.*
+    - valhalla/third_party/.*
     - bench/.*
 
 comment: off

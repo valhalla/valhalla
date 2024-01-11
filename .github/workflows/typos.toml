@@ -40,7 +40,7 @@ FOF_NO_UI = "FOF_NO_UI"
 extend-exclude = [
     "*.osm",
 
-    "third_party/",
+    "valhalla/third_party/",
     "date_time/",
     "locales/",
 
