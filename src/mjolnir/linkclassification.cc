@@ -747,6 +747,7 @@ bool IsTurnChannel(Data& data, const std::vector<uint32_t>& link_edges) {
 std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& link_graph,
                                                   uint32_t exit_classification,
                                                   Data& data,
+                                                  bool reclassify_links,
                                                   bool infer_turn_channels) {
   // number of reclassified edges
   uint32_t reclass_count = 0;
@@ -850,7 +851,8 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         sequence<Edge>::iterator element = data.edges[edge_idx];
         auto edge = *element;
 
-        if (rc > edge.attributes.importance) {
+        // Reclassify edge (if reclassify_links is true).
+        if (reclassify_links && rc > edge.attributes.importance) {
           if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
             edge.attributes.importance = rc;
           else
@@ -858,6 +860,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
           ++reclass_count;
         }
+
         if (turn_channel) {
           edge.attributes.turn_channel = true;
           ++tc_count;
@@ -886,6 +889,7 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& edges_file,
                      const std::string& way_nodes_file,
                      const OSMData& osmdata,
+                     bool reclassify_links,
                      bool infer_turn_channels) {
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
@@ -905,14 +909,15 @@ void ReclassifyLinks(const std::string& ways_file,
       // build link graph
       auto link_graph = build_graph(node, classification);
       // reclassify links and infer turn channels
-      auto counts = ReclassifyLinkGraph(link_graph, classification, data, infer_turn_channels);
+      auto counts = ReclassifyLinkGraph(link_graph, classification, data, reclassify_links,
+                                        infer_turn_channels);
       // update counters
       reclass_count += counts.first;
       tc_count += counts.second;
     }
   }
 
-  LOG_INFO("Finished with " + std::to_string(reclass_count) + " reclassified. " +
+  LOG_INFO("Finished with " + std::to_string(reclass_count) + " link edges reclassified. " +
            " Turn channel count = " + std::to_string(tc_count));
 }
 

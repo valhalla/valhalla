@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
 #include "worker.h"
 
 #include "baldr/graphid.h"
@@ -163,6 +162,8 @@ std::string shape = "";
 // Main method for testing a single path
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -176,18 +177,17 @@ int main(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("t,type", "Route Type: auto|bicycle|pedestrian|truck etc. Default auto.", cxxopts::value<std::string>()->default_value("auto"))
       ("s,shape", "", cxxopts::value<std::string>())
       ("j,json", R"(JSON Example: {"paths":"
         "[[{"lat":12.47,"lon":15.2},{"lat":12.46,"lon":15.21}],[{"lat":12.36,"lon":15.17},{"lat":12.37,"lon":15.18}]],"
-        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>())
-      ("config", "positional argument", cxxopts::value<std::string>());
+        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>());
     // clang-format on
 
-    options.parse_positional({"config"});
-    options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {
@@ -265,7 +265,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(config().get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   if (!map_match) {
     rapidjson::Document doc;
@@ -290,7 +290,7 @@ int main(int argc, char* argv[]) {
   }
 
   // If JSON is entered we do map matching
-  MapMatcherFactory map_matcher_factory(config());
+  MapMatcherFactory map_matcher_factory(config);
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(request.options()));
 
   uint32_t i = 0;

@@ -479,7 +479,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse() && !IsTurnChannelUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
@@ -1372,7 +1372,8 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(const TravelMode tr
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
+  return ((road_class() == RoadClass::kMotorway) &&
+          !(use() == TripLeg_Use_kRampUse || use() == TripLeg_Use_kTurnChannelUse));
 }
 
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {

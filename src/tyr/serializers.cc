@@ -439,7 +439,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "alertc_codes");
     writer.StartArray();
     for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer.Int(static_cast<uint64_t>(alertc_code));
+      writer.Uint64(static_cast<uint64_t>(alertc_code));
     }
     writer.EndArray();
   }
