@@ -266,11 +266,11 @@ public:
   // Hidden in source file so we don't need it to be protected
   // We expose it within the source file for testing purposes
 
-  std::vector<float> speedfactor_;
+  float speedfactor_[kMaxSpeedKph + 1];
 
   // Road speed penalty factor. Penalties apply above a threshold
   float speedpenalty_[kMaxSpeedKph + 1];
-  std::vector<float> trans_density_factor_; // Density factor used in edge transition costing
+  float trans_density_factor_[16]; // Density factor used in edge transition costing
   uint32_t max_allowed_speed_limit_;
 };
 
@@ -290,7 +290,6 @@ GolfCartCost::GolfCartCost(const Costing& costing)
   get_base_costs(costing);
 
   // Create speed cost table
-  speedfactor_.resize(kMaxSpeedKph + 1, 0);
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
     speedfactor_[s] = (kSecPerHour * 0.001f) / static_cast<float>(s);
@@ -363,7 +362,7 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
 
   uint32_t final_speed = std::min(top_speed_, speed);
 
-  assert(final_speed < speedfactor_.size());
+  assert(final_speed < kMaxSpeedKph);
   float sec = (edge->length() * speedfactor_[final_speed]);
 
   if (shortest_) {
