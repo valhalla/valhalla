@@ -257,7 +257,9 @@ public:
     bool allow_closures = (!filter_closures_ && !(disallow_mask & kDisallowClosure)) ||
                           !(flow_mask_ & kCurrentFlowMask);
     return DynamicCost::Allowed(edge, tile, disallow_mask) && !edge->bss_connection() &&
-           (edge->speed_type() == SpeedType::kClassified || tile->edgeinfo(edge).speed_limit() <= max_allowed_speed_limit_) &&
+           // NB: SpeedType is either classified (determined by characteristics) or tagged.
+           // Writing the logic this way is shorter and allows for easy short-circuiting.
+           (edge->speed_type() == SpeedType::kClassified || edge->speed() <= max_allowed_speed_limit_) &&
            (allow_closures || !tile->IsClosed(edge));
   }
 
@@ -317,7 +319,7 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
       // to ignore this (per the GIS department of Peachtree City, GA).
       (!allow_destination_only_ && !pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
-      (edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(edge).speed_limit() > max_allowed_speed_limit_)) {
+      (edge->speed_type() == SpeedType::kTagged && edge->speed() > max_allowed_speed_limit_)) {
     return false;
   }
 
@@ -342,7 +344,7 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly() && opp_edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (opp_edge->speed_type() == SpeedType::kTagged && tile->edgeinfo(opp_edge).speed_limit() > max_allowed_speed_limit_)) {
+      (opp_edge->speed_type() == SpeedType::kTagged || edge->speed() > max_allowed_speed_limit_)) {
     return false;
   }
 
