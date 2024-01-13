@@ -14,9 +14,15 @@ function(configure_proj_pc)
   set_variable_from_rel_or_absolute_path("includedir" "$\{prefix\}" "${CMAKE_INSTALL_INCLUDEDIR}")
   # Build strings of dependencies
   set(LIBS "")
-  set(REQUIRES "protobuf-lite zlib")
+  set(REQUIRES "zlib")
   set(LIBS_PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
   set(REQUIRES_PRIVATE "")
+
+  if(TARGET protobuf::libprotobuf-lite)
+    list(APPEND REQUIRES protobuf-lite)
+  else()
+    list(APPEND REQUIRES protobuf)
+  endif()
   
   if(ENABLE_DATA_TOOLS)
     list(APPEND REQUIRES spatialite sqlite3 luajit)
