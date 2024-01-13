@@ -252,6 +252,17 @@ set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
 
+# pkg-config installation
+if(PKG_CONFIG_FOUND)
+  include(PkgConfig)
+  
+  configure_proj_pc()
+
+  install(FILES
+    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
+
 
 install(TARGETS valhalla
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
