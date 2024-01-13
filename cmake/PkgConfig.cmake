@@ -9,6 +9,7 @@ endfunction()
 # configure a pkg-config file libvalhalla.pc
 function(configure_proj_pc)
   set(prefix ${CMAKE_INSTALL_PREFIX})
+  set(exec_prefix ${prefix})
   set_variable_from_rel_or_absolute_path("libdir" "$\{prefix\}" "${CMAKE_INSTALL_LIBDIR}")
   set_variable_from_rel_or_absolute_path("includedir" "$\{prefix\}" "${CMAKE_INSTALL_INCLUDEDIR}")
   # Build strings of dependencies
