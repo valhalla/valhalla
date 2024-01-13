@@ -287,6 +287,12 @@ if(PKG_CONFIG_FOUND)
   ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
   set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
 
+  set(ex4 " /usr/lib/libsqlite3.so")
+  set(example " /usr/lib/libabsl_flags.so.2308.0.0")
+#  string(REGEX REPLACE " [^ ]*lib([^.]+).so" " -l\\1" example2 "${example}")
+  string(REGEX REPLACE "[^ ]*lib([^\/]+).so(.+)" "-l\\1" example2 "${example}")
+  message(STATUS "Nils: ${example2}")
+
   add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
   target_link_libraries(libvalhalla.pc valhalla)
   set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
