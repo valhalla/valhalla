@@ -32,6 +32,7 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
+option(INSTALL_VENDORED_HEADERS "Install vendored public headers to <install_dir>/valhalla/third_party" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
@@ -293,7 +294,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     if(MSVC)
       target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
@@ -307,7 +308,7 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla)
     if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
@@ -334,7 +335,6 @@ if(ENABLE_SERVICES)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -359,6 +359,18 @@ endforeach()
 install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
+
+# install third_party
+if (INSTALL_VENDORED_LIBS)
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+  if (WIN32)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
+      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+  endif()
+endif()
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
