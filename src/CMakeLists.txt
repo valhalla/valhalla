@@ -39,7 +39,6 @@ set(LIBCXX_LIBRARIES "")
 
 # Include build macros for updating configuration variables
 include(HandleLibcxxFlags)
-include(PkgConfig)
 
 ## Define libvalhalla sub-modules as OBJECT libraries
 
@@ -283,11 +282,3 @@ install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
 install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
-
-if(PKG_CONFIG_FOUND)
-  configure_proj_pc()
-
-  install(FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/libvalhalla.pc
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
-endif()

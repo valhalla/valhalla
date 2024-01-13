@@ -360,6 +360,17 @@ install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
+# pkg-config installation
+if(PKG_CONFIG_FOUND)
+  include(PkgConfig)
+  
+  configure_proj_pc()
+
+  install(FILES
+    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
+
 if(ENABLE_TESTS)
   add_subdirectory(test)
 endif()
