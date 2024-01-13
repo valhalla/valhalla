@@ -1,3 +1,45 @@
-string(REGEX REPLACE " [^ ]*valhalla[^ ]+" "" deplibs "${deplibs}")
-string(REGEX REPLACE "[^ ]*lib([^\/]+).so(.+)" "-l\\1" deplibs "${deplibs}")
-configure_file(${INPUT} ${OUTPUT} @ONLY)
+function(set_variable_from_rel_or_absolute_path var root rel_or_abs_path)
+  if(IS_ABSOLUTE "${rel_or_abs_path}")
+    set(${var} "${rel_or_abs_path}" PARENT_SCOPE)
+  else()
+    set(${var} "${root}/${rel_or_abs_path}" PARENT_SCOPE)
+  endif()
+endfunction()
+
+# configure a pkg-config file libvalhalla.pc
+function(configure_proj_pc)
+  set(prefix ${CMAKE_INSTALL_PREFIX})
+  set_variable_from_rel_or_absolute_path("libdir" "$\{prefix\}" "${CMAKE_INSTALL_LIBDIR}")
+  set_variable_from_rel_or_absolute_path("includedir" "$\{prefix\}" "${CMAKE_INSTALL_INCLUDEDIR}")
+  # Build strings of dependencies
+  set(LIBS "")
+  set(REQUIRES "protobuf-lite zlib")
+  set(LIBS_PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
+  set(REQUIRES_PRIVATE "")
+  
+  if(ENABLE_DATA_TOOLS)
+    list(APPEND REQUIRES spatialite sqlite3 luajit)
+  endif()
+  if(ENABLE_HTTP OR ENABLE_PYTHON_BINDINGS)
+    list(APPEND REQUIRES_PRIVATE libcurl)
+  endif()
+  if(ENABLE_SERVICES)
+    list(APPEND REQUIRES libprime_server)
+  endif()
+  if(WIN32 AND NOT MINGW)
+    list(APPEND LIBS_PRIVATE -lole32 -lshell32)
+  else()
+    if(NOT "-lm" IN_LIST LIBS_PRIVATE)
+        list(APPEND LIBS_PRIVATE -lm)
+    endif()
+  endif()
+  list(JOIN LIBS " " LIBS)
+  list(JOIN REQUIRES " " REQUIRES)
+  list(JOIN LIBS_PRIVATE " " LIBS_PRIVATE)
+  list(JOIN REQUIRES_PRIVATE " " REQUIRES_PRIVATE)
+
+  configure_file(
+    ${CMAKE_SOURCE_DIR}/libvalhalla.pc.in
+    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    @ONLY)
+endfunction()
