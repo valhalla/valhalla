@@ -9,5 +9,4 @@ Version: @VERSION@
 Libs: -L${libdir} -lvalhalla
 Libs.private: @LIBS_PRIVATE@
 Requires: @REQUIRES@
-Requires.private: @REQUIRES_PRIVATE@
 Cflags: -I${includedir} @CFLAGS@

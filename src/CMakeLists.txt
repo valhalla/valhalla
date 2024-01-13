@@ -256,7 +256,7 @@ set_target_properties(valhalla PROPERTIES
 if(PKG_CONFIG_FOUND)
   include(PkgConfig)
   
-  configure_proj_pc()
+  configure_valhalla_pc()
 
   install(FILES
     ${CMAKE_BINARY_DIR}/libvalhalla.pc

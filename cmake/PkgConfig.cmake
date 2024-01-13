@@ -7,7 +7,7 @@ function(set_variable_from_rel_or_absolute_path var root rel_or_abs_path)
 endfunction()
 
 # configure a pkg-config file libvalhalla.pc
-function(configure_proj_pc)
+function(configure_valhalla_pc)
   set(prefix ${CMAKE_INSTALL_PREFIX})
   set(exec_prefix ${prefix})
   set_variable_from_rel_or_absolute_path("libdir" "$\{prefix\}" "${CMAKE_INSTALL_LIBDIR}")
@@ -16,7 +16,6 @@ function(configure_proj_pc)
   set(LIBS "")
   set(REQUIRES "zlib")
   set(LIBS_PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
-  set(REQUIRES_PRIVATE "")
   if (INSTALL_VENDORED_LIBS)
     set(CFLAGS "-I$\{includedir\}/valhalla/third_party")
   endif()
@@ -46,7 +45,6 @@ function(configure_proj_pc)
   list(JOIN LIBS " " LIBS)
   list(JOIN REQUIRES " " REQUIRES)
   list(JOIN LIBS_PRIVATE " " LIBS_PRIVATE)
-  list(JOIN REQUIRES_PRIVATE " " REQUIRES_PRIVATE)
 
   configure_file(
     ${CMAKE_SOURCE_DIR}/libvalhalla.pc.in
