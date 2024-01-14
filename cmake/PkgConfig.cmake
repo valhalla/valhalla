@@ -27,7 +27,7 @@ function(configure_valhalla_pc)
   endif()
   
   if(ENABLE_DATA_TOOLS)
-    list(APPEND REQUIRES spatialite sqlite3 luajit)
+    list(APPEND REQUIRES spatialite sqlite3 luajit geos)
   endif()
   if(ENABLE_HTTP OR ENABLE_PYTHON_BINDINGS)
     list(APPEND REQUIRES libcurl)
