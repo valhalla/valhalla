@@ -361,7 +361,7 @@ install(FILES COPYING CHANGELOG.md
   COMPONENT runtime)
 
 # install third_party
-if (INSTALL_VENDORED_LIBS)
+if (INSTALL_VENDORED_HEADERS)
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/

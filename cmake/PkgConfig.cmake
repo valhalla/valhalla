@@ -16,7 +16,7 @@ function(configure_valhalla_pc)
   set(LIBS "")
   set(REQUIRES "zlib")
   set(LIBS_PRIVATE "${CMAKE_THREAD_LIBS_INIT}")
-  if (INSTALL_VENDORED_LIBS)
+  if (INSTALL_VENDORED_HEADERS)
     set(CFLAGS "-I$\{includedir\}/valhalla/third_party")
   endif()
 
