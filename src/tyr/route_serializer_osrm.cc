@@ -1492,7 +1492,11 @@ float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_mane
   float speed = etp->GetCurrEdge(node_index)->speed(); // speed is in km/h
   float hours_to_be_removed = (accumulated_seconds - target_seconds) / 3600;
   accumulated_distance_km -= speed * hours_to_be_removed;
-  return accumulated_distance_km * 1000; // in meters
+  if (accumulated_distance_km * 1000 > distance) {
+    return distance;
+  } else {
+    return accumulated_distance_km * 1000; // in meters
+  }
 }
 
 // Populate the voiceInstructions within a step.
@@ -1506,7 +1510,10 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
   json::ArrayPtr voice_instructions_array = json::array({});
 
   // distanceAlongGeometry is the distance along the current step from where on this
-  // voice instruction should be heard.
+  // voice instruction should be played. It is measured from the end of the maneuver.
+  // Using the maneuver length (distance) as the distanceAlongGeometry plays
+  // right at the beginning of the maneuver. A distanceAlongGeometry of 10 is
+  // shortly (10 meters at the given speed) after the maneuver has started.
   // The voice_instruction_beginning starts shortly after the beginning of the step.
   // The voice_instruction_end starts shortly before the end of the step.
   float distance_before_maneuver_end = -1;
@@ -1514,8 +1521,12 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     distance_before_maneuver_end =
         distance_along_geometry(prev_maneuver, etp, distance,
                                 SECONDS_BEFORE_MANEUVER_END_FOR_VOICE_INSTRUCTIONS);
-    // This is the the case for the depart maneuver
     if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+      // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
+      // right at the beginning of the navigation. This is something like:
+      // Drive West on XYZ Street.
+      // This voice_instruction_start is only created once. It is always played, even when
+      // the maneuver would otherwise be too short.
       json::MapPtr voice_instruction_start = json::map({});
       voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
       voice_instruction_start->emplace("announcement",
@@ -1523,6 +1534,12 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instructions_array->emplace_back(std::move(voice_instruction_start));
     } else if (distance > distance_before_maneuver_end + 110 &&
                !prev_maneuver->verbal_post_transition_instruction().empty()) {
+      // In all other cases we want to play the verbal_post_transition_instruction shortly
+      // after the maneuver has started but only if there is sufficient time to play both
+      // the upcoming verbal_pre_transition_instruction and the verbal_post_transition_instruction
+      // itself. The approximation here is that the verbal_post_transition_instruction takes 100
+      // meters to play + the 10 meters after the maneuver start which is added so that the
+      // instruction is not played directly on the intersection where the maneuver starts.
       json::MapPtr voice_instruction_beginning = json::map({});
       voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 10, 1});
       voice_instruction_beginning->emplace("announcement",
@@ -1533,14 +1550,13 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
 
   if (!maneuver.verbal_pre_transition_instruction().empty()) {
     json::MapPtr voice_instruction_end = json::map({});
-    if (distance_before_maneuver_end != -1 && distance > distance_before_maneuver_end) {
-      voice_instruction_end->emplace("distanceAlongGeometry",
-                                     json::fixed_t{distance_before_maneuver_end, 1});
-    } else if (maneuver_index == 1) {
-      // For the departmaneuver
+    if (maneuver_index == 1 && distance_before_maneuver_end == distance) {
+      // For the depart maneuver we want to play both the verbal_post_transition_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
       voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 1});
     } else {
-      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
+      // In all other cases we use distance_before_maneuver_end value as it is capped to the maneuver length
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance_before_maneuver_end, 1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));

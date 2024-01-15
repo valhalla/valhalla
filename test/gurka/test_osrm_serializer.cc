@@ -528,22 +528,23 @@ protected:
     constexpr double gridsize_metres = 50;
 
     const std::string ascii_map = R"(
-                 X
-                 |           --M--N
-                 |  __ -- ¯¯
+             X   Y
+              \  |           --M--N
+               \ |  __ -- ¯¯
     A----------BCD<
                  |  ¯¯ -- __
                  |           --E--F
-                 Y
+                 Z
     )";
 
     const gurka::ways ways =
         {{"AB", {{"highway", "primary"}, {"maxspeed", "80"}, {"name", "10th Avenue SE"}}},
          {"BC", {{"highway", "primary"}, {"maxspeed", "50"}, {"name", "10th Avenue SE"}}},
          {"CD", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "10th Avenue SE"}}},
+         {"CX", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Sidestreet"}}},
          {"DMN", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Heinrich Street"}}},
          {"DEF", {{"highway", "primary"}, {"maxspeed", "30"}, {"name", "Alfred Street"}}},
-         {"XDY", {{"highway", "primary"}, {"name", "Market Street"}, {"oneway", "yes"}}}};
+         {"YDZ", {{"highway", "primary"}, {"name", "Market Street"}, {"oneway", "yes"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {0.0, 0.0});
 
@@ -612,6 +613,34 @@ TEST_F(VoiceInstructions, DistanceAlongGeometryVoiceInstructions) {
   EXPECT_STREQ(arrive_instruction["announcement"].GetString(),
                "You have arrived at your destination.");
   EXPECT_EQ(arrive_instruction["distanceAlongGeometry"].GetFloat(), 220.0);
+}
+
+TEST_F(VoiceInstructions, ShortDepartVoiceInstructions) {
+  auto json = json_request("C", "F");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+
+  EXPECT_EQ(steps[0]["voiceInstructions"].Size(), 2);
+
+  auto depart_instruction = steps[0]["voiceInstructions"][0].GetObject();
+  EXPECT_STREQ(depart_instruction["announcement"].GetString(),
+               "Drive east on 10th Avenue SE. Then Bear right onto Alfred Street.");
+  EXPECT_EQ(depart_instruction["distanceAlongGeometry"].GetFloat(), 50.0);
+  auto arrive_instruction = steps[0]["voiceInstructions"][1].GetObject();
+  EXPECT_STREQ(arrive_instruction["announcement"].GetString(),
+               "Bear right onto Alfred Street.");
+  EXPECT_EQ(arrive_instruction["distanceAlongGeometry"].GetFloat(), 25.0);
+}
+
+TEST_F(VoiceInstructions, ShortIntermediateStepVoiceInstructions) {
+  auto json = json_request("X", "Z");
+  auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
+
+  EXPECT_EQ(steps[1]["voiceInstructions"].Size(), 1); // No verbal_post_transition_instruction
+
+  auto instruction = steps[1]["voiceInstructions"][0].GetObject();
+  EXPECT_STREQ(instruction["announcement"].GetString(),
+               "Turn right onto Market Street. Then You will arrive at your destination.");
+  EXPECT_EQ(instruction["distanceAlongGeometry"].GetFloat(), 50.0);
 }
 
 TEST_F(VoiceInstructions, AllVoiceInstructions) {
