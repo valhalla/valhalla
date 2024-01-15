@@ -138,7 +138,7 @@ const std::unordered_map<std::string, float> kMaxDistances = {
 // a scale factor to apply to the score so that we bias towards closer results more
 constexpr float kDistanceScale = 10.f;
 
-const auto cfg = test::make_config("test/data", {{"mjolnir.tile_dir", "test/data/utrecht_tiles"}});
+const auto cfg = test::make_config("test/data/utrecht_tiles");
 
 const auto test_request = R"({
     "sources":[

@@ -442,7 +442,10 @@ map buildtiles(const nodelayout& layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options) {
+               std::unordered_map<std::string, std::string> config_options) {
+  // patch the tile_dir & concurrency bcs of the singleton, just to be safe
+  config_options.insert({"mjolnir.tile_dir", workdir});
+  config_options.insert({"mjolnir.concurrency", "1"});
   auto config = test::make_config(workdir, config_options);
   return buildtiles(layout, ways, nodes, relations, config);
 }

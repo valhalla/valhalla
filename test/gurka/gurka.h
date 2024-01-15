@@ -120,8 +120,7 @@ map buildtiles(const nodelayout& layout,
                const nodes& nodes,
                const relations& relations,
                const std::string& workdir,
-               const std::unordered_map<std::string, std::string>& config_options = {
-                   {"mjolnir.concurrency", "1"}});
+               std::unordered_map<std::string, std::string> config_options = {});
 
 /**
  * Given a node layout, set of ways, node properties and relations, generates an OSM PBF file,

@@ -151,7 +151,7 @@ const gurka::ways ways = {{"AB", {{"highway", "primary"}}}, {"BC", {{"highway", 
 
 boost::property_tree::ptree get_config() {
 
-  return test::make_config(VALHALLA_BUILD_DIR "test/data/transit_tests",
+  return test::make_config(VALHALLA_BUILD_DIR "test/data/transit_tests/tiles",
                            {{"mjolnir.transit_feeds_dir",
                              VALHALLA_BUILD_DIR "test/data/transit_tests/gtfs_feeds"},
                             {"mjolnir.transit_dir",
@@ -160,7 +160,6 @@ boost::property_tree::ptree get_config() {
                              "1"}, // so we create more than one file per tile
                             {"mjolnir.hierarchy", "1"},
                             {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"},
-                            {"mjolnir.tile_dir", VALHALLA_BUILD_DIR "test/data/transit_tests/tiles"},
                             {"service_limits.pedestrian.max_transit_walking_distance", "100000"}});
 }
 

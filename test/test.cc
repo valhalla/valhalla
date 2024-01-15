@@ -117,7 +117,7 @@ boost::property_tree::ptree json_to_pt(const std::string& json) {
   return pt;
 }
 
-boost::property_tree::ptree make_config(const std::string& path_prefix,
+boost::property_tree::ptree make_config(const std::string& tile_dir,
                                         const std::unordered_map<std::string, std::string>& overrides,
                                         const std::unordered_set<std::string>& removes) {
 
@@ -387,7 +387,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
   )";
 
   // force the paths to be different
-  boost::replace_all(defaults, "%%", path_prefix);
+  boost::replace_all(defaults, "%%", tile_dir);
 
   auto config = valhalla::config(defaults);
 

@@ -17,7 +17,7 @@ using namespace valhalla::midgard;
 
 namespace {
 
-const auto config = test::make_config("test/data", {{"mjolnir.tile_dir", "test/data/utrecht_tiles"}});
+const auto config = test::make_config(VALHALLA_BUILD_DIR "test/data/utrecht_tiles");
 
 } // namespace
 

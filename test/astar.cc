@@ -132,6 +132,7 @@ const auto fake_conf =
     test::make_config(test_dir,
                       {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},
                        {"mjolnir.timezone", VALHALLA_SOURCE_DIR "test/data/not_needed.sqlite"},
+                       {"mjolnir.tile_dir", test_dir},
                        {"mjolnir.hierarchy", "false"},
                        {"mjolnir.shortcuts", "false"}});
 
@@ -422,7 +423,8 @@ TEST(Astar, TestPartialDurationReverse) {
 }
 
 TEST(Astar, TestTrivialPathNoUturns) {
-  boost::property_tree::ptree conf = test::make_config("test/data/utrecht_tiles");
+  boost::property_tree::ptree conf =
+      test::make_config("test/data/utrecht_tiles", {{"mjolnir.tile_dir", "test/data/utrecht_tiles"}});
   vr::actor_t actor(conf);
   valhalla::Api api;
   actor.route(
@@ -456,7 +458,8 @@ struct route_tester {
 };
 
 TEST(Astar, test_oneway) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles"}});
   route_tester tester(conf);
   // Test onewayness with this route - oneway works, South-West to North-East
   std::string request =
@@ -491,7 +494,8 @@ TEST(Astar, test_oneway) {
 }
 
 TEST(Astar, test_oneway_wrong_way) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles"}});
   route_tester tester(conf);
   // Test onewayness with this route - oneway wrong way, North-east to South-West
   // Should produce no-route
@@ -507,7 +511,8 @@ TEST(Astar, test_oneway_wrong_way) {
 }
 
 TEST(Astar, test_deadend) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles"}});
   route_tester tester(conf);
   std::string request =
       R"({
@@ -558,7 +563,8 @@ TEST(Astar, test_deadend) {
 TEST(Astar, test_time_dep_forward_with_current_time) {
   // Test a request with date_time as "current" (type: 0)
   //
-  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles_reverse"}});
   route_tester tester(conf);
   std::string request =
       R"({
@@ -604,7 +610,8 @@ TEST(Astar, test_time_dep_forward_with_current_time) {
 }
 
 TEST(Astar, test_deadend_timedep_forward) {
-  auto conf = test::make_config("test/data/whitelion_tiles_reverse");
+  auto conf = test::make_config("test/data/whitelion_tiles_reverse",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles_reverse"}});
   route_tester tester(conf);
   std::string request =
       R"({
@@ -657,7 +664,8 @@ TEST(Astar, test_deadend_timedep_forward) {
   EXPECT_EQ(uturn_street, "Quay Street") << "We did not find the expected u-turn";
 }
 TEST(Astar, test_deadend_timedep_reverse) {
-  auto conf = test::make_config("test/data/whitelion_tiles");
+  auto conf = test::make_config("test/data/whitelion_tiles",
+                                {{"mjolnir.tile_dir", "test/data/whitelion_tiles"}});
   route_tester tester(conf);
   std::string request =
       R"({
@@ -714,7 +722,8 @@ TEST(Astar, test_time_restricted_road_bidirectional) {
   // Try routing over "Via Montebello" in Rome which is a time restricted road
   // We should receive a route for a time-independent query but have the response
   // note that it is time restricted
-  auto conf = test::make_config("test/data/roma_tiles");
+  auto conf =
+      test::make_config("test/data/roma_tiles", {{"mjolnir.tile_dir", "test/data/roma_tiles"}});
   route_tester tester(conf);
   std::string request =
       R"({"locations":[{"lat":41.90550,"lon":12.50090},{"lat":41.90477,"lon":12.49914}],"costing":"auto"})";
@@ -793,7 +802,8 @@ Api route_on_timerestricted(const std::string& costing_str, int16_t hour) {
   // so lets use a timedependent a-star and verify that
 
   LOG_INFO("Testing " + costing_str + " route at hour " + std::to_string(hour));
-  auto conf = test::make_config("test/data/roma_tiles");
+  auto conf =
+      test::make_config("test/data/roma_tiles", {{"mjolnir.tile_dir", "test/data/roma_tiles"}});
   route_tester tester(conf);
   // The following request results in timedep astar during the restricted hours
   // and should be denied
@@ -867,7 +877,8 @@ void test_backtrack_complex_restriction(int date_time_type) {
   //
   // Test-case documented in https://github.com/valhalla/valhalla/issues/2103
   //
-  auto conf = test::make_config("test/data/bayfront_singapore_tiles");
+  auto conf = test::make_config("test/data/bayfront_singapore_tiles",
+                                {{"mjolnir.tile_dir", "test/data/bayfront_singapore_tiles"}});
   route_tester tester(conf);
   std::string request;
   switch (date_time_type) {
@@ -1080,7 +1091,8 @@ TEST(Astar, TestBacktrackComplexRestrictionForwardDetourAfterRestriction) {
 Api timed_access_restriction_ny(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="bicycle:conditional" v="no @ (Su 08:00-18:00)"/>
   // and <tag k="motor_vehicle:conditional" v="no @ (Su 08:00-18:00)"/>
-  auto conf = test::make_config("test/data/ny_ar_tiles");
+  auto conf =
+      test::make_config("test/data/ny_ar_tiles", {{"mjolnir.tile_dir", "test/data/ny_ar_tiles"}});
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1151,7 +1163,8 @@ TEST(Astar, test_timed_access_restriction_2) {
 
 Api timed_conditional_restriction_pa(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="restriction:conditional" v="no_right_turn @ (Mo-Fr 07:00-09:00)"/>
-  auto conf = test::make_config("test/data/pa_ar_tiles");
+  auto conf =
+      test::make_config("test/data/pa_ar_tiles", {{"mjolnir.tile_dir", "test/data/pa_ar_tiles"}});
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1171,7 +1184,8 @@ Api timed_conditional_restriction_pa(const std::string& mode, const std::string&
 
 Api timed_conditional_restriction_nh(const std::string& mode, const std::string& datetime) {
   // The restriction is <tag k="hgv:conditional" v="no @ (19:00-06:00)"/>
-  auto conf = test::make_config("test/data/nh_ar_tiles");
+  auto conf =
+      test::make_config("test/data/nh_ar_tiles", {{"mjolnir.tile_dir", "test/data/nh_ar_tiles"}});
   route_tester tester(conf);
   LOG_INFO("Testing " + mode + " route at " + datetime);
 
@@ -1339,7 +1353,8 @@ TEST(Astar, test_complex_restriction_short_path_fake) {
 
 TEST(Astar, test_complex_restriction_short_path_melborne) {
   // Tests a real live scenario of a short Bidirectional query against "Melborne"
-  auto conf = test::make_config("test/data/melborne_tiles");
+  auto conf = test::make_config("test/data/melborne_tiles",
+                                {{"mjolnir.tile_dir", "test/data/melborne_tiles"}});
   route_tester tester(conf);
   {
     // Tests "Route around the block" due to complex restriction,

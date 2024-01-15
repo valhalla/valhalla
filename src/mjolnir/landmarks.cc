@@ -478,7 +478,7 @@ bool AddLandmarks(const boost::property_tree::ptree& pt) {
 
   const size_t num_threads =
       pt.get<size_t>("mjolnir.concurrency", std::thread::hardware_concurrency());
-  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks_db", "");
+  const std::string db_name = pt.get_child("mjolnir").get<std::string>("landmarks", "");
 
   // get tile access
   baldr::GraphReader reader(pt.get_child("mjolnir"));

@@ -305,7 +305,7 @@ TEST(LandmarkTest, TestParseLandmarks) {
 TEST(LandmarkTest, TestTileStoreLandmarks) {
   BuildPBF();
   landmark_map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.tile_dir", workdir}, {"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -401,7 +401,9 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles,
+                        {{"mjolnir.tile_dir", workdir_tiles},
+                         {"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -437,7 +439,9 @@ TEST(LandmarkTest, DISABLED_ErrorTest) {
   BuildPBFAddLandmarksToTiles();
 
   landmark_map_tile_test.config =
-      test::make_config(workdir_tiles, {{"mjolnir.landmarks_db", db_path_tile_test}},
+      test::make_config(workdir_tiles,
+                        {{"mjolnir.tile_dir", workdir_tiles},
+                         {"mjolnir.landmarks", db_path_tile_test}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf that we have already made, there wont be landmarks in them
@@ -518,7 +522,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
   detail::build_pbf(map.nodes, ways, nodes, {}, pbf, 0, false);
 
   map.config =
-      test::make_config(workdir, {{"mjolnir.landmarks_db", db_path}},
+      test::make_config(workdir, {{"mjolnir.tile_dir", workdir}, {"mjolnir.landmarks", db_path}},
                         {{"additional_data", "mjolnir.traffic_extract", "mjolnir.tile_extract"}});
 
   // build regular graph tiles from the pbf, and add landmarks to it
