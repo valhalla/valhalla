@@ -72,6 +72,7 @@
    * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
+   * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
