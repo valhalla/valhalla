@@ -991,6 +991,7 @@ protected:
   bool exclude_highways_{false};
   bool exclude_tunnels_{false};
   bool exclude_tolls_{false};
+  bool exclude_ferries_{false};
 
   bool exclude_cash_only_tolls_{false};
 
@@ -1094,6 +1095,7 @@ protected:
     exclude_highways_ = costing_options.exclude_highways();
     exclude_tunnels_ = costing_options.exclude_tunnels();
     exclude_tolls_ = costing_options.exclude_tolls();
+    exclude_ferries_ = costing_options.exclude_ferries();
     exclude_cash_only_tolls_ = costing_options.exclude_cash_only_tolls();
   }
 
@@ -1204,6 +1206,7 @@ struct BaseCostingOptionsConfig {
   bool exclude_highways_;
   bool exclude_tunnels_;
   bool exclude_tolls_;
+  bool exclude_ferries_;
 
   bool exclude_cash_only_tolls_ = false;
 

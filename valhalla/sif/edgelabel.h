@@ -489,7 +489,7 @@ protected:
   uint32_t unpaved_ : 1;
   // Flag indicating edge is a tunnel.
   uint32_t tunnel_ : 1;
-  uint32_t spare : 13;
+  uint32_t spare : 12;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.

@@ -320,6 +320,9 @@ message Costing {
     oneof has_exclude_highways {
       bool exclude_highways = 86;
     }
+    oneof has_exclude_ferries {
+      bool exclude_ferries = 87;
+    }
   }
 
   oneof has_options {
