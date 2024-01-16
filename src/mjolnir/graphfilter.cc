@@ -1,5 +1,6 @@
 #include "mjolnir/graphfilter.h"
 #include "mjolnir/graphtilebuilder.h"
+#include "mjolnir/util.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
@@ -18,6 +19,7 @@
 #include "midgard/sequence.h"
 
 using namespace valhalla::baldr;
+using namespace valhalla::midgard;
 using namespace valhalla::mjolnir;
 
 namespace {
@@ -27,9 +29,145 @@ uint32_t n_original_nodes = 0;
 uint32_t n_filtered_edges = 0;
 uint32_t n_filtered_nodes = 0;
 uint32_t can_aggregate = 0;
+uint32_t aggregated = 0;
 
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
+
+struct EdgeId {
+  uint64_t way_id;
+  GraphId graph_id;
+};
+
+bool ExpandFromNode(GraphReader& reader,
+                    std::list<PointLL>& shape,
+                    GraphId& en,
+                    const GraphId& from_node,
+                    std::unordered_set<std::string>& isos,
+                    bool forward,
+                    GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    const uint64_t way_id,
+                    size_t way_id_index,
+                    const graph_tile_ptr& prev_tile,
+                    GraphId prev_node,
+                    GraphId current_node);
+
+bool ExpandFromNodeInner(GraphReader& reader,
+                         std::list<PointLL>& shape,
+                         GraphId& en,
+                         const GraphId& from_node,
+                         std::unordered_set<std::string>& isos,
+                         bool forward,
+                         GraphId& last_node,
+                         std::unordered_set<GraphId>& visited_nodes,
+                         const uint64_t way_id,
+                         size_t way_id_index,
+                         const graph_tile_ptr& prev_tile,
+                         GraphId prev_node,
+                         GraphId current_node,
+                         const NodeInfo* node_info) {
+
+  for (size_t j = 0; j < node_info->edge_count(); ++j) {
+    GraphId edge_id(prev_tile->id().tileid(), prev_tile->id().level(), node_info->edge_index() + j);
+    const DirectedEdge* de = prev_tile->directededge(edge_id);
+    auto edge_info = prev_tile->edgeinfo(de);
+
+    auto tile = prev_tile;
+    if (tile->id() != de->endnode().Tile_Base()) {
+      tile = reader.GetGraphTile(de->endnode());
+    }
+
+    const NodeInfo* en_info = tile->node(de->endnode().id());
+
+    // check the direction, if we looped back, or are we done
+    if ((de->endnode() != prev_node) && (de->forward() == forward) &&
+        (de->endnode() != from_node || (de->endnode() == from_node && visited_nodes.size() > 1))) {
+      if (edge_info.wayid() == way_id &&
+          (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
+
+        if (isos.size() >= 1) {
+          isos.insert(tile->admin(en_info->admin_index())->country_iso());
+        } else {
+          std::list<PointLL> edgeshape =
+              valhalla::midgard::decode7<std::list<PointLL>>(edge_info.encoded_shape());
+          if (!de->forward()) {
+            std::reverse(edgeshape.begin(), edgeshape.end());
+          }
+
+          // Append shape. Skip first point since it
+          // should equal the last of the prior edge.
+          edgeshape.pop_front();
+          shape.splice(shape.end(), edgeshape);
+        }
+
+        // found a node that does not have aggregation marked (using mode_change flag)
+        // we are done.
+        if (node_info->mode_change() && !en_info->mode_change()) {
+          en = de->endnode();
+          aggregated++;
+          return true;
+        }
+        aggregated++;
+
+        bool found;
+        if (visited_nodes.find(de->endnode()) == visited_nodes.end()) {
+          visited_nodes.insert(de->endnode());
+
+          // expand with the same way_id
+          found =
+              ExpandFromNode(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
+                             way_id, way_id_index, tile, current_node, de->endnode());
+          if (found)
+            return true;
+
+          visited_nodes.erase(de->endnode());
+        }
+      }
+    }
+  }
+  return false;
+}
+
+bool ExpandFromNode(GraphReader& reader,
+                    std::list<PointLL>& shape,
+                    GraphId& en,
+                    const GraphId& from_node,
+                    std::unordered_set<std::string>& isos,
+                    bool forward,
+                    GraphId& last_node,
+                    std::unordered_set<GraphId>& visited_nodes,
+                    const uint64_t way_id,
+                    size_t way_id_index,
+                    const graph_tile_ptr& prev_tile,
+                    GraphId prev_node,
+                    GraphId current_node) {
+
+  auto tile = prev_tile;
+  if (tile->id() != current_node.Tile_Base()) {
+    tile = reader.GetGraphTile(current_node);
+  }
+
+  auto node_info = tile->node(current_node);
+  // expand from the current node
+  return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
+                             way_id, way_id_index, tile, prev_node, current_node, node_info);
+}
+
+bool Aggregate(GraphId& start_node,
+               GraphReader& reader,
+               std::list<PointLL>& shape,
+               GraphId& en,
+               const GraphId& from_node,
+               const uint64_t way_id,
+               std::unordered_set<std::string>& isos,
+               bool forward) {
+
+  graph_tile_ptr tile = reader.GetGraphTile(start_node);
+  std::unordered_set<GraphId> visited_nodes{start_node};
+  return ExpandFromNode(reader, shape, en, from_node, isos, forward, start_node, visited_nodes,
+                        way_id, 0, tile, GraphId(), start_node);
+}
 
 /**
  * Filter edges to optionally remove edges by access.
@@ -51,8 +189,18 @@ void FilterTiles(GraphReader& reader,
     // Edge filtering
     bool bicycle_access =
         (edge->forwardaccess() & kBicycleAccess) || (edge->reverseaccess() & kBicycleAccess);
-    bool pedestrian_access = (edge->forwardaccess() & kAllPedestrianAccess) ||
-                             (edge->reverseaccess() & kAllPedestrianAccess);
+    bool pedestrian_access = false;
+
+    // Toss sidewalk, footway, pedestrian,
+    // pedestrian crossing, path, and bridleway edges
+    if (!include_pedestrian) {
+      const auto& use = edge->use();
+      if (use == Use::kSidewalk || use == Use::kFootway || use == Use::kPath ||
+          use == Use::kPedestrian || use == Use::kBridleway || use == Use::kPedestrianCrossing) {
+        pedestrian_access = (edge->forwardaccess() & kAllPedestrianAccess) ||
+                            (edge->reverseaccess() & kAllPedestrianAccess);
+      }
+    }
     bool driving_access =
         (edge->forwardaccess() & kVehicularAccess) || (edge->reverseaccess() & kVehicularAccess);
     return (driving_access && include_driving) || (bicycle_access && include_bicycle) ||
@@ -75,7 +223,8 @@ void FilterTiles(GraphReader& reader,
     GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       bool diff_names = false;
-
+      bool diff_tile = false;
+      bool edge_filtered = false;
       // Count of edges added for this node
       uint32_t edge_count = 0;
 
@@ -86,12 +235,15 @@ void FilterTiles(GraphReader& reader,
       std::vector<uint64_t> wayid;
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
+      std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
+
       GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
       for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
         // Check if the directed edge should be included
         const DirectedEdge* directededge = tile->directededge(edgeid);
         if (!include_edge(directededge)) {
           ++n_filtered_edges;
+          edge_filtered = true;
           continue;
         }
 
@@ -160,6 +312,10 @@ void FilterTiles(GraphReader& reader,
         wayid.push_back(edgeinfo.wayid());
         endnode.push_back(directededge->endnode());
 
+        if (directededge->endnode().tile_value() != tile->header()->graphid().tile_value()) {
+          diff_tile = true;
+        }
+
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
         ++edge_count;
@@ -191,8 +347,12 @@ void FilterTiles(GraphReader& reader,
         old_to_new[nodeid] = new_node;
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
-        // edge attributes should match), don't end at same node (no loops).
-        if (edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] && !diff_names) {
+        // edge attributes should match), don't end at same node (no loops), does not have different
+        // names, and end node of edges are not in a different tile.
+        if (edge_filtered && edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] &&
+            !diff_names && !diff_tile) {
+          // temporarily used to check aggregating edges from this node
+          node.set_mode_change(true);
           ++can_aggregate;
         }
       } else {
@@ -219,7 +379,326 @@ void FilterTiles(GraphReader& reader,
            std::to_string(n_original_nodes));
   LOG_INFO("Filtered " + std::to_string(n_filtered_edges) + " directededges out of " +
            std::to_string(n_original_edges));
-  LOG_INFO("Can aggregate: " + std::to_string(can_aggregate));
+  LOG_INFO("Nodes to aggregate: " + std::to_string(can_aggregate));
+}
+
+void GetAggregatedData(GraphReader& reader,
+                       std::list<PointLL>& shape,
+                       GraphId& en,
+                       const GraphId& from_node,
+                       const graph_tile_ptr& tile,
+                       const DirectedEdge* directededge) {
+
+  // Get the tile at the end node.  Skip if node is in another tile.
+  // mode_change is not set for end nodes that are in diff tiles
+  if (directededge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
+
+    // original edge data.
+    auto edgeinfo = tile->edgeinfo(directededge);
+    const NodeInfo* en_info = tile->node(directededge->endnode().id());
+
+    // do we need to aggregate?
+    if (en_info->mode_change()) {
+      std::unordered_set<std::string> isos;
+      bool isForward = directededge->forward();
+      auto id = directededge->endnode();
+      if (!isForward) {
+        std::reverse(shape.begin(), shape.end());
+      }
+      // walk in the correct direction.
+      if (Aggregate(id, reader, shape, en, from_node, edgeinfo.wayid(), isos, isForward)) {
+        aggregated++; // count the current edge
+        // flip the shape back for storing in edgeinfo
+        if (!isForward) {
+          std::reverse(shape.begin(), shape.end());
+        }
+      }
+    }
+  }
+}
+
+// If we cross into another country we can't aggregate the edges
+// as the access can be different in each country.  Also, bollards
+// and or gates could exist at the node blocking access.
+//
+// Also, we need to handle islands that we created by tossing the
+// pedestrian edges.  For example://
+// https://www.openstreetmap.org/way/993706522
+// https://www.openstreetmap.org/way/975845893
+// As of 01/15/2024 there are only ~180 of these.
+
+void ValidateData(GraphReader& reader,
+                  std::list<PointLL>& shape,
+                  GraphId& en,
+                  std::unordered_set<GraphId>& processed_nodes,
+                  const GraphId& from_node,
+                  const graph_tile_ptr& tile,
+                  const DirectedEdge* directededge) {
+
+  // Get the tile at the end node.  Skip if node is in another tile.
+  // mode_change is not set for end nodes that are in diff tiles
+  if (directededge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
+
+    // original edge data.
+    auto edgeinfo = tile->edgeinfo(directededge);
+    const NodeInfo* en_info = tile->node(directededge->endnode().id());
+    const NodeInfo* sn_info = tile->node(from_node);
+
+    if (en_info->mode_change()) {
+      std::unordered_set<std::string> isos;
+      bool isForward = directededge->forward();
+      auto id = directededge->endnode();
+
+      isos.insert(tile->admin(sn_info->admin_index())->country_iso()); // start node
+      isos.insert(tile->admin(en_info->admin_index())->country_iso()); // end node
+
+      if (isos.size() > 1) { // already in diff country
+        processed_nodes.insert(directededge->endnode());
+        return;
+      }
+
+      // walk in the correct direction.
+      if (!Aggregate(id, reader, shape, en, from_node, edgeinfo.wayid(), isos, isForward)) {
+        LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
+        std::cout << "End node: " << directededge->endnode() << " WayId: " << edgeinfo.wayid()
+                  << std::endl;
+        processed_nodes.insert(directededge->endnode()); // turn off so that we don't fail
+      } else if (isos.size() > 1) {                      // in diff country
+        processed_nodes.insert(directededge->endnode());
+      }
+    }
+  }
+}
+
+void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
+
+  LOG_INFO("Validating data");
+  // Iterate through all tiles in the local level
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
+  for (const auto& tile_id : local_tiles) {
+    // Get the graph tile. Read from this tile to create the new tile.
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    assert(tile);
+
+    std::unordered_set<GraphId> processed_nodes;
+    processed_nodes.reserve(tile->header()->nodecount());
+    GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      const NodeInfo* nodeinfo = tile->node(i);
+      uint32_t idx = nodeinfo->edge_index();
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, idx++) {
+        const DirectedEdge* directededge = tile->directededge(idx);
+
+        bool found = (processed_nodes.find(nodeid) != processed_nodes.end());
+        if (!found) {
+          GraphId en = directededge->endnode();
+          std::list<PointLL> shape;
+          // check if we can aggregate the edges at this node.
+          ValidateData(reader, shape, en, processed_nodes, nodeid, tile, directededge);
+        }
+      }
+    }
+
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+
+    // Create a new tile builder
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+
+    // Update end nodes of transit connection directed edges
+    std::vector<NodeInfo> nodes;
+
+    // Copy edges (they do not change)
+    std::vector<DirectedEdge> directededges;
+    size_t n = tile->header()->directededgecount();
+    directededges.reserve(n);
+    const DirectedEdge* orig_edges = tile->directededge(0);
+    std::copy(orig_edges, orig_edges + n, std::back_inserter(directededges));
+
+    GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++node_id) {
+      NodeInfo nodeinfo = tilebuilder.node(i);
+      bool found = (processed_nodes.find(node_id) != processed_nodes.end());
+
+      // We can not aggregate at this node.  Turn off the mode change(aggregation) bit
+      if (found)
+        nodeinfo.set_mode_change(false);
+      // Add the node to the local list
+      nodes.emplace_back(std::move(nodeinfo));
+    }
+    tilebuilder.Update(nodes, directededges);
+
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+  }
+
+  LOG_INFO("Aggregating edges");
+  reader.Clear();
+  // Iterate through all tiles in the local level
+  local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
+  // Iterate through all tiles in the local level
+  for (const auto& tile_id : local_tiles) {
+    // Create a new tilebuilder - should copy header information
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+
+    // Get the graph tile. Read from this tile to create the new tile.
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    assert(tile);
+
+    std::hash<std::string> hasher;
+    GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      bool diff_names = false;
+
+      // Count of edges added for this node
+      uint32_t edge_count = 0;
+
+      // Current edge index for first edge from this node
+      uint32_t edge_index = tilebuilder.directededges().size();
+
+      // Iterate through directed edges outbound from this node
+      std::vector<uint64_t> wayid;
+      std::vector<GraphId> endnode;
+      const NodeInfo* nodeinfo = tile->node(nodeid);
+
+      // This nodes are tossed.
+      if (nodeinfo->mode_change()) {
+        continue;
+      }
+
+      GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
+
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
+        // Check if the directed edge should be included
+        const DirectedEdge* directededge = tile->directededge(edgeid);
+
+        // Copy the directed edge information
+        DirectedEdge newedge = *directededge;
+
+        // Set opposing edge indexes to 0 (gets set in graph validator).
+        newedge.set_opp_index(0);
+
+        // Get signs from the base directed edge
+        if (directededge->sign()) {
+          std::vector<SignInfo> signs = tile->GetSigns(edgeid.id());
+          if (signs.size() == 0) {
+            LOG_ERROR("Base edge should have signs, but none found");
+          }
+          tilebuilder.AddSigns(tilebuilder.directededges().size(), signs);
+        }
+
+        // Get turn lanes from the base directed edge
+        if (directededge->turnlanes()) {
+          uint32_t offset = tile->turnlanes_offset(edgeid.id());
+          tilebuilder.AddTurnLanes(tilebuilder.directededges().size(), tile->GetName(offset));
+        }
+
+        // Get access restrictions from the base directed edge. Add these to
+        // the list of access restrictions in the new tile. Update the
+        // edge index in the restriction to be the current directed edge Id
+        if (directededge->access_restriction()) {
+          auto restrictions = tile->GetAccessRestrictions(edgeid.id(), kAllAccess);
+          for (const auto& res : restrictions) {
+            tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                               res.type(), res.modes(), res.value()));
+          }
+        }
+
+        // Copy lane connectivity
+        if (directededge->laneconnectivity()) {
+          auto laneconnectivity = tile->GetLaneConnectivity(edgeid.id());
+          if (laneconnectivity.size() == 0) {
+            LOG_ERROR("Base edge should have lane connectivity, but none found");
+          }
+          for (auto& lc : laneconnectivity) {
+            lc.set_to(tilebuilder.directededges().size());
+          }
+          tilebuilder.AddLaneConnectivity(laneconnectivity);
+        }
+
+        // Names can be different in the forward and backward direction
+        diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
+        bool added;
+        auto edgeinfo = tile->edgeinfo(directededge);
+        std::string encoded_shape = edgeinfo.encoded_shape();
+        std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL>>(encoded_shape);
+
+        GraphId en = directededge->endnode();
+        // Do the actual aggregation.
+        GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
+
+        newedge.set_endnode(en);
+        encoded_shape = encode7(shape);
+        uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
+        // Hammerhead specific.  bike network not saved to edgeinfo
+        uint32_t edge_info_offset =
+            tilebuilder.AddEdgeInfo(w, nodeid, en, edgeinfo.wayid(), edgeinfo.mean_elevation(),
+                                    edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
+                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
+                                    edgeinfo.GetTypes(), added, diff_names);
+
+        // length
+        auto length = valhalla::midgard::length(shape);
+
+        // Compute a curvature metric [0-15]. TODO - use resampled polyline?
+        uint32_t curvature = compute_curvature(shape);
+
+        newedge.set_length(length);
+        newedge.set_curvature(curvature);
+
+        newedge.set_edgeinfo_offset(edge_info_offset);
+        // Add directed edge
+        tilebuilder.directededges().emplace_back(std::move(newedge));
+        ++edge_count;
+      }
+
+      // Add the node to the tilebuilder unless no edges remain
+      if (edge_count > 0) {
+        // Add a node builder to the tile. Update the edge count and edgeindex
+        GraphId new_node(nodeid.tileid(), nodeid.level(), tilebuilder.nodes().size());
+        tilebuilder.nodes().push_back(*nodeinfo);
+        NodeInfo& node = tilebuilder.nodes().back();
+        node.set_edge_count(edge_count);
+        node.set_edge_index(edge_index);
+        const auto& admin = tile->admininfo(nodeinfo->admin_index());
+        node.set_admin_index(tilebuilder.AddAdmin(admin.country_text(), admin.state_text(),
+                                                  admin.country_iso(), admin.state_iso()));
+
+        // Get named signs from the base node
+        if (nodeinfo->named_intersection()) {
+          std::vector<SignInfo> signs = tile->GetSigns(nodeid.id(), true);
+          if (signs.size() == 0) {
+            LOG_ERROR("Base node should have signs, but none found");
+          }
+          node.set_named_intersection(true);
+          tilebuilder.AddSigns(tilebuilder.nodes().size() - 1, signs);
+        }
+        // Associate the old node to the new node.
+        old_to_new[nodeid] = new_node;
+      }
+    }
+
+    // Store the updated tile data (or remove tile if all edges are filtered)
+    if (tilebuilder.nodes().size() > 0) {
+      tilebuilder.StoreTileData();
+    } else {
+      // Remove the tile - all nodes and edges were filtered
+      std::string file_location =
+          reader.tile_dir() + filesystem::path::preferred_separator + GraphTile::FileSuffix(tile_id);
+      remove(file_location.c_str());
+      LOG_INFO("Remove file: " + file_location + " all edges were filtered");
+    }
+
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+  }
+
+  LOG_INFO("Aggregated " + std::to_string(aggregated) + " directededges out of " +
+           std::to_string(n_original_edges));
 }
 
 /**
@@ -258,6 +737,8 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       auto iter = old_to_new.find(edge->endnode());
       if (iter == old_to_new.end()) {
         LOG_ERROR("UpdateEndNodes - failed to find associated node");
+        std::cout << std::to_string(edge->endnode().value) << " "
+                  << std::to_string(tile->edgeinfo(edge).wayid()) << std::endl;
       } else {
         end_node = iter->second;
       }
@@ -315,8 +796,13 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   // Filter edges (and nodes) by access
   FilterTiles(reader, old_to_new, include_driving, include_bicycle, include_pedestrian);
 
-  // TODO - aggregate / combine edges across false nodes (only 2 directed edges)
-  // where way Ids are equal
+  // Update end nodes. Clear the GraphReader cache first.
+  reader.Clear();
+  UpdateEndNodes(reader, old_to_new);
+
+  reader.Clear();
+  old_to_new.clear();
+  AggregateTiles(reader, old_to_new);
 
   // Update end nodes. Clear the GraphReader cache first.
   reader.Clear();
