@@ -118,8 +118,9 @@ bool ExpandFromNodeInner(GraphReader& reader,
           found =
               ExpandFromNode(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
                              way_id, way_id_index, tile, current_node, de->endnode());
-          if (found)
+          if (found) {
             return true;
+          }
 
           visited_nodes.erase(de->endnode());
         }
@@ -472,7 +473,7 @@ void ValidateData(GraphReader& reader,
 
 void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
 
-  LOG_INFO("Validating data");
+  LOG_INFO("Validating edges for aggregation");
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
@@ -522,8 +523,9 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       bool found = (processed_nodes.find(node_id) != processed_nodes.end());
 
       // We can not aggregate at this node.  Turn off the mode change(aggregation) bit
-      if (found)
+      if (found) {
         nodeinfo.set_mode_change(false);
+      }
       // Add the node to the local list
       nodes.emplace_back(std::move(nodeinfo));
     }
@@ -563,7 +565,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
 
-      // This nodes are tossed.
+      // Nodes marked with mode_change = true are tossed.
       if (nodeinfo->mode_change()) {
         continue;
       }
