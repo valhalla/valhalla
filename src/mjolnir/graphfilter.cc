@@ -633,12 +633,12 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         newedge.set_endnode(en);
         encoded_shape = encode7(shape);
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
-        // Hammerhead specific.  bike network not saved to edgeinfo
         uint32_t edge_info_offset =
             tilebuilder.AddEdgeInfo(w, nodeid, en, edgeinfo.wayid(), edgeinfo.mean_elevation(),
-                                    edgeinfo.speed_limit(), encoded_shape, edgeinfo.GetNames(),
-                                    edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.GetTypes(), added, diff_names);
+                                    edgeinfo.bike_network(), edgeinfo.speed_limit(), encoded_shape,
+                                    edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
+                                    edgeinfo.GetLinguisticTaggedValues(), edgeinfo.GetTypes(), added,
+                                    diff_names);
 
         // length
         auto length = valhalla::midgard::length(shape);
