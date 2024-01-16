@@ -321,6 +321,9 @@ message Costing {
     oneof has_exclude_toll {
       bool exclude_tolls = 86;
     }
+    oneof has_exclude_highway {
+      bool exclude_highways = 86;
+    }
   }
 
   oneof has_options {
