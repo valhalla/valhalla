@@ -1478,20 +1478,26 @@ float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_mane
   }
 
   float accumulated_distance_km = 0;
+  float previous_accumulated_distance_km = 0;
   double accumulated_seconds = 0;
+  double previous_accumulated_seconds = 0;
   // Find the node after which the instructions should be heard:
   while (accumulated_seconds < target_seconds && node_index >= prev_maneuver->begin_path_index()) {
     node_index -= 1;
     // not really accumulating seconds ourselves, but it happens elsewhere:
+    previous_accumulated_seconds = accumulated_seconds;
     accumulated_seconds =
         end_node_elapsed_seconds - etp->node(node_index).cost().elapsed_cost().seconds();
+    previous_accumulated_distance_km = accumulated_distance_km;
     accumulated_distance_km += etp->GetCurrEdge(node_index)->length_km();
   }
   // The node_index now indicates the node AFTER which the target_seconds will be reached
-  // we now have to subtract the surplus seconds * speed of this edge from the accumulated_distance_km
-  float speed = etp->GetCurrEdge(node_index)->speed(); // speed is in km/h
-  float hours_to_be_removed = (accumulated_seconds - target_seconds) / 3600;
-  accumulated_distance_km -= speed * hours_to_be_removed;
+  // we now have to subtract the surplus distance (based on seconds) of this edge from the
+  // accumulated_distance_km
+  auto surplus_percentage =
+      (accumulated_seconds - target_seconds) / (accumulated_seconds - previous_accumulated_seconds);
+  accumulated_distance_km -=
+      (accumulated_distance_km - previous_accumulated_distance_km) * surplus_percentage;
   if (accumulated_distance_km * 1000 > distance) {
     return distance;
   } else {
@@ -1555,8 +1561,10 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       // the verbal_pre_transition_instruction even if the maneuver is too short.
       voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 1});
     } else {
-      // In all other cases we use distance_before_maneuver_end value as it is capped to the maneuver length
-      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance_before_maneuver_end, 1});
+      // In all other cases we use distance_before_maneuver_end value
+      // as it is capped to the maneuver length
+      voice_instruction_end->emplace("distanceAlongGeometry",
+                                     json::fixed_t{distance_before_maneuver_end, 1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));

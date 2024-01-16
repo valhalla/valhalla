@@ -607,12 +607,12 @@ TEST_F(VoiceInstructions, DistanceAlongGeometryVoiceInstructions) {
 
   auto depart_instruction = steps[0]["voiceInstructions"][0].GetObject();
   EXPECT_STREQ(depart_instruction["announcement"].GetString(),
-               "Drive east on 10th Avenue SE. Then You will arrive at your destination.");
+               "Drive east on 10th Avenue SE. Then, in 700 meters, You will arrive at your destination.");
   EXPECT_EQ(depart_instruction["distanceAlongGeometry"].GetFloat(), 650.0);
   auto arrive_instruction = steps[0]["voiceInstructions"][1].GetObject();
   EXPECT_STREQ(arrive_instruction["announcement"].GetString(),
                "You have arrived at your destination.");
-  EXPECT_EQ(arrive_instruction["distanceAlongGeometry"].GetFloat(), 220.0);
+  EXPECT_EQ(round(arrive_instruction["distanceAlongGeometry"].GetFloat()), 220);
 }
 
 TEST_F(VoiceInstructions, ShortDepartVoiceInstructions) {
@@ -626,8 +626,7 @@ TEST_F(VoiceInstructions, ShortDepartVoiceInstructions) {
                "Drive east on 10th Avenue SE. Then Bear right onto Alfred Street.");
   EXPECT_EQ(depart_instruction["distanceAlongGeometry"].GetFloat(), 50.0);
   auto arrive_instruction = steps[0]["voiceInstructions"][1].GetObject();
-  EXPECT_STREQ(arrive_instruction["announcement"].GetString(),
-               "Bear right onto Alfred Street.");
+  EXPECT_STREQ(arrive_instruction["announcement"].GetString(), "Bear right onto Alfred Street.");
   EXPECT_EQ(arrive_instruction["distanceAlongGeometry"].GetFloat(), 25.0);
 }
 
@@ -654,7 +653,7 @@ TEST_F(VoiceInstructions, AllVoiceInstructions) {
 
   auto bear_right_instruction = steps[0]["voiceInstructions"][1].GetObject();
   EXPECT_STREQ(bear_right_instruction["announcement"].GetString(), "Bear right onto Alfred Street.");
-  EXPECT_EQ(bear_right_instruction["distanceAlongGeometry"].GetFloat(), 220.0);
+  EXPECT_EQ(round(bear_right_instruction["distanceAlongGeometry"].GetFloat()), 220);
 
   auto continue_instruction = steps[1]["voiceInstructions"][0].GetObject();
   EXPECT_STREQ(continue_instruction["announcement"].GetString(), "Continue for 900 meters.");
