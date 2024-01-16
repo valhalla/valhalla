@@ -606,8 +606,9 @@ TEST_F(VoiceInstructions, DistanceAlongGeometryVoiceInstructions) {
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
   auto depart_instruction = steps[0]["voiceInstructions"][0].GetObject();
-  EXPECT_STREQ(depart_instruction["announcement"].GetString(),
-               "Drive east on 10th Avenue SE. Then, in 700 meters, You will arrive at your destination.");
+  EXPECT_STREQ(
+      depart_instruction["announcement"].GetString(),
+      "Drive east on 10th Avenue SE. Then, in 700 meters, You will arrive at your destination.");
   EXPECT_EQ(depart_instruction["distanceAlongGeometry"].GetFloat(), 650.0);
   auto arrive_instruction = steps[0]["voiceInstructions"][1].GetObject();
   EXPECT_STREQ(arrive_instruction["announcement"].GetString(),
