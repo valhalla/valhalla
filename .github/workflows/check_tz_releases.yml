@@ -1,0 +1,31 @@
+name: Check if tz git submodule is up to date
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  check_tz:
+    name: Check if latest tag commit differs from the commit the submodule currently points to
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: 0
+
+      - name: Run script
+        shell: bash
+        run: |
+          set -e 
+
+          latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
+          latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
+          current_commit=$(git -C ./third_party/tz rev-parse HEAD)
+
+          if [[ $latest_tag_commit != $current_commit ]]; then 
+              echo "New tz release available: ${latest_tag}"
+              exit 1
+          fi
+
+          echo "tz up to date"
