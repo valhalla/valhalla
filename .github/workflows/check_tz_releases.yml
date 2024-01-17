@@ -3,6 +3,7 @@ name: Check if tz git submodule is up to date
 on:
   schedule:
     - cron: "0 0 * * 0"
+  workflow_dispatch:
 
 jobs:
   check_tz:
@@ -58,7 +59,10 @@ jobs:
               git push origin 
 
               # open new PR 
-              gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/$WORKFLOW_RUN_ID/job/${WORKFLOW_JOB_ID})"
+              body=$(echo "See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz.\
+              Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID}/job/${WORKFLOW_JOB_ID})." | xargs)
+
+              gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "${body}"
 
               exit 1
           fi
