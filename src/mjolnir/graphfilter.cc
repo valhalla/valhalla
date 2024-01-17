@@ -190,18 +190,8 @@ void FilterTiles(GraphReader& reader,
     // Edge filtering
     bool bicycle_access =
         (edge->forwardaccess() & kBicycleAccess) || (edge->reverseaccess() & kBicycleAccess);
-    bool pedestrian_access = false;
-
-    // Toss sidewalk, footway, pedestrian,
-    // pedestrian crossing, path, and bridleway edges
-    if (!include_pedestrian) {
-      const auto& use = edge->use();
-      if (use == Use::kSidewalk || use == Use::kFootway || use == Use::kPath ||
-          use == Use::kPedestrian || use == Use::kBridleway || use == Use::kPedestrianCrossing) {
-        pedestrian_access = (edge->forwardaccess() & kAllPedestrianAccess) ||
-                            (edge->reverseaccess() & kAllPedestrianAccess);
-      }
-    }
+    bool pedestrian_access = (edge->forwardaccess() & kAllPedestrianAccess) ||
+                             (edge->reverseaccess() & kAllPedestrianAccess);
     bool driving_access =
         (edge->forwardaccess() & kVehicularAccess) || (edge->reverseaccess() & kVehicularAccess);
     return (driving_access && include_driving) || (bicycle_access && include_bicycle) ||
