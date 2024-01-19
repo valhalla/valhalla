@@ -39,6 +39,14 @@ struct EdgeId {
   GraphId graph_id;
 };
 
+bool CanAggregate(const DirectedEdge* de) {
+  if (de->start_restriction() || de->part_of_complex_restriction() || de->end_restriction() ||
+      de->restrictions() || de->traffic_signal() || de->access_restriction()) {
+    return false;
+  }
+  return true;
+}
+
 bool ExpandFromNode(GraphReader& reader,
                     std::list<PointLL>& shape,
                     GraphId& en,
@@ -47,8 +55,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool forward,
                     GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
-                    const uint64_t way_id,
-                    size_t way_id_index,
+                    uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
                     GraphId current_node);
@@ -61,8 +68,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
                          bool forward,
                          GraphId& last_node,
                          std::unordered_set<GraphId>& visited_nodes,
-                         const uint64_t way_id,
-                         size_t way_id_index,
+                         uint64_t& way_id,
                          const graph_tile_ptr& prev_tile,
                          GraphId prev_node,
                          GraphId current_node,
@@ -85,6 +91,12 @@ bool ExpandFromNodeInner(GraphReader& reader,
         (de->endnode() != from_node || (de->endnode() == from_node && visited_nodes.size() > 1))) {
       if (edge_info.wayid() == way_id &&
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
+
+        // If this edge has special attributes, then we can't aggregate
+        if (!CanAggregate(de)) {
+          way_id = 0;
+          return false;
+        }
 
         if (isos.size() >= 1) {
           isos.insert(tile->admin(en_info->admin_index())->country_iso());
@@ -115,9 +127,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.insert(de->endnode());
 
           // expand with the same way_id
-          found =
-              ExpandFromNode(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
-                             way_id, way_id_index, tile, current_node, de->endnode());
+          found = ExpandFromNode(reader, shape, en, from_node, isos, forward, last_node,
+                                 visited_nodes, way_id, tile, current_node, de->endnode());
           if (found) {
             return true;
           }
@@ -138,8 +149,7 @@ bool ExpandFromNode(GraphReader& reader,
                     bool forward,
                     GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
-                    const uint64_t way_id,
-                    size_t way_id_index,
+                    uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
                     GraphId current_node) {
@@ -152,7 +162,7 @@ bool ExpandFromNode(GraphReader& reader,
   auto node_info = tile->node(current_node);
   // expand from the current node
   return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
-                             way_id, way_id_index, tile, prev_node, current_node, node_info);
+                             way_id, tile, prev_node, current_node, node_info);
 }
 
 bool Aggregate(GraphId& start_node,
@@ -160,14 +170,14 @@ bool Aggregate(GraphId& start_node,
                std::list<PointLL>& shape,
                GraphId& en,
                const GraphId& from_node,
-               const uint64_t way_id,
+               uint64_t& way_id,
                std::unordered_set<std::string>& isos,
                bool forward) {
 
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   std::unordered_set<GraphId> visited_nodes{start_node};
   return ExpandFromNode(reader, shape, en, from_node, isos, forward, start_node, visited_nodes,
-                        way_id, 0, tile, GraphId(), start_node);
+                        way_id, tile, GraphId(), start_node);
 }
 
 /**
@@ -338,13 +348,25 @@ void FilterTiles(GraphReader& reader,
         old_to_new[nodeid] = new_node;
 
         // Check if edges at this node can be aggregated. Only 2 edges, same way Id (so that
-        // edge attributes should match), don't end at same node (no loops), does not have different
+        // edge attributes should match), don't end at same node (no loops), no traffic signal,
+        // no signs exist at the node(named_intersection), does not have different
         // names, and end node of edges are not in a different tile.
         if (edge_filtered && edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] &&
-            !diff_names && !diff_tile) {
-          // temporarily used to check aggregating edges from this node
-          node.set_mode_change(true);
-          ++can_aggregate;
+            !nodeinfo->traffic_signal() && !nodeinfo->named_intersection() && !diff_names &&
+            !diff_tile) {
+
+          // one more check on intersection and node type.  similar to shortcuts
+          bool aggregate =
+              (nodeinfo->intersection() != IntersectionType::kFork &&
+               nodeinfo->type() != NodeType::kGate && nodeinfo->type() != NodeType::kTollBooth &&
+               nodeinfo->type() != NodeType::kTollGantry &&
+               nodeinfo->type() != NodeType::kSumpBuster);
+
+          if (aggregate) {
+            // temporarily used to check aggregating edges from this node
+            node.set_mode_change(true);
+            ++can_aggregate;
+          }
         }
       } else {
         ++n_filtered_nodes;
@@ -397,7 +419,8 @@ void GetAggregatedData(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
       // walk in the correct direction.
-      if (Aggregate(id, reader, shape, en, from_node, edgeinfo.wayid(), isos, isForward)) {
+      uint64_t wayid = edgeinfo.wayid();
+      if (Aggregate(id, reader, shape, en, from_node, wayid, isos, isForward)) {
         aggregated++; // count the current edge
         // flip the shape back for storing in edgeinfo
         if (!isForward) {
@@ -422,6 +445,7 @@ void ValidateData(GraphReader& reader,
                   std::list<PointLL>& shape,
                   GraphId& en,
                   std::unordered_set<GraphId>& processed_nodes,
+                  std::unordered_set<uint64_t>& no_agg_ways,
                   const GraphId& from_node,
                   const graph_tile_ptr& tile,
                   const DirectedEdge* directededge) {
@@ -436,6 +460,14 @@ void ValidateData(GraphReader& reader,
     const NodeInfo* sn_info = tile->node(from_node);
 
     if (en_info->mode_change()) {
+
+      // If this edge has special attributes, then we can't aggregate
+      if (!CanAggregate(directededge)) {
+        processed_nodes.insert(directededge->endnode());
+        no_agg_ways.insert(edgeinfo.wayid());
+        return;
+      }
+
       std::unordered_set<std::string> isos;
       bool isForward = directededge->forward();
       auto id = directededge->endnode();
@@ -449,10 +481,16 @@ void ValidateData(GraphReader& reader,
       }
 
       // walk in the correct direction.
-      if (!Aggregate(id, reader, shape, en, from_node, edgeinfo.wayid(), isos, isForward)) {
+      uint64_t wayid = edgeinfo.wayid();
+      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, isForward)) {
         LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         std::cout << "End node: " << directededge->endnode() << " WayId: " << edgeinfo.wayid()
                   << std::endl;
+
+        if (wayid == 0) { // This edge has special attributes, we can't aggregate
+          no_agg_ways.insert(edgeinfo.wayid());
+        }
+
         processed_nodes.insert(directededge->endnode()); // turn off so that we don't fail
       } else if (isos.size() > 1) {                      // in diff country
         processed_nodes.insert(directededge->endnode());
@@ -472,20 +510,37 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     assert(tile);
 
     std::unordered_set<GraphId> processed_nodes;
+    std::unordered_set<uint64_t> no_agg_ways;
+
     processed_nodes.reserve(tile->header()->nodecount());
-    GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
+    GraphId nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       const NodeInfo* nodeinfo = tile->node(i);
       uint32_t idx = nodeinfo->edge_index();
       for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, idx++) {
         const DirectedEdge* directededge = tile->directededge(idx);
-
-        bool found = (processed_nodes.find(nodeid) != processed_nodes.end());
-        if (!found) {
+        if (processed_nodes.find(nodeid) == processed_nodes.end()) {
           GraphId en = directededge->endnode();
           std::list<PointLL> shape;
           // check if we can aggregate the edges at this node.
-          ValidateData(reader, shape, en, processed_nodes, nodeid, tile, directededge);
+          ValidateData(reader, shape, en, processed_nodes, no_agg_ways, nodeid, tile, directededge);
+        }
+      }
+    }
+
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+
+    // Now loop again double checking the ways.
+    nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      const NodeInfo* nodeinfo = tile->node(i);
+      uint32_t idx = nodeinfo->edge_index();
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); j++, idx++) {
+        const DirectedEdge* directededge = tile->directededge(idx);
+        if (no_agg_ways.find(tile->edgeinfo(directededge).wayid()) != no_agg_ways.end()) {
+          processed_nodes.insert(directededge->endnode());
         }
       }
     }
@@ -507,10 +562,10 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     const DirectedEdge* orig_edges = tile->directededge(0);
     std::copy(orig_edges, orig_edges + n, std::back_inserter(directededges));
 
-    GraphId node_id(tile_id.tileid(), tile_id.level(), 0);
-    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++node_id) {
+    nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       NodeInfo nodeinfo = tilebuilder.node(i);
-      bool found = (processed_nodes.find(node_id) != processed_nodes.end());
+      bool found = (processed_nodes.find(nodeid) != processed_nodes.end());
 
       // We can not aggregate at this node.  Turn off the mode change(aggregation) bit
       if (found) {
