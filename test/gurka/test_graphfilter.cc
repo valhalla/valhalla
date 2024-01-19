@@ -15,15 +15,15 @@ TEST(Standalone, SimpleFilter) {
 
   const std::string ascii_map = R"(
 
-                     M              P         R              W    Y
-                     |              |         |              |    |
-                     |              |         |              |    |
+             M              P         R              W    Y
+             |              |         |              |    |
+             |              |         |              |    |
 		A----B----C----D----E----F----G----H----I----J----K----L
-                          |    |         |         |    |         |
-                          |    |         Q----S----T    |         |
-                          N    O              |         V         X
-                                              |
-                                              U 
+                  |    |         |         |    |         |
+                  |    |         Q----S----T    |         |
+                  N    O              |         V         X
+                                      |
+                                      U 
   )";
 
   const gurka::ways ways = {
@@ -56,16 +56,48 @@ TEST(Standalone, SimpleFilter) {
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
 
-  GraphReader graph_reader(map.config.get_child("mjolnir"));
+  // all footways will be deleted.  check for DO
+  {
+    GraphReader graph_reader(map.config.get_child("mjolnir"));
+    GraphId DO_edge_id;
+    const DirectedEdge* DO_edge = nullptr;
+    GraphId OD_edge_id;
+    const DirectedEdge* OD_edge = nullptr;
+    std::tie(DO_edge_id, DO_edge, OD_edge_id, OD_edge) =
+        findEdge(graph_reader, map.nodes, "DO", "O", baldr::GraphId{});
+    EXPECT_EQ(DO_edge, nullptr);
+    EXPECT_EQ(OD_edge, nullptr);
+  }
 
-  GraphId DO_edge_id;
-  const DirectedEdge* DO_edge = nullptr;
-  GraphId OD_edge_id;
-  const DirectedEdge* OD_edge = nullptr;
-  std::tie(DO_edge_id, DO_edge, OD_edge_id, OD_edge) =
-      findEdge(graph_reader, map.nodes, "DO", "O", baldr::GraphId{});
-  EXPECT_EQ(DO_edge, nullptr);
-  EXPECT_EQ(OD_edge, nullptr);
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "auto");
+  gurka::assert::raw::expect_path(result, {"East Fort Avenue", "East Fort Avenue", "East Fort Avenue",
+                                           "East Fort Avenue", "East Fort Avenue", "East Fort Avenue",
+                                           "East Fort Avenue"});
+
+  // reconvert again, but include pedestrian edges
+  map = gurka::buildtiles(layout, ways, {}, {}, work_dir,
+                          {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                           {"mjolnir.include_pedestrian", "true"}});
+
+  // all footways will not be deleted
+  {
+    GraphReader graph_reader(map.config.get_child("mjolnir"));
+    GraphId DO_edge_id;
+    const DirectedEdge* DO_edge = nullptr;
+    GraphId OD_edge_id;
+    const DirectedEdge* OD_edge = nullptr;
+    std::tie(DO_edge_id, DO_edge, OD_edge_id, OD_edge) =
+        findEdge(graph_reader, map.nodes, "DO", "O", baldr::GraphId{});
+    EXPECT_NE(DO_edge, nullptr);
+    EXPECT_NE(OD_edge, nullptr);
+  }
+
+  // more edges will exist
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "L"}, "auto");
+  gurka::assert::raw::expect_path(result, {"East Fort Avenue", "East Fort Avenue", "East Fort Avenue",
+                                           "East Fort Avenue", "East Fort Avenue", "East Fort Avenue",
+                                           "East Fort Avenue", "East Fort Avenue", "East Fort Avenue",
+                                           "East Fort Avenue", "East Fort Avenue"});
 }
 
 TEST(Standalone, AccessFilter) {
@@ -75,13 +107,13 @@ TEST(Standalone, AccessFilter) {
   const std::string ascii_map = R"(
 
 		J----K----L----M----------------------N
-                |    |    |    |                      |
-                |    H    I    |                      |
-                |    |    |    |                      |
+        |    |    |    |                      |
+        |    H    I    |                      |
+        |    |    |    |                      |
 		A----B----C----D----E------------F----G
-                |              |     \          /     |
-                |              |      \        /      |
-                O              P       Q------R       S                  
+        |              |     \          /     |
+        |              |      \        /      |
+        O              P       Q------R       S                  
   )";
 
   const gurka::ways ways = {
@@ -120,15 +152,41 @@ TEST(Standalone, AccessFilter) {
       gurka::buildtiles(layout, ways, nodes, {}, work_dir,
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
+  // CIL should be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId CL_edge_id;
+    const DirectedEdge* CL_edge = nullptr;
+    GraphId LC_edge_id;
+    const DirectedEdge* LC_edge = nullptr;
+    std::tie(CL_edge_id, CL_edge, LC_edge_id, LC_edge) =
+        findEdge(graph_reader, map.nodes, "CIL", "L", baldr::GraphId{});
+    EXPECT_EQ(CL_edge, nullptr);
+    EXPECT_EQ(LC_edge, nullptr);
+  }
 
-  GraphReader graph_reader(map.config.get_child("mjolnir"));
+  auto result = gurka::do_action(valhalla::Options::route, map, {"J", "N"}, "auto");
+  gurka::assert::raw::expect_path(result, {"Vondellaan", "Vondellaan", "Vondellaan"});
 
-  GraphId LC_edge_id;
-  const DirectedEdge* LC_edge = nullptr;
-  GraphId CL_edge_id;
-  const DirectedEdge* CL_edge = nullptr;
-  std::tie(LC_edge_id, LC_edge, CL_edge_id, CL_edge) =
-      findEdge(graph_reader, map.nodes, "LC", "C", baldr::GraphId{});
-  EXPECT_EQ(LC_edge, nullptr);
-  EXPECT_EQ(CL_edge, nullptr);
+  // reconvert again, but include pedestrian edges
+  map = gurka::buildtiles(layout, ways, nodes, {}, work_dir,
+                          {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                           {"mjolnir.include_pedestrian", "true"}});
+
+  // CIL should not be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId CL_edge_id;
+    const DirectedEdge* CL_edge = nullptr;
+    GraphId LC_edge_id;
+    const DirectedEdge* LC_edge = nullptr;
+    std::tie(CL_edge_id, CL_edge, LC_edge_id, LC_edge) =
+        findEdge(graph_reader, map.nodes, "CIL", "L", baldr::GraphId{});
+    EXPECT_NE(CL_edge, nullptr);
+    EXPECT_NE(LC_edge, nullptr);
+  }
+
+  // should have an extra edge since CIL was not deleted
+  result = gurka::do_action(valhalla::Options::route, map, {"J", "N"}, "auto");
+  gurka::assert::raw::expect_path(result, {"Vondellaan", "Vondellaan", "Vondellaan", "Vondellaan"});
 }
