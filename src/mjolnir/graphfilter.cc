@@ -511,8 +511,9 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
     std::unordered_set<GraphId> processed_nodes;
     std::unordered_set<uint64_t> no_agg_ways;
-
     processed_nodes.reserve(tile->header()->nodecount());
+    no_agg_ways.reserve(tile->header()->directededgecount());
+
     GraphId nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
       const NodeInfo* nodeinfo = tile->node(i);
@@ -552,7 +553,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
     // Create a new tile builder
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
 
-    // Update end nodes of transit connection directed edges
+    // Update end nodes
     std::vector<NodeInfo> nodes;
 
     // Copy edges (they do not change)
