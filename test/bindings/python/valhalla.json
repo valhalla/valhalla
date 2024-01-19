@@ -27,7 +27,6 @@
       "infer_internal_intersections": true,
       "infer_turn_channels": true,
       "apply_country_overrides": true,
-      "use_admin_db": true,
       "use_direction_on_ways": false,
       "allow_alt_name": false,
       "use_urban_tag": false,

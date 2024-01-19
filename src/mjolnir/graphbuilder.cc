@@ -459,20 +459,14 @@ void BuildTileSet(const std::string& ways_file,
 
       // Get the admin polygons. If only one exists for the tile check if the
       // tile is entirely inside the polygon
-      bool tile_within_one_admin = false;
-      std::multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
       std::vector<std::tuple<std::string, multi_polygon_type, bool>> language_ploys;
 
-      if (admin_db_handle) {
-        admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
-                                   language_ploys, tiling.TileBounds(id), graphtile);
-        if (admin_polys.size() == 1) {
-          // TODO - check if tile bounding box is entirely inside the polygon...
-          tile_within_one_admin = true;
-        }
-      }
+      std::multimap<uint32_t, multi_polygon_type> admin_polys =
+          GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names, language_ploys,
+                       tiling.TileBounds(id), graphtile);
+      auto admins_size = admin_polys.size();
 
       bool tile_within_one_tz = false;
       auto tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
@@ -507,10 +501,22 @@ void BuildTileSet(const std::string& ways_file,
         PointLL node_ll = node.latlng();
 
         // Get the admin index
-        auto admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
-                                                   : GetMultiPolyId(admin_polys, node_ll, graphtile);
-        auto dor = drive_on_right[admin_index];
-        auto default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
+        uint32_t admin_index = 0;
+        // TODO(nils): this is to keep compat with way_.drive_on_right() which defaults to false
+        // but causes guidance issues for the vast majority of nodes which are inside broken admins
+        // polys
+        bool dor = false;
+        std::vector<std::pair<std::string, bool>> default_languages;
+
+        if (admins_size == 0) {
+          admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
+                                           osmdata.node_names.name(node.state_iso_index()));
+        } else {
+          admin_index = (admins_size == 1) ? admin_polys.begin()->first
+                                           : GetMultiPolyId(admin_polys, node_ll, graphtile);
+          dor = drive_on_right[admin_index];
+          default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
+        }
 
         // Look for potential duplicates
         // CheckForDuplicates(nodeid, node, edgelengths, nodes, edges, osmdata.ways, stats);
@@ -545,7 +551,9 @@ void BuildTileSet(const std::string& ways_file,
             std::swap(source, target);
           }
 
-          dor = w.drive_on_right();
+          if (admins_size == 0) {
+            dor = w.drive_on_right();
+          }
 
           // Validate speed. Set speed limit and truck speed.
           uint32_t speed = w.speed();

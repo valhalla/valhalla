@@ -391,7 +391,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
   auto pt = json_to_pt(defaults);
 
   // default the admin db & timezone db
-  pt.put("mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite");
+  pt.put("mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/admin_empty.sqlite");
   pt.put("mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite");
 
   for (const auto& override : overrides) {

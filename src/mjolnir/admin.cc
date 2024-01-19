@@ -307,9 +307,6 @@ GetAdminInfo(sqlite3* db_handle,
              const AABB2<PointLL>& aabb,
              GraphTileBuilder& tilebuilder) {
   std::multimap<uint32_t, multi_polygon_type> polys;
-  if (!db_handle) {
-    return polys;
-  }
 
   sqlite3_stmt* stmt = 0;
 

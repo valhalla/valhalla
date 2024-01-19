@@ -174,6 +174,10 @@ public:
     empty_way_results_ = lua_.Transform(OSMType::kWay, 0, {});
     empty_relation_results_ = lua_.Transform(OSMType::kRelation, 0, {});
 
+    tag_handlers_["driving_side"] = [this]() {
+      way_.set_drive_on_right(tag_.second == "right" ? true : false);
+    };
+
     tag_handlers_["internal_intersection"] = [this]() {
       if (!infer_internal_intersections_) {
         way_.set_internal(tag_.second == "true" ? true : false);
