@@ -18,7 +18,7 @@ TEST(Standalone, SimpleFilter) {
              M              P         R              W    Y
              |              |         |              |    |
              |              |         |              |    |
-		A----B----C----D----E----F----G----H----I----J----K----L
+        A----B----C----D----E----F----G----H----I----J----K----L
                   |    |         |         |    |         |
                   |    |         Q----S----T    |         |
                   N    O              |         V         X
@@ -106,11 +106,11 @@ TEST(Standalone, SimpleFilter2) {
 
   const std::string ascii_map = R"(
 
-		J----K----L----M----------------------N
+        J----K----L----M----------------------N
         |    |    |    |                      |
         |    H    I    |                      |
         |    |    |    |                      |
-		A----B----C----D----E------------F----G
+        A----B----C----D----E------------F----G
         |              |     \          /     |
         |              |      \        /      |
         O              P       Q------R       S                  
@@ -288,7 +288,7 @@ TEST(Standalone, FilterTestSimpleRestrictions) {
   const std::string ascii_map = R"(
 
 
-	 H----------D----------I
+     H----------D----------I
                / \
               /   \
      J-------E-----C-------K
@@ -358,7 +358,7 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
                 G--H
                 |  | 
                 |  |
-	 A----------B--C-------D
+     A----------B--C-------D
                 |
                 |
                 E
