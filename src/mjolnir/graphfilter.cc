@@ -359,8 +359,9 @@ void FilterTiles(GraphReader& reader,
           bool aggregate =
               (nodeinfo->intersection() != IntersectionType::kFork &&
                nodeinfo->type() != NodeType::kGate && nodeinfo->type() != NodeType::kTollBooth &&
-               nodeinfo->type() != NodeType::kTollGantry &&
-               nodeinfo->type() != NodeType::kSumpBuster);
+               nodeinfo->type() != NodeType::kTollGantry && nodeinfo->type() != NodeType::kBollard &&
+               nodeinfo->type() != NodeType::kSumpBuster &&
+               nodeinfo->type() != NodeType::kBorderControl);
 
           if (aggregate) {
             // temporarily used to check aggregating edges from this node
