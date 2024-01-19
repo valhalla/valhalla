@@ -440,7 +440,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) || 
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -471,7 +471,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -815,7 +815,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -846,7 +846,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -1006,7 +1006,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -1037,7 +1037,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
+      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
