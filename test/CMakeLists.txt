@@ -150,7 +150,7 @@ foreach(test ${tyr_tests})
 endforeach()
 
 ## Test-specific data, properties and dependencies
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
@@ -376,7 +376,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-if(ENABLE_HTTP)
+  if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
 endif()
@@ -385,7 +385,7 @@ if(ENABLE_SERVICES)
   add_dependencies(run-skadi_service test_directories)
 endif()
 
-if(ENABLE_PYTHON_BINDINGS AND ENABLE_DATA_TOOLS)
+if(ENABLE_PYTHON_BINDINGS)
   find_package(Python COMPONENTS Interpreter)
   add_custom_command(OUTPUT python_valhalla.log
     COMMAND

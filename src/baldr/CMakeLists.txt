@@ -11,7 +11,7 @@ DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
-    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
         ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file}
         ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
         --variable-name date_time_${tz_db_file} --skip 1 --raw
@@ -22,7 +22,7 @@ endforeach()
 
 # Process the windowsZones.xml file
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
   ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
   ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
   --variable-name date_time_windows_zones_xml --skip 1 --raw
@@ -131,5 +131,5 @@ valhalla_module(NAME baldr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    CURL::CURL
+    ${curl_targets}
     ZLIB::ZLIB)

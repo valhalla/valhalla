@@ -1,6 +1,6 @@
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/admin.lua
       ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
       --variable-name lua_admin_lua
@@ -10,7 +10,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   VERBATIM)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/graph.lua
       ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
       --variable-name lua_graph_lua
@@ -89,9 +89,9 @@ valhalla_module(NAME mjolnir
     valhalla::proto
     valhalla::baldr
     SpatiaLite::SpatiaLite
-    SQLite3::SQLite3
+    SQLite::SQLite3
     Boost::boost
-    Lua::Lua
+    PkgConfig::luajit
     Threads::Threads
     ZLIB::ZLIB
     robin_hood::robin_hood)

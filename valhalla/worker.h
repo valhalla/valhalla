@@ -8,7 +8,7 @@
 #include <valhalla/proto/api.pb.h>
 #include <valhalla/valhalla.h>
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 #endif
@@ -59,7 +59,7 @@ struct valhalla_exception_t : public std::runtime_error {
  *                      already filled out, it will be validated and the json will be ignored
  */
 void ParseApi(const std::string& json_request, Options::Action action, Api& api);
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 /**
  * Take the json OR pbf request and parse/validate it. If you pass a protobuf mime type in the request
  * it is assumed that the body of the request is protobuf bytes and any json will be ignored. Likewise
@@ -78,7 +78,7 @@ std::string serialize_error(const valhalla_exception_t& exception, Api& options)
 // function to add warnings to proto info object
 void add_warning(valhalla::Api& api, unsigned code);
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 prime_server::worker_t::result_t serialize_error(const valhalla_exception_t& exception,
                                                  prime_server::http_request_info_t& request_info,
                                                  Api& options);
@@ -102,7 +102,7 @@ public:
 
   virtual ~service_worker_t();
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
   /**
    * The main work function that stages in the prime_server will call when responding to requests
    *

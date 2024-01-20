@@ -22,7 +22,7 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 using namespace valhalla;
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 using namespace prime_server;
 #endif
 
@@ -1291,7 +1291,7 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, action, api);
 }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {

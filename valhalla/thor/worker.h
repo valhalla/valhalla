@@ -35,7 +35,7 @@
 namespace valhalla {
 namespace thor {
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
 void run_service(const boost::property_tree::ptree& config);
 #endif
 
@@ -45,7 +45,7 @@ public:
   thor_worker_t(const boost::property_tree::ptree& config,
                 const std::shared_ptr<baldr::GraphReader>& graph_reader = {});
   virtual ~thor_worker_t();
-#ifdef HAVE_HTTP
+#ifdef ENABLE_HTTP
   virtual prime_server::worker_t::result_t work(const std::list<zmq::message_t>& job,
                                                 void* request_info,
                                                 const std::function<void()>& interrupt) override;

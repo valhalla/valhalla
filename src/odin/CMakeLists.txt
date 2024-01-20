@@ -1,7 +1,7 @@
 file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/Binary2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/valhalla_bin2header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling locales/*.json to locales.h"
   DEPENDS ${locale_jsons}
@@ -53,4 +53,4 @@ valhalla_module(NAME odin
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server)
+    ${libprime_server_targets})
