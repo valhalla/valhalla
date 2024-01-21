@@ -100,7 +100,7 @@ find_package(ZLIB REQUIRED)
 
 # cURL
 set(curl_targets "")
-if (ENABLE_HTTP)
+if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
   find_package(CURL)
   if (CURL_FOUND)
     set(curl_targets CURL::libcurl)
@@ -225,7 +225,7 @@ if(ENABLE_DATA_TOOLS)
     target_link_libraries(${program} valhalla
       # TODO(nils): make this a target-specific dependency? I'm sure it's not many needing this..
       $<$<BOOL:${CURL_FOUND}>:CURL::libcurl>)
-    if (luajit_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()

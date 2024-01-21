@@ -204,7 +204,7 @@ set_target_properties(valhalla PROPERTIES
 
 # pkg-config installation
 if(PKG_CONFIG_FOUND)
-  include(PkgConfig)
+  include(ValhallaPkgConfig)
   
   configure_valhalla_pc()
 

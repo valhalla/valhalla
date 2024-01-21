@@ -58,7 +58,7 @@ sudo make install
 popd && rm -rf $primeserver_dir
 
 # for boost and scripts deps
-if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_p    refix")))') -eq 1 ]]; then
+if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
   python3 -m pip install --upgrade requests shapely
 else
   sudo PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely

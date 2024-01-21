@@ -39,7 +39,7 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-v3-{{ .Branch }
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }}
             - ccache-debug-linux-x86_64-v3
       - run: |
           mkdir build
