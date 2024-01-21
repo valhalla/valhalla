@@ -252,6 +252,17 @@ set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
 
+# pkg-config installation
+if(PKG_CONFIG_FOUND)
+  include(PkgConfig)
+  
+  configure_valhalla_pc()
+
+  install(FILES
+    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
+
 
 install(TARGETS valhalla
   LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT shared NAMELINK_SKIP
@@ -282,20 +293,3 @@ install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
 install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
-
-if(PKG_CONFIG_FOUND)
-  ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
-  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
-
-  add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
-  target_link_libraries(libvalhalla.pc valhalla)
-  set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
-  set_target_properties(libvalhalla.pc PROPERTIES FOLDER "Library")
-  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
-  if(NOT \${_res} EQUAL 0)
-    message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
-  endif()")
-  install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-    COMPONENT development)
-endif()
