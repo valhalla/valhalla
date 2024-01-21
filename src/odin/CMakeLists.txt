@@ -1,7 +1,7 @@
 file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/ValhallaBin2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling locales/*.json to locales.h"
   DEPENDS ${locale_jsons}

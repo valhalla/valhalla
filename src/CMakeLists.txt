@@ -2,7 +2,7 @@ include(GNUInstallDirs)
 include(ValhallaVersion)
 include(ValhallaWarnings)
 
-## Set relative to the current source and binary paths
+## Set relative binary path
 set(VALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
 if (ENABLE_COMPILER_WARNINGS)
