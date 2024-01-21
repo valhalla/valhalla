@@ -1,7 +1,7 @@
 file(GLOB locale_jsons ${VALHALLA_SOURCE_DIR}/locales *.json)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/locales.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/valhalla_bin2header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P cmake/ValhallaBin2Header.cmake ${VALHALLA_SOURCE_DIR}/locales/ ${CMAKE_CURRENT_BINARY_DIR}/locales.h --locales
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling locales/*.json to locales.h"
   DEPENDS ${locale_jsons}
@@ -29,7 +29,9 @@ set(sources_with_warnings
   util.cc)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes
+  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
@@ -42,13 +44,13 @@ valhalla_module(NAME odin
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_CURRENT_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}
+    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
   DEPENDS
     valhalla::proto
     ${valhalla_protobuf_targets}

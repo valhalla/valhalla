@@ -14,9 +14,11 @@ valhalla_module(NAME skadi
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   DEPENDS
     valhalla::baldr
     Boost::boost

@@ -1,6 +1,6 @@
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/admin.lua
       ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
       --variable-name lua_admin_lua
@@ -10,7 +10,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   VERBATIM)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/valhalla_bin2header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/graph.lua
       ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
       --variable-name lua_graph_lua
@@ -63,7 +63,11 @@ set(sources
   validatetransit.cc)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes
+  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+  ${PROTOBUF_INCLUDE_DIR})
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
@@ -75,23 +79,21 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-      ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}
+    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
   DEPENDS
     valhalla::proto
     valhalla::baldr
     SpatiaLite::SpatiaLite
     SQLite::SQLite3
     Boost::boost
-    PkgConfig::luajit
+    PkgConfig::LuaJIT
     Threads::Threads
-    ZLIB::ZLIB
-    robin_hood::robin_hood)
+    ZLIB::ZLIB)

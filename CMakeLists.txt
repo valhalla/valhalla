@@ -91,8 +91,8 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
-include(cmake/valhalla_sanitizer_options.cmake)
-include(cmake/valhalla_source_groups.cmake)
+include(ValhallaSanitizerOptions)
+include(ValhallaSourceGroups)
 
 ## Dependencies
 find_package(Threads REQUIRED)
@@ -144,10 +144,10 @@ endif()
 # see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
 set(libprime_server_targets "")
 if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server REQUIRED IMPORTED_TARGET libprime_server>=0.6.3)
+  pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
   if (libprime_server_FOUND)
     target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_HTTP)
-    set(libprime_server_targets libprime_server_targets)
+    set(libprime_server_targets PkgConfig::libprime_server)
   else()
     set(ENABLE_SERVICES OFF)
     message(WARNING "prime_server not found, skipping ENABLE_SERVICES...")
@@ -159,7 +159,7 @@ if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
   find_package(SpatiaLite REQUIRED)
-  pkg_check_modules(luajit REQUIRED IMPORTED_TARGET)
+  pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
