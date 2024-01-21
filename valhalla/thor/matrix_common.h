@@ -95,6 +95,8 @@ inline void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
   matrix.mutable_times()->Resize(size, 0U);
   matrix.mutable_date_times()->Reserve(size);
   matrix.mutable_shapes()->Reserve(size);
+  matrix.mutable_time_zone_offsets()->Reserve(size);
+  matrix.mutable_time_zone_names()->Reserve(size);
 }
 
 } // namespace thor

@@ -72,6 +72,7 @@
    * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
+   * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
    * CHANGED: libvalhalla.pc generation to have finer controls and install vendored public headers [#4507](https://github.com/valhalla/valhalla/pull/4507)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
