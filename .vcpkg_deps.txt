@@ -6,3 +6,4 @@ proj4
 luajit
 libspatialite
 geos
+boost

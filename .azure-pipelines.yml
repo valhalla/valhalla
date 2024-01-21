@@ -43,7 +43,6 @@ jobs:
       VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       TRIPLET: 'x64'
       VCPKG_REF: 'f330a32'
-      CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
     steps:
       - script: |

@@ -11,8 +11,8 @@ executors:
 commands:
   mac_deps:
     steps:
-      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: sudo python3 -m pip install requests shapely "conan<2.0.0"
+      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip boost
+      - run: sudo python3 -m pip install requests shapely
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
   linux_deps:
     steps:
@@ -39,8 +39,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-debug-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }
+            - ccache-debug-linux-x86_64-v3
       - run: |
           mkdir build
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -57,10 +57,9 @@ jobs:
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-            - ~/.conan
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
@@ -81,8 +80,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-x86_64-v3-{{ .Branch }}
+            - ccache-release-linux-x86_64-v3
       - run: |
           mkdir build
           cd build
@@ -97,10 +96,9 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-            - ~/.conan
       - run: sudo make -C build install
       - run: make -C build package
 
@@ -116,8 +114,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-arm_64-v3-{{ checksum "conanfile.txt" }}
+            - ccache-release-linux-arm_64-v3-{{ .Branch }}
+            - ccache-release-linux-arm_64-v3
       - run: |
           mkdir build
           cd build
@@ -131,10 +129,9 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
             - ~/.ccache
-            - ~/.conan
       - run: sudo make -C build install
       - run: make -C build package
 
@@ -148,8 +145,8 @@ jobs:
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-macos-{{ checksum "conanfile.txt" }}
+            - ccache-release-macos-{{ .Branch }}
+            - ccache-release-macos
       - run: |
           mkdir -p build
           cd build
@@ -161,10 +158,9 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build run-benchmarks
       - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-macos-{{ epoch }}
           paths:
             - ~/.ccache
-            - ~/.conan
 
 workflows:
   version: 2
