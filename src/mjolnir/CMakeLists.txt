@@ -92,7 +92,7 @@ valhalla_module(NAME mjolnir
     valhalla::proto
     valhalla::baldr
     SpatiaLite::SpatiaLite
-    SQLite::SQLite3
+    SQLite3::SQLite3
     Boost::boost
     PkgConfig::LuaJIT
     Threads::Threads
