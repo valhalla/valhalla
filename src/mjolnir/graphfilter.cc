@@ -553,8 +553,6 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
 
     // Create a new tile builder
     GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
-
-    // Update end nodes
     std::vector<NodeInfo> nodes;
 
     // Copy edges (they do not change)
