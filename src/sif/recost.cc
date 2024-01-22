@@ -8,7 +8,7 @@ namespace sif {
  * Will take a sequence of edges and create the set of edge labels that would represent it
  * Allows for the caller to essentially re-compute the costing of a given path
  *
- * @param reader            used to get access to graph data. modifyable because its got a cache
+ * @param reader            used to get access to graph data. modifiable because its got a cache
  * @param costing           single costing object to be used for costing/access computations
  * @param edge_cb           the callback used to get each edge in the path
  * @param label_cb          the callback used to emit each label in the path
@@ -57,7 +57,7 @@ void recost_forward(baldr::GraphReader& reader,
   const baldr::NodeInfo* node = nullptr;
 
   // keep grabbing edges while we get valid ids
-  EdgeLabel label;
+  PathEdgeLabel label;
   uint32_t predecessor = baldr::kInvalidLabel;
   Cost cost{};
   double length = 0;
@@ -128,9 +128,9 @@ void recost_forward(baldr::GraphReader& reader,
 
     InternalTurn turn =
         node ? costing.TurnType(label.opp_local_idx(), node, edge) : InternalTurn::kNoTurn;
-    label = EdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, 0, costing.travel_mode(), length,
-                      transition_cost, time_restrictions_TODO, !ignore_access,
-                      static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
+    label = PathEdgeLabel(predecessor++, edge_id, edge, cost, cost.cost, costing.travel_mode(),
+                          length, transition_cost, time_restrictions_TODO, !ignore_access,
+                          static_cast<bool>(flow_sources & baldr::kDefaultFlowMask), turn);
     // hand back the label
     label_cb(label);
     // next edge

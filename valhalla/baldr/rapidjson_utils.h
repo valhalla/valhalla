@@ -20,7 +20,7 @@
   throw std::logic_error(RAPIDJSON_STRINGIFY(x))
 // Because we now throw exceptions, we need to turn off RAPIDJSON_NOEXCEPT
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 0
-// Enbale std::string overloads
+// Enable std::string overloads
 #define RAPIDJSON_HAS_STDSTRING 1
 
 #include <rapidjson/allocators.h>

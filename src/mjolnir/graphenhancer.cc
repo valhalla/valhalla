@@ -115,11 +115,11 @@ void GetTurnTypes(const DirectedEdge& directededge,
   const NodeInfo* node = tile->node(directededge.endnode());
 
   // Iterate through outbound edges and get turn degrees from the candidate
-  // edge onto outbound driveable edges.
+  // edge onto outbound drivable edges.
   const auto* diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
-    // edges that are not driveable outbound.
+    // edges that are not drivable outbound.
     if (i == directededge.opp_local_idx() || !(diredge->forwardaccess() & kAutoAccess) ||
         (directededge.restrictions() & (1 << diredge->localedgeidx())) != 0) {
       continue;
@@ -134,7 +134,7 @@ void GetTurnTypes(const DirectedEdge& directededge,
     uint32_t to_heading =
         std::round(PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
                                                                             diredge->use())));
-    // Store outgoing turn type for any driveable edges
+    // Store outgoing turn type for any drivable edges
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
     outgoing_turn_type.insert(Turn::GetType(turndegree));
   }
@@ -401,7 +401,7 @@ void UpdateTurnLanes(const OSMData& osmdata,
 constexpr uint32_t kUnreachableIterations = 20;
 
 /**
- * Tests if the directed edge is unreachable by driving. If a driveable
+ * Tests if the directed edge is unreachable by driving. If a drivable
  * edge cannot reach higher class roads and a search cannot expand after
  * a set number of iterations the edge is considered unreachable.
  * @param  reader        Graph reader
@@ -410,7 +410,7 @@ constexpr uint32_t kUnreachableIterations = 20;
  * @return  Returns true if the edge is found to be unreachable.
  */
 bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directededge) {
-  // Only check driveable edges. If already on a higher class road consider
+  // Only check drivable edges. If already on a higher class road consider
   // the edge reachable
   if (!(directededge.forwardaccess() & kAutoAccess) ||
       directededge.classification() < RoadClass::kTertiary) {
@@ -432,11 +432,11 @@ bool IsUnreachable(GraphReader& reader, std::mutex& lock, DirectedEdge& directed
   while (n < kUnreachableIterations) {
     if (expandset.empty()) {
       // Have expanded all nodes without reaching a higher classification
-      // driveable road - consider this unreachable
+      // drivable road - consider this unreachable
       return true;
     }
 
-    // Get all driveable edges from the node on the expandlist
+    // Get all drivable edges from the node on the expandlist
     const GraphId expandnode = *expandset.cbegin();
     expandset.erase(expandset.begin());
     visitedset.insert(expandnode);
@@ -604,7 +604,7 @@ void SetStopYieldSignInfo(const graph_tile_ptr& start_tile,
       const DirectedEdge* diredge = tile->directededge(nodeinfo->edge_index());
       for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, diredge++) {
         // Skip the candidate directed edge and any non-road edges. Skip any edges
-        // that are not driveable inbound.
+        // that are not drivable inbound.
         if (!diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
           continue;
         }
@@ -679,7 +679,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
     }
   }
 
-  // Iterate through inbound edges and get turn degrees from driveable inbound
+  // Iterate through inbound edges and get turn degrees from drivable inbound
   // edges onto the candidate edge.
   bool oneway_inbound = false;
   uint32_t heading = startnodeinfo.heading(idx);
@@ -687,7 +687,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   const DirectedEdge* diredge = tile->directededge(startnodeinfo.edge_index());
   for (uint32_t i = 0; i < startnodeinfo.edge_count(); i++, diredge++) {
     // Skip the candidate directed edge and any non-road edges. Skip any edges
-    // that are not driveable inbound.
+    // that are not drivable inbound.
     if (i == idx || !diredge->is_road() || !(diredge->reverseaccess() & kAutoAccess)) {
       continue;
     }
@@ -697,7 +697,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
       return false;
     }
 
-    // Store the turn type of incoming driveable edges.
+    // Store the turn type of incoming drivable edges.
     uint32_t from_heading = ((startnodeinfo.heading(i) + 180) % 360);
     uint32_t turndegree = GetTurnDegree(from_heading, heading);
     incoming_turn_type.insert(Turn::GetType(turndegree));
@@ -743,13 +743,13 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
   }
 
   // Iterate through outbound edges and get turn degrees from the candidate
-  // edge onto outbound driveable edges.
+  // edge onto outbound drivable edges.
   bool oneway_outbound = false;
   std::set<Turn::Type> outgoing_turn_type;
   diredge = tile->directededge(node->edge_index());
   for (uint32_t i = 0; i < node->edge_count(); i++, diredge++) {
     // Skip opposing directed edge and any edge that is not a road. Skip any
-    // edges that are not driveable outbound.
+    // edges that are not drivable outbound.
     if (i == directededge.opp_local_idx() || !diredge->is_road() ||
         !(diredge->forwardaccess() & kAutoAccess)) {
       continue;
@@ -770,7 +770,7 @@ bool IsIntersectionInternal(const graph_tile_ptr& start_tile,
         std::round(PointLL::HeadingAlongPolyline(shape, GetOffsetForHeading(diredge->classification(),
                                                                             diredge->use())));
 
-    // Store outgoing turn type for any driveable edges
+    // Store outgoing turn type for any drivable edges
     uint32_t turndegree = GetTurnDegree(heading, to_heading);
     outgoing_turn_type.insert(Turn::GetType(turndegree));
 
@@ -824,16 +824,16 @@ uint32_t GetDensity(GraphReader& reader,
                     const Tiles<PointLL>& tiles,
                     uint8_t local_level) {
   // Radius is in km - turn into meters
-  float rm = kDensityRadius * kMetersPerKm;
-  float mr2 = rm * rm;
+  auto rm = kDensityRadius * kMetersPerKm;
+  auto mr2 = rm * rm;
 
   // Use distance approximator for all distance checks
   DistanceApproximator<PointLL> approximator(ll);
 
   // Get a list of tiles required for a node search within this radius
-  float lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
-  AABB2<PointLL> bbox(Point2(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg),
-                      Point2(ll.lng() + lngdeg, ll.lat() + kDensityLatDeg));
+  auto lngdeg = (rm / DistanceApproximator<PointLL>::MetersPerLngDegree(ll.lat()));
+  AABB2<PointLL> bbox(ll.lng() - lngdeg, ll.lat() - kDensityLatDeg, ll.lng() + lngdeg,
+                      ll.lat() + kDensityLatDeg);
   std::vector<int32_t> tilelist = tiles.TileList(bbox);
 
   // For all tiles needed to find nodes within the radius...find nodes within
@@ -1075,7 +1075,7 @@ uint32_t GetStopImpact(uint32_t from,
   // together for the stop_impact logic.
   RoadClass bestrc = RoadClass::kUnclassified;
   for (uint32_t i = 0; i < count; i++, edge++) {
-    // Check the road if it is driveable TO the intersection and is neither
+    // Check the road if it is drivable TO the intersection and is neither
     // the "to" nor "from" edge. Treat roundabout edges as two levels lower
     // classification (higher value) to reduce the stop impact.
     if (i != to && i != from && (edge->reverseaccess() & kAutoAccess)) {
@@ -1482,7 +1482,7 @@ void enhance(const boost::property_tree::ptree& pt,
       }
 
       // Go through directed edges and "enhance" directed edge attributes
-      uint32_t driveable_count = 0;
+      uint32_t drivable_count = 0;
       const DirectedEdge* edges = tilebuilder->directededges(nodeinfo.edge_index());
       for (uint32_t j = 0; j < nodeinfo.edge_count(); j++) {
         DirectedEdge& directededge = tilebuilder->directededge_builder(nodeinfo.edge_index() + j);
@@ -1603,10 +1603,10 @@ void enhance(const boost::property_tree::ptree& pt,
           }
         }
 
-        // Update driveable count (do this after country access logic)
+        // Update drivable count (do this after country access logic)
         if ((directededge.forwardaccess() & kAutoAccess) ||
             (directededge.reverseaccess() & kAutoAccess)) {
-          driveable_count++;
+          drivable_count++;
         }
 
         // Use::kPedestrian is really a kFootway
@@ -1620,8 +1620,7 @@ void enhance(const boost::property_tree::ptree& pt,
         }
 
         // Update the named flag
-        std::vector<uint8_t> types;
-        auto names = tilebuilder->edgeinfo(&directededge).GetNamesAndTypes(types, false);
+        auto names = e_offset.GetNames(false);
         directededge.set_named(names.size() > 0);
 
         // Speed assignment
@@ -1632,9 +1631,8 @@ void enhance(const boost::property_tree::ptree& pt,
         uint32_t ntrans = nodeinfo.local_edge_count();
         for (uint32_t k = 0; k < ntrans; k++) {
           DirectedEdge& fromedge = tilebuilder->directededge(nodeinfo.edge_index() + k);
-          std::vector<uint8_t> types;
           if (ConsistentNames(country_code, names,
-                              tilebuilder->edgeinfo(&fromedge).GetNamesAndTypes(types, false))) {
+                              tilebuilder->edgeinfo(&fromedge).GetNames(false))) {
             directededge.set_name_consistency(k, true);
           }
         }
@@ -1697,7 +1695,7 @@ void enhance(const boost::property_tree::ptree& pt,
       // gates or toll-booths or toll gantry or sump buster).
       if (nodeinfo.type() != NodeType::kGate && nodeinfo.type() != NodeType::kTollBooth &&
           nodeinfo.type() != NodeType::kTollGantry && nodeinfo.type() != NodeType::kSumpBuster) {
-        if (driveable_count == 1) {
+        if (drivable_count == 1) {
           nodeinfo.set_intersection(IntersectionType::kDeadEnd);
         } else if (nodeinfo.edge_count() == 2) {
           nodeinfo.set_intersection(IntersectionType::kFalse);

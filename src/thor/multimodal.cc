@@ -38,14 +38,12 @@ uint32_t GetOperatorId(const graph_tile_ptr& tile,
 namespace valhalla {
 namespace thor {
 
-constexpr uint32_t kInitialEdgeLabelCount = 200000;
-
 // Default constructor
 MultiModalPathAlgorithm::MultiModalPathAlgorithm(const boost::property_tree::ptree& config)
-    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count", kInitialEdgeLabelCount),
+    : PathAlgorithm(config.get<uint32_t>("max_reserved_labels_count_astar",
+                                         kInitialEdgeLabelCountAstar),
                     config.get<bool>("clear_reserved_memory", false)),
-      max_walking_dist_(0), max_label_count_(std::numeric_limits<uint32_t>::max()),
-      mode_(travel_mode_t::kPedestrian), travel_type_(0) {
+      max_walking_dist_(0), mode_(travel_mode_t::kPedestrian), travel_type_(0) {
 }
 
 // Destructor
@@ -60,7 +58,7 @@ void MultiModalPathAlgorithm::Init(const midgard::PointLL& destll,
 
   // Reserve size for edge labels - do this here rather than in constructor so
   // to limit how much extra memory is used for persistent objects
-  edgelabels_.reserve(std::min(max_reserved_labels_count_, kInitialEdgeLabelCount));
+  edgelabels_.reserve(max_reserved_labels_count_);
 
   // Construct adjacency list and edge status.
   // Set bucket size and cost range based on DynamicCost.
@@ -742,21 +740,19 @@ bool MultiModalPathAlgorithm::ExpandFromNode(baldr::GraphReader& graphreader,
 
     // Check if lower cost path
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels[es->index()];
+      auto& lab = edgelabels[es->index()];
       if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjlist.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, walking_distance, transition_cost,
-                   restriction_idx);
+        adjlist.decrease(es->index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, walking_distance, restriction_idx);
       }
       continue;
     }
 
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = edgelabels.size();
-    edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                            walking_distance, transition_cost, baldr::kInvalidRestriction, true,
-                            false, InternalTurn::kNoTurn);
+    edgelabels.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                            walking_distance, baldr::kInvalidRestriction, true, false,
+                            InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjlist.add(idx);
   }
@@ -812,8 +808,8 @@ bool MultiModalPathAlgorithm::CanReachDestination(const valhalla::Location& dest
     Cost cost = costing->EdgeCost(diredge, tile) * ratio;
     // we cannot do transition_cost on this label yet because we have no predecessor, but when we find
     // it, we will do an update on it and set the real transition cost based on the path to it
-    edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, 0.0f, mode_, length,
-                            Cost{}, baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+    edgelabels.emplace_back(kInvalidLabel, oppedge, diredge, cost, cost.cost, mode_, length,
+                            baldr::kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     adjlist.add(label_idx);
     edgestatus.Set(oppedge, EdgeSet::kTemporary, label_idx, tile);
     label_idx++;

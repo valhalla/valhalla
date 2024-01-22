@@ -15,12 +15,9 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astarheuristic.h>
-#include <valhalla/thor/costmatrix.h>
 #include <valhalla/thor/edgestatus.h>
 #include <valhalla/thor/matrix_common.h>
 #include <valhalla/thor/pathalgorithm.h>
-
-constexpr uint64_t kInitialEdgeLabelCount = 500000;
 
 namespace valhalla {
 namespace thor {
@@ -32,7 +29,7 @@ public:
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  TimeDistanceBSSMatrix();
+  TimeDistanceBSSMatrix(const boost::property_tree::ptree& config = {});
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -49,27 +46,27 @@ public:
    *                               to the closest 20 out of 50 locations).
    * @return time/distance from origin index to all other locations
    */
-  inline std::vector<TimeDistance>
-  SourceToTarget(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                 const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                 baldr::GraphReader& graphreader,
-                 const sif::mode_costing_t& mode_costing,
-                 const sif::travel_mode_t /*mode*/,
-                 const float max_matrix_distance,
-                 const uint32_t matrix_locations = kAllLocations) {
+  inline void SourceToTarget(Api& request,
+                             baldr::GraphReader& graphreader,
+                             const sif::mode_costing_t& mode_costing,
+                             const sif::travel_mode_t /*mode*/,
+                             const float max_matrix_distance,
+                             const uint32_t matrix_locations = kAllLocations) {
+
+    LOG_INFO("matrix::TimeDistanceBSSMatrix");
+    request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
+
     // Set the costings
     pedestrian_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kPedestrian)];
     bicycle_costing_ = mode_costing[static_cast<uint32_t>(sif::travel_mode_t::kBicycle)];
-    edgelabels_.reserve(kInitialEdgeLabelCount);
 
-    const bool forward_search = source_location_list.size() <= target_location_list.size();
+    const bool forward_search =
+        request.options().sources().size() <= request.options().targets().size();
     if (forward_search) {
-      return ComputeMatrix<ExpansionType::forward>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
+      return ComputeMatrix<ExpansionType::forward>(request, graphreader, max_matrix_distance,
                                                    matrix_locations);
     } else {
-      return ComputeMatrix<ExpansionType::reverse>(source_location_list, target_location_list,
-                                                   graphreader, max_matrix_distance,
+      return ComputeMatrix<ExpansionType::reverse>(request, graphreader, max_matrix_distance,
                                                    matrix_locations);
     }
   };
@@ -79,6 +76,11 @@ public:
    * matrix construction.
    */
   inline void clear() {
+    auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+    if (edgelabels_.size() > reservation) {
+      edgelabels_.resize(max_reserved_labels_count_);
+      edgelabels_.shrink_to_fit();
+    }
     reset();
     destinations_.clear();
     dest_edges_.clear();
@@ -91,6 +93,9 @@ protected:
 
   // The cost threshold being used for the currently executing query
   float current_cost_threshold_;
+
+  uint32_t max_reserved_labels_count_;
+  bool clear_reserved_memory_;
 
   // A* heuristic
   AStarHeuristic pedestrian_astarheuristic_;
@@ -121,6 +126,11 @@ protected:
    * Reset all origin-specific information
    */
   inline void reset() {
+    auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
+    if (edgelabels_.size() > reservation) {
+      edgelabels_.resize(max_reserved_labels_count_);
+      edgelabels_.shrink_to_fit();
+    }
     edgelabels_.clear();
     // Clear the per-origin information
     for (auto& dest : destinations_) {
@@ -141,12 +151,10 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  std::vector<TimeDistance>
-  ComputeMatrix(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
-                baldr::GraphReader& graphreader,
-                const float max_matrix_distance,
-                const uint32_t matrix_locations = kAllLocations);
+  void ComputeMatrix(Api& request,
+                     baldr::GraphReader& graphreader,
+                     const float max_matrix_distance,
+                     const uint32_t matrix_locations = kAllLocations);
 
   /**
    * Expand from the node along the forward search path. Immediately expands
@@ -189,7 +197,7 @@ protected:
   void SetOrigin(baldr::GraphReader& graphreader, const valhalla::Location& origin);
 
   /**
-   * Initalize destinations for all origins.
+   * Initialize destinations for all origins.
    * @param  graphreader   Graph reader for accessing routing graph.
    * @param  locations     List of locations.
    */
@@ -236,9 +244,10 @@ protected:
 
   /**
    * Form a time/distance matrix from the results.
-   * @return  Returns a time distance matrix among locations.
+   *
+   * @param request the request PBF
    */
-  std::vector<TimeDistance> FormTimeDistanceMatrix();
+  void FormTimeDistanceMatrix(Api& request, const bool forward, const uint32_t origin_index);
 };
 
 } // namespace thor

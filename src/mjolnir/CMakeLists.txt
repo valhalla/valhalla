@@ -42,6 +42,7 @@ set(sources
   graphvalidator.cc
   hierarchybuilder.cc
   ingest_transit.cc
+  landmarks.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
@@ -61,6 +62,12 @@ set(sources
   util.cc
   validatetransit.cc)
 
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
+
 valhalla_module(NAME mjolnir
   SOURCES ${sources}
   HEADERS ${headers}
@@ -68,7 +75,6 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/date/include
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
       ${PROTOBUF_INCLUDE_DIR}
@@ -76,6 +82,9 @@ valhalla_module(NAME mjolnir
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
   DEPENDS
     valhalla::proto
     valhalla::baldr

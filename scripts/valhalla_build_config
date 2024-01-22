@@ -38,6 +38,7 @@ config = {
         'incident_log': Optional(str),
         'shortcut_caching': Optional(bool),
         'admin': '/data/valhalla/admin.sqlite',
+        'landmarks': '/data/valhalla/landmarks.sqlite',
         'timezone': '/data/valhalla/tz_world.sqlite',
         'transit_dir': '/data/valhalla/transit',
         'transit_feeds_dir': '/data/valhalla/transit_feeds',
@@ -60,6 +61,7 @@ config = {
             'infer_internal_intersections': True,
             'infer_turn_channels': True,
             'apply_country_overrides': True,
+            'grid_divisions_within_tile': 32,
             'use_admin_db': True,
             'use_direction_on_ways': False,
             'allow_alt_name': False,
@@ -112,7 +114,12 @@ config = {
         },
         'source_to_target_algorithm': 'select_optimal',
         'service': {'proxy': 'ipc:///tmp/thor'},
-        'max_reserved_labels_count': 1000000,
+        'max_reserved_labels_count_astar': 2000000,
+        'max_reserved_labels_count_bidir_astar': 1000000,
+        'max_reserved_labels_count_dijkstras': 4000000,
+        'max_reserved_labels_count_bidir_dijkstras': 2000000,
+        'costmatrix_check_reverse_connection': False,
+        'max_reserved_locations_costmatrix': 25,
         'clear_reserved_memory': False,
         'extended_search': False,
     },
@@ -291,8 +298,9 @@ help_text = {
         'traffic_extract': 'Location to read traffic from tar',
         'incident_dir': 'Location to read incident tiles from',
         'incident_log': 'Location to read change events of incident tiles',
-        'shortcut_caching': 'Precaches the superceded edges of all shortcuts in the graph. Defaults to false',
+        'shortcut_caching': 'Precaches the superseded edges of all shortcuts in the graph. Defaults to false',
         'admin': 'Location of sqlite file holding admin polygons created with valhalla_build_admins',
+        'landmarks': 'Location of sqlite file holding landmark POI created with valhalla_build_landmarks',
         'timezone': 'Location of sqlite file holding timezone information created with valhalla_build_timezones',
         'transit_dir': 'Location of intermediate transit tiles created with valhalla_build_transit',
         'transit_feeds_dir': 'Location of GTFS transit feeds',
@@ -315,6 +323,7 @@ help_text = {
             'infer_internal_intersections': 'bool indicating whether or not to infer internal intersections during the graph enhancer phase or use the internal_intersection key from the pbf',
             'infer_turn_channels': 'bool indicating whether or not to infer turn channels during the graph enhancer phase or use the turn_channel key from the pbf',
             'apply_country_overrides': 'bool indicating whether or not to apply country overrides during the graph enhancer phase',
+            'grid_divisions_within_tile': 'number of grid subdivisions within a tile. Used for spatial sorting of nodes within a tile. Set to 0 to disable spatial sorting of nodes',
             'use_admin_db': 'bool indicating whether or not to use the administrative database during the graph enhancer phase or use the admin keys from the pbf that are set on the node',
             'use_direction_on_ways': 'bool indicating whether or not to process the direction key on the ways or utilize the guidance relation tags during the parsing phase',
             'allow_alt_name': 'bool indicating whether or not to process the alt_name key on the ways during the parsing phase',
@@ -359,9 +368,14 @@ help_text = {
             'file_name': 'Output log file for the file logger',
             'long_request': 'Value used in processing to determine whether it took too long',
         },
-        'source_to_target_algorithm': 'TODO: which matrix algorithm should be used',
+        'source_to_target_algorithm': 'Which matrix algorithm should be used, one of "timedistancematrix" or "costmatrix". If blank, the optimal will be selected.',
+        'costmatrix_check_reverse_connection': 'Whether to check for expansion connections on the reverse tree, which has an adverse effect on performance',
         'service': {'proxy': 'IPC linux domain socket file location'},
-        'max_reserved_labels_count': 'Maximum capacity that allowed to keep reserved in path algorithm.',
+        'max_reserved_labels_count_astar': 'Maximum capacity allowed to keep reserved for unidirectional A*.',
+        'max_reserved_labels_count_bidir_astar': 'Maximum capacity allowed to keep reserved for bidirectional A*.',
+        'max_reserved_labels_count_dijkstras': 'Maximum capacity allowed to keep reserved for unidirectional Dijkstras.',
+        'max_reserved_labels_count_bidir_dijkstras': 'Maximum capacity allowed to keep reserved for bidirectional Dijkstras.',
+        'max_reserved_locations_costmatrix': 'Maximum amount of locations allowed to to keep reserved between requests for CostMatrix',
         'clear_reserved_memory': 'If True clean reserved memory in path algorithms',
         'extended_search': 'If True and 1 side of the bidirectional search is exhausted, causes the other side to continue if the starting location of that side began on a not_thru or closed edge',
     },
@@ -569,7 +583,7 @@ def add_leaf_args(
 
         # its either required and is the right type or optional and has a type to use
         # lists are supported as comma separated and bools support a bunch of conventions
-        # the rest of the primatives (strings and numbers) parse automatically
+        # the rest of the primitives (strings and numbers) parse automatically
         if isinstance(tree, Optional):
             t = tree.type
         elif isinstance(tree, list):

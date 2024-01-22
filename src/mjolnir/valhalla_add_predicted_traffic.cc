@@ -25,19 +25,13 @@
 #include "mjolnir/graphtilebuilder.h"
 #include "mjolnir/util.h"
 
-#include "config.h"
+#include "argparse_utils.h"
 
 namespace vm = valhalla::midgard;
 namespace vb = valhalla::baldr;
 namespace vj = valhalla::mjolnir;
 
 namespace bpt = boost::property_tree;
-
-// args
-boost::property_tree::ptree config;
-filesystem::path traffic_tile_dir;
-unsigned int num_threads;
-bool summary = false;
 
 namespace {
 
@@ -242,79 +236,48 @@ void update_tiles(
 
 } // anonymous namespace
 
-bool ParseArguments(int argc, char* argv[]) {
+int main(int argc, char** argv) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  filesystem::path traffic_tile_dir;
+  bool summary = false;
+  boost::property_tree::ptree config;
+
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_add_predicted_traffic",
-      "valhalla_add_predicted_traffic " VALHALLA_VERSION "\n\n"
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
       "adds predicted traffic to valhalla tiles.\n");
 
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>(num_threads)->default_value(std::to_string(std::thread::hardware_concurrency())))
+      ("j,concurrency", "Number of threads to use.", cxxopts::value<unsigned int>())
       ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
       ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("s,summary", "Output summary information about traffic coverage for the tile set", cxxopts::value<bool>(summary))
-      ("t,traffic_tile_dir", "positional argument", cxxopts::value<std::string>());
+      ("t,traffic-tile-dir", "positional argument", cxxopts::value<std::string>());
     // clang-format on
 
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
+      return EXIT_SUCCESS;
 
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      exit(0);
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_add_predicted_traffic " << VALHALLA_VERSION << "\n";
-      exit(0);
-    }
-
-    if (!result.count("traffic_tile_dir")) {
+    if (!result.count("traffic-tile-dir")) {
       std::cout << "You must provide a tile directory to read the csv tiles from.\n";
       return false;
     }
-    traffic_tile_dir = filesystem::path(result["traffic_tile_dir"].as<std::string>());
-
-    // Read the config file
-    if (result.count("inline-config")) {
-      std::stringstream ss;
-      ss << result["inline-config"].as<std::string>();
-      rapidjson::read_json(ss, config);
-    } else if (result.count("config") &&
-               filesystem::is_regular_file(result["config"].as<std::string>())) {
-      rapidjson::read_json(result["config"].as<std::string>(), config);
-    } else {
-      std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
-      return false;
-    }
-
-    return true;
+    traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
   } catch (cxxopts::OptionException& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
-    return false;
-  }
-
-  return true;
-}
-
-int main(int argc, char** argv) {
-  if (!ParseArguments(argc, argv)) {
     return EXIT_FAILURE;
-  }
-
-  // configure logging
-  auto logging_subtree = config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // queue up all the work we'll be doing
@@ -337,10 +300,7 @@ int main(int argc, char** argv) {
   std::random_device rd;
   std::shuffle(traffic_tiles.begin(), traffic_tiles.end(), std::mt19937(rd()));
 
-  LOG_INFO("Adding predicted traffic with " + std::to_string(num_threads) + " threads");
-  std::vector<std::shared_ptr<std::thread>> threads(num_threads);
-
-  std::cout << traffic_tile_dir << std::endl;
+  std::vector<std::shared_ptr<std::thread>> threads(config.get<uint32_t>("mjolnir.concurrency"));
 
   LOG_INFO("Parsing speeds from " + std::to_string(traffic_tiles.size()) + " tiles.");
   size_t floor = traffic_tiles.size() / threads.size();
@@ -450,9 +410,9 @@ int main(int argc, char** argv) {
     }
   }
   LOG_INFO("Stats - excluding shortcut edges");
-  LOG_INFO("non driveable with speed = " + std::to_string(non_dr_with_speed));
+  LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
-  uint32_t totaldriveable = 0, totalpt = 0, totalff = 0, totaldriveablelink = 0;
+  uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
@@ -460,19 +420,18 @@ int main(int argc, char** argv) {
     std::stringstream ss_pct1, ss_pct2;
     ss_pct1 << std::setprecision(1) << std::fixed << pct1;
     ss_pct2 << std::setprecision(1) << std::fixed << pct2;
-    LOG_INFO("RC " + std::to_string(i) + ": driveable edges " +
+    LOG_INFO("RC " + std::to_string(i) + ": drivable edges " +
              std::to_string(dr_road_class_edges[i]) + " predtraffic " +
              std::to_string(pred_road_class_edges[i]) + " pct " + ss_pct1.str() + " ff " +
              std::to_string(ff_road_class_edges[i]) + " pct " + ss_pct2.str());
-    totaldriveable += dr_road_class_edges[i];
-    totaldriveablelink += dr_class_edges_links[i];
+    totaldrivable += dr_road_class_edges[i];
+    totaldrivablelink += dr_class_edges_links[i];
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
   }
-  LOG_INFO("total driveable = " + std::to_string(totaldriveable) +
-           " total driveable ramps/links = " + std::to_string(totaldriveablelink));
-  LOG_INFO("total driveable non ramps/links = " +
-           std::to_string(totaldriveable - totaldriveablelink));
+  LOG_INFO("total drivable = " + std::to_string(totaldrivable) +
+           " total drivable ramps/links = " + std::to_string(totaldrivablelink));
+  LOG_INFO("total drivable non ramps/links = " + std::to_string(totaldrivable - totaldrivablelink));
   LOG_INFO("total pred " + std::to_string(totalpt));
   LOG_INFO("total ff " + std::to_string(totalff));
 

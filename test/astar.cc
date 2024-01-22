@@ -239,7 +239,7 @@ std::unique_ptr<vb::GraphReader> get_graph_reader(const std::string& tile_dir) {
   std::unique_ptr<vb::GraphReader> reader(new vb::GraphReader(conf));
   auto tile = reader->GetGraphTile(tile_id);
 
-  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run succesfully?";
+  EXPECT_NE(tile, nullptr) << "Unable to load test tile! Did `make_tile` run successfully?";
   if (tile->header()->directededgecount() != 28) {
     throw std::logic_error("test-tiles does not contain expected number of edges");
   }
@@ -500,7 +500,7 @@ TEST(Astar, test_oneway_wrong_way) {
 
   try {
     auto response = tester.test(request);
-    FAIL() << "Expectd exception!";
+    FAIL() << "Expected exception!";
   } catch (const std::exception& e) {
     EXPECT_EQ(std::string(e.what()), "No path could be found for input");
   } catch (...) { FAIL() << "Wrong exception type"; }
@@ -956,7 +956,7 @@ void test_backtrack_complex_restriction(int date_time_type) {
     default:
       throw std::runtime_error("unhandled case");
   }
-  EXPECT_EQ(leg.shape(), correct_shape)
+  EXPECT_TRUE(test::encoded_shape_equality(leg.shape(), correct_shape))
       << "Did not find expected shape. Found \n" + leg.shape() + "\nbut expected \n" + correct_shape;
 
   std::vector<std::string> names;
@@ -1348,7 +1348,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.627860699397075,"lon":145.365825588286},{"lat":-37.62842169939707,"lon":145.36587158828598}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "~{rwfAmslgtGxNkUvDtDtLjM");
+    EXPECT_TRUE(test::encoded_shape_equality(leg.shape(), "~{rwfAmslgtGxNkUvDtDtLjM"));
   }
   {
     // Tests "X-crossing",
@@ -1357,7 +1357,7 @@ TEST(Astar, test_complex_restriction_short_path_melborne) {
         R"({"locations":[{"lat":-37.62403769939707,"lon":145.360320588286},{"lat":-37.624804699397075,"lon":145.36041758828597}],"costing":"auto"})";
     auto response = tester.test(request);
     const auto& leg = response.trip().routes(0).legs(0);
-    EXPECT_EQ(leg.shape(), "rmkwfAwzagtGlAgCnB}CfHcKzLk@lPbQ");
+    EXPECT_TRUE(test::encoded_shape_equality(leg.shape(), "rmkwfAwzagtGlAgCnB}CfHcKzLk@lPbQ"));
   }
 }
 
@@ -1706,7 +1706,7 @@ TEST(BiDiAstar, test_clear_reserved_memory) {
 
 TEST(BiDiAstar, test_max_reserved_labels_count) {
   boost::property_tree::ptree config;
-  config.put("max_reserved_labels_count", 10);
+  config.put("max_reserved_labels_count_bidir_astar", 10);
 
   BiAstarTest astar(config);
   astar.Clear();

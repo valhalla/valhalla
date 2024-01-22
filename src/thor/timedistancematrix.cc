@@ -1,7 +1,9 @@
-#include "thor/timedistancematrix.h"
-#include "midgard/logging.h"
 #include <algorithm>
 #include <vector>
+
+#include "baldr/datetime.h"
+#include "midgard/logging.h"
+#include "thor/timedistancematrix.h"
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -22,45 +24,18 @@ static bool IsTrivial(const uint64_t& edgeid,
   }
   return false;
 }
-
-// Will return a destination's date_time string
-std::string GetDateTime(const std::string& origin_dt,
-                        const uint64_t& origin_tz,
-                        const GraphId& pred_id,
-                        GraphReader& reader,
-                        const uint64_t& offset) {
-  if (origin_dt.empty()) {
-    return "";
-  } else if (!offset) {
-    return origin_dt;
-  }
-  graph_tile_ptr tile = nullptr;
-  uint32_t dest_tz = 0;
-  if (pred_id.Is_Valid()) {
-    // get the timezone of the output location
-    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
-    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-      dest_tz = node->timezone();
-    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-      dest_tz = node->timezone();
-  }
-
-  auto in_epoch =
-      DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
-  uint64_t out_epoch = in_epoch + offset;
-  std::string out_dt =
-      DateTime::seconds_to_date(out_epoch, DateTime::get_tz_db().from_index(dest_tz), false);
-
-  return out_dt;
-}
 } // namespace
 
 namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
+TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
+    : settled_count_(0), current_cost_threshold_(0),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
+                                                      kInitialEdgeLabelCountDijkstras)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
+      mode_(travel_mode_t::kDrive) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -100,6 +75,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     return;
   }
   const NodeInfo* nodeinfo = tile->node(node);
+  // TODO(nils): handle deadends in this algo, this should be flagged as one too
   if (!costing_->Allowed(nodeinfo)) {
     return;
   }
@@ -177,17 +153,15 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                                   static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                   pred.internal_turn());
     newcost += pred.cost() + transition_cost;
-    uint32_t distance = pred.path_distance() + directededge->length();
+    uint32_t path_distance = pred.path_distance() + directededge->length();
 
     // Check if edge is temporarily labeled and this path has less cost. If
-    // less cost the predecessor is updated and the sort cost is decremented
-    // by the difference in real cost (A* heuristic doesn't change)
+    // less cost the cost and predecessor are updated.
     if (es->set() == EdgeSet::kTemporary) {
-      EdgeLabel& lab = edgelabels_[es->index()];
+      auto& lab = edgelabels_[es->index()];
       if (newcost.cost < lab.cost().cost) {
-        float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
-        adjacencylist_.decrease(es->index(), newsortcost);
-        lab.Update(pred_idx, newcost, newsortcost, distance, transition_cost, restriction_idx);
+        adjacencylist_.decrease(es->index(), newcost.cost);
+        lab.Update(pred_idx, newcost, newcost.cost, path_distance, restriction_idx);
       }
       continue;
     }
@@ -195,13 +169,15 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
     sif::InternalTurn turn_type =
-        FORWARD ? turn_type = costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
+        FORWARD ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
                 : costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
 
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, 0.0f, mode_,
-                             distance, transition_cost, restriction_idx,
+    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                             path_distance, restriction_idx,
                              (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type);
+                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type, 0,
+                             directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv()));
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -216,35 +192,47 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant) {
+void TimeDistanceMatrix::ComputeMatrix(Api& request,
+                                       baldr::GraphReader& graphreader,
+                                       const float max_matrix_distance,
+                                       const uint32_t matrix_locations,
+                                       const bool invariant) {
   uint32_t bucketsize = costing_->UnitSize();
+
+  auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
+                          : *request.mutable_options()->mutable_targets();
+  auto& destinations = FORWARD ? *request.mutable_options()->mutable_targets()
+                               : *request.mutable_options()->mutable_sources();
+
+  size_t num_elements = origins.size() * destinations.size();
   auto time_infos = SetTime(origins, graphreader);
+  // thanks to protobuf not handling strings well, we have to collect those
+  std::vector<DateTime::dt_info_t> out_tz_infos(num_elements);
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
+  // reserve the PBF vectors
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
 
-  std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
-  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+  for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
+    // reserve some space for the next dijkstras (will be cleared at the end of the loop)
+    edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
     const auto& time_info = time_infos[origin_index];
 
-    std::vector<TimeDistance> one_to_many;
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
-    // Construct adjacency list, edge status, and done set. Set bucket size and
-    // cost range based on DynamicCost.
+    // Construct adjacency list. Set bucket size and cost range based on DynamicCost.
     adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
 
     // Initialize the origin and set the available destination edges
     settled_count_ = 0;
     SetOrigin<expansion_direction>(graphreader, origin, time_info);
     SetDestinationEdges();
+
+    // Collect edge_ids used for settling a location to determine its time zone
+    std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
+    dest_edge_ids.reserve(destinations.size());
 
     // Find shortest path
     graph_tile_ptr tile;
@@ -254,8 +242,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
       uint32_t predindex = adjacencylist_.pop();
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, GraphId{});
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, dest_edge_ids, out_tz_infos);
         break;
       }
 
@@ -277,18 +265,22 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
         // have been settled or the requested amount of destinations has been found
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
+
+        for (auto& dest_id : destedge->second) {
+          dest_edge_ids[dest_id] = pred.edgeid();
+        }
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
-          one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                               time_info.timezone_index, pred.edgeid());
+          FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                                 time_info.timezone_index, dest_edge_ids, out_tz_infos);
           break;
         }
       }
 
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
-        one_to_many = FormTimeDistanceMatrix(graphreader, origin.date_time(),
-                                             time_info.timezone_index, pred.edgeid());
+        FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
+                               time_info.timezone_index, dest_edge_ids, out_tz_infos);
         break;
       }
 
@@ -297,38 +289,34 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
                                   invariant);
     }
 
-    // Insert one-to-many into many-to-many
-    if (FORWARD) {
-      for (size_t target_index = 0; target_index < destinations.size(); target_index++) {
-        size_t index = origin_index * origins.size() + target_index;
-        many_to_many[index] = one_to_many[target_index];
-      }
-    } else {
-      for (size_t source_index = 0; source_index < destinations.size(); source_index++) {
-        size_t index = source_index * origins.size() + origin_index;
-        many_to_many[index] = one_to_many[source_index];
-      }
-    }
     reset();
   }
 
-  return many_to_many;
+  // amend the date_time strings
+  for (auto& date_time : out_tz_infos) {
+    auto* pbf_dt = request.mutable_matrix()->mutable_date_times()->Add();
+    *pbf_dt = date_time.date_time;
+
+    auto* pbf_tz_offset = request.mutable_matrix()->mutable_time_zone_offsets()->Add();
+    *pbf_tz_offset = date_time.time_zone_offset;
+
+    auto* pbf_tz_names = request.mutable_matrix()->mutable_time_zone_names()->Add();
+    *pbf_tz_names = date_time.time_zone_name;
+  }
 }
 
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
-template std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(
-    google::protobuf::RepeatedPtrField<valhalla::Location>& origins,
-    google::protobuf::RepeatedPtrField<valhalla::Location>& destinations,
-    baldr::GraphReader& graphreader,
-    const float max_matrix_distance,
-    const uint32_t matrix_locations,
-    const bool invariant);
+template void
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
+                                                                baldr::GraphReader& graphreader,
+                                                                const float max_matrix_distance,
+                                                                const uint32_t matrix_locations,
+                                                                const bool invariant);
+template void
+TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
+                                                                 baldr::GraphReader& graphreader,
+                                                                 const float max_matrix_distance,
+                                                                 const uint32_t matrix_locations,
+                                                                 const bool invariant);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -398,17 +386,19 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
     if (FORWARD) {
-      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, 0.0f, mode_,
-                               dist, Cost{}, baldr::kInvalidRestriction,
-                               !costing_->IsClosed(directededge, tile),
+      edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv()));
     } else {
-      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, 0.0f, mode_,
-                               dist, Cost{}, baldr::kInvalidRestriction,
-                               !costing_->IsClosed(directededge, tile),
+      edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
+                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn);
+                               InternalTurn::kNoTurn, 0,
+                               opp_dir_edge->destonly() ||
+                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);
@@ -442,7 +432,6 @@ void TimeDistanceMatrix::InitDestinations(
 
       // Form a threshold cost (the total cost to traverse the edge), also based on forward path for
       // REVERSE
-      GraphId id(static_cast<GraphId>(edge.graph_id()));
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
       const DirectedEdge* directededge = tile->directededge(edgeid);
       float c = costing_->EdgeCost(directededge, tile).cost;
@@ -583,17 +572,35 @@ bool TimeDistanceMatrix::UpdateDestinations(
 }
 
 // Form the time, distance matrix from the destinations list
-std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader& reader,
-                                                                     const std::string& origin_dt,
-                                                                     const uint64_t& origin_tz,
-                                                                     const GraphId& pred_id) {
-  std::vector<TimeDistance> td;
-  for (auto& dest : destinations_) {
-    auto date_time = GetDateTime(origin_dt, origin_tz, pred_id, reader,
-                                 static_cast<uint64_t>(dest.best_cost.secs + .5f));
-    td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
+void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
+                                                GraphReader& reader,
+                                                const bool forward,
+                                                const uint32_t origin_index,
+                                                const std::string& origin_dt,
+                                                const uint64_t& origin_tz,
+                                                std::unordered_map<uint32_t, GraphId>& edge_ids,
+                                                std::vector<DateTime::dt_info_t>& out_tz_infos) {
+  // when it's forward, origin_index will be the source_index
+  // when it's reverse, origin_index will be the target_index
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  graph_tile_ptr tile;
+  for (uint32_t i = 0; i < destinations_.size(); i++) {
+    auto& dest = destinations_[i];
+    float time = dest.best_cost.secs + .5f;
+    auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
+                           : (i * request.options().targets().size()) + origin_index;
+    matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
+    matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
+    matrix.mutable_distances()->Set(pbf_idx, dest.distance);
+    matrix.mutable_times()->Set(pbf_idx, time);
+
+    // this logic doesn't work with string repeated fields, gotta collect them
+    // and process them later
+    auto dt_info =
+        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(edge_ids[i], tile),
+                              static_cast<uint64_t>(time));
+    out_tz_infos[pbf_idx] = dt_info;
   }
-  return td;
 }
 
 } // namespace thor

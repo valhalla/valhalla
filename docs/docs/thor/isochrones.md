@@ -9,7 +9,7 @@ In this image the green, yellow, orange and red contour lines represent 15, 30, 
 How are Isochrone Maps Useful?
 ------------------------------
 
-Isochrone maps can be used to make informed decisions about travel at both an individual level and en masse. You can get quantitative answeres to questions like:
+Isochrone maps can be used to make informed decisions about travel at both an individual level and en masse. You can get quantitative answers to questions like:
 
  * What are our lunch options within 5 minutes from here?
  * How much of the city lives within walking range of public transit?

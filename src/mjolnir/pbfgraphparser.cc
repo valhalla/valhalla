@@ -20,8 +20,8 @@
 #include "midgard/tiles.h"
 #include "mjolnir/luatagtransform.h"
 #include "mjolnir/osmaccess.h"
+#include "mjolnir/osmlinguistic.h"
 #include "mjolnir/osmpbfparser.h"
-#include "mjolnir/osmpronunciation.h"
 #include "mjolnir/pbfgraphparser.h"
 #include "mjolnir/timeparsing.h"
 #include "mjolnir/util.h"
@@ -347,6 +347,10 @@ public:
       if (tag_.second == "true")
         way_.set_destination_only(true);
     };
+    tag_handlers_["private_hgv"] = [this]() {
+      if (tag_.second == "true")
+        way_.set_destination_only_hgv(true);
+    };
     tag_handlers_["service"] = [this]() {
       if (tag_.second == "rest_area") {
         service_ = tag_.second;
@@ -479,21 +483,57 @@ public:
       if (!tag_.second.empty())
         name_ = tag_.second;
     };
-    tag_handlers_["name:en"] = [this]() {
+    tag_handlers_["name:left"] = [this]() {
       if (!tag_.second.empty())
-        way_.set_name_en_index(osmdata_.name_offset_map.index(tag_.second));
+        name_left_ = tag_.second;
+    };
+    tag_handlers_["name:right"] = [this]() {
+      if (!tag_.second.empty())
+        name_right_ = tag_.second;
+    };
+    tag_handlers_["name:forward"] = [this]() {
+      if (!tag_.second.empty())
+        name_forward_ = tag_.second;
+    };
+    tag_handlers_["name:backward"] = [this]() {
+      if (!tag_.second.empty())
+        name_backward_ = tag_.second;
     };
     tag_handlers_["alt_name"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_)
-        way_.set_alt_name_index(osmdata_.name_offset_map.index(tag_.second));
+        alt_name_ = tag_.second;
+    };
+    tag_handlers_["alt_name:left"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_)
+        alt_name_left_ = tag_.second;
+    };
+    tag_handlers_["alt_name:right"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_)
+        alt_name_right_ = tag_.second;
     };
     tag_handlers_["official_name"] = [this]() {
       if (!tag_.second.empty())
-        way_.set_official_name_index(osmdata_.name_offset_map.index(tag_.second));
+        official_name_ = tag_.second;
+    };
+    tag_handlers_["official_name:left"] = [this]() {
+      if (!tag_.second.empty())
+        official_name_left_ = tag_.second;
+    };
+    tag_handlers_["official_name:right"] = [this]() {
+      if (!tag_.second.empty())
+        official_name_right_ = tag_.second;
     };
     tag_handlers_["tunnel:name"] = [this]() {
       if (!tag_.second.empty())
-        way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tag_.second));
+        tunnel_name_ = tag_.second;
+    };
+    tag_handlers_["tunnel:name:left"] = [this]() {
+      if (!tag_.second.empty())
+        tunnel_name_left_ = tag_.second;
+    };
+    tag_handlers_["tunnel:name:right"] = [this]() {
+      if (!tag_.second.empty())
+        tunnel_name_right_ = tag_.second;
     };
     tag_handlers_["level"] = [this]() {
       if (!tag_.second.empty())
@@ -506,141 +546,337 @@ public:
     tag_handlers_["name:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        name_ipa_ = tag_.second;
       }
     };
-    tag_handlers_["name:en:pronunciation"] = [this]() {
+    tag_handlers_["name:left:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_en_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        name_left_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_right_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:forward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_forward_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:backward:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_backward_ipa_ = tag_.second;
       }
     };
     tag_handlers_["alt_name:pronunciation"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_alt_name_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        alt_name_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:left:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_left_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_right_ipa_ = tag_.second;
       }
     };
     tag_handlers_["official_name:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_official_name_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        official_name_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:left:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        official_name_left_ipa_ = tag_.second;
+        has_pronunciation_tags_ = true;
+      }
+    };
+    tag_handlers_["official_name:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_right_ipa_ = tag_.second;
       }
     };
     tag_handlers_["tunnel:name:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_tunnel_name_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        tunnel_name_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:left:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_left_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_right_ipa_ = tag_.second;
       }
     };
     tag_handlers_["name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        name_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["name:en:pronunciation:nt-sampa"] = [this]() {
+    tag_handlers_["name:left:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_en_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        name_left_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:right:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_right_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:forward:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_forward_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:backward:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_backward_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["alt_name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_alt_name_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        alt_name_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:left:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_left_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:right:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_right_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["official_name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_official_name_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        official_name_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:left:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_left_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:right:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_right_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["tunnel:name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_tunnel_name_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        tunnel_name_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["name:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["tunnel:name:left:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        tunnel_name_left_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["name:en:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["tunnel:name:right:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_en_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        tunnel_name_right_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["alt_name:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:left:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_left_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_right_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:forward:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_forward_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:backward:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_backward_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_alt_name_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        alt_name_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["official_name:pronunciation:x-katakana"] = [this]() {
-      if (!tag_.second.empty()) {
-        has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_official_name_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
-      }
-    };
-    tag_handlers_["tunnel:name:pronunciation:x-katakana"] = [this]() {
-      if (!tag_.second.empty()) {
-        has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_tunnel_name_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
-      }
-    };
-    tag_handlers_["name:pronunciation:x-jeita"] = [this]() {
-      if (!tag_.second.empty()) {
-        has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
-      }
-    };
-    tag_handlers_["name:en:pronunciation:x-jeita"] = [this]() {
-      if (!tag_.second.empty()) {
-        has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_name_en_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
-      }
-    };
-    tag_handlers_["alt_name:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["alt_name:left:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_alt_name_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        alt_name_left_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["official_name:pronunciation:x-jeita"] = [this]() {
-      if (!tag_.second.empty()) {
+    tag_handlers_["alt_name:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_official_name_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        alt_name_right_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["tunnel:name:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["official_name:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_tunnel_name_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        official_name_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:left:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_left_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_right_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:left:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_left_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_right_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_right_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:forward:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_forward_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["name:backward:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        name_backward_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["alt_name:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty() && allow_alt_name_) {
+        has_pronunciation_tags_ = true;
+        alt_name_right_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["official_name:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        official_name_right_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["tunnel:name:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        tunnel_name_right_jeita_ = tag_.second;
       }
     };
     tag_handlers_["max_speed"] = [this]() {
@@ -781,98 +1017,212 @@ public:
 
     tag_handlers_["ref"] = [this]() {
       if (!tag_.second.empty()) {
-        if (!use_direction_on_ways_)
-          way_.set_ref_index(osmdata_.name_offset_map.index(tag_.second));
-        else
-          ref_ = tag_.second;
+        ref_ = tag_.second;
       }
+    };
+    tag_handlers_["ref:left"] = [this]() {
+      if (!tag_.second.empty())
+        ref_left_ = tag_.second;
+    };
+    tag_handlers_["ref:right"] = [this]() {
+      if (!tag_.second.empty())
+        ref_right_ = tag_.second;
     };
     tag_handlers_["int_ref"] = [this]() {
       if (!tag_.second.empty()) {
-        if (!use_direction_on_ways_)
-          way_.set_int_ref_index(osmdata_.name_offset_map.index(tag_.second));
-        else
-          int_ref_ = tag_.second;
+        int_ref_ = tag_.second;
       }
+    };
+    tag_handlers_["int_ref:left"] = [this]() {
+      if (!tag_.second.empty())
+        int_ref_left_ = tag_.second;
+    };
+    tag_handlers_["int_ref:right"] = [this]() {
+      if (!tag_.second.empty())
+        int_ref_right_ = tag_.second;
     };
     tag_handlers_["ref:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_ref_pronunciation_ipa_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          ref_pronunciation_ = tag_.second;
+        if (use_direction_on_ways_)
+          ref_ipa_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+          pronunciationMap[std::make_pair(t, ipa)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["ref:left:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_left_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_right_ipa_ = tag_.second;
       }
     };
     tag_handlers_["int_ref:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          int_ref_pronunciation_ = tag_.second;
+        if (use_direction_on_ways_)
+          int_ref_ipa_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+          pronunciationMap[std::make_pair(t, ipa)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["int_ref:left:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_left_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:right:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_right_ipa_ = tag_.second;
       }
     };
     tag_handlers_["ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          ref_pronunciation_nt_sampa_ = tag_.second;
+        if (use_direction_on_ways_)
+          ref_nt_sampa_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+          pronunciationMap[std::make_pair(t, nt_sampa)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["ref:left:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_left_nt_sampa_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:right:pronunciation:nt-sampa"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_right_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["int_ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          int_ref_pronunciation_nt_sampa_ = tag_.second;
+        if (use_direction_on_ways_)
+          int_ref_nt_sampa_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+          pronunciationMap[std::make_pair(t, nt_sampa)] = osmdata_.name_offset_map.index(tag_.second);
+        }
       }
     };
-    tag_handlers_["ref:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["int_ref:left:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_ref_pronunciation_katakana_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          ref_pronunciation_katakana_ = tag_.second;
+        int_ref_left_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["int_ref:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["int_ref:right:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          int_ref_pronunciation_katakana_ = tag_.second;
+        int_ref_right_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["ref:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["ref:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_ref_pronunciation_jeita_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          ref_pronunciation_jeita_ = tag_.second;
+        if (use_direction_on_ways_)
+          ref_katakana_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+          pronunciationMap[std::make_pair(t, katakana)] = osmdata_.name_offset_map.index(tag_.second);
+        }
       }
     };
-    tag_handlers_["int_ref:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["ref:left:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        if (!use_direction_on_ways_)
-          osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
-              osmdata_.name_offset_map.index(tag_.second));
-        else
-          int_ref_pronunciation_jeita_ = tag_.second;
+        ref_left_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_right_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (use_direction_on_ways_)
+          int_ref_katakana_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+          pronunciationMap[std::make_pair(t, katakana)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["int_ref:left:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_left_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:right:pronunciation:katakana"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_right_katakana_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (use_direction_on_ways_)
+          ref_jeita_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+          pronunciationMap[std::make_pair(t, jeita)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["ref:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["ref:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        ref_right_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        if (use_direction_on_ways_)
+          int_ref_jeita_ = tag_.second;
+        else {
+          const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+          pronunciationMap[std::make_pair(t, jeita)] = osmdata_.name_offset_map.index(tag_.second);
+        }
+      }
+    };
+    tag_handlers_["int_ref:left:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_left_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["int_ref:right:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        int_ref_right_jeita_ = tag_.second;
       }
     };
     tag_handlers_["direction"] = [this]() {
@@ -899,19 +1249,19 @@ public:
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_nt_sampa_ = tag_.second;
     };
-    tag_handlers_["direction:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["direction:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_pronunciation_katakana_ = tag_.second;
     };
-    tag_handlers_["int_direction:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["int_direction:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_katakana_ = tag_.second;
     };
-    tag_handlers_["direction:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["direction:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         direction_pronunciation_jeita_ = tag_.second;
     };
-    tag_handlers_["int_direction:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["int_direction:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty() && use_direction_on_ways_)
         int_direction_pronunciation_jeita_ = tag_.second;
     };
@@ -1100,274 +1450,284 @@ public:
     //    };
     tag_handlers_["destination"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:forward"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_forward_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_forward_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:backward"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_backward_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_backward_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:ref"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:ref:to"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_ref_to_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_to_ = tag_.second;
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:int_ref"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_int_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["destination:int_ref:to"] = [this]() {
+      if (!tag_.second.empty()) {
+        way_.set_destination_int_ref_to_index(osmdata_.name_offset_map.index(tag_.second));
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:street"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_street_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_street_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:street:to"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_destination_street_to_index(osmdata_.name_offset_map.index(tag_.second));
+        destination_street_to_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["junction:ref"] = [this]() {
       if (!tag_.second.empty()) {
-        way_.set_junction_ref_index(osmdata_.name_offset_map.index(tag_.second));
+        junction_ref_ = tag_.second;
+        way_.set_exit(true);
+      }
+    };
+    tag_handlers_["junction:name"] = [this]() {
+      if (!tag_.second.empty()) {
+        junction_name_ = tag_.second;
         way_.set_exit(true);
       }
     };
     tag_handlers_["destination:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:forward:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_forward_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_forward_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:backward:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_backward_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_backward_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:ref:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:ref:to:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_to_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_to_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:street:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:street:to:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_to_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_to_ipa_ = tag_.second;
       }
     };
     tag_handlers_["junction:ref:pronunciation"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_junction_ref_pronunciation_ipa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        junction_ref_ipa_ = tag_.second;
+      }
+    };
+    tag_handlers_["junction:name:pronunciation"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        junction_name_ipa_ = tag_.second;
       }
     };
     tag_handlers_["destination:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:forward:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_forward_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_forward_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:backward:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_backward_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_backward_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:ref:to:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_to_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_to_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:street:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["destination:street:to:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_to_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_to_nt_sampa_ = tag_.second;
       }
     };
     tag_handlers_["junction:ref:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_junction_ref_pronunciation_nt_sampa_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        junction_ref_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["destination:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["junction:name:pronunciation:nt-sampa"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        junction_name_nt_sampa_ = tag_.second;
       }
     };
-    tag_handlers_["destination:forward:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_forward_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:backward:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:forward:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_backward_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_forward_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:ref:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:backward:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_backward_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:ref:to:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:ref:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_to_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:street:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:ref:to:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_to_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:street:to:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:street:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_to_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["junction:ref:pronunciation:x-katakana"] = [this]() {
+    tag_handlers_["destination:street:to:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_junction_ref_pronunciation_katakana_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_to_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["junction:ref:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        junction_ref_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:forward:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["junction:name:pronunciation:katakana"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_forward_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        junction_name_katakana_ = tag_.second;
       }
     };
-    tag_handlers_["destination:backward:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_backward_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["destination:ref:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:forward:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_forward_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["destination:ref:to:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:backward:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_ref_to_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_backward_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["destination:street:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:ref:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["destination:street:to:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:ref:to:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_destination_street_to_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_ref_to_jeita_ = tag_.second;
       }
     };
-    tag_handlers_["junction:ref:pronunciation:x-jeita"] = [this]() {
+    tag_handlers_["destination:street:pronunciation:jeita"] = [this]() {
       if (!tag_.second.empty()) {
         has_pronunciation_tags_ = true;
-        osm_pronunciation_.set_junction_ref_pronunciation_jeita_index(
-            osmdata_.name_offset_map.index(tag_.second));
+        destination_street_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["destination:street:to:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        destination_street_to_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["junction:ref:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        junction_ref_jeita_ = tag_.second;
+      }
+    };
+    tag_handlers_["junction:name:pronunciation:jeita"] = [this]() {
+      if (!tag_.second.empty()) {
+        has_pronunciation_tags_ = true;
+        junction_name_jeita_ = tag_.second;
       }
     };
     tag_handlers_["turn:lanes"] = [this]() {
@@ -1524,7 +1884,17 @@ public:
         junction != results->end() && (junction->second == "named" || junction->second == "yes");
     bool named_junction = false;
 
-    // Create a new node and set its attributes
+    const auto barrier_toll_booth = results->find("barrier");
+    bool is_barrier_toll_booth =
+        (barrier_toll_booth != results->end()) && (barrier_toll_booth->second == "toll_booth");
+
+    const auto highway_toll_gantry = results->find("highway");
+    bool is_highway_toll_gantry =
+        (highway_toll_gantry != results->end()) && (highway_toll_gantry->second == "toll_gantry");
+
+    bool is_toll_node = is_barrier_toll_booth || is_highway_toll_gantry;
+    bool named_toll_node = false;
+
     OSMNode n;
     n.set_id(osmid);
     n.set_latlng(lng, lat);
@@ -1532,8 +1902,18 @@ public:
     if (is_highway_junction) {
       n.set_type(NodeType::kMotorWayJunction);
     }
+    ref_ = ref_language_ = ref_w_lang_ = name_ = language_ = name_w_lang_ = {};
+    name_ipa_ = ref_ipa_ = name_nt_sampa_ = ref_nt_sampa_ = name_katakana_ = ref_katakana_ =
+        name_jeita_ = ref_jeita_ = {};
 
     for (const auto& tag : *results) {
+      tag_ = tag;
+
+      bool is_lang_pronunciation = false;
+      std::size_t found = tag_.first.find(":pronunciation");
+      if (found != std::string::npos)
+        is_lang_pronunciation = true;
+
       // TODO: instead of checking this, we should delete these tag/values completely in lua
       // and save our CPUs the wasted time of iterating over them again for nothing
       auto hasTag = !tag.second.empty();
@@ -1578,30 +1958,36 @@ public:
         n.set_exit_to_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_exit_to_count;
       } else if (tag.first == "ref" && is_highway_junction && hasTag) {
-        // Add the name to the unique node names list and store its index in the OSM node
-        n.set_ref_index(osmdata_.node_names.index(tag.second));
+        // Add the name to the unique node names list and store its index in the OSM node.
+
+        // TODO  Need to process ref:right and ref:left and add correctly in graphbuilder.
+        // ref:left means the ref for the left exit and ref:right means the ref for the
+        // right exit at a split
+        ref_ = tag.second;
         ++osmdata_.node_ref_count;
-      } else if (tag.first == "name" && (is_highway_junction || maybe_named_junction) && hasTag) {
+      } else if (tag.first == "name" &&
+                 (is_highway_junction || maybe_named_junction || is_toll_node) && hasTag) {
         // Add the name to the unique node names list and store its index in the OSM node
-        n.set_name_index(osmdata_.node_names.index(tag.second));
+        name_ = tag.second;
         ++osmdata_.node_name_count;
         named_junction = maybe_named_junction;
+        named_toll_node = is_toll_node;
       } else if (tag.first == "name:pronunciation") {
-        n.set_name_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+        name_ipa_ = tag.second;
       } else if (tag.first == "name:pronunciation:nt-sampa") {
-        n.set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "name:pronunciation:x-katakana") {
-        n.set_name_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "name:pronunciation:x-jeita") {
-        n.set_name_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
+        name_nt_sampa_ = tag.second;
+      } else if (tag.first == "name:pronunciation:katakana") {
+        name_katakana_ = tag.second;
+      } else if (tag.first == "name:pronunciation:jeita") {
+        name_jeita_ = tag.second;
       } else if (tag.first == "ref:pronunciation") {
-        n.set_ref_pronunciation_ipa_index(osmdata_.node_names.index(tag.second));
+        ref_ipa_ = tag.second;
       } else if (tag.first == "ref:pronunciation:nt-sampa") {
-        n.set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "ref:pronunciation:x-katakana") {
-        n.set_ref_pronunciation_katakana_index(osmdata_.node_names.index(tag.second));
-      } else if (tag.first == "ref:pronunciation:x-jeita") {
-        n.set_ref_pronunciation_jeita_index(osmdata_.node_names.index(tag.second));
+        ref_nt_sampa_ = tag.second;
+      } else if (tag.first == "ref:pronunciation:katakana") {
+        ref_katakana_ = tag.second;
+      } else if (tag.first == "ref:pronunciation:jeita") {
+        ref_jeita_ = tag.second;
       } else if (tag.first == "gate" && tag.second == "true") {
         osmdata_.edge_count += !intersection;
         intersection = true;
@@ -1645,11 +2031,78 @@ public:
         n.set_tagged_access(std::stoi(tag.second));
       } else if (tag.first == "private") {
         n.set_private_access(tag.second == "true");
+      } else if (!is_lang_pronunciation) {
+        if (boost::algorithm::starts_with(tag.first, "name:") &&
+            (is_highway_junction || maybe_named_junction || is_toll_node) && hasTag) {
+          ProcessNameTag(tag_, name_w_lang_, language_);
+          ++osmdata_.node_name_count;
+          named_junction = maybe_named_junction;
+        } else if (boost::algorithm::starts_with(tag_.first, "ref:")) {
+          ProcessNameTag(tag_, ref_w_lang_, ref_language_);
+          ++osmdata_.node_ref_count;
+        }
+      } else {
+        std::string t = tag_.first;
+        PronunciationAlphabet alphabet = PronunciationAlphabet::kIpa;
+        std::size_t found = t.find(":nt-sampa");
+        if (found != std::string::npos)
+          alphabet = PronunciationAlphabet::kNtSampa;
+        else {
+          found = t.find(":katakana");
+          if (found != std::string::npos)
+            alphabet = PronunciationAlphabet::kKatakana;
+          else {
+            found = t.find(":jeita");
+            if (found != std::string::npos)
+              alphabet = PronunciationAlphabet::kJeita;
+          }
+        }
+        if (boost::algorithm::starts_with(t, "name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeName, alphabet, &n);
+        } else if (boost::algorithm::starts_with(t, "ref:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kNodeRef, alphabet, &n);
+        }
       }
     }
 
-    // If we ended up storing a name for a regular junction flag that
-    n.set_named_intersection(named_junction);
+    // begin name logic
+    std::string l = language_;
+    ProcessName(name_w_lang_, name_, language_);
+    n.set_name_index(osmdata_.node_names.index(name_));
+    n.set_name_lang_index(osmdata_.node_names.index(language_));
+
+    // begin ref logic
+    l = ref_language_;
+    ProcessName(ref_w_lang_, ref_, ref_language_);
+    n.set_ref_index(osmdata_.node_names.index(ref_));
+    n.set_ref_lang_index(osmdata_.node_names.index(ref_language_));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kIpa, name_ipa_,
+                             &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kKatakana,
+                             name_katakana_, &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kJeita,
+                             name_jeita_, &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeName, PronunciationAlphabet::kNtSampa,
+                             name_nt_sampa_, &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kIpa, ref_ipa_,
+                             &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kKatakana,
+                             ref_katakana_, &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kJeita, ref_jeita_,
+                             &n);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kNodeRef, PronunciationAlphabet::kNtSampa,
+                             ref_nt_sampa_, &n);
+
+    // Different types of named nodes are tagged as a named intersection
+    n.set_named_intersection(named_junction || named_toll_node);
 
     // If way parsing marked it as the beginning or end of a way (dead ends) we'll keep that too
     sequence<OSMWayNode>::iterator element = (*way_nodes_)[current_way_node_index_];
@@ -1687,6 +2140,7 @@ public:
   virtual void way_callback(const uint64_t osmid,
                             const OSMPBF::Tags& tags,
                             const std::vector<uint64_t>& nodes) override {
+
     osmid_ = osmid;
 
     // unsorted extracts are just plain nasty, so they can bugger off!
@@ -1787,21 +2241,97 @@ public:
     default_speed_ = 0.0f, max_speed_ = 0.0f;
     average_speed_ = 0.0f, advisory_speed_ = 0.0f;
     has_default_speed_ = false, has_max_speed_ = false;
-    has_average_speed_ = false, has_advisory_speed_ = false;
-    has_surface_ = true;
-    name_ = {}, service_ = {}, amenity_ = {};
+    has_average_speed_ = false, has_advisory_speed_ = false, has_surface_ = true,
 
+    name_ = language_ = name_w_lang_ = service_ = amenity_ = name_left_ = name_right_ = lang_left_ =
+        lang_right_ = name_left_w_lang_ = name_right_w_lang_ = {};
+
+    name_forward_ = name_backward_ = lang_forward_ = lang_backward_ = name_forward_w_lang_ =
+        name_backward_w_lang_ = {};
+
+    ref_ipa_ = ref_left_ipa_ = ref_right_ipa_ = ref_katakana_ = ref_left_katakana_ =
+        ref_right_katakana_ = ref_jeita_ = ref_left_jeita_ = ref_right_jeita_ = ref_nt_sampa_ =
+            ref_left_nt_sampa_ = ref_right_nt_sampa_ = {};
+
+    int_ref_ipa_ = int_ref_left_ipa_ = int_ref_right_ipa_ = int_ref_katakana_ =
+        int_ref_left_katakana_ = int_ref_right_katakana_ = int_ref_jeita_ = int_ref_left_jeita_ =
+            int_ref_right_jeita_ = int_ref_nt_sampa_ = int_ref_left_nt_sampa_ =
+                int_ref_right_nt_sampa_ = {};
+
+    name_ipa_ = name_left_ipa_ = name_right_ipa_ = name_forward_ipa_ = name_backward_ipa_ =
+        name_katakana_ = name_left_katakana_ = name_right_katakana_ = name_forward_katakana_ =
+            name_backward_katakana_ = name_jeita_ = name_left_jeita_ = name_right_jeita_ =
+                name_forward_jeita_ = name_backward_jeita_ = name_nt_sampa_ = name_left_nt_sampa_ =
+                    name_right_nt_sampa_ = name_forward_nt_sampa_ = name_backward_nt_sampa_ = {};
+
+    alt_name_ipa_ = alt_name_left_ipa_ = alt_name_right_ipa_ = alt_name_katakana_ =
+        alt_name_left_katakana_ = alt_name_right_katakana_ = alt_name_jeita_ = alt_name_left_jeita_ =
+            alt_name_right_jeita_ = alt_name_nt_sampa_ = alt_name_left_nt_sampa_ =
+                alt_name_right_nt_sampa_ = {};
+
+    official_name_ipa_ = official_name_left_ipa_ = official_name_right_ipa_ =
+        official_name_katakana_ = official_name_left_katakana_ = official_name_right_katakana_ =
+            official_name_jeita_ = official_name_left_jeita_ = official_name_right_jeita_ =
+                official_name_nt_sampa_ = official_name_left_nt_sampa_ =
+                    official_name_right_nt_sampa_ = {};
+
+    tunnel_name_ipa_ = tunnel_name_left_ipa_ = tunnel_name_right_ipa_ = tunnel_name_katakana_ =
+        tunnel_name_left_katakana_ = tunnel_name_right_katakana_ = tunnel_name_jeita_ =
+            tunnel_name_left_jeita_ = tunnel_name_right_jeita_ = tunnel_name_nt_sampa_ =
+                tunnel_name_left_nt_sampa_ = tunnel_name_right_nt_sampa_ = {};
+
+    official_name_ = official_language_ = official_name_w_lang_ = official_name_left_ =
+        official_name_right_ = official_lang_left_ = official_lang_right_ =
+            official_name_left_w_lang_ = official_name_right_w_lang_ = {};
+
+    tunnel_name_ = tunnel_language_ = tunnel_name_w_lang_ = tunnel_name_left_ = tunnel_name_right_ =
+        tunnel_lang_left_ = tunnel_lang_right_ = tunnel_name_left_w_lang_ =
+            tunnel_name_right_w_lang_ = {};
+
+    alt_name_ = alt_language_ = alt_name_w_lang_ = alt_name_left_ = alt_name_right_ = alt_lang_left_ =
+        alt_lang_right_ = alt_name_left_w_lang_ = alt_name_right_w_lang_ = {};
+
+    destination_ = destination_language_ = destination_w_lang_ = destination_forward_ =
+        destination_forward_language_ = destination_forward_w_lang_ = destination_backward_ =
+            destination_backward_language_ = destination_backward_w_lang_ = {};
+
+    destination_ref_ = destination_ref_language_ = destination_ref_w_lang_ = destination_ref_to_ =
+        destination_ref_to_language_ = destination_ref_to_w_lang_ = destination_street_ =
+            destination_street_language_ = destination_street_w_lang_ = destination_street_to_ =
+                destination_street_to_language_ = destination_street_to_w_lang_ = {};
+
+    junction_ref_ = junction_ref_language_ = junction_ref_w_lang_ = junction_name_ =
+        junction_name_language_ = junction_name_w_lang_ = {};
+
+    destination_ipa_ = destination_forward_ipa_ = destination_backward_ipa_ = destination_katakana_ =
+        destination_forward_katakana_ = destination_backward_katakana_ = destination_jeita_ =
+            destination_forward_jeita_ = destination_backward_jeita_ = destination_nt_sampa_ =
+                destination_forward_nt_sampa_ = destination_backward_nt_sampa_ = {};
+
+    destination_ref_ipa_ = destination_ref_to_ipa_ = destination_street_ipa_ =
+        destination_street_to_ipa_ = junction_ref_ipa_ = junction_name_ipa_ = {};
+    destination_ref_nt_sampa_ = destination_ref_to_nt_sampa_ = destination_street_nt_sampa_ =
+        destination_street_to_nt_sampa_ = junction_ref_nt_sampa_ = junction_name_nt_sampa_ = {};
+    destination_ref_katakana_ = destination_ref_to_katakana_ = destination_street_katakana_ =
+        destination_street_to_katakana_ = junction_ref_katakana_ = junction_name_katakana_ = {};
+    destination_ref_jeita_ = destination_ref_to_jeita_ = destination_street_jeita_ =
+        destination_street_to_jeita_ = junction_ref_jeita_ = junction_name_jeita_ = {};
     // Process tags
     way_ = OSMWay{osmid_};
     way_.set_node_count(nodes.size());
 
     osm_access_ = OSMAccess{osmid_};
-    osm_pronunciation_ = OSMPronunciation{osmid_};
-
+    pronunciationMap.clear();
+    langMap.clear();
     has_user_tags_ = false, has_pronunciation_tags_ = false;
-    ref_ = int_ref_ = direction_ = int_direction_ = {};
-    ref_pronunciation_ = int_ref_pronunciation_ = direction_pronunciation_ =
-        int_direction_pronunciation_ = {};
+    ref_ = ref_language_ = ref_w_lang_ = ref_left_ = ref_right_ = ref_lang_left_ = ref_lang_right_ =
+        ref_left_w_lang_ = ref_right_w_lang_ = {};
+
+    int_ref_ = int_ref_language_ = int_ref_w_lang_ = int_ref_left_ = int_ref_right_ =
+        int_ref_lang_left_ = int_ref_lang_right_ = int_ref_left_w_lang_ = int_ref_right_w_lang_ = {};
+
+    direction_ = int_direction_ = {};
+    direction_pronunciation_ = int_direction_pronunciation_ = {};
 
     const auto& surface_exists = results.find("surface");
     has_surface_tag_ = (surface_exists != results.end());
@@ -1813,6 +2343,12 @@ public:
 
     for (const auto& kv : results) {
       tag_ = kv;
+
+      bool is_lang_pronunciation = false;
+      std::size_t found = tag_.first.find(":pronunciation");
+      if (found != std::string::npos)
+        is_lang_pronunciation = true;
+
       const auto it = tag_handlers_.find(tag_.first);
       if (it != tag_handlers_.end()) {
         try {
@@ -1857,10 +2393,16 @@ public:
         if (tokens.size() == 2 && tmp.size()) {
 
           uint16_t mode = 0;
-          if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional") ||
-              boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
+          if (boost::algorithm::starts_with(tag_.first, "motor_vehicle:conditional")) {
             mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
                     kHOVAccess | kMopedAccess | kMotorcycleAccess);
+          } else if (boost::algorithm::starts_with(tag_.first, "motorcar:conditional")) {
+            if (type == AccessType::kTimedAllowed) {
+              mode = kAutoAccess | kHOVAccess | kTaxiAccess;
+            } else {
+              mode = (kAutoAccess | kTruckAccess | kEmergencyAccess | kTaxiAccess | kBusAccess |
+                      kHOVAccess);
+            }
           } else if (boost::algorithm::starts_with(tag_.first, "bicycle:conditional")) {
             mode = kBicycleAccess;
           } else if (boost::algorithm::starts_with(tag_.first, "foot:conditional") ||
@@ -1900,6 +2442,176 @@ public:
             }
           }
         }
+      } else if (!is_lang_pronunciation) {
+        if (boost::algorithm::starts_with(tag_.first, "name:left:")) {
+          ProcessLeftRightNameTag(tag_, name_left_w_lang_, lang_left_);
+        } else if (boost::algorithm::starts_with(tag_.first, "name:right:")) {
+          ProcessLeftRightNameTag(tag_, name_right_w_lang_, lang_right_);
+        } else if (boost::algorithm::starts_with(tag_.first, "name:forward:")) {
+          ProcessLeftRightNameTag(tag_, name_forward_w_lang_, lang_forward_);
+        } else if (boost::algorithm::starts_with(tag_.first, "name:backward:")) {
+          ProcessLeftRightNameTag(tag_, name_backward_w_lang_, lang_backward_);
+        } else if (boost::algorithm::starts_with(tag_.first, "name:")) {
+          ProcessNameTag(tag_, name_w_lang_, language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "official_name:left:")) {
+          ProcessLeftRightNameTag(tag_, official_name_left_w_lang_, official_lang_left_);
+        } else if (boost::algorithm::starts_with(tag_.first, "official_name:right:")) {
+          ProcessLeftRightNameTag(tag_, official_name_right_w_lang_, official_lang_right_);
+        } else if (boost::algorithm::starts_with(tag_.first, "official_name:")) {
+          ProcessNameTag(tag_, official_name_w_lang_, official_language_);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:left:")) {
+          ProcessLeftRightNameTag(tag_, alt_name_left_w_lang_, alt_lang_left_);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:right:")) {
+          ProcessLeftRightNameTag(tag_, alt_name_right_w_lang_, alt_lang_right_);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(tag_.first, "alt_name:")) {
+          ProcessNameTag(tag_, alt_name_w_lang_, alt_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "ref:left:")) {
+          ProcessLeftRightNameTag(tag_, ref_left_w_lang_, ref_lang_left_);
+        } else if (boost::algorithm::starts_with(tag_.first, "ref:right:")) {
+          ProcessLeftRightNameTag(tag_, ref_right_w_lang_, ref_lang_right_);
+        } else if (boost::algorithm::starts_with(tag_.first, "ref:")) {
+          ProcessNameTag(tag_, ref_w_lang_, ref_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:left:")) {
+          ProcessLeftRightNameTag(tag_, int_ref_left_w_lang_, int_ref_lang_left_);
+        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:right:")) {
+          ProcessLeftRightNameTag(tag_, int_ref_right_w_lang_, int_ref_lang_right_);
+        } else if (boost::algorithm::starts_with(tag_.first, "int_ref:")) {
+          ProcessNameTag(tag_, int_ref_w_lang_, int_ref_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:left:")) {
+          ProcessLeftRightNameTag(tag_, tunnel_name_left_w_lang_, tunnel_lang_left_);
+        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:right:")) {
+          ProcessLeftRightNameTag(tag_, tunnel_name_right_w_lang_, tunnel_lang_right_);
+        } else if (boost::algorithm::starts_with(tag_.first, "tunnel:name:")) {
+          ProcessNameTag(tag_, tunnel_name_w_lang_, tunnel_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:backward:")) {
+          ProcessNameTag(tag_, destination_backward_w_lang_, destination_backward_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:forward:")) {
+          ProcessNameTag(tag_, destination_forward_w_lang_, destination_forward_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+          ProcessNameTag(tag_, destination_ref_to_w_lang_, destination_ref_to_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+          ProcessNameTag(tag_, destination_ref_w_lang_, destination_ref_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+          ProcessNameTag(tag_, destination_street_to_w_lang_, destination_street_to_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+          ProcessNameTag(tag_, destination_street_w_lang_, destination_street_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:")) {
+          ProcessNameTag(tag_, destination_w_lang_, destination_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+          ProcessNameTag(tag_, junction_ref_w_lang_, junction_ref_language_);
+        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+          ProcessNameTag(tag_, junction_name_w_lang_, junction_name_language_);
+        }
+      } else { // is_lang_pronunciation = true
+        std::string t = tag_.first;
+        PronunciationAlphabet alphabet = PronunciationAlphabet::kIpa;
+        std::size_t found = t.find(":nt-sampa");
+        if (found != std::string::npos)
+          alphabet = PronunciationAlphabet::kNtSampa;
+        else {
+          found = t.find(":katakana");
+          if (found != std::string::npos)
+            alphabet = PronunciationAlphabet::kKatakana;
+          else {
+            found = t.find(":jeita");
+            if (found != std::string::npos)
+              alphabet = PronunciationAlphabet::kJeita;
+          }
+        }
+
+        if (boost::algorithm::starts_with(t, "name:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameLeft, alphabet);
+        } else if (boost::algorithm::starts_with(t, "name:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameRight, alphabet);
+        } else if (boost::algorithm::starts_with(t, "name:forward:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameForward, alphabet);
+        } else if (boost::algorithm::starts_with(t, "name:backward:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kNameBackward, alphabet);
+        } else if (boost::algorithm::starts_with(t, "name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kName, alphabet);
+        } else if (boost::algorithm::starts_with(t, "official_name:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameLeft, alphabet);
+        } else if (boost::algorithm::starts_with(t, "official_name:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kOfficialNameRight, alphabet);
+        } else if (boost::algorithm::starts_with(t, "official_name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kOfficialName, alphabet);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameLeft, alphabet);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kAltNameRight, alphabet);
+        } else if (allow_alt_name_ && boost::algorithm::starts_with(t, "alt_name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kAltName, alphabet);
+        } else if (boost::algorithm::starts_with(t, "ref:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefLeft, alphabet);
+        } else if (boost::algorithm::starts_with(t, "ref:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kRefRight, alphabet);
+        } else if (boost::algorithm::starts_with(t, "ref:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kRef, alphabet);
+        } else if (boost::algorithm::starts_with(t, "int_ref:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefLeft, alphabet);
+        } else if (boost::algorithm::starts_with(t, "int_ref:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kIntRefRight, alphabet);
+        } else if (boost::algorithm::starts_with(t, "int_ref:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kIntRef, alphabet);
+        } else if (boost::algorithm::starts_with(t, "tunnel:name:left:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameLeft, alphabet);
+        } else if (boost::algorithm::starts_with(t, "tunnel:name:right:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kTunnelNameRight, alphabet);
+        } else if (boost::algorithm::starts_with(t, "tunnel:name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kTunnelName, alphabet);
+        } else if (boost::algorithm::starts_with(t, "destination:forward:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationForward, alphabet);
+        } else if (boost::algorithm::starts_with(t, "destination:backward:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationBackward, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:to:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRefTo, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:ref:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationRef, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:to:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreetTo, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "destination:street:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kDestinationStreet, alphabet);
+        } else if (boost::algorithm::starts_with(t, "destination:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kDestination, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "junction:ref:")) {
+          ProcessLeftRightPronunciationTag(OSMLinguistic::Type::kJunctionRef, alphabet);
+        } else if (boost::algorithm::starts_with(tag_.first, "junction:name:")) {
+          ProcessPronunciationTag(OSMLinguistic::Type::kJunctionName, alphabet);
+        }
+      }
+    }
+
+    if (!use_direction_on_ways_) {
+
+      uint8_t alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+      uint8_t right = static_cast<uint8_t>(OSMLinguistic::Type::kRefRight);
+      uint8_t left = static_cast<uint8_t>(OSMLinguistic::Type::kRefLeft);
+
+      if (get_pronunciation_index(right, alpha) && get_pronunciation_index(left, alpha)) {
+        uint8_t type = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+        ref_ipa_ = osmdata_.name_offset_map.name(get_pronunciation_index(type, alpha));
+        pronunciationMap[std::make_pair(type, alpha)] = 0;
+      }
+
+      alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+      if (get_pronunciation_index(right, alpha) && get_pronunciation_index(left, alpha)) {
+        uint8_t type = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+        ref_katakana_ = osmdata_.name_offset_map.name(get_pronunciation_index(type, alpha));
+        pronunciationMap[std::make_pair(type, alpha)] = 0;
+      }
+
+      alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+      if (get_pronunciation_index(right, alpha) && get_pronunciation_index(left, alpha)) {
+        uint8_t type = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+        ref_jeita_ = osmdata_.name_offset_map.name(get_pronunciation_index(type, alpha));
+        pronunciationMap[std::make_pair(type, alpha)] = 0;
+      }
+
+      alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+      if (get_pronunciation_index(right, alpha) && get_pronunciation_index(left, alpha)) {
+        uint8_t type = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+        ref_nt_sampa_ = osmdata_.name_offset_map.name(get_pronunciation_index(type, alpha));
+        pronunciationMap[std::make_pair(type, alpha)] = 0;
       }
     }
 
@@ -1920,37 +2632,36 @@ public:
       if (!int_ref_.empty())
         ProcessDirection(true);
 
-      if (!ref_pronunciation_.empty())
+      if (!ref_ipa_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, false);
 
-      if (!int_ref_pronunciation_.empty())
+      if (!int_ref_ipa_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kIpa, true);
 
-      if (!ref_pronunciation_katakana_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, false);
+      if (!ref_katakana_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kKatakana, false);
 
-      if (!int_ref_pronunciation_katakana_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXKatakana, true);
+      if (!int_ref_katakana_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kKatakana, true);
 
-      if (!ref_pronunciation_nt_sampa_.empty())
+      if (!ref_nt_sampa_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, false);
 
-      if (!int_ref_pronunciation_nt_sampa_.empty())
+      if (!int_ref_nt_sampa_.empty())
         ProcessDirectionPronunciation(PronunciationAlphabet::kNtSampa, true);
 
-      if (!ref_pronunciation_jeita_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, false);
+      if (!ref_jeita_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kJeita, false);
 
-      if (!int_ref_pronunciation_jeita_.empty())
-        ProcessDirectionPronunciation(PronunciationAlphabet::kXJeita, true);
+      if (!int_ref_jeita_.empty())
+        ProcessDirectionPronunciation(PronunciationAlphabet::kJeita, true);
     }
 
     // add int_refs to the end of the refs for now.  makes sure that we don't add dups.
-    if (way_.int_ref_index()) {
-      std::string tmp = osmdata_.name_offset_map.name(way_.ref_index());
-
+    if (!int_ref_.empty()) {
+      std::string tmp = ref_;
       std::vector<std::string> rs = GetTagTokens(tmp);
-      std::vector<std::string> is = GetTagTokens(osmdata_.name_offset_map.name(way_.int_ref_index()));
+      std::vector<std::string> is = GetTagTokens(int_ref_);
       bool bFound = false;
 
       for (auto& i : is) {
@@ -1969,7 +2680,7 @@ public:
         bFound = false;
       }
       if (!tmp.empty()) {
-        way_.set_ref_index(osmdata_.name_offset_map.index(tmp));
+        ref_ = tmp;
       }
       // no matter what, clear out the int_ref.
       way_.set_int_ref_index(0);
@@ -2154,9 +2865,9 @@ public:
     }
 
     // Delete the name from from name field if it exists in the ref.
-    if (!name_.empty() && way_.ref_index()) {
+    if (!name_.empty() && !ref_.empty()) {
       std::vector<std::string> names = GetTagTokens(name_);
-      std::vector<std::string> refs = GetTagTokens(osmdata_.name_offset_map.name(way_.ref_index()));
+      std::vector<std::string> refs = GetTagTokens(ref_);
       bool bFound = false;
 
       std::string tmp;
@@ -2177,11 +2888,663 @@ public:
         bFound = false;
       }
       if (!tmp.empty()) {
-        way_.set_name_index(osmdata_.name_offset_map.index(tmp));
-      }
-    } else {
-      way_.set_name_index(osmdata_.name_offset_map.index(name_));
+        name_ = tmp;
+      } else
+        name_ = "";
     }
+
+    // edge case.  name = name:<lg> and we contain a -  or /
+    // see https://www.openstreetmap.org/way/816515178#map=16/42.7888/-1.6391
+    if (name_ == name_w_lang_ && !name_.empty() && GetTagTokens(language_).size() == 1) {
+      bool process = false;
+      std::vector<std::string> names;
+
+      if (name_w_lang_.find(" - ") != std::string::npos) {
+        names = GetTagTokens(name_w_lang_, " - ");
+        process = true;
+      } else if (name_w_lang_.find(" / ") != std::string::npos) {
+        names = GetTagTokens(name_w_lang_, " / ");
+        process = true;
+      }
+
+      if (process) {
+        std::string tmp;
+        std::string l;
+
+        for (auto& name : names) {
+          if (!tmp.empty()) {
+            tmp += ";";
+            l += ";";
+          }
+          tmp += name;
+          l += language_;
+        }
+        if (!tmp.empty()) {
+          name_ = tmp;
+          name_w_lang_ = tmp;
+          language_ = l;
+        }
+      }
+    }
+
+    // begin name logic
+    std::string l = language_;
+    ProcessName(name_w_lang_, name_, language_);
+    way_.set_name_index(osmdata_.name_offset_map.index(name_));
+    way_.set_name_lang_index(osmdata_.name_offset_map.index(language_));
+
+    ProcessLRFBName(name_left_w_lang_, name_w_lang_, l, name_left_, lang_left_);
+    way_.set_name_left_index(osmdata_.name_offset_map.index(name_left_));
+    way_.set_name_left_lang_index(osmdata_.name_offset_map.index(lang_left_));
+
+    ProcessLRFBName(name_right_w_lang_, name_w_lang_, l, name_right_, lang_right_);
+    way_.set_name_right_index(osmdata_.name_offset_map.index(name_right_));
+    way_.set_name_right_lang_index(osmdata_.name_offset_map.index(lang_right_));
+
+    ProcessLRFBName(name_forward_w_lang_, name_w_lang_, l, name_forward_, lang_forward_);
+    way_.set_name_forward_index(osmdata_.name_offset_map.index(name_forward_));
+    way_.set_name_forward_lang_index(osmdata_.name_offset_map.index(lang_forward_));
+
+    ProcessLRFBName(name_backward_w_lang_, name_w_lang_, l, name_backward_, lang_backward_);
+    way_.set_name_backward_index(osmdata_.name_offset_map.index(name_backward_));
+    way_.set_name_backward_lang_index(osmdata_.name_offset_map.index(lang_backward_));
+
+    // begin official name logic
+    l = official_language_;
+    ProcessName(official_name_w_lang_, official_name_, official_language_);
+    way_.set_official_name_index(osmdata_.name_offset_map.index(official_name_));
+    way_.set_official_name_lang_index(osmdata_.name_offset_map.index(official_language_));
+
+    ProcessLRFBName(official_name_left_w_lang_, official_name_w_lang_, l, official_name_left_,
+                    official_lang_left_);
+    way_.set_official_name_left_index(osmdata_.name_offset_map.index(official_name_left_));
+    way_.set_official_name_left_lang_index(osmdata_.name_offset_map.index(official_lang_left_));
+
+    ProcessLRFBName(official_name_right_w_lang_, official_name_w_lang_, l, official_name_right_,
+                    official_lang_right_);
+    way_.set_official_name_right_index(osmdata_.name_offset_map.index(official_name_right_));
+    way_.set_official_name_right_lang_index(osmdata_.name_offset_map.index(official_lang_right_));
+
+    // begin alt name logic
+    l = alt_language_;
+    ProcessName(alt_name_w_lang_, alt_name_, alt_language_);
+    way_.set_alt_name_index(osmdata_.name_offset_map.index(alt_name_));
+    way_.set_alt_name_lang_index(osmdata_.name_offset_map.index(alt_language_));
+
+    ProcessLRFBName(alt_name_left_w_lang_, alt_name_w_lang_, l, alt_name_left_, alt_lang_left_);
+    way_.set_alt_name_left_index(osmdata_.name_offset_map.index(alt_name_left_));
+    way_.set_alt_name_left_lang_index(osmdata_.name_offset_map.index(alt_lang_left_));
+
+    ProcessLRFBName(alt_name_right_w_lang_, alt_name_w_lang_, l, alt_name_right_, alt_lang_right_);
+    way_.set_alt_name_right_index(osmdata_.name_offset_map.index(alt_name_right_));
+    way_.set_alt_name_right_lang_index(osmdata_.name_offset_map.index(alt_lang_right_));
+
+    // begin ref logic
+    l = ref_language_;
+    ProcessName(ref_w_lang_, ref_, ref_language_);
+    way_.set_ref_index(osmdata_.name_offset_map.index(ref_));
+    way_.set_ref_lang_index(osmdata_.name_offset_map.index(ref_language_));
+
+    ProcessLRFBName(ref_left_w_lang_, ref_w_lang_, l, ref_left_, ref_lang_left_);
+    way_.set_ref_left_index(osmdata_.name_offset_map.index(ref_left_));
+    way_.set_ref_left_lang_index(osmdata_.name_offset_map.index(ref_lang_left_));
+
+    ProcessLRFBName(ref_right_w_lang_, ref_w_lang_, l, ref_right_, ref_lang_right_);
+    way_.set_ref_right_index(osmdata_.name_offset_map.index(ref_right_));
+    way_.set_ref_right_lang_index(osmdata_.name_offset_map.index(ref_lang_right_));
+
+    // begin int_ref logic
+    l = int_ref_language_;
+    ProcessName(int_ref_w_lang_, int_ref_, int_ref_language_);
+    way_.set_int_ref_index(osmdata_.name_offset_map.index(int_ref_));
+    way_.set_int_ref_lang_index(osmdata_.name_offset_map.index(int_ref_language_));
+
+    ProcessLRFBName(int_ref_left_w_lang_, int_ref_w_lang_, l, int_ref_left_, int_ref_lang_left_);
+    way_.set_int_ref_left_index(osmdata_.name_offset_map.index(int_ref_left_));
+    way_.set_int_ref_left_lang_index(osmdata_.name_offset_map.index(int_ref_lang_left_));
+
+    ProcessLRFBName(int_ref_right_w_lang_, int_ref_w_lang_, l, int_ref_right_, int_ref_lang_right_);
+    way_.set_int_ref_right_index(osmdata_.name_offset_map.index(int_ref_right_));
+    way_.set_int_ref_right_lang_index(osmdata_.name_offset_map.index(int_ref_lang_right_));
+
+    // begin tunnel name logic
+    l = tunnel_language_;
+    ProcessName(tunnel_name_w_lang_, tunnel_name_, tunnel_language_);
+    way_.set_tunnel_name_index(osmdata_.name_offset_map.index(tunnel_name_));
+    way_.set_tunnel_name_lang_index(osmdata_.name_offset_map.index(tunnel_language_));
+
+    ProcessLRFBName(tunnel_name_left_w_lang_, tunnel_name_w_lang_, l, tunnel_name_left_,
+                    tunnel_lang_left_);
+    way_.set_tunnel_name_left_index(osmdata_.name_offset_map.index(tunnel_name_left_));
+    way_.set_tunnel_name_left_lang_index(osmdata_.name_offset_map.index(tunnel_lang_left_));
+
+    ProcessLRFBName(tunnel_name_right_w_lang_, tunnel_name_w_lang_, l, tunnel_name_right_,
+                    tunnel_lang_right_);
+    way_.set_tunnel_name_right_index(osmdata_.name_offset_map.index(tunnel_name_right_));
+    way_.set_tunnel_name_right_lang_index(osmdata_.name_offset_map.index(tunnel_lang_right_));
+
+    uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kName);
+    uint8_t alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kName, PronunciationAlphabet::kIpa, name_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kName, PronunciationAlphabet::kKatakana,
+                             name_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kName, PronunciationAlphabet::kJeita, name_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kName, PronunciationAlphabet::kNtSampa,
+                             name_nt_sampa_);
+
+    ProcessPronunciationLRFBName(ipa_name, ipa_lang, name_left_ipa_, OSMLinguistic::Type::kNameLeft,
+                                 PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_name, katakana_lang, name_left_katakana_,
+                                 OSMLinguistic::Type::kNameLeft, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_name, jeita_lang, name_left_jeita_,
+                                 OSMLinguistic::Type::kNameLeft, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_name, nt_sampa_lang, name_left_nt_sampa_,
+                                 OSMLinguistic::Type::kNameLeft, PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_name, ipa_lang, name_right_ipa_, OSMLinguistic::Type::kNameRight,
+                                 PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_name, katakana_lang, name_right_katakana_,
+                                 OSMLinguistic::Type::kNameRight, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_name, jeita_lang, name_right_jeita_,
+                                 OSMLinguistic::Type::kNameRight, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_name, nt_sampa_lang, name_right_nt_sampa_,
+                                 OSMLinguistic::Type::kNameRight, PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_name, ipa_lang, name_backward_ipa_,
+                                 OSMLinguistic::Type::kNameBackward, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_name, katakana_lang, name_backward_katakana_,
+                                 OSMLinguistic::Type::kNameBackward,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_name, jeita_lang, name_backward_jeita_,
+                                 OSMLinguistic::Type::kNameBackward, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_name, nt_sampa_lang, name_backward_nt_sampa_,
+                                 OSMLinguistic::Type::kNameBackward, PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_name, ipa_lang, name_forward_ipa_,
+                                 OSMLinguistic::Type::kNameForward, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_name, katakana_lang, name_forward_katakana_,
+                                 OSMLinguistic::Type::kNameForward, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_name, jeita_lang, name_forward_jeita_,
+                                 OSMLinguistic::Type::kNameForward, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_name, nt_sampa_lang, name_forward_nt_sampa_,
+                                 OSMLinguistic::Type::kNameForward, PronunciationAlphabet::kNtSampa);
+
+    t = static_cast<uint8_t>(OSMLinguistic::Type::kAltName);
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_alt_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_alt_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_alt_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_alt_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_alt_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_alt_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_alt_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_alt_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kAltName, PronunciationAlphabet::kIpa,
+                             alt_name_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kAltName, PronunciationAlphabet::kKatakana,
+                             alt_name_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kAltName, PronunciationAlphabet::kJeita,
+                             alt_name_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kAltName, PronunciationAlphabet::kNtSampa,
+                             alt_name_nt_sampa_);
+
+    ProcessPronunciationLRFBName(ipa_alt_name, ipa_alt_lang, alt_name_left_ipa_,
+                                 OSMLinguistic::Type::kAltNameLeft, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_alt_name, katakana_alt_lang, alt_name_left_katakana_,
+                                 OSMLinguistic::Type::kAltNameLeft, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_alt_name, jeita_alt_lang, alt_name_left_jeita_,
+                                 OSMLinguistic::Type::kAltNameLeft, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_alt_name, nt_sampa_alt_lang, alt_name_left_nt_sampa_,
+                                 OSMLinguistic::Type::kAltNameLeft, PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_alt_name, ipa_alt_lang, alt_name_right_ipa_,
+                                 OSMLinguistic::Type::kAltNameRight, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_alt_name, katakana_alt_lang, alt_name_right_katakana_,
+                                 OSMLinguistic::Type::kAltNameRight,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_alt_name, jeita_alt_lang, alt_name_right_jeita_,
+                                 OSMLinguistic::Type::kAltNameRight, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_alt_name, nt_sampa_alt_lang, alt_name_right_nt_sampa_,
+                                 OSMLinguistic::Type::kAltNameRight, PronunciationAlphabet::kNtSampa);
+
+    t = static_cast<uint8_t>(OSMLinguistic::Type::kOfficialName);
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_official_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_official_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_official_name =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_official_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_official_name =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_official_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_official_name =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_official_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kOfficialName, PronunciationAlphabet::kIpa,
+                             official_name_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kOfficialName, PronunciationAlphabet::kKatakana,
+                             official_name_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kOfficialName, PronunciationAlphabet::kJeita,
+                             official_name_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kOfficialName, PronunciationAlphabet::kNtSampa,
+                             official_name_nt_sampa_);
+
+    ProcessPronunciationLRFBName(ipa_official_name, ipa_official_lang, official_name_left_ipa_,
+                                 OSMLinguistic::Type::kOfficialNameLeft, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_official_name, katakana_official_lang,
+                                 official_name_left_katakana_, OSMLinguistic::Type::kOfficialNameLeft,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_official_name, jeita_official_lang, official_name_left_jeita_,
+                                 OSMLinguistic::Type::kOfficialNameLeft,
+                                 PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_official_name, nt_sampa_official_lang,
+                                 official_name_left_nt_sampa_, OSMLinguistic::Type::kOfficialNameLeft,
+                                 PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_official_name, ipa_official_lang, official_name_right_ipa_,
+                                 OSMLinguistic::Type::kOfficialNameRight,
+                                 PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_official_name, katakana_official_lang,
+                                 official_name_right_katakana_,
+                                 OSMLinguistic::Type::kOfficialNameRight,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_official_name, jeita_official_lang, official_name_right_jeita_,
+                                 OSMLinguistic::Type::kOfficialNameRight,
+                                 PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_official_name, nt_sampa_official_lang,
+                                 official_name_right_nt_sampa_,
+                                 OSMLinguistic::Type::kOfficialNameRight,
+                                 PronunciationAlphabet::kNtSampa);
+
+    t = static_cast<uint8_t>(OSMLinguistic::Type::kTunnelName);
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_tunnel_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_tunnel_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_tunnel_name =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_tunnel_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_tunnel_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_tunnel_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_tunnel_name =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_tunnel_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kTunnelName, PronunciationAlphabet::kIpa,
+                             tunnel_name_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kTunnelName, PronunciationAlphabet::kKatakana,
+                             tunnel_name_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kTunnelName, PronunciationAlphabet::kJeita,
+                             tunnel_name_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kTunnelName, PronunciationAlphabet::kNtSampa,
+                             tunnel_name_nt_sampa_);
+
+    ProcessPronunciationLRFBName(ipa_tunnel_name, ipa_tunnel_lang, tunnel_name_left_ipa_,
+                                 OSMLinguistic::Type::kTunnelNameLeft, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_tunnel_name, katakana_tunnel_lang,
+                                 tunnel_name_left_katakana_, OSMLinguistic::Type::kTunnelNameLeft,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_tunnel_name, jeita_tunnel_lang, tunnel_name_left_jeita_,
+                                 OSMLinguistic::Type::kTunnelNameLeft, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_tunnel_name, nt_sampa_tunnel_lang,
+                                 tunnel_name_left_nt_sampa_, OSMLinguistic::Type::kTunnelNameLeft,
+                                 PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_tunnel_name, ipa_tunnel_lang, tunnel_name_right_ipa_,
+                                 OSMLinguistic::Type::kTunnelNameRight, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_tunnel_name, katakana_tunnel_lang,
+                                 tunnel_name_right_katakana_, OSMLinguistic::Type::kTunnelNameRight,
+                                 PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_tunnel_name, jeita_tunnel_lang, tunnel_name_right_jeita_,
+                                 OSMLinguistic::Type::kTunnelNameRight,
+                                 PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_tunnel_name, nt_sampa_tunnel_lang,
+                                 tunnel_name_right_nt_sampa_, OSMLinguistic::Type::kTunnelNameRight,
+                                 PronunciationAlphabet::kNtSampa);
+
+    t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_ref_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_ref_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_ref_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_ref_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_ref_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_ref_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_ref_name = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_ref_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    if (!use_direction_on_ways_) {
+      ProcessPronunciationName(OSMLinguistic::Type::kRef, PronunciationAlphabet::kIpa, ref_ipa_);
+
+      ProcessPronunciationName(OSMLinguistic::Type::kRef, PronunciationAlphabet::kKatakana,
+                               ref_katakana_);
+
+      ProcessPronunciationName(OSMLinguistic::Type::kRef, PronunciationAlphabet::kJeita, ref_jeita_);
+
+      ProcessPronunciationName(OSMLinguistic::Type::kRef, PronunciationAlphabet::kNtSampa,
+                               ref_nt_sampa_);
+    }
+
+    ProcessPronunciationLRFBName(ipa_ref_name, ipa_ref_lang, ref_left_ipa_,
+                                 OSMLinguistic::Type::kRefLeft, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_ref_name, katakana_ref_lang, ref_left_katakana_,
+                                 OSMLinguistic::Type::kRefLeft, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_ref_name, jeita_ref_lang, ref_left_jeita_,
+                                 OSMLinguistic::Type::kRefLeft, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_ref_name, nt_sampa_ref_lang, ref_left_nt_sampa_,
+                                 OSMLinguistic::Type::kRefLeft, PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationLRFBName(ipa_ref_name, ipa_ref_lang, ref_right_ipa_,
+                                 OSMLinguistic::Type::kRefRight, PronunciationAlphabet::kIpa);
+
+    ProcessPronunciationLRFBName(katakana_ref_name, katakana_ref_lang, ref_right_katakana_,
+                                 OSMLinguistic::Type::kRefRight, PronunciationAlphabet::kKatakana);
+
+    ProcessPronunciationLRFBName(jeita_ref_name, jeita_ref_lang, ref_right_jeita_,
+                                 OSMLinguistic::Type::kRefRight, PronunciationAlphabet::kJeita);
+
+    ProcessPronunciationLRFBName(nt_sampa_ref_name, nt_sampa_ref_lang, ref_right_nt_sampa_,
+                                 OSMLinguistic::Type::kRefRight, PronunciationAlphabet::kNtSampa);
+
+    // begin destination logic
+    ProcessName(destination_w_lang_, destination_, destination_language_);
+    way_.set_destination_index(osmdata_.name_offset_map.index(destination_));
+    way_.set_destination_lang_index(osmdata_.name_offset_map.index(destination_language_));
+
+    ProcessName(destination_forward_w_lang_, destination_forward_, destination_forward_language_);
+    way_.set_destination_forward_index(osmdata_.name_offset_map.index(destination_forward_));
+    way_.set_destination_forward_lang_index(
+        osmdata_.name_offset_map.index(destination_forward_language_));
+
+    ProcessName(destination_backward_w_lang_, destination_backward_, destination_backward_language_);
+    way_.set_destination_backward_index(osmdata_.name_offset_map.index(destination_backward_));
+    way_.set_destination_backward_lang_index(
+        osmdata_.name_offset_map.index(destination_backward_language_));
+
+    ProcessName(junction_ref_w_lang_, junction_ref_, junction_ref_language_);
+    way_.set_junction_ref_index(osmdata_.name_offset_map.index(junction_ref_));
+    way_.set_junction_ref_lang_index(osmdata_.name_offset_map.index(junction_ref_language_));
+
+    ProcessName(junction_name_w_lang_, junction_name_, junction_name_language_);
+    way_.set_junction_name_index(osmdata_.name_offset_map.index(junction_name_));
+    way_.set_junction_name_lang_index(osmdata_.name_offset_map.index(junction_name_language_));
+
+    ProcessName(destination_ref_w_lang_, destination_ref_, destination_ref_language_);
+    way_.set_destination_ref_index(osmdata_.name_offset_map.index(destination_ref_));
+    way_.set_destination_ref_lang_index(osmdata_.name_offset_map.index(destination_ref_language_));
+
+    ProcessName(destination_ref_to_w_lang_, destination_ref_to_, destination_ref_to_language_);
+    way_.set_destination_ref_to_index(osmdata_.name_offset_map.index(destination_ref_to_));
+    way_.set_destination_ref_to_lang_index(
+        osmdata_.name_offset_map.index(destination_ref_to_language_));
+
+    ProcessName(destination_street_to_w_lang_, destination_street_to_,
+                destination_street_to_language_);
+    way_.set_destination_street_to_index(osmdata_.name_offset_map.index(destination_street_to_));
+    way_.set_destination_street_to_lang_index(
+        osmdata_.name_offset_map.index(destination_street_to_language_));
+
+    ProcessName(destination_street_w_lang_, destination_street_, destination_street_language_);
+    way_.set_destination_street_index(osmdata_.name_offset_map.index(destination_street_));
+    way_.set_destination_street_lang_index(
+        osmdata_.name_offset_map.index(destination_street_language_));
+
+    t = static_cast<uint8_t>(OSMLinguistic::Type::kDestination);
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+    std::string ipa_destination = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string ipa_destination_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+    std::string katakana_destination =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string katakana_destination_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+    std::string jeita_destination = osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string jeita_destination_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    alpha = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+    std::string nt_sampa_destination =
+        osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha));
+    std::string nt_sampa_destination_lang = osmdata_.name_offset_map.name(get_lang_index(t, alpha));
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestination, PronunciationAlphabet::kIpa,
+                             destination_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestination, PronunciationAlphabet::kKatakana,
+                             destination_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestination, PronunciationAlphabet::kJeita,
+                             destination_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestination, PronunciationAlphabet::kNtSampa,
+                             destination_nt_sampa_);
+
+    if (destination_forward_ipa_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationForward, PronunciationAlphabet::kIpa,
+                               destination_forward_ipa_);
+    else
+      ProcessPronunciationLRFBName(ipa_destination, ipa_destination_lang, destination_forward_ipa_,
+                                   OSMLinguistic::Type::kDestinationForward,
+                                   PronunciationAlphabet::kIpa);
+
+    if (destination_forward_katakana_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationForward,
+                               PronunciationAlphabet::kKatakana, destination_forward_katakana_);
+    else
+      ProcessPronunciationLRFBName(katakana_destination, katakana_lang, destination_forward_katakana_,
+                                   OSMLinguistic::Type::kDestinationForward,
+                                   PronunciationAlphabet::kKatakana);
+
+    if (destination_forward_jeita_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationForward,
+                               PronunciationAlphabet::kJeita, destination_forward_jeita_);
+    else
+      ProcessPronunciationLRFBName(jeita_destination, jeita_destination_lang,
+                                   destination_forward_jeita_,
+                                   OSMLinguistic::Type::kDestinationForward,
+                                   PronunciationAlphabet::kJeita);
+
+    if (destination_forward_nt_sampa_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationForward,
+                               PronunciationAlphabet::kNtSampa, destination_forward_nt_sampa_);
+    else
+      ProcessPronunciationLRFBName(nt_sampa_destination, nt_sampa_destination_lang,
+                                   destination_forward_nt_sampa_,
+                                   OSMLinguistic::Type::kDestinationForward,
+                                   PronunciationAlphabet::kNtSampa);
+
+    if (destination_backward_ipa_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationBackward, PronunciationAlphabet::kIpa,
+                               destination_backward_ipa_);
+    else
+      ProcessPronunciationLRFBName(ipa_destination, ipa_destination_lang, destination_backward_ipa_,
+                                   OSMLinguistic::Type::kDestinationBackward,
+                                   PronunciationAlphabet::kIpa);
+
+    if (destination_backward_katakana_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationBackward,
+                               PronunciationAlphabet::kKatakana, destination_backward_katakana_);
+    else
+      ProcessPronunciationLRFBName(katakana_destination, katakana_destination_lang,
+                                   destination_backward_katakana_,
+                                   OSMLinguistic::Type::kDestinationBackward,
+                                   PronunciationAlphabet::kKatakana);
+
+    if (destination_backward_jeita_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationBackward,
+                               PronunciationAlphabet::kJeita, destination_backward_jeita_);
+    else
+      ProcessPronunciationLRFBName(jeita_destination, jeita_destination_lang,
+                                   destination_backward_jeita_,
+                                   OSMLinguistic::Type::kDestinationBackward,
+                                   PronunciationAlphabet::kJeita);
+
+    if (destination_backward_nt_sampa_.empty())
+      ProcessPronunciationName(OSMLinguistic::Type::kDestinationBackward,
+                               PronunciationAlphabet::kNtSampa, destination_backward_nt_sampa_);
+    else
+      ProcessPronunciationLRFBName(nt_sampa_destination, nt_sampa_destination_lang,
+                                   destination_backward_nt_sampa_,
+                                   OSMLinguistic::Type::kDestinationBackward,
+                                   PronunciationAlphabet::kNtSampa);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRef, PronunciationAlphabet::kIpa,
+                             destination_ref_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRef, PronunciationAlphabet::kKatakana,
+                             destination_ref_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRef, PronunciationAlphabet::kJeita,
+                             destination_ref_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRef, PronunciationAlphabet::kNtSampa,
+                             destination_ref_nt_sampa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRefTo, PronunciationAlphabet::kIpa,
+                             destination_ref_to_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRefTo, PronunciationAlphabet::kKatakana,
+                             destination_ref_to_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRefTo, PronunciationAlphabet::kJeita,
+                             destination_ref_to_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationRefTo, PronunciationAlphabet::kNtSampa,
+                             destination_ref_to_nt_sampa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreet, PronunciationAlphabet::kIpa,
+                             destination_street_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreet,
+                             PronunciationAlphabet::kKatakana, destination_street_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreet, PronunciationAlphabet::kJeita,
+                             destination_street_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreet, PronunciationAlphabet::kNtSampa,
+                             destination_street_nt_sampa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreetTo, PronunciationAlphabet::kIpa,
+                             destination_street_to_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreetTo,
+                             PronunciationAlphabet::kKatakana, destination_street_to_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreetTo, PronunciationAlphabet::kJeita,
+                             destination_street_to_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kDestinationStreetTo,
+                             PronunciationAlphabet::kNtSampa, destination_street_to_nt_sampa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionRef, PronunciationAlphabet::kIpa,
+                             junction_ref_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionRef, PronunciationAlphabet::kKatakana,
+                             junction_ref_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionRef, PronunciationAlphabet::kJeita,
+                             junction_ref_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionRef, PronunciationAlphabet::kNtSampa,
+                             junction_ref_nt_sampa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionName, PronunciationAlphabet::kIpa,
+                             junction_name_ipa_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionName, PronunciationAlphabet::kKatakana,
+                             junction_name_katakana_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionName, PronunciationAlphabet::kJeita,
+                             junction_name_jeita_);
+
+    ProcessPronunciationName(OSMLinguistic::Type::kJunctionName, PronunciationAlphabet::kNtSampa,
+                             junction_name_nt_sampa_);
 
     // Infer cul-de-sac if a road edge is a loop and is low classification.
     if (!way_.roundabout() && loop_nodes_.size() != nodes.size() && way_.use() == Use::kRoad &&
@@ -2197,7 +3560,24 @@ public:
 
     if (has_pronunciation_tags_) {
       way_.set_has_pronunciation_tags(true);
-      pronunciation_->push_back(osm_pronunciation_);
+      for (auto const& p : pronunciationMap) {
+        if (p.second != 0) {
+          OSMLinguistic ling;
+          ling.key_.type_ = p.first.first;
+          ling.key_.alpha_ = p.first.second;
+          ling.name_offset_ = p.second;
+          osmdata_.pronunciations.insert(LinguisticMultiMap::value_type(osmid_, ling));
+        }
+      }
+      for (auto const& l : langMap) {
+        if (l.second != 0) {
+          OSMLinguistic ling;
+          ling.key_.type_ = l.first.first;
+          ling.key_.alpha_ = l.first.second;
+          ling.name_offset_ = l.second;
+          osmdata_.langs.insert(LinguisticMultiMap::value_type(osmid_, ling));
+        }
+      }
     }
 
     // Add the way to the list
@@ -2656,7 +4036,6 @@ public:
   void reset(sequence<OSMWay>* ways,
              sequence<OSMWayNode>* way_nodes,
              sequence<OSMAccess>* access,
-             sequence<OSMPronunciation>* pronunciation,
              sequence<OSMRestriction>* complex_restrictions_from,
              sequence<OSMRestriction>* complex_restrictions_to,
              sequence<OSMNode>* bss_nodes) {
@@ -2664,10 +4043,424 @@ public:
     ways_.reset(ways);
     way_nodes_.reset(way_nodes);
     access_.reset(access);
-    pronunciation_.reset(pronunciation);
     complex_restrictions_from_.reset(complex_restrictions_from);
     complex_restrictions_to_.reset(complex_restrictions_to);
     bss_nodes_.reset(bss_nodes);
+  }
+
+  void ProcessPronunciationTag(const OSMLinguistic::Type& type,
+                               const PronunciationAlphabet& alphabet,
+                               OSMNode* n = nullptr) {
+
+    uint32_t name = 0, lang = 0;
+    uint8_t t = static_cast<uint8_t>(type);
+    uint8_t alpha = static_cast<uint8_t>(alphabet);
+
+    if (n) {
+      if (type == OSMLinguistic::Type::kNodeName) {
+        switch (alphabet) {
+          case PronunciationAlphabet::kIpa:
+            name = n->name_pronunciation_ipa_index();
+            lang = n->name_pronunciation_ipa_lang_index();
+            break;
+          case PronunciationAlphabet::kKatakana:
+            name = n->name_pronunciation_katakana_index();
+            lang = n->name_pronunciation_katakana_lang_index();
+            break;
+          case PronunciationAlphabet::kJeita:
+            name = n->name_pronunciation_jeita_index();
+            lang = n->name_pronunciation_jeita_lang_index();
+            break;
+          case PronunciationAlphabet::kNtSampa:
+            name = n->name_pronunciation_nt_sampa_index();
+            lang = n->name_pronunciation_nt_sampa_lang_index();
+            break;
+          case PronunciationAlphabet::kNone:
+            break;
+        }
+      } else if (type == OSMLinguistic::Type::kNodeRef) {
+        switch (alphabet) {
+          case PronunciationAlphabet::kIpa:
+            name = n->ref_pronunciation_ipa_index();
+            lang = n->ref_pronunciation_ipa_lang_index();
+            break;
+          case PronunciationAlphabet::kKatakana:
+            name = n->ref_pronunciation_katakana_index();
+            lang = n->ref_pronunciation_katakana_lang_index();
+            break;
+          case PronunciationAlphabet::kJeita:
+            name = n->ref_pronunciation_jeita_index();
+            lang = n->ref_pronunciation_jeita_lang_index();
+            break;
+          case PronunciationAlphabet::kNtSampa:
+            name = n->ref_pronunciation_nt_sampa_index();
+            lang = n->ref_pronunciation_nt_sampa_lang_index();
+            break;
+          case PronunciationAlphabet::kNone:
+            break;
+        }
+      }
+    } else {
+      name = get_pronunciation_index(t, alpha);
+      lang = get_lang_index(t, alpha);
+    }
+
+    std::string name_w_lang, language;
+
+    if (name != 0)
+      name_w_lang = !n ? osmdata_.name_offset_map.name(name) : osmdata_.node_names.name(name);
+
+    if (lang != 0)
+      language = !n ? osmdata_.name_offset_map.name(lang) : osmdata_.node_names.name(lang);
+
+    ProcessNameTag(tag_, name_w_lang, language, true);
+
+    SavePronunciationData(t, alpha, name_w_lang, language, n);
+  }
+
+  void ProcessLeftRightPronunciationTag(const OSMLinguistic::Type& type,
+                                        const PronunciationAlphabet& alphabet) {
+    uint32_t name = 0, lang = 0;
+    std::string name_w_lang, language;
+    uint8_t t = static_cast<uint8_t>(type);
+    uint8_t alpha = static_cast<uint8_t>(alphabet);
+
+    name = get_pronunciation_index(t, alpha);
+    lang = get_lang_index(t, alpha);
+
+    if (name != 0)
+      name_w_lang = osmdata_.name_offset_map.name(name);
+
+    if (lang != 0)
+      language = osmdata_.name_offset_map.name(lang);
+
+    ProcessLeftRightNameTag(tag_, name_w_lang, language, true);
+
+    SavePronunciationData(t, alpha, name_w_lang, language);
+  }
+
+  void SavePronunciationData(const uint8_t type,
+                             const uint8_t alphabet,
+                             const std::string& pronunciation,
+                             const std::string& language,
+                             OSMNode* n = nullptr) {
+    if (!pronunciation.empty()) {
+      has_pronunciation_tags_ = true;
+
+      if (n) {
+        OSMLinguistic::Type t = static_cast<OSMLinguistic::Type>(type);
+        PronunciationAlphabet alpha = static_cast<PronunciationAlphabet>(alphabet);
+        if (t == OSMLinguistic::Type::kNodeName) {
+          switch (alpha) {
+            case PronunciationAlphabet::kIpa:
+              n->set_name_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
+              n->set_name_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kKatakana:
+              n->set_name_pronunciation_katakana_index(osmdata_.node_names.index(pronunciation));
+              n->set_name_pronunciation_katakana_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kJeita:
+              n->set_name_pronunciation_jeita_index(osmdata_.node_names.index(pronunciation));
+              n->set_name_pronunciation_jeita_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kNtSampa:
+              n->set_name_pronunciation_nt_sampa_index(osmdata_.node_names.index(pronunciation));
+              n->set_name_pronunciation_nt_sampa_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kNone:
+              break;
+          }
+        } else if (t == OSMLinguistic::Type::kNodeRef) {
+          switch (alpha) {
+            case PronunciationAlphabet::kIpa:
+              n->set_ref_pronunciation_ipa_index(osmdata_.node_names.index(pronunciation));
+              n->set_ref_pronunciation_ipa_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kKatakana:
+              n->set_ref_pronunciation_katakana_index(osmdata_.node_names.index(pronunciation));
+              n->set_ref_pronunciation_katakana_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kJeita:
+              n->set_ref_pronunciation_jeita_index(osmdata_.node_names.index(pronunciation));
+              n->set_ref_pronunciation_jeita_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kNtSampa:
+              n->set_ref_pronunciation_nt_sampa_index(osmdata_.node_names.index(pronunciation));
+              n->set_ref_pronunciation_nt_sampa_lang_index(osmdata_.node_names.index(language));
+              break;
+            case PronunciationAlphabet::kNone:
+              break;
+          }
+        }
+      } else {
+
+        pronunciationMap[std::make_pair(type, alphabet)] =
+            osmdata_.name_offset_map.index(pronunciation);
+        langMap[std::make_pair(type, alphabet)] = osmdata_.name_offset_map.index(language);
+      }
+    }
+  }
+
+  void ProcessNameTag(const std::pair<std::string, std::string>& tag,
+                      std::string& name_w_lang,
+                      std::string& language,
+                      bool is_lang_pronunciation = false) {
+    // If we start to use admin tags for HERE, then put use_admin_db_ check back
+    // if (!use_admin_db_)
+    //  return;
+
+    std::string t = tag.first;
+    std::size_t found = t.find(":pronunciation");
+    if (found != std::string::npos && !is_lang_pronunciation)
+      return;
+    else {
+      if (found != std::string::npos) {
+        // remove :pronunciation or :pronunciation:<type>
+        t = tag.first.substr(0, found);
+        has_pronunciation_tags_ = true;
+      }
+    }
+
+    if (boost::algorithm::starts_with(t, "tunnel:name:"))
+      t = t.substr(7);
+    else if (boost::algorithm::starts_with(t, "junction:name:") ||
+             boost::algorithm::starts_with(t, "junction:ref:"))
+      t = t.substr(9);
+    else {
+      found = t.find(":lang:");
+      if (found != std::string::npos) {
+        t = t.substr(found + 1);
+      }
+    }
+
+    // if we have column at the and of token delete it
+    // TODO It looks like road bug. We shouldn't have any column ant the end
+    while (t.back() == ':') {
+      t.pop_back();
+    }
+
+    std::vector<std::string> tokens = GetTagTokens(t, ':');
+    if (tokens.size() == 2) {
+
+      std::string lang = tokens.at(1);
+      if (stringLanguage(lang) != Language::kNone &&
+          !tag.second.empty()) // name:en, name:ar, name:fr, etc
+      {
+        t = tag.second;
+        uint32_t count = std::count(t.begin(), t.end(), ';');
+        std::string l = lang;
+        for (uint32_t i = 0; i < count; i++) {
+          l += ";" + lang;
+        }
+        if (name_w_lang.empty()) {
+          name_w_lang = tag.second;
+          language = l;
+        } else {
+          name_w_lang += ";" + tag.second;
+          language += ";" + l;
+        }
+      }
+    }
+  }
+
+  void ProcessLeftRightNameTag(const std::pair<std::string, std::string>& tag,
+                               std::string& name_left_right_w_lang,
+                               std::string& lang_left_right,
+                               bool is_lang_pronunciation = false) {
+    if (!use_admin_db_)
+      return;
+
+    std::string t = tag.first;
+    std::size_t found = t.find(":pronunciation");
+    if (found != std::string::npos && !is_lang_pronunciation)
+      return;
+    else {
+      if (found != std::string::npos) {
+        // remove :pronunciation or :pronunciation:<type>
+        t = tag.first.substr(0, found);
+        has_pronunciation_tags_ = true;
+      }
+
+      if (boost::algorithm::starts_with(t, "tunnel:name:"))
+        t = t.substr(7);
+    }
+
+    std::vector<std::string> tokens;
+    std::string lang;
+
+    found = t.find(":lang:");
+    // destination:forward:lang:nl
+    if (found != std::string::npos) {
+      tokens = GetTagTokens(t, ':');
+      if (tokens.size() == 4)
+        lang = tokens.at(3);
+    } else {
+      tokens = GetTagTokens(t, ':');
+      if (tokens.size() == 3)
+        lang = tokens.at(2);
+    }
+
+    found = t.find(":to:");
+    if (found != std::string::npos && tokens.size() == 5) {
+      lang = tokens.at(4);
+    }
+
+    if (!lang.empty()) {
+
+      if (stringLanguage(lang) != Language::kNone && !tag_.second.empty()) // name:left:en
+      {
+        if (name_left_right_w_lang.empty()) {
+          name_left_right_w_lang = tag_.second;
+          lang_left_right = lang;
+        } else {
+          name_left_right_w_lang += ";" + tag_.second;
+          lang_left_right += ";" + lang;
+        }
+      }
+    }
+  }
+
+  void ProcessPronunciationName(const OSMLinguistic::Type& type,
+                                const PronunciationAlphabet& alphabet,
+                                std::string& name_w_pronunciation,
+                                OSMNode* n = nullptr) {
+    uint32_t name_index = 0, lang_index = 0;
+    std::string language, name_pronunciation_w_lang;
+    uint8_t t = static_cast<uint8_t>(type);
+    uint8_t alpha = static_cast<uint8_t>(alphabet);
+
+    if (n) {
+      if (type == OSMLinguistic::Type::kNodeName) {
+        switch (alphabet) {
+          case PronunciationAlphabet::kIpa:
+            name_index = n->name_pronunciation_ipa_index();
+            lang_index = n->name_pronunciation_ipa_lang_index();
+            break;
+          case PronunciationAlphabet::kKatakana:
+            name_index = n->name_pronunciation_katakana_index();
+            lang_index = n->name_pronunciation_katakana_lang_index();
+            break;
+          case PronunciationAlphabet::kJeita:
+            name_index = n->name_pronunciation_jeita_index();
+            lang_index = n->name_pronunciation_jeita_lang_index();
+            break;
+          case PronunciationAlphabet::kNtSampa:
+            name_index = n->name_pronunciation_nt_sampa_index();
+            lang_index = n->name_pronunciation_nt_sampa_lang_index();
+            break;
+          case PronunciationAlphabet::kNone:
+            break;
+        }
+      } else if (type == OSMLinguistic::Type::kNodeRef) {
+        switch (alphabet) {
+          case PronunciationAlphabet::kIpa:
+            name_index = n->ref_pronunciation_ipa_index();
+            lang_index = n->ref_pronunciation_ipa_lang_index();
+            break;
+          case PronunciationAlphabet::kKatakana:
+            name_index = n->ref_pronunciation_katakana_index();
+            lang_index = n->ref_pronunciation_katakana_lang_index();
+            break;
+          case PronunciationAlphabet::kJeita:
+            name_index = n->ref_pronunciation_jeita_index();
+            lang_index = n->ref_pronunciation_jeita_lang_index();
+            break;
+          case PronunciationAlphabet::kNtSampa:
+            name_index = n->ref_pronunciation_nt_sampa_index();
+            lang_index = n->ref_pronunciation_nt_sampa_lang_index();
+            break;
+          case PronunciationAlphabet::kNone:
+            break;
+        }
+      }
+    } else {
+      name_index = get_pronunciation_index(t, alpha);
+      lang_index = get_lang_index(t, alpha);
+    }
+
+    if (name_index != 0)
+      name_pronunciation_w_lang =
+          !n ? osmdata_.name_offset_map.name(name_index) : osmdata_.node_names.name(name_index);
+
+    if (lang_index != 0)
+      language =
+          !n ? osmdata_.name_offset_map.name(lang_index) : osmdata_.node_names.name(lang_index);
+
+    ProcessName(name_pronunciation_w_lang, name_w_pronunciation, language);
+
+    SavePronunciationData(t, alpha, name_w_pronunciation, language, n);
+  }
+
+  void ProcessPronunciationLRFBName(const std::string& pronunciation_name,
+                                    const std::string& pronunciation_lang,
+                                    const std::string& name_lr_fb,
+                                    const OSMLinguistic::Type& type,
+                                    const PronunciationAlphabet& alphabet) {
+
+    uint32_t name_lr_fb_w_lang_index = 0, lang_lr_fb_index = 0;
+    uint8_t t = static_cast<uint8_t>(type);
+    uint8_t alpha = static_cast<uint8_t>(alphabet);
+
+    name_lr_fb_w_lang_index = get_pronunciation_index(t, alpha);
+    lang_lr_fb_index = get_lang_index(t, alpha);
+
+    const std::string name_lr_fb_w_lang = osmdata_.name_offset_map.name(name_lr_fb_w_lang_index);
+    std::string name = name_lr_fb;
+    std::string lang = osmdata_.name_offset_map.name(lang_lr_fb_index);
+
+    ProcessLRFBName(name_lr_fb_w_lang, pronunciation_name, pronunciation_lang, name, lang);
+    SavePronunciationData(t, alpha, name, lang);
+  }
+
+  void ProcessName(const std::string& name_w_lang, std::string& name, std::string& language) {
+    if (!use_admin_db_)
+      return;
+
+    if (!name.empty()) {
+      if (name_w_lang.empty())
+        return;
+      else {
+        uint32_t count = std::count(name.begin(), name.end(), ';');
+        language.insert(0, count + 1, ';');
+        name += ";" + name_w_lang;
+      }
+    } else
+      name = name_w_lang;
+  }
+
+  void ProcessLRFBName(const std::string& name_lr_fb_w_lang,
+                       const std::string& name_w_lang,
+                       const std::string& language,
+                       std::string& name_lr_fb,
+                       std::string& lang_lr_fb) {
+    if (!use_admin_db_)
+      return;
+
+    if (!name_lr_fb.empty()) {
+
+      if (name_lr_fb_w_lang.empty())
+
+        if (!name_w_lang.empty()) { // other side of street name may not change
+          name_lr_fb += ";" + name_w_lang;
+          lang_lr_fb += ";" + language;
+        } else
+          return;
+      else {
+        std::string lang = lang_lr_fb;
+        uint32_t count = std::count(name_lr_fb.begin(), name_lr_fb.end(), ';');
+        for (uint32_t i = 0; i <= count; i++) {
+          lang_lr_fb = ";" + lang;
+        }
+
+        if (!name_w_lang.empty()) { // other side of street name may not change
+          name_lr_fb += ";" + name_lr_fb_w_lang + ";" + name_w_lang;
+          lang_lr_fb += ";" + language;
+        } else {
+          name_lr_fb += ";" + name_lr_fb_w_lang;
+        }
+      }
+    }
   }
 
   void ProcessDirection(bool int_ref) {
@@ -2683,9 +4476,9 @@ public:
 
     if (direction.empty()) {
       if (int_ref)
-        way_.set_int_ref_index(osmdata_.name_offset_map.index(ref));
+        int_ref_ = ref;
       else
-        way_.set_ref_index(osmdata_.name_offset_map.index(ref));
+        ref_ = ref;
     } else {
       std::vector<std::string> refs = GetTagTokens(ref);
       std::vector<std::string> directions = GetTagTokens(direction);
@@ -2702,14 +4495,14 @@ public:
             tmp_ref += refs.at(i);
         }
         if (int_ref)
-          way_.set_int_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+          int_ref_ = tmp_ref;
         else
-          way_.set_ref_index(osmdata_.name_offset_map.index(tmp_ref));
+          ref_ = tmp_ref;
       } else {
         if (int_ref)
-          way_.set_int_ref_index(osmdata_.name_offset_map.index(ref));
+          int_ref_ = ref;
         else
-          way_.set_ref_index(osmdata_.name_offset_map.index(ref));
+          ref_ = ref;
       }
     }
   }
@@ -2720,19 +4513,19 @@ public:
     if (int_ref) {
       switch (type) {
         case PronunciationAlphabet::kIpa:
-          ref_pronunciation = int_ref_pronunciation_;
+          ref_pronunciation = int_ref_ipa_;
           direction_pronunciation = int_direction_pronunciation_;
           break;
-        case PronunciationAlphabet::kXKatakana:
-          ref_pronunciation = int_ref_pronunciation_katakana_;
+        case PronunciationAlphabet::kKatakana:
+          ref_pronunciation = int_ref_katakana_;
           direction_pronunciation = int_direction_pronunciation_katakana_;
           break;
         case PronunciationAlphabet::kNtSampa:
-          ref_pronunciation = int_ref_pronunciation_nt_sampa_;
+          ref_pronunciation = int_ref_nt_sampa_;
           direction_pronunciation = int_direction_pronunciation_nt_sampa_;
           break;
-        case PronunciationAlphabet::kXJeita:
-          ref_pronunciation = int_ref_pronunciation_jeita_;
+        case PronunciationAlphabet::kJeita:
+          ref_pronunciation = int_ref_jeita_;
           direction_pronunciation = int_direction_pronunciation_jeita_;
           break;
         case PronunciationAlphabet::kNone:
@@ -2741,19 +4534,19 @@ public:
     } else {
       switch (type) {
         case PronunciationAlphabet::kIpa:
-          ref_pronunciation = ref_pronunciation_;
+          ref_pronunciation = ref_ipa_;
           direction_pronunciation = direction_pronunciation_;
           break;
-        case PronunciationAlphabet::kXKatakana:
-          ref_pronunciation = ref_pronunciation_katakana_;
+        case PronunciationAlphabet::kKatakana:
+          ref_pronunciation = ref_katakana_;
           direction_pronunciation = direction_pronunciation_katakana_;
           break;
         case PronunciationAlphabet::kNtSampa:
-          ref_pronunciation = ref_pronunciation_nt_sampa_;
+          ref_pronunciation = ref_nt_sampa_;
           direction_pronunciation = direction_pronunciation_nt_sampa_;
           break;
-        case PronunciationAlphabet::kXJeita:
-          ref_pronunciation = ref_pronunciation_jeita_;
+        case PronunciationAlphabet::kJeita:
+          ref_pronunciation = ref_jeita_;
           direction_pronunciation = direction_pronunciation_jeita_;
           break;
         case PronunciationAlphabet::kNone:
@@ -2785,91 +4578,35 @@ public:
   }
 
   void UpdateRefPronunciation(const std::string& ref_pronunciation,
-                              const PronunciationAlphabet type,
+                              const PronunciationAlphabet alphabet,
                               bool int_ref) {
+    uint8_t alpha = static_cast<uint8_t>(alphabet);
     if (int_ref) {
-      switch (type) {
-        case PronunciationAlphabet::kIpa:
-          osm_pronunciation_.set_int_ref_pronunciation_ipa_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kXKatakana:
-          osm_pronunciation_.set_int_ref_pronunciation_katakana_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kNtSampa:
-          osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kXJeita:
-          osm_pronunciation_.set_int_ref_pronunciation_jeita_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kNone:
-          break;
-      }
+      uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+      pronunciationMap[std::make_pair(t, alpha)] = osmdata_.name_offset_map.index(ref_pronunciation);
+
     } else {
-      switch (type) {
-        case PronunciationAlphabet::kIpa:
-          osm_pronunciation_.set_ref_pronunciation_ipa_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kXKatakana:
-          osm_pronunciation_.set_ref_pronunciation_katakana_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kNtSampa:
-          osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kXJeita:
-          osm_pronunciation_.set_ref_pronunciation_jeita_index(
-              osmdata_.name_offset_map.index(ref_pronunciation));
-          break;
-        case PronunciationAlphabet::kNone:
-          break;
-      }
+      uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+      pronunciationMap[std::make_pair(t, alpha)] = osmdata_.name_offset_map.index(ref_pronunciation);
     }
   }
 
   void MergeRefPronunciations() {
 
-    for (uint8_t type = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
-         type != static_cast<uint8_t>(PronunciationAlphabet::kNtSampa) + 1; ++type) {
+    for (uint8_t alphabet = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+         alphabet != static_cast<uint8_t>(PronunciationAlphabet::kNone); ++alphabet) {
       // add int_ref pronunciations to the end of the pronunciation refs for now.  makes sure that we
       // don't add dups.
 
       uint32_t index = 0;
       std::string tmp;
-      switch (static_cast<PronunciationAlphabet>(type)) {
-        case PronunciationAlphabet::kIpa:
-          index = osm_pronunciation_.int_ref_pronunciation_ipa_index();
-          tmp =
-              (index ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_ipa_index())
-                     : "");
-          break;
-        case PronunciationAlphabet::kXKatakana:
-          index = osm_pronunciation_.int_ref_pronunciation_katakana_index();
-          tmp = (index ? osmdata_.name_offset_map.name(
-                             osm_pronunciation_.ref_pronunciation_katakana_index())
-                       : "");
-          break;
-        case PronunciationAlphabet::kNtSampa:
-          index = osm_pronunciation_.int_ref_pronunciation_nt_sampa_index();
-          tmp = (index ? osmdata_.name_offset_map.name(
-                             osm_pronunciation_.ref_pronunciation_nt_sampa_index())
-                       : "");
-          break;
-        case PronunciationAlphabet::kXJeita:
-          index = osm_pronunciation_.int_ref_pronunciation_jeita_index();
-          tmp =
-              (index
-                   ? osmdata_.name_offset_map.name(osm_pronunciation_.ref_pronunciation_jeita_index())
-                   : "");
-          break;
-        case PronunciationAlphabet::kNone:
-          break;
-      }
+
+      uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+      uint8_t alpha = static_cast<uint8_t>(alphabet);
+
+      index = get_pronunciation_index(t, alpha);
+      t = static_cast<uint8_t>(OSMLinguistic::Type::kRef);
+      tmp = (index ? osmdata_.name_offset_map.name(get_pronunciation_index(t, alpha)) : "");
 
       if (index) {
         std::vector<std::string> rs = GetTagTokens(tmp);
@@ -2892,41 +4629,13 @@ public:
           bFound = false;
         }
 
-        switch (static_cast<PronunciationAlphabet>(type)) {
-          case PronunciationAlphabet::kIpa:
-            if (!tmp.empty()) {
-              osm_pronunciation_.set_ref_pronunciation_ipa_index(osmdata_.name_offset_map.index(tmp));
-            }
-            // no matter what, clear out the int_ref.
-            osm_pronunciation_.set_int_ref_pronunciation_ipa_index(0);
-            break;
-          case PronunciationAlphabet::kXKatakana:
-            if (!tmp.empty()) {
-              osm_pronunciation_.set_ref_pronunciation_katakana_index(
-                  osmdata_.name_offset_map.index(tmp));
-            }
-            // no matter what, clear out the int_ref.
-            osm_pronunciation_.set_int_ref_pronunciation_katakana_index(0);
-            break;
-          case PronunciationAlphabet::kNtSampa:
-            if (!tmp.empty()) {
-              osm_pronunciation_.set_ref_pronunciation_nt_sampa_index(
-                  osmdata_.name_offset_map.index(tmp));
-            }
-            // no matter what, clear out the int_ref.
-            osm_pronunciation_.set_int_ref_pronunciation_nt_sampa_index(0);
-            break;
-          case PronunciationAlphabet::kXJeita:
-            if (!tmp.empty()) {
-              osm_pronunciation_.set_ref_pronunciation_jeita_index(
-                  osmdata_.name_offset_map.index(tmp));
-            }
-            // no matter what, clear out the int_ref.
-            osm_pronunciation_.set_int_ref_pronunciation_jeita_index(0);
-            break;
-          case PronunciationAlphabet::kNone:
-            break;
+        if (!tmp.empty()) {
+
+          pronunciationMap[std::make_pair(t, alpha)] = osmdata_.name_offset_map.index(tmp);
         }
+        // no matter what, clear out the int_ref.
+        t = static_cast<uint8_t>(OSMLinguistic::Type::kIntRef);
+        pronunciationMap[std::make_pair(t, alpha)] = 0;
       }
     }
   }
@@ -2938,6 +4647,12 @@ public:
   OSMWay way_;
   std::pair<std::string, std::string> tag_;
   uint64_t osmid_;
+
+  const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+  const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+  const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+  const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+
   float default_speed_ = 0.0f, max_speed_ = 0.0f;
   float average_speed_ = 0.0f, advisory_speed_ = 0.0f;
   bool has_default_speed_ = false, has_max_speed_ = false;
@@ -2945,17 +4660,100 @@ public:
   bool has_surface_ = true;
   bool has_surface_tag_ = true;
   OSMAccess osm_access_;
-  OSMPronunciation osm_pronunciation_;
+  std::map<std::pair<uint8_t, uint8_t>, uint32_t> pronunciationMap;
+  std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
   bool has_user_tags_ = false, has_pronunciation_tags_ = false;
-  std::string ref_, int_ref_, direction_, int_direction_;
-  std::string ref_pronunciation_, int_ref_pronunciation_, ref_pronunciation_nt_sampa_,
-      int_ref_pronunciation_nt_sampa_, ref_pronunciation_katakana_, int_ref_pronunciation_katakana_,
-      ref_pronunciation_jeita_, int_ref_pronunciation_jeita_;
+
+  std::string ref_, ref_language_, ref_w_lang_, ref_left_, ref_right_, ref_lang_left_,
+      ref_lang_right_, ref_left_w_lang_, ref_right_w_lang_, payment_, payment_forward_,
+      payment_backward_;
+
+  std::string int_ref_, int_ref_language_, int_ref_w_lang_, int_ref_left_, int_ref_right_,
+      int_ref_lang_left_, int_ref_lang_right_, int_ref_left_w_lang_, int_ref_right_w_lang_;
+
+  std::string direction_, int_direction_;
+
   std::string direction_pronunciation_, int_direction_pronunciation_,
       direction_pronunciation_nt_sampa_, int_direction_pronunciation_nt_sampa_,
       direction_pronunciation_katakana_, int_direction_pronunciation_katakana_,
       direction_pronunciation_jeita_, int_direction_pronunciation_jeita_;
-  std::string name_, service_, amenity_;
+  std::string name_, language_, name_w_lang_, service_, amenity_;
+
+  std::string ref_ipa_, ref_left_ipa_, ref_right_ipa_;
+  std::string ref_katakana_, ref_left_katakana_, ref_right_katakana_;
+  std::string ref_jeita_, ref_left_jeita_, ref_right_jeita_;
+  std::string ref_nt_sampa_, ref_left_nt_sampa_, ref_right_nt_sampa_;
+
+  std::string int_ref_ipa_, int_ref_left_ipa_, int_ref_right_ipa_;
+  std::string int_ref_katakana_, int_ref_left_katakana_, int_ref_right_katakana_;
+  std::string int_ref_jeita_, int_ref_left_jeita_, int_ref_right_jeita_;
+  std::string int_ref_nt_sampa_, int_ref_left_nt_sampa_, int_ref_right_nt_sampa_;
+
+  std::string name_ipa_, name_left_ipa_, name_right_ipa_, name_forward_ipa_, name_backward_ipa_;
+  std::string name_katakana_, name_left_katakana_, name_right_katakana_, name_forward_katakana_,
+      name_backward_katakana_;
+  std::string name_jeita_, name_left_jeita_, name_right_jeita_, name_forward_jeita_,
+      name_backward_jeita_;
+  std::string name_nt_sampa_, name_left_nt_sampa_, name_right_nt_sampa_, name_forward_nt_sampa_,
+      name_backward_nt_sampa_;
+
+  std::string alt_name_ipa_, alt_name_left_ipa_, alt_name_right_ipa_;
+  std::string alt_name_katakana_, alt_name_left_katakana_, alt_name_right_katakana_;
+  std::string alt_name_jeita_, alt_name_left_jeita_, alt_name_right_jeita_;
+  std::string alt_name_nt_sampa_, alt_name_left_nt_sampa_, alt_name_right_nt_sampa_;
+
+  std::string official_name_ipa_, official_name_left_ipa_, official_name_right_ipa_;
+  std::string official_name_katakana_, official_name_left_katakana_, official_name_right_katakana_;
+  std::string official_name_jeita_, official_name_left_jeita_, official_name_right_jeita_;
+  std::string official_name_nt_sampa_, official_name_left_nt_sampa_, official_name_right_nt_sampa_;
+
+  std::string tunnel_name_ipa_, tunnel_name_left_ipa_, tunnel_name_right_ipa_;
+  std::string tunnel_name_katakana_, tunnel_name_left_katakana_, tunnel_name_right_katakana_;
+  std::string tunnel_name_jeita_, tunnel_name_left_jeita_, tunnel_name_right_jeita_;
+  std::string tunnel_name_nt_sampa_, tunnel_name_left_nt_sampa_, tunnel_name_right_nt_sampa_;
+
+  std::string destination_ipa_, destination_forward_ipa_, destination_backward_ipa_;
+  std::string destination_katakana_, destination_forward_katakana_, destination_backward_katakana_;
+  std::string destination_jeita_, destination_forward_jeita_, destination_backward_jeita_;
+  std::string destination_nt_sampa_, destination_forward_nt_sampa_, destination_backward_nt_sampa_;
+
+  std::string destination_ref_ipa_, destination_ref_to_ipa_, destination_street_ipa_,
+      destination_street_to_ipa_, junction_ref_ipa_, junction_name_ipa_;
+  std::string destination_ref_nt_sampa_, destination_ref_to_nt_sampa_, destination_street_nt_sampa_,
+      destination_street_to_nt_sampa_, junction_ref_nt_sampa_, junction_name_nt_sampa_;
+  std::string destination_ref_katakana_, destination_ref_to_katakana_, destination_street_katakana_,
+      destination_street_to_katakana_, junction_ref_katakana_, junction_name_katakana_;
+  std::string destination_ref_jeita_, destination_ref_to_jeita_, destination_street_jeita_,
+      destination_street_to_jeita_, junction_ref_jeita_, junction_name_jeita_;
+
+  std::string name_left_, name_right_, lang_left_, lang_right_;
+  std::string name_left_w_lang_, name_right_w_lang_;
+
+  std::string name_forward_, name_backward_, lang_forward_, lang_backward_;
+  std::string name_forward_w_lang_, name_backward_w_lang_;
+
+  std::string official_name_, official_language_, official_name_w_lang_, official_name_left_,
+      official_name_right_, official_lang_left_, official_lang_right_, official_name_left_w_lang_,
+      official_name_right_w_lang_;
+
+  std::string tunnel_name_, tunnel_language_, tunnel_name_w_lang_, tunnel_name_left_,
+      tunnel_name_right_, tunnel_lang_left_, tunnel_lang_right_, tunnel_name_left_w_lang_,
+      tunnel_name_right_w_lang_;
+
+  std::string alt_name_, alt_language_, alt_name_w_lang_, alt_name_left_, alt_name_right_,
+      alt_lang_left_, alt_lang_right_, alt_name_left_w_lang_, alt_name_right_w_lang_;
+
+  std::string destination_, destination_language_, destination_w_lang_, destination_forward_,
+      destination_forward_language_, destination_forward_w_lang_, destination_backward_,
+      destination_backward_language_, destination_backward_w_lang_;
+
+  std::string destination_ref_, destination_ref_language_, destination_ref_w_lang_,
+      destination_ref_to_, destination_ref_to_language_, destination_ref_to_w_lang_,
+      destination_street_, destination_street_language_, destination_street_w_lang_,
+      destination_street_to_, destination_street_to_language_, destination_street_to_w_lang_;
+
+  std::string junction_name_, junction_name_language_, junction_name_w_lang_, junction_ref_,
+      junction_ref_language_, junction_ref_w_lang_;
 
   // Configuration option to include highway=platform for pedestrians
   bool include_platforms_;
@@ -3015,7 +4813,7 @@ public:
   // user entered access
   std::unique_ptr<sequence<OSMAccess>> access_;
   // way pronunciations
-  std::unique_ptr<sequence<OSMPronunciation>> pronunciation_;
+  // GREG std::unique_ptr<sequence<OSMPronunciation>> pronunciation_;
   // from complex restrictions
   std::unique_ptr<sequence<OSMRestriction>> complex_restrictions_from_;
   //  used to find out if a wayid is the to edge for a complex restriction
@@ -3031,6 +4829,22 @@ public:
   Tags empty_node_results_;
   Tags empty_way_results_;
   Tags empty_relation_results_;
+
+  uint32_t get_pronunciation_index(const uint8_t type, const uint8_t alpha) {
+    auto itr = pronunciationMap.find(std::make_pair(type, alpha));
+    if (itr != pronunciationMap.end()) {
+      return itr->second;
+    }
+    return 0;
+  }
+
+  uint32_t get_lang_index(const uint8_t type, const uint8_t alpha) {
+    auto itr = langMap.find(std::make_pair(type, alpha));
+    if (itr != langMap.end()) {
+      return itr->second;
+    }
+    return 0;
+  }
 };
 
 } // namespace
@@ -3042,8 +4856,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
                                   const std::vector<std::string>& input_files,
                                   const std::string& ways_file,
                                   const std::string& way_nodes_file,
-                                  const std::string& access_file,
-                                  const std::string& pronunciation_file) {
+                                  const std::string& access_file) {
   // TODO: option 1: each one threads makes an osmdata and we splice them together at the end
   // option 2: synchronize around adding things to a single osmdata. will have to test to see
   // which is the least expensive (memory and speed). leaning towards option 2
@@ -3069,8 +4882,7 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   callback.reset(new sequence<OSMWay>(ways_file, true),
                  new sequence<OSMWayNode>(way_nodes_file, true),
-                 new sequence<OSMAccess>(access_file, true),
-                 new sequence<OSMPronunciation>(pronunciation_file, true), nullptr, nullptr, nullptr);
+                 new sequence<OSMAccess>(access_file, true), nullptr, nullptr, nullptr);
   // Parse the ways and find all node Ids needed (those that are part of a
   // way's node list. Iterate through each pbf input file.
   LOG_INFO("Parsing ways...");
@@ -3088,21 +4900,13 @@ OSMData PBFGraphParser::ParseWays(const boost::property_tree::ptree& pt,
 
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_way_count) + " routable ways containing " +
            std::to_string(osmdata.osm_way_node_count) + " nodes");
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the access tags so that we can easily find them.
   LOG_INFO("Sorting osm access tags by way id...");
   {
     sequence<OSMAccess> access(access_file, false);
     access.sort([](const OSMAccess& a, const OSMAccess& b) { return a.way_id() < b.way_id(); });
-  }
-
-  // we need to sort the pronunciation indexes so that we can easily find them.
-  LOG_INFO("Sorting pronunciation indexes by way id...");
-  {
-    sequence<OSMPronunciation> pronunciation(pronunciation_file, false);
-    pronunciation.sort(
-        [](const OSMPronunciation& a, const OSMPronunciation& b) { return a.way_id() < b.way_id(); });
   }
 
   LOG_INFO("Finished");
@@ -3143,7 +4947,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
     }
   }
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr,
+  callback.reset(nullptr, nullptr, nullptr,
                  new sequence<OSMRestriction>(complex_restriction_from_file, true),
                  new sequence<OSMRestriction>(complex_restriction_to_file, true), nullptr);
 
@@ -3161,7 +4965,7 @@ void PBFGraphParser::ParseRelations(const boost::property_tree::ptree& pt,
   LOG_INFO("Finished with " + std::to_string(osmdata.lane_connectivity_map.size()) +
            " lane connections");
 
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // Sort complex restrictions. Keep this scoped so the file handles are closed when done sorting.
   LOG_INFO("Sorting complex restrictions by from id...");
@@ -3220,18 +5024,18 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
       callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
           callback.last_relation_ = 0;
       // we send a null way_nodes file so that only the bike share stations are parsed
-      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+      callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr,
                      new sequence<OSMNode>(bss_nodes_file, create));
       OSMPBF::Parser::parse(file_handle, static_cast<OSMPBF::Interest>(OSMPBF::Interest::NODES),
                             callback);
       create = false;
     }
     // Since the sequence must be flushed before reading it...
-    callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
     LOG_INFO("Found " + std::to_string(sequence<OSMNode>{bss_nodes_file, false}.size()) +
              " bss nodes...");
   }
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
   // we need to sort the refs so that we can easily (sequentially) update them
   // during node processing, we use memory mapping here because otherwise we aren't
@@ -3251,7 +5055,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
     // each time we parse nodes we have to run through the way nodes file from the beginning because
     // because osm node ids are only sorted at the single pbf file level
     callback.reset(nullptr, new sequence<OSMWayNode>(way_nodes_file, false), nullptr, nullptr,
-                   nullptr, nullptr, nullptr);
+                   nullptr, nullptr);
     callback.current_way_node_index_ = callback.last_node_ = callback.last_way_ =
         callback.last_relation_ = 0;
     OSMPBF::Parser::parse(file_handle,
@@ -3260,7 +5064,7 @@ void PBFGraphParser::ParseNodes(const boost::property_tree::ptree& pt,
                           callback);
   }
   uint64_t max_osm_id = callback.last_node_;
-  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+  callback.reset(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
   LOG_INFO("Finished with " + std::to_string(osmdata.osm_node_count) +
            " nodes contained in routable ways");
 

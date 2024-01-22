@@ -120,6 +120,14 @@ std::string serializeStatus(Api& request) {
   if (request.status().has_has_live_traffic_case())
     status_doc.AddMember("has_live_traffic",
                          rapidjson::Value().SetBool(request.status().has_live_traffic()), alloc);
+  if (request.status().has_has_transit_tiles_case())
+    status_doc.AddMember("has_transit_tiles",
+                         rapidjson::Value().SetBool(request.status().has_transit_tiles()), alloc);
+  // a 0 changeset indicates there's none, so don't write in the output
+  // TODO: currently this can't be tested as gurka isn't adding changeset IDs to OSM objects (yet)
+  if (request.status().has_osm_changeset_case() && request.status().osm_changeset())
+    status_doc.AddMember("osm_changeset",
+                         rapidjson::Value().SetUint64(request.status().osm_changeset()), alloc);
 
   rapidjson::Document bbox_doc;
   if (request.status().has_bbox_case()) {
@@ -202,6 +210,9 @@ std::string serializePbf(Api& request) {
       case Options::status:
         selection.set_status(true);
         break;
+      case Options::sources_to_targets:
+        selection.set_matrix(true);
+        break;
       // should never get here, actions which dont have pbf yet return json
       default:
         throw std::logic_error("Requested action is not yet serializable as pbf");
@@ -225,6 +236,8 @@ std::string serializePbf(Api& request) {
     request.clear_status();
   if (!selection.options())
     request.clear_options();
+  if (!selection.matrix())
+    request.clear_matrix();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();
@@ -235,6 +248,20 @@ std::string serializePbf(Api& request) {
   }
 
   return bytes;
+}
+
+// Generate leg shape in geojson format.
+baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
+  auto geojson = baldr::json::map({});
+  auto coords = baldr::json::array({});
+  coords->reserve(shape.size());
+  for (const auto& p : shape) {
+    coords->emplace_back(
+        baldr::json::array({baldr::json::fixed_t{p.lng(), 6}, baldr::json::fixed_t{p.lat(), 6}}));
+  }
+  geojson->emplace("type", std::string("LineString"));
+  geojson->emplace("coordinates", coords);
+  return geojson;
 }
 } // namespace tyr
 } // namespace valhalla
@@ -412,7 +439,7 @@ void serializeIncidentProperties(rapidjson::Writer<rapidjson::StringBuffer>& wri
     writer.Key(key_prefix + "alertc_codes");
     writer.StartArray();
     for (const auto& alertc_code : incident_metadata.alertc_codes()) {
-      writer.Int(static_cast<uint64_t>(alertc_code));
+      writer.Uint64(static_cast<uint64_t>(alertc_code));
     }
     writer.EndArray();
   }

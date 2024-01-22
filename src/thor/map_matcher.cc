@@ -283,14 +283,14 @@ MapMatcher::FormPath(meili::MapMatcher* matcher,
             directededge,
             elapsed,
             0,
-            0,
             mode,
             0,
-            {},
             baldr::kInvalidRestriction,
             true,
             static_cast<bool>(flow_sources & kDefaultFlowMask),
-            turn};
+            turn,
+            0,
+            directededge->destonly() || (costing->is_hgv() && directededge->destonly_hgv())};
     paths.back().first.emplace_back(
         PathInfo{mode, elapsed, edge_id, 0, 0, edge_segment.restriction_idx, transition_cost});
     paths.back().second.emplace_back(&edge_segment);

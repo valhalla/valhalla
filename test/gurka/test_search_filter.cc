@@ -17,6 +17,8 @@ protected:
   static void SetUpTestSuite() {
     constexpr double gridsize = 100;
 
+    // remark: without admin database, left-side driving is the
+    // default driving side.
     const std::string ascii_map = R"(
     B---------C
     |   2   8 |
@@ -90,6 +92,22 @@ TEST_F(SearchFilter, PreferredSide) {
   // should take the long way around starting southbound due to preferred side at destination
   gurka::assert::osrm::expect_steps(result, {"AB", "AD", "CD", "BC"});
   gurka::assert::raw::expect_path(result, {"AB", "AD", "CD", "BC"});
+}
+TEST_F(SearchFilter, StreetSideCutoff) {
+  auto from = "7";
+  auto to = "8";
+
+  const std::string& request =
+      (boost::format(
+           R"({"locations":[{"lat":%s,"lon":%s},{"lat":%s,"lon":%s,"preferred_side":"same","street_side_cutoff":"primary"}],"costing":"auto"})") %
+       std::to_string(map.nodes.at(from).lat()) % std::to_string(map.nodes.at(from).lng()) %
+       std::to_string(map.nodes.at(to).lat()) % std::to_string(map.nodes.at(to).lng()))
+          .str();
+  auto result = gurka::do_action(valhalla::Options::route, map, request);
+
+  // should take the short way in the north
+  gurka::assert::osrm::expect_steps(result, {"AB", "BC"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC"});
 }
 TEST_F(SearchFilter, MaxRoadClass) {
   auto from = "1";
@@ -243,7 +261,7 @@ protected:
             |
             H
 
-   L-4---5-M-6-N
+   L4----5-M-6-N
   )";
 
     const std::string speed_str = std::to_string(default_speed);

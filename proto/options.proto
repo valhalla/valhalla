@@ -41,6 +41,7 @@ enum ShapeFormat {
   polyline6 = 0;
   polyline5 = 1;
   geojson = 2;
+  no_shape = 3;  // to omit returning the geometry, e.g. default in matrix
 }
 
 // use this to select which top level fields should be present in the pbf output
@@ -50,9 +51,9 @@ message PbfFieldSelector {
   bool trip = 2;       // /trace_attributes
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
+  bool matrix = 5;     // sources_to_targets
   // TODO: enable these once we have objects for them
   // bool isochrone = 5;
-  // bool matrix = 6;
   // bool locate = 7;
   // bool height = 8;
   // bool expansion = 9;
@@ -366,11 +367,12 @@ message Options {
   }
 
   enum ExpansionProperties {
-    costs = 0;
-    durations = 1;
-    distances = 2;
-    statuses = 3;
-    edge_ids = 4;
+    cost = 0;
+    duration = 1;
+    distance = 2;
+    edge_status = 3;
+    edge_id = 4;
+    pred_edge_id = 5;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -444,7 +446,9 @@ message Options {
   oneof has_use_timestamps {
     bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   }
-  ShapeFormat shape_format = 38;                                   // Shape format (defaults to polyline6 encoding)
+  oneof has_shape_format {
+    ShapeFormat shape_format = 38;                                 // Shape format, defaults to polyline6 encoding for OSRM/height, and no_shape for matrix
+  }
   oneof has_alternates {
     uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   }
@@ -467,7 +471,7 @@ message Options {
   repeated Costing recostings = 46;                                // CostingType options to use to recost a path after it has been found
   repeated Ring exclude_polygons = 47;                                    // Rings/polygons to exclude entire areas during path finding
   oneof has_prioritize_bidirectional {
-    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a* when depart_at date_time.type is specified [default = false]
+    bool prioritize_bidirectional = 48;                            // Prioritize bidirectional a*/matrix when depart_at date_time.type is specified [default = false]
   }
   oneof has_expansion_action {
     Action expansion_action = 49;                                  // Meta action for /expansion endpoint
@@ -482,5 +486,7 @@ message Options {
     uint32 matrix_locations = 54;                                  // a one to many or many to one time distance matrix. Does not affect
   }                                                                // sources_to_targets when either sources or targets has more than 1 location
                                                                    // or when CostMatrix is the selected matrix mode.
+  bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
+  float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
   bool blind_user_mode = 81;                           // route: additional maneuvers and informations for blind users.
 }

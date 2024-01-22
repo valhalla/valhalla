@@ -105,7 +105,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (tiles.empty()) {
-        LOG_WARN("Tile extract contained no usuable tiles");
+        LOG_WARN("Tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -145,7 +145,7 @@ GraphReader::tile_extract_t::tile_extract_t(const boost::property_tree::ptree& p
       }
       // couldn't load it
       if (traffic_tiles.empty()) {
-        LOG_WARN("Traffic tile extract contained no usuable tiles");
+        LOG_WARN("Traffic tile extract contained no usable tiles");
         archive.reset();
       } // loaded ok but with possibly bad blocks
       else {
@@ -183,7 +183,7 @@ void FlatTileCache::Reserve(size_t tile_size) {
 
 // Checks if tile exists in the cache.
 bool FlatTileCache::Contains(const GraphId& graphid) const {
-  return get_index(graphid) != -1;
+  return is_valid(get_index(graphid));
 }
 
 // Lets you know if the cache is too large.
@@ -206,7 +206,7 @@ void FlatTileCache::Clear() {
 // Get a pointer to a graph tile object given a GraphId.
 graph_tile_ptr FlatTileCache::Get(const GraphId& graphid) const {
   auto index = get_index(graphid);
-  if (index == -1)
+  if (is_invalid(index))
     return nullptr;
   return cache_[index];
 }
@@ -758,7 +758,6 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
         continue;
       }
       if (continuing_edge != nullptr) {
-        LOG_WARN("GraphReader::GetShortcut found multiple potential continuing edges, aborting");
         continuing_edge = directededge + (nodeinfo->edge_count() - i);
         continue;
       }
@@ -769,7 +768,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
 
   // No shortcuts on the local level or transit level.
   if (id.level() >= TileHierarchy::levels().back().level) {
-    LOG_WARN("GraphReader::GetShortcut was called with a lever that doesn't contain shortcuts");
+    LOG_DEBUG("GraphReader::GetShortcut was called with a level that doesn't contain shortcuts");
     return {};
   }
 
@@ -792,7 +791,7 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // directed edge.
     cont_de = (node == nullptr) ? GetOpposingEdge(id) : continuing_edge(tile, edgeid, node);
     if (cont_de == nullptr) {
-      LOG_WARN("GraphReader::GetShortcut found no clear continuing edge");
+      LOG_DEBUG("GraphReader::GetShortcut found no clear continuing edge");
       break;
     }
 
@@ -811,8 +810,8 @@ GraphId GraphReader::GetShortcut(const GraphId& id) {
     // If this edge is itself not the beginning of a shortcut, but we encountered another shortcut
     // it means we must have started the traversal outside a shortcuts internal edges
     if (!directededge->superseded() && shortcut_at_node) {
-      LOG_WARN(
-          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge we arrived on");
+      LOG_DEBUG(
+          "GraphReader::GetShortcut found a shortcut but it's not superseding the edge it arrived on");
       break;
     }
 
@@ -976,6 +975,16 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile) {
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+int GraphReader::GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile) {
+  auto nodes = GetDirectedEdgeNodes(edge, tile);
+  if (const auto* node = nodeinfo(nodes.first, tile))
+    return node->timezone();
+  else if (const auto* node = nodeinfo(nodes.second, tile))
+    return node->timezone();
+
+  return 0;
+}
+
 std::shared_ptr<const valhalla::IncidentsTile>
 GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())
@@ -1014,7 +1023,7 @@ IncidentResult GraphReader::GetIncidents(const GraphId& edge_id, graph_tile_ptr&
 const valhalla::IncidentsTile::Metadata&
 getIncidentMetadata(const std::shared_ptr<const valhalla::IncidentsTile>& tile,
                     const valhalla::IncidentsTile::Location& incident_location) {
-  const auto metadata_index = incident_location.metadata_index();
+  const int64_t metadata_index = incident_location.metadata_index();
   if (metadata_index >= tile->metadata_size()) {
     throw std::runtime_error(std::string("Invalid incident tile with an incident_index of ") +
                              std::to_string(metadata_index) + " but total incident metadata of " +

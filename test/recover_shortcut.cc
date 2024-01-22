@@ -103,7 +103,7 @@ void recover(bool cache) {
           continue;
         }
 
-        // check if the shape matches approximatly
+        // check if the shape matches approximately
         for (size_t k = 0; k < shortcut_shape.size(); ++k) {
           if (!shortcut_shape[k].ApproximatelyEqual(recovered_shape[k])) {
             //            FAIL() << "edge shape points are not equal: " +
@@ -134,30 +134,36 @@ TEST(RecoverShortcut, test_recover_shortcut_edges_cache) {
 TEST(GetShortcut, check_false_negatives) {
   GraphReader reader(conf.get_child("mjolnir"));
 
-  auto tile_set = reader.GetTileSet();
-  for (const valhalla::baldr::GraphId& tile_id : tile_set) {
-    auto tile = reader.GetGraphTile(tile_id);
+  for (const auto& level : TileHierarchy::levels()) {
+    // we don't get shortcuts on level 2 and up
+    if (level.level > 1)
+      continue;
 
-    valhalla::baldr::GraphId edge_id{tile_id};
-    for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
-      auto directed_edge = tile->directededge(i);
-      if (!directed_edge->is_shortcut()) {
-        continue;
-      }
+    auto tile_set = reader.GetTileSet(level.level);
+    for (const valhalla::baldr::GraphId& tile_id : tile_set) {
+      auto tile = reader.GetGraphTile(tile_id);
 
-      // If the edge is a shortcut, let's recover its edges
-      auto edges_of_shortcut = reader.RecoverShortcut(edge_id);
+      valhalla::baldr::GraphId edge_id{tile_id};
+      for (size_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+        auto directed_edge = tile->directededge(i);
+        if (!directed_edge->is_shortcut()) {
+          continue;
+        }
 
-      for (const auto& edge_of_shortcut : edges_of_shortcut) {
-        // Resolve the shortcut that the edge belongs to, this must always be valid
-        auto shortcut_id = reader.GetShortcut(edge_of_shortcut);
-        EXPECT_TRUE(shortcut_id.Is_Valid());
+        // If the edge is a shortcut, let's recover its edges
+        auto edges_of_shortcut = reader.RecoverShortcut(edge_id);
 
-        if (shortcut_id.Is_Valid()) {
-          // The resolved shortcut must always the same as the one we recovered in the first place
-          auto directed_shortcut = reader.directededge(shortcut_id);
-          EXPECT_TRUE(directed_shortcut->is_shortcut());
-          EXPECT_EQ(shortcut_id, edge_id);
+        for (const auto& edge_of_shortcut : edges_of_shortcut) {
+          // Resolve the shortcut that the edge belongs to, this must always be valid
+          auto shortcut_id = reader.GetShortcut(edge_of_shortcut);
+          EXPECT_TRUE(shortcut_id.Is_Valid());
+
+          if (shortcut_id.Is_Valid()) {
+            // The resolved shortcut must always the same as the one we recovered in the first place
+            auto directed_shortcut = reader.directededge(shortcut_id);
+            EXPECT_TRUE(directed_shortcut->is_shortcut());
+            EXPECT_EQ(shortcut_id, edge_id);
+          }
         }
       }
     }
@@ -167,41 +173,47 @@ TEST(GetShortcut, check_false_negatives) {
 TEST(GetShortcut, check_false_positives) {
   GraphReader reader(conf.get_child("mjolnir"));
 
-  auto tile_set = reader.GetTileSet();
-  for (const valhalla::baldr::GraphId& tile_id : tile_set) {
-    auto tile = reader.GetGraphTile(tile_id);
+  for (const auto& level : TileHierarchy::levels()) {
+    // we don't get shortcuts on level 2 and up
+    if (level.level > 1)
+      continue;
 
-    valhalla::baldr::GraphId edge_id{tile_id};
-    for (int32_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
-      auto shortcut_id = reader.GetShortcut(edge_id);
+    auto tile_set = reader.GetTileSet(level.level);
+    for (const valhalla::baldr::GraphId& tile_id : tile_set) {
+      auto tile = reader.GetGraphTile(tile_id);
 
-      // Edges that don't belong to any shortcut will lead to invalid shortcut ID and this is fine
-      if (!shortcut_id.Is_Valid()) {
-        continue;
-      }
+      valhalla::baldr::GraphId edge_id{tile_id};
+      for (size_t i = 0; i < tile->header()->directededgecount(); i++, ++edge_id) {
+        auto shortcut_id = reader.GetShortcut(edge_id);
 
-      // If edge_id was already referencing a shortcut we must get the same ID back
-      auto directed_edge = reader.directededge(edge_id);
-      if (directed_edge->is_shortcut()) {
-        EXPECT_TRUE(shortcut_id == edge_id);
-        continue;
-      }
-
-      // If the returned shortcut ID is valid it must reference an actual shortcut
-      auto directed_shortcut = reader.directededge(shortcut_id);
-      EXPECT_TRUE(directed_shortcut->is_shortcut());
-
-      if (directed_shortcut->is_shortcut()) {
-        auto edges_of_shortcut = reader.RecoverShortcut(shortcut_id);
-        auto found_edge = false;
-
-        for (const auto& edge_of_shortcut : edges_of_shortcut) {
-          if (edge_of_shortcut == edge_id) {
-            found_edge = true;
-            break;
-          }
+        // Edges that don't belong to any shortcut will lead to invalid shortcut ID and this is fine
+        if (!shortcut_id.Is_Valid()) {
+          continue;
         }
-        EXPECT_TRUE(found_edge);
+
+        // If edge_id was already referencing a shortcut we must get the same ID back
+        auto directed_edge = reader.directededge(edge_id);
+        if (directed_edge->is_shortcut()) {
+          EXPECT_TRUE(shortcut_id == edge_id);
+          continue;
+        }
+
+        // If the returned shortcut ID is valid it must reference an actual shortcut
+        auto directed_shortcut = reader.directededge(shortcut_id);
+        EXPECT_TRUE(directed_shortcut->is_shortcut());
+
+        if (directed_shortcut->is_shortcut()) {
+          auto edges_of_shortcut = reader.RecoverShortcut(shortcut_id);
+          auto found_edge = false;
+
+          for (const auto& edge_of_shortcut : edges_of_shortcut) {
+            if (edge_of_shortcut == edge_id) {
+              found_edge = true;
+              break;
+            }
+          }
+          EXPECT_TRUE(found_edge);
+        }
       }
     }
   }

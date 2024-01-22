@@ -8,7 +8,7 @@
     "doc_url": "",
     "icon_url": "https://avatars0.githubusercontent.com/u/10232331",
     "contact_name": "Greg Knisely",
-    "contact_email": "greg.knisely@mapbox.com"
+    "contact_email": "greg@hammerhead.io"
   },
   "tags": [
     {
@@ -242,7 +242,7 @@
       "object_types": [
         "relation"
       ],
-      "description": "Special cases of state/provinces in eg France and the Phillipines"
+      "description": "Special cases of state/provinces in eg France and the Philippines"
     },
     {
       "key": "admin_level",
@@ -268,11 +268,123 @@
       "description": "Alternative name for the way, frequently used when a street has another official or locally preferred name"
     },
     {
+      "key": "alt_name:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Alternative name in a given language for the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
       "key": "alt_name:pronunciation",
       "object_types": [
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the alternative name for the way, frequently used when a street has another official or locally preferred name"
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name for the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name for the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "alt_name:<lg>pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name in a given language for the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:<lg>pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name in a given language for the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "alt_name:left",
+      "object_types": [
+        "way"
+      ],
+      "description": "Alternative name for the way for the left side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:left:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Alternative name in a given language for the left side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:left:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name for the left side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:left:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name for the left side of the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "alt_name:left:<lg>pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name in a given language for the left side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:left:<lg>pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name in a given language for the left side of the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "alt_name:right",
+      "object_types": [
+        "way"
+      ],
+      "description": "Alternative name for the way for the right side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:right:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Alternative name in a given language for the right side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:right:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name for the right side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:right:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name for the right side of the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "alt_name:right:<lg>pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the alternative name in a given language for the right side of the way, frequently used when a street has another official or locally preferred name"
+    },
+    {
+      "key": "alt_name:right:<lg>pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the alternative name in a given language for the right side of the way, frequently used when a street has another official or locally preferred name.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "area",
@@ -597,7 +709,7 @@
       "description": "Sets the bike reverse flag to true.  Note from wiki: (when cyclists are allowed to travel in both directions on a oneway street (but no lane is present))"
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "bicycle:conditional",
       "object_types": [
@@ -605,7 +717,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "bicycle:conditional",
       "object_types": [
@@ -613,7 +725,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "bicycle:conditional",
       "object_types": [
@@ -621,7 +733,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "bicycle:conditional",
       "object_types": [
@@ -629,7 +741,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "bicycle:conditional",
       "object_types": [
@@ -915,7 +1027,7 @@
       "description": "Sets the bus reverse flag to true."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -923,7 +1035,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -931,7 +1043,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -939,7 +1051,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -947,7 +1059,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -955,7 +1067,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "bus:conditional",
       "object_types": [
@@ -1589,8 +1701,36 @@
       ]
     },
     {
+      "key": "destination:lang:<lg>",
+      "description": "Toward location in a given language. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
       "key": "destination:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the toward location. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward location. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:lang:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward location in a given language. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward location. Phonetic Alphabet: jeita|katakana|nt-sampa. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:lang:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward location in a given language. Phonetic Alphabet: jeita|katakana|nt-sampa. Used for exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
       "object_types": [
         "way"
       ]
@@ -1603,8 +1743,36 @@
       ]
     },
     {
-      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
       "key": "destination:backward:pronunciation",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Phonetic Alphabet: jeita|katakana|nt-sampa. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:backward:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "Adds sinage information in a given language to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:backward:lang:<lg>",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide(IPA) in a given language to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:backward:lang:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide in a given language to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Phonetic Alphabet: jeita|katakana|nt-sampa. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:backward:lang:<lg>:pronunciation:<alphabet>",
       "object_types": [
         "way"
       ]
@@ -1617,8 +1785,36 @@
       ]
     },
     {
-      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
       "key": "destination:forward:pronunciation",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Phonetic Alphabet: jeita|katakana|nt-sampa.  Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:forward:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "Adds sinage information in a given language to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:forward:lang:<lg>",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide(IPA) in a given language to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:forward:lang:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "description": "This tag contains a phonetic guide in a given language to pronouncing the sinage information to the given edge in the graph which is helpful to know to where a given road leads. Phonetic Alphabet: jeita|katakana|nt-sampa.  Forward and backward allow for distinct values based on the direction the way is drawn specifically useful for single carriageways.",
+      "key": "destination:forward:lang:<lg>:pronunciation:<alphabet>",
       "object_types": [
         "way"
       ]
@@ -1632,7 +1828,35 @@
     },
     {
       "key": "destination:ref:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the branch route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:lang:<lg>",
+      "description": "Branch route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:lang:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the branch route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:lang:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the branch route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
       "object_types": [
         "way"
       ]
@@ -1646,7 +1870,35 @@
     },
     {
       "key": "destination:ref:to:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the toward route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:to:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward route number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:to:lang:<lg>",
+      "description": "Toward route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:to:lang:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:ref:to:lang:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward route number in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
       "object_types": [
         "way"
       ]
@@ -1660,7 +1912,35 @@
     },
     {
       "key": "destination:street:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the branch road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:lang:<lg>",
+      "description": "Branch road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:lang:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the branch road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:lang:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the branch road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
       "object_types": [
         "way"
       ]
@@ -1674,7 +1954,35 @@
     },
     {
       "key": "destination:street:to:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:to:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward road name for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:to:lang:<lg>",
+      "description": "Toward road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:to:lang:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the toward road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "destination:street:to:lang:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the toward road name in a given language for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa.",
       "object_types": [
         "way"
       ]
@@ -1689,7 +1997,7 @@
       "description": "Overrides access flags for emergency vehicles.  Emergency Routing is allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1697,7 +2005,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1705,7 +2013,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1713,7 +2021,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1721,7 +2029,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1729,7 +2037,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "emergency:conditional",
       "object_types": [
@@ -1998,7 +2306,7 @@
       "description": "Sets the foot reverse flag to true."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2006,7 +2314,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2014,7 +2322,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2022,7 +2330,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2030,7 +2338,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2038,7 +2346,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "foot:conditional",
       "object_types": [
@@ -2488,7 +2796,7 @@
       "description": "Overrides access flags for hgv.  Hgv Routing is not allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -2496,7 +2804,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -2504,7 +2812,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -2512,7 +2820,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -2520,7 +2828,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -2528,7 +2836,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "hgv:conditional",
       "object_types": [
@@ -3024,7 +3332,7 @@
       "description": "Allows access for hov modes unless the value is no."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3032,7 +3340,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3040,7 +3348,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3048,7 +3356,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3056,7 +3364,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3064,7 +3372,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "hov:conditional",
       "object_types": [
@@ -3123,7 +3431,35 @@
       "object_types": [
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the international route network and number."
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the international route network and number."
+    },
+    {
+      "key": "int_ref:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the international route network and number.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "int_ref:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "International route network and number in a given language."
+    },
+    {
+      "key": "int_ref:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the international route network and number in a given language."
+    },
+    {
+      "key": "int_ref:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the international route network and number in a given language.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "junction",
@@ -3143,14 +3479,84 @@
     },
     {
       "key": "junction:ref",
-      "description": "Junction/exit number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "Junction/exit number for signage (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)",
       "object_types": [
         "way"
       ]
     },
     {
       "key": "junction:ref:pronunciation",
-      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number for sinage ie. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction/exit number for signage (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:ref:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number for signage (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:ref:<lg>",
+      "description": "Junction/exit number for signage in a given language (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:ref:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction/exit number for signage in a given language (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:ref:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number for signage in a given language (i.e. exit information, see: https://wiki.openstreetmap.org/wiki/Exit_Info)  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name",
+      "description": "Junction name",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction name",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the junction name.  Phonetic Alphabet: jeita|katakana|nt-sampa.",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name:<lg>",
+      "description": "Junction name in a given language",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name:<lg>:pronunciation",
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction name in a given language",
+      "object_types": [
+        "way"
+      ]
+    },
+    {
+      "key": "junction:name:<lg>:pronunciation:<alphabet>",
+      "description": "This tag contains a phonetic guide to pronouncing the junction name in a given language.  Phonetic Alphabet: jeita|katakana|nt-sampa.",
       "object_types": [
         "way"
       ]
@@ -3565,7 +3971,7 @@
       "description": "Sets the motor scooter reverse flag to true."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3573,7 +3979,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3581,7 +3987,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3589,7 +3995,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3597,7 +4003,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3605,7 +4011,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "mofa:conditional",
       "object_types": [
@@ -3729,7 +4135,7 @@
       "description": "Sets the motor scooter reverse flag to true."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3737,7 +4143,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3745,7 +4151,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3753,7 +4159,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3761,7 +4167,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3769,7 +4175,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "moped:conditional",
       "object_types": [
@@ -3948,7 +4354,7 @@
       "description": "Overrides access flags for auto.  Auto Routing allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -3956,7 +4362,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -3964,7 +4370,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -3972,7 +4378,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -3980,7 +4386,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -3988,7 +4394,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "motor_vehicle:conditional",
       "object_types": [
@@ -4167,7 +4573,7 @@
       "description": "Overrides access flags for auto.  Auto Routing allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4175,7 +4581,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4183,7 +4589,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4191,7 +4597,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4199,7 +4605,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4207,7 +4613,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "motorcar:conditional",
       "object_types": [
@@ -4215,7 +4621,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4223,7 +4629,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4231,7 +4637,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4239,7 +4645,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4247,7 +4653,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4255,7 +4661,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "motorcycle:conditional",
       "object_types": [
@@ -4469,7 +4875,225 @@
         "node",
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc."
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature, street names, river names, POI names etc."
+    },
+    {
+      "key": "name:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:<lg>",
+      "object_types": [
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature in a given language"
+    },
+    {
+      "key": "name:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature in a given language"
+    },
+    {
+      "key": "name:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature in a given language.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:left",
+      "object_types": [
+        "node",
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature, street names, river names, POI names etc. for the left side"
+    },
+    {
+      "key": "name:left:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature, street names, river names, POI names etc. for the left side"
+    },
+    {
+      "key": "name:left:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc. for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:left:<lg>",
+      "object_types": [
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature in a given language for the left side"
+    },
+    {
+      "key": "name:left:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature in a given language for the left side"
+    },
+    {
+      "key": "name:left:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature in a given language for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:right",
+      "object_types": [
+        "node",
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature, street names, river names, POI names etc. for the right side"
+    },
+    {
+      "key": "name:right:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature, street names, river names, POI names etc. for the right side"
+    },
+    {
+      "key": "name:right:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc. for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:right:<lg>",
+      "object_types": [
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature in a given language for the right side"
+    },
+    {
+      "key": "name:right:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature in a given language for the right side"
+    },
+    {
+      "key": "name:right:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature in a given language for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:forward",
+      "object_types": [
+        "node",
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature, street names, river names, POI names etc. for the forward direction"
+    },
+    {
+      "key": "name:forward:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature, street names, river names, POI names etc. for the forward direction"
+    },
+    {
+      "key": "name:forward:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc. for the forward direction.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:forward:<lg>",
+      "object_types": [
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature in a given language for the forward direction"
+    },
+    {
+      "key": "name:forward:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature in a given language for the forward direction"
+    },
+    {
+      "key": "name:forward:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature in a given language for the forward direction.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:backward",
+      "object_types": [
+        "node",
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature, street names, river names, POI names etc. for the backward direction"
+    },
+    {
+      "key": "name:backward:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature, street names, river names, POI names etc. for the backward direction"
+    },
+    {
+      "key": "name:backward:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature, street names, river names, POI names etc. for the backward direction.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "name:backward:<lg>",
+      "object_types": [
+        "way",
+        "relation"
+      ],
+      "description": "The name of the feature in a given language for the backward direction"
+    },
+    {
+      "key": "name:backward:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the name of the feature in a given language for the backward direction"
+    },
+    {
+      "key": "name:backward:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the name of the feature in a given language for the backward direction.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "tunnel:name",
@@ -4484,22 +5108,130 @@
         "node",
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the tunnel name of the way."
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name of the way."
     },
     {
-      "key": "name:en",
+      "key": "tunnel:name:pronunciation:<alphabet>",
       "object_types": [
-        "way",
-        "relation"
+        "node",
+        "way"
       ],
-      "description": "The english name of the feature"
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name of the way.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
-      "key": "name:en:pronunciation",
+      "key": "tunnel:name:<lg>",
       "object_types": [
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the english name of the feature"
+      "description": "The tunnel name in a given language of the way."
+    },
+    {
+      "key": "tunnel:name:<lg>:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name in a given language of the way."
+    },
+    {
+      "key": "tunnel:name:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name in a given language of the way.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "tunnel:name:left",
+      "object_types": [
+        "way"
+      ],
+      "description": "The tunnel name of the way for the left side."
+    },
+    {
+      "key": "tunnel:name:left:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name of the way for the left side."
+    },
+    {
+      "key": "tunnel:name:left:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name of the way for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "tunnel:name:left:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "The tunnel name in a given language of the way for the left side."
+    },
+    {
+      "key": "tunnel:name:left:<lg>:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name in a given language of the way for the left side."
+    },
+    {
+      "key": "tunnel:name:left:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name in a given language of the way for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "tunnel:name:right",
+      "object_types": [
+        "way"
+      ],
+      "description": "The tunnel name of the way for the right side."
+    },
+    {
+      "key": "tunnel:name:right:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name of the way for the right side."
+    },
+    {
+      "key": "tunnel:name:right:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name of the way for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "tunnel:name:right:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "The tunnel name in a given language of the way for the right side."
+    },
+    {
+      "key": "tunnel:name:right:<lg>:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the tunnel name in a given language of the way for the right side."
+    },
+    {
+      "key": "tunnel:name:right:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the tunnel name in a given language of the way for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "ncn",
@@ -4559,14 +5291,126 @@
       "object_types": [
         "way"
       ],
-      "description": "Official name for a country used in that country if it differs from what is in the name tag"
+      "description": "Official name for a country or street"
     },
     {
       "key": "official_name:pronunciation",
       "object_types": [
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the official name for a country used in that country if it differs from what is in the name tag"
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name for a street"
+    },
+    {
+      "key": "official_name:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name for a street.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "official_name:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Official name in a given language for a street"
+    },
+    {
+      "key": "official_name:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name in a given language for a street"
+    },
+    {
+      "key": "official_name:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name in a given language for a street.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "official_name:left",
+      "object_types": [
+        "way"
+      ],
+      "description": "Official name for a street for the left side."
+    },
+    {
+      "key": "official_name:left:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name a street for the left side."
+    },
+    {
+      "key": "official_name:left:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name a street for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "official_name:left:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Official name in a given language for a street for the left side."
+    },
+    {
+      "key": "official_name:left:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name in a given language for a street for the left side."
+    },
+    {
+      "key": "official_name:left:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name in a given language for a street for the left side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "official_name:right",
+      "object_types": [
+        "way"
+      ],
+      "description": "Official name for a street for the right side."
+    },
+    {
+      "key": "official_name:right:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name a street for the right side."
+    },
+    {
+      "key": "official_name:right:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name a street for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "official_name:right:<lg>",
+      "object_types": [
+        "way"
+      ],
+      "description": "Official name in a given language for a street for the right side."
+    },
+    {
+      "key": "official_name:right:<lg>:pronunciation",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the official name in a given language for a street for the right side."
+    },
+    {
+      "key": "official_name:right:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the official name in a given language for a street for the right side.  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "access",
@@ -5010,7 +5854,7 @@
       "description": "Overrides access flags for pedestrian.  Pedestrian Routing allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5018,7 +5862,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5026,7 +5870,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5034,7 +5878,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5042,7 +5886,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5050,7 +5894,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "pedestrian:conditional",
       "object_types": [
@@ -5166,7 +6010,7 @@
       "description": "Overrides access flags for bus.  Bus Routing allowed."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5174,7 +6018,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5182,7 +6026,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5190,7 +6034,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5198,7 +6042,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5206,7 +6050,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "psv:conditional",
       "object_types": [
@@ -5259,7 +6103,40 @@
         "node",
         "way"
       ],
-      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
+    },
+    {
+      "key": "ref:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide to pronouncing the junction/exit number, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa."
+    },
+    {
+      "key": "ref:<lg>",
+      "object_types": [
+        "node",
+        "way",
+        "relation"
+      ],
+      "description": "Route network and number.  Junction/exit number in a given language, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
+    },
+    {
+      "key": "ref:<lg>:pronunciation",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction/exit number in a given language, see: https://wiki.openstreetmap.org/wiki/Exit_Info"
+    },
+    {
+      "key": "ref:<lg>:pronunciation:<alphabet>",
+      "object_types": [
+        "node",
+        "way"
+      ],
+      "description": "This tag contains a phonetic guide(IPA) to pronouncing the junction/exit number in a given language, see: https://wiki.openstreetmap.org/wiki/Exit_Info  Phonetic Alphabet: jeita|katakana|nt-sampa."
     },
     {
       "key": "restriction",
@@ -6803,7 +7680,7 @@
       "description": "Sets the taxi reverse flag to true."
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "no @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -6811,7 +7688,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "yes @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -6819,7 +7696,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "private @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -6827,7 +7704,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "delivery @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -6835,7 +7712,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "designated @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -6843,7 +7720,7 @@
       ]
     },
     {
-      "description": "Adds conditional access to an edge with a time depedency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
+      "description": "Adds conditional access to an edge with a time dependency in opening_hours format, see: https://wiki.openstreetmap.org/wiki/Key:opening_hours",
       "value": "destination @ (opening_hours format)",
       "key": "taxi:conditional",
       "object_types": [
@@ -7359,6 +8236,134 @@
         "way"
       ],
       "description": "Considers the way lit"
+    },
+    {
+      "key": "motor_vehicle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables motor_vehicle access in the forward direction"
+    },
+    {
+      "key": "motor_vehicle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables motor_vehicle access in the forward direction"
+    },
+    {
+      "key": "motor_vehicle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables motor_vehicle access in the backward direction"
+    },
+    {
+      "key": "motor_vehicle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables motor_vehicle access in the backward direction"
+    },
+    {
+      "key": "vehicle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables vehicle access in the forward direction"
+    },
+    {
+      "key": "vehicle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables vehicle access in the forward direction"
+    },
+    {
+      "key": "vehicle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables vehicle access in the backward direction"
+    },
+    {
+      "key": "vehicle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables vehicle access in the backward direction"
+    },
+    {
+      "key": "foot:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables foot access in the forward direction"
+    },
+    {
+      "key": "foot:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables foot access in the forward direction"
+    },
+    {
+      "key": "foot:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables foot access in the backward direction"
+    },
+    {
+      "key": "foot:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables foot access in the backward direction"
+    },
+    {
+      "key": "bicycle:forward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables bicycle access in the forward direction"
+    },
+    {
+      "key": "bicycle:forward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables bicycle access in the forward direction"
+    },
+    {
+      "key": "bicycle:backward",
+      "value": "yes",
+      "object_types": [
+        "way"
+      ],
+      "description": "Enables bicycle access in the backward direction"
+    },
+    {
+      "key": "bicycle:backward",
+      "value": "no",
+      "object_types": [
+        "way"
+      ],
+      "description": "Disables bicycle access in the backward direction"
     }
   ]
 }

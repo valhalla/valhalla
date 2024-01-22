@@ -104,6 +104,14 @@ inline std::string to_string(BuildStage stg) {
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim = ';');
 
 /**
+ * Splits a tag into a vector of strings.
+ * @param  tag_value  tag to split
+ * @param  delim      delimiter
+ * @return the vector of strings
+ */
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str);
+
+/**
  * Remove double quotes.
  * @param  s
  * @return string string with no quotes.

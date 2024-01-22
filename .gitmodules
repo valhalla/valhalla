@@ -45,4 +45,7 @@
 	url = https://github.com/jarro2783/cxxopts.git
 [submodule "third_party/just_gtfs"]
 	path = third_party/just_gtfs
-	url = https://github.com/mesozoic-drones/just_gtfs.git
+	url = https://github.com/valhalla/just_gtfs
+[submodule "third_party/tz"]
+	path = third_party/tz
+	url = https://github.com/eggert/tz.git

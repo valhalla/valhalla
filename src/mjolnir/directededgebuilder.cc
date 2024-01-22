@@ -26,7 +26,7 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
                                          const bool minor,
                                          const uint32_t restrictions,
                                          const uint32_t bike_network,
-                                         const bool reclass_ferry)
+                                         const bool remove_destonly)
     : DirectedEdge() {
   set_endnode(endnode);
   set_use(use);
@@ -52,13 +52,13 @@ DirectedEdgeBuilder::DirectedEdgeBuilder(const OSMWay& way,
 
   set_truck_route(way.truck_route());
 
-  // Set destination only to true if the reclass_ferry is set to false and either destination only or
-  // no thru traffic is set. Adding the reclass_ferry check allows us to know if we should override
-  // the destination only attribution
-  set_dest_only(!reclass_ferry && (way.destination_only() || way.no_thru_traffic()));
-  if (reclass_ferry && (way.destination_only() || way.no_thru_traffic())) {
+  // Set destination only to true if the remove_destonly is set to false and either destination only
+  // or no thru traffic is set. remove_destonly is set for reclassified paths due to ferries.
+  set_dest_only(!remove_destonly && (way.destination_only() || way.no_thru_traffic()));
+  if (remove_destonly && (way.destination_only() || way.no_thru_traffic())) {
     LOG_DEBUG("Overriding dest_only attribution to false for ferry.");
   }
+  set_dest_only_hgv(way.destination_only_hgv());
   set_dismount(way.dismount());
   set_use_sidepath(way.use_sidepath());
   set_sac_scale(way.sac_scale());

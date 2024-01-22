@@ -237,7 +237,7 @@ public:
   void set_curvature(const uint32_t factor);
 
   /**
-   * Flag indicating the edge is a dead end (no other driveable
+   * Flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @return  Returns true if this edge is a dead end.
    */
@@ -246,7 +246,7 @@ public:
   }
 
   /**
-   * Set the flag indicating the edge is a dead end (no other driveable
+   * Set the flag indicating the edge is a dead end (no other drivable
    * roads at the end node of this edge).
    * @param d  True if this edge is a dead end.
    */
@@ -298,6 +298,24 @@ public:
    *                   destination only), false if not.
    */
   void set_dest_only(const bool destonly);
+
+  /**
+   * Is this edge part of a private or no through road for HGV that allows access
+   * only if required to get to a destination? If destonly() is true, this is true.
+   * @return  Returns true if the edge is destination only / private access for HGV.
+   */
+  bool destonly_hgv() const {
+    return dest_only_hgv_;
+  }
+
+  /**
+   * Sets the destination only (private) flag for HGV. This indicates the
+   * edge should allow access only to locations that are destinations and
+   * not allow HGV "through" traffic
+   * @param  destonly_hgv  True if the edge is private for HGV (allows access to
+   *                       destination only), false if not.
+   */
+  void set_dest_only_hgv(const bool destonly_hgv);
 
   /**
    * Is this edge part of a tunnel?
@@ -570,9 +588,9 @@ public:
    * @return true if the edge is not a shortcut, not related to transit and not under construction
    */
   bool can_form_shortcut() const {
-    return !is_shortcut() && !bss_connection() && !start_restriction() && !end_restriction() &&
-           use() != Use::kTransitConnection && use() != Use::kEgressConnection &&
-           use() != Use::kPlatformConnection && use() != Use::kConstruction;
+    return !is_shortcut() && !bss_connection() && use() != Use::kTransitConnection &&
+           use() != Use::kEgressConnection && use() != Use::kPlatformConnection &&
+           use() != Use::kConstruction;
   }
 
   /**
@@ -862,16 +880,16 @@ public:
   void set_dismount(const bool dismount);
 
   /**
-   * Get if a sidepath for bicycling should be preffered instead of this edge
-   * @return  Returns if a sidepath should be preffered for cycling
+   * Get if a sidepath for bicycling should be preferred instead of this edge
+   * @return  Returns if a sidepath should be preferred for cycling
    */
   bool use_sidepath() const {
     return use_sidepath_;
   }
 
   /**
-   * Set if a sidepath for bicycling should be preffered instead of this edge
-   * @param  use_sidepath  true if sidepath should be preffered for cycling over this edge
+   * Set if a sidepath for bicycling should be preferred instead of this edge
+   * @param  use_sidepath  true if sidepath should be preferred for cycling over this edge
    */
   void set_use_sidepath(const bool use_sidepath);
 
@@ -1234,14 +1252,15 @@ protected:
   uint64_t bridge_ : 1;         // Is this edge part of a bridge?
   uint64_t traffic_signal_ : 1; // Traffic signal at end of the directed edge
   uint64_t seasonal_ : 1;       // Seasonal access (ex. no access in winter)
-  uint64_t deadend_ : 1;        // Leads to a dead-end (no other driveable roads) TODO
+  uint64_t deadend_ : 1;        // Leads to a dead-end (no other drivable roads) TODO
   uint64_t bss_connection_ : 1; // Does this lead to(come out from) a bike share station?
   uint64_t stop_sign_ : 1;      // Stop sign at end of the directed edge
   uint64_t yield_sign_ : 1;     // Yield/give way sign at end of the directed edge
   uint64_t hov_type_ : 1;       // if (is_hov_only()==true), this means (HOV2=0, HOV3=1)
   uint64_t indoor_ : 1;         // Is this edge indoor
   uint64_t lit_ : 1;            // Is the edge lit?
-  uint64_t spare4_ : 4;
+  uint64_t dest_only_hgv_ : 1;  // destonly for HGV specifically
+  uint64_t spare4_ : 3;
 
   // 5th 8-byte word
   uint64_t turntype_ : 24;      // Turn type (see graphconstants.h)

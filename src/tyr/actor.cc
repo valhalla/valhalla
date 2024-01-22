@@ -143,12 +143,12 @@ actor_t::matrix(const std::string& request_str, const std::function<void()>* int
   // check the request and locate the locations in the graph
   pimpl->loki_worker.matrix(*api);
   // compute the matrix
-  auto json = pimpl->thor_worker.matrix(*api);
+  auto bytes = pimpl->thor_worker.matrix(*api);
   // if they want you do to do the cleanup automatically
   if (auto_cleanup) {
     cleanup();
   }
-  return json;
+  return bytes;
 }
 
 std::string actor_t::optimized_route(const std::string& request_str,
@@ -301,8 +301,10 @@ actor_t::expansion(const std::string& request_str, const std::function<void()>* 
   // check the request and locate the locations in the graph
   if (api->options().expansion_action() == Options::route) {
     pimpl->loki_worker.route(*api);
-  } else {
+  } else if (api->options().expansion_action() == Options::isochrone) {
     pimpl->loki_worker.isochrones(*api);
+  } else {
+    pimpl->loki_worker.matrix(*api);
   }
   // route between the locations in the graph to find the best path
   auto json = pimpl->thor_worker.expansion(*api);

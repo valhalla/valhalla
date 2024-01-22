@@ -425,7 +425,7 @@ public:
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
-          // hav already been evaluated. I.e. B is now marked as kPermanent since
+          // have already been evaluated. I.e. B is now marked as kPermanent since
           // we didn't know at the time of B's evaluation that A to B would eventually
           // form a restricted path
           //
@@ -525,7 +525,7 @@ public:
             }
             continue;
           }
-          // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
+          // TODO: If a user runs a non-time dependent route, we need to provide Maneuver Notes for
           // the timed restriction.
           else if (!current_time && cr->has_dt()) {
             return false;
@@ -771,6 +771,12 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const;
+
+  /**
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
@@ -882,7 +888,7 @@ public:
                      const baldr::TimeInfo& time_info,
                      uint8_t flow_sources,
                      float edge_speed) const {
-    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    // TODO: speed_penalty hasn't been extensively tested, might alter this in future
     float average_edge_speed = edge_speed;
     // dont use current speed layer for penalties as live speeds might be too low/too high
     // better to use layers with smoothed/constant speeds
@@ -1131,7 +1137,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost += destination_only_penalty_ *
+              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));

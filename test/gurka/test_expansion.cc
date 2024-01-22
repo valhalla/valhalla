@@ -49,20 +49,26 @@ protected:
 
     // get the response
     std::string res;
-    auto api =
-        gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
+    valhalla::Api api;
+
+    if (action == "sources_to_targets") {
+      api = gurka::do_action(Options::expansion, expansion_map, {waypoints[0]}, {waypoints[1]},
+                             "auto", options, {}, &res);
+    } else {
+      api = gurka::do_action(Options::expansion, expansion_map, waypoints, "auto", options, {}, &res);
+    }
 
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
+    ASSERT_EQ(res_doc["features"].GetArray().Size(), exp_feats);
     auto feat = res_doc["features"][0].GetObject();
-    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("MultiLineString"));
+    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("LineString"));
+    ASSERT_TRUE(feat.HasMember("properties"));
 
-    auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
-    ASSERT_EQ(coords_size, exp_feats);
-
+    ASSERT_EQ(feat["properties"].MemberCount(), props.size());
     for (const auto& prop : props) {
-      ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
+      ASSERT_TRUE(feat["properties"].HasMember(prop));
     }
   }
 };
@@ -90,6 +96,14 @@ TEST_P(ExpansionTest, Routing) {
 TEST_P(ExpansionTest, RoutingNoOpposites) {
   // test AStar expansion and no opposite edges
   check_result("route", {"E", "H"}, true, 16, GetParam());
+}
+
+TEST_P(ExpansionTest, Matrix) {
+  check_result("sources_to_targets", {"E", "H"}, false, 48, GetParam());
+}
+
+TEST_P(ExpansionTest, MatrixNoOpposites) {
+  check_result("sources_to_targets", {"E", "H"}, true, 23, GetParam());
 }
 
 TEST_F(ExpansionTest, UnsupportedAction) {
@@ -123,7 +137,8 @@ TEST_F(ExpansionTest, NoAction) {
 
 INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                          ExpansionTest,
-                         ::testing::Values(std::vector<std::string>{"statuses"},
-                                           std::vector<std::string>{"distances", "durations"},
-                                           std::vector<std::string>{"edge_ids", "costs"},
+                         ::testing::Values(std::vector<std::string>{"edge_status"},
+                                           std::vector<std::string>{"distance", "duration",
+                                                                    "pred_edge_id"},
+                                           std::vector<std::string>{"edge_id", "cost"},
                                            std::vector<std::string>{}));

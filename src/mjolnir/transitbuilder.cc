@@ -44,7 +44,7 @@ struct OSMConnectionEdge {
   std::vector<std::string> names;
   std::vector<PointLL> shape;
   std::vector<std::string> tagged_values;
-  std::vector<std::string> pronunciations;
+  std::vector<std::string> linguistics;
 };
 
 // Struct to hold stats information during each threads work
@@ -167,8 +167,7 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
       bool added = false;
       uint32_t edge_info_offset =
           tilebuilder_local.AddEdgeInfo(0, conn.osm_node, endnode, conn.wayid, 0, 0, 0, conn.shape,
-                                        conn.names, conn.tagged_values, conn.pronunciations, 0,
-                                        added);
+                                        conn.names, conn.tagged_values, conn.linguistics, 0, added);
       directededge.set_edgeinfo_offset(edge_info_offset);
       directededge.set_forward(true);
       tilebuilder_local.directededges().emplace_back(std::move(directededge));
@@ -264,8 +263,8 @@ void ConnectToGraph(GraphTileBuilder& tilebuilder_local,
         std::reverse(r_shape.begin(), r_shape.end());
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, conn.stop_node, conn.osm_node, conn.wayid, 0, 0, 0,
-                                            r_shape, conn.names, conn.tagged_values,
-                                            conn.pronunciations, 0, added);
+                                            r_shape, conn.names, conn.tagged_values, conn.linguistics,
+                                            0, added);
         LOG_DEBUG("Add conn from stop to OSM: ei offset = " + std::to_string(edge_info_offset));
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
@@ -489,7 +488,7 @@ void build(const boost::property_tree::ptree& pt,
 
     // TODO - how to handle connections that reach nodes outside the tile? Need to break up the calls
     //  to MakeConnections and ConnectToGraph below. First we have threads find all the connections
-    //  even accross tile boundaries, we keep those in ram and then we run another pass where we add
+    //  even across tile boundaries, we keep those in ram and then we run another pass where we add
     //  those to the tiles when we rewrite them in ConnectToGraph. So two separate threaded steps
     //  rather than cramming both of them into the single build function
 
@@ -652,7 +651,7 @@ void TransitBuilder::Build(const boost::property_tree::ptree& pt) {
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished - TransitBuilder took " + std::to_string(secs) + " secs");
 }
 

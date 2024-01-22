@@ -406,7 +406,10 @@ public:
   void set_building_exit(bool building_exit);
 
   std::string end_level_ref() const;
-  void set_end_level_ref(std::string end_level_ref);
+  void set_end_level_ref(const std::string& end_level_ref);
+
+  const std::vector<RouteLandmark>& landmarks() const;
+  void set_landmarks(const std::vector<RouteLandmark>& landmarks);
 
 #ifdef LOGGING_LEVEL_TRACE
   std::string ToString() const;
@@ -496,6 +499,9 @@ protected:
   bool building_enter_;
   bool building_exit_;
   std::string end_level_ref_;
+
+  // Landmarks correlated to the maneuver
+  std::vector<RouteLandmark> landmarks_;
 
   ////////////////////////////////////////////////////////////////////////////
   // Transit support

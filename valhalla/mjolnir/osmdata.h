@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <valhalla/mjolnir/osmaccessrestriction.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
 #include <valhalla/mjolnir/osmrestriction.h>
 #include <valhalla/mjolnir/osmway.h>
@@ -48,6 +49,7 @@ using ViaSet = std::unordered_set<uint64_t>;
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
+using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
 
 // OSMString map uses the way Id as the key and the name index into UniqueNames as the value
 using OSMStringMap = std::unordered_map<uint64_t, uint32_t>;
@@ -127,6 +129,12 @@ struct OSMData {
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;
+
+  // Stores the pronunciations. Indexed by the way Id.
+  LinguisticMultiMap pronunciations;
+
+  // Stores the pronunciation languages. Indexed by the way Id.
+  LinguisticMultiMap langs;
 
   bool initialized = false;
 };

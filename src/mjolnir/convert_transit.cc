@@ -126,17 +126,17 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   filesystem::recursive_directory_iterator end_file_itr;
 
   // lambda to add a schedule
-  auto add_schedule = [&schedules, &transit_tilebuilder](uint32_t& schedule_idx, Departure& dep,
-                                                         const uint64_t days, const uint32_t dow,
-                                                         const uint32_t end_day) {
+  auto add_schedule = [&schedule_index, &schedules,
+                       &transit_tilebuilder](Departure& dep, const uint64_t days, const uint32_t dow,
+                                             const uint32_t end_day) {
     TransitSchedule sched(days, dow, end_day);
     auto sched_itr = schedules.find(sched);
     if (sched_itr == schedules.end()) {
       transit_tilebuilder.AddTransitSchedule(sched);
       // Add to the map and increment the index
-      schedules[sched] = schedule_idx;
-      dep.schedule_index = schedule_idx;
-      schedule_idx++;
+      schedules[sched] = schedule_index;
+      dep.schedule_index = schedule_index;
+      schedule_index++;
     } else {
       dep.schedule_index = sched_itr->second;
     }
@@ -295,7 +295,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           dep.bicycle_accessible = stop_pair.bikes_allowed();
           dep.wheelchair_accessible = stop_pair.wheelchair_accessible();
 
-          add_schedule(schedule_index, dep, days, dow_mask, end_day);
+          add_schedule(dep, days, dow_mask, end_day);
 
           // is this past midnight?
           // create a departure for before midnight and one after
@@ -319,7 +319,7 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               dow_mask =
                   ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
 
-              add_schedule(schedule_index, dep, days, dow_mask, end_day);
+              add_schedule(dep, days, dow_mask, end_day);
             }
 
             dep.dep_time = origin_seconds;
@@ -690,13 +690,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
 
         std::list<PointLL> shape = {egress_ll, station_ll};
 
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, egress_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -738,13 +738,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         directededge.set_named(false);
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
         std::list<PointLL> shape = {station_ll, egress_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(false);
 
@@ -786,13 +786,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Add edge info to the tile and set the offset in the directed edge
         bool added = false;
-        std::vector<std::string> names, tagged_values, pronunciations;
+        std::vector<std::string> names, tagged_values, linguistics;
         std::list<PointLL> shape = {station_ll, platform_ll};
 
         // TODO - these need to be valhalla graph Ids
         uint32_t edge_info_offset =
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, platform_graphid, 0, 0, 0, 0, shape,
-                                            names, tagged_values, pronunciations, 0, added);
+                                            names, tagged_values, linguistics, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
         directededge.set_forward(true);
 
@@ -865,13 +865,13 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     directededge.set_named(false);
     // Add edge info to the tile and set the offset in the directed edge
     bool added = false;
-    std::vector<std::string> names, tagged_values, pronunciations;
+    std::vector<std::string> names, tagged_values, linguistics;
     std::list<PointLL> shape = {platform_ll, station_ll};
 
     // TODO - these need to be valhalla graph Ids
     uint32_t edge_info_offset =
         tilebuilder_transit.AddEdgeInfo(0, platform_graphid, station_graphid, 0, 0, 0, 0, shape,
-                                        names, tagged_values, pronunciations, 0, added);
+                                        names, tagged_values, linguistics, 0, added);
 
     directededge.set_edgeinfo_offset(edge_info_offset);
     directededge.set_forward(false);
@@ -934,7 +934,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Leave the name empty. Use the trip Id to look up the route Id and
       // route within TripLegBuilder.
       bool added = false;
-      std::vector<std::string> names, tagged_values, pronunciations;
+      std::vector<std::string> names, tagged_values, linguistics;
 
       std::vector<PointLL> points;
       std::vector<float> distance;
@@ -958,7 +958,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
-                                          0, 0, 0, 0, shape, names, tagged_values, pronunciations, 0,
+                                          0, 0, 0, 0, shape, names, tagged_values, linguistics, 0,
                                           added);
 
       directededge.set_edgeinfo_offset(edge_info_offset);
@@ -985,7 +985,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
   // Log the number of added nodes and edges
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t msecs =
+      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   LOG_INFO("Tile " + std::to_string(tileid.tileid()) + ": added " + std::to_string(transitedges) +
            " transit edges, and " + std::to_string(tilebuilder_transit.nodes().size()) +
            " nodes. time = " + std::to_string(msecs) + " ms");
@@ -1180,7 +1181,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::multimap<uint32_t, multi_polygon_type> tz_polys;
     if (tz_db_handle) {
       tz_polys = GetTimeZones(tz_db_handle, tile_bounds);
-      if (tz_polys.size() == 1) {
+      if (tz_polys.size() < 2) {
         tile_within_one_tz = true;
       }
     }
@@ -1324,7 +1325,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
-  uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
+  [[maybe_unused]] uint32_t secs = std::chrono::duration_cast<std::chrono::seconds>(t2 - t1).count();
   LOG_INFO("Finished building transit network - took " + std::to_string(secs) + " secs");
 
   return all_tiles;

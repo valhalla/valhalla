@@ -1,24 +1,31 @@
 ## Process the IANA Time Zone Database files
 set(tz_db_files africa antarctica asia australasia backward etcetera europe
-  pacificnew northamerica southamerica systemv leapseconds)
+  northamerica southamerica leapseconds)
+
+# Process the leap seconds file (it's in .gitignore of the tz repo)
+add_custom_command(OUTPUT ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds
+COMMAND make leapseconds
+WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}/third_party/tz
+COMMENT "Compiling third_party/tz/leapseconds with awk"
+DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
     COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-        ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file}
+        ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file}
         ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
         --variable-name date_time_${tz_db_file} --skip 1 --raw
     WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
-    COMMENT "Compiling date_time/${tz_db_file} to date_time_${tz_db_file}.h"
-    DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/${tz_db_file})
+    COMMENT "Compiling third_party/tz/${tz_db_file} to date_time_${tz_db_file}.h"
+    DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file} ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds)
 endforeach()
 
-## Process the windowsZones.xml file
+# Process the windowsZones.xml file
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
   COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
-      ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
-      ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-      --variable-name date_time_windows_zones_xml --skip 1 --raw
+  ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
+  ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
+  --variable-name date_time_windows_zones_xml --skip 1 --raw
   WORKING_DIRECTORY ${VALHALLA_SOURCE_DIR}
   COMMENT "Compiling date_time/windowsZones.xml to date_time_windows_zones.h"
   DEPENDS ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml)
@@ -30,9 +37,14 @@ set(includes
      ${VALHALLA_SOURCE_DIR}/valhalla
      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-     ${VALHALLA_SOURCE_DIR}/third_party/date/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
+
+# treat date library as system
+set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if(APPLE)
+  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
+endif()
 
 set(sources
     accessrestriction.cc
@@ -45,6 +57,9 @@ set(sources
     directededge.cc
     edgeinfo.cc
     graphid.cc
+    graphreader.cc
+    graphtile.cc
+    graphtileheader.cc
     incident_singleton.h
     edgetracker.cc
     nodeinfo.cc
@@ -64,17 +79,13 @@ set(sources
     transitroute.cc
     transitschedule.cc
     transittransfer.cc
+    tz_alt.cpp
     laneconnectivity.cc
     verbal_text_formatter.cc
     verbal_text_formatter_us.cc
     verbal_text_formatter_us_co.cc
     verbal_text_formatter_us_tx.cc
     verbal_text_formatter_factory.cc)
-
-set (sources_with_warnings
-    graphreader.cc
-    graphtile.cc
-    graphtileheader.cc)
 
 list(APPEND sources
     #basic timezone stuff
@@ -87,9 +98,7 @@ list(APPEND sources
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_europe.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_leapseconds.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_northamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_pacificnew.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_southamerica.h
-    ${CMAKE_CURRENT_BINARY_DIR}/date_time_systemv.h
     ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h)
 
 list(APPEND sources_with_warnings
@@ -97,7 +106,6 @@ list(APPEND sources_with_warnings
 
 #ios we have more work to make use of system tzdb
 if(APPLE)
-  list(APPEND includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
   list(APPEND sources ${VALHALLA_SOURCE_DIR}/third_party/date/src/ios.mm)
 endif()
 
@@ -114,6 +122,9 @@ valhalla_module(NAME baldr
       ${includes}
     PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
+  SYSTEM_INCLUDE_DIRECTORIES
+    PUBLIC
+      ${system_includes}
 
   DEPENDS
     valhalla::midgard

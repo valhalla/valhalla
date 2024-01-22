@@ -154,7 +154,12 @@ const std::unordered_map<int, std::string> warning_codes = {
   {202, R"("targets" have date_time set, but "depart_at" was requested, ignoring date_time)"},
   {203, R"("waiting_time" is set on a location of type "via" or "through", ignoring waiting_time)"},
   {204, R"("exclude_polygons" received invalid input, ignoring exclude_polygons)"},
-  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"}
+  {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
+  {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
+  {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
+  // 3xx is used when costing options were specified but we had to change them internally for some reason
+  {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
+  {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
 };
 // clang-format on
 
@@ -366,6 +371,13 @@ void parse_location(valhalla::Location* location,
   if (street_side_max_distance) {
     location->set_street_side_max_distance(*street_side_max_distance);
   }
+  auto street_side_cutoff = rapidjson::get_optional<std::string>(r_loc, "/street_side_cutoff");
+  if (street_side_cutoff) {
+    valhalla::RoadClass cutoff_street_side;
+    if (RoadClass_Enum_Parse(*street_side_cutoff, &cutoff_street_side)) {
+      location->set_street_side_cutoff(cutoff_street_side);
+    }
+  }
 
   boost::optional<bool> exclude_closures;
   // is it json?
@@ -530,7 +542,7 @@ void parse_locations(const rapidjson::Document& doc,
   // Forward valhalla_exception_t types as-is, since they contain a more specific error message
   catch (const valhalla_exception_t& e) {
     throw e;
-  } // generic execptions and other stuff get a generic message
+  } // generic exceptions and other stuff get a generic message
   catch (...) {
     throw valhalla_exception_t{location_parse_error_code};
   }
@@ -633,10 +645,13 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // so that we serialize correctly at the end we fix up any request discrepancies
   if (options.format() == Options::pbf) {
-    const std::unordered_set<Options::Action> pbf_actions{
-        Options::route,    Options::optimized_route,  Options::trace_route,
-        Options::centroid, Options::trace_attributes, Options::status,
-    };
+    const std::unordered_set<Options::Action> pbf_actions{Options::route,
+                                                          Options::optimized_route,
+                                                          Options::trace_route,
+                                                          Options::centroid,
+                                                          Options::trace_attributes,
+                                                          Options::status,
+                                                          Options::sources_to_targets};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -792,10 +807,17 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.set_shape_format(polyline5);
     } else if (*shape_format == "geojson") {
       options.set_shape_format(geojson);
+    } else if (*shape_format == "no_shape") {
+      if (action == Options::height) {
+        throw valhalla_exception_t{164};
+      }
+      options.set_shape_format(no_shape);
     } else {
       // Throw an error if shape format is invalid
       throw valhalla_exception_t{164};
     }
+  } else if (action == Options::sources_to_targets) {
+    options.set_shape_format(options.has_shape_format_case() ? options.shape_format() : no_shape);
   }
 
   // whether or not to output b64 encoded openlr
@@ -920,6 +942,19 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // Blind user mode:
   options.set_blind_user_mode(
       rapidjson::get_optional<bool>(doc, "/blind_user_mode").get_value_or(false));
+
+  // Get the elevation interval for returning elevation along the path in a route or
+  // trace attribute call. Defaults to 0.0 (no elevation is returned)
+  constexpr float kMaxElevationInterval = 1000.0f;
+  auto elevation_interval = rapidjson::get_optional<float>(doc, "/elevation_interval");
+  if (elevation_interval) {
+    options.set_elevation_interval(
+        std::max(std::min(*elevation_interval, kMaxElevationInterval), 0.0f));
+  } else {
+    // Constrain to range [0-kMaxElevationInterval]
+    options.set_elevation_interval(
+        std::max(std::min(options.elevation_interval(), kMaxElevationInterval), 0.0f));
+  }
 
   // Elevation service options
   options.set_range(rapidjson::get(doc, "/range", options.range()));
@@ -1158,6 +1193,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
 
   // whether to return guidance_views, default false
   options.set_guidance_views(rapidjson::get<bool>(doc, "/guidance_views", options.guidance_views()));
+
+  // whether to return bannerInstructions in OSRM serializer, default false
+  options.set_banner_instructions(
+      rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =

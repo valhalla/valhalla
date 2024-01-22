@@ -68,7 +68,6 @@ constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
-const std::string kDefaultAutoType = "car";
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
@@ -352,20 +351,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  const std::string& type = costing_options.transport_type();
-  if (type == "motorcycle") {
-    type_ = VehicleType::kMotorcycle;
-    surface_factor_ = 1.0f;
-  } else if (type == "bus") {
-    type_ = VehicleType::kBus;
-  } else if (type == "tractor_trailer") {
-    type_ = VehicleType::kTractorTrailer;
-  } else if (type == "four_wheel_drive") {
-    type_ = VehicleType::kFourWheelDrive;
-    surface_factor_ = 0.0f;
-  } else {
-    type_ = VehicleType::kCar;
-  }
+  type_ = VehicleType::kCar;
 
   // Get the base transition costs
   get_base_costs(costing);
@@ -564,7 +550,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -632,7 +618,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -697,7 +683,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
