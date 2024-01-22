@@ -11,7 +11,7 @@ executors:
 commands:
   mac_deps:
     steps:
-      - run: brew install autoconf automake protobuf cmake ccache libtool libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost && brew unlink pkg-config && brew install pkgconf
+      - run: brew install autoconf automake protobuf cmake ccache libtool libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost
       - run: sudo python3 -m pip install requests shapely
       - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && sudo make install
   linux_deps:
