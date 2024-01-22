@@ -38,7 +38,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     make \
     osmium-tool \
     parallel \
-    pkg-config \
+    pkgconf \
     protobuf-compiler \
     python3-all-dev \
     python3-shapely \
