@@ -404,3 +404,198 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
     EXPECT_EQ(CG_edge, nullptr);
   }
 }
+
+TEST(Standalone, FilterTestMultipleEdges) {
+  constexpr double gridsize_metres = 50;
+
+  const std::string ascii_map = R"(
+
+     A---B---C---D---E---F---G---H---I
+         |   |   |   |   |   |   |
+         |   |   |   |   |   |   |
+         J   K   L   M   N   O   P
+  )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}, {"osm_id", "100"}}},
+      {"BC", {{"highway", "secondary"}, {"osm_id", "101"}}},
+      {"CD", {{"highway", "secondary"}, {"osm_id", "102"}}},
+      {"DE", {{"highway", "secondary"}, {"osm_id", "103"}}},
+      {"EF", {{"highway", "secondary"}, {"osm_id", "104"}}},
+      // note these next 2 have same way id
+      {"FG", {{"highway", "secondary"}, {"osm_id", "105"}}},
+      {"GH", {{"highway", "secondary"}, {"osm_id", "105"}}},
+      {"HI", {{"highway", "secondary"}, {"osm_id", "106"}}},
+      {"BJ", {{"highway", "residential"}, {"osm_id", "107"}}},
+      {"CK", {{"highway", "residential"}, {"osm_id", "108"}}},
+      {"DL", {{"highway", "footway"}, {"osm_id", "109"}, {"foot", "yes"}}},
+      {"EM", {{"highway", "residential"}, {"osm_id", "110"}}},
+      {"FN", {{"highway", "residential"}, {"osm_id", "111"}}},
+      {"GO", {{"highway", "footway"}, {"osm_id", "112"}, {"foot", "yes"}}},
+      {"HP", {{"highway", "residential"}, {"osm_id", "113"}}},
+
+  };
+
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-73.94913, 42.81490});
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, work_dir,
+                        {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                         {"mjolnir.include_pedestrian", "false"}});
+
+  // there should be 7 edges from A to I as even though DJ is a footway, CD and DE have different way
+  // ids FG and GH will be aggregated as they have the same way id and are separated by a footway.
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "HI"});
+  // DL should be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId DL_edge_id;
+    const DirectedEdge* DL_edge = nullptr;
+    GraphId LD_edge_id;
+    const DirectedEdge* LD_edge = nullptr;
+    std::tie(DL_edge_id, DL_edge, LD_edge_id, LD_edge) =
+        findEdge(graph_reader, map.nodes, "DL", "L", baldr::GraphId{});
+    EXPECT_EQ(DL_edge, nullptr);
+    EXPECT_EQ(LD_edge, nullptr);
+  }
+
+  // GO should be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId GO_edge_id;
+    const DirectedEdge* GO_edge = nullptr;
+    GraphId OG_edge_id;
+    const DirectedEdge* OG_edge = nullptr;
+    std::tie(GO_edge_id, GO_edge, OG_edge_id, OG_edge) =
+        findEdge(graph_reader, map.nodes, "GO", "O", baldr::GraphId{});
+    EXPECT_EQ(GO_edge, nullptr);
+    EXPECT_EQ(OG_edge, nullptr);
+  }
+
+  // FG should be deleted as it was aggregated
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId FG_edge_id;
+    const DirectedEdge* FG_edge = nullptr;
+    GraphId GF_edge_id;
+    const DirectedEdge* GF_edge = nullptr;
+    std::tie(FG_edge_id, FG_edge, GF_edge_id, GF_edge) =
+        findEdge(graph_reader, map.nodes, "FG", "G", baldr::GraphId{});
+    EXPECT_EQ(FG_edge, nullptr);
+    EXPECT_EQ(GF_edge, nullptr);
+  }
+
+  // GH should be deleted as it was aggregated
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId GH_edge_id;
+    const DirectedEdge* GH_edge = nullptr;
+    GraphId HG_edge_id;
+    const DirectedEdge* HG_edge = nullptr;
+    std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) =
+        findEdge(graph_reader, map.nodes, "GH", "H", baldr::GraphId{});
+    EXPECT_EQ(GH_edge, nullptr);
+    EXPECT_EQ(HG_edge, nullptr);
+  }
+
+  // FH is the new aggregated edge.  Make sure is equal to wayid 105
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId FH_edge_id;
+    const DirectedEdge* FH_edge = nullptr;
+    GraphId HF_edge_id;
+    const DirectedEdge* HF_edge = nullptr;
+    std::tie(FH_edge_id, FH_edge, HF_edge_id, HF_edge) =
+        findEdge(graph_reader, map.nodes, "FG", "H", baldr::GraphId{}, 105);
+    EXPECT_NE(FH_edge, nullptr);
+    EXPECT_NE(HF_edge, nullptr);
+
+    auto FH = gurka::findEdgeByNodes(graph_reader, layout, "F", "H");
+    auto tile = graph_reader.GetGraphTile(std::get<1>(FH)->endnode());
+    EXPECT_EQ(tile->edgeinfo(std::get<1>(FH)).wayid(), 105);
+  }
+
+  // save and check later
+  auto shape = result.trip().routes(0).legs().begin()->shape();
+
+  // Now run again with include_pedestrian = true.  all footways should be back.
+  map = gurka::buildtiles(layout, ways, {}, {}, work_dir,
+                          {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
+                           {"mjolnir.include_pedestrian", "true"}});
+
+  // there should be 8 edges from A to I
+  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+  // DL should not be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId DL_edge_id;
+    const DirectedEdge* DL_edge = nullptr;
+    GraphId LD_edge_id;
+    const DirectedEdge* LD_edge = nullptr;
+    std::tie(DL_edge_id, DL_edge, LD_edge_id, LD_edge) =
+        findEdge(graph_reader, map.nodes, "DL", "L", baldr::GraphId{});
+    EXPECT_NE(DL_edge, nullptr);
+    EXPECT_NE(LD_edge, nullptr);
+  }
+
+  // GO should not be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId GO_edge_id;
+    const DirectedEdge* GO_edge = nullptr;
+    GraphId OG_edge_id;
+    const DirectedEdge* OG_edge = nullptr;
+    std::tie(GO_edge_id, GO_edge, OG_edge_id, OG_edge) =
+        findEdge(graph_reader, map.nodes, "GO", "O", baldr::GraphId{});
+    EXPECT_NE(GO_edge, nullptr);
+    EXPECT_NE(OG_edge, nullptr);
+  }
+
+  // FG should not be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId FG_edge_id;
+    const DirectedEdge* FG_edge = nullptr;
+    GraphId GF_edge_id;
+    const DirectedEdge* GF_edge = nullptr;
+    std::tie(FG_edge_id, FG_edge, GF_edge_id, GF_edge) =
+        findEdge(graph_reader, map.nodes, "FG", "G", baldr::GraphId{});
+    EXPECT_NE(FG_edge, nullptr);
+    EXPECT_NE(GF_edge, nullptr);
+
+    auto tile = graph_reader.GetGraphTile(FG_edge->endnode());
+    EXPECT_EQ(tile->edgeinfo(FG_edge).wayid(), 105);
+
+    tile = graph_reader.GetGraphTile(GF_edge->endnode());
+    EXPECT_EQ(tile->edgeinfo(GF_edge).wayid(), 105);
+  }
+
+  // GH should not be deleted
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    GraphId GH_edge_id;
+    const DirectedEdge* GH_edge = nullptr;
+    GraphId HG_edge_id;
+    const DirectedEdge* HG_edge = nullptr;
+    std::tie(GH_edge_id, GH_edge, HG_edge_id, HG_edge) =
+        findEdge(graph_reader, map.nodes, "GH", "H", baldr::GraphId{});
+    EXPECT_NE(GH_edge, nullptr);
+    EXPECT_NE(HG_edge, nullptr);
+
+    auto tile = graph_reader.GetGraphTile(GH_edge->endnode());
+    EXPECT_EQ(tile->edgeinfo(GH_edge).wayid(), 105);
+
+    tile = graph_reader.GetGraphTile(HG_edge->endnode());
+    EXPECT_EQ(tile->edgeinfo(HG_edge).wayid(), 105);
+  }
+
+  // FH should not exist
+  {
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    ASSERT_THROW(gurka::findEdgeByNodes(graph_reader, layout, "F", "H"), std::runtime_error);
+  }
+
+  // the shape between including the pedestrian edges or not, should match
+  EXPECT_EQ(shape, result.trip().routes(0).legs().begin()->shape());
+}
