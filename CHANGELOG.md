@@ -75,6 +75,7 @@
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
+   * UPDATED: OSX CI to use M1 arch; conan boost version to 1.83 to avoid warnings-as-error on OSX [#4500](https://github.com/valhalla/valhalla/pull/4500)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
