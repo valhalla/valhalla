@@ -544,7 +544,7 @@ help_text = {
         'max_alternates': 'Maximum number of alternate routes to allow in a request',
         'max_exclude_polygons_length': 'Maximum total perimeter of all exclude_polygons in meters',
         'max_distance_disable_hierarchy_culling': 'Maximum search distance allowed with hierarchy culling disabled',
-        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels or exclude_tolls ar allowed on this server',
+        'allow_hard_exclusions': 'Whether hard exclusions, such as exclude_bridges, exclude_tunnels, exclude_tolls, exclude_highways or exclude_ferries are allowed on this server',
     },
     'statsd': {
         'host': 'The statsd host address',

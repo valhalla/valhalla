@@ -242,6 +242,9 @@ The following options are available for all costing methods. Those options are n
 | `exclude_bridges` | This value indicates whether or not the path may include bridges. If `exclude_bridges` is set to 1 it is allowed to start and end with bridges, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
 | `exclude_tunnels` | This value indicates whether or not the path may include tunnels. If `exclude_tunnels` is set to 1 it is allowed to start and end with tunnels, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
 | `exclude_tolls` | This value indicates whether or not the path may include tolls. If `exclude_tolls` is set to 1 it is allowed to start and end with tolls, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_highways` | This value indicates whether or not the path may include highways. If `exclude_highways` is set to 1 it is allowed to start and end with highways, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+| `exclude_ferries` | This value indicates whether or not the path may include ferries. If `exclude_ferries` is set to 1 it is allowed to start and end with ferries, but is not allowed to have them in the middle of the route path, otherwise they are allowed. If set to true, it is highly plausible that no path will be found. Default false. |
+
 
 ###### Filter transit data
 
