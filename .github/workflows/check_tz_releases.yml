@@ -20,6 +20,9 @@ jobs:
         run: |
           set -e 
 
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
           latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
           latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
           current_commit=$(git -C ./third_party/tz rev-parse HEAD)
@@ -56,12 +59,11 @@ jobs:
               set -e
               # commit and push 
               git commit -m "bumped tz to ${latest_tag}"
-              git push origin 
+              git push origin "${new_branch}"
 
               # open new PR 
               body=$(echo "See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz.\
-              Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID}/job/${WORKFLOW_JOB_ID})." | xargs)
-
+              Created by workflow run [#${WORKFLOW_RUN_ID}](https://github.com/valhalla/valhalla/actions/runs/${WORKFLOW_RUN_ID})." | xargs)
               gh pr create --base master --head $new_branch --title "Bump tz to ${latest_tag}" --body "${body}"
 
               exit 1

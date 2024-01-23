@@ -97,6 +97,7 @@ constexpr ranged_default_t<float> kTruckLengthRange{0, kDefaultTruckLength, 50.0
 constexpr ranged_default_t<float> kUseTollsRange{0, kDefaultUseTolls, 1.0f};
 constexpr ranged_default_t<uint8_t> kAxleCountRange{2, kDefaultAxleCount, 20};
 constexpr ranged_default_t<float> kUseHighwaysRange{0, kDefaultUseHighways, 1.0f};
+constexpr ranged_default_t<float> kTopSpeedRange{10, kMaxAssumedTruckSpeed, kMaxSpeedKph};
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   BaseCostingOptionsConfig cfg{};
@@ -484,7 +485,9 @@ Cost TruckCost::EdgeCost(const baldr::DirectedEdge* edge,
                                          &flow_sources, time_info.seconds_from_now)
                         : fixed_speed_;
 
-  auto final_speed = std::min(edge_speed, top_speed_);
+  auto final_speed = std::min(std::min(edge_speed, edge->truck_speed() ? edge->truck_speed()
+                                                                       : kMaxAssumedTruckSpeed),
+                              top_speed_);
 
   float sec = edge->length() * speedfactor_[final_speed];
 
@@ -710,6 +713,7 @@ void ParseTruckCostOptions(const rapidjson::Document& doc,
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   co->set_axle_count(
       kAxleCountRange(rapidjson::get<uint32_t>(json, "/axle_count", co->axle_count())));
+  JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
 }
 
 cost_ptr_t CreateTruckCost(const Costing& costing_options) {
