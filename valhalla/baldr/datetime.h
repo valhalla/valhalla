@@ -49,6 +49,20 @@ protected:
   std::unordered_map<size_t, const date::time_zone*> zones;
 };
 
+struct dt_info_t {
+  dt_info_t() {
+  }
+  dt_info_t(const std::string& dt, const std::string& tzo, const std::string& tzn)
+      :
+
+        date_time(dt), time_zone_offset(tzo), time_zone_name(tzn) {
+  }
+
+  std::string date_time;
+  std::string time_zone_offset;
+  std::string time_zone_name;
+};
+
 /**
  * Get the timezone database singleton
  * @return  timezone database
@@ -216,9 +230,10 @@ uint32_t second_of_week(uint32_t epoch_time, const date::time_zone* time_zone);
  * @param in_tz    the start timezone
  * @param out_tz   the end timezone
  * @param offset   the offset in seconds from the input date time string
- * @return out_dt  the time at the out_edge in local time after the offset is applied to the in_dt
+ * @return out_dt  a struct containing the time, UTC offset and timezone name at the out_edge in
+ *                 local time after the offset is applied to the in_dt
  */
-std::string
+dt_info_t
 offset_date(const std::string& in_dt, const uint32_t in_tz, const uint32_t out_tz, float offset);
 
 /**
