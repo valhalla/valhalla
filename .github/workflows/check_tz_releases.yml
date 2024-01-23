@@ -59,7 +59,7 @@ jobs:
               set -e
               # commit and push 
               git commit -m "bumped tz to ${latest_tag}"
-              git push origin 
+              git push origin "${new_branch}"
 
               # open new PR 
               body=$(echo "See [here](https://github.com/eggert/tz/blob/main/NEWS) for the latest changes made to tz.\
