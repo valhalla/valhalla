@@ -20,6 +20,9 @@ jobs:
         run: |
           set -e 
 
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
           latest_tag=$(git -C third_party/tz ls-remote --tags --refs --quiet origin | tail --lines 1 | awk '{print $2}' | cut --delimiter='/' --fields=3 )
           latest_tag_commit=$(git -C third_party/tz rev-list -n 1 $latest_tag)
           current_commit=$(git -C ./third_party/tz rev-parse HEAD)
