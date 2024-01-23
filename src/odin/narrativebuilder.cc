@@ -47,7 +47,10 @@ NarrativeBuilder::NarrativeBuilder(const Options& options,
                                    const NarrativeDictionary& dictionary,
                                    const MarkupFormatter& markup_formatter)
     : options_(options), trip_path_(trip_path), dictionary_(dictionary),
-      markup_formatter_(markup_formatter), articulated_preposition_enabled_(false) {
+      markup_formatter_(markup_formatter), articulated_preposition_enabled_(false),
+      blind_mode_(options.costing_type() == Costing_Type_pedestrian &&
+                  options.costings().find(Costing::pedestrian)->second.options().transport_type() ==
+                      "blind") {
 }
 
 void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
@@ -524,7 +527,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
   }
 
   // Iterate over maneuvers to form verbal multi-cue instructions
-  if (!options_.blind_user_mode())
+  if (blind_mode_)
     FormVerbalMultiCue(maneuvers);
 }
 
@@ -4624,7 +4627,7 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
   // then determine if walkway or bike path
   if (enhance_empty_street_names && street_names_string.empty() && empty_street_name_labels) {
     // Set names in blind user mode:
-    if (options_.blind_user_mode()) {
+    if (blind_mode_) {
       if (maneuver.is_steps())
         street_names_string = empty_street_name_labels->at(kStepsIndex);
       else if (maneuver.is_bridge())

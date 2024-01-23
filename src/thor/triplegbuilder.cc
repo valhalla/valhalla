@@ -1064,7 +1064,7 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
-    const auto names_and_types = edgeinfo.GetNamesAndTypes(true);
+    auto names_and_types = edgeinfo.GetNamesAndTypes(true);
     FilterUnneededStreetNumbers(names_and_types);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     const auto linguistics = edgeinfo.GetLinguisticMap();

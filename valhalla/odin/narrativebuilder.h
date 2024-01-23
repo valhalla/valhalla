@@ -661,6 +661,7 @@ protected:
   const NarrativeDictionary& dictionary_;
   MarkupFormatter markup_formatter_; // No ref - need our own non-const copy
   bool articulated_preposition_enabled_;
+  bool blind_mode_;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

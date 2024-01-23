@@ -939,10 +939,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
-  // Blind user mode:
-  options.set_blind_user_mode(
-      rapidjson::get_optional<bool>(doc, "/blind_user_mode").get_value_or(false));
-
   // Get the elevation interval for returning elevation along the path in a route or
   // trace attribute call. Defaults to 0.0 (no elevation is returned)
   constexpr float kMaxElevationInterval = 1000.0f;

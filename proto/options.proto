@@ -488,5 +488,4 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
-  bool blind_user_mode = 81;                           // route: additional maneuvers and informations for blind users.
 }

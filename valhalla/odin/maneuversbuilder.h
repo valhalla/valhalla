@@ -329,6 +329,7 @@ protected:
 
   const Options& options_;
   EnhancedTripLeg* trip_path_;
+  const bool blind_mode_;
 };
 
 } // namespace odin
