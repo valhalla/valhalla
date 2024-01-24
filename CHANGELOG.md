@@ -1,4 +1,4 @@
-## Release Date: 2023-??-?? Valhalla 3.4.1
+## Release Date: 2024-??-?? Valhalla 3.4.1
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
@@ -73,6 +73,7 @@
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
+   * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
