@@ -9,7 +9,7 @@ protected:
 
   config_singleton_t(const std::string& config_file_or_inline) {
     if (config_file_or_inline.empty()) {
-      throw valhalla::ConfigUninitializedException();
+      throw std::runtime_error("Config singleton was not initialized before usage");
     }
 
     try {
