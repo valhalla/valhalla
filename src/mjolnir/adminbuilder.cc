@@ -147,8 +147,9 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   // https://github.com/valhalla/valhalla/pull/4500/files#r1445039739
   auto unused_size = std::to_string(polygon.inners().size());
 
-  for (const auto& inner : polygon.inners())
+  for (const auto& inner : polygon.inners()) {
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  }
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   GEOSNormalize(buffered);
