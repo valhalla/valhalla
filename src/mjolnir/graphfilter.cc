@@ -42,26 +42,44 @@ bool CanAggregate(const DirectedEdge* de) {
   return true;
 }
 
+// ExpandFromNode and ExpandFromNodeInner is reused code from restriction builder with some slight
+// modifications. We are using recursion for graph traversal. We have to make sure we don't loop back
+// to ourselves, walk in the correct direction, have not already visited a node, etc. Once we meet our
+// criteria or not we stop.
 bool ExpandFromNode(GraphReader& reader,
                     std::list<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
                     bool forward,
-                    GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
                     uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
                     GraphId current_node);
 
+/*
+ * Expand from the current node
+ * @param  reader  			Graph reader.
+ * @param  shape   			shape that we need to update
+ * @param  en      			current end node that we started at
+ * @param  from_node    	node that we started from
+ * @param  isos				country ISOs. Used to see if we cross into a new country
+ * @param  forward			traverse in the forward or backward direction
+ * @param  visited_nodes	nodes that we already visited.  don't visit again
+ * @param  way_id			only interested in edges with this way_id
+ * @param  prev_tile		previous tile
+ * @param  prev_node		previous node
+ * @param  current_node		current node
+ * @param  node_info		current node's info
+ *
+ */
 bool ExpandFromNodeInner(GraphReader& reader,
                          std::list<PointLL>& shape,
                          GraphId& en,
                          const GraphId& from_node,
                          std::unordered_set<std::string>& isos,
                          bool forward,
-                         GraphId& last_node,
                          std::unordered_set<GraphId>& visited_nodes,
                          uint64_t& way_id,
                          const graph_tile_ptr& prev_tile,
@@ -122,8 +140,8 @@ bool ExpandFromNodeInner(GraphReader& reader,
           visited_nodes.insert(de->endnode());
 
           // expand with the same way_id
-          found = ExpandFromNode(reader, shape, en, from_node, isos, forward, last_node,
-                                 visited_nodes, way_id, tile, current_node, de->endnode());
+          found = ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id,
+                                 tile, current_node, de->endnode());
           if (found) {
             return true;
           }
@@ -136,13 +154,27 @@ bool ExpandFromNodeInner(GraphReader& reader,
   return false;
 }
 
+/*
+ * Expand from the next node which is now our new current node
+ * @param  reader  			Graph reader.
+ * @param  shape   			shape that we need to update
+ * @param  en      			current end node that we started at
+ * @param  from_node    	node that we started from
+ * @param  isos				country ISOs. Used to see if we cross into a new country
+ * @param  forward			traverse in the forward or backward direction
+ * @param  visited_nodes	nodes that we already visited.  don't visit again
+ * @param  way_id			only interested in edges with this way_id
+ * @param  prev_tile		previous tile
+ * @param  prev_node		previous node
+ * @param  current_node		current node
+ *
+ */
 bool ExpandFromNode(GraphReader& reader,
                     std::list<PointLL>& shape,
                     GraphId& en,
                     const GraphId& from_node,
                     std::unordered_set<std::string>& isos,
                     bool forward,
-                    GraphId& last_node,
                     std::unordered_set<GraphId>& visited_nodes,
                     uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
@@ -156,8 +188,8 @@ bool ExpandFromNode(GraphReader& reader,
 
   auto* node_info = tile->node(current_node);
   // expand from the current node
-  return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
-                             way_id, tile, prev_node, current_node, node_info);
+  return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
+                             prev_node, current_node, node_info);
 }
 
 bool Aggregate(GraphId& start_node,
@@ -171,8 +203,8 @@ bool Aggregate(GraphId& start_node,
 
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   std::unordered_set<GraphId> visited_nodes{start_node};
-  return ExpandFromNode(reader, shape, en, from_node, isos, forward, start_node, visited_nodes,
-                        way_id, tile, GraphId(), start_node);
+  return ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
+                        GraphId(), start_node);
 }
 
 /**
