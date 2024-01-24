@@ -648,7 +648,7 @@ bool PedestrianCost::Allowed(const baldr::DirectedEdge* edge,
        pred.mode() == TravelMode::kPedestrian) ||
       //      (edge->max_up_slope() > max_grade_ || edge->max_down_slope() > max_grade_) ||
       // path_distance for multimodal is currently checked inside the algorithm
-      (!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
+      ((!allow_transit_connections_ && pred.path_distance() + edge->length()) > max_distance_) ||
       (exclude_bridges_ && !pred.bridge() && edge->bridge()) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_tolls_ && !pred.toll() && edge->toll()) ||

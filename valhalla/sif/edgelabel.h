@@ -86,8 +86,7 @@ public:
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
-        bridge_(edge->bridge()), tunnel_(edge->tunnel()),
-        has_measured_speed_(has_measured_speed), cost_(cost), sortcost_(sortcost) {
+        has_measured_speed_(has_measured_speed), bridge_(edge->bridge()), tunnel_(edge->tunnel()), cost_(cost), sortcost_(sortcost) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
