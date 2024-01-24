@@ -95,6 +95,7 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
 };
 
 const constexpr double SECONDS_BEFORE_MANEUVER_END_FOR_VOICE_INSTRUCTIONS = 15.0;
+const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
 
 inline double clamp(const double lat) {
   return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
@@ -1538,7 +1539,7 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_start->emplace("announcement",
                                        prev_maneuver->verbal_pre_transition_instruction());
       voice_instructions_array->emplace_back(std::move(voice_instruction_start));
-    } else if (distance > distance_before_maneuver_end + 110 &&
+    } else if (distance > distance_before_maneuver_end + APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
                !prev_maneuver->verbal_post_transition_instruction().empty()) {
       // In all other cases we want to play the verbal_post_transition_instruction shortly
       // after the maneuver has started but only if there is sufficient time to play both
