@@ -137,10 +137,9 @@
    * ADDED: Added `exclude_tolls` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
    * ADDED: Added `exclude_bridges` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
    * ADDED: Added `exclude_tunnels` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_highways` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_ferries` request parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
    * ADDED: Added `service_limits.allow_hard_exclusions` server config parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
-   * ADDED: Added `exclude_tolls`, `exclude_bridges`, `exclude_tunnels`, `exclude_highways` and `exclude_ferries`   request parameters, and `service_limits.allow_hard_exclusions` server config parameter [#3733](https://github.com/valhalla/valhalla/pull/3733)
+   * ADDED: Added `exclude_highways` request parameter [#4524](https://github.com/valhalla/valhalla/pull/4524)
+   * ADDED: Added `exclude_ferries` request parameter [#4524](https://github.com/valhalla/valhalla/pull/4524)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
