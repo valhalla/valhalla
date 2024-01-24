@@ -68,7 +68,7 @@ TEST(CostingTypeBlind, Tunnel) {
 }
 
 // Make sure we get instructions for passing a traffic sign
-TEST(CostingTypeBlind, TrafficSign) {
+TEST(CostingTypeBlind, TrafficSignal) {
 
   const std::string& ascii_map = R"(
             E
