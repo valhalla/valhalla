@@ -107,7 +107,7 @@
    * FIXED: Move complex turn restriction check out of can_form_shortcut() [#4047](https://github.com/valhalla/valhalla/pull/4047)
    * FIXED: fix `clear` methods on matrix algorithms and reserve some space for labels with a new config [#4075](https://github.com/valhalla/valhalla/pull/4075)
    * FIXED: fix `valhalla_build_admins` & `valhalla_ways_to_edges` argument parsing [#4097](https://github.com/valhalla/valhalla/pull/4097)
-   * FIXED: fail early in `valhalla_build_admins` if parent directory can't be created, also exit with failure [#4099](https://github.com/valhalla/valhalla/pull/4099)F
+   * FIXED: fail early in `valhalla_build_admins` if parent directory can't be created, also exit with failure [#4099](https://github.com/valhalla/valhalla/pull/4099)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
