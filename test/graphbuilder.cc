@@ -1,6 +1,7 @@
 #include "mjolnir/graphbuilder.h"
 #include "baldr/graphreader.h"
 #include "midgard/sequence.h"
+#include "mjolnir/admin.h"
 #include "mjolnir/directededgebuilder.h"
 #include "mjolnir/osmdata.h"
 #include "mjolnir/pbfgraphparser.h"
@@ -33,7 +34,7 @@ using valhalla::mjolnir::TileManifest;
 namespace {
 
 const std::string pbf_file = {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"};
-const std::string tile_dir = "test/data/graphbuilder_tiles";
+const std::string tile_dir = {VALHALLA_BUILD_DIR "test/data/graphbuilder_tiles"};
 const size_t id_table_size = 1000;
 
 const std::string access_file = "test_access_harrisburg.bin";
@@ -110,6 +111,44 @@ TEST(Graphbuilder, TestDEBuilderLength) {
                                                 baldr::RoadClass::kMotorway, 0, false, false, false,
                                                 false, 0, 0, false),
                std::runtime_error);
+}
+
+// test new timezones here instead of a new mjolnir test
+class TestNodeInfo : NodeInfo {
+public:
+  using NodeInfo::set_timezone;
+
+  uint32_t get_raw_timezone_field() const {
+    return timezone_;
+  }
+
+  uint32_t get_raw_timezone_ext1_field() const {
+    return timezone_ext_1_;
+  }
+};
+
+TEST(Graphbuilder, NewTimezones) {
+  TestNodeInfo test_node;
+  auto* sql_db = GetDBHandle(VALHALLA_BUILD_DIR "test/data/tz.sqlite");
+
+  auto sconn = make_spatialite_cache(sql_db);
+  const auto& tzdb = DateTime::get_tz_db();
+
+  // America/Ciudad_Juarez
+  auto ciudad_juarez_polys = GetTimeZones(sql_db, {-106.450948, 31.669746, -106.386046, 31.724371});
+  EXPECT_EQ(ciudad_juarez_polys.begin()->first, tzdb.to_index("America/Ciudad_Juarez"));
+  test_node.set_timezone(ciudad_juarez_polys.begin()->first);
+  EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("America/Ojinaga"));
+  EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
+
+  // Asia/Qostanay
+  auto qostanay_polys = GetTimeZones(sql_db, {62.41766759, 51.37601571, 64.83104595, 52.71089583});
+  EXPECT_EQ(qostanay_polys.begin()->first, tzdb.to_index("Asia/Qostanay"));
+  test_node.set_timezone(qostanay_polys.begin()->first);
+  EXPECT_EQ(test_node.get_raw_timezone_field(), tzdb.to_index("Asia/Qyzylorda"));
+  EXPECT_EQ(test_node.get_raw_timezone_ext1_field(), 1);
+
+  sqlite3_close(sql_db);
 }
 
 class HarrisburgTestSuiteEnv : public ::testing::Environment {

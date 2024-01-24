@@ -1,5 +1,7 @@
 ## Release Date: 2023-??-?? Valhalla 3.4.1
 * **Removed**
+   * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
+   * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
@@ -19,6 +21,15 @@
    * FIXED: break shortcuts when there are different restrictions on base edges [#4326](https://github.com/valhalla/valhalla/pull/4326)
    * FIXED: Incorrect `edge_index` assignment in `thor_worker_t::build_trace` [#4413](https://github.com/valhalla/valhalla/pull/4413)
    * FIXED: lots of issues with CostMatrix (primarily deadend logic) with a complete refactor modeling things very close to bidir A*, also to prepare for a unification of the two [#4372](https://github.com/valhalla/valhalla/pull/4372)
+   * FIXED: diff_names check was missing for Graphfilter and Shortcutbuilder for AddEdgeInfo call.  [#4436](https://github.com/valhalla/valhalla/pull/4436)
+   * FIXED: updated timezone database and added code to keep compatibility with old servers/new data and vice versa [#4446](https://github.com/valhalla/valhalla/pull/4446)
+   * FIXED: retry elevation tile download if the download failed for some reason or the downloaded tile was corrupt [#4461](https://github.com/valhalla/valhalla/pull/4461)
+   * FIXED: base transition costs were getting overridden by osrm car turn duration [#4463](https://github.com/valhalla/valhalla/pull/4463)
+   * FIXED: insane ETAs for `motor_scooter` on `track`s [#4468](https://github.com/valhalla/valhalla/pull/4468)
+   * FIXED: -j wasn't taken into account anymore [#4483](https://github.com/valhalla/valhalla/pull/4483)
+   * FIXED: time distance matrix was always using time zone of last settled edge id [#4494](https://github.com/valhalla/valhalla/pull/4494)
+   * FIXED: log to stderr in valhalla_export_edges [#4498](https://github.com/valhalla/valhalla/pull/4498)
+   * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -52,6 +63,17 @@
    * CHANGED: refactor EdgeLabel (and derived classes) to reduce memory use. [#4439](https://github.com/valhalla/valhalla/pull/4439)
    * ADDED: "shape" field to matrix response for CostMatrix only [#4432](https://github.com/valhalla/valhalla/pull/4432)
    * CHANGED: `/expansion`: add field `prev_edge_id`, make the GeoJSON features `LineString`s [#4275](https://github.com/valhalla/valhalla/issues/4275)
+   * ADDED: --optimize & --log-details to valhalla_run_matrix [#4355](https://github.com/valhalla/valhalla/pull/4334)
+   * ADDED: most access restrictions to /locate response [#4431](https://github.com/valhalla/valhalla/pull/4431)
+   * ADDED: hgv=destination and friends for truck-specific "destination_only" logic [#4450](https://github.com/valhalla/valhalla/issues/4450)
+   * UPDATED: updated country access overrides [#4460](https://github.com/valhalla/valhalla/pull/4460)
+   * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
+   * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
+   * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
+   * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
+   * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
+   * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
+   * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

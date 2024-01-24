@@ -56,38 +56,6 @@ struct Destination {
   }
 };
 
-// Will return a destination's date_time string
-inline std::string get_date_time(const std::string& origin_dt,
-                                 const uint64_t& origin_tz,
-                                 const baldr::GraphId& pred_id,
-                                 baldr::GraphReader& reader,
-                                 const uint64_t& offset) {
-  if (origin_dt.empty()) {
-    return "";
-  } else if (!offset) {
-    return origin_dt;
-  }
-  graph_tile_ptr tile = nullptr;
-  uint32_t dest_tz = 0;
-  if (pred_id.Is_Valid()) {
-    // get the timezone of the output location
-    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
-    dest_tz = reader.GetTimezone(out_nodes.first, tile);
-    if (dest_tz == 0)
-      dest_tz = reader.GetTimezone(out_nodes.second, tile);
-  }
-
-  auto in_epoch =
-      baldr::DateTime::seconds_since_epoch(origin_dt,
-                                           baldr::DateTime::get_tz_db().from_index(origin_tz));
-  uint64_t out_epoch = in_epoch + offset;
-  std::string out_dt =
-      baldr::DateTime::seconds_to_date(out_epoch, baldr::DateTime::get_tz_db().from_index(dest_tz),
-                                       false);
-
-  return out_dt;
-}
-
 // return true if any location had a valid time set
 // return false if it doesn't make sense computationally and add warnings accordingly
 inline bool check_matrix_time(Api& request, const Matrix::Algorithm algo) {
@@ -127,6 +95,8 @@ inline void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
   matrix.mutable_times()->Resize(size, 0U);
   matrix.mutable_date_times()->Reserve(size);
   matrix.mutable_shapes()->Reserve(size);
+  matrix.mutable_time_zone_offsets()->Reserve(size);
+  matrix.mutable_time_zone_names()->Reserve(size);
 }
 
 } // namespace thor

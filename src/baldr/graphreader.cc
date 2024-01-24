@@ -975,6 +975,16 @@ int GraphReader::GetTimezone(const baldr::GraphId& node, graph_tile_ptr& tile) {
   return (tile == nullptr) ? 0 : tile->node(node)->timezone();
 }
 
+int GraphReader::GetTimezoneFromEdge(const baldr::GraphId& edge, graph_tile_ptr& tile) {
+  auto nodes = GetDirectedEdgeNodes(edge, tile);
+  if (const auto* node = nodeinfo(nodes.first, tile))
+    return node->timezone();
+  else if (const auto* node = nodeinfo(nodes.second, tile))
+    return node->timezone();
+
+  return 0;
+}
+
 std::shared_ptr<const valhalla::IncidentsTile>
 GraphReader::GetIncidentTile(const GraphId& tile_id) const {
   return enable_incidents_ ? incident_singleton_t::get(tile_id.Tile_Base())

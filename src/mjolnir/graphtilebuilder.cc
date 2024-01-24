@@ -1338,5 +1338,21 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
   edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
 }
 
+bool GraphTileBuilder::OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge) {
+  if (edge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
+    // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+    // true if a matching edgeinfo offset if found.
+    const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+    const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, de++) {
+      // Return true if the edge info matches (same name, shape, etc.)
+      if (de->edgeinfo_offset() == edge->edgeinfo_offset()) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 } // namespace mjolnir
 } // namespace valhalla

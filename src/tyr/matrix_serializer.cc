@@ -137,6 +137,8 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
     json::MapPtr map;
     const auto time = matrix.times()[i];
     const auto& date_time = matrix.date_times()[i];
+    const auto& time_zone_offset = matrix.time_zone_offsets()[i];
+    const auto& time_zone_name = matrix.time_zone_names()[i];
     if (time != kMaxCost) {
       map = json::map({{"from_index", static_cast<uint64_t>(source_index)},
                        {"to_index", static_cast<uint64_t>(target_index + (i - start_td))},
@@ -145,6 +147,15 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
       if (!date_time.empty()) {
         map->emplace("date_time", date_time);
       }
+
+      if (!time_zone_offset.empty()) {
+        map->emplace("time_zone_offset", time_zone_offset);
+      }
+
+      if (!time_zone_name.empty()) {
+        map->emplace("time_zone_name", time_zone_name);
+      }
+
       if (matrix.shapes().size() && shape_format != no_shape) {
         switch (shape_format) {
           case geojson:

@@ -71,8 +71,9 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // bridge and tunnel here
   if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
       edge1->use() != edge2->use() || edge1->toll() != edge2->toll() ||
-      edge1->destonly() != edge2->destonly() || edge1->unpaved() != edge2->unpaved() ||
-      edge1->surface() != edge2->surface() || edge1->roundabout() != edge2->roundabout()) {
+      edge1->destonly() != edge2->destonly() || edge1->destonly_hgv() != edge2->destonly_hgv() ||
+      edge1->unpaved() != edge2->unpaved() || edge1->surface() != edge2->surface() ||
+      edge1->roundabout() != edge2->roundabout()) {
     return false;
   }
 
@@ -133,26 +134,6 @@ GraphId GetOpposingEdge(const GraphId& node,
   LOG_ERROR("Opposing directed edge not found at LL= " + std::to_string(ll.lat()) + "," +
             std::to_string(ll.lng()));
   return GraphId(0, 0, 0);
-}
-
-/**
- * Is there an opposing edge with matching edgeinfo offset. The end node of the directed edge
- * must be in the same tile as the directed edge.
- * @param  tile          Graph tile of the edge
- * @param  directededge  Directed edge to match.
- */
-bool OpposingEdgeInfoMatches(const graph_tile_ptr& tile, const DirectedEdge* edge) {
-  // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
-  // true if a matching edgeinfo offset if found.
-  const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
-  const DirectedEdge* directededge = tile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    // Return true if the edge info matches (same name, shape, etc.)
-    if (directededge->edgeinfo_offset() == edge->edgeinfo_offset()) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // Get the ISO country code at the end node
@@ -314,9 +295,11 @@ uint32_t ConnectEdges(GraphReader& reader,
   total_duration += edge_duration;
 
   // Add edge and turn duration for truck
-  // Currently use the same as for cars. TODO: implement for trucks
   total_truck_duration += turn_duration;
-  auto const truck_speed = tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+  auto const truck_speed =
+      std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
+               directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
+
   assert(truck_speed != 0);
   auto const edge_duration_truck = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
   total_truck_duration += edge_duration_truck;
@@ -404,7 +387,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       assert(speed != 0);
       float total_duration = length / (speed * kKPHtoMetersPerSec);
       uint32_t const truck_speed =
-          tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true);
+          std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
+                   directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
       assert(truck_speed != 0);
       float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
 
@@ -471,12 +455,8 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                                average_density, total_duration, total_truck_duration);
       }
-
-      // Do we need to force adding edgeinfo (opposing edge could have diff names)?
-      // If end node is in the same tile and opposing edge does not have matching
-      // edge_info_offset).
-      bool diff_names = directededge->endnode().tileid() == edge_id.tileid() &&
-                        !OpposingEdgeInfoMatches(tile, directededge);
+      // Names can be different in the forward and backward direction
+      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -670,6 +650,9 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
           tilebuilder.AddLaneConnectivity(laneconnectivity);
         }
 
+        // Names can be different in the forward and backward direction
+        bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
         // Get edge info, shape, and names from the old tile and add
         // to the new. Use prior edgeinfo offset as the key to make sure
         // edges that have the same end nodes are differentiated (this
@@ -681,7 +664,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
                                     edgeinfo.bike_network(), edgeinfo.speed_limit(),
                                     edgeinfo.encoded_shape(), edgeinfo.GetNames(),
                                     edgeinfo.GetTaggedValues(), edgeinfo.GetLinguisticTaggedValues(),
-                                    edgeinfo.GetTypes(), added);
+                                    edgeinfo.GetTypes(), added, diff_names);
 
         newedge.set_edgeinfo_offset(edge_info_offset);
 

@@ -53,7 +53,7 @@ void check_matrix(const rapidjson::Document& result,
 }
 } // namespace
 
-class MatrixTest : public ::testing::Test {
+class MatrixTrafficTest : public ::testing::Test {
 protected:
   static gurka::map map;
 
@@ -87,11 +87,13 @@ protected:
                               {"KL", {{"highway", "primary"}}}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+    // also turn on the reverse connection search; there's no real test for it
     map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_traffic_allowed",
                             {{"service_limits.max_timedep_distance_matrix", "50000"},
                              {"mjolnir.traffic_extract",
                               "test/data/matrix_traffic_allowed/traffic.tar"},
-                             {"mjolnir.timezone", "test/data/tz.sqlite"}});
+                             {"mjolnir.timezone", "test/data/tz.sqlite"},
+                             {"thor.costmatrix_check_reverse_connection", "1"}});
 
     // verify shortcut edges being built
     // TODO: need to hack HierarchyLimits to allow shortcuts being seen by the algo
@@ -114,9 +116,9 @@ protected:
   }
 };
 
-gurka::map MatrixTest::map = {};
+gurka::map MatrixTrafficTest::map = {};
 
-TEST_F(MatrixTest, MatrixNoTraffic) {
+TEST_F(MatrixTrafficTest, MatrixNoTraffic) {
   // no traffic, so this is CostMatrix
   std::string res;
   const auto result = gurka::do_action(Options::sources_to_targets, map, {"E", "L"}, {"E", "L"},
@@ -129,7 +131,7 @@ TEST_F(MatrixTest, MatrixNoTraffic) {
   check_matrix(res_doc, {0.0f, 3.2f, 3.2f, 0.0f}, false, Matrix::CostMatrix);
 }
 
-TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"}};
@@ -176,7 +178,7 @@ TEST_F(MatrixTest, TDMatrixWithLiveTraffic) {
   ASSERT_EQ(result.info().warnings().size(), 0);
 }
 
-TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
+TEST_F(MatrixTrafficTest, CostMatrixWithLiveTraffic) {
   std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"},
                                                           {"/costing_options/auto/speed_types/0",
                                                            "current"},
@@ -244,7 +246,7 @@ TEST_F(MatrixTest, CostMatrixWithLiveTraffic) {
   ASSERT_EQ(result.info().warnings(0).code(), 206);
 }
 
-TEST_F(MatrixTest, DisallowedRequest) {
+TEST_F(MatrixTrafficTest, DisallowedRequest) {
   map.config.put("service_limits.max_timedep_distance_matrix", "0");
   const std::unordered_map<std::string, std::string> options = {{"/date_time/type", "0"}};
   const auto result =
@@ -262,7 +264,7 @@ TEST_F(MatrixTest, DisallowedRequest) {
   map.config.put("service_limits.max_timedep_distance_matrix", "50000");
 }
 
-TEST_F(MatrixTest, TDSources) {
+TEST_F(MatrixTrafficTest, TDSources) {
   // more sources than targets and arrive_by should work
   rapidjson::Document res_doc;
   std::string res;
@@ -297,7 +299,7 @@ TEST_F(MatrixTest, TDSources) {
   ASSERT_EQ(result.info().warnings().size(), 1);
 }
 
-TEST_F(MatrixTest, TDTargets) {
+TEST_F(MatrixTrafficTest, TDTargets) {
   // more targets than sources are allowed
   rapidjson::Document res_doc;
   std::string res;
@@ -535,4 +537,181 @@ TEST(StandAlone, CostMatrixShapes) {
             207);
 
   res.erase();
+}
+
+class DateTimeTest : public ::testing::Test {
+protected:
+  // check both with and without time zones present
+  static gurka::map map;
+  static gurka::map map_tz;
+
+  static void SetUpTestSuite() {
+    constexpr double gridsize = 1500;
+
+    // ~ are approximate time zone crossings
+    const std::string ascii_map = R"(
+      A----------B
+      |          |
+      C          D
+      |          |
+      ~          ~
+      |          |
+      |          |
+      E          F
+      |          |
+      G----------H
+    )";
+
+    const gurka::ways ways = {{"AC", {{"highway", "residential"}}},
+                              {"CE", {{"highway", "residential"}}},
+                              {"EG", {{"highway", "residential"}}},
+                              {"GH", {{"highway", "residential"}}},
+                              {"HF", {{"highway", "residential"}}},
+                              {"FD", {{"highway", "residential"}}},
+                              {"DB", {{"highway", "residential"}}},
+                              {"BA", {{"highway", "residential"}}}};
+
+    const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize, {-8.5755, 42.1079});
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix_no_tz");
+    map_tz = gurka::buildtiles(layout, ways, {}, {}, "test/data/time_zone_matrix",
+                               {{"mjolnir.timezone", "test/data/tz.sqlite"},
+                                {"service_limits.max_timedep_distance_matrix", "50000"}});
+  }
+};
+gurka::map DateTimeTest::map = {};
+gurka::map DateTimeTest::map_tz = {};
+
+TEST_F(DateTimeTest, DepartAtCostMatrix) {
+  rapidjson::Document res_doc;
+  std::string res;
+  {
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map_tz, {"A", "G"}, {"A", "G"},
+                                "auto",
+                                {{"/prioritize_bidirectional", "1"},
+                                 {"/date_time/type", "1"},
+                                 {"/date_time/value", "2020-10-30T09:00"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::CostMatrix);
+
+    EXPECT_TRUE(
+        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+  }
+}
+
+TEST_F(DateTimeTest, DepartAtTimeDistanceMatrix) {
+  rapidjson::Document res_doc;
+  std::string res;
+  {
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map_tz, {"A", "G"}, {"A", "G"},
+                                "bicycle",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}},
+                                nullptr, &res);
+
+    res_doc.Parse(res.c_str());
+
+    // sanity check
+    EXPECT_EQ(api.matrix().algorithm(), Matrix::TimeDistanceMatrix);
+
+    EXPECT_TRUE(
+        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[0]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[0]
+                  .GetObject()["time_zone_offset"],
+              "+01:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"]
+                  .GetArray()[1]
+                  .GetArray()[1]
+                  .GetObject()["time_zone_offset"],
+              "+00:00");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[0].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[0].GetObject()["time_zone_name"],
+              "Europe/Madrid");
+
+    EXPECT_EQ(res_doc["sources_to_targets"].GetArray()[1].GetArray()[1].GetObject()["time_zone_name"],
+              "Europe/Lisbon");
+  }
+}
+
+TEST_F(DateTimeTest, NoTimeZone) {
+  rapidjson::Document res_doc;
+  std::string res;
+  {
+    auto api =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"A", "G"}, {"A", "G"}, "auto",
+                         {{"/prioritize_bidirectional", "true"},
+                          {"/date_time/type", "1"},
+                          {"/date_time/value", "2020-10-30T09:00"}},
+                         nullptr, &res);
+    res_doc.Parse(res.c_str());
+
+    EXPECT_FALSE(
+        res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember("date_time"));
+
+    EXPECT_FALSE(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember(
+        "time_zone_offset"));
+
+    EXPECT_FALSE(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember(
+        "time_zone_name"));
+  }
 }
