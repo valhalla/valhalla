@@ -60,18 +60,18 @@ bool ExpandFromNode(GraphReader& reader,
 
 /*
  * Expand from the current node
- * @param  reader  			Graph reader.
- * @param  shape   			shape that we need to update
- * @param  en      			current end node that we started at
- * @param  from_node    	node that we started from
- * @param  isos				country ISOs. Used to see if we cross into a new country
- * @param  forward			traverse in the forward or backward direction
- * @param  visited_nodes	nodes that we already visited.  don't visit again
- * @param  way_id			only interested in edges with this way_id
- * @param  prev_tile		previous tile
- * @param  prev_node		previous node
- * @param  current_node		current node
- * @param  node_info		current node's info
+ * @param  reader         Graph reader.
+ * @param  shape          shape that we need to update
+ * @param  en             current end node that we started at
+ * @param  from_node      node that we started from
+ * @param  isos           country ISOs. Used to see if we cross into a new country
+ * @param  forward        traverse in the forward or backward direction
+ * @param  visited_nodes  nodes that we already visited.  don't visit again
+ * @param  way_id         only interested in edges with this way_id
+ * @param  prev_tile      previous tile
+ * @param  prev_node      previous node
+ * @param  current_node   current node
+ * @param  node_info      current node's info
  *
  */
 bool ExpandFromNodeInner(GraphReader& reader,
@@ -156,17 +156,17 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
 /*
  * Expand from the next node which is now our new current node
- * @param  reader  			Graph reader.
- * @param  shape   			shape that we need to update
- * @param  en      			current end node that we started at
- * @param  from_node    	node that we started from
- * @param  isos				country ISOs. Used to see if we cross into a new country
- * @param  forward			traverse in the forward or backward direction
- * @param  visited_nodes	nodes that we already visited.  don't visit again
- * @param  way_id			only interested in edges with this way_id
- * @param  prev_tile		previous tile
- * @param  prev_node		previous node
- * @param  current_node		current node
+ * @param  reader         Graph reader.
+ * @param  shape          shape that we need to update
+ * @param  en             current end node that we started at
+ * @param  from_node      node that we started from
+ * @param  isos           country ISOs. Used to see if we cross into a new country
+ * @param  forward        traverse in the forward or backward direction
+ * @param  visited_nodes  nodes that we already visited.  don't visit again
+ * @param  way_id         only interested in edges with this way_id
+ * @param  prev_tile      previous tile
+ * @param  prev_node      previous node
+ * @param  current_node   current node
  *
  */
 bool ExpandFromNode(GraphReader& reader,
