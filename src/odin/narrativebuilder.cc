@@ -527,7 +527,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
   }
 
   // Iterate over maneuvers to form verbal multi-cue instructions
-  if (blind_mode_)
+  if (!blind_mode_)
     FormVerbalMultiCue(maneuvers);
 }
 
