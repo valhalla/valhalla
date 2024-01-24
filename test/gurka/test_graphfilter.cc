@@ -58,7 +58,7 @@ TEST(Standalone, SimpleFilter) {
 
   // all footways will be deleted.  check for DO
   {
-    GraphReader graph_reader(map.config.get_child("mjolnir"));
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
     GraphId DO_edge_id;
     const DirectedEdge* DO_edge = nullptr;
     GraphId OD_edge_id;
@@ -81,7 +81,7 @@ TEST(Standalone, SimpleFilter) {
 
   // all footways will not be deleted
   {
-    GraphReader graph_reader(map.config.get_child("mjolnir"));
+    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
     GraphId DO_edge_id;
     const DirectedEdge* DO_edge = nullptr;
     GraphId OD_edge_id;
@@ -152,6 +152,7 @@ TEST(Standalone, SimpleFilter2) {
       gurka::buildtiles(layout, ways, nodes, {}, work_dir,
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
+
   // CIL should be deleted
   {
     GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
@@ -172,10 +173,10 @@ TEST(Standalone, SimpleFilter2) {
   map = gurka::buildtiles(layout, ways, nodes, {}, work_dir,
                           {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                            {"mjolnir.include_pedestrian", "true"}});
+  GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
 
   // CIL should not be deleted
   {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
     GraphId CL_edge_id;
     const DirectedEdge* CL_edge = nullptr;
     GraphId LC_edge_id;
@@ -269,6 +270,7 @@ TEST(Standalone, FilterTestComplexRestrictionsSignals) {
       gurka::buildtiles(layout, ways, nodes, relations, work_dir,
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
+  GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
 
   // even though we filitered pedestrian edges, make sure the restriction is not deleted.
   auto result = gurka::do_action(valhalla::Options::route, map, {"E", "I"}, "auto");
@@ -327,6 +329,7 @@ TEST(Standalone, FilterTestSimpleRestrictions) {
       gurka::buildtiles(layout, ways, {}, relations, work_dir,
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
+  GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
 
   // even though we filitered pedestrian edges, make sure the simple restriction is not deleted.  We
   // make a uturn at the H node
@@ -336,7 +339,6 @@ TEST(Standalone, FilterTestSimpleRestrictions) {
 
   // JECK should be deleted
   {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
     GraphId JK_edge_id;
     const DirectedEdge* JK_edge = nullptr;
     GraphId KJ_edge_id;
@@ -381,6 +383,7 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
       gurka::buildtiles(layout, ways, nodes, {}, work_dir,
                         {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                          {"mjolnir.include_pedestrian", "false"}});
+  GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
 
   // even though we filitered pedestrian edges there should be 3 edges as ABCD has a signal set on the
   // edge
@@ -393,7 +396,6 @@ TEST(Standalone, FilterTestNodeTypeSignals) {
 
   // GHC should be deleted
   {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
     GraphId GC_edge_id;
     const DirectedEdge* GC_edge = nullptr;
     GraphId CG_edge_id;
@@ -446,9 +448,11 @@ TEST(Standalone, FilterTestMultipleEdges) {
   // ids FG and GH will be aggregated as they have the same way id and are separated by a footway.
   auto result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "HI"});
-  // DL should be deleted
+
   {
     GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+
+    // DL should be deleted
     GraphId DL_edge_id;
     const DirectedEdge* DL_edge = nullptr;
     GraphId LD_edge_id;
@@ -457,11 +461,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "DL", "L", baldr::GraphId{});
     EXPECT_EQ(DL_edge, nullptr);
     EXPECT_EQ(LD_edge, nullptr);
-  }
 
-  // GO should be deleted
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // GO should be deleted
     GraphId GO_edge_id;
     const DirectedEdge* GO_edge = nullptr;
     GraphId OG_edge_id;
@@ -470,11 +471,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "GO", "O", baldr::GraphId{});
     EXPECT_EQ(GO_edge, nullptr);
     EXPECT_EQ(OG_edge, nullptr);
-  }
 
-  // FG should be deleted as it was aggregated
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // FG should be deleted as it was aggregated
     GraphId FG_edge_id;
     const DirectedEdge* FG_edge = nullptr;
     GraphId GF_edge_id;
@@ -483,11 +481,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "FG", "G", baldr::GraphId{});
     EXPECT_EQ(FG_edge, nullptr);
     EXPECT_EQ(GF_edge, nullptr);
-  }
 
-  // GH should be deleted as it was aggregated
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // GH should be deleted as it was aggregated
     GraphId GH_edge_id;
     const DirectedEdge* GH_edge = nullptr;
     GraphId HG_edge_id;
@@ -496,11 +491,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "GH", "H", baldr::GraphId{});
     EXPECT_EQ(GH_edge, nullptr);
     EXPECT_EQ(HG_edge, nullptr);
-  }
 
-  // FH is the new aggregated edge.  Make sure is equal to wayid 105
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // FH is the new aggregated edge.  Make sure is equal to wayid 105
     GraphId FH_edge_id;
     const DirectedEdge* FH_edge = nullptr;
     GraphId HF_edge_id;
@@ -523,12 +515,14 @@ TEST(Standalone, FilterTestMultipleEdges) {
                           {{"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/language_admin.sqlite"}},
                            {"mjolnir.include_pedestrian", "true"}});
 
-  // there should be 8 edges from A to I
-  result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
-  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
-  // DL should not be deleted
   {
     GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+
+    // there should be 8 edges from A to I
+    result = gurka::do_action(valhalla::Options::route, map, {"A", "I"}, "auto");
+    gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GH", "HI"});
+    // DL should not be deleted
+
     GraphId DL_edge_id;
     const DirectedEdge* DL_edge = nullptr;
     GraphId LD_edge_id;
@@ -537,11 +531,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "DL", "L", baldr::GraphId{});
     EXPECT_NE(DL_edge, nullptr);
     EXPECT_NE(LD_edge, nullptr);
-  }
 
-  // GO should not be deleted
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // GO should not be deleted
     GraphId GO_edge_id;
     const DirectedEdge* GO_edge = nullptr;
     GraphId OG_edge_id;
@@ -550,11 +541,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
         findEdge(graph_reader, map.nodes, "GO", "O", baldr::GraphId{});
     EXPECT_NE(GO_edge, nullptr);
     EXPECT_NE(OG_edge, nullptr);
-  }
 
-  // FG should not be deleted
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // FG should not be deleted
     GraphId FG_edge_id;
     const DirectedEdge* FG_edge = nullptr;
     GraphId GF_edge_id;
@@ -569,11 +557,8 @@ TEST(Standalone, FilterTestMultipleEdges) {
 
     tile = graph_reader.GetGraphTile(GF_edge->endnode());
     EXPECT_EQ(tile->edgeinfo(GF_edge).wayid(), 105);
-  }
 
-  // GH should not be deleted
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // GH should not be deleted
     GraphId GH_edge_id;
     const DirectedEdge* GH_edge = nullptr;
     GraphId HG_edge_id;
@@ -583,19 +568,15 @@ TEST(Standalone, FilterTestMultipleEdges) {
     EXPECT_NE(GH_edge, nullptr);
     EXPECT_NE(HG_edge, nullptr);
 
-    auto tile = graph_reader.GetGraphTile(GH_edge->endnode());
+    tile = graph_reader.GetGraphTile(GH_edge->endnode());
     EXPECT_EQ(tile->edgeinfo(GH_edge).wayid(), 105);
 
     tile = graph_reader.GetGraphTile(HG_edge->endnode());
     EXPECT_EQ(tile->edgeinfo(HG_edge).wayid(), 105);
-  }
 
-  // FH should not exist
-  {
-    GraphReader graph_reader = GraphReader(map.config.get_child("mjolnir"));
+    // FH should not exist
     ASSERT_THROW(gurka::findEdgeByNodes(graph_reader, layout, "F", "H"), std::runtime_error);
   }
-
   // the shape between including the pedestrian edges or not, should match
   EXPECT_EQ(shape, result.trip().routes(0).legs().begin()->shape());
 }

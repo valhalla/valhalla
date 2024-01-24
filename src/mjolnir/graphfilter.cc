@@ -34,11 +34,6 @@ uint32_t aggregated = 0;
 // Group wheelchair and pedestrian access together
 constexpr uint32_t kAllPedestrianAccess = (kPedestrianAccess | kWheelchairAccess);
 
-struct EdgeId {
-  uint64_t way_id;
-  GraphId graph_id;
-};
-
 bool CanAggregate(const DirectedEdge* de) {
   if (de->start_restriction() || de->part_of_complex_restriction() || de->end_restriction() ||
       de->restrictions() || de->traffic_signal() || de->access_restriction()) {
@@ -77,7 +72,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
     GraphId edge_id(prev_tile->id().tileid(), prev_tile->id().level(), node_info->edge_index() + j);
     const DirectedEdge* de = prev_tile->directededge(edge_id);
-    auto edge_info = prev_tile->edgeinfo(de);
+    const auto& edge_info = prev_tile->edgeinfo(de);
 
     auto tile = prev_tile;
     if (tile->id() != de->endnode().Tile_Base()) {
@@ -159,7 +154,7 @@ bool ExpandFromNode(GraphReader& reader,
     tile = reader.GetGraphTile(current_node);
   }
 
-  auto node_info = tile->node(current_node);
+  auto* node_info = tile->node(current_node);
   // expand from the current node
   return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, last_node, visited_nodes,
                              way_id, tile, prev_node, current_node, node_info);
@@ -300,7 +295,7 @@ void FilterTiles(GraphReader& reader,
         // highway hierarchy can cross base tiles! Use a hash based on the
         // encoded shape plus way Id.
         bool added;
-        auto edgeinfo = tile->edgeinfo(directededge);
+        const auto& edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
@@ -408,7 +403,7 @@ void GetAggregatedData(GraphReader& reader,
   if (directededge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
 
     // original edge data.
-    auto edgeinfo = tile->edgeinfo(directededge);
+    const auto& edgeinfo = tile->edgeinfo(directededge);
     const NodeInfo* en_info = tile->node(directededge->endnode().id());
 
     // do we need to aggregate?
@@ -456,7 +451,7 @@ void ValidateData(GraphReader& reader,
   if (directededge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
 
     // original edge data.
-    auto edgeinfo = tile->edgeinfo(directededge);
+    const auto& edgeinfo = tile->edgeinfo(directededge);
     const NodeInfo* en_info = tile->node(directededge->endnode().id());
     const NodeInfo* sn_info = tile->node(from_node);
 
@@ -484,9 +479,11 @@ void ValidateData(GraphReader& reader,
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
       if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, isForward)) {
-        LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
-        std::cout << "End node: " << directededge->endnode() << " WayId: " << edgeinfo.wayid()
-                  << std::endl;
+        // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
+        // for debugging only
+        // std::cout << "End node: " << directededge->endnode().value << " WayId: " <<
+        // edgeinfo.wayid()
+        //          << std::endl;
 
         if (wayid == 0) { // This edge has special attributes, we can't aggregate
           no_agg_ways.insert(edgeinfo.wayid());
@@ -530,10 +527,6 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       }
     }
 
-    if (reader.OverCommitted()) {
-      reader.Trim();
-    }
-
     // Now loop again double checking the ways.
     nodeid = GraphId(tile_id.tileid(), tile_id.level(), 0);
     for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
@@ -545,10 +538,6 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
           processed_nodes.insert(directededge->endnode());
         }
       }
-    }
-
-    if (reader.OverCommitted()) {
-      reader.Trim();
     }
 
     // Create a new tile builder
@@ -669,7 +658,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
         bool added;
-        auto edgeinfo = tile->edgeinfo(directededge);
+        const auto& edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL>>(encoded_shape);
 
