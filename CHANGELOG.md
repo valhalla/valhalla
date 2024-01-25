@@ -76,6 +76,7 @@
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
    * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded conan's boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
+   * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
