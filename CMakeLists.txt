@@ -32,7 +32,6 @@ option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
-option(INSTALL_VENDORED_HEADERS "Install vendored public headers to <install_dir>/valhalla/third_party" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
@@ -281,15 +280,13 @@ install(FILES COPYING CHANGELOG.md
   COMPONENT runtime)
 
 # install third_party
-if (INSTALL_VENDORED_HEADERS)
-  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+if (WIN32)
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-  if (WIN32)
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
-      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-  endif()
 endif()
 
 if(ENABLE_TESTS)
