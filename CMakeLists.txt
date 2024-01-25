@@ -94,35 +94,39 @@ endif()
 include(ValhallaSanitizerOptions)
 include(ValhallaSourceGroups)
 
-## Dependencies
+# We use PkgConfig for (almost) all dependencies:
+# - CMake Find* modules are versioned with CMake, not the packages, see protobuf 21.12
+# - it's trivial to use custom installations via PKG_CONFIG_PATH env var
+find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
+pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
+target_compile_definitions(PkgConfig::ZLIB INTERFACE ENABLE_HTTP)
 
 # cURL
 set(curl_targets "")
 if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-  find_package(CURL)
+  pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
   if (CURL_FOUND)
-    set(curl_targets CURL::libcurl)
-    target_compile_definitions(CURL::libcurl INTERFACE ENABLE_HTTP)
+    set(curl_targets PkgConfig::CURL)
+    target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
     if (MSVC)
       # TODO(nils): this seems too blankety.. in CI python_valhalla fails
-      link_libraries(CURL::libcurl)
+      link_libraries(PkgConfig::CURL)
     endif()
   else()
-    set(ENABLE_HTTP OFF)
-    message(WARNING "cURL not found, skipping ENABLE_HTTP...")
+    message(FATAL_ERROR "ENABLE_HTTP=ON, but cURL not found...")
   endif()
 endif()
 
-# Boost
+# Boost has no .pc file..
 find_package(Boost 1.71 REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
-# Protobuf
-# prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf fuckups
+# Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
+# for protoc location in a platform agnostic manner
+# prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf messups
 # NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 # newer protobuf versions require a compat bool
@@ -154,15 +158,17 @@ if(ENABLE_SERVICES)
     set(libprime_server_targets PkgConfig::libprime_server)
   else()
     set(ENABLE_SERVICES OFF)
-    message(WARNING "prime_server not found, skipping ENABLE_SERVICES...")
+    message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
   endif()
 endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
+  # keep sqlite3 with cmake find_package(), as OSX needs our own FindSqlite3.cmake
+  # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
-  find_package(SpatiaLite REQUIRED)
+  pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
   pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
 endif()
 
@@ -175,7 +181,7 @@ add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  # favors Py3, falls back to Py2
+  # python is fine for cmake as well
   find_package(Python COMPONENTS Development Interpreter)
   if (Python_FOUND)
     add_subdirectory(src/bindings/python)
@@ -212,8 +218,7 @@ if(ENABLE_TOOLS)
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program}
       valhalla
-      # TODO(nils): make this a target-specific dependency? I'm sure it's not many needing this..
-      $<$<BOOL:${CURL_FOUND}>:CURL::libcurl>)
+      $<$<BOOL:${CURL_FOUND}>:PkgConfig::CURL>)
     target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -227,8 +232,7 @@ if(ENABLE_DATA_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla
-      # TODO(nils): make this a target-specific dependency? I'm sure it's not many needing this..
-      $<$<BOOL:${CURL_FOUND}>:CURL::libcurl>)
+      $<$<BOOL:${CURL_FOUND}>:PkgConfig::CURL>)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
@@ -237,8 +241,8 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific dependencies
-  find_package(GEOS)
-  target_link_libraries(valhalla_build_admins GEOS::GEOS)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
+  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc

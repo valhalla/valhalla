@@ -91,9 +91,9 @@ valhalla_module(NAME mjolnir
   DEPENDS
     valhalla::proto
     valhalla::baldr
-    SpatiaLite::SpatiaLite
+    PkgConfig::SpatiaLite
     SQLite3::SQLite3
     Boost::boost
     PkgConfig::LuaJIT
     Threads::Threads
-    ZLIB::ZLIB)
+    PkgConfig::ZLIB)
