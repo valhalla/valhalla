@@ -117,8 +117,10 @@ It's recommended to work with the following toolset:
 1. Install the dependencies with `vcpkg`:
 ```
 git -C C:\path\to\vcpkg checkout f330a32
+# only build release versions for vcpkg packages
+echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
-C:\path\to\vcpkg.exe install
+C:\path\to\vcpkg.exe install --triple x64-windows
 ```
 2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```
@@ -130,6 +132,10 @@ cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:Bui
 ```
 
 The artifacts will be built to `./build/Release`.
+
+#### Troubleshooting
+
+- if the build fails on something with `date_time`, chances are you don't have [`make`](https://gnuwin32.sourceforge.net/packages/make.htm) and/or [`awk`](https://gnuwin32.sourceforge.net/packages/gawk.htm) installed, which is needed to properly configure `third_party/tz`. Even so, it might still fail because the used MS shell can't handle `mv` properly. In that case simply mv `third_party/tz/leapseconds.out` to `third_party/tz/leapseconds` and start the build again
 
 ### Include Valhalla as a project dependency
 

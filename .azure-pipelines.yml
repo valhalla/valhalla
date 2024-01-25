@@ -65,7 +65,7 @@ jobs:
         displayName: "Cache vcpkg's packages"
         inputs:
           key: .\vcpkg.json | "$(VCPKG_REF)"
-          path: '$(VCPKG_INSTALLATION_ROOT)\installed'
+          path: '%BUILD_DIR%/vcpkg_installed'
           cacheHitVar: CACHE_RESTORED
       
       # TODO: cache build never worked, look into it
@@ -85,12 +85,6 @@ jobs:
           call %VCPKG_INSTALLATION_ROOT%\bootstrap-vcpkg.bat
           %VCPKG_INSTALLATION_ROOT%\vcpkg.exe version
         displayName: 'Install vcpkg'
-        condition: ne(variables.CACHE_RESTORED, 'true')
-
-      - script: |
-          %VCPKG_INSTALLATION_ROOT%\vcpkg.exe install
-          %VCPKG_INSTALLATION_ROOT%\vcpkg.exe list
-        displayName: 'Install vcpkg packages'
         condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
