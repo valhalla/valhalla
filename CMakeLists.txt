@@ -160,6 +160,8 @@ add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
+find_package(PkgConfig REQUIRED)
+
 if(NOT TARGET CURL::CURL)
   add_library(CURL::CURL INTERFACE IMPORTED)
   if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
@@ -169,8 +171,9 @@ if(NOT TARGET CURL::CURL)
     set_target_properties(CURL::CURL PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
       INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
+    message(STATUS "Found cURL: ${CURL_LIBRARIES}")
     if(NOT MSVC)
-      set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
+      target_link_libraries(CURL::CURL INTERFACE ${CURL_LIBRARIES})
     else()
       link_libraries(${CURL_LIBRARIES})
     endif()
@@ -192,7 +195,7 @@ if(NOT Protobuf_FOUND)
   set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 endif()
 
-message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
+message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIRS}")
 message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARY}")
 message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
 message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
@@ -229,7 +232,7 @@ endif()
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
   find_package(SQLite3 REQUIRED)
-  find_package(SpatiaLite REQUIRED)
+  pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
   find_package(LuaJIT)
   add_library(Lua::Lua INTERFACE IMPORTED)
   set_target_properties(Lua::Lua PROPERTIES
@@ -320,8 +323,9 @@ if(ENABLE_DATA_TOOLS)
   endforeach()
 
   # Target-specific dependencies
-  find_package(GEOS)
-  target_link_libraries(valhalla_build_admins GEOS::GEOS)
+  # find_package(GEOS)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
+  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
