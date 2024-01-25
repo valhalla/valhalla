@@ -146,7 +146,7 @@ jobs:
           keys:
             - ccache-release-macos-{{ .Branch }}
             - ccache-release-macos
-      - run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
