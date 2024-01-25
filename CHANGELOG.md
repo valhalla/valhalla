@@ -30,6 +30,7 @@
    * FIXED: time distance matrix was always using time zone of last settled edge id [#4494](https://github.com/valhalla/valhalla/pull/4494)
    * FIXED: log to stderr in valhalla_export_edges [#4498](https://github.com/valhalla/valhalla/pull/4498)
    * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
+   * FIXED: Config singleton multiple instantiation issue [#4521](https://github.com/valhalla/valhalla/pull/4521)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
