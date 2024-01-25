@@ -196,7 +196,7 @@ target_include_directories(valhalla
 target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
-    $<$<BOOL:$(WIN32)>:ws2_32>
+    $<$<BOOL:${WIN32}>:ws2_32>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
     Threads::Threads)
