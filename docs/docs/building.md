@@ -131,6 +131,12 @@ cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:Bui
 
 The artifacts will be built to `./build/Release`.
 
+### Include Valhalla as a project dependency
+
+When importing `libvalhalla` as a dependency in a project, it's important to know that we're using both CMake and `pkg-config` to resolve our own dependencies. Check the root `CMakeLists.txt` for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use `PKG_CONFIG_PATH` environment variable to point CMake to custom installations, however, for dependencies we resolve with `find_package` you'll need to check CMake's built-in `Find*` modules on how to provide the proper paths.
+
+To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or `pkg_check_modules` (in CMake).
+
 ## Running Valhalla server on Unix
 
 The following script should be enough to make some routing data and start a server using it. (Note - if you would like to run an elevation lookup service with Valhalla follow the instructions [here](./elevation.md)).
@@ -144,8 +150,9 @@ mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
 # build timezones.sqlite to support time-dependent routing
 valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+# build admins.sqlite to support admin-related properties such as access restrictions, driving side, ISO codes etc
+valhalla_build_admins -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # build routing tiles
-# TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # tar it up for running the server
 # either run this to build a tile index for faster graph loading times
