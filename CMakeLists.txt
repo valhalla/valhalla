@@ -93,13 +93,12 @@ endif()
 include(ValhallaSanitizerOptions)
 include(ValhallaSourceGroups)
 
-# We use PkgConfig for (almost) all dependencies:
-# - CMake Find* modules are versioned with CMake, not the packages, see protobuf 21.12
-# - it's trivial to use custom installations via PKG_CONFIG_PATH env var
+# We use pkg-config for (almost) all dependencies:
+# - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
+# - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
-target_compile_definitions(PkgConfig::ZLIB INTERFACE ENABLE_HTTP)
 
 # cURL
 set(curl_targets "")
@@ -108,10 +107,6 @@ if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
   if (CURL_FOUND)
     set(curl_targets PkgConfig::CURL)
     target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
-    if (MSVC)
-      # TODO(nils): this seems too blankety.. in CI python_valhalla fails
-      link_libraries(PkgConfig::CURL)
-    endif()
   else()
     message(FATAL_ERROR "ENABLE_HTTP=ON, but cURL not found...")
   endif()
@@ -215,9 +210,7 @@ if(ENABLE_TOOLS)
     add_executable(${program} ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
-    target_link_libraries(${program}
-      valhalla
-      $<$<BOOL:${CURL_FOUND}>:PkgConfig::CURL>)
+    target_link_libraries(${program} valhalla)
     target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
@@ -230,8 +223,7 @@ if(ENABLE_DATA_TOOLS)
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
     target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
-    target_link_libraries(${program} valhalla
-      $<$<BOOL:${CURL_FOUND}>:PkgConfig::CURL>)
+    target_link_libraries(${program} valhalla)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
