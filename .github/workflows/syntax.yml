@@ -1,5 +1,5 @@
-name: GitHub CI
-on: [pull_request]
+name: changelog & spell check
+
 
 jobs:
   changelog:
