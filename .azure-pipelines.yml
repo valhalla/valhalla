@@ -65,7 +65,7 @@ jobs:
         displayName: "Cache vcpkg's packages"
         inputs:
           key: .\vcpkg.json | "$(VCPKG_REF)"
-          path: '%BUILD_DIR%/vcpkg_installed'
+          path: '$(BUILD_DIR)/vcpkg_installed'
           cacheHitVar: CACHE_RESTORED
       
       # TODO: cache build never worked, look into it
