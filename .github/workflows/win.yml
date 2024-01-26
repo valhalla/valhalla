@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          - submodules: recursive
+          submodules: recursive
 
       # we add a custom triplet to avoid cache misses as much as possible
       # https://github.com/microsoft/vcpkg/issues/26346#issuecomment-1319244766
