@@ -1927,7 +1927,7 @@ public:
         // node
         n.set_state_iso_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_name_count;
-      } else if (tag.second == "traffic_signals" && tag.first == "crossing") {
+      } else if (tag.first == "crossing" && tag.second == "traffic_signals") {
         n.set_traffic_signal(true);
       } else if (tag.first == "highway") {
         n.set_traffic_signal(n.traffic_signal() || tag.second == "traffic_signals");
