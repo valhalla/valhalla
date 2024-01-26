@@ -107,7 +107,7 @@ jobs:
 
       - name: Build Valhalla
         run: |
-          cmake --build build --config $BUILD_TYPE -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config $BUILD_TYPE -- /clp:ErrorsOnly
       
       - name: Test Executable
         run: |
