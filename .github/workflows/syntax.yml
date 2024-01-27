@@ -1,5 +1,5 @@
 name: changelog & spell check
-
+on: [pull_request]
 
 jobs:
   changelog:
