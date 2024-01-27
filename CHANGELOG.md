@@ -77,6 +77,9 @@
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
    * ADDED: Support for `voiceInstructions` attribute in OSRM serializer via `voice_instructions` request parameter [#4506](https://github.com/valhalla/valhalla/pull/4506)
    * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded conan's boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
+   * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
+   * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
+   * FIXED: Fix segfault in costmatrix (date_time and time zone always added). [#4530](https://github.com/valhalla/valhalla/pull/4530)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
