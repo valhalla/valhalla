@@ -22,6 +22,13 @@ on:
       - test_requests/
     branches:
       - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
 defaults:
   run:
@@ -116,4 +123,12 @@ jobs:
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked or a previous job failed
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
+        with:
+          detached: true
+          timeout-minutes: 15
           

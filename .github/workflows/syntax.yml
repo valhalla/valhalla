@@ -1,4 +1,4 @@
-name: changelog & spell check
+name: syntax
 on: [pull_request]
 
 jobs:
