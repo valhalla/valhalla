@@ -115,14 +115,14 @@ jobs:
       - name: Build Valhalla
         shell: powershell
         run: |
-          cmake --build build --config $BUILD_TYPE -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
       
       - name: Test Executable
         run: |
-          set PATH=$PATH;${{ github.workspace }}\build\vcpkg_installed\Release\bin
-          .\build\Release\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
-          .\build\Release\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
-          .\build\Release\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
+          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
+          ./build/$BUILD_TYPE/valhalla_run_route.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
+          ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
       
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
