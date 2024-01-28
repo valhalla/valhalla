@@ -1,19 +1,12 @@
 #pragma once
 
 #include <functional>
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+
+#include <boost/property_tree/ptree.hpp>
 
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/sif/dynamiccost.h>
-#include <valhalla/sif/edgelabel.h>
-#include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/pathinfo.h>
 // TODO(nils): should abstract more so we don't pull this in
 #include <valhalla/thor/pathalgorithm.h>
 
@@ -33,8 +26,8 @@ public:
         clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
   }
 
-  MatrixAlgorithm(const PathAlgorithm&) = delete;
-  MatrixAlgorithm& operator=(const PathAlgorithm&) = delete;
+  MatrixAlgorithm(const MatrixAlgorithm&) = delete;
+  MatrixAlgorithm& operator=(const MatrixAlgorithm&) = delete;
 
   /**
    * Destructor
