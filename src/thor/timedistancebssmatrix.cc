@@ -7,22 +7,6 @@ using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
 namespace {
-static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::Location& origin,
-                      const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.correlation().edges()) {
-    if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.correlation().edges()) {
-        if (origin_edge.graph_id() == edgeid &&
-            origin_edge.percent_along() <= destination_edge.percent_along()) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
 static travel_mode_t get_other_travel_mode(const travel_mode_t current_mode) {
   static const auto bss_modes =
       std::vector<travel_mode_t>{travel_mode_t::kPedestrian, travel_mode_t::kBicycle};
