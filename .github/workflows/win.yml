@@ -113,11 +113,11 @@ jobs:
             -DENABLE_BENCHMARKS=OFF
 
       - name: Build Valhalla
+        shell: powershell
         run: |
-          cmake --build build --config $BUILD_TYPE -- /clp:ErrorsOnly
+          cmake --build build --config $BUILD_TYPE -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
       
       - name: Test Executable
-        shell: cmd
         run: |
           set PATH=$PATH;${{ github.workspace }}\build\vcpkg_installed\Release\bin
           .\build\Release\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
