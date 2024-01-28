@@ -620,7 +620,7 @@ public:
   /**
    * Convenience method for use with costing to get the speed for an edge given the directed
    * edge and a time (seconds since start of the week). If the current speed of the edge
-   * is 0 then the current speed is ignore and other speed sources are used to prevent
+   * is 0 then the current speed is ignored and other speed sources are used to prevent
    * issues with costing
    *
    * @param  de            Directed edge information.

@@ -217,6 +217,8 @@ struct Node {
   uint32_t end_of;
   // the graphid of the node
   baldr::GraphId graph_id;
+  // grid Id within the tile (used for spatial node sorting)
+  uint32_t grid_id;
 
   bool is_start() const {
     return start_of != static_cast<uint32_t>(-1);
