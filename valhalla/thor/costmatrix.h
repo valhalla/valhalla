@@ -150,9 +150,6 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
-  // for tracking the expansion of the Dijkstra
-  expansion_callback_t expansion_callback_;
-
   // whether time was specified
   bool has_time_;
 
