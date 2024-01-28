@@ -79,6 +79,7 @@
    * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
    * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
    * FIXED: Fix segfault in costmatrix (date_time and time zone always added). [#4530](https://github.com/valhalla/valhalla/pull/4530)
+   * CHANGED: refactored matrix code to include a base class for all matrix algorithms to prepare for second passes on matrix [#4535](https://github.com/valhalla/valhalla/pull/4535)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
