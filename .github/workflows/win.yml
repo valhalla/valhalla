@@ -119,7 +119,7 @@ jobs:
       - name: Test Executable
         shell: cmd
         run: |
-          set PATH=$PATH;${{ github.workspace }}\build\\vcpkg_installed\$VCPKG_DEFAULT_TRIPLET\bin
+          set PATH=$PATH;${{ github.workspace }}\build\vcpkg_installed\$VCPKG_DEFAULT_TRIPLET\bin
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_build_tiles.exe -c .\test\win\valhalla.json .\test\data\utrecht_netherlands.osm.pbf
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_run_route.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}, {\"lat\": 52.093113, \"lon\": 5.100918}], \"costing\": \"auto\"}"
           ${{ github.workspace }}\build\$BUILD_TYPE\valhalla_run_isochrone.exe --config .\test\win\valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
