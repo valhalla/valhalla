@@ -28,10 +28,9 @@ void thor_worker_t::optimized_route(Api& request) {
 
   // Use CostMatrix to find costs from each location to every other location
   CostMatrix costmatrix;
+  costmatrix.set_has_time(check_matrix_time(request, Matrix::CostMatrix));
   costmatrix.SourceToTarget(request, *reader, mode_costing, mode,
-                            max_matrix_distance.find(costing)->second,
-                            check_matrix_time(request, Matrix::CostMatrix),
-                            options.date_time_type() == Options::invariant);
+                            max_matrix_distance.find(costing)->second);
 
   // Return an error if any locations are totally unreachable
   const auto& correlated =

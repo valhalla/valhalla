@@ -433,8 +433,7 @@ TEST(Matrix, partial_matrix) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   TimeDistanceMatrix timedist_matrix;
-  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0,
-                                 request.options().matrix_locations());
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto& matrix = request.matrix();
   uint32_t found = 0;
   for (uint32_t i = 0; i < matrix.times().size(); ++i) {

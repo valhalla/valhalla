@@ -49,9 +49,9 @@ class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::v
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
-    : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
+    : MatrixAlgorithm(config),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
@@ -132,19 +132,17 @@ void CostMatrix::SourceToTarget(Api& request,
                                 baldr::GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
                                 const sif::travel_mode_t mode,
-                                const float max_matrix_distance,
-                                const bool has_time,
-                                const bool invariant,
-                                const ShapeFormat& shape_format) {
+                                const float max_matrix_distance) {
 
   LOG_INFO("matrix::CostMatrix");
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
+  bool invariant = request.options().date_time_type() == Options::invariant;
+  auto shape_format = request.options().shape_format();
 
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
-  has_time_ = has_time;
 
   auto& source_location_list = *request.mutable_options()->mutable_sources();
   auto& target_location_list = *request.mutable_options()->mutable_targets();
