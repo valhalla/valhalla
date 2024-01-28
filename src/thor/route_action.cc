@@ -305,7 +305,6 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // If bidirectional A* disable use of destination-only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   // Other path algorithms can use destination-only edges on the first pass.
-  // TODO(nils): Why?
   cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
 
   cost->set_pass(0);
