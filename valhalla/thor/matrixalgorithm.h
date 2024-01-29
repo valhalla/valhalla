@@ -113,7 +113,7 @@ protected:
   // if `true` clean reserved memory for edge labels
   bool clear_reserved_memory_;
 
-  // resizes all PBF sequences except for date_times
+  // resizes all PBF sequences except for repeated string where it reserves instead
   inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
     matrix.mutable_from_indices()->Resize(size, 0U);
     matrix.mutable_to_indices()->Resize(size, 0U);
