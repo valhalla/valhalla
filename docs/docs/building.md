@@ -117,8 +117,10 @@ It's recommended to work with the following toolset:
 1. Install the dependencies with `vcpkg`:
 ```
 git -C C:\path\to\vcpkg checkout f330a32
+# only build release versions for vcpkg packages
+echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
-C:\path\to\vcpkg.exe install
+C:\path\to\vcpkg.exe install --triple x64-windows
 ```
 2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```
@@ -130,6 +132,18 @@ cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:Bui
 ```
 
 The artifacts will be built to `./build/Release`.
+
+#### Troubleshooting
+
+- if the build fails on something with `date_time`, chances are you don't have [`make`](https://gnuwin32.sourceforge.net/packages/make.htm) and/or [`awk`](https://gnuwin32.sourceforge.net/packages/gawk.htm) installed, which is needed to properly configure `third_party/tz`. Even so, it might still fail because the used MS shell can't handle `mv` properly. In that case simply mv `third_party/tz/leapseconds.out` to `third_party/tz/leapseconds` and start the build again
+
+### Include Valhalla as a project dependency
+
+When importing `libvalhalla` as a dependency in a project, it's important to know that we're using both CMake and `pkg-config` to resolve our own dependencies. Check the root `CMakeLists.txt` for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use `PKG_CONFIG_PATH` environment variable to point CMake to custom installations, however, for dependencies we resolve with `find_package` you'll need to check CMake's built-in `Find*` modules on how to provide the proper paths.
+
+To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or `pkg_check_modules` (in CMake).
+
+Currently, `rapidjson`, `date` & `dirent` (Win only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_pary/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
 
 ## Running Valhalla server on Unix
 
@@ -144,8 +158,9 @@ mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
 # build timezones.sqlite to support time-dependent routing
 valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+# build admins.sqlite to support admin-related properties such as access restrictions, driving side, ISO codes etc
+valhalla_build_admins -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # build routing tiles
-# TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # tar it up for running the server
 # either run this to build a tile index for faster graph loading times
