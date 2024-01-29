@@ -150,9 +150,6 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
-  // whether time was specified
-  bool has_time_;
-
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
    * for that mode.
