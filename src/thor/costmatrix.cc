@@ -262,11 +262,11 @@ bool CostMatrix::SourceToTarget(Api& request,
   // Form the matrix PBF output
   graph_tile_ptr tile;
   uint32_t connection_idx = 0;
-  bool second_pass = false;
+  bool connection_failed = false;
   valhalla::Matrix& matrix = *request.mutable_matrix();
   reserve_pbf_arrays(matrix, best_connection_.size());
   for (auto& connection : best_connection_) {
-    // if this is the second pass we don't have to process it again
+    // if this is the second pass we don't have to process previously found ones again
     if (costing_->pass() > 0 && !(matrix.second_pass(connection_idx))) {
       continue;
     }
@@ -299,7 +299,8 @@ bool CostMatrix::SourceToTarget(Api& request,
     } else {
       // let's try a second pass for this connection
       matrix.mutable_second_pass()->Set(connection_idx, true);
-      second_pass = true;
+      connection_failed = true;
+
       // Add empty strings to make sure pbf arrays are populated (serializer
       // requires this)
       auto* pbf_date_time = matrix.mutable_date_times()->Add();
@@ -318,7 +319,7 @@ bool CostMatrix::SourceToTarget(Api& request,
     connection_idx++;
   }
 
-  return second_pass;
+  return connection_failed;
 }
 
 // Initialize all time distance to "not found". Any locations that
@@ -385,15 +386,21 @@ void CostMatrix::Initialize(
 
   // Set the remaining number of sources and targets
   locs_remaining_[MATRIX_FORW] = 0;
-  for (const auto& s : locs_status_[MATRIX_FORW]) {
+  for (auto& s : locs_status_[MATRIX_FORW]) {
     if (!s.unfound_connections.empty()) {
       locs_remaining_[MATRIX_FORW]++;
+    } else {
+      // don't look at sources which don't have unfound connections, important for second pass
+      s.threshold = 0;
     }
   }
   locs_remaining_[MATRIX_REV] = 0;
-  for (const auto& t : locs_status_[MATRIX_REV]) {
+  for (auto& t : locs_status_[MATRIX_REV]) {
     if (!t.unfound_connections.empty()) {
       locs_remaining_[MATRIX_REV]++;
+    } else {
+      // don't look at targets which don't have unfound connections, important for second pass
+      t.threshold = 0;
     }
   }
 }
