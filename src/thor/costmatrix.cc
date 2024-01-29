@@ -294,6 +294,15 @@ void CostMatrix::SourceToTarget(Api& request,
 
       auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
       *pbf_time_zone_name = dt_info.time_zone_name;
+    } else {
+      // Add empty strings to make sure pbf arrays are populated (serializer
+      // requires this)
+      auto* pbf_date_time = matrix.mutable_date_times()->Add();
+      *pbf_date_time = "";
+      auto* pbf_time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
+      *pbf_time_zone_offset = "";
+      auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
+      *pbf_time_zone_name = "";
     }
     matrix.mutable_from_indices()->Set(count, source_idx);
     matrix.mutable_to_indices()->Set(count, target_idx);
