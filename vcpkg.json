@@ -13,6 +13,7 @@
     "curl",
     "geos",
     "libspatialite",
+    "pkgconf",
     "spatialite-tools",
     "luajit",
     "protobuf",

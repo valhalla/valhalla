@@ -18,7 +18,6 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/tokenizer.hpp>
-#include <curl/curl.h>
 
 #include "baldr/graphconstants.h"
 #include "baldr/graphid.h"
