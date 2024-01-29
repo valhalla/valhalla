@@ -500,12 +500,17 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     return false;
   }
 
+  // not_thru_pruning_ is only set to false on the 2nd pass in matrix_action.
+  // TODO(nils): one of these cases where I think reverse tree should look at the opposing edge,
+  //   not the expanding one, same for quite some attributes below (also bidir a)
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, thru,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -514,7 +519,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()));
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, thru,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
