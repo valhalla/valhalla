@@ -765,7 +765,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
                              uint32_t local_edge_index,
                              const NodeInfo* nodeinfo,
                              TripLeg_Node* trip_node,
-                             const DirectedEdge* intersecting_de) {
+                             const DirectedEdge* intersecting_de,
+                             bool blind_instructions) {
   TripLeg_IntersectingEdge* intersecting_edge = trip_node->add_intersecting_edge();
 
   // Set the heading for the intersecting edge if requested
@@ -826,7 +827,8 @@ void AddTripIntersectingEdge(const AttributesController& controller,
     // Get the edgeinfo
     auto edgeinfo = graphtile->edgeinfo(intersecting_de);
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
-    FilterUnneededStreetNumbers(names_and_types);
+    if (blind_instructions)
+      FilterUnneededStreetNumbers(names_and_types);
     intersecting_edge->mutable_name()->Reserve(names_and_types.size());
     for (const auto& name_and_type : names_and_types) {
       auto* trip_edge_name = intersecting_edge->mutable_name()->Add();
@@ -875,6 +877,7 @@ void AddTripIntersectingEdge(const AttributesController& controller,
  * @param prior_opp_local_index    opposing edge local index of previous edge in the path
  * @param graphreader              graph reader for graph access
  * @param trip_node                pbf node in the pbf structure we are building
+ * @param blind_instructions       whether instructions for blind users are requested
  */
 void AddIntersectingEdges(const AttributesController& controller,
                           const graph_tile_ptr& start_tile,
@@ -883,7 +886,8 @@ void AddIntersectingEdges(const AttributesController& controller,
                           const DirectedEdge* prev_de,
                           uint32_t prior_opp_local_index,
                           GraphReader& graphreader,
-                          valhalla::TripLeg::Node* trip_node) {
+                          valhalla::TripLeg::Node* trip_node,
+                          const bool blind_instructions) {
   /* Add connected edges from the start node. Do this after the first trip
      edge is added
 
@@ -926,7 +930,8 @@ void AddIntersectingEdges(const AttributesController& controller,
 
     // Add intersecting edges on the same hierarchy level and not on the path
     AddTripIntersectingEdge(controller, start_tile, directededge, prev_de,
-                            intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge);
+                            intersecting_edge->localedgeidx(), node, trip_node, intersecting_edge,
+                            blind_instructions);
   }
 
   // Add intersecting edges on different levels (follow NodeTransitions)
@@ -952,7 +957,7 @@ void AddIntersectingEdges(const AttributesController& controller,
 
         AddTripIntersectingEdge(controller, endtile, directededge, prev_de,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
-                                intersecting_edge2);
+                                intersecting_edge2, blind_instructions);
       }
     }
   }
@@ -1035,6 +1040,7 @@ void ProcessTunnelBridgeTaggedValue(valhalla::StreetName* trip_edge_name,
  * @param  start_node_idx     The start node index
  * @param  has_junction_name  True if named junction exists, false otherwise
  * @param  start_tile         The start tile of the start node
+ * @param  blind_instructions Whether instructions should be generated for blind users
  *
  */
 TripLeg_Edge* AddTripEdge(const AttributesController& controller,
@@ -1053,7 +1059,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
                           const bool has_junction_name,
                           const graph_tile_ptr& start_tile,
                           const uint8_t restrictions_idx,
-                          float elapsed_secs) {
+                          float elapsed_secs,
+                          bool blind_instructions) {
 
   // Index of the directed edge within the tile
   uint32_t idx = edge.id();
@@ -1065,7 +1072,8 @@ TripLeg_Edge* AddTripEdge(const AttributesController& controller,
   // Add names to edge if requested
   if (controller(kEdgeNames)) {
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
-    FilterUnneededStreetNumbers(names_and_types);
+    if (blind_instructions)
+      FilterUnneededStreetNumbers(names_and_types);
     trip_edge->mutable_name()->Reserve(names_and_types.size());
     const auto linguistics = edgeinfo.GetLinguisticMap();
 
@@ -1623,6 +1631,10 @@ void TripLegBuilder::Build(
     (*interrupt_callback)();
   }
 
+  const bool blind_instructions =
+      options.costing_type() == Costing_Type_pedestrian &&
+      options.costings().find(Costing::pedestrian)->second.options().transport_type() == "blind";
+
   // Remember what algorithms were used to create this leg
   *trip_path.mutable_algorithms() = {algorithms.begin(), algorithms.end()};
 
@@ -1822,7 +1834,7 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
                     time_info, startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs);
+                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs, blind_instructions);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
@@ -1984,7 +1996,7 @@ void TripLegBuilder::Build(
     // node and end node) of a shortcut that was recovered.
     if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
-                           graphreader, trip_node);
+                           graphreader, trip_node, blind_instructions);
     }
 
     ////////////// Prepare for the next iteration
