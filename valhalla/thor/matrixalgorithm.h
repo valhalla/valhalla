@@ -28,7 +28,7 @@ public:
    * Constructor
    */
   MatrixAlgorithm(const boost::property_tree::ptree& config)
-      : interrupt_(nullptr), expansion_callback_(),
+      : interrupt_(nullptr), has_time_(false), expansion_callback_(),
         clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
   }
 
@@ -58,6 +58,11 @@ public:
                               const sif::mode_costing_t& mode_costing,
                               const sif::travel_mode_t mode,
                               const float max_matrix_distance) = 0;
+
+  /**
+   * Clear the temporary information.
+   */
+  virtual void Clear() = 0;
 
   /**
    * Returns the name of the algorithm

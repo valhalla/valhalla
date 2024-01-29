@@ -108,7 +108,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  void Clear() override;
 
 protected:
   uint32_t max_reserved_labels_count_;

@@ -57,8 +57,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0),
-      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -86,7 +85,7 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void CostMatrix::clear() {
+void CostMatrix::Clear() {
   // Clear the target edge markings
   targets_->clear();
   if (check_reverse_connections_)

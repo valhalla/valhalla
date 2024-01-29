@@ -70,7 +70,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  inline void clear() {
+  inline void Clear() override {
     auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
     if (edgelabels_.size() > reservation) {
       edgelabels_.resize(max_reserved_labels_count_);
