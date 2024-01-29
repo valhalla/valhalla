@@ -51,16 +51,10 @@ TEST(Shortcuts, LoopWithoutShortcut) {
       |  |
       C--D
   )";
-  const gurka::ways ways = {
-      {"AB",
-       {{"highway", "primary"}}},
-      {"BD",
-       {{"highway", "primary"}}},
-      {"DC",
-       {{"highway", "primary"}}},
-      {"CA",
-       {{"highway", "primary"}}}
-  };
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BD", {{"highway", "primary"}}},
+                            {"DC", {{"highway", "primary"}}},
+                            {"CA", {{"highway", "primary"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
