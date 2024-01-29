@@ -30,7 +30,9 @@ set(sources_with_warnings
   triplegbuilder_utils.h)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes
+  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
@@ -43,18 +45,19 @@ valhalla_module(NAME thor
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}
+    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+
   DEPENDS
     valhalla::proto
     valhalla::sif
     valhalla::meili
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server
-    robin_hood::robin_hood)
+    ${libprime_server_targets})
