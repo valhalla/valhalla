@@ -53,6 +53,8 @@ struct LocationStatus {
  */
 struct BestCandidate {
   bool found;
+  // whether a connection was found in the first pass
+  bool previously_found;
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   sif::Cost cost;
@@ -60,7 +62,8 @@ struct BestCandidate {
   uint32_t max_iterations;
 
   BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d)
-      : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
+      : found(false), previously_found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d),
+        max_iterations(0) {
   }
 
   void
@@ -98,7 +101,7 @@ public:
    * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    */
-  void SourceToTarget(Api& request,
+  bool SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
                       const sif::mode_costing_t& mode_costing,
                       const sif::travel_mode_t mode,
@@ -108,7 +111,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
+  void Clear() override;
 
 protected:
   uint32_t max_reserved_labels_count_;
@@ -150,9 +153,6 @@ protected:
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
 
-  // whether time was specified
-  bool has_time_;
-
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance
    * for that mode.
@@ -167,7 +167,8 @@ protected:
    * @param  target_location_list   List of target/destination locations.
    */
   void Initialize(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                  const valhalla::Matrix& matrix);
 
   /**
    * Iterate the forward search from the source/origin location.

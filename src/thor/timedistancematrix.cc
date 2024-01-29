@@ -173,7 +173,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix::ComputeMatrix(Api& request,
+bool TimeDistanceMatrix::ComputeMatrix(Api& request,
                                        baldr::GraphReader& graphreader,
                                        const float max_matrix_distance) {
   bool invariant = request.options().date_time_type() == Options::invariant;
@@ -291,13 +291,16 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     auto* pbf_tz_names = request.mutable_matrix()->mutable_time_zone_names()->Add();
     *pbf_tz_names = date_time.time_zone_name;
   }
+
+  // TODO(nils): implement second pass here too
+  return true;
 }
 
-template void
+template bool
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
                                                                 baldr::GraphReader& graphreader,
                                                                 const float max_matrix_distance);
-template void
+template bool
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
                                                                  baldr::GraphReader& graphreader,
                                                                  const float max_matrix_distance);

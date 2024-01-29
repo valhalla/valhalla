@@ -41,7 +41,7 @@ public:
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  inline void SourceToTarget(Api& request,
+  inline bool SourceToTarget(Api& request,
                              baldr::GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
                              const sif::travel_mode_t /*mode*/,
@@ -70,7 +70,7 @@ public:
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  inline void clear() {
+  inline void Clear() override {
     auto reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
     if (edgelabels_.size() > reservation) {
       edgelabels_.resize(max_reserved_labels_count_);
@@ -146,7 +146,7 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void ComputeMatrix(Api& request, baldr::GraphReader& graphreader, const float max_matrix_distance);
+  bool ComputeMatrix(Api& request, baldr::GraphReader& graphreader, const float max_matrix_distance);
 
   /**
    * Expand from the node along the forward search path. Immediately expands

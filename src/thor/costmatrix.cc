@@ -57,8 +57,7 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0),
-      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -86,7 +85,7 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void CostMatrix::clear() {
+void CostMatrix::Clear() {
   // Clear the target edge markings
   targets_->clear();
   if (check_reverse_connections_)
@@ -128,7 +127,7 @@ void CostMatrix::clear() {
 
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
-void CostMatrix::SourceToTarget(Api& request,
+bool CostMatrix::SourceToTarget(Api& request,
                                 baldr::GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
                                 const sif::travel_mode_t mode,
@@ -154,7 +153,7 @@ void CostMatrix::SourceToTarget(Api& request,
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
-  Initialize(source_location_list, target_location_list);
+  Initialize(source_location_list, target_location_list, request.matrix());
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
@@ -262,12 +261,17 @@ void CostMatrix::SourceToTarget(Api& request,
 
   // Form the matrix PBF output
   graph_tile_ptr tile;
-  uint32_t count = 0;
+  uint32_t connection_idx = 0;
+  bool second_pass = false;
   valhalla::Matrix& matrix = *request.mutable_matrix();
   reserve_pbf_arrays(matrix, best_connection_.size());
   for (auto& connection : best_connection_) {
-    uint32_t target_idx = count % target_location_list.size();
-    uint32_t source_idx = count / target_location_list.size();
+    // if this is the second pass we don't have to process it again
+    if (costing_->pass() > 0 && !(matrix.second_pass(connection_idx))) {
+      continue;
+    }
+    uint32_t target_idx = connection_idx % target_location_list.size();
+    uint32_t source_idx = connection_idx / target_location_list.size();
 
     // first recost and form the path, if desired (either time and/or geometry requested)
     const auto shape = RecostFormPath(graphreader, connection, source_location_list[source_idx],
@@ -293,6 +297,9 @@ void CostMatrix::SourceToTarget(Api& request,
       auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
       *pbf_time_zone_name = dt_info.time_zone_name;
     } else {
+      // let's try a second pass for this connection
+      matrix.mutable_second_pass()->Set(connection_idx, true);
+      second_pass = true;
       // Add empty strings to make sure pbf arrays are populated (serializer
       // requires this)
       auto* pbf_date_time = matrix.mutable_date_times()->Add();
@@ -302,14 +309,16 @@ void CostMatrix::SourceToTarget(Api& request,
       auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
       *pbf_time_zone_name = "";
     }
-    matrix.mutable_from_indices()->Set(count, source_idx);
-    matrix.mutable_to_indices()->Set(count, target_idx);
-    matrix.mutable_distances()->Set(count, connection.distance);
-    matrix.mutable_times()->Set(count, time);
+    matrix.mutable_from_indices()->Set(connection_idx, source_idx);
+    matrix.mutable_to_indices()->Set(connection_idx, target_idx);
+    matrix.mutable_distances()->Set(connection_idx, connection.distance);
+    matrix.mutable_times()->Set(connection_idx, time);
     auto* pbf_shape = matrix.mutable_shapes()->Add();
     *pbf_shape = shape;
-    count++;
+    connection_idx++;
   }
+
+  return second_pass;
 }
 
 // Initialize all time distance to "not found". Any locations that
@@ -317,7 +326,8 @@ void CostMatrix::SourceToTarget(Api& request,
 // remaining locations set.
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations,
+    const valhalla::Matrix& matrix) {
 
   locs_count_[MATRIX_FORW] = source_locations.size();
   locs_count_[MATRIX_REV] = target_locations.size();
@@ -355,9 +365,16 @@ void CostMatrix::Initialize(
   best_connection_.reserve(locs_count_[MATRIX_FORW] * locs_count_[MATRIX_REV]);
   for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
     for (uint32_t j = 0; j < locs_count_[MATRIX_REV]; j++) {
+      const auto connection_idx = i * static_cast<uint32_t>(target_locations.size()) + j;
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
+      } else if (matrix.second_pass().size() && matrix.second_pass(connection_idx)) {
+        // we've found this connection in a previous pass, we only need the time & distance
+        best_connection_.emplace_back(empty, empty, Cost{0.0f, matrix.times(connection_idx)},
+                                      matrix.distances(connection_idx));
+        best_connection_.back().found = true;
+        best_connection_.back().previously_found = true;
       } else {
         best_connection_.emplace_back(empty, empty, max_cost, static_cast<uint32_t>(kMaxCost));
         locs_status_[MATRIX_FORW][i].unfound_connections.insert(j);
@@ -502,7 +519,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // not_thru_pruning_ is only set to false on the 2nd pass in matrix_action.
   // TODO(nils): one of these cases where I think reverse tree should look at the opposing edge,
-  //   not the expanding one, same for quite some attributes below (also bidir a)
+  //   not the expanding one, same for quite some attributes below (and same in bidir a*)
   bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
@@ -541,7 +558,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                         pred_dist, newcost.cost);
   }
 
-  return true;
+  return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>

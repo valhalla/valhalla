@@ -52,12 +52,18 @@ public:
    * @param  has_time              whether time-dependence was requested
    * @param  invariant             whether invariant time-dependence was requested
    * @param  shape_format          which shape_format, if any
+   * @returns Whether there were unfound connections
    */
-  virtual void SourceToTarget(Api& request,
+  virtual bool SourceToTarget(Api& request,
                               baldr::GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
                               const sif::travel_mode_t mode,
                               const float max_matrix_distance) = 0;
+
+  /**
+   * Clear the temporary information.
+   */
+  virtual void Clear() = 0;
 
   /**
    * Returns the name of the algorithm
@@ -143,6 +149,7 @@ protected:
     matrix.mutable_to_indices()->Resize(size, 0U);
     matrix.mutable_distances()->Resize(size, 0U);
     matrix.mutable_times()->Resize(size, 0U);
+    matrix.mutable_second_pass()->Resize(size, false);
     matrix.mutable_date_times()->Reserve(size);
     matrix.mutable_shapes()->Reserve(size);
     matrix.mutable_time_zone_offsets()->Reserve(size);

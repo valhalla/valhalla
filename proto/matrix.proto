@@ -18,4 +18,5 @@ message Matrix {
   repeated string shapes = 8;
   repeated string time_zone_offsets = 9;
   repeated string time_zone_names = 10;
+  repeated bool second_pass = 11;
 }

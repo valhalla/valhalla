@@ -98,8 +98,24 @@ std::string thor_worker_t::matrix(Api& request) {
   auto* algo =
       costing == "bikeshare" ? &time_distance_bss_matrix_ : get_matrix_algorithm(request, has_time);
 
-  algo->SourceToTarget(request, *reader, mode_costing, mode,
-                       max_matrix_distance.find(costing)->second);
+  valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  cost->set_allow_destination_only(false);
+  cost->set_pass(0);
+
+  if (!algo->SourceToTarget(request, *reader, mode_costing, mode,
+                            max_matrix_distance.find(costing)->second) &&
+      cost->AllowMultiPass()) {
+    // TODO(nils): probably add filtered edges here too?
+    algo->Clear();
+    cost->set_pass(1);
+    cost->RelaxHierarchyLimits(true);
+    cost->set_allow_destination_only(true);
+    cost->set_allow_conditional_destination(true);
+    algo->set_not_thru_pruning(false);
+    // expand a second time with only the ones that matter
+    algo->SourceToTarget(request, *reader, mode_costing, mode,
+                         max_matrix_distance.find(costing)->second);
+  };
 
   return tyr::serializeMatrix(request);
 }
