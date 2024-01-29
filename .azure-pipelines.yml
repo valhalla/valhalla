@@ -11,11 +11,25 @@ trigger:
   branches:
     include:
       - master
+  paths:
+    include:
+      - '*'
+    exclude:
+      - README.md
+      - CHANGELOG.md
+      - bench/
+      - docs/
+      - run_route_scripts/
+      - test/
+      - .circleci/
+      - .github/
 pr:
   branches:
     include:
       - master
   paths:
+    include:
+      - '*'
     exclude:
       - README.md
       - CHANGELOG.md
@@ -38,12 +52,8 @@ jobs:
     variables:
       BUILD_CFG: 'Release'
       BUILD_DIR: '$(Agent.WorkFolder)\build'
-      VCPKG_DIR: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_ROOT: '$(Build.SourcesDirectory)\vcpkg'
-      VCPKG_INSTALLATION_ROOT: '$(Build.SourcesDirectory)\vcpkg'
       TRIPLET: 'x64'
       VCPKG_REF: 'f330a32'
-      CONAN_HOME: '$(Build.SourcesDirectory)/conan'
 
     steps:
       - script: |
@@ -54,8 +64,8 @@ jobs:
       - task: Cache@2
         displayName: "Cache vcpkg's packages"
         inputs:
-          key: .\vcpkg.json | "$(VCPKG_REF)" | ".v2"
-          path: "$(VCPKG_DIR)"
+          key: .\vcpkg.json | "$(VCPKG_REF)"
+          path: '$(BUILD_DIR)/vcpkg_installed'
           cacheHitVar: CACHE_RESTORED
       
       # TODO: cache build never worked, look into it
@@ -70,18 +80,11 @@ jobs:
       #     cacheHitVar: BUILD_CACHE_RESTORED
 
       - script: |
-          git clone https://github.com/microsoft/vcpkg %VCPKG_DIR%
-          git -C %VCPKG_DIR% checkout %VCPKG_REF%
-          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_DIR%\triplets\%TRIPLET%-windows.cmake
-          call %VCPKG_DIR%\bootstrap-vcpkg.bat
-          %VCPKG_DIR%\vcpkg.exe version
+          git -C %VCPKG_INSTALLATION_ROOT% checkout %VCPKG_REF%
+          echo.set(VCPKG_BUILD_TYPE release)>> %VCPKG_INSTALLATION_ROOT%\triplets\%TRIPLET%-windows.cmake
+          call %VCPKG_INSTALLATION_ROOT%\bootstrap-vcpkg.bat
+          %VCPKG_INSTALLATION_ROOT%\vcpkg.exe version
         displayName: 'Install vcpkg'
-        condition: ne(variables.CACHE_RESTORED, 'true')
-
-      - script: |
-          %VCPKG_DIR%\vcpkg.exe install
-          %VCPKG_DIR%\vcpkg.exe list
-        displayName: 'Install vcpkg packages'
         condition: ne(variables.CACHE_RESTORED, 'true')
 
       - script: |
@@ -97,7 +100,7 @@ jobs:
 
       - script: |
           cmake --version
-          cmake -G "Visual Studio 17 2022" -A %TRIPLET% -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_DIR%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF
+          cmake -G "Visual Studio 17 2022" -A %TRIPLET% -H$(Build.SourcesDirectory) -B%BUILD_DIR% -DCMAKE_BUILD_TYPE=%BUILD_CFG% -DCMAKE_TOOLCHAIN_FILE=%VCPKG_INSTALLATION_ROOT%\scripts\buildsystems\vcpkg.cmake -DVCPKG_APPLOCAL_DEPS=ON -DENABLE_DATA_TOOLS=ON -DENABLE_TOOLS=ON -DENABLE_PYTHON_BINDINGS=ON -DENABLE_TESTS=OFF -DENABLE_CCACHE=OFF -DENABLE_HTTP=OFF -DENABLE_SERVICES=OFF -DENABLE_BENCHMARKS=OFF
           cmake --build %BUILD_DIR% --config %BUILD_CFG% -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
         displayName: 'Build Valhalla'
 
