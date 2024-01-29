@@ -13,8 +13,8 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/actor.py ${CMAKE_CURRENT_BINARY_DIR}/
 message(STATUS "Installing python modules to ${Python_SITEARCH}")
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/valhalla
 DESTINATION "${Python_SITEARCH}"
-COMPONENT python_valhalla
+COMPONENT runtime
 FILES_MATCHING PATTERN "*.py")
 install(TARGETS python_valhalla
 DESTINATION "${Python_SITEARCH}/valhalla"
-COMPONENT python_valhalla)
+COMPONENT runtime)
