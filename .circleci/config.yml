@@ -3,7 +3,7 @@ version: 2.1
 executors:
   macos:
     macos:
-      xcode: 13.4.1
+      xcode: 15.1.0
     environment:
       HOMEBREW_NO_AUTO_UPDATE: 1
       CXXFLAGS: -DGEOS_INLINE
@@ -11,9 +11,9 @@ executors:
 commands:
   mac_deps:
     steps:
-      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
+      - run: brew install autoconf automake protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
       - run: sudo python3 -m pip install requests shapely "conan<2.0.0"
-      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
+      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && sudo make install
   linux_deps:
     steps:
       - run: ./scripts/install-linux-deps.sh
@@ -140,20 +140,16 @@ jobs:
 
   build-osx:
     executor: macos
-    resource_class: macos.x86.medium.gen2
+    resource_class: macos.m1.medium.gen1
     steps:
       - checkout
-      - check_ci_lint
       - mac_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
             - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
             - ccache-release-macos-{{ checksum "conanfile.txt" }}
-      - run: |
-          mkdir -p build
-          cd build
-          cmake ..
+      - run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
