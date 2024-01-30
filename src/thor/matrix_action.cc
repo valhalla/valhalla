@@ -109,6 +109,7 @@ std::string thor_worker_t::matrix(Api& request) {
     return tyr::serializeMatrix(request);
   }
 
+  // for costmatrix try a second pass if the first didn't work out
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   cost->set_allow_destination_only(false);
   cost->set_pass(0);
@@ -116,6 +117,8 @@ std::string thor_worker_t::matrix(Api& request) {
   if (!algo->SourceToTarget(request, *reader, mode_costing, mode,
                             max_matrix_distance.find(costing)->second) &&
       cost->AllowMultiPass()) {
+    // NOTE: we only look for unfound connections in a second pass; but
+    // if A -> B wasn't found and B -> A was, we still expand both for bidirectional efficiency
     // TODO(nils): probably add filtered edges here too?
     algo->Clear();
     cost->set_pass(1);
@@ -123,7 +126,6 @@ std::string thor_worker_t::matrix(Api& request) {
     cost->set_allow_destination_only(true);
     cost->set_allow_conditional_destination(true);
     algo->set_not_thru_pruning(false);
-    // expand a second time with only the ones that matter
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
   };
