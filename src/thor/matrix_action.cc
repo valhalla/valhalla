@@ -95,8 +95,14 @@ std::string thor_worker_t::matrix(Api& request) {
     alg->set_has_time(has_time);
   }
 
-  auto* algo =
-      costing == "bikeshare" ? &time_distance_bss_matrix_ : get_matrix_algorithm(request, has_time);
+  // BSS uses only ped & bike, both shouldn't trigger second passes
+  if (costing == "bikeshare") {
+    time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
+                                             max_matrix_distance.find(costing)->second);
+    return tyr::serializeMatrix(request);
+  }
+
+  auto* algo = get_matrix_algorithm(request, has_time);
 
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   cost->set_allow_destination_only(false);

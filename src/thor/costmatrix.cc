@@ -259,13 +259,15 @@ bool CostMatrix::SourceToTarget(Api& request,
     }
   }
 
+  // resize/reserve all properties of Matrix on first pass only
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  reserve_pbf_arrays(matrix, best_connection_.size(), costing_->pass());
+
   // Form the matrix PBF output
   graph_tile_ptr tile;
-  uint32_t connection_idx = 0;
   bool connection_failed = false;
-  valhalla::Matrix& matrix = *request.mutable_matrix();
-  reserve_pbf_arrays(matrix, best_connection_.size());
-  for (auto& connection : best_connection_) {
+  for (uint32_t connection_idx = 0; connection_idx < best_connection_.size(); connection_idx++) {
+    auto best_connection = best_connection_[connection_idx];
     // if this is the second pass we don't have to process previously found ones again
     if (costing_->pass() > 0 && !(matrix.second_pass(connection_idx))) {
       continue;
@@ -274,11 +276,11 @@ bool CostMatrix::SourceToTarget(Api& request,
     uint32_t source_idx = connection_idx / target_location_list.size();
 
     // first recost and form the path, if desired (either time and/or geometry requested)
-    const auto shape = RecostFormPath(graphreader, connection, source_location_list[source_idx],
+    const auto shape = RecostFormPath(graphreader, best_connection, source_location_list[source_idx],
                                       target_location_list[target_idx], source_idx, target_idx,
                                       time_infos[source_idx], invariant, shape_format);
 
-    float time = connection.cost.secs;
+    float time = best_connection.cost.secs;
     if (time < kMaxCost) {
       auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
@@ -288,38 +290,22 @@ bool CostMatrix::SourceToTarget(Api& request,
                                                                     .edgeid(),
                                                                 tile),
                                 time);
-      auto* pbf_date_time = matrix.mutable_date_times()->Add();
-      *pbf_date_time = dt_info.date_time;
-
-      auto* pbf_time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
-      *pbf_time_zone_offset = dt_info.time_zone_offset;
-
-      auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
-      *pbf_time_zone_name = dt_info.time_zone_name;
+      *matrix.mutable_date_times(connection_idx) = dt_info.date_time;
+      *matrix.mutable_time_zone_offsets(connection_idx) = dt_info.time_zone_offset;
+      *matrix.mutable_time_zone_names(connection_idx) = dt_info.time_zone_name;
     } else {
       // let's try a second pass for this connection
       matrix.mutable_second_pass()->Set(connection_idx, true);
       connection_failed = true;
-
-      // Add empty strings to make sure pbf arrays are populated (serializer
-      // requires this)
-      auto* pbf_date_time = matrix.mutable_date_times()->Add();
-      *pbf_date_time = "";
-      auto* pbf_time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
-      *pbf_time_zone_offset = "";
-      auto* pbf_time_zone_name = matrix.mutable_time_zone_names()->Add();
-      *pbf_time_zone_name = "";
     }
     matrix.mutable_from_indices()->Set(connection_idx, source_idx);
     matrix.mutable_to_indices()->Set(connection_idx, target_idx);
-    matrix.mutable_distances()->Set(connection_idx, connection.distance);
+    matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
     matrix.mutable_times()->Set(connection_idx, time);
-    auto* pbf_shape = matrix.mutable_shapes()->Add();
-    *pbf_shape = shape;
-    connection_idx++;
+    *matrix.mutable_shapes(connection_idx) = shape;
   }
 
-  return connection_failed;
+  return !connection_failed;
 }
 
 // Initialize all time distance to "not found". Any locations that
@@ -370,7 +356,7 @@ void CostMatrix::Initialize(
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
-      } else if (matrix.second_pass().size() && matrix.second_pass(connection_idx)) {
+      } else if (costing_->pass() > 0 && !matrix.second_pass(connection_idx)) {
         // we've found this connection in a previous pass, we only need the time & distance
         best_connection_.emplace_back(empty, empty, Cost{0.0f, matrix.times(connection_idx)},
                                       matrix.distances(connection_idx));

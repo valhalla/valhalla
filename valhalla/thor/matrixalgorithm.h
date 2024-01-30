@@ -143,17 +143,26 @@ protected:
   // if `true` clean reserved memory for edge labels
   bool clear_reserved_memory_;
 
-  // resizes all PBF sequences except for repeated string where it reserves instead
-  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
-    matrix.mutable_from_indices()->Resize(size, 0U);
-    matrix.mutable_to_indices()->Resize(size, 0U);
-    matrix.mutable_distances()->Resize(size, 0U);
-    matrix.mutable_times()->Resize(size, 0U);
-    matrix.mutable_second_pass()->Resize(size, false);
-    matrix.mutable_date_times()->Reserve(size);
-    matrix.mutable_shapes()->Reserve(size);
-    matrix.mutable_time_zone_offsets()->Reserve(size);
-    matrix.mutable_time_zone_names()->Reserve(size);
+  // on first pass, resizes all PBF sequences and defaults to 0 or ""
+  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, uint32_t pass = 0) {
+    if (pass == 0) {
+      matrix.mutable_from_indices()->Resize(size, 0U);
+      matrix.mutable_to_indices()->Resize(size, 0U);
+      matrix.mutable_distances()->Resize(size, 0U);
+      matrix.mutable_times()->Resize(size, 0U);
+      matrix.mutable_second_pass()->Resize(size, false);
+      // repeated strings don't support Resize(), likely this is not ideal in terms of performance
+      for (size_t i = 0; i < size; i++) {
+        auto* date_time = matrix.mutable_date_times()->Add();
+        *date_time = "";
+        auto* time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
+        *time_zone_offset = "";
+        auto* time_zone_name = matrix.mutable_time_zone_names()->Add();
+        *time_zone_name = "";
+        auto* shape = matrix.mutable_shapes()->Add();
+        *shape = "";
+      }
+    }
   }
 };
 
