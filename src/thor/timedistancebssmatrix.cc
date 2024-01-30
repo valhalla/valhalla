@@ -253,7 +253,7 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
     reset();
   }
 
-  // TODO(nils): implement second pass here too
+  // TODO(nils): not sure a second pass would make for BSS
   return true;
 }
 

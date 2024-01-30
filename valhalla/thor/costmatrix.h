@@ -53,8 +53,6 @@ struct LocationStatus {
  */
 struct BestCandidate {
   bool found;
-  // whether a connection was found in the first pass
-  bool previously_found;
   baldr::GraphId edgeid;
   baldr::GraphId opp_edgeid;
   sif::Cost cost;
@@ -62,8 +60,7 @@ struct BestCandidate {
   uint32_t max_iterations;
 
   BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d)
-      : found(false), previously_found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d),
-        max_iterations(0) {
+      : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
   }
 
   void
@@ -112,6 +109,14 @@ public:
    * matrix construction.
    */
   void Clear() override;
+
+  /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  inline std::string_view name() override {
+    return "costmatrix";
+  }
 
 protected:
   uint32_t max_reserved_labels_count_;

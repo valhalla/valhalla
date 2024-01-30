@@ -66,6 +66,12 @@ public:
   virtual void Clear() = 0;
 
   /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  virtual std::string_view name() = 0;
+
+  /**
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */

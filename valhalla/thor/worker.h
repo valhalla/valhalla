@@ -77,7 +77,8 @@ protected:
                                           const Location& origin,
                                           const Location& destination,
                                           const Options& options);
-  thor::MatrixAlgorithm* get_matrix_algorithm(Api& request, const bool has_time);
+  thor::MatrixAlgorithm*
+  get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized

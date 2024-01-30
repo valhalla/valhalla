@@ -132,8 +132,6 @@ bool CostMatrix::SourceToTarget(Api& request,
                                 const sif::mode_costing_t& mode_costing,
                                 const sif::travel_mode_t mode,
                                 const float max_matrix_distance) {
-
-  LOG_INFO("matrix::CostMatrix");
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
   bool invariant = request.options().date_time_type() == Options::invariant;
   auto shape_format = request.options().shape_format();
@@ -361,8 +359,9 @@ void CostMatrix::Initialize(
         best_connection_.emplace_back(empty, empty, Cost{0.0f, matrix.times(connection_idx)},
                                       matrix.distances(connection_idx));
         best_connection_.back().found = true;
-        best_connection_.back().previously_found = true;
       } else {
+        // in a second pass this block makes sure that if e.g. A -> B is found, but B -> A isn't,
+        // we still expand both A & B to get the bidirectional benefit
         best_connection_.emplace_back(empty, empty, max_cost, static_cast<uint32_t>(kMaxCost));
         locs_status_[MATRIX_FORW][i].unfound_connections.insert(j);
         locs_status_[MATRIX_REV][j].unfound_connections.insert(i);

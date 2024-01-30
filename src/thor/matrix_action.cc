@@ -21,7 +21,11 @@ constexpr uint32_t kCostMatrixThreshold = 5;
 namespace valhalla {
 namespace thor {
 
-MatrixAlgorithm* thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time) {
+MatrixAlgorithm*
+thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing) {
+  if (costing == "bikeshare") {
+    return &time_distance_bss_matrix_;
+  }
 
   Matrix::Algorithm config_algo = Matrix::CostMatrix;
   switch (source_to_target_algorithm) {
@@ -95,14 +99,15 @@ std::string thor_worker_t::matrix(Api& request) {
     alg->set_has_time(has_time);
   }
 
-  // BSS uses only ped & bike, both shouldn't trigger second passes
-  if (costing == "bikeshare") {
-    time_distance_bss_matrix_.SourceToTarget(request, *reader, mode_costing, mode,
-                                             max_matrix_distance.find(costing)->second);
+  auto* algo = get_matrix_algorithm(request, has_time, costing);
+  LOG_INFO("matrix::" + std::string(algo->name()));
+
+  // TODO(nils): TDMatrix doesn't care about either destonly or no_thru
+  if (algo->name() != "costmatrix") {
+    algo->SourceToTarget(request, *reader, mode_costing, mode,
+                         max_matrix_distance.find(costing)->second);
     return tyr::serializeMatrix(request);
   }
-
-  auto* algo = get_matrix_algorithm(request, has_time);
 
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
   cost->set_allow_destination_only(false);

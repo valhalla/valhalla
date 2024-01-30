@@ -47,7 +47,6 @@ public:
                              const sif::travel_mode_t /*mode*/,
                              const float max_matrix_distance) override {
 
-    LOG_INFO("matrix::TimeDistanceBSSMatrix");
     request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
 
     if (request.options().shape_format() != no_shape)
@@ -80,6 +79,14 @@ public:
     destinations_.clear();
     dest_edges_.clear();
   };
+
+  /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  inline std::string_view name() override {
+    return "timedistancebssmatrix";
+  }
 
 protected:
   // Number of destinations that have been found and settled (least cost path
