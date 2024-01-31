@@ -380,8 +380,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "service": {
           "proxy": "ipc://%%/thor"
         },
-        "source_to_target_algorithm": "select_optimal",
-        "costmatrix_allow_second_pass": true
+        "source_to_target_algorithm": "select_optimal"
       }
     }
   )";

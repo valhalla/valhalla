@@ -84,8 +84,7 @@ public:
    * @return the name of the algorithm
    */
   inline const std::string& name() override {
-    const static std::string& name = MatrixAlgoToString(Matrix::TimeDistanceMatrix);
-    return name;
+    return MatrixAlgoToString(Matrix::TimeDistanceMatrix);
   }
 
 protected:

@@ -157,7 +157,11 @@ protected:
       matrix.mutable_distances()->Resize(size, 0U);
       matrix.mutable_times()->Resize(size, 0U);
       matrix.mutable_second_pass()->Resize(size, false);
-      // repeated strings don't support Resize(), likely this is not ideal in terms of performance
+      // repeated strings don't support Resize()
+      matrix.mutable_date_times()->Reserve(size);
+      matrix.mutable_time_zone_offsets()->Reserve(size);
+      matrix.mutable_time_zone_names()->Reserve(size);
+      matrix.mutable_shapes()->Reserve(size);
       for (size_t i = 0; i < size; i++) {
         auto* date_time = matrix.mutable_date_times()->Add();
         *date_time = "";
