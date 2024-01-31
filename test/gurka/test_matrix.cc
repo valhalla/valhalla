@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include "test.h"
 #include <valhalla/midgard/encoded.h>
-#include <valhalla/thor/matrix_common.h>
+#include <valhalla/thor/matrixalgorithm.h>
 
 #include <gtest/gtest.h>
 

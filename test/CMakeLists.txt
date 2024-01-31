@@ -85,7 +85,6 @@ set(tests_with_warnings
   logging
   maneuversbuilder
   mapmatch
-  matrix
   narrativebuilder
   node_search
   polyline2

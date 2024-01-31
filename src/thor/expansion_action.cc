@@ -130,7 +130,10 @@ std::string thor_worker_t::expansion(Api& request) {
        }) {
     alg->set_track_expansion(track_expansion);
   }
-  costmatrix_.set_track_expansion(track_expansion);
+  for (auto* alg : std::vector<MatrixAlgorithm*>{&costmatrix_, &time_distance_matrix_,
+                                                 &time_distance_bss_matrix_}) {
+    alg->set_track_expansion(track_expansion);
+  }
   isochrone_gen.SetInnerExpansionCallback(track_expansion);
 
   try {

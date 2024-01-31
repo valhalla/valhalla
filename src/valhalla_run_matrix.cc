@@ -218,7 +218,7 @@ int main(int argc, char* argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     matrix.SourceToTarget(request, reader, mode_costing, mode, max_distance);
-    matrix.clear();
+    matrix.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);
-    tdm.clear();
+    tdm.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
