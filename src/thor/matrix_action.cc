@@ -15,8 +15,20 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-constexpr uint32_t kCostMatrixThreshold = 5;
+const std::string get_unfound_indices(const google::protobuf::RepeatedField<bool> result) {
+  std::string indices;
+  for (int i = 0; i != result.size(); ++i) {
+    if (result[i]) {
+      indices += std::to_string(i) + ",";
+    }
+  }
+  indices.pop_back();
+
+  return indices;
 }
+
+constexpr uint32_t kCostMatrixThreshold = 5;
+} // namespace
 
 namespace valhalla {
 namespace thor {
@@ -116,7 +128,7 @@ std::string thor_worker_t::matrix(Api& request) {
 
   if (!algo->SourceToTarget(request, *reader, mode_costing, mode,
                             max_matrix_distance.find(costing)->second) &&
-      cost->AllowMultiPass()) {
+      cost->AllowMultiPass() && costmatrix_allow_second_pass) {
     // NOTE: we only look for unfound connections in a second pass; but
     // if A -> B wasn't found and B -> A was, we still expand both for bidirectional efficiency
     // TODO(nils): probably add filtered edges here too?
@@ -128,6 +140,9 @@ std::string thor_worker_t::matrix(Api& request) {
     algo->set_not_thru_pruning(false);
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
+
+    // add a warning that we needed to open destonly etc
+    add_warning(request, 400, get_unfound_indices(request.matrix().second_pass()));
   };
 
   return tyr::serializeMatrix(request);

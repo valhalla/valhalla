@@ -753,6 +753,7 @@ TEST(StandAlone, MatrixSecondPass) {
     auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"J"}, "auto");
     EXPECT_GT(api.matrix().times(0), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(0));
+    EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
   }
 
   // I -> K (idx 1) should pass on the first try
@@ -769,5 +770,6 @@ TEST(StandAlone, MatrixSecondPass) {
     // I -> I & K -> K shouldn't be processed a second time either
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
+    EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
   }
 }
