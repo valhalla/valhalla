@@ -15,7 +15,7 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-const std::string get_unfound_indices(const google::protobuf::RepeatedField<bool> result) {
+const std::string get_unfound_indices(const google::protobuf::RepeatedField<bool>& result) {
   std::string indices;
   for (int i = 0; i != result.size(); ++i) {
     if (result[i]) {
