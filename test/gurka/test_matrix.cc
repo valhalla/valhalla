@@ -48,7 +48,7 @@ void check_matrix(const rapidjson::Document& result,
     }
   }
   const std::string algo = result["algorithm"].GetString();
-  const std::string exp_algo = MatrixAlgoToString(matrix_type);
+  const std::string& exp_algo = MatrixAlgoToString(matrix_type);
   EXPECT_EQ(algo, exp_algo);
 }
 } // namespace
