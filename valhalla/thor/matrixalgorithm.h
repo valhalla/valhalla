@@ -69,7 +69,7 @@ public:
    * Get the algorithm's name
    * @return the name of the algorithm
    */
-  virtual std::string_view name() = 0;
+  virtual const std::string& name() = 0;
 
   /**
    * Returns the name of the algorithm

@@ -7,6 +7,7 @@ message Matrix {
   enum Algorithm {
     TimeDistanceMatrix = 0;
     CostMatrix = 1;
+    TimeDistanceBSSMatrix = 2;
   }
 
   repeated uint32 distances = 2;

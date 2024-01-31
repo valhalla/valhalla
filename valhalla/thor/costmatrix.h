@@ -12,6 +12,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/common.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
@@ -114,8 +115,9 @@ public:
    * Get the algorithm's name
    * @return the name of the algorithm
    */
-  inline std::string_view name() override {
-    return "costmatrix";
+  inline const std::string& name() override {
+    const static std::string& name = MatrixAlgoToString(Matrix::CostMatrix);
+    return name;
   }
 
 protected:
