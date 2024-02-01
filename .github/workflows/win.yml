@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.VCPKG_ROOT }}
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2
           save-always: 'true'
 
       - name: Install GNU make & awk
@@ -106,9 +106,9 @@ jobs:
             -DENABLE_DATA_TOOLS=ON \
             -DENABLE_TOOLS=ON \
             -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_HTTP=ON \
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
-            -DENABLE_HTTP=OFF \
             -DENABLE_SERVICES=OFF \
             -DENABLE_BENCHMARKS=OFF
 
