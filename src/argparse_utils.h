@@ -21,7 +21,7 @@
  * @param use_threads Whether this program multi-threads
  *
  * @returns true if the program should continue, false if we should EXIT_SUCCESS
- * @throws cxxopts::OptionException Thrown if there's no valid configuration
+ * @throws cxxopts::exceptions::exception Thrown if there's no valid configuration
  */
 bool parse_common_args(const std::string& program,
                        const cxxopts::Options& opts,
@@ -46,7 +46,7 @@ bool parse_common_args(const std::string& program,
              filesystem::is_regular_file(result["config"].as<std::string>())) {
     conf = valhalla::config(result["config"].as<std::string>());
   } else {
-    throw cxxopts::OptionException("Configuration is required\n\n" + opts.help() + "\n\n");
+    throw cxxopts::exceptions::exception("Configuration is required\n\n" + opts.help() + "\n\n");
   }
 
   // configure logging
