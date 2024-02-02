@@ -81,6 +81,7 @@
    * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
    * FIXED: Fix segfault in costmatrix (date_time and time zone always added). [#4530](https://github.com/valhalla/valhalla/pull/4530)
    * CHANGED: libvalhalla.pc generation to have finer controls; install third_party public headers; overhaul lots of CMake; remove conan support [#4516](https://github.com/valhalla/valhalla/pull/4516)
+   * ADDED: pbf output format for isochrone [#4543](https://github.com/valhalla/valhalla/pull/4543)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

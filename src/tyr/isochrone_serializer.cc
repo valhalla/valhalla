@@ -145,7 +145,6 @@ serializeIsochroneJson(Api& request,
 std::string serializeIsochronePbf(Api& request,
                                   std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                   midgard::GriddedData<2>::contours_t& contours) {
-  //
   // construct pbf output
   Isochrone& isochrone = *request.mutable_isochrone();
 
@@ -154,7 +153,6 @@ std::string serializeIsochronePbf(Api& request,
     const auto& contour = contours[isoline_index];
     const auto& interval = intervals[isoline_index];
 
-    // a contour can consist of muliple features
     valhalla::Isochrone::Contour con;
     con.set_metric(std::get<2>(interval) == "time" ? Isochrone_metric_type_time
                                                    : Isochrone_metric_type_distance);
