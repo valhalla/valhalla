@@ -143,7 +143,7 @@ if (NOT USE_VENDORED_RAPIDJSON)
 endif()
 
 # robin-hood-hashing
-set(robinhoodhashing_include_dir)
+set(robinhoodhashing_include_dir ${CMAKE_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
 if (NOT USE_VENDORED_ROBINHOODHASHING)
   find_package(robin_hood REQUIRED)
   get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
