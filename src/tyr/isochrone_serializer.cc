@@ -12,56 +12,16 @@ using namespace valhalla::baldr::json;
 
 namespace {
 using rgba_t = std::tuple<float, float, float>;
-}
 
-namespace valhalla {
-namespace tyr {
+using namespace valhalla;
+using namespace tyr;
 
-std::string serializeIsochrones(Api& request,
-                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                midgard::GriddedData<2>::contours_t& contours,
-                                bool polygons,
-                                bool show_locations) {
-
-  // if the user requested pbf output
-  if (request.options().format() == Options_Format_pbf) {
-    // construct pbf output
-    Isochrone& isochrone = *request.mutable_isochrone();
-
-    // construct contours
-    for (size_t isoline_index = 0; isoline_index < contours.size(); ++isoline_index) {
-      const auto& contour = contours[isoline_index];
-      const auto& interval = intervals[isoline_index];
-
-      // a contour can consist of muliple features
-      valhalla::Isochrone::Contour con;
-      con.set_metric(std::get<2>(interval) == "time" ? Isochrone_metric_type_time
-                                                     : Isochrone_metric_type_distance);
-
-      con.set_metric_value(std::get<1>(interval));
-
-      // for each feature
-      for (const auto& feature : contour) {
-        // for each ring/contour
-        for (const auto& ring : feature) {
-          // construct a geometry
-          Isochrone_Geometry geom;
-          for (const auto& pair : ring) {
-            geom.add_coords(round(pair.lng() * 1e6));
-            geom.add_coords(round(pair.lat() * 1e6));
-          }
-          con.add_geometries()->CopyFrom(geom);
-        }
-      }
-
-      isochrone.add_contours()->CopyFrom(con);
-    }
-
-    if (show_locations) {}
-
-    return serializePbf(request);
-  }
-
+std::string
+serializeIsochroneJson(Api& request,
+                       std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                       midgard::GriddedData<2>::contours_t& contours,
+                       bool polygons,
+                       bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
@@ -181,6 +141,69 @@ std::string serializeIsochrones(Api& request,
   ss << *feature_collection;
 
   return ss.str();
+}
+std::string serializeIsochronePbf(Api& request,
+                                  std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                  midgard::GriddedData<2>::contours_t& contours) {
+  //
+  // construct pbf output
+  Isochrone& isochrone = *request.mutable_isochrone();
+
+  // construct contours
+  for (size_t isoline_index = 0; isoline_index < contours.size(); ++isoline_index) {
+    const auto& contour = contours[isoline_index];
+    const auto& interval = intervals[isoline_index];
+
+    // a contour can consist of muliple features
+    valhalla::Isochrone::Contour con;
+    con.set_metric(std::get<2>(interval) == "time" ? Isochrone_metric_type_time
+                                                   : Isochrone_metric_type_distance);
+
+    con.set_metric_value(std::get<1>(interval));
+
+    // for each feature
+    for (const auto& feature : contour) {
+      // for each ring/contour
+      for (const auto& ring : feature) {
+        // construct a geometry
+        Isochrone_Geometry geom;
+        for (const auto& pair : ring) {
+          geom.add_coords(round(pair.lng() * 1e6));
+          geom.add_coords(round(pair.lat() * 1e6));
+        }
+        con.add_geometries()->CopyFrom(geom);
+      }
+    }
+
+    isochrone.add_contours()->CopyFrom(con);
+  }
+
+  return serializePbf(request);
+}
+} // namespace
+
+namespace valhalla {
+namespace tyr {
+
+std::string serializeIsochrones(Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                midgard::GriddedData<2>::contours_t& contours,
+                                bool polygons,
+                                bool show_locations) {
+
+  // if the user requested pbf output
+  if (request.options().format() == Options_Format_pbf) {
+    return serializeIsochronePbf(request, intervals, contours);
+  }
+
+  switch (request.options().format()) {
+    case Options_Format_pbf:
+      return serializeIsochronePbf(request, intervals, contours);
+    case Options_Format_json:
+      return serializeIsochroneJson(request, intervals, contours, polygons, show_locations);
+    default:
+      throw;
+  }
 }
 } // namespace tyr
 } // namespace valhalla

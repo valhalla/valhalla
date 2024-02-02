@@ -98,10 +98,6 @@ TEST(pbf_api, pbf_in_out) {
       EXPECT_TRUE(actual_pbf.has_matrix() || action != Options::sources_to_targets);
       EXPECT_TRUE(actual_pbf.has_isochrone() || action != Options::isochrone);
 
-      if (actual_pbf.has_isochrone()) {
-        auto l = actual_pbf.options().locations();
-      }
-
       // lets try it again but this time we'll disable all the fields but one
       Api slimmed;
       slimmed.mutable_options()->CopyFrom(clean_pbf.options());
