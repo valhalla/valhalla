@@ -62,9 +62,8 @@ set(sources
   util.cc
   validatetransit.cc)
 
-# treat date library as system
 set(system_includes
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  ${date_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
   $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
   ${PROTOBUF_INCLUDE_DIR})

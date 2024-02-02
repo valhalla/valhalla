@@ -14,13 +14,9 @@ set(sources_with_warnings
   transition_cost_model.cc
   viterbi_search.cc)
 
-# treat date library as system
 set(system_includes 
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  ${date_include_dir}
   $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
 
 valhalla_module(NAME meili
   SOURCES ${sources}

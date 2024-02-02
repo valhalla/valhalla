@@ -21,13 +21,9 @@ set(sources_with_warnings
   trace_route_action.cc
   worker.cc)
 
-# treat date library as system
 set(system_includes 
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  ${date_include_dir}
   $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
 
 valhalla_module(NAME loki
   SOURCES ${sources}

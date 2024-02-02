@@ -34,6 +34,8 @@ option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPI
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
+option(USE_VENDORED_CXXOPTS "Whether to use internally vendored cxxopts library or find an external package" ON)
+option(USE_VENDORED_DATE "Whether to use internally vendored date library or find an external package" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 
@@ -117,6 +119,15 @@ find_package(Boost 1.71 REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
+
+# date
+set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+if (NOT USE_VENDORED_DATE)
+  find_package(date CONFIG REQUIRED)
+  get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
+endif()
+message(STATUS "DATE INCLUDE DIR ${date_include_dir}")
+
 
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
 # for protoc location in a platform agnostic manner
@@ -211,7 +222,12 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    if(USE_VENDORED_CXXOPTS)
+      target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    else()
+      find_package(cxxopts CONFIG REQUIRED)
+      target_include_directories(${program} PRIVATE cxxopts::cxxopts)
+    endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -222,7 +238,12 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    if(USE_VENDORED_CXXOPTS)
+      target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    else()
+      find_package(cxxopts CONFIG REQUIRED)
+      target_include_directories(${program} PRIVATE cxxopts::cxxopts)
+    endif()
     target_link_libraries(${program} valhalla)
     if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
@@ -274,7 +295,7 @@ install(FILES COPYING CHANGELOG.md
 # install third_party
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
+install(DIRECTORY ${date_include_dir}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 if (WIN32)
   install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
