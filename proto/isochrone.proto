@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+package valhalla;
+
+message Isochrone {
+
+  enum metric_type {
+    time = 0;
+    distance = 1;
+  }
+
+  enum location_type {
+    input = 0;
+    snapped = 1;
+  }
+
+  message Geometry {
+    repeated sint32 coords = 1;
+  }
+
+  message Contour {
+    metric_type metric = 1; // time or distance enum
+    float metric_value = 2; // the target metric, eg 15min
+    repeated Geometry geometries = 3; // if polygon first one is outer rest are inners, though this is a problem when we allow multi location isochrones
+  }
+
+  repeated Contour contours = 1;
+}
