@@ -111,12 +111,7 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
             -DENABLE_BENCHMARKS=OFF \
-            -DUSE_VENDORED_CXXOPTS=OFF \
-            -DUSE_VENDORED_DATE=OFF \
-            -DUSE_VENDORED_RAPIDJSON=OFF \
-            -DUSE_VENDORED_DIRENT=OFF \
-            -DUSE_VENDORED_ROBINHOODHASHING=OFF \
-            -DUSE_VENDORED_PYBIND11=OFF
+            -DPREFER_SYSTEM_DEPS=ON \
 
       - name: Build Valhalla
         shell: powershell

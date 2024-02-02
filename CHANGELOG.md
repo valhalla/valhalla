@@ -84,6 +84,7 @@
    * CHANGED: refactored matrix code to include a base class for all matrix algorithms to prepare for second passes on matrix [#4535](https://github.com/valhalla/valhalla/pull/4535)
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
    * CHANGED: make use of vendored libraries for anything but test compilation optional [#4544](https://github.com/valhalla/valhalla/pull/4544)
+   * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

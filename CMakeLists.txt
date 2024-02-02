@@ -34,12 +34,7 @@ option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPI
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
-option(USE_VENDORED_CXXOPTS "Whether to use internally vendored cxxopts headers or find an external package" ON)
-option(USE_VENDORED_DATE "Whether to use internally vendored date headers or find an external package" ON)
-option(USE_VENDORED_RAPIDJSON "Whether to use internally vendored rapidjson headers or find an external package" ON)
-option(USE_VENDORED_DIRENT "Whether to use internally vendored dirent.h header or find an external package (WIN only)" ON)
-option(USE_VENDORED_ROBINHOODHASHING "Whether to use internally vendored robin-hood-hashing headers or find an external package (WIN only)" ON)
-option(USE_VENDORED_PYBIND11 "Whether to use internally vendored pybind11 headers or find an external package (WIN only)" ON)
+option(PREFER_SYSTEM_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 
@@ -128,32 +123,40 @@ add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
-# date
+# resolve vendored libraries
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
-if (NOT USE_VENDORED_DATE)
-  find_package(date REQUIRED)
-  get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
-endif()
-
-# rapidjson
 set(rapidjson_include_dir ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
-if (NOT USE_VENDORED_RAPIDJSON)
-  find_package(RapidJSON REQUIRED)
-  get_target_property(rapidjson_include_dir rapidjson INTERFACE_INCLUDE_DIRECTORIES)
-endif()
-
-# robin-hood-hashing
 set(robinhoodhashing_include_dir ${CMAKE_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
-if (NOT USE_VENDORED_ROBINHOODHASHING)
-  find_package(robin_hood REQUIRED)
-  get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
-endif()
-message(STATUS "DATE INCLUDE DIR ${robinhoodhashing_include_dir}")
-
-# dirent
 set(dirent_include_dir ${CMAKE_SOURCE_DIR}/third_party/dirent/include)
-if (WIN32 AND NOT USE_VENDORED_DIRENT)
-  find_path(dirent_include_dir dirent.h REQUIRED)
+if (PREFER_SYSTEM_DEPS)
+  # date
+  find_package(date QUIET)
+  if (date_FOUND)
+    get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No date found in system libraries, using vendored date...")
+  endif()
+  # rapidjson
+  find_package(RapidJSON QUIET)
+  if (RapidJSON_FOUND)
+    get_target_property(rapidjson_include_dir rapidjson INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No RapidJSON found in system libraries, using vendored RapidJSON...")
+  endif()
+  # robin-hood-hashing
+  find_package(robin_hood QUIET)
+  if (robin_hood_FOUND)
+    get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
+  else()
+    message(WARNING "No robin_hood found in system libraries, using vendored robin_hood...")
+  endif()
+  if (WIN32)
+    # dirent
+    find_path(dirent_include_dir dirent.h REQUIRED)
+    if (dirent_include_dir-NOTFOUND)
+      message(WARNING "No dirent.h found in system headers, using vendored dirent.h...")
+    endif()
+  endif()
 endif()
 
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
