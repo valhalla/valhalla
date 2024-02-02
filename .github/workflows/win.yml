@@ -61,11 +61,10 @@ jobs:
 
       - name: Cache vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ${{ env.VCPKG_ROOT }}
-          key: 'vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2'
-          save-always: 'true'
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v3
 
       - name: Install GNU make & awk
         run: choco install gawk make
