@@ -162,7 +162,7 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
 // Calculate time and distance from one origin location to many destination
 // locations.
 template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
+bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
                                           baldr::GraphReader& graphreader,
                                           const float max_matrix_distance) {
   uint32_t matrix_locations = request.options().matrix_locations();
@@ -252,13 +252,16 @@ void TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
     }
     reset();
   }
+
+  // TODO(nils): not sure a second pass would make for BSS
+  return true;
 }
 
-template void
+template bool
 TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
                                                                    baldr::GraphReader& graphreader,
                                                                    const float max_matrix_distance);
-template void
+template bool
 TimeDistanceBSSMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
                                                                     baldr::GraphReader& graphreader,
                                                                     const float max_matrix_distance);

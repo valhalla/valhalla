@@ -312,6 +312,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
   // Check if we should run a second pass pedestrian route with different A*
   // (to look for better routes where a ferry is taken)
+  // TODO(nils): how would a second pass find a better route, if it changes nothing ferry-related?
   bool ped_second_pass = false;
   if (!paths.empty() && (costing == "pedestrian" && path_algorithm->has_ferry())) {
     // DO NOT run a second pass on long routes due to performance issues
