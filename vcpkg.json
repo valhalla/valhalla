@@ -13,7 +13,10 @@
     "curl",
     "cxxopts",
     "date",
-    "dirent",
+    {
+      "name": "dirent",
+      "platform": "windows"
+    },
     "geos",
     "libspatialite",
     "pkgconf",

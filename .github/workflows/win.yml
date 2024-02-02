@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.VCPKG_ROOT }}
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2
+          key: 'vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2'
           save-always: 'true'
 
       - name: Install GNU make & awk
@@ -110,7 +110,13 @@ jobs:
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
-            -DENABLE_BENCHMARKS=OFF
+            -DENABLE_BENCHMARKS=OFF \
+            -DUSE_VENDORED_CXXOPTS=OFF \
+            -DUSE_VENDORED_DATE=OFF \
+            -DUSE_VENDORED_RAPIDJSON=OFF \
+            -DUSE_VENDORED_DIRENT=OFF \
+            -DUSE_VENDORED_ROBINHOODHASHING=OFF \
+            -DUSE_VENDORED_PYBIND11=OFF
 
       - name: Build Valhalla
         shell: powershell
