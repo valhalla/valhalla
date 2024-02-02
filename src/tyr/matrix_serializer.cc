@@ -2,7 +2,7 @@
 
 #include "baldr/json.h"
 #include "proto_conversions.h"
-#include "thor/matrix_common.h"
+#include "thor/matrixalgorithm.h"
 #include "tyr/serializers.h"
 
 using namespace valhalla;
