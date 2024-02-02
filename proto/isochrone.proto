@@ -10,11 +10,6 @@ message Isochrone {
     distance = 1;
   }
 
-  enum location_type {
-    input = 0;
-    snapped = 1;
-  }
-
   message Geometry {
     repeated sint32 coords = 1;
   }
