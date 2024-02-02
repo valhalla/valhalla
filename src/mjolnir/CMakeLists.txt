@@ -64,8 +64,8 @@ set(sources
 
 set(system_includes
   ${date_include_dir}
-  ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+  ${rapidjson_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>
   ${PROTOBUF_INCLUDE_DIR})
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
@@ -86,7 +86,7 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+      ${robinhoodhashing_include_dir}
   DEPENDS
     valhalla::proto
     valhalla::baldr

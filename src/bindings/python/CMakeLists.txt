@@ -1,4 +1,8 @@
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/pybind11 ${CMAKE_BINARY_DIR}/third_party/pybind11)
+if (NOT USE_VENDORED_PYBIND11)
+  find_package(pybind11 REQUIRED)
+else()
+  add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/pybind11 ${CMAKE_BINARY_DIR}/third_party/pybind11)
+endif()
 
 pybind11_add_module(python_valhalla python.cc)
 target_link_libraries(python_valhalla PUBLIC valhalla)

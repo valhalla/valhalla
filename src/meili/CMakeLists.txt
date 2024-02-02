@@ -16,7 +16,7 @@ set(sources_with_warnings
 
 set(system_includes 
   ${date_include_dir}
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME meili
   SOURCES ${sources}
@@ -32,7 +32,7 @@ valhalla_module(NAME meili
     PUBLIC
       ${system_includes}
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${rapidjson_include_dir}
   DEPENDS
     valhalla::sif
     ${valhalla_protobuf_targets}

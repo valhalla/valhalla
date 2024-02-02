@@ -15,8 +15,8 @@ set(sources
 
 set(system_includes
   ${date_include_dir}
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-  ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include)
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>
+  ${rapidjson_include_dir})
   
 valhalla_module(NAME sif
   SOURCES ${sources}

@@ -31,7 +31,7 @@ set(sources_with_warnings
 
 set(system_includes
   ${date_include_dir}
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME thor
   SOURCES ${sources}
@@ -47,8 +47,8 @@ valhalla_module(NAME thor
     PUBLIC
       ${system_includes}
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+      ${rapidjson_include_dir}
+      ${robinhoodhashing_include_dir}
 
   DEPENDS
     valhalla::proto

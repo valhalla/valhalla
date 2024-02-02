@@ -34,8 +34,12 @@ option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPI
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
-option(USE_VENDORED_CXXOPTS "Whether to use internally vendored cxxopts library or find an external package" ON)
-option(USE_VENDORED_DATE "Whether to use internally vendored date library or find an external package" ON)
+option(USE_VENDORED_CXXOPTS "Whether to use internally vendored cxxopts headers or find an external package" ON)
+option(USE_VENDORED_DATE "Whether to use internally vendored date headers or find an external package" ON)
+option(USE_VENDORED_RAPIDJSON "Whether to use internally vendored rapidjson headers or find an external package" ON)
+option(USE_VENDORED_DIRENT "Whether to use internally vendored dirent.h header or find an external package (WIN only)" ON)
+option(USE_VENDORED_ROBINHOODHASHING "Whether to use internally vendored robin-hood-hashing headers or find an external package (WIN only)" ON)
+option(USE_VENDORED_PYBIND11 "Whether to use internally vendored pybind11 headers or find an external package (WIN only)" ON)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 
@@ -95,6 +99,10 @@ endif()
 include(ValhallaSanitizerOptions)
 include(ValhallaSourceGroups)
 
+# prefer CONFIG mode over MODULE mode, which versions configuration on the package, not CMake
+# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+
 # We use pkg-config for (almost) all dependencies:
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
@@ -123,22 +131,36 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 # date
 set(date_include_dir ${VALHALLA_SOURCE_DIR}/third_party/date/include)
 if (NOT USE_VENDORED_DATE)
-  find_package(date CONFIG REQUIRED)
+  find_package(date REQUIRED)
   get_target_property(date_include_dir date::date INTERFACE_INCLUDE_DIRECTORIES)
 endif()
-message(STATUS "DATE INCLUDE DIR ${date_include_dir}")
 
+# rapidjson
+set(rapidjson_include_dir ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
+if (NOT USE_VENDORED_RAPIDJSON)
+  find_package(RapidJSON REQUIRED)
+  get_target_property(rapidjson_include_dir rapidjson INTERFACE_INCLUDE_DIRECTORIES)
+endif()
+
+# robin-hood-hashing
+set(robinhoodhashing_include_dir)
+if (NOT USE_VENDORED_ROBINHOODHASHING)
+  find_package(robin_hood REQUIRED)
+  get_target_property(robinhoodhashing_include_dir robin_hood::robin_hood INTERFACE_INCLUDE_DIRECTORIES)
+endif()
+message(STATUS "DATE INCLUDE DIR ${robinhoodhashing_include_dir}")
+
+# dirent
+set(dirent_include_dir ${CMAKE_SOURCE_DIR}/third_party/dirent/include)
+if (WIN32 AND NOT USE_VENDORED_DIRENT)
+  find_path(dirent_include_dir dirent.h REQUIRED)
+endif()
 
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
 # for protoc location in a platform agnostic manner
-# prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf messups
-# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 # newer protobuf versions require a compat bool
 set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
 find_package(Protobuf REQUIRED)
-# and turn it off again
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 message(STATUS "Using protoc from ${Protobuf_PROTOC_EXECUTABLE}")
 message(STATUS "Using pbf headers from ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARIES}")
@@ -293,12 +315,12 @@ install(FILES COPYING CHANGELOG.md
   COMPONENT runtime)
 
 # install third_party
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+install(DIRECTORY ${rapidjson_include_dir}/
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
-install(DIRECTORY ${date_include_dir}
+install(DIRECTORY ${date_include_dir}/
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 if (WIN32)
-  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
+  install(DIRECTORY ${dirent_include_dir}/
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
 endif()
 

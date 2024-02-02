@@ -23,7 +23,7 @@ set(sources_with_warnings
 
 set(system_includes 
   ${date_include_dir}
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME loki
   SOURCES ${sources}
@@ -34,7 +34,7 @@ valhalla_module(NAME loki
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${rapidjson_include_dir}
       ${CMAKE_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC

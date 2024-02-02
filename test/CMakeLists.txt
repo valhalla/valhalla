@@ -25,7 +25,7 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
-  ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+  ${robinhoodhashing_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
