@@ -65,6 +65,7 @@ jobs:
         with:
           path: ${{ env.VCPKG_ROOT }}
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v3
+          enableCrossOsArchive: true
 
       - name: Install GNU make & awk
         run: choco install gawk make
