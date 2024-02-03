@@ -27,12 +27,12 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
     // add whatever this segment of shape contributes to the overall distance
     PrecisionT len = from->Distance(*to);
     suffix_len += len;
-    
+
     // skip 0 length segments
     if (len == 0)
       continue;
-    
-    // we have enough distance now, lets find the exact stopping point along the geom    
+
+    // we have enough distance now, lets find the exact stopping point along the geom
     if (suffix_len >= distance_along) {
       auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
       std::vector<GeoPoint<PrecisionT>> res(pts.rbegin(), from);
@@ -44,7 +44,7 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
 
   // we got through the whole shape didnt reach the distance, floating point noise probably
   return pts;
-} 
+}
 
 } // namespace
 
