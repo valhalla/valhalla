@@ -94,10 +94,6 @@ endif()
 include(ValhallaSanitizerOptions)
 include(ValhallaSourceGroups)
 
-# prefer CONFIG mode over MODULE mode, which versions configuration on the package, not CMake
-# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
-set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
-
 # We use pkg-config for (almost) all dependencies:
 # - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
@@ -171,9 +167,14 @@ endif()
 
 # Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
 # for protoc location in a platform agnostic manner
+# prefer CONFIG mode over MODULE mode, which versions configuration on the package, not CMake
+# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 # newer protobuf versions require a compat bool
 set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
 find_package(Protobuf REQUIRED)
+# and turn it off again
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
 message(STATUS "Using protoc from ${Protobuf_PROTOC_EXECUTABLE}")
 message(STATUS "Using pbf headers from ${Protobuf_INCLUDE_DIRS}")
 message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARIES}")
