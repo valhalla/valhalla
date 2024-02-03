@@ -18,7 +18,7 @@ using namespace valhalla::midgard;
 namespace {
 
 const auto config = test::json_to_pt(R"({
-    "mjolnir":{"tile_dir":"test/data/utrecht_tiles", "concurrency": 1}
+    "mjolnir":{"tile_dir":")" VALHALLA_BUILD_DIR R"(test/data/utrecht_tiles", "concurrency": 1}
   })");
 
 } // namespace

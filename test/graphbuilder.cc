@@ -23,14 +23,6 @@ using valhalla::baldr::GraphReader;
 using valhalla::mjolnir::build_tile_set;
 using valhalla::mjolnir::TileManifest;
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
-#if !defined(VALHALLA_BINARY_DIR)
-#define VALHALLA_BINARY_DIR
-#endif
-
 namespace {
 
 const std::string pbf_file = {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"};

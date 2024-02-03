@@ -11,14 +11,6 @@
 
 #include "test.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
-#if !defined(VALHALLA_BINARY_DIR)
-#define VALHALLA_BINARY_DIR
-#endif
-
 namespace {
 using boost::property_tree::ptree;
 using valhalla::baldr::GraphId;
@@ -30,7 +22,7 @@ using namespace valhalla::midgard;
 // Verify that this function runs
 TEST(UtilMjolnir, BuildTileSet) {
   ptree config;
-  const std::string tile_dir("test/data/util_mjolnir_test_tiles");
+  const std::string tile_dir(VALHALLA_BUILD_DIR "test/data/util_mjolnir_test_tiles");
   config.put("mjolnir.tile_dir", tile_dir);
   config.put("mjolnir.concurrency", 1);
   EXPECT_TRUE(build_tile_set(config, {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
@@ -84,7 +76,7 @@ TEST(UtilMjolnir, TileManifestLogToFile) {
                                          {GraphId{5970546}, 54},
                                          {GraphId{5970554}, 450}};
   TileManifest manifest{src};
-  const std::string filename(VALHALLA_BINARY_DIR "dummy_tile_manifest0.json");
+  const std::string filename(VALHALLA_BUILD_DIR "test/data/written_dummy_tile_manifest0.json");
   manifest.LogToFile(filename);
   TileManifest read = TileManifest::ReadFromFile(filename);
   EXPECT_EQ(read.tileset.size(), 3);

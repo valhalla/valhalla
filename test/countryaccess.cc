@@ -20,16 +20,12 @@
 
 #include "test.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla::mjolnir;
 using namespace valhalla::baldr;
 
 namespace {
 
-const std::string config_file = "test/test_config_country";
+const std::string config_file = VALHALLA_BUILD_DIR "test/test_config_country";
 
 // Remove a temporary file if it exists
 void remove_temp_file(const std::string& fname) {

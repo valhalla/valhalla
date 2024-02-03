@@ -273,7 +273,7 @@ public:
     // start a file server for utrecht tiles
     valhalla::test_tile_server_t server;
     server.set_url(tile_remote_address);
-    server.start("test/data/utrecht_tiles", context);
+    server.start(VALHALLA_BUILD_DIR "test/data/utrecht_tiles", context);
   }
 
   void TearDown() override {

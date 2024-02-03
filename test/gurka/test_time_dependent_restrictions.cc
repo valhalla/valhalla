@@ -32,9 +32,9 @@ public:
                                           {"restriction", "no_left_turn"},
                                           {"hour_on", "07:00"},
                                           {"hour_off", "19:00"}}}};
-    map =
-        gurka::buildtiles(layout, ways, {}, relations, "test/data/gurka_time_dependent_restrictions",
-                          {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+    map = gurka::buildtiles(layout, ways, {}, relations,
+                            VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions",
+                            {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
   }
 };
 gurka::map TimeDependentRestrictions::map = {};

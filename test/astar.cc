@@ -127,7 +127,7 @@ const gurka::relations relations3 = {{{gurka::relation_member{gurka::way_member,
 
 const vb::GraphId tile_id = vb::TileHierarchy::GetGraphId({.125, .125}, 2);
 gurka::nodelayout node_locations;
-const std::string test_dir = "test/data/fake_tiles_astar";
+const std::string test_dir = VALHALLA_BUILD_DIR "test/data/fake_tiles_astar";
 const auto fake_conf =
     test::make_config(test_dir,
                       {{"mjolnir.admin", VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"},

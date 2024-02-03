@@ -27,6 +27,9 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
   ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
+target_compile_definitions(valhalla_test PRIVATE
+  VALHALLA_SOURCE_DIR="${VALHALLA_SOURCE_DIR}/"
+  VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)

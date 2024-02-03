@@ -7,10 +7,6 @@
 
 #include "test.h"
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 
 namespace {

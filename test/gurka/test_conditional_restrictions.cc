@@ -1,10 +1,6 @@
 #include "gurka.h"
 #include <gtest/gtest.h>
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 namespace {
 const std::array<std::string, 3> kDateTimeTypes = {"1", "2", "3"};
 const std::array<std::string, 6> kMotorVehicleCostingModels = {"auto",  "bus",

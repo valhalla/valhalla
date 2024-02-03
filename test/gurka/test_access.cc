@@ -2,10 +2,6 @@
 #include "test.h"
 #include <gtest/gtest.h>
 
-#if !defined(VALHALLA_SOURCE_DIR)
-#define VALHALLA_SOURCE_DIR
-#endif
-
 using namespace valhalla;
 
 const std::unordered_map<std::string, std::string> build_config{

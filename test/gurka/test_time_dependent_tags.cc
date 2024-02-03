@@ -55,7 +55,7 @@ TEST_F(TimeDependentTags, HourRestrictions) {
   const gurka::relations restrictions = {{restriction_members, hour_only}};
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, restrictions,
-                        "test/data/gurka_time_dependent_restrictions_hour",
+                        VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_hour",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   for (size_t x = 0; x < working_hours.size(); ++x) {
@@ -78,7 +78,7 @@ TEST_F(TimeDependentTags, DayRestrictions) {
   const gurka::relations restrictions = {{restriction_members, day_hour}};
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, restrictions,
-                        "test/data/gurka_time_dependent_restrictions_day",
+                        VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_day",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   for (size_t x = 0; x < working_hours.size(); ++x) {
@@ -100,7 +100,7 @@ TEST_F(TimeDependentTags, DayAndHourRestrictions) {
   const gurka::relations restrictions = {{restriction_members, day_hour}};
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, restrictions,
-                        "test/data/gurka_time_dependent_restrictions_day_and_hour",
+                        VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_day_and_hour",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   for (size_t x = 0; x < working_hours.size(); ++x) {
@@ -122,7 +122,7 @@ TEST_F(TimeDependentTags, ConditionalEdgeRestriction) {
   const gurka::relations restrictions = {{restriction_members, day_hour}};
   const gurka::map map =
       gurka::buildtiles(layout, ways, {}, restrictions,
-                        "test/data/gurka_time_dependent_restrictions_day_and_hour",
+                        VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_day_and_hour",
                         {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
   for (size_t x = 0; x < working_hours.size(); ++x) {
@@ -152,7 +152,7 @@ TEST_F(TimeDependentTags, IgnorePartialRestriction) {
     const gurka::relations restrictions = {{restriction_members, partial_restriction_tags}};
     const gurka::map map =
         gurka::buildtiles(layout, ways, {}, restrictions,
-                          "test/data/gurka_time_dependent_restrictions_partial",
+                          VALHALLA_BUILD_DIR "test/data/gurka_time_dependent_restrictions_partial",
                           {{"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
 
     for (std::string& working_hour : working_hours) { //  Restriction is always off.
