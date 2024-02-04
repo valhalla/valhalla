@@ -48,14 +48,6 @@ jobs:
 
       - name: Get branch name
         run: echo VALHALLA_BRANCH=${GITHUB_REF##*/} >> $GITHUB_ENV
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked or a previous job failed
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
-        with:
-          detached: true
-          timeout-minutes: 15
 
       - name: Restore ccache
         id: cache-ccache-restore
@@ -68,10 +60,18 @@ jobs:
             ccache-osx-
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF blabla
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF
 
       - name: Build Valhalla
-        run: make -C build -j$(sysctl -n hw.logicalcpu)
+        run: make -C build -j$(sysctl -n hw.logicalcpu) no-target
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked or a previous job failed
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
+        with:
+          detached: true
+          timeout-minutes: 15
 
       - name: Build Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) tests
