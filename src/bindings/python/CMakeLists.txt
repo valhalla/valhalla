@@ -1,4 +1,4 @@
-if (PREFER_SYSTEM_DEPS)
+if (PREFER_EXTERNAL_DEPS)
   find_package(pybind11 QUIET)
   if (NOT pybind11_FOUND)
     message(WARNING "No pybind11 found in system libraries, using vendored pybind11...")

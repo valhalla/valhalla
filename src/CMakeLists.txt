@@ -199,7 +199,9 @@ target_link_libraries(valhalla
     $<$<BOOL:${WIN32}>:ws2_32>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-    Threads::Threads)
+    Threads::Threads
+    # link here, not via skadi or it'd be publicly linked
+    PkgConfig::LZ4)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"

@@ -25,6 +25,7 @@
     "robin-hood-hashing",
     "spatialite-tools",
     "luajit",
+    "lz4",
     "protobuf",
     "sqlite3",
     "zlib"

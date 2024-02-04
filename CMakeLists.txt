@@ -34,7 +34,7 @@ option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPI
 option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
-option(PREFER_SYSTEM_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
+option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
 
@@ -100,6 +100,7 @@ include(ValhallaSourceGroups)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
+pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
 
 # cURL
 set(curl_targets "")
@@ -125,7 +126,7 @@ set(rapidjson_include_dir ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include)
 set(robinhoodhashing_include_dir ${CMAKE_SOURCE_DIR}/third_party/robin-hood-hashing/src/include)
 set(cxxopts_include_dir ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
 set(dirent_include_dir ${CMAKE_SOURCE_DIR}/third_party/dirent/include)
-if (PREFER_SYSTEM_DEPS)
+if (PREFER_EXTERNAL_DEPS)
   # date
   find_package(date QUIET)
   if (date_FOUND)
