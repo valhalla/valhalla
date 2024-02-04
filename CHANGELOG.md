@@ -83,6 +83,7 @@
    * CHANGED: libvalhalla.pc generation to have finer controls; install third_party public headers; overhaul lots of CMake; remove conan support [#4516](https://github.com/valhalla/valhalla/pull/4516)
    * CHANGED: refactored matrix code to include a base class for all matrix algorithms to prepare for second passes on matrix [#4535](https://github.com/valhalla/valhalla/pull/4535)
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
+   * CHANGED: switched robin-hood-hashing for unordered_dense library [#4552](https://github.com/valhalla/valhalla/pull/4552)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
