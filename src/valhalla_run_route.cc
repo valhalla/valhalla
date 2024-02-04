@@ -227,7 +227,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
-      LOG_ERROR("RouteMatcher failed");
+      LOG_ERROR("RouteMatcher failed.");
     }
   }
 
