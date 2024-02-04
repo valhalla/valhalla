@@ -27,7 +27,8 @@ jobs:
       - restore_cache:
           keys:
             - ccache-debug-linux-x86_64-v3-{{ .Branch }}
-            - ccache-debug-linux-x86_64-v3
+            - ccache-debug-linux-x86_64-v3-master
+            - ccache-debug-linux-x86_64-v3-
       - run: |
           mkdir build
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
@@ -46,7 +47,7 @@ jobs:
       - save_cache:
           key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
-            - ~/.ccache
+            - ~/.cache/ccache
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
@@ -68,6 +69,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache-release-linux-x86_64-v3-{{ .Branch }}
+            - ccache-release-linux-x86_64-v3-master
             - ccache-release-linux-x86_64-v3
       - run: |
           mkdir build
@@ -85,7 +87,7 @@ jobs:
       - save_cache:
           key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
-            - ~/.ccache
+            - ~/.cache/ccache
       - run: sudo make -C build install
       - run: make -C build package
 
@@ -102,6 +104,7 @@ jobs:
       - restore_cache:
           keys:
             - ccache-release-linux-arm_64-v3-{{ .Branch }}
+            - ccache-release-linux-arm_64-v3-master
             - ccache-release-linux-arm_64-v3
       - run: |
           mkdir build
@@ -116,9 +119,9 @@ jobs:
       - run: make -C build -j8 benchmarks
       - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-arm_64-v3-{{ .Branch }}-{{ epoch }}
+          key: ccache-release-linux-arm_64-v3-{{ .Branch }}
           paths:
-            - ~/.ccache
+            - ~/.cache/ccache
       - run: sudo make -C build install
       - run: make -C build package
 
