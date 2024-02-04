@@ -41,7 +41,6 @@ jobs:
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
       - run: make -C build -j8 benchmarks
-      - run: make -C build -j8 run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -82,8 +81,6 @@ jobs:
       - run: make -C build -j8 tests
       # leaks in glibc we cant control for
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
-      - run: make -C build -j8 benchmarks
-      - run: make -C build -j8 run-benchmarks
       - save_cache:
           key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
@@ -117,7 +114,6 @@ jobs:
       # leaks in glibc we cant control for
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
       - run: make -C build -j8 benchmarks
-      - run: make -C build -j8 run-benchmarks
       - save_cache:
           key: ccache-release-linux-arm_64-v3-{{ .Branch }}
           paths:
