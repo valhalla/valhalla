@@ -47,7 +47,7 @@ jobs:
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && sudo make install
 
       - name: Restore ccache
-        id: cache-ccache
+        id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
           path: '~/.ccache'
@@ -69,11 +69,11 @@ jobs:
         run: make -C build -j8 check
 
       - name: Save ccache
-        id: cache-ccache
+        id: cache-ccache-save
         uses: actions/cache/save@v4
         with:
           path: '~/.ccache'
-          key: ${{ steps.cache-ccache.outputs.cache-primary-key }}
+          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
           save-always: true
       
       - name: Setup tmate session
