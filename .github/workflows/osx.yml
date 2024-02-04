@@ -46,12 +46,22 @@ jobs:
           sudo python -m pip install --break-system-packages requests shapely
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && sudo make install
 
+      - name: Get branch name
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            echo VALHALLA_BRANCH=${GITHUB_REF##*/} >> $GITHUB_ENV
+          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
+            echo VALHALLA_BRANCH=$GITHUB_BASE_REF >> $GITHUB_ENV
+          else
+            echo VALHALLA_BRANCH=INVALID_EVENT_BRANCH_UNKNOWN >> $GITHUB_ENV
+          fi
+
       - name: Restore ccache
         id: cache-ccache-restore
         uses: actions/cache/restore@v4
         with:
-          path: '~/.ccache'
-          key: ccache-osx-${GITHUB_REF##*/}
+          path: ~/.ccache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
           restore-keys: |
             ccache-osx-master
             ccache-osx-
@@ -63,18 +73,17 @@ jobs:
         run: make -C build -j$(sysctl -n hw.logicalcpu)
 
       - name: Build Tests
-        run: make -C build -j8 tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
           
       - name: Run Tests
-        run: make -C build -j8 check
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
 
       - name: Save ccache
         id: cache-ccache-save
         uses: actions/cache/save@v4
         with:
-          path: '~/.ccache'
+          path: ~/.ccache
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
-          save-always: true
       
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
