@@ -47,14 +47,15 @@ jobs:
           git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && sudo make install
 
       - name: Get branch name
-        run: |
-          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
-            echo VALHALLA_BRANCH=${GITHUB_REF##*/} >> $GITHUB_ENV
-          elif [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
-            echo VALHALLA_BRANCH=$GITHUB_BASE_REF >> $GITHUB_ENV
-          else
-            echo VALHALLA_BRANCH=INVALID_EVENT_BRANCH_UNKNOWN >> $GITHUB_ENV
-          fi
+        run: echo VALHALLA_BRANCH=${GITHUB_REF##*/} >> $GITHUB_ENV
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked or a previous job failed
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
+        with:
+          detached: true
+          timeout-minutes: 15
 
       - name: Restore ccache
         id: cache-ccache-restore
@@ -67,7 +68,7 @@ jobs:
             ccache-osx-
 
       - name: Configure CMake
-        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF blabla
 
       - name: Build Valhalla
         run: make -C build -j$(sysctl -n hw.logicalcpu)
@@ -84,12 +85,4 @@ jobs:
         with:
           path: ~/.ccache
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
-      
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        # only run this if manually invoked or a previous job failed
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
-        with:
-          detached: true
-          timeout-minutes: 15
           
