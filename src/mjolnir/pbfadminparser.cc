@@ -127,7 +127,8 @@ public:
   LuaTagTransform lua_;
 
   // Mark the OSM Ids used by the ways and relations
-  // TODO: just use robin_hood::unordered_set<uint64_t> since these are probably relatively small
+  // TODO: just use ankerl::unordered_dense::unordered_set<uint64_t> since these are probably
+  // relatively small
   UnorderedIdTable shape_, members_;
 
   // Pointer to all the OSM data (for use by callbacks)

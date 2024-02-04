@@ -49,3 +49,6 @@
 [submodule "third_party/tz"]
 	path = third_party/tz
 	url = https://github.com/eggert/tz.git
+[submodule "third_party/unordered_dense"]
+	path = third_party/unordered_dense
+	url = https://github.com/martinus/unordered_dense.git

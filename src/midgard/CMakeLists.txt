@@ -24,6 +24,6 @@ valhalla_module(NAME midgard
     PUBLIC
       $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+      ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include
   DEPENDS
     Boost::boost)

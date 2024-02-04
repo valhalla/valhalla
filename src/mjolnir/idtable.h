@@ -7,7 +7,7 @@
 #include <fstream>
 #include <vector>
 
-#include <robin_hood.h>
+#include <ankerl/unordered_dense.h>
 
 #include <midgard/logging.h>
 
@@ -104,7 +104,7 @@ public:
   }
 
 private:
-  robin_hood::unordered_map<uint64_t, uint64_t> bitmarkers_;
+  ankerl::unordered_dense::segmented_map<uint64_t, uint64_t> bitmarkers_;
 };
 
 } // namespace mjolnir

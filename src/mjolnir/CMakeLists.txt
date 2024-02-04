@@ -87,7 +87,7 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+      ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include
   DEPENDS
     valhalla::proto
     valhalla::baldr

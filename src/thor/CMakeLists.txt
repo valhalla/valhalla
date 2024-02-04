@@ -52,7 +52,7 @@ valhalla_module(NAME thor
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
+      ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include
 
   DEPENDS
     valhalla::proto
