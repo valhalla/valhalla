@@ -16,4 +16,5 @@ valhalla_module(NAME skadi
   DEPENDS
     valhalla::baldr
     Boost::boost
-    PkgConfig::ZLIB)
+    PkgConfig::ZLIB
+    PkgConfig::LZ4)
