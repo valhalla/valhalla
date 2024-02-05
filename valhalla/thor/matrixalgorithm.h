@@ -28,7 +28,7 @@ public:
    * Constructor
    */
   MatrixAlgorithm(const boost::property_tree::ptree& config)
-      : interrupt_(nullptr), has_time_(false), expansion_callback_(),
+      : interrupt_(nullptr), has_time_(false), not_thru_pruning_(true), expansion_callback_(),
         clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
   }
 
@@ -52,8 +52,9 @@ public:
    * @param  has_time              whether time-dependence was requested
    * @param  invariant             whether invariant time-dependence was requested
    * @param  shape_format          which shape_format, if any
+   * @returns Whether there were unfound connections
    */
-  virtual void SourceToTarget(Api& request,
+  virtual bool SourceToTarget(Api& request,
                               baldr::GraphReader& graphreader,
                               const sif::mode_costing_t& mode_costing,
                               const sif::travel_mode_t mode,
@@ -65,12 +66,44 @@ public:
   virtual void Clear() = 0;
 
   /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  virtual const std::string& name() = 0;
+
+  /**
    * Returns the name of the algorithm
    * @return the name of the algorithm
    */
   void set_has_time(const bool has_time) {
     has_time_ = has_time;
   };
+
+  /**
+   *
+   * There is a rare case where we may encounter only_restrictions with edges being
+   * marked as not_thru.  Basically the only way to get in this area is via one edge
+   * and all other edges are restricted, but this one edge is also marked as not_thru.
+   * Therefore, on the first pass the expansion stops as we cannot take the restricted
+   * turns and we cannot go into the not_thru region. On the 2nd pass, we now ignore
+   * not_thru flags and allow entry into the not_thru region due to the fact that
+   * not_thru_pruning_ is false.  See the gurka test not_thru_pruning_.
+   *
+   * Set the not_thru_pruning_
+   * @param pruning  set the not_thru_pruning_ to pruning value.
+   *                 only set on the second pass
+   */
+  void set_not_thru_pruning(const bool pruning) {
+    not_thru_pruning_ = pruning;
+  }
+
+  /**
+   * Get the not thru pruning
+   * @return  Returns not_thru_pruning_
+   */
+  bool not_thru_pruning() {
+    return not_thru_pruning_;
+  }
 
   /**
    * Set a callback that will throw when the path computation should be aborted
@@ -105,6 +138,9 @@ protected:
   // whether time was specified
   bool has_time_;
 
+  // Indicates whether to allow access into a not-thru region.
+  bool not_thru_pruning_;
+
   // for tracking the expansion of the algorithm visually
   expansion_callback_t expansion_callback_;
 
@@ -113,16 +149,30 @@ protected:
   // if `true` clean reserved memory for edge labels
   bool clear_reserved_memory_;
 
-  // resizes all PBF sequences except for repeated string where it reserves instead
-  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size) {
-    matrix.mutable_from_indices()->Resize(size, 0U);
-    matrix.mutable_to_indices()->Resize(size, 0U);
-    matrix.mutable_distances()->Resize(size, 0U);
-    matrix.mutable_times()->Resize(size, 0U);
-    matrix.mutable_date_times()->Reserve(size);
-    matrix.mutable_shapes()->Reserve(size);
-    matrix.mutable_time_zone_offsets()->Reserve(size);
-    matrix.mutable_time_zone_names()->Reserve(size);
+  // on first pass, resizes all PBF sequences and defaults to 0 or ""
+  inline static void reserve_pbf_arrays(valhalla::Matrix& matrix, size_t size, uint32_t pass = 0) {
+    if (pass == 0) {
+      matrix.mutable_from_indices()->Resize(size, 0U);
+      matrix.mutable_to_indices()->Resize(size, 0U);
+      matrix.mutable_distances()->Resize(size, 0U);
+      matrix.mutable_times()->Resize(size, 0U);
+      matrix.mutable_second_pass()->Resize(size, false);
+      // repeated strings don't support Resize()
+      matrix.mutable_date_times()->Reserve(size);
+      matrix.mutable_time_zone_offsets()->Reserve(size);
+      matrix.mutable_time_zone_names()->Reserve(size);
+      matrix.mutable_shapes()->Reserve(size);
+      for (size_t i = 0; i < size; i++) {
+        auto* date_time = matrix.mutable_date_times()->Add();
+        *date_time = "";
+        auto* time_zone_offset = matrix.mutable_time_zone_offsets()->Add();
+        *time_zone_offset = "";
+        auto* time_zone_name = matrix.mutable_time_zone_names()->Add();
+        *time_zone_name = "";
+        auto* shape = matrix.mutable_shapes()->Add();
+        *shape = "";
+      }
+    }
   }
 };
 

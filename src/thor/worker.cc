@@ -101,6 +101,8 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
     source_to_target_algorithm = SELECT_OPTIMAL;
   }
 
+  costmatrix_allow_second_pass = config.get<bool>("thor.costmatrix_allow_second_pass", false);
+
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
