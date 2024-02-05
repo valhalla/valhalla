@@ -127,7 +127,7 @@ public:
   LuaTagTransform lua_;
 
   // Mark the OSM Ids used by the ways and relations
-  // TODO: just use ankerl::unordered_dense::unordered_set<uint64_t> since these are probably
+  // TODO: just use absl::flat_hash_set<uint64_t> since these are probably
   // relatively small
   UnorderedIdTable shape_, members_;
 

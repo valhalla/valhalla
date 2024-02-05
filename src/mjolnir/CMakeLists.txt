@@ -87,7 +87,6 @@ valhalla_module(NAME mjolnir
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
-      ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include
   DEPENDS
     valhalla::proto
     valhalla::baldr
@@ -96,4 +95,5 @@ valhalla_module(NAME mjolnir
     Boost::boost
     PkgConfig::LuaJIT
     Threads::Threads
-    PkgConfig::ZLIB)
+    PkgConfig::ZLIB
+    absl::container_common)

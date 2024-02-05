@@ -7,7 +7,7 @@
 #include <fstream>
 #include <vector>
 
-#include <ankerl/unordered_dense.h>
+#include <absl/container/flat_hash_map.h>
 
 #include <midgard/logging.h>
 
@@ -104,7 +104,7 @@ public:
   }
 
 private:
-  ankerl::unordered_dense::segmented_map<uint64_t, uint64_t> bitmarkers_;
+  absl::flat_hash_map<uint64_t, uint64_t> bitmarkers_;
 };
 
 } // namespace mjolnir

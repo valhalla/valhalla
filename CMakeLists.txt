@@ -98,6 +98,8 @@ include(ValhallaSourceGroups)
 # - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+# abseil is only used for flat_hash_map container
+find_package(absl REQUIRED)
 pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 
 # cURL

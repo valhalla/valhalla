@@ -9,7 +9,7 @@
 #include "thor/costmatrix.h"
 #include "worker.h"
 
-#include <ankerl/unordered_dense.h>
+#include <absl/container/flat_hash_map.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -46,8 +46,7 @@ namespace valhalla {
 namespace thor {
 
 // segmented_map has much lower memory requirement; no re-allocation is happening
-class CostMatrix::ReachedMap
-    : public ankerl::unordered_dense::segmented_map<uint64_t, std::vector<uint32_t>> {};
+class CostMatrix::ReachedMap : public absl::flat_hash_map<uint64_t, std::vector<uint32_t>> {};
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)

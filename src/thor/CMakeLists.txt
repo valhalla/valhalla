@@ -52,7 +52,6 @@ valhalla_module(NAME thor
       ${system_includes}
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      ${VALHALLA_SOURCE_DIR}/third_party/unordered_dense/include
 
   DEPENDS
     valhalla::proto
@@ -60,4 +59,5 @@ valhalla_module(NAME thor
     valhalla::meili
     ${valhalla_protobuf_targets}
     Boost::boost
+    absl::container_common
     ${libprime_server_targets})
