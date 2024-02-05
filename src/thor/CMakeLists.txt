@@ -2,16 +2,18 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/thor/*.h)
 
 set(sources
   astar_bss.cc
-    alternates.cc
+  alternates.cc
   bidirectional_astar.cc
   costmatrix.cc
   dijkstras.cc
   matrix_action.cc
   multimodal.cc
+  route_action.cc
+  timedistancebssmatrix.cc
   timedistancematrix.cc
-    triplegbuilder.cc
+  triplegbuilder.cc
   unidirectional_astar.cc
-    worker.cc)
+  worker.cc)
 
 set(sources_with_warnings
   centroid.cc
@@ -21,10 +23,8 @@ set(sources_with_warnings
   map_matcher.cc
   optimized_route_action.cc
   optimizer.cc
-  route_action.cc
   route_matcher.cc
   status_action.cc
-  timedistancebssmatrix.cc
   trace_attributes_action.cc
   trace_route_action.cc
   triplegbuilder_utils.h)

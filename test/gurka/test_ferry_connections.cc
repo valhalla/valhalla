@@ -297,7 +297,8 @@ TEST(Standalone, ReclassifyFerryUntagDestOnly) {
   EXPECT_TRUE(std::get<1>(upclassed)->classification() == valhalla::baldr::RoadClass::kPrimary);
 
   // we expect to take the shorter route on the left and the detour on the right
-  for (const std::string& mode : {"auto", "motorcycle", "taxi", "bus", "hov", "truck"}) {
+  std::vector<std::string> modes = {"auto", "motorcycle", "taxi", "bus", "hov", "truck"};
+  for (const auto& mode : modes) {
     auto res = gurka::do_action(valhalla::Options::route, map, {"A", "M"}, mode);
     gurka::assert::raw::expect_path(res, {"AB", "BC", "CD", "DE", "EF", "FKLG", "GH", "HM"},
                                     mode + " failed.");
