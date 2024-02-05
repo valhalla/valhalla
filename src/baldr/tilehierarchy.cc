@@ -1,44 +1,99 @@
+#include <cassert>
+#include "boost/foreach.hpp"
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
 #include "midgard/vector2.h"
+#include "config.h"
 
 using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace baldr {
 
-const std::vector<TileLevel>& TileHierarchy::levels() {
-  // Static tile levels
-  static const std::vector<TileLevel> levels_ = {
+static std::once_flag getLevel_once_flag;
+static std::vector<TileLevel> levels_;
+static std::vector<TileLevel> transit_levels_;
+
+void getLevels_once() {
+  std::vector<int32_t> columnsvector;
+  std::vector<int32_t> rowsvector;
+  std::vector<float> tilesizesvector;
+  bool bSizesInConfigOk = false;
+
+  const midgard::PointLL minpt = {config().get<float>("baldr.tiling_scheme.minpt.lng", -180), config().get<float>("baldr.tiling_scheme.minpt.lat", -90)}; 
+  const boost::optional<const boost::property_tree::ptree &> columnsptree = config().get_child_optional("baldr.tiling_scheme.columns");
+  const boost::optional<const boost::property_tree::ptree &> rowsptree = config().get_child_optional("baldr.tiling_scheme.rows");
+  const boost::optional<const boost::property_tree::ptree &> tilesizesptree = config().get_child_optional("baldr.tiling_scheme.tilesizes");
+  
+  if (columnsptree && rowsptree && tilesizesptree) {
+    BOOST_FOREACH (auto& v, *columnsptree) {
+      columnsvector.push_back( v.second.get<int32_t>("") );
+    }
+    BOOST_FOREACH (auto& v, *rowsptree) {
+      rowsvector.push_back( v.second.get<int32_t>("") );
+    }
+    BOOST_FOREACH (auto& v, *tilesizesptree) {
+      tilesizesvector.push_back( v.second.get<float>("") );
+    }
+    if (columnsvector.size()>=4 && rowsvector.size()>=4 && tilesizesvector.size()>=4) {
+      bSizesInConfigOk = true;
+    }
+  }
+
+  if (!bSizesInConfigOk) {
+    // Default OSM tile-grid
+    columnsvector = {90, 360, 1440, 1440};
+    rowsvector = {45, 180, 720, 720};
+    tilesizesvector = {4., 1., .25, .25};
+  }
+
+  levels_ = {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 4,
+                midgard::Tiles<midgard::PointLL>{minpt,
+                                                 tilesizesvector[0],
+                                                 columnsvector[0],
+                                                 rowsvector[0],  
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 1,
+                midgard::Tiles<midgard::PointLL>{minpt,
+                                                 tilesizesvector[1],
+                                                 columnsvector[1],
+                                                 rowsvector[1],
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
-                midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                                 .25,
+                midgard::Tiles<midgard::PointLL>{minpt,
+                                                 tilesizesvector[2],
+                                                 columnsvector[2],
+                                                 rowsvector[2],
+                                                 static_cast<unsigned short>(kBinsDim)}},
+
+  };
+
+  transit_levels_ = {
+    TileLevel{3, stringToRoadClass("ServiceOther"), "transit",
+                midgard::Tiles<midgard::PointLL>{minpt,
+                                                 tilesizesvector[3],
+                                                 columnsvector[3],
+                                                 rowsvector[3],
                                                  static_cast<unsigned short>(kBinsDim)}},
   };
 
+}
+
+
+const std::vector<TileLevel>& TileHierarchy::levels() {
+  std::call_once(getLevel_once_flag, getLevels_once);
   return levels_;
 }
 
 const TileLevel& TileHierarchy::GetTransitLevel() {
   // Should we make a class lower than service other for transit?
-  static const TileLevel transit_level_ =
-      {3, stringToRoadClass("ServiceOther"), "transit",
-       midgard::Tiles<midgard::PointLL>{{{-180, -90}, {180, 90}},
-                                        .25,
-                                        static_cast<unsigned short>(kBinsDim)}};
-
-  return transit_level_;
+  std::call_once(getLevel_once_flag, getLevels_once);
+  assert( transit_levels_.size()>0 );
+  return transit_levels_[0];
 }
 
 midgard::AABB2<midgard::PointLL> TileHierarchy::GetGraphIdBoundingBox(const GraphId& id) {
