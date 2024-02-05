@@ -15,9 +15,7 @@
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
-#include <valhalla/thor/matrix_common.h>
-// this is only for EdgeMetadata. one day we should move to a global interface
-#include <valhalla/thor/pathalgorithm.h>
+#include <valhalla/thor/matrixalgorithm.h>
 #include <valhalla/thor/pathinfo.h>
 
 namespace valhalla {
@@ -81,7 +79,7 @@ struct BestCandidate {
  * Shortest Paths".
  * https://i11www.iti.uni-karlsruhe.de/_media/teaching/theses/files/da-sknopp-06.pdf
  */
-class CostMatrix {
+class CostMatrix : public MatrixAlgorithm {
 public:
   /**
    * Default constructor. Most internal values are set when a query is made so
@@ -99,55 +97,21 @@ public:
    * @param  mode_costing          List of target/destination locations.
    * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
-   * @param  has_time              whether time-dependence was requested
-   * @param  invariant             whether invariant time-dependence was requested
-   * @param  shape_format          which shape_format, if any
    */
   void SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
                       const sif::mode_costing_t& mode_costing,
                       const sif::travel_mode_t mode,
-                      const float max_matrix_distance,
-                      const bool has_time = false,
-                      const bool invariant = false,
-                      const ShapeFormat& shape_format = no_shape);
+                      const float max_matrix_distance) override;
 
   /**
    * Clear the temporary information generated during time+distance
    * matrix construction.
    */
-  void clear();
-
-  /**
-   * Sets the functor which will track the Dijkstra expansion.
-   *
-   * @param  expansion_callback  the functor to call back when the Dijkstra makes progress
-   *                             on a given edge
-   */
-  using expansion_callback_t = std::function<void(baldr::GraphReader&,
-                                                  const baldr::GraphId,
-                                                  const baldr::GraphId,
-                                                  const char*,
-                                                  const char*,
-                                                  float,
-                                                  uint32_t,
-                                                  float)>;
-  void set_track_expansion(const expansion_callback_t& expansion_callback) {
-    expansion_callback_ = expansion_callback;
-  }
-
-  /**
-   * Set a callback that will throw when the path computation should be aborted
-   * @param interrupt_callback  the function to periodically call to see if
-   *                            we should abort
-   */
-  void set_interrupt(const std::function<void()>* interrupt_callback) {
-    interrupt_ = interrupt_callback;
-  }
+  void Clear() override;
 
 protected:
   uint32_t max_reserved_labels_count_;
-  bool clear_reserved_memory_;
   uint32_t max_reserved_locations_count_;
   bool check_reverse_connections_;
 
@@ -185,14 +149,6 @@ protected:
 
   // when doing timezone differencing a timezone cache speeds up the computation
   baldr::DateTime::tz_sys_info_cache_t tz_cache_;
-
-  // for tracking the expansion of the Dijkstra
-  expansion_callback_t expansion_callback_;
-
-  // whether time was specified
-  bool has_time_;
-
-  const std::function<void()>* interrupt_ = nullptr;
 
   /**
    * Get the cost threshold based on the current mode and the max arc-length distance

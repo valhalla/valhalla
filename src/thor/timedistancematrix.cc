@@ -8,33 +8,14 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::Location& origin,
-                      const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.correlation().edges()) {
-    if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.correlation().edges()) {
-        if (origin_edge.graph_id() == edgeid &&
-            origin_edge.percent_along() <= destination_edge.percent_along()) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
-    : settled_count_(0), current_cost_threshold_(0),
+    : MatrixAlgorithm(config), settled_count_(0), current_cost_threshold_(0),
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
                                                       kInitialEdgeLabelCountDijkstras)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
       mode_(travel_mode_t::kDrive) {
 }
 
@@ -194,9 +175,10 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 template <const ExpansionType expansion_direction, const bool FORWARD>
 void TimeDistanceMatrix::ComputeMatrix(Api& request,
                                        baldr::GraphReader& graphreader,
-                                       const float max_matrix_distance,
-                                       const uint32_t matrix_locations,
-                                       const bool invariant) {
+                                       const float max_matrix_distance) {
+  bool invariant = request.options().date_time_type() == Options::invariant;
+  uint32_t matrix_locations = request.options().matrix_locations();
+
   uint32_t bucketsize = costing_->UnitSize();
 
   auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
@@ -230,6 +212,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     SetOrigin<expansion_direction>(graphreader, origin, time_info);
     SetDestinationEdges();
 
+    uint32_t n = 0;
     // Collect edge_ids used for settling a location to determine its time zone
     std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
     dest_edge_ids.reserve(destinations.size());
@@ -287,6 +270,11 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       // Expand forward from the end node of the predecessor edge.
       Expand<expansion_direction>(graphreader, pred.endnode(), pred, predindex, false, time_info,
                                   invariant);
+
+      // Allow this process to be aborted
+      if (interrupt_ && (n++ % kInterruptIterationsInterval) == 0) {
+        (*interrupt_)();
+      }
     }
 
     reset();
@@ -308,15 +296,11 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
 template void
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
                                                                 baldr::GraphReader& graphreader,
-                                                                const float max_matrix_distance,
-                                                                const uint32_t matrix_locations,
-                                                                const bool invariant);
+                                                                const float max_matrix_distance);
 template void
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
                                                                  baldr::GraphReader& graphreader,
-                                                                 const float max_matrix_distance,
-                                                                 const uint32_t matrix_locations,
-                                                                 const bool invariant);
+                                                                 const float max_matrix_distance);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
