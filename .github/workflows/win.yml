@@ -108,6 +108,7 @@ jobs:
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
+            -DPREFER_EXTERNAL=ON
 
       - name: Build Valhalla
         shell: powershell
