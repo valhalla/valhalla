@@ -60,6 +60,7 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+vcpkg*/
 
 # python
 .venv
