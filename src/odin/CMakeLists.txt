@@ -28,13 +28,9 @@ set(sources_with_warnings
   narrativebuilder.cc
   util.cc)
 
-# treat date library as system
 set(system_includes
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME odin
   SOURCES ${sources}
@@ -50,7 +46,7 @@ valhalla_module(NAME odin
     PUBLIC
       ${system_includes}
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${rapidjson_include_dir}
   DEPENDS
     valhalla::proto
     ${valhalla_protobuf_targets}
