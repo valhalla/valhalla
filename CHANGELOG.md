@@ -85,7 +85,7 @@
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
    * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
    * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
-   * ADDED: Add ability to specify and use custom tile layouts in valhalla config json [#4563](https://github.com/valhalla/valhalla/pull/4563)
+   * ADDED: Add ability to specify and use custom tile sizes in valhalla config json [#4563](https://github.com/valhalla/valhalla/pull/4563)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

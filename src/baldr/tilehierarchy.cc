@@ -14,29 +14,22 @@ static std::vector<TileLevel> levels_;
 static std::vector<TileLevel> transit_levels_;
 
 void getLevelsfromConfig() {
-  std::vector<int32_t> columnsvector;
-  std::vector<int32_t> rowsvector;
   std::vector<float> tilesizesvector;
   bool bSizesInConfigOk = false;
-  midgard::PointLL minpt = {-180., -90.};
+  const AABB2<midgard::PointLL> wholemapbb{
+      {-180., -90.},
+      {180., 90.},
+  };
 
   try {
     // Many tests don't specify any configuration, so catch the "Config singleton was not initialized
     // before usage" exception here and fallback to default OSM tile grid.
-    minpt = {config().get<float>("baldr.tiling_scheme.minpt.lng", -180),
-             config().get<float>("baldr.tiling_scheme.minpt.lat", -90)};
-    const boost::optional<const boost::property_tree::ptree&> columnsptree =
-        config().get_child_optional("baldr.tiling_scheme.columns");
-    const boost::optional<const boost::property_tree::ptree&> rowsptree =
-        config().get_child_optional("baldr.tiling_scheme.rows");
     const boost::optional<const boost::property_tree::ptree&> tilesizesptree =
-        config().get_child_optional("baldr.tiling_scheme.tilesizes");
+        config().get_child_optional("baldr.tilesizes");
 
-    if (columnsptree && rowsptree && tilesizesptree) {
-      BOOST_FOREACH (auto& v, *columnsptree) { columnsvector.push_back(v.second.get<int32_t>("")); }
-      BOOST_FOREACH (auto& v, *rowsptree) { rowsvector.push_back(v.second.get<int32_t>("")); }
+    if (tilesizesptree) {
       BOOST_FOREACH (auto& v, *tilesizesptree) { tilesizesvector.push_back(v.second.get<float>("")); }
-      if (columnsvector.size() >= 4 && rowsvector.size() >= 4 && tilesizesvector.size() >= 4) {
+      if (tilesizesvector.size() >= 4) {
         bSizesInConfigOk = true;
       }
     }
@@ -47,35 +40,44 @@ void getLevelsfromConfig() {
 
   if (!bSizesInConfigOk) {
     // Default OSM tile-grid
-    columnsvector = {90, 360, 1440, 1440};
-    rowsvector = {45, 180, 720, 720};
     tilesizesvector = {4., 1., .25, .25};
-    minpt = {-180., -90.};
   }
 
   levels_ = {
 
       TileLevel{0, stringToRoadClass("Primary"), "highway",
-                midgard::Tiles<midgard::PointLL>{minpt, tilesizesvector[0], columnsvector[0],
-                                                 rowsvector[0],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(), tilesizesvector[0],
+                                                 static_cast<int32_t>(std::round(wholemapbb.Width() /
+                                                                                 tilesizesvector[0])),
+                                                 static_cast<int32_t>(std::round(wholemapbb.Height() /
+                                                                                 tilesizesvector[0])),
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{1, stringToRoadClass("Tertiary"), "arterial",
-                midgard::Tiles<midgard::PointLL>{minpt, tilesizesvector[1], columnsvector[1],
-                                                 rowsvector[1],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(), tilesizesvector[1],
+                                                 static_cast<int32_t>(std::round(wholemapbb.Width() /
+                                                                                 tilesizesvector[1])),
+                                                 static_cast<int32_t>(std::round(wholemapbb.Height() /
+                                                                                 tilesizesvector[1])),
                                                  static_cast<unsigned short>(kBinsDim)}},
 
       TileLevel{2, stringToRoadClass("ServiceOther"), "local",
-                midgard::Tiles<midgard::PointLL>{minpt, tilesizesvector[2], columnsvector[2],
-                                                 rowsvector[2],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(), tilesizesvector[2],
+                                                 static_cast<int32_t>(std::round(wholemapbb.Width() /
+                                                                                 tilesizesvector[2])),
+                                                 static_cast<int32_t>(std::round(wholemapbb.Height() /
+                                                                                 tilesizesvector[2])),
                                                  static_cast<unsigned short>(kBinsDim)}},
 
   };
 
   transit_levels_ = {
       TileLevel{3, stringToRoadClass("ServiceOther"), "transit",
-                midgard::Tiles<midgard::PointLL>{minpt, tilesizesvector[3], columnsvector[3],
-                                                 rowsvector[3],
+                midgard::Tiles<midgard::PointLL>{wholemapbb.minpt(), tilesizesvector[3],
+                                                 static_cast<int32_t>(std::round(wholemapbb.Width() /
+                                                                                 tilesizesvector[3])),
+                                                 static_cast<int32_t>(std::round(wholemapbb.Height() /
+                                                                                 tilesizesvector[3])),
                                                  static_cast<unsigned short>(kBinsDim)}},
   };
 }
