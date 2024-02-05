@@ -108,8 +108,8 @@ inline bool is_break_point(const valhalla::Location& l) {
 }
 
 inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
-  return edge.inbound_reach() >= loc.minimum_reachability() &&
-         edge.outbound_reach() >= loc.minimum_reachability();
+  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >= loc.minimum_reachability() &&
+         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >= loc.minimum_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
@@ -388,7 +388,8 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
       // we add the timezone info if destination is the last location
       // and add waiting_secs again from the final destination's datetime, so we output the departing
       // time at intermediate locations, not the arrival time
-      if ((destination->correlation().original_index() == (options.locations().size() - 1) &&
+      if ((destination->correlation().original_index() ==
+               static_cast<google::protobuf::uint32>((options.locations().size() - 1)) &&
            (in_tz || out_tz))) {
         auto destination_dt = DateTime::offset_date(destination->date_time(), out_tz, out_tz,
                                                     destination->waiting_secs());
