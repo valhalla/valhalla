@@ -19,6 +19,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     git \
     jq \
     lcov \
+    libboost-all-dev \
     libcurl4-openssl-dev \
     libczmq-dev \
     libgeos++-dev \
@@ -37,7 +38,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     make \
     osmium-tool \
     parallel \
-    pkg-config \
+    pkgconf \
     protobuf-compiler \
     python3-all-dev \
     python3-shapely \
@@ -57,8 +58,8 @@ sudo make install
 popd && rm -rf $primeserver_dir
 
 # for boost and scripts deps
-if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_p    refix")))') -eq 1 ]]; then
-  python3 -m pip install --upgrade "conan<2.0.0" requests shapely
+if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
+  python3 -m pip install --upgrade requests shapely
 else
-  sudo PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade "conan<2.0.0" requests shapely
+  sudo PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely
 fi
