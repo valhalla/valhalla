@@ -37,7 +37,7 @@ defaults:
 env:
   BUILD_TYPE: Release
   MSVC_VERSION: '2022'
-  VCPKG_VERSION: '2024.01.12'
+  VCPKG_VERSION: '8040303'
   VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
   VCPKG_DISABLE_COMPILER_TRACKING: ON
 
@@ -61,11 +61,11 @@ jobs:
 
       - name: Cache vcpkg
         id: cache-vcpkg
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ${{ env.VCPKG_ROOT }}
-          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2
-          save-always: 'true'
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v3
+          enableCrossOsArchive: true
 
       - name: Install GNU make & awk
         run: choco install gawk make
@@ -73,8 +73,9 @@ jobs:
       - if: ${{ steps.cache-vcpkg.outputs.cache-hit != 'true' }}
         name: Bootstrap vcpkg and install packages (if cache miss)
         run: |
-          git clone --depth=1 --branch "$VCPKG_VERSION" https://github.com/microsoft/vcpkg.git
+          git clone https://github.com/microsoft/vcpkg.git
           cd vcpkg
+          git checkout $VCPKG_VERSION
           mkdir archives
           mkdir "$VCPKG_OVERLAY_TRIPLETS"
           TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
@@ -82,12 +83,11 @@ jobs:
           echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
           echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
           cmd.exe /c bootstrap-vcpkg.bat
-          vcpkg.exe \
+          vcpkg.exe install \
             --vcpkg-root="$VCPKG_ROOT" \
             --overlay-triplets="$VCPKG_OVERLAY_TRIPLETS" \
             --triplet="$VCPKG_DEFAULT_TRIPLET" \
-            $VCPKG_INSTALL_OPTIONS \
-            install
+            $VCPKG_INSTALL_OPTIONS
 
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
@@ -110,7 +110,8 @@ jobs:
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
-            -DENABLE_BENCHMARKS=OFF
+            -DENABLE_BENCHMARKS=OFF \
+            -DPREFER_EXTERNAL=ON \
 
       - name: Build Valhalla
         shell: powershell
