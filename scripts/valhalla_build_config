@@ -448,7 +448,7 @@ help_text = {
         'tiling_scheme': {
             'minpt': {
                 'lng': 'Longitude of bottom-left coordinate of whole map area',
-                'lat': 'Latitude of bottom-left coordinate of bounding box',
+                'lat': 'Latitude of bottom-left coordinate of whole map area',
             },
             'columns': 'Number of columns in the tile grid. (In this order: highway, arterial, local, transit)',
             'rows': 'Number of rows in the tile grid. (In this order: highway, arterial, local, transit)',

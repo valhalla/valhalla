@@ -10,32 +10,37 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace baldr {
 
-static std::once_flag getLevel_once_flag;
 static std::vector<TileLevel> levels_;
 static std::vector<TileLevel> transit_levels_;
 
-void getLevels_once() {
+void getLevelsfromConfig() {
   std::vector<int32_t> columnsvector;
   std::vector<int32_t> rowsvector;
   std::vector<float> tilesizesvector;
   bool bSizesInConfigOk = false;
+  midgard::PointLL minpt = {-180., -90.};
 
-  const midgard::PointLL minpt = {config().get<float>("baldr.tiling_scheme.minpt.lng", -180),
-                                  config().get<float>("baldr.tiling_scheme.minpt.lat", -90)};
-  const boost::optional<const boost::property_tree::ptree&> columnsptree =
-      config().get_child_optional("baldr.tiling_scheme.columns");
-  const boost::optional<const boost::property_tree::ptree&> rowsptree =
-      config().get_child_optional("baldr.tiling_scheme.rows");
-  const boost::optional<const boost::property_tree::ptree&> tilesizesptree =
-      config().get_child_optional("baldr.tiling_scheme.tilesizes");
+  try {
+    minpt = {config().get<float>("baldr.tiling_scheme.minpt.lng", -180),
+             config().get<float>("baldr.tiling_scheme.minpt.lat", -90)};
+    const boost::optional<const boost::property_tree::ptree&> columnsptree =
+        config().get_child_optional("baldr.tiling_scheme.columns");
+    const boost::optional<const boost::property_tree::ptree&> rowsptree =
+        config().get_child_optional("baldr.tiling_scheme.rows");
+    const boost::optional<const boost::property_tree::ptree&> tilesizesptree =
+        config().get_child_optional("baldr.tiling_scheme.tilesizes");
 
-  if (columnsptree && rowsptree && tilesizesptree) {
-    BOOST_FOREACH (auto& v, *columnsptree) { columnsvector.push_back(v.second.get<int32_t>("")); }
-    BOOST_FOREACH (auto& v, *rowsptree) { rowsvector.push_back(v.second.get<int32_t>("")); }
-    BOOST_FOREACH (auto& v, *tilesizesptree) { tilesizesvector.push_back(v.second.get<float>("")); }
-    if (columnsvector.size() >= 4 && rowsvector.size() >= 4 && tilesizesvector.size() >= 4) {
-      bSizesInConfigOk = true;
+    if (columnsptree && rowsptree && tilesizesptree) {
+      BOOST_FOREACH (auto& v, *columnsptree) { columnsvector.push_back(v.second.get<int32_t>("")); }
+      BOOST_FOREACH (auto& v, *rowsptree) { rowsvector.push_back(v.second.get<int32_t>("")); }
+      BOOST_FOREACH (auto& v, *tilesizesptree) { tilesizesvector.push_back(v.second.get<float>("")); }
+      if (columnsvector.size() >= 4 && rowsvector.size() >= 4 && tilesizesvector.size() >= 4) {
+        bSizesInConfigOk = true;
+      }
     }
+  } catch (std::runtime_error&) {
+    // fallback to default OSM tile layout
+    ;
   }
 
   if (!bSizesInConfigOk) {
@@ -43,6 +48,7 @@ void getLevels_once() {
     columnsvector = {90, 360, 1440, 1440};
     rowsvector = {45, 180, 720, 720};
     tilesizesvector = {4., 1., .25, .25};
+    minpt = {-180., -90.};
   }
 
   levels_ = {
@@ -73,14 +79,17 @@ void getLevels_once() {
 }
 
 const std::vector<TileLevel>& TileHierarchy::levels() {
-  std::call_once(getLevel_once_flag, getLevels_once);
+  if (levels_.size()==0) {
+    getLevelsfromConfig();
+  }
   return levels_;
 }
 
 const TileLevel& TileHierarchy::GetTransitLevel() {
   // Should we make a class lower than service other for transit?
-  std::call_once(getLevel_once_flag, getLevels_once);
-  assert(transit_levels_.size() > 0);
+  if (transit_levels_.size()==0) {
+    getLevelsfromConfig();
+  }
   return transit_levels_[0];
 }
 
