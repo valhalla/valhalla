@@ -1,0 +1,133 @@
+name: Windows CI
+on:
+  push:
+    paths-ignore:
+      - '*.md'
+      - .circleci/
+      - bench/
+      - docs/
+      - run_route_scripts/
+      - test/
+      - test_requests/
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - .circleci/
+      - bench/
+      - docs/
+      - run_route_scripts/
+      - test/
+      - test_requests/
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  BUILD_TYPE: Release
+  MSVC_VERSION: '2022'
+  VCPKG_VERSION: '2024.01.12'
+  VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
+  VCPKG_DISABLE_COMPILER_TRACKING: ON
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # we add a custom triplet to avoid cache misses as much as possible
+      # https://github.com/microsoft/vcpkg/issues/26346#issuecomment-1319244766
+      - name: Configure vckpg
+        run: |
+          echo "VCPKG_ROOT=${{ github.workspace }}/vcpkg" >> $GITHUB_ENV
+          echo "VCPKG_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "VCPKG_OVERLAY_TRIPLETS=${{ github.workspace }}/vcpkg/custom-triplets" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_TRIPLET=custom-x64-windows" >> $GITHUB_ENV
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg/archives" >> $GITHUB_ENV
+
+      - name: Cache vcpkg
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.VCPKG_ROOT }}
+          key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v2
+          save-always: 'true'
+
+      - name: Install GNU make & awk
+        run: choco install gawk make
+
+      - if: ${{ steps.cache-vcpkg.outputs.cache-hit != 'true' }}
+        name: Bootstrap vcpkg and install packages (if cache miss)
+        run: |
+          git clone --depth=1 --branch "$VCPKG_VERSION" https://github.com/microsoft/vcpkg.git
+          cd vcpkg
+          mkdir archives
+          mkdir "$VCPKG_OVERLAY_TRIPLETS"
+          TRIPLET_FILE="$VCPKG_OVERLAY_TRIPLETS/$VCPKG_DEFAULT_TRIPLET.cmake"
+          cp triplets/x64-windows.cmake "$TRIPLET_FILE"
+          echo "set(VCPKG_BUILD_TYPE release)" >> "$TRIPLET_FILE"
+          echo "set(VCPKG_DISABLE_COMPILER_TRACKING $VCPKG_DISABLE_COMPILER_TRACKING)" >> "$TRIPLET_FILE"
+          cmd.exe /c bootstrap-vcpkg.bat
+          vcpkg.exe \
+            --vcpkg-root="$VCPKG_ROOT" \
+            --overlay-triplets="$VCPKG_OVERLAY_TRIPLETS" \
+            --triplet="$VCPKG_DEFAULT_TRIPLET" \
+            $VCPKG_INSTALL_OPTIONS \
+            install
+
+      - name: Setup Developer Command Prompt for VS
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: |
+          cmake --version
+          cmake -B build \
+            -G "Visual Studio 17 2022" \
+            -A x64 \
+            -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+            -DCMAKE_TOOLCHAIN_FILE="$VCPKG_TOOLCHAIN_FILE" \
+            -DVCPKG_OVERLAY_TRIPLETS="$VCPKG_OVERLAY_TRIPLETS" \
+            -DVCPKG_TARGET_TRIPLET="$VCPKG_DEFAULT_TRIPLET" \
+            -DVCPKG_INSTALL_OPTIONS="$VCPKG_INSTALL_OPTIONS" \
+            -DENABLE_DATA_TOOLS=ON \
+            -DENABLE_TOOLS=ON \
+            -DENABLE_PYTHON_BINDINGS=ON \
+            -DENABLE_HTTP=ON \
+            -DENABLE_TESTS=OFF \
+            -DENABLE_CCACHE=OFF \
+            -DENABLE_SERVICES=OFF \
+            -DENABLE_BENCHMARKS=OFF
+
+      - name: Build Valhalla
+        shell: powershell
+        run: |
+          cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+      
+      - name: Test Executable
+        run: |
+          set PATH=$PATH:${{ github.workspace }}/build/vcpkg_installed/$BUILD_TYPE/bin
+          ./build/$BUILD_TYPE/valhalla_build_tiles.exe -c ./test/win/valhalla.json ./test/data/utrecht_netherlands.osm.pbf
+          ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked or a previous job failed
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
+        with:
+          detached: true
+          timeout-minutes: 15
+          

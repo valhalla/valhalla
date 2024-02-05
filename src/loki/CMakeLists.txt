@@ -22,7 +22,9 @@ set(sources_with_warnings
   worker.cc)
 
 # treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes 
+  ${VALHALLA_SOURCE_DIR}/third_party/date/include
+  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
@@ -35,7 +37,6 @@ valhalla_module(NAME loki
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
       ${CMAKE_BINARY_DIR}
@@ -48,4 +49,4 @@ valhalla_module(NAME loki
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server)
+    ${libprime_server_targets})

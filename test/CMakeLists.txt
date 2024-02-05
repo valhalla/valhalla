@@ -25,11 +25,12 @@ target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing/src/include
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
 target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
 
 if(ENABLE_DATA_TOOLS)
-  target_link_libraries(valhalla_test GEOS::GEOS)
+  target_link_libraries(valhalla_test PkgConfig::GEOS)
 endif()
 
 
@@ -84,7 +85,6 @@ set(tests_with_warnings
   logging
   maneuversbuilder
   mapmatch
-  matrix
   narrativebuilder
   node_search
   polyline2
@@ -150,7 +150,7 @@ foreach(test ${tyr_tests})
 endforeach()
 
 ## Test-specific data, properties and dependencies
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
@@ -376,7 +376,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-if(ENABLE_HTTP)
+  if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
 endif()

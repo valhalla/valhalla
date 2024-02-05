@@ -41,8 +41,6 @@ set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -52,13 +50,10 @@ include(CheckCXXCompilerFlag)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(COLOR_FLAG "-fdiagnostics-color=auto")
   check_cxx_compiler_flag("-fdiagnostics-color=auto" HAS_COLOR_FLAG)
-  if(NOT HAS_COLOR_FLAG)
-    set(COLOR_FLAG "")
+  if(HAS_COLOR_FLAG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COLOR_FLAG}")
   endif()
-  # using GCC
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COLOR_FLAG}")
 endif()
 
 # Explicitly set the build type to Release if no other type is specified
@@ -85,18 +80,6 @@ else()
   message(FATAL_ERROR "Unrecognized build type. Use one of Debug, Release, RelWithDebInfo, MinRelSize, None")
 endif()
 
-function(create_source_groups prefix)
-  foreach(file ${ARGN})
-    get_filename_component(file "${file}" ABSOLUTE)
-    string(FIND "${file}" "${PROJECT_BINARY_DIR}/" pos)
-    if(pos EQUAL 0)
-      source_group(TREE "${PROJECT_BINARY_DIR}/" PREFIX "Generated Files" FILES "${file}")
-    else()
-      source_group(TREE "${PROJECT_SOURCE_DIR}/" PREFIX "${prefix}" FILES "${file}")
-    endif()
-  endforeach()
-endfunction()
-
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
   find_program(CCACHE_FOUND ccache)
   if(CCACHE_FOUND)
@@ -107,103 +90,50 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
-include(cmake/SanitizerOptions.cmake)
+include(ValhallaSanitizerOptions)
+include(ValhallaSourceGroups)
 
-## Coverage report targets
-if(ENABLE_COVERAGE)
-  find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
-  if(NOT GENHTML_PATH)
-    message(FATAL_ERROR "no genhtml installed")
-  endif()
-
-  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/third_party/fastcov/fastcov.py)
-  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
-    COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS check)
-
-  add_custom_target(coverage
-    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
-  set_target_properties(coverage PROPERTIES FOLDER "Tests")
-endif()
-
-## Dependencies
+# We use pkg-config for (almost) all dependencies:
+# - CMake Find* modules are versioned with CMake, not the packages, see protobuf > 21.12
+# - it's more trivial to use custom installations via PKG_CONFIG_PATH env var
+find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(ZLIB REQUIRED)
+pkg_check_modules(ZLIB REQUIRED IMPORTED_TARGET zlib)
 
-# try to find an installed boost or install locally with conan
-set(boost_VERSION "1.71")
-find_package(Boost ${boost_VERSION} QUIET)
-if (NOT Boost_FOUND)
-  # bail if there's no conan installed
-  message(STATUS "No compatible boost version detected, using conan...")
-  find_program(conan_FOUND conan)
-  if (NOT conan_FOUND)
-    message(FATAL_ERROR "conan needs to be installed for boost, see https://docs.conan.io/en/latest/installation.html.")
+# cURL
+set(curl_targets "")
+if (ENABLE_HTTP OR ENABLE_DATA_TOOLS)
+  pkg_check_modules(CURL REQUIRED IMPORTED_TARGET libcurl)
+  if (CURL_FOUND)
+    set(curl_targets PkgConfig::CURL)
+    target_compile_definitions(PkgConfig::CURL INTERFACE ENABLE_HTTP)
+  else()
+    message(FATAL_ERROR "ENABLE_HTTP=ON, but cURL not found...")
   endif()
-
-  # build dir needs to be added, that's where conan writes some info
-  list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_BINARY_DIR})
-  list(APPEND CMAKE_PREFIX_PATH ${CMAKE_CURRENT_BINARY_DIR})
-  include(${VALHALLA_SOURCE_DIR}/cmake/conan.cmake)
-
-  conan_cmake_autodetect(settings)
-  conan_cmake_install(PATH_OR_REFERENCE ${VALHALLA_SOURCE_DIR}/conanfile.txt
-                      REMOTE conancenter
-                      SETTINGS ${settings}
-                      OUTPUT_QUIET)
 endif()
-find_package(Boost ${boost_VERSION} REQUIRED)
+
+# Boost has no .pc file..
+find_package(Boost 1.71 REQUIRED)
 add_definitions(-DBOOST_NO_CXX11_SCOPED_ENUMS)
 add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS)
 add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 
-if(NOT TARGET CURL::CURL)
-  add_library(CURL::CURL INTERFACE IMPORTED)
-  if(ENABLE_HTTP OR ENABLE_DATA_TOOLS)
-    if(NOT CURL_FOUND)
-      find_package(CURL REQUIRED)
-    endif()
-    set_target_properties(CURL::CURL PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${CURL_INCLUDE_DIR}"
-      INTERFACE_COMPILE_DEFINITIONS CURL_STATICLIB)
-    if(NOT MSVC)
-      set_property(TARGET CURL::CURL APPEND PROPERTY INTERFACE_LINK_LIBRARIES "${CURL_LIBRARIES}")
-    else()
-      link_libraries(${CURL_LIBRARIES})
-    endif()
-  endif()
-else()
-  message(STATUS "Using curl from the outside")
-endif()
-
-if(NOT Protobuf_FOUND)
-  # prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf fuckups
-  # NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
-  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
-
-  # newer protobuf versions require a compat bool
-  set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
-  find_package(Protobuf REQUIRED)
-
-  # and turn it off again
-  set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
-endif()
-
-message(STATUS "Using pbf headers from ${PROTOBUF_INCLUDE_DIR}")
-message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARY}")
-message(STATUS "Using pbf release libs from ${PROTOBUF_LIBRARY_RELEASE}")
-message(STATUS "Using pbf debug libs from ${PROTOBUF_LIBRARY_DEBUG}")
+# Protobuf is non-trivial to include via pkg-config, pkg_check_modules has no way to check
+# for protoc location in a platform agnostic manner
+# prefer CONFIG mode over MODULE mode, there were a few CMake/protobuf messups
+# NOTE: this is only supported for cmake >= 3.15, but shouldn't be a problem in real life
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
+# newer protobuf versions require a compat bool
+set(protobuf_MODULE_COMPATIBLE ON CACHE BOOL "")
+find_package(Protobuf REQUIRED)
+# and turn it off again
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)
+message(STATUS "Using protoc from ${Protobuf_PROTOC_EXECUTABLE}")
+message(STATUS "Using pbf headers from ${Protobuf_INCLUDE_DIRS}")
+message(STATUS "Using pbf libs from ${PROTOBUF_LIBRARIES}")
 if(TARGET protobuf::libprotobuf-lite)
   message(STATUS "Using pbf-lite")
 endif()
-
-# Allow linking against full or lite version of Protobuf library
-# TODO: After switching to CMake 3.12+, replace with
-#       $<TARGET_EXISTS:protobuf::libprotobuf
-#       $<TARGET_EXISTS:protobuf::libprotobuf-lite
 if(TARGET protobuf::libprotobuf-lite)
   set(valhalla_protobuf_targets protobuf::libprotobuf-lite)
 elseif(TARGET protobuf::libprotobuf)
@@ -212,29 +142,28 @@ else()
   message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
-add_library(libprime_server INTERFACE IMPORTED)
+# libprime_server
+# see https://gitlab.kitware.com/cmake/cmake/-/issues/19467
+set(libprime_server_targets "")
 if(ENABLE_SERVICES)
-  pkg_check_modules(libprime_server REQUIRED libprime_server>=0.6.3)
-  # workaround for https://gitlab.kitware.com/cmake/cmake/issues/15804
-  find_library(libprime_server_LIBRARY
-    NAME ${libprime_server_LIBRARIES}
-    HINTS ${libprime_server_LIBRARY_DIRS})
-  set_target_properties(libprime_server PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${libprime_server_LIBRARY}"
-    INTERFACE_INCLUDE_DIRECTORIES "${libprime_server_INCLUDE_DIRS}"
-    INTERFACE_COMPILE_DEFINITIONS HAVE_HTTP)
+  pkg_check_modules(libprime_server IMPORTED_TARGET libprime_server>=0.6.3)
+  if (libprime_server_FOUND)
+    target_compile_definitions(PkgConfig::libprime_server INTERFACE ENABLE_SERVICES)
+    set(libprime_server_targets PkgConfig::libprime_server)
+  else()
+    set(ENABLE_SERVICES OFF)
+    message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
+  endif()
 endif()
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
   add_compile_definitions(DATA_TOOLS)
+  # keep sqlite3 with cmake find_package(), as OSX needs our own FindSqlite3.cmake
+  # otherwise the system sqlite3 is found which doesn't allow for spatialite
   find_package(SQLite3 REQUIRED)
-  find_package(SpatiaLite REQUIRED)
-  find_package(LuaJIT)
-  add_library(Lua::Lua INTERFACE IMPORTED)
-  set_target_properties(Lua::Lua PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${LUA_LIBRARIES}"
-    INTERFACE_INCLUDE_DIRECTORIES "${LUA_INCLUDE_DIR}")
+  pkg_check_modules(SpatiaLite REQUIRED IMPORTED_TARGET spatialite)
+  pkg_check_modules(LuaJIT REQUIRED IMPORTED_TARGET luajit)
 endif()
 
 if (ENABLE_THREAD_SAFE_TILE_REF_COUNT)
@@ -246,7 +175,7 @@ add_subdirectory(src)
 
 ## Python bindings
 if(ENABLE_PYTHON_BINDINGS)
-  # favors Py3, falls back to Py2
+  # python is fine for cmake as well
   find_package(Python COMPONENTS Development Interpreter)
   if (Python_FOUND)
     add_subdirectory(src/bindings/python)
@@ -255,22 +184,11 @@ if(ENABLE_PYTHON_BINDINGS)
       COMPONENT python)
   else()
     set(ENABLE_PYTHON_BINDINGS OFF)
-    message(WARNING "Skipping Python bindings... Install a development Python version including headers to compile the bindings.")
+    message(WARNING "Python development version not found, skipping Python bindings...")
   endif()
 endif()
 
 ## Executable targets
-function(get_source_path PATH NAME)
-  if(EXISTS ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/meili/${NAME}.cc PARENT_SCOPE)
-  elseif(EXISTS ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc)
-    set(${PATH} ${VALHALLA_SOURCE_DIR}/src/mjolnir/${NAME}.cc PARENT_SCOPE)
-  else()
-    message(FATAL_ERROR "no source path for ${NAME}")
-  endif()
-endfunction()
 
 ## Valhalla programs
 set(valhalla_programs valhalla_run_map_match valhalla_benchmark_loki valhalla_benchmark_skadi
@@ -293,10 +211,7 @@ if(ENABLE_TOOLS)
     set_target_properties(${program} PROPERTIES FOLDER "Tools")
     create_source_groups("Source Files" ${path})
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
-    if(MSVC)
-      target_link_libraries(${program} ${CURL_LIBRARIES})
-    endif()
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -307,21 +222,18 @@ if(ENABLE_DATA_TOOLS)
     add_executable(${program} ${path})
     create_source_groups("Source Files" ${path})
     set_target_properties(${program} PROPERTIES FOLDER "Data Tools")
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
+    target_include_directories(${program} PRIVATE ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     target_link_libraries(${program} valhalla)
-    if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${program} PUBLIC -pagezero_size 10000 -image_base 100000000)
-    endif()
-    if(MSVC)
-      target_link_libraries(${program} ${CURL_LIBRARIES})
     endif()
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 
   # Target-specific dependencies
-  find_package(GEOS)
-  target_link_libraries(valhalla_build_admins GEOS::GEOS)
+  pkg_check_modules(GEOS REQUIRED IMPORTED_TARGET geos)
+  target_link_libraries(valhalla_build_admins PkgConfig::GEOS)
   target_sources(valhalla_build_statistics
     PUBLIC
       ${VALHALLA_SOURCE_DIR}/src/mjolnir/statistics.cc
@@ -334,7 +246,6 @@ if(ENABLE_SERVICES)
     create_source_groups("Source Files" src/${program}.cc)
     set_target_properties(${program} PROPERTIES FOLDER "Services")
     target_link_libraries(${program} valhalla)
-    target_include_directories(${program} PUBLIC ${VALHALLA_SOURCE_DIR}/third_party/cxxopts/include)
     install(TARGETS ${program} DESTINATION "${CMAKE_INSTALL_BINDIR}" COMPONENT runtime)
   endforeach()
 endif()
@@ -360,6 +271,16 @@ install(FILES COPYING CHANGELOG.md
   DESTINATION "${CMAKE_INSTALL_DOCDIR}"
   COMPONENT runtime)
 
+# install third_party
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/rapidjson/include/
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/date/include/
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+if (WIN32)
+  install(DIRECTORY ${CMAKE_SOURCE_DIR}/third_party/dirent/include/
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla/third_party")
+endif()
+
 if(ENABLE_TESTS)
   add_subdirectory(test)
 endif()
@@ -367,6 +288,26 @@ endif()
 # NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
 if(ENABLE_BENCHMARKS AND ENABLE_DATA_TOOLS AND NOT WIN32)
   add_subdirectory(bench)
+endif()
+
+## Coverage report targets
+if(ENABLE_COVERAGE)
+  find_program(GENHTML_PATH NAMES genhtml genhtml.perl genhtml.bat)
+  if(NOT GENHTML_PATH)
+    message(FATAL_ERROR "no genhtml installed")
+  endif()
+
+  set(FASTCOV_PATH ${VALHALLA_SOURCE_DIR}/third_party/fastcov/fastcov.py)
+  add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/coverage.info
+    COMMAND ${FASTCOV_PATH} -d . --exclude /usr/ third_party/ ${CMAKE_CURRENT_BINARY_DIR}/ --lcov -o coverage.info
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS check)
+
+  add_custom_target(coverage
+    COMMAND ${GENHTML_PATH} --prefix ${CMAKE_CURRENT_BINARY_DIR} --output-directory coverage --title "Test Coverage" --legend --show-details coverage.info
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/coverage.info)
+  set_target_properties(coverage PROPERTIES FOLDER "Tests")
 endif()
 
 ## Packaging via CPack
@@ -425,3 +366,6 @@ endif()
 set(CPACK_PROJECT_CONFIG_FILE ${VALHALLA_SOURCE_DIR}/cmake/CPackConfig.cmake)
 set(CPACK_DEBIAN_PACKAGE_DEBUG OFF)
 include(CPack)
+
+configure_file(cmake/uninstall.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/valhalla_uninstall.cmake @ONLY)
+add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/valhalla_uninstall.cmake)

@@ -22,7 +22,7 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 using namespace valhalla;
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 using namespace prime_server;
 #endif
 
@@ -160,6 +160,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
+  // 4xx is used when we do sneaky important things the user should be aware of
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
 // clang-format on
 
@@ -1221,12 +1223,12 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
 }
 
 // function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code) {
-  auto message = warning_codes.find(code);
-  if (message != warning_codes.end()) {
-    auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
-    warning->set_code(message->first);
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
+  auto warning = warning_codes.find(code);
+  if (warning != warning_codes.end()) {
+    auto* warning_pbf = api.mutable_info()->mutable_warnings()->Add();
+    warning_pbf->set_description(warning->second + extra);
+    warning_pbf->set_code(warning->first);
   }
 }
 
@@ -1291,7 +1293,7 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, action, api);
 }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {

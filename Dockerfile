@@ -30,10 +30,6 @@ RUN ls -la
 RUN git submodule sync && git submodule update --init --recursive
 RUN rm -rf build && mkdir build
 
-# upgrade Conan again, to avoid using an outdated version:
-# https://github.com/valhalla/valhalla/issues/3685#issuecomment-1198604174
-RUN sudo PIP_BREAK_SYSTEM_PACKAGES=1 pip install --upgrade "conan<2.0.0"
-
 # configure the build with symbols turned on so that crashes can be triaged
 WORKDIR /usr/local/src/valhalla/build
 # switch back to -DCMAKE_BUILD_TYPE=RelWithDebInfo and uncomment the block below if you want debug symbols
