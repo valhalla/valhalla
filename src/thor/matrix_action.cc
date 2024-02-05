@@ -15,13 +15,29 @@ using namespace valhalla::sif;
 using namespace valhalla::thor;
 
 namespace {
-constexpr uint32_t kCostMatrixThreshold = 5;
+const std::string get_unfound_indices(const google::protobuf::RepeatedField<bool>& result) {
+  std::string indices;
+  for (int i = 0; i != result.size(); ++i) {
+    if (result[i]) {
+      indices += std::to_string(i) + ",";
+    }
+  }
+  indices.pop_back();
+
+  return indices;
 }
+
+constexpr uint32_t kCostMatrixThreshold = 5;
+} // namespace
 
 namespace valhalla {
 namespace thor {
 
-MatrixAlgorithm* thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time) {
+MatrixAlgorithm*
+thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing) {
+  if (costing == "bikeshare") {
+    return &time_distance_bss_matrix_;
+  }
 
   Matrix::Algorithm config_algo = Matrix::CostMatrix;
   switch (source_to_target_algorithm) {
@@ -95,11 +111,39 @@ std::string thor_worker_t::matrix(Api& request) {
     alg->set_has_time(has_time);
   }
 
-  auto* algo =
-      costing == "bikeshare" ? &time_distance_bss_matrix_ : get_matrix_algorithm(request, has_time);
+  auto* algo = get_matrix_algorithm(request, has_time, costing);
+  LOG_INFO("matrix::" + std::string(algo->name()));
 
-  algo->SourceToTarget(request, *reader, mode_costing, mode,
-                       max_matrix_distance.find(costing)->second);
+  // TODO(nils): TDMatrix doesn't care about either destonly or no_thru
+  if (algo->name() != "costmatrix") {
+    algo->SourceToTarget(request, *reader, mode_costing, mode,
+                         max_matrix_distance.find(costing)->second);
+    return tyr::serializeMatrix(request);
+  }
+
+  // for costmatrix try a second pass if the first didn't work out
+  valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
+  cost->set_allow_destination_only(false);
+  cost->set_pass(0);
+
+  if (!algo->SourceToTarget(request, *reader, mode_costing, mode,
+                            max_matrix_distance.find(costing)->second) &&
+      cost->AllowMultiPass() && costmatrix_allow_second_pass) {
+    // NOTE: we only look for unfound connections in a second pass; but
+    // if A -> B wasn't found and B -> A was, we still expand both for bidirectional efficiency
+    // TODO(nils): probably add filtered edges here too?
+    algo->Clear();
+    cost->set_pass(1);
+    cost->RelaxHierarchyLimits(true);
+    cost->set_allow_destination_only(true);
+    cost->set_allow_conditional_destination(true);
+    algo->set_not_thru_pruning(false);
+    algo->SourceToTarget(request, *reader, mode_costing, mode,
+                         max_matrix_distance.find(costing)->second);
+
+    // add a warning that we needed to open destonly etc
+    add_warning(request, 400, get_unfound_indices(request.matrix().second_pass()));
+  };
 
   return tyr::serializeMatrix(request);
 }
