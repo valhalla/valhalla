@@ -515,9 +515,9 @@ int main(int argc, char* argv[]) {
     } else if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else {
-      throw cxxopts::OptionException("Either json or json-file args must be set.");
+      throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
