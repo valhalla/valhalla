@@ -79,7 +79,7 @@ void getLevelsfromConfig() {
 }
 
 const std::vector<TileLevel>& TileHierarchy::levels() {
-  if (levels_.size()==0) {
+  if (levels_.size() == 0) {
     getLevelsfromConfig();
   }
   return levels_;
@@ -87,7 +87,7 @@ const std::vector<TileLevel>& TileHierarchy::levels() {
 
 const TileLevel& TileHierarchy::GetTransitLevel() {
   // Should we make a class lower than service other for transit?
-  if (transit_levels_.size()==0) {
+  if (transit_levels_.size() == 0) {
     getLevelsfromConfig();
   }
   return transit_levels_[0];
