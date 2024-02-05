@@ -39,7 +39,6 @@ jobs:
             -DENABLE_PYTHON_BINDINGS=ON \
             -DENABLE_CCACHE=OFF \
             -DENABLE_TESTS=OFF \
-            -DENABLE_BENCHMARKS=OFF \
             -DLOGGING_LEVEL=DEBUG \
             -DBoost_PROGRAM_OPTIONS_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libboost_program_options-mt-x64.dll.a \
             -DPYTHON_EXECUTABLE=/usr/x86_64-w64-mingw32/bin/python3 \

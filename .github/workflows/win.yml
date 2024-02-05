@@ -4,7 +4,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test/
@@ -15,7 +14,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test/
@@ -109,8 +107,7 @@ jobs:
             -DENABLE_HTTP=ON \
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
-            -DENABLE_SERVICES=OFF \
-            -DENABLE_BENCHMARKS=OFF
+            -DENABLE_SERVICES=OFF
 
       - name: Build Valhalla
         shell: powershell

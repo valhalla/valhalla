@@ -4,7 +4,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test_requests/
@@ -14,7 +13,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test_requests/
