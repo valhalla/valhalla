@@ -182,7 +182,7 @@ bool TimeDistanceBSSMatrix::ComputeMatrix(Api& request,
   // reserve the PBF vectors
   reserve_pbf_arrays(*request.mutable_matrix(), origins.size() * destinations.size());
 
-  for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+  for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     edgelabels_.reserve(max_reserved_labels_count_);
     const auto& origin = origins.Get(origin_index);
 
