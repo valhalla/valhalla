@@ -21,6 +21,8 @@ void getLevelsfromConfig() {
   midgard::PointLL minpt = {-180., -90.};
 
   try {
+    // Many tests don't specify any configuration, so catch the "Config singleton was not initialized
+    // before usage" exception here and fallback to default OSM tile grid.
     minpt = {config().get<float>("baldr.tiling_scheme.minpt.lng", -180),
              config().get<float>("baldr.tiling_scheme.minpt.lat", -90)};
     const boost::optional<const boost::property_tree::ptree&> columnsptree =
