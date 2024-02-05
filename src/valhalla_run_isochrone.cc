@@ -59,14 +59,15 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
-      throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
+      throw cxxopts::exceptions::exception("A JSON format request must be present.\n\n" +
+                                           options.help());
     }
     json_str = result["json"].as<std::string>();
 
     if (result.count("file")) {
       filename = result["file"].as<std::string>();
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
