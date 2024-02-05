@@ -170,11 +170,11 @@ config = {
     },
     'baldr': {
         'tiling_scheme': {
-            'minpt': { 'lng': -180.0, 'lat': -90.0 },
-            'columns': [ 90, 360, 1440, 1440 ],
-            'rows': [ 45, 180, 720, 720 ],
-            'tilesizes': [ 4, 1, .25, .25 ]
-        } 
+            'minpt': {'lng': -180.0, 'lat': -90.0},
+            'columns': [90, 360, 1440, 1440],
+            'rows': [45, 180, 720, 720],
+            'tilesizes': [4, 1, 0.25, 0.25],
+        }
     },
     'httpd': {
         'service': {
@@ -446,11 +446,14 @@ help_text = {
     },
     'baldr': {
         'tiling_scheme': {
-            'minpt': { 'lng': 'Longitude of bottom-left coordinate of whole map area', 'lat': 'Latitude of bottom-left coordinate of bounding box' },
+            'minpt': {
+                'lng': 'Longitude of bottom-left coordinate of whole map area',
+                'lat': 'Latitude of bottom-left coordinate of bounding box',
+            },
             'columns': 'Number of columns in the tile grid. (In this order: highway, arterial, local, transit)',
             'rows': 'Number of rows in the tile grid. (In this order: highway, arterial, local, transit)',
             'tilesizes': 'Size of a tile at the given level. (Levels are in this order: highway, arterial, local, transit)',
-        } 
+        }
     },
     'httpd': {
         'service': {
