@@ -153,27 +153,23 @@ std::string serializeIsochronePbf(Api& request,
     const auto& contour = contours[isoline_index];
     const auto& interval = intervals[isoline_index];
 
-    valhalla::Isochrone::Contour con;
-    con.set_metric(std::get<2>(interval) == "time" ? Isochrone_metric_type_time
-                                                   : Isochrone_metric_type_distance);
+    auto* con = isochrone.mutable_contours()->Add();
+    con->set_metric(std::get<2>(interval) == "time" ? Isochrone::time : Isochrone::distance);
 
-    con.set_metric_value(std::get<1>(interval));
+    con->set_metric_value(std::get<1>(interval));
 
     // for each feature
     for (const auto& feature : contour) {
       // for each ring/contour
       for (const auto& ring : feature) {
         // construct a geometry
-        Isochrone_Geometry geom;
+        auto* geom = con->mutable_geometries()->Add();
         for (const auto& pair : ring) {
-          geom.add_coords(round(pair.lng() * 1e6));
-          geom.add_coords(round(pair.lat() * 1e6));
+          geom->add_coords(round(pair.lng() * 1e6));
+          geom->add_coords(round(pair.lat() * 1e6));
         }
-        con.add_geometries()->CopyFrom(geom);
       }
     }
-
-    isochrone.add_contours()->CopyFrom(con);
   }
 
   return serializePbf(request);
