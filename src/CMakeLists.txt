@@ -186,10 +186,10 @@ target_include_directories(valhalla
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${rapidjson_include_dir}
+    ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+    $<$<BOOL:${WIN32}>:${dirent_include_dir}>
   PRIVATE
     ${libvalhalla_include_directories})
 
