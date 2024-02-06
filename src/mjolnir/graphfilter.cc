@@ -723,6 +723,7 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
                                     edgeinfo.GetNames(), edgeinfo.GetTaggedValues(),
                                     edgeinfo.GetLinguisticTaggedValues(), edgeinfo.GetTypes(), added,
                                     diff_names);
+        newedge.set_edgeinfo_offset(edge_info_offset);
 
         // Update length and curvature if the edge was aggregated
         if (aggregated) {
