@@ -101,7 +101,7 @@ TEST(CostingTypeBlind, TrafficSignal) {
        }},
   };
 
-  const gurka::nodes nodes = {{"B", {{"highway", "crossing"}, {"crossing", "traffic_signals"}}}};
+  const gurka::nodes nodes = {{"B", {{"highway", "traffic_signals"}}}};
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/costing_type_blind_traffic_sign");

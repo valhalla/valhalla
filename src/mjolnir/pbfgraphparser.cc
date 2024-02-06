@@ -1927,10 +1927,8 @@ public:
         // node
         n.set_state_iso_index(osmdata_.node_names.index(tag.second));
         ++osmdata_.node_name_count;
-      } else if (tag.first == "crossing" && tag.second == "traffic_signals") {
-        n.set_traffic_signal(true);
       } else if (tag.first == "highway") {
-        n.set_traffic_signal(n.traffic_signal() || tag.second == "traffic_signals");
+        n.set_traffic_signal(tag.second == "traffic_signals");
         n.set_stop_sign(tag.second == "stop");
         n.set_yield_sign(tag.second == "give_way");
       } else if (tag.first == "forward_signal") {
