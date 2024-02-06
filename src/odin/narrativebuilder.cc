@@ -48,9 +48,7 @@ NarrativeBuilder::NarrativeBuilder(const Options& options,
                                    const MarkupFormatter& markup_formatter)
     : options_(options), trip_path_(trip_path), dictionary_(dictionary),
       markup_formatter_(markup_formatter), articulated_preposition_enabled_(false),
-      blind_mode_(options.costing_type() == Costing_Type_pedestrian &&
-                  options.costings().find(Costing::pedestrian)->second.options().transport_type() ==
-                      "blind") {
+      blind_mode_(trip_path->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
 }
 
 void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {

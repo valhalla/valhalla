@@ -87,9 +87,7 @@ namespace odin {
 
 ManeuversBuilder::ManeuversBuilder(const Options& options, EnhancedTripLeg* etp)
     : options_(options), trip_path_(etp),
-      blind_mode_(options.costing_type() == Costing_Type_pedestrian &&
-                  options.costings().find(Costing::pedestrian)->second.options().transport_type() ==
-                      "blind") {
+      blind_mode_(etp->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -281,7 +279,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               std::string(" | left_similar_traversable_outbound =") +
               std::to_string(xedge_counts.left_similar_traversable_outbound));
 #endif
-    if (blind_mode_)
+    if (blind_mode_) {
       switch (node->type()) {
         case TripLeg_Node_Type_kStreetIntersection: {
           std::vector<std::pair<std::string, bool>> name_list;
@@ -308,6 +306,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
         default:
           break;
       }
+    }
     if (CanManeuverIncludePrevEdge(maneuvers.front(), i)) {
       UpdateManeuver(maneuvers.front(), i);
     } else {

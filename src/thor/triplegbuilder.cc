@@ -1631,10 +1631,6 @@ void TripLegBuilder::Build(
     (*interrupt_callback)();
   }
 
-  const bool blind_instructions =
-      options.costing_type() == Costing_Type_pedestrian &&
-      options.costings().find(Costing::pedestrian)->second.options().transport_type() == "blind";
-
   // Remember what algorithms were used to create this leg
   *trip_path.mutable_algorithms() = {algorithms.begin(), algorithms.end()};
 
@@ -1834,7 +1830,8 @@ void TripLegBuilder::Build(
         AddTripEdge(controller, edge, edge_itr->trip_id, multimodal_builder.block_id, mode,
                     travel_type, costing, directededge, node->drive_on_right(), trip_node, graphtile,
                     time_info, startnode.id(), node->named_intersection(), start_tile,
-                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs, blind_instructions);
+                    edge_itr->restriction_index, edge_itr->elapsed_cost.secs,
+                    travel_type == PedestrianType::kBlind && mode == sif::TravelMode::kPedestrian);
 
     // some information regarding shape/length trimming
     float trim_start_pct = is_first_edge ? start_pct : 0;
@@ -1996,7 +1993,9 @@ void TripLegBuilder::Build(
     // node and end node) of a shortcut that was recovered.
     if (startnode.Is_Valid() && !edge_itr->start_node_is_recovered) {
       AddIntersectingEdges(controller, start_tile, node, directededge, prev_de, prior_opp_local_index,
-                           graphreader, trip_node, blind_instructions);
+                           graphreader, trip_node,
+                           travel_type == PedestrianType::kBlind &&
+                               mode == sif::TravelMode::kPedestrian);
     }
 
     ////////////// Prepare for the next iteration
