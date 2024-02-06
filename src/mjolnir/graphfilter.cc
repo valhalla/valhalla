@@ -56,22 +56,25 @@ bool ExpandFromNode(GraphReader& reader,
                     uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
-                    GraphId current_node);
+                    GraphId current_node,
+                    const RoadClass& rc,
+                    bool validate);
 
 /*
  * Expand from the current node
- * @param  reader         Graph reader.
- * @param  shape          shape that we need to update
- * @param  en             current end node that we started at
- * @param  from_node      node that we started from
- * @param  isos           country ISOs. Used to see if we cross into a new country
- * @param  forward        traverse in the forward or backward direction
+ * @param  reader  Graph reader.
+ * @param  shape  shape that we need to update
+ * @param  en  current end node that we started at
+ * @param  from_node  node that we started from
+ * @param  isos  country ISOs. Used to see if we cross into a new country
+ * @param  forward  traverse in the forward or backward direction
  * @param  visited_nodes  nodes that we already visited.  don't visit again
- * @param  way_id         only interested in edges with this way_id
- * @param  prev_tile      previous tile
- * @param  prev_node      previous node
- * @param  current_node   current node
- * @param  node_info      current node's info
+ * @param  way_id  only interested in edges with this way_id
+ * @param  prev_tile  previous tile
+ * @param  prev_node  previous node
+ * @param  current_node  current node
+ * @param  node_info  current node's info
+ * @param  validate  Are we validating data?
  *
  */
 bool ExpandFromNodeInner(GraphReader& reader,
@@ -85,7 +88,9 @@ bool ExpandFromNodeInner(GraphReader& reader,
                          const graph_tile_ptr& prev_tile,
                          GraphId prev_node,
                          GraphId current_node,
-                         const NodeInfo* node_info) {
+                         const NodeInfo* node_info,
+                         const RoadClass& rc,
+                         bool validate) {
 
   for (size_t j = 0; j < node_info->edge_count(); ++j) {
     GraphId edge_id(prev_tile->id().tileid(), prev_tile->id().level(), node_info->edge_index() + j);
@@ -98,7 +103,6 @@ bool ExpandFromNodeInner(GraphReader& reader,
     }
 
     const NodeInfo* en_info = tile->node(de->endnode().id());
-
     // check the direction, if we looped back, or are we done
     if ((de->endnode() != prev_node) && (de->forward() == forward) &&
         (de->endnode() != from_node || (de->endnode() == from_node && visited_nodes.size() > 1))) {
@@ -111,8 +115,10 @@ bool ExpandFromNodeInner(GraphReader& reader,
           return false;
         }
 
-        if (isos.size() >= 1) {
-          isos.insert(tile->admin(en_info->admin_index())->country_iso());
+        if (validate) {
+          if (isos.size() >= 1) {
+            isos.insert(tile->admin(en_info->admin_index())->country_iso());
+          }
         } else {
           std::list<PointLL> edgeshape =
               valhalla::midgard::decode7<std::list<PointLL>>(edge_info.encoded_shape());
@@ -141,7 +147,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
           // expand with the same way_id
           found = ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id,
-                                 tile, current_node, de->endnode());
+                                 tile, current_node, de->endnode(), rc, validate);
           if (found) {
             return true;
           }
@@ -156,17 +162,18 @@ bool ExpandFromNodeInner(GraphReader& reader,
 
 /*
  * Expand from the next node which is now our new current node
- * @param  reader         Graph reader.
- * @param  shape          shape that we need to update
- * @param  en             current end node that we started at
- * @param  from_node      node that we started from
- * @param  isos           country ISOs. Used to see if we cross into a new country
- * @param  forward        traverse in the forward or backward direction
+ * @param  reader  Graph reader.
+ * @param  shape  shape that we need to update
+ * @param  en  current end node that we started at
+ * @param  from_node  node that we started from
+ * @param  isos  country ISOs. Used to see if we cross into a new country
+ * @param  forward  traverse in the forward or backward direction
  * @param  visited_nodes  nodes that we already visited.  don't visit again
- * @param  way_id         only interested in edges with this way_id
- * @param  prev_tile      previous tile
- * @param  prev_node      previous node
- * @param  current_node   current node
+ * @param  way_id  only interested in edges with this way_id
+ * @param  prev_tile  previous tile
+ * @param  prev_node  previous node
+ * @param  current_node  current node
+ * @param  validate  Are we validating data?
  *
  */
 bool ExpandFromNode(GraphReader& reader,
@@ -179,7 +186,9 @@ bool ExpandFromNode(GraphReader& reader,
                     uint64_t& way_id,
                     const graph_tile_ptr& prev_tile,
                     GraphId prev_node,
-                    GraphId current_node) {
+                    GraphId current_node,
+                    const RoadClass& rc,
+                    bool validate) {
 
   auto tile = prev_tile;
   if (tile->id() != current_node.Tile_Base()) {
@@ -189,7 +198,7 @@ bool ExpandFromNode(GraphReader& reader,
   auto* node_info = tile->node(current_node);
   // expand from the current node
   return ExpandFromNodeInner(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
-                             prev_node, current_node, node_info);
+                             prev_node, current_node, node_info, rc, validate);
 }
 
 bool Aggregate(GraphId& start_node,
@@ -199,12 +208,14 @@ bool Aggregate(GraphId& start_node,
                const GraphId& from_node,
                uint64_t& way_id,
                std::unordered_set<std::string>& isos,
-               bool forward) {
+               const RoadClass& rc,
+               bool forward,
+               bool validate) {
 
   graph_tile_ptr tile = reader.GetGraphTile(start_node);
   std::unordered_set<GraphId> visited_nodes{start_node};
   return ExpandFromNode(reader, shape, en, from_node, isos, forward, visited_nodes, way_id, tile,
-                        GraphId(), start_node);
+                        GraphId(), start_node, rc, validate);
 }
 
 /**
@@ -261,6 +272,7 @@ void FilterTiles(GraphReader& reader,
 
       // Iterate through directed edges outbound from this node
       std::vector<uint64_t> wayid;
+      std::vector<RoadClass> classification;
       std::vector<GraphId> endnode;
       const NodeInfo* nodeinfo = tile->node(nodeid);
       std::string begin_node_iso = tile->admin(nodeinfo->admin_index())->country_iso();
@@ -338,6 +350,7 @@ void FilterTiles(GraphReader& reader,
                                     edgeinfo.GetTypes(), added, diff_names);
         newedge.set_edgeinfo_offset(edge_info_offset);
         wayid.push_back(edgeinfo.wayid());
+        classification.push_back(directededge->classification());
         endnode.push_back(directededge->endnode());
 
         if (directededge->endnode().tile_value() != tile->header()->graphid().tile_value()) {
@@ -378,7 +391,12 @@ void FilterTiles(GraphReader& reader,
         // edge attributes should match), don't end at same node (no loops), no traffic signal,
         // no signs exist at the node(named_intersection), does not have different
         // names, and end node of edges are not in a different tile.
-        if (edge_filtered && edge_count == 2 && wayid[0] == wayid[1] && endnode[0] != endnode[1] &&
+        //
+        // Note: The classification check is here due to the reclassification of ferries.  Found
+        // that some edges that were split at pedestrian edges had different classifications due to
+        // the reclassification of ferry edges (e.g., https://www.openstreetmap.org/way/204337649)
+        if (edge_filtered && edge_count == 2 && wayid[0] == wayid[1] &&
+            classification[0] == classification[1] && endnode[0] != endnode[1] &&
             !nodeinfo->traffic_signal() && !nodeinfo->named_intersection() && !diff_names &&
             !diff_tile) {
 
@@ -429,32 +447,21 @@ void GetAggregatedData(GraphReader& reader,
                        const GraphId& from_node,
                        const graph_tile_ptr& tile,
                        const DirectedEdge* directededge) {
+  std::unordered_set<std::string> isos;
+  bool isForward = directededge->forward();
+  auto id = directededge->endnode();
+  if (!isForward) {
+    std::reverse(shape.begin(), shape.end());
+  }
 
-  // Get the tile at the end node.  Skip if node is in another tile.
-  // mode_change is not set for end nodes that are in diff tiles
-  if (directededge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
-
-    // original edge data.
-    const auto& edgeinfo = tile->edgeinfo(directededge);
-    const NodeInfo* en_info = tile->node(directededge->endnode().id());
-
-    // do we need to aggregate?
-    if (en_info->mode_change()) {
-      std::unordered_set<std::string> isos;
-      bool isForward = directededge->forward();
-      auto id = directededge->endnode();
-      if (!isForward) {
-        std::reverse(shape.begin(), shape.end());
-      }
-      // walk in the correct direction.
-      uint64_t wayid = edgeinfo.wayid();
-      if (Aggregate(id, reader, shape, en, from_node, wayid, isos, isForward)) {
-        aggregated++; // count the current edge
-        // flip the shape back for storing in edgeinfo
-        if (!isForward) {
-          std::reverse(shape.begin(), shape.end());
-        }
-      }
+  // walk in the correct direction.
+  uint64_t wayid = tile->edgeinfo(directededge).wayid();
+  if (Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+                isForward, false)) {
+    aggregated++; // count the current edge
+    // flip the shape back for storing in edgeinfo
+    if (!isForward) {
+      std::reverse(shape.begin(), shape.end());
     }
   }
 }
@@ -510,12 +517,13 @@ void ValidateData(GraphReader& reader,
 
       // walk in the correct direction.
       uint64_t wayid = edgeinfo.wayid();
-      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, isForward)) {
+      if (!Aggregate(id, reader, shape, en, from_node, wayid, isos, directededge->classification(),
+                     isForward, true)) {
         // LOG_WARN("ValidateData - failed to validate node.  Will not aggregate.");
         // for debugging only
         // std::cout << "End node: " << directededge->endnode().value << " WayId: " <<
         // edgeinfo.wayid()
-        //          << std::endl;
+        //           << std::endl;
 
         if (wayid == 0) { // This edge has special attributes, we can't aggregate
           no_agg_ways.insert(edgeinfo.wayid());
@@ -689,16 +697,24 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
         // Names can be different in the forward and backward direction
         diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
-        bool added;
         const auto& edgeinfo = tile->edgeinfo(directededge);
         std::string encoded_shape = edgeinfo.encoded_shape();
         std::list<PointLL> shape = valhalla::midgard::decode7<std::list<PointLL>>(encoded_shape);
 
+        // Aggregate if end node is marked and in same tile
+        bool aggregated = false;
         GraphId en = directededge->endnode();
-        // Do the actual aggregation.
-        GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
 
-        newedge.set_endnode(en);
+        if (en.tile_value() == tile_id) {
+          if (tile->node(en.id())->mode_change()) {
+            GetAggregatedData(reader, shape, en, nodeid, tile, directededge);
+            newedge.set_endnode(en);
+            aggregated = true;
+          }
+        }
+
+        // Hammerhead specific.  bike network not saved to edgeinfo
+        bool added;
         encoded_shape = encode7(shape);
         uint32_t w = hasher(encoded_shape + std::to_string(edgeinfo.wayid()));
         uint32_t edge_info_offset =
@@ -708,16 +724,12 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
                                     edgeinfo.GetLinguisticTaggedValues(), edgeinfo.GetTypes(), added,
                                     diff_names);
 
-        // length
-        auto length = valhalla::midgard::length(shape);
+        // Update length and curvature if the edge was aggregated
+        if (aggregated) {
+          newedge.set_length(valhalla::midgard::length(shape));
+          newedge.set_curvature(compute_curvature(shape));
+        }
 
-        // Compute a curvature metric [0-15]. TODO - use resampled polyline?
-        uint32_t curvature = compute_curvature(shape);
-
-        newedge.set_length(length);
-        newedge.set_curvature(curvature);
-
-        newedge.set_edgeinfo_offset(edge_info_offset);
         // Add directed edge
         tilebuilder.directededges().emplace_back(std::move(newedge));
         ++edge_count;
@@ -776,7 +788,6 @@ void AggregateTiles(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
  */
 void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& old_to_new) {
   LOG_INFO("Update end nodes of directed edges");
-
   // Iterate through all tiles in the local level
   auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
   for (const auto& tile_id : local_tiles) {
@@ -815,6 +826,66 @@ void UpdateEndNodes(GraphReader& reader, std::unordered_map<GraphId, GraphId>& o
       directededges.push_back(*edge);
       DirectedEdge& new_edge = directededges.back();
       new_edge.set_endnode(end_node);
+    }
+
+    // Update the tile with new directededges.
+    tilebuilder.Update(nodes, directededges);
+
+    if (reader.OverCommitted()) {
+      reader.Trim();
+    }
+  }
+}
+
+/**
+ * Update Opposing Edge Index of all directed edges.
+ * @param  reader  Graph reader.
+ */
+void UpdateOpposingEdgeIndex(GraphReader& reader) {
+  LOG_INFO("Update Opposing Edge Index of directed edges");
+
+  // Iterate through all tiles in the local level
+  auto local_tiles = reader.GetTileSet(TileHierarchy::levels().back().level);
+  for (const auto& tile_id : local_tiles) {
+    GraphTileBuilder tilebuilder(reader.tile_dir(), tile_id, false);
+
+    // Get the graph tile. Read from this tile to create the new tile.
+    graph_tile_ptr tile = reader.GetGraphTile(tile_id);
+    assert(tile);
+
+    // Copy nodes (they do not change)
+    std::vector<NodeInfo> nodes;
+    size_t n = tile->header()->nodecount();
+    nodes.reserve(n);
+    const NodeInfo* orig_nodes = tile->node(0);
+    std::copy(orig_nodes, orig_nodes + n, std::back_inserter(nodes));
+
+    // Iterate through all directed edges - update end nodes
+    std::vector<DirectedEdge> directededges;
+
+    GraphId nodeid(tile_id.tileid(), tile_id.level(), 0);
+    for (uint32_t i = 0; i < tile->header()->nodecount(); ++i, ++nodeid) {
+      const NodeInfo* nodeinfo = tile->node(nodeid);
+      GraphId edgeid(nodeid.tileid(), nodeid.level(), nodeinfo->edge_index());
+      for (uint32_t j = 0; j < nodeinfo->edge_count(); ++j, ++edgeid) {
+        // Check if the directed edge should be included
+        const DirectedEdge* edge = tile->directededge(edgeid);
+
+        // Copy the edge to the directededges vector and update the end node
+        directededges.push_back(*edge);
+        DirectedEdge& new_edge = directededges.back();
+
+        // Get the tile at the end node
+        graph_tile_ptr endnodetile;
+        if (tile->id() == edge->endnode().Tile_Base()) {
+          endnodetile = tile;
+        } else {
+          endnodetile = reader.GetGraphTile(edge->endnode());
+        }
+
+        // Set the opposing index on the local level
+        new_edge.set_opp_local_idx(GetOpposingEdgeIndex(endnodetile, nodeid, tile, *edge));
+      }
     }
 
     // Update the tile with new directededges.
@@ -875,6 +946,10 @@ void GraphFilter::Filter(const boost::property_tree::ptree& pt) {
   // Update end nodes. Clear the GraphReader cache first.
   reader.Clear();
   UpdateEndNodes(reader, old_to_new);
+
+  // Update Opposing Edge Index. Clear the GraphReader cache first.
+  reader.Clear();
+  UpdateOpposingEdgeIndex(reader);
 
   LOG_INFO("Done GraphFilter");
 }
