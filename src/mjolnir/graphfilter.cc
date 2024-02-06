@@ -110,7 +110,7 @@ bool ExpandFromNodeInner(GraphReader& reader,
           (en_info->mode_change() || (node_info->mode_change() && !en_info->mode_change()))) {
 
         // If this edge has special attributes, then we can't aggregate
-        if (!CanAggregate(de)) {
+        if (!CanAggregate(de) || de->classification() != rc) {
           way_id = 0;
           return false;
         }
