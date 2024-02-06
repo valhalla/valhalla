@@ -33,6 +33,7 @@
    * FIXED: Config singleton multiple instantiation issue [#4521](https://github.com/valhalla/valhalla/pull/4521)
    * FIXED: Prevent GetShortcut to run into an infinite loop [#4532](https://github.com/valhalla/valhalla/pull/4532)
    * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
+   * FIXED: Aggregation updates: update opposing local idx after aggregating the edges, added classification check for aggregation, and shortcut length changes [#4570](https://github.com/valhalla/valhalla/pull/4570)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
