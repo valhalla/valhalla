@@ -100,7 +100,7 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
     for (size_t i = 1; i < heights.size(); i++) {
       auto d = std::abs(heights[i] - heights[i - 1]);
       diff = d < diff ? diff : d;
-      LOG_INFO("  " + std::to_string(heights[i]));
+      LOG_DEBUG("  " + std::to_string(heights[i]));
     }
     LOG_WARN("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
              std::to_string(diff) + " meters.");
