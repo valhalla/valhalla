@@ -326,7 +326,6 @@ void ConnectEdges(GraphReader& reader,
 
   // Update the end node and return the length
   endnode = directededge->endnode();
-  return directededge->length();
 }
 
 // Check if the edge is entering a contracted node
@@ -379,7 +378,6 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
-      uint32_t length = newedge.length();
 
       // For computing weighted density and total turn duration along the shortcut
       uint32_t edge_length = newedge.length();
@@ -488,7 +486,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
 
-      // Update the length, curvature, and end node.
+      // Update the length, curvature, and end node
       newedge.set_length(length);
       newedge.set_curvature(compute_curvature(shape));
       newedge.set_endnode(end_node);
