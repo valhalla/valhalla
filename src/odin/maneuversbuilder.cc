@@ -86,8 +86,7 @@ namespace valhalla {
 namespace odin {
 
 ManeuversBuilder::ManeuversBuilder(const Options& options, EnhancedTripLeg* etp)
-    : options_(options), trip_path_(etp),
-      blind_mode_(etp->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
+    : options_(options), trip_path_(etp) {
 }
 
 std::list<Maneuver> ManeuversBuilder::Build() {
@@ -279,7 +278,7 @@ std::list<Maneuver> ManeuversBuilder::Produce() {
               std::string(" | left_similar_traversable_outbound =") +
               std::to_string(xedge_counts.left_similar_traversable_outbound));
 #endif
-    if (blind_mode_) {
+    if (trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
       switch (node->type()) {
         case TripLeg_Node_Type_kStreetIntersection: {
           std::vector<std::pair<std::string, bool>> name_list;
@@ -542,7 +541,7 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Do not combine
       // if has node_type
-      else if (blind_mode_ &&
+      else if (trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind &&
                (curr_man->has_node_type() || next_man->has_node_type() || curr_man->is_steps() ||
                 next_man->is_steps() || curr_man->is_bridge() || next_man->is_bridge() ||
                 curr_man->is_tunnel() || next_man->is_tunnel())) {
@@ -1291,7 +1290,7 @@ void ManeuversBuilder::InitializeManeuver(Maneuver& maneuver, int node_index) {
     }
   }
 
-  if (blind_mode_) {
+  if (trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
     if (prev_edge->use() == TripLeg_Use_kStepsUse)
       maneuver.set_steps(true);
     if (prev_edge->bridge())
@@ -2109,7 +2108,8 @@ bool ManeuversBuilder::CanManeuverIncludePrevEdge(Maneuver& maneuver, int node_i
   auto node = trip_path_->GetEnhancedNode(node_index);
   auto turn_degree = GetTurnDegree(prev_edge->end_heading(), curr_edge->begin_heading());
 
-  if (blind_mode_ && maneuver.has_node_type()) {
+  if (trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind &&
+      maneuver.has_node_type()) {
     return false;
   }
   if (node->type() == TripLeg_Node_Type::TripLeg_Node_Type_kBikeShare) {
