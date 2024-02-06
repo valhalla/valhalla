@@ -524,8 +524,7 @@ void NarrativeBuilder::Build(std::list<Maneuver>& maneuvers) {
   }
 
   // Iterate over maneuvers to form verbal multi-cue instructions
-  if (!(trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind))
-    FormVerbalMultiCue(maneuvers);
+  FormVerbalMultiCue(maneuvers);
 }
 
 std::string NarrativeBuilder::FormVerbalAlertApproachInstruction(float distance,
@@ -4624,7 +4623,7 @@ NarrativeBuilder::FormStreetNames(const Maneuver& maneuver,
   // then determine if walkway or bike path
   if (enhance_empty_street_names && street_names_string.empty() && empty_street_name_labels) {
     // Set names in blind user mode:
-    if (trip_path_->GetCurrEdge(0)->pedestrian_type() == PedestrianType::kBlind) {
+    if (maneuver.pedestrian_type() == PedestrianType::kBlind) {
       if (maneuver.is_steps())
         street_names_string = empty_street_name_labels->at(kStepsIndex);
       else if (maneuver.is_bridge())
@@ -4688,6 +4687,8 @@ std::string NarrativeBuilder::FormStreetNames(const StreetNames& street_names,
 void NarrativeBuilder::FormVerbalMultiCue(std::list<Maneuver>& maneuvers) {
   Maneuver* prev_maneuver = nullptr;
   for (auto& maneuver : maneuvers) {
+    if (maneuver.pedestrian_type() == PedestrianType::kBlind)
+      continue;
     if (prev_maneuver && IsVerbalMultiCuePossible(*prev_maneuver, maneuver)) {
       // Determine if imminent or distant verbal multi-cue
       // if previous maneuver has an intersecting traversable outbound edge
