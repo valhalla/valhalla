@@ -324,7 +324,7 @@ void ConnectEdges(GraphReader& reader,
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
 
-  // Update the end node and return the length
+  // Update the end node
   endnode = directededge->endnode();
 }
 
