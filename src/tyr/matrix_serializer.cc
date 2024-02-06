@@ -157,13 +157,16 @@ json::ArrayPtr serialize_row(const valhalla::Matrix& matrix,
       }
 
       if (matrix.shapes().size() && shape_format != no_shape) {
-        switch (shape_format) {
-          case geojson:
-            map->emplace("shape",
-                         tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
-            break;
-          default:
-            map->emplace("shape", matrix.shapes()[i]);
+        // TODO(nils): tdmatrices don't have "shape" support yet
+        if (!matrix.shapes()[i].empty()) {
+          switch (shape_format) {
+            case geojson:
+              map->emplace("shape",
+                           tyr::geojson_shape(decode<std::vector<PointLL>>(matrix.shapes()[i])));
+              break;
+            default:
+              map->emplace("shape", matrix.shapes()[i]);
+          }
         }
       }
     } else {

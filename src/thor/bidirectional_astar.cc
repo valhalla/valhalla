@@ -90,7 +90,7 @@ void BidirectionalAStar::Clear() {
   // Set the ferry flag to false
   has_ferry_ = false;
   // Set not thru pruning to true
-  not_thru_pruning_ = true;
+  set_not_thru_pruning(true);
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
