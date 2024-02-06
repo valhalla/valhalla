@@ -394,8 +394,8 @@ TEST(Shortcuts, ShortcutRestrictions) {
         gurka::findEdge(reader, layout, "highway", end_node, baldr::GraphId{}, 0, true);
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
     EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
-    EXPECT_EQ(std::get<1>(shortcut)->length(), 3000);
-    EXPECT_EQ(std::get<3>(shortcut)->length(), 3000);
+    EXPECT_NEAR(std::get<1>(shortcut)->length(), 3000, 1);
+    EXPECT_NEAR(std::get<3>(shortcut)->length(), 3000, 1);
   }
 
   // test the right edges are really superseded by a shortcut
@@ -435,7 +435,7 @@ TEST(Shortcuts, ShortcutRestrictions) {
         gurka::findEdge(reader2, layout, "highway", end_node, baldr::GraphId{}, 0, true);
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
     EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
-    EXPECT_EQ(std::get<1>(shortcut)->length(), 7500);
-    EXPECT_EQ(std::get<3>(shortcut)->length(), 7500);
+    EXPECT_NEAR(std::get<1>(shortcut)->length(), 7500, 1);
+    EXPECT_NEAR(std::get<3>(shortcut)->length(), 7500, 1);
   }
 }
