@@ -42,6 +42,31 @@ TEST(Shortcuts, CreateValid) {
   EXPECT_EQ(opp_shortcut_edged->speed(), 90);
 }
 
+TEST(Shortcuts, LoopWithoutShortcut) {
+  constexpr double gridsize = 50;
+
+  const std::string ascii_map = R"(
+      A--B
+      |  |
+      |  |
+      C--D
+  )";
+  const gurka::ways ways = {{"AB", {{"highway", "primary"}}},
+                            {"BD", {{"highway", "primary"}}},
+                            {"DC", {{"highway", "primary"}}},
+                            {"CA", {{"highway", "primary"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_shortcut");
+
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  auto loopEdge = std::get<0>(gurka::findEdgeByNodes(graph_reader, layout, "A", "B"));
+  auto shortcut = graph_reader.GetShortcut(loopEdge);
+
+  EXPECT_FALSE(shortcut.Is_Valid()) << "Shortcuts found. Check the map.";
+}
+
 // Here no shortcuts are created. There could be one from A to C with speed 80 but in the opposite
 // direction speeds differ which blocks CA creation.
 TEST(Shortcuts, CreateInvalid) {
@@ -143,7 +168,7 @@ TEST(Shortcuts, ShortcutSpeed) {
 
   ASSERT_EQ(shortcut_infos.size(), 2);
 
-  for (auto const shortcut_info : shortcut_infos) {
+  for (auto const& shortcut_info : shortcut_infos) {
     auto const shortcutid = std::get<0>(shortcut_info);
     auto const shortcut_speed = std::get<1>(shortcut_info);
     auto const shortcut_truck_speed = std::get<2>(shortcut_info);

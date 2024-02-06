@@ -1,4 +1,4 @@
-name: GitHub CI
+name: syntax
 on: [pull_request]
 
 jobs:

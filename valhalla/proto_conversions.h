@@ -515,7 +515,7 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 }
 
 // matrix algo to string
-std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
+const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact
