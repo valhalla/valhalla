@@ -393,12 +393,12 @@ bool TruckCost::ModeSpecificAllowed(const baldr::AccessRestriction& restriction)
       }
       break;
     case AccessType::kMaxAxleLoad:
-      if (axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
+      if (!ignore_restrictions_ && axle_load_ > static_cast<float>(restriction.value() * 0.01)) {
         return false;
       }
       break;
     case AccessType::kMaxAxles:
-      if (axle_count_ > static_cast<uint8_t>(restriction.value())) {
+      if (!ignore_restrictions_ && axle_count_ > static_cast<uint8_t>(restriction.value())) {
         return false;
       }
       break;

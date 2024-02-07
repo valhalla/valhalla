@@ -575,7 +575,7 @@ public:
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-    bool time_allowed = false;
+    bool restricted = false;
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
@@ -592,7 +592,7 @@ public:
         restriction_idx = static_cast<uint8_t>(i);
 
         if (access_type == baldr::AccessType::kTimedAllowed)
-          time_allowed = true;
+          restricted = true;
 
         if (current_time == 0) {
           // No time supplied so ignore time-based restrictions
@@ -605,12 +605,16 @@ public:
             // If not, we should keep looking
 
             // We are in range at the time we are allowed at this edge
-            if (access_type == baldr::AccessType::kTimedAllowed)
-              return true;
-            else if (access_type == baldr::AccessType::kDestinationAllowed)
-              return allow_conditional_destination_ || is_dest;
-            else
-              return false;
+            switch (access_type) {
+              case baldr::AccessType::kTimedAllowed:
+                restricted = false;
+                break;
+              case baldr::AccessType::kDestinationAllowed:
+                restricted = !(allow_conditional_destination_ || is_dest);
+                break;
+              default:
+                return false;
+            }
           }
         }
       }
@@ -619,7 +623,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return !time_allowed || (current_time == 0);
+    return !restricted || (current_time == 0);
   }
 
   /**
