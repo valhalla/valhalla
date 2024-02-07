@@ -73,7 +73,7 @@ constexpr float kRoadClassPenaltyFactor[] = {
     0.75f,  // Tertiary
     0.5f,  // Unclassified
     0.25f,  // Residential
-    0.05f  // Service, other
+    0.0f  // Service, other
 };
 
 BaseCostingOptionsConfig GetBaseCostOptsConfig() {
