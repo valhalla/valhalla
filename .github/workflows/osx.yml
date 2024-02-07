@@ -67,16 +67,15 @@ jobs:
 
       - name: Build Tests
         run: make -C build -j$(sysctl -n hw.logicalcpu) tests
-          
-      - name: Run Tests
-        run: make -C build -j$(sysctl -n hw.logicalcpu) check
 
       - name: Save ccache
-        id: cache-ccache-save
         uses: actions/cache/save@v4
         with:
           path: ~/Library/Caches/ccache
           key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+          
+      - name: Run Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
       
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
