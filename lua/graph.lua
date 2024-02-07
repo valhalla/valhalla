@@ -2105,11 +2105,6 @@ function nodes_proc (kv, nokeys)
     bike_tag = 4
   end
 
-  --do not shut off golf cart access if there is a highway crossing.
-  if golf_cart_tag == 0 and kv["highway"] == "crossing" then
-    golf_cart_tag = 2048
-  end
-
   --if tag exists use it, otherwise access allowed for all modes unless access = false or kv["hov"] == "designated" or kv["vehicle"] == "no")
   --if access=private use allowed modes, but consider private_access tag as true.
   local auto = auto_tag or 1

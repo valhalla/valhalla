@@ -157,3 +157,38 @@ TEST_F(GolfCartAccess, CheckGolfCartAccessReducedSpeedLimit) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
   }
 }
+
+TEST(Standalone, HighwayCrossing) {
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+                F
+                |
+        A---B---C---D---E
+                |
+                G
+    )";
+
+  const gurka::ways ways = {
+      // Tertiary highway
+      {"AB", {{"highway", "tertiary"}}}, {"BC", {{"highway", "tertiary"}}},
+      {"CD", {{"highway", "tertiary"}}}, {"DE", {{"highway", "tertiary"}}},
+      // Primary highway
+      {"FC", {{"highway", "primary"}}}, {"CG", {{"highway", "primary"}}},
+
+  };
+
+  const gurka::nodes nodes = {{"C",
+                               {
+                                   {"highway", "crossing"},
+                               }}};
+
+  const auto layout =
+      gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
+  auto map =
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/golf_cart_access_highway_crossing");
+
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "golf_cart");
+  gurka::assert::osrm::expect_steps(result, {"AB"});
+  gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
+}
