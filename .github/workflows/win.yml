@@ -80,7 +80,11 @@ jobs:
         with:
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}
           path: |
-            vcpkg
+            vcpkg/*
+            !vcpkg/downloads
+            !vcpkg/docs
+            !vcpkg/buildtrees
+            vcpkg/downloads/tools
 
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
@@ -113,7 +117,7 @@ jobs:
         with:
           key: ${{ steps.vcpkg-restore.outputs.cache-primary-key }}
           path: |
-            vcpkg
+            vcpkg/*
             !vcpkg/downloads
             !vcpkg/docs
             !vcpkg/buildtrees
