@@ -88,7 +88,6 @@ jobs:
 
       - name: Setup Developer Command Prompt for VS
         uses: ilammy/msvc-dev-cmd@v1
-        shell: bash
 
       - name: Configure CMake
         shell: bash
@@ -124,7 +123,6 @@ jobs:
           ./build/$BUILD_TYPE/valhalla_run_isochrone.exe --config ./test/win/valhalla.json -j "{\"locations\": [{\"lat\": 52.10205, \"lon\": 5.114651}], \"costing\": \"auto\", \"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}"
       
       - name: Setup tmate session
-        shell: bash
         uses: mxschmitt/action-tmate@v3
         # only run this if manually invoked or a previous job failed
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
