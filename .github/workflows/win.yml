@@ -60,7 +60,7 @@ jobs:
         id: cache-vcpkg
         uses: actions/cache@v3
         with:
-          path: ${{ env.VCPKG_ROOT }}
+          path: vcpkg_installed
           key: vcpkg=${{ env.VCPKG_VERSION }}-msvc=${{ env.MSVC_VERSION }}-json=${{ hashFiles('vcpkg.json') }}-v4
 
       - name: Install GNU make & awk
