@@ -33,7 +33,7 @@ protected:
     const std::string ascii_map = R"(
           B----------C
          /            \
-        A<-------------D
+        A<-------------D----G----H---I
          \            /
           F----------E
     )";
@@ -50,6 +50,9 @@ protected:
         {"CD", {{"highway", "service"}, {"bicycle", "no"}}},
         {"FE", {{"highway", "service"}}},
         {"ED", {{"highway", "service"}}},
+        {"GD", {{"highway", "service"}}},
+        {"HG", {{"highway", "service"}, {"maxheight", "1"}}},
+        {"IH", {{"highway", "service"}}},
     };
 
     const gurka::nodes nodes = {
@@ -59,8 +62,16 @@ protected:
         {"C", {{"barrier", "gate"}, {"access", "no"}, {"bicycle", "yes"}}},
     };
 
+    const gurka::relations relations = {
+        {{
+             {gurka::way_member, "GD", "from"},
+             {gurka::way_member, "DA", "to"},
+             {gurka::node_member, "D", "via"},
+         },
+         {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
+
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    ignore_access_map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/ignore_access");
+    ignore_access_map = gurka::buildtiles(layout, ways, nodes, relations, "test/data/ignore_access");
   }
 };
 
@@ -73,6 +84,10 @@ inline std::string IgnoreOneWaysParam(const std::string& cost_name) {
 
 inline std::string IgnoreAccessParam(const std::string& cost_name) {
   return "/costing_options/" + cost_name + "/ignore_access";
+}
+
+inline std::string IgnoreRestrictionsParam(const std::string& cost_name) {
+  return "/costing_options/" + cost_name + "/ignore_restrictions";
 }
 } // namespace
 
@@ -207,6 +222,25 @@ TEST_F(IgnoreAccessTest, PedestrianIgnoreAccess) {
                std::runtime_error);
   EXPECT_NO_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"A", "F", "D", "B"},
                                    cost, {{IgnoreAccessParam(cost), "1"}}));
+}
+
+TEST_F(IgnoreAccessTest, IgnoreRestrictions) {
+  // make a u-turn due to the restriction
+  auto api = gurka::do_action(valhalla::Options::route, ignore_access_map, {"H", "A"}, "auto");
+  gurka::assert::raw::expect_path(api, {"HG", "GD", "ED", "ED", "DA"});
+
+  // ignore the turn restriction if ignore_restriction=true
+  api = gurka::do_action(valhalla::Options::route, ignore_access_map, {"H", "A"}, "auto",
+                         {{IgnoreRestrictionsParam("auto"), "1"}});
+  gurka::assert::raw::expect_path(api, {"HG", "GD", "DA"});
+
+  // don't ignore weight restriction if ignore_restriction=true
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"I", "A"}, "truck",
+                                {{IgnoreRestrictionsParam("truck"), "1"}}),
+               std::runtime_error);
+  EXPECT_THROW(gurka::do_action(valhalla::Options::route, ignore_access_map, {"I", "A"}, "auto",
+                                {{IgnoreRestrictionsParam("auto"), "1"}}),
+               std::runtime_error);
 }
 
 TEST(AutoDataFix, deprecation) {

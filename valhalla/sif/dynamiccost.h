@@ -569,7 +569,7 @@ public:
                                    const uint64_t current_time,
                                    const uint32_t tz_index,
                                    uint8_t& restriction_idx) const {
-    if (ignore_restrictions_ || !(edge->access_restriction() & access_mode))
+    if (!(edge->access_restriction() & access_mode))
       return true;
 
     const std::vector<baldr::AccessRestriction>& restrictions =
@@ -579,11 +579,15 @@ public:
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
-      // Compare the time to the time-based restrictions
+      // In case there are mode-specific restrictions check them now
+      if (!ModeSpecificAllowed(restriction)) {
+        return false;
+      }
+      // Compare the time to the time-based restrictions, unless ignore_restrictions=true
       baldr::AccessType access_type = restriction.type();
-      if (access_type == baldr::AccessType::kTimedAllowed ||
-          access_type == baldr::AccessType::kTimedDenied ||
-          access_type == baldr::AccessType::kDestinationAllowed) {
+      if (!ignore_restrictions_ && (access_type == baldr::AccessType::kTimedAllowed ||
+                                    access_type == baldr::AccessType::kTimedDenied ||
+                                    access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
@@ -609,11 +613,6 @@ public:
               return false;
           }
         }
-      }
-      // In case there are additional restriction checks for a particular  mode,
-      // check them now
-      if (!ModeSpecificAllowed(restriction)) {
-        return false;
       }
     }
 
