@@ -343,7 +343,7 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly() && opp_edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
-      (opp_edge->speed_type() == SpeedType::kTagged || edge->speed() > max_allowed_speed_limit_)) {
+      (opp_edge->speed_type() == SpeedType::kTagged && edge->speed() > max_allowed_speed_limit_)) {
     return false;
   }
 
