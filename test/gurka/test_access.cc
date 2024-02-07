@@ -12,7 +12,8 @@ const std::unordered_map<std::string, std::string> build_config{
     {"mjolnir.admin", {VALHALLA_SOURCE_DIR "test/data/netherlands_admin.sqlite"}}};
 
 const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
-                                           "bicycle", "motor_scooter", "motorcycle", "pedestrian"};
+                                           "bicycle", "motor_scooter", "motorcycle", "pedestrian",
+                                           "golf_cart"};
 
 TEST(Standalone, AccessPsvWay) {
   constexpr double gridsize_metres = 10;
@@ -31,25 +32,25 @@ TEST(Standalone, AccessPsvWay) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
-      {"DE", {{"highway", "primary"}}},
-      {"EG", {{"highway", "primary"}}},
-      {"FG", {{"highway", "primary"}}},
+      {"AB", {{"highway", "tertiary"}}},
+      {"BC", {{"highway", "tertiary"}}},
+      {"CD", {{"highway", "tertiary"}}},
+      {"DE", {{"highway", "tertiary"}}},
+      {"EG", {{"highway", "tertiary"}}},
+      {"FG", {{"highway", "tertiary"}}},
       {"CF",
        {
-           {"highway", "primary"},
+           {"highway", "tertiary"},
            {"access", "psv"}, // access key wins over bus or taxi tag
            {"bike", "no"},
            {"bus", "no"},
        }},
-      {"FH", {{"highway", "primary"}}},
+      {"FH", {{"highway", "tertiary"}}},
       {"EI", {{"highway", "bus_guideway"}}},
       {"JI", {{"highway", "busway"}}},
-      {"GK", {{"highway", "primary"}}},
-      {"KJ", {{"highway", "primary"}}},
-      {"LI", {{"highway", "primary"}}},
+      {"GK", {{"highway", "tertiary"}}},
+      {"KJ", {{"highway", "tertiary"}}},
+      {"LI", {{"highway", "tertiary"}}},
       {"MN", {{"highway", "residential"}, {"access", "no"}, {"bus", "permit"}, {"taxi", "permit"}}},
       {"NO", {{"highway", "residential"}, {"access", "no"}, {"bus", "permit"}, {"taxi", "permit"}}},
   };
@@ -105,10 +106,10 @@ TEST(Standalone, AccessPsvNode) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}}, {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}}, {"DE", {{"highway", "primary"}}},
-      {"EG", {{"highway", "primary"}}}, {"HG", {{"highway", "primary"}}},
-      {"CF", {{"highway", "primary"}}}, {"FH", {{"highway", "primary"}}},
+      {"AB", {{"highway", "tertiary"}}}, {"BC", {{"highway", "tertiary"}}},
+      {"CD", {{"highway", "tertiary"}}}, {"DE", {{"highway", "tertiary"}}},
+      {"EG", {{"highway", "tertiary"}}}, {"HG", {{"highway", "tertiary"}}},
+      {"CF", {{"highway", "tertiary"}}}, {"FH", {{"highway", "tertiary"}}},
 
   };
 
@@ -547,9 +548,9 @@ TEST(Standalone, RouteOnPrivateAccess) {
     )";
 
   const gurka::ways ways = {
-      {"AB", {{"highway", "primary"}}},
-      {"BC", {{"highway", "primary"}}},
-      {"CD", {{"highway", "primary"}}},
+      {"AB", {{"highway", "secondary"}}},
+      {"BC", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "secondary"}}},
       {"BE", {{"highway", "service"}, {"access", "private"}}},
       {"CF", {{"highway", "service"}, {"access", "private"}, {"service", "driveway"}}},
       {"DG", {{"highway", "service"}, {"access", "private"}, {"service", "parking_aisle"}}},
@@ -584,17 +585,17 @@ TEST(Standalone, AccessForwardBackward) {
     )";
 
   const gurka::ways ways = {
-      {"ABCDE", {{"highway", "primary"}}},
+      {"ABCDE", {{"highway", "tertiary"}}},
       {"CFH",
-       {{"highway", "primary"},
+       {{"highway", "tertiary"},
         {"motor_vehicle:forward", "no"},
         {"vehicle:backward", "yes"},
         {"foot:forward", "no"},
         {"foot:backward", "yes"},
         {"bicycle:forward", "no"}}},
-      {"HG", {{"highway", "primary"}}},
+      {"HG", {{"highway", "tertiary"}}},
       {"EG",
-       {{"highway", "primary"},
+       {{"highway", "tertiary"},
         {"vehicle:forward", "yes"},
         {"motor_vehicle:backward", "no"},
         {"foot:forward", "yes"},
