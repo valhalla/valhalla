@@ -49,7 +49,7 @@ grouped_contours_t GroupContours(const bool polygons, const feature_t& contours)
   // exactly one exterior ring, so all inners go in one group
   if (results.size() == 1) {
     std::for_each(inner_ptrs.begin(), inner_ptrs.end(),
-                  [&inner_ptrs, &results](const contour_t* c) { results[0].push_back(c); });
+                  [&results](const contour_t* c) { results[0].push_back(c); });
     return results;
   }
 
@@ -102,8 +102,7 @@ std::stringstream getIntervalColor(std::vector<contour_interval_t>& intervals, s
 
 std::string serializeIsochroneJson(Api& request,
                                    std::vector<contour_interval_t>& intervals,
-                                   contours_t& contours,
-                                   bool show_locations) {
+                                   contours_t& contours) {
   // for each contour interval
   int i = 0;
   auto features = array({});
@@ -175,11 +174,11 @@ std::string serializeIsochroneJson(Api& request,
   return ss.str();
 }
 
-[[maybe_unused]] std::string serializeIsochroneJson_Legacy(Api& request,
-                                                           std::vector<contour_interval_t>& intervals,
-                                                           contours_t& contours,
-                                                           bool polygons,
-                                                           bool show_locations) {
+std::string serializeIsochroneJson_Legacy(Api& request,
+                                          std::vector<contour_interval_t>& intervals,
+                                          contours_t& contours,
+                                          bool polygons,
+                                          bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
@@ -305,7 +304,7 @@ std::string serializeIsochronePbf(Api& request,
       grouped_contours_t groups = GroupContours(true, feature);
 
       // for each group of rings (first is outer, rest is inner)
-      for (std::vector<const contour_t*> group_ptr : groups) {
+      for (const std::vector<const contour_t*>& group_ptr : groups) {
         auto* contour_pbf = interval_pbf->mutable_contours()->Add();
 
         // construct a geometry
@@ -341,7 +340,7 @@ std::string serializeIsochrones(Api& request,
       return serializeIsochronePbf(request, intervals, contours);
     case Options_Format_json:
       if (polygons)
-        return serializeIsochroneJson(request, intervals, contours, show_locations);
+        return serializeIsochroneJson(request, intervals, contours);
       return serializeIsochroneJson_Legacy(request, intervals, contours, polygons, show_locations);
     default:
       throw;

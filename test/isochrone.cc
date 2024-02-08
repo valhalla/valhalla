@@ -38,8 +38,8 @@ void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
   EXPECT_NEAR(a.GetArray()[1].GetDouble(), b.GetArray()[1].GetDouble(), 0.00002);
 }
 
-void test_shape_equality(rapidjson::GenericArray<false, rapidjson::Value> actual_geom,
-                         rapidjson::GenericArray<false, rapidjson::Value> expected_geom) {
+void test_shape_equality(const rapidjson::GenericArray<false, rapidjson::Value>& actual_geom,
+                         const rapidjson::GenericArray<false, rapidjson::Value>& expected_geom) {
   // different platforms can end up having some slightly different floating point wobble
   // to avoid failing tests we measure shape similarity and fail if its too far out of whack
   std::vector<PointLL> actual, expected;
