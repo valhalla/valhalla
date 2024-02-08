@@ -15,10 +15,14 @@ message Isochrone {
   }
 
   message Contour {
-    metric_type metric = 1; // time or distance enum
-    float metric_value = 2; // the target metric, eg 15min
-    repeated Geometry geometries = 3; // if polygon first one is outer rest are inners, though this is a problem when we allow multi location isochrones
+    repeated Geometry geometries = 2; // if polygon first one is outer rest are inners, though this is a problem when we allow multi location isochrones
   }
 
-  repeated Contour contours = 1;
+  message Interval {
+    metric_type metric = 1; // time or distance enum
+    float metric_value = 2; // the target metric, eg 15min
+    repeated Contour contours = 3;
+  }
+
+  repeated Interval intervals = 1;
 }
