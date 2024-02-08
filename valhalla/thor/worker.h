@@ -77,7 +77,8 @@ protected:
                                           const Location& origin,
                                           const Location& destination,
                                           const Options& options);
-  thor::MatrixAlgorithm* get_matrix_algorithm(Api& request, const bool has_time);
+  thor::MatrixAlgorithm*
+  get_matrix_algorithm(Api& request, const bool has_time, const std::string& costing);
   void route_match(Api& request);
   /**
    * Returns the results of the map match where the first float is the normalized
@@ -129,6 +130,7 @@ protected:
   float max_timedep_distance;
   std::unordered_map<std::string, float> max_matrix_distance;
   SOURCE_TO_TARGET_ALGORITHM source_to_target_algorithm;
+  bool costmatrix_allow_second_pass;
   std::shared_ptr<baldr::GraphReader> reader;
   meili::MapMatcherFactory matcher_factory;
   baldr::AttributesController controller;

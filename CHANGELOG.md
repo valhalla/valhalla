@@ -32,6 +32,7 @@
    * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
    * FIXED: Config singleton multiple instantiation issue [#4521](https://github.com/valhalla/valhalla/pull/4521)
    * FIXED: Prevent GetShortcut to run into an infinite loop [#4532](https://github.com/valhalla/valhalla/pull/4532)
+   * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -83,6 +84,9 @@
    * CHANGED: libvalhalla.pc generation to have finer controls; install third_party public headers; overhaul lots of CMake; remove conan support [#4516](https://github.com/valhalla/valhalla/pull/4516)
    * CHANGED: refactored matrix code to include a base class for all matrix algorithms to prepare for second passes on matrix [#4535](https://github.com/valhalla/valhalla/pull/4535)
    * ADDED: pbf output format for isochrone [#4543](https://github.com/valhalla/valhalla/pull/4543)
+   * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
+   * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
+   * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
