@@ -575,11 +575,12 @@ public:
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-    bool restricted = false;
+    bool time_allowed = true;
 
     for (size_t i = 0; i < restrictions.size(); ++i) {
       const auto& restriction = restrictions[i];
       // In case there are mode-specific restrictions check them now
+      // restrictions are sorted in a way that these come first (except maxaxles!)
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
@@ -589,32 +590,28 @@ public:
                                     access_type == baldr::AccessType::kTimedDenied ||
                                     access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
-        restriction_idx = static_cast<uint8_t>(i);
 
-        if (access_type == baldr::AccessType::kTimedAllowed)
-          restricted = true;
+        // we assume that any edge only comes with one type of timed restriction, i.e.
+        // not mixing kTimedDenied & kDestinationAllowed!
 
+        if (access_type == baldr::AccessType::kTimedAllowed) {
+          time_allowed = false;
+        }
         if (current_time == 0) {
           // No time supplied so ignore time-based restrictions
-          // (but mark the edge  (`has_time_restrictions`)
+          // but mark the edge with has_time_restrictions
           continue;
-        } else {
-          // is in range?
-          if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
-            // If edge really is restricted at this time, we can exit early.
-            // If not, we should keep looking
-
-            // We are in range at the time we are allowed at this edge
-            switch (access_type) {
-              case baldr::AccessType::kTimedAllowed:
-                restricted = false;
-                break;
-              case baldr::AccessType::kDestinationAllowed:
-                restricted = !(allow_conditional_destination_ || is_dest);
-                break;
-              default:
-                return false;
-            }
+        } else if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
+          // We are in range at the time we are (not) allowed at this edge
+          // remember restrictions are sorted! see baldr/graphconstants.h
+          switch (access_type) {
+            case baldr::AccessType::kTimedAllowed:
+              return true;
+            case baldr::AccessType::kDestinationAllowed:
+              return allow_conditional_destination_ || is_dest;
+            default:
+              // baldr::AccessType::kTimedDenied
+              return false;
           }
         }
       }
@@ -623,7 +620,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return !restricted || (current_time == 0);
+    return time_allowed || (current_time == 0);
   }
 
   /**

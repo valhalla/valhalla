@@ -97,8 +97,9 @@ protected:
     };
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, grid_size_meters);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/conditional_restrictions",
-                            {{"mjolnir.timezone", {"test/data/tz.sqlite"}}});
+    map = gurka::buildtiles(layout, ways, {}, {},
+                            VALHALLA_BUILD_DIR "test/data/conditional_restrictions",
+                            {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   }
 };
 
@@ -166,6 +167,7 @@ TEST_F(ConditionalRestrictions, NoRestrictionPedestrianNoDate) {
 }
 
 TEST_F(ConditionalRestrictions, NoRestrictionPedestrian) {
+  const std::string a = "a";
   auto result =
       gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "pedestrian",
                        {{"/date_time/type", "1"}, {"/date_time/value", "2020-04-02T20:00"}});
