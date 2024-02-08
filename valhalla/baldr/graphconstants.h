@@ -739,8 +739,6 @@ enum class AccessType : uint8_t {
   kTimedAllowed = 6,
   kTimedDenied = 7,
   kDestinationAllowed = 8,
-  // TODO(nils): this is a problem. when evaluating restrictions in dynamiccost,
-  // we rely on the fact that non-time restrictions come first
   kMaxAxles = 9
 };
 

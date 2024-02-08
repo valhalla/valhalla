@@ -575,15 +575,15 @@ public:
     const std::vector<baldr::AccessRestriction>& restrictions =
         tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
-    bool time_allowed = true;
-
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restriction = restrictions[i];
-      // In case there are mode-specific restrictions check them now
-      // restrictions are sorted in a way that these come first (except maxaxles!)
+    // do 2 loops to not disregard "maxaxles" (restrictions are sorted, see graphconstants.h)
+    for (const auto& restriction : restrictions) {
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
+    }
+
+    bool time_allowed = true;
+    for (const auto& restriction : restrictions) {
       // Compare the time to the time-based restrictions, unless ignore_restrictions=true
       baldr::AccessType access_type = restriction.type();
       if (!ignore_restrictions_ && (access_type == baldr::AccessType::kTimedAllowed ||
