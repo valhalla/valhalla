@@ -583,7 +583,8 @@ public:
     }
 
     bool time_allowed = true;
-    for (const auto& restriction : restrictions) {
+    for (size_t i = 0; i < restrictions.size(); ++i) {
+      const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions, unless ignore_restrictions=true
       baldr::AccessType access_type = restriction.type();
       if (!ignore_restrictions_ && (access_type == baldr::AccessType::kTimedAllowed ||
@@ -597,9 +598,11 @@ public:
         if (access_type == baldr::AccessType::kTimedAllowed) {
           time_allowed = false;
         }
+
+        // mark the restriction even if no valid time was passed
+        restriction_idx = static_cast<uint8_t>(i);
         if (current_time == 0) {
           // No time supplied so ignore time-based restrictions
-          // but mark the edge with has_time_restrictions
           continue;
         } else if (IsConditionalActive(restriction.value(), current_time, tz_index)) {
           // We are in range at the time we are (not) allowed at this edge
