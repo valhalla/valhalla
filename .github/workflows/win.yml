@@ -109,7 +109,7 @@ jobs:
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
             -DENABLE_BENCHMARKS=OFF \
-            -DPREFER_EXTERNAL=ON
+            -DPREFER_EXTERNAL_DEPS=ON
 
       - if: ${{ steps.vcpkg-restore.outputs.cache-hit != 'true' }}
         name: Save vcpkg packages (if cache miss)
