@@ -100,9 +100,42 @@ std::stringstream getIntervalColor(std::vector<contour_interval_t>& intervals, s
   return hex;
 }
 
+void addLocations(Api& request, valhalla::baldr::json::ArrayPtr& features) {
+  int idx = 0;
+  for (const auto& location : request.options().locations()) {
+    // first add all snapped points as MultiPoint feature per origin point
+    auto snapped_points_array = array({});
+    std::unordered_set<PointLL> snapped_points;
+    for (const auto& path_edge : location.correlation().edges()) {
+      const PointLL& snapped_current = PointLL(path_edge.ll().lng(), path_edge.ll().lat());
+      // remove duplicates of path_edges in case the snapped object is a node
+      if (snapped_points.insert(snapped_current).second) {
+        snapped_points_array->push_back(
+            array({fixed_t{snapped_current.lng(), 6}, fixed_t{snapped_current.lat(), 6}}));
+      }
+    };
+    features->emplace_back(map({{"type", std::string("Feature")},
+                                {"properties", map({{"type", std::string("snapped")},
+                                                    {"location_index", static_cast<uint64_t>(idx)}})},
+                                {"geometry", map({{"type", std::string("MultiPoint")},
+                                                  {"coordinates", snapped_points_array}})}}));
+
+    // then each user input point as separate Point feature
+    const valhalla::LatLng& input_latlng = location.ll();
+    const auto input_array = array({fixed_t{input_latlng.lng(), 6}, fixed_t{input_latlng.lat(), 6}});
+    features->emplace_back(
+        map({{"type", std::string("Feature")},
+             {"properties",
+              map({{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
+             {"geometry", map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
+    idx++;
+  }
+}
+
 std::string serializeIsochroneJson(Api& request,
                                    std::vector<contour_interval_t>& intervals,
-                                   contours_t& contours) {
+                                   contours_t& contours,
+                                   bool show_locations) {
   // for each contour interval
   int i = 0;
   auto features = array({});
@@ -118,11 +151,9 @@ std::string serializeIsochroneJson(Api& request,
     for (const auto& feature : interval_contours) {
       grouped_contours_t groups = GroupContours(true, feature);
       auto geom = array({});
-      // groups are a multipolygon, or polygon if just one
+      // each group is a polygon consisting of an exterior ring and possibly inner rings
       for (const auto& group : groups) {
-        // group is a ring
         auto poly = array({});
-        // first ring is exterior, rest are inner
         for (const auto& ring : group) {
           auto ring_coords = array({});
           for (const auto& pair : *ring) {
@@ -136,10 +167,12 @@ std::string serializeIsochroneJson(Api& request,
       // add a feature
       features->emplace_back(map({
           {"type", std::string("Feature")},
-          {"geometry", map({
-                           {"type", std::string(groups.size() > 1 ? "MultiPolygon" : "Polygon")},
-                           {"coordinates", geom->size() > 1 ? geom : geom->at(0)},
-                       })},
+          {"geometry",
+           map({
+               {"type", std::string(groups.size() > 1 ? "MultiPolygon" : "Polygon")},
+               {"coordinates",
+                geom->size() > 1 ? geom : geom->at(0)}, // unwrap polygon if there's only one
+           })},
           {"properties", map({
                              {"metric", std::get<2>(interval)},
                              {"contour", baldr::json::float_t{std::get<1>(interval)}},
@@ -153,6 +186,9 @@ std::string serializeIsochroneJson(Api& request,
       }));
     }
   }
+
+  if (show_locations)
+    addLocations(request, features);
 
   auto feature_collection = map({
       {"type", std::string("FeatureCollection")},
@@ -229,39 +265,8 @@ std::string serializeIsochroneJson_Legacy(Api& request,
     }
   }
   // Add input and snapped locations to the geojson
-  if (show_locations) {
-    int idx = 0;
-    for (const auto& location : request.options().locations()) {
-      // first add all snapped points as MultiPoint feature per origin point
-      auto snapped_points_array = array({});
-      std::unordered_set<PointLL> snapped_points;
-      for (const auto& path_edge : location.correlation().edges()) {
-        const PointLL& snapped_current = PointLL(path_edge.ll().lng(), path_edge.ll().lat());
-        // remove duplicates of path_edges in case the snapped object is a node
-        if (snapped_points.insert(snapped_current).second) {
-          snapped_points_array->push_back(
-              array({fixed_t{snapped_current.lng(), 6}, fixed_t{snapped_current.lat(), 6}}));
-        }
-      };
-      features->emplace_back(map(
-          {{"type", std::string("Feature")},
-           {"properties",
-            map({{"type", std::string("snapped")}, {"location_index", static_cast<uint64_t>(idx)}})},
-           {"geometry",
-            map({{"type", std::string("MultiPoint")}, {"coordinates", snapped_points_array}})}}));
-
-      // then each user input point as separate Point feature
-      const valhalla::LatLng& input_latlng = location.ll();
-      const auto input_array =
-          array({fixed_t{input_latlng.lng(), 6}, fixed_t{input_latlng.lat(), 6}});
-      features->emplace_back(map(
-          {{"type", std::string("Feature")},
-           {"properties",
-            map({{"type", std::string("input")}, {"location_index", static_cast<uint64_t>(idx)}})},
-           {"geometry", map({{"type", std::string("Point")}, {"coordinates", input_array}})}}));
-      idx++;
-    }
-  }
+  if (show_locations)
+    addLocations(request, features);
 
   // make the collection
   auto feature_collection = map({
@@ -283,6 +288,7 @@ std::string serializeIsochroneJson_Legacy(Api& request,
 
   return ss.str();
 }
+
 std::string serializeIsochronePbf(Api& request,
                                   std::vector<contour_interval_t>& intervals,
                                   const contours_t& contours) {
@@ -340,7 +346,7 @@ std::string serializeIsochrones(Api& request,
       return serializeIsochronePbf(request, intervals, contours);
     case Options_Format_json:
       if (polygons)
-        return serializeIsochroneJson(request, intervals, contours);
+        return serializeIsochroneJson(request, intervals, contours, show_locations);
       return serializeIsochroneJson_Legacy(request, intervals, contours, polygons, show_locations);
     default:
       throw;
