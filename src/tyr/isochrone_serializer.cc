@@ -58,9 +58,9 @@ grouped_contours_t GroupContours(const bool polygons, const feature_t& contours)
   for (const auto inner : inner_ptrs) {
     // construct bbox
     AABB2<PointLL> inner_bbox(std::vector(inner->rbegin(), inner->rend()));
-    bool found_exterior;
+    bool found_exterior = false;
     // go over exterior rings from smallest to largest
-    for (size_t i = results.size(); i > 0; --i) {
+    for (size_t i = results.size();; --i) {
       AABB2<PointLL> outer_bbox(std::vector(results[i - 1][0]->rbegin(), results[i - 1][0]->rend()));
 
       // contain check
