@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
       onestoptests = valhalla::mjolnir::ParseTestFile(testfile);
       std::sort(onestoptests.begin(), onestoptests.end());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

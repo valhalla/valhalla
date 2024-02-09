@@ -195,11 +195,11 @@ int main(int argc, char* argv[]) {
     } else if (result.count("shape")) {
       shape = result["shape"].as<std::string>();
     } else {
-      throw cxxopts::OptionException(
+      throw cxxopts::exceptions::exception(
           "The json parameter or shape parameter was not supplied but is required.\n\n" +
           options.help());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
