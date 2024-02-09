@@ -2251,8 +2251,8 @@
     },
     "pass": {
       "phrases": {
-        "0": "Pass <object_label>.",
-        "1": "Pass traffic signals on <object_label>."
+        "0": "Pass <OBJECT_LABEL>.",
+        "1": "Pass traffic signals on <OBJECT_LABEL>."
       },
       "object_labels": [
         "the gate",

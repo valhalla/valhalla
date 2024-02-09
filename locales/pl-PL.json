@@ -2253,8 +2253,8 @@
     },
     "pass": {
       "phrases": {
-        "0": "Przejdź <object_label>.",
-        "1": "Przejdź na światłach <object_label>."
+        "0": "Przejdź <OBJECT_LABEL>.",
+        "1": "Przejdź na światłach <OBJECT_LABEL>."
       },
       "object_labels": [
         "bramę",
