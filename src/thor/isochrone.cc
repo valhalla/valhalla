@@ -28,10 +28,6 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
     PrecisionT len = from->Distance(*to);
     suffix_len += len;
 
-    // skip 0 length segments
-    if (len == 0)
-      continue;
-
     // we have enough distance now, lets find the exact stopping point along the geom
     if (suffix_len >= distance_along) {
       auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
