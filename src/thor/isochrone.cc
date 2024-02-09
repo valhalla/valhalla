@@ -17,10 +17,18 @@ constexpr float METRIC_PADDING = 10.f;
 template <typename PrecisionT>
 std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<PrecisionT>>& pts,
                                                   double distance_along) {
+  // just the endpoint really
+  if (distance_along == 0)
+    return {pts.back(), pts.back()};
+
+  // consume shape until we reach the desired distance
   double suffix_len = 0;
   for (auto from = std::next(pts.rbegin()), to = pts.rbegin(); from != pts.rend(); ++from, ++to) {
+    // add whatever this segment of shape contributes to the overall distance
     PrecisionT len = from->Distance(*to);
     suffix_len += len;
+
+    // we have enough distance now, lets find the exact stopping point along the geom
     if (suffix_len >= distance_along) {
       auto interpolated = from->PointAlongSegment(*to, (suffix_len - distance_along) / len);
       std::vector<GeoPoint<PrecisionT>> res(pts.rbegin(), from);
@@ -29,6 +37,8 @@ std::vector<GeoPoint<PrecisionT>> OriginEdgeShape(const std::vector<GeoPoint<Pre
       return res;
     }
   }
+
+  // we got through the whole shape didnt reach the distance, floating point noise probably
   return pts;
 }
 

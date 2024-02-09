@@ -11,7 +11,7 @@
 #include <thread>
 #include <unordered_set>
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
 using namespace prime_server;
@@ -26,7 +26,7 @@ using namespace prime_server;
 #include "tyr/actor.h"
 
 int main(int argc, char** argv) {
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   if (argc < 2 || argc > 4) {
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json [concurrency]");
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json action json_request");
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   // gracefully shutdown when asked via SIGTERM
   prime_server::quiesce(config.get<unsigned int>("httpd.service.drain_seconds", 28),
                         config.get<unsigned int>("httpd.service.shutting_seconds", 1));

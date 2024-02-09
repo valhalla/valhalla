@@ -1,3 +1,4 @@
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -11,6 +12,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "route_serializer_osrm.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
@@ -171,34 +173,6 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"VI", {kSpeedLimitSignMutcd, kSpeedLimitUnitsMph}},
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
-
-namespace osrm_serializers {
-/*
-OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-{
-    "code":"Ok"
-    "waypoints": [{ }, { }...],
-    "routes": [
-        {
-            "geometry":"....."
-            "distance":xxx.y
-            "duration":yyy.z
-            "legs":[
-                {
-                    "steps":[
-                        "intersections":[
-                        ]
-                        "geometry":" "
-                        "maneuver":{
-                        }
-                    ]
-                }
-            ]
-        },
-        ...
-    ]
-}
-*/
 
 std::string destinations(const valhalla::TripSign& sign);
 
@@ -385,11 +359,8 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // the optimized sequence.
 json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
-  uint32_t i = 0;
-  std::vector<uint32_t> indexes;
-  for (const auto& loc : locs) {
-    indexes.push_back(i++);
-  }
+  std::vector<uint32_t> indexes(locs.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
@@ -478,7 +449,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   count = 0;
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
-  EnhancedTripLeg_Node* prev_node = nullptr;
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
@@ -536,7 +506,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
       auto rest_stop = json::map({});
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+      for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
@@ -577,7 +547,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
       if (i > 0) {
-        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        for (int m = 0; m < node->intersecting_edge_size(); m++) {
           auto intersecting_edge = node->GetIntersectingEdge(m);
           bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
           edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
@@ -600,7 +570,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Sort edges by increasing bearing and update the in/out edge indexes
     std::sort(edges.begin(), edges.end());
-    uint32_t incoming_index, outgoing_index;
+    uint32_t incoming_index = 0, outgoing_index = 0;
     for (uint32_t n = 0; n < edges.size(); ++n) {
       if (edges[n].in_edge) {
         incoming_index = n;
@@ -626,9 +596,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
       if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
-          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
+        for (const auto& e : curr_edge->tagged_value()) {
+          if (e.type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", e.value());
           }
         }
       }
@@ -1690,7 +1660,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // #########################################################################
     //  Iterate through maneuvers - convert to OSRM steps
-    uint32_t maneuver_index = 0;
+    int maneuver_index = 0;
     uint32_t prev_intersection_count = 0;
     double prev_distance = 0;
     std::string drive_side = "right";
@@ -1908,7 +1878,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    // #########################################################################
+      // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -1989,7 +1959,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // Find the simplest summary for every leg of every route. Important note:
   // each route should have the same number of legs. Hence, we only need to make
   // unique the same leg (leg_idx) between all routes.
-  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
+  for (int route_i = 0; route_i < routes.size(); route_i++) {
 
     size_t num_legs_i = routes.Get(route_i).legs_size();
     std::vector<std::string> leg_summaries;
@@ -2005,7 +1975,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
       // Compare every jth route/leg summary vs the current ith route/leg summary.
       // We desire to compute num_named_segs_needed, which is the number of named
       // segments needed to uniquely identify the ith's summary.
-      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
+      for (int route_j = 0; route_j < routes.size(); route_j++) {
 
         // avoid self
         if (route_i == route_j)
@@ -2050,6 +2020,9 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   return all_summaries;
 }
 
+} // namespace
+
+namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
@@ -2138,6 +2111,7 @@ std::string serialize(valhalla::Api& api) {
 
 using namespace osrm_serializers;
 
+namespace {
 /// Assert equality of two json documents
 //
 // TODO Improve the diffed view of mismatching documents
@@ -2437,9 +2411,4 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
-#else
-
-} // namespace
-
 #endif

@@ -13,20 +13,16 @@ add_library(valhalla_test
   ${TEST_SRCS}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.h
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src/microtar.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4hc.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/lz4frame.c
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib/xxhash.c
   )
 target_include_directories(valhalla_test PUBLIC
   ${VALHALLA_SOURCE_DIR}/test
   ${VALHALLA_SOURCE_DIR}/test/gurka
-  ${VALHALLA_SOURCE_DIR}/third_party/lz4/lib
   ${VALHALLA_SOURCE_DIR}/third_party/protozero/include
   ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   ${VALHALLA_SOURCE_DIR}/third_party/libosmium/include
+  ${robinhoodhashing_include_dir}
   ${VALHALLA_SOURCE_DIR}/third_party/microtar/src)
-target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread)
+target_link_libraries(valhalla_test valhalla gtest gtest_main gmock pthread PkgConfig::LZ4)
 
 if(ENABLE_DATA_TOOLS)
   target_link_libraries(valhalla_test PkgConfig::GEOS)
@@ -84,7 +80,6 @@ set(tests_with_warnings
   logging
   maneuversbuilder
   mapmatch
-  matrix
   narrativebuilder
   node_search
   polyline2
@@ -150,7 +145,7 @@ foreach(test ${tyr_tests})
 endforeach()
 
 ## Test-specific data, properties and dependencies
-set_target_properties(logging PROPERTIES COMPILE_DEFINITIONS LOGGING_LEVEL_ALL)
+target_compile_definitions(logging PRIVATE LOGGING_LEVEL_ALL)
 
 add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/test/data/tz.sqlite
   DEPENDS ${VALHALLA_SOURCE_DIR}/scripts/valhalla_build_timezones
@@ -376,7 +371,7 @@ if(ENABLE_DATA_TOOLS)
   add_dependencies(run-alternates utrecht_tiles)
   add_dependencies(run-tar_index utrecht_tiles)
   add_dependencies(run-graphbuilder build_timezones)
-if(ENABLE_HTTP)
+  if(ENABLE_HTTP)
     add_dependencies(run-http_tiles utrecht_tiles)
   endif()
 endif()

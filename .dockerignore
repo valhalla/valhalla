@@ -59,6 +59,7 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+vcpkg*/
 
 # documentation
 site/

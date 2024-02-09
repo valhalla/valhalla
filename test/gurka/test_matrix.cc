@@ -1,7 +1,7 @@
 #include "gurka.h"
 #include "test.h"
 #include <valhalla/midgard/encoded.h>
-#include <valhalla/thor/matrix_common.h>
+#include <valhalla/thor/matrixalgorithm.h>
 
 #include <gtest/gtest.h>
 
@@ -48,7 +48,7 @@ void check_matrix(const rapidjson::Document& result,
     }
   }
   const std::string algo = result["algorithm"].GetString();
-  const std::string exp_algo = MatrixAlgoToString(matrix_type);
+  const std::string& exp_algo = MatrixAlgoToString(matrix_type);
   EXPECT_EQ(algo, exp_algo);
 }
 } // namespace
@@ -713,5 +713,64 @@ TEST_F(DateTimeTest, NoTimeZone) {
 
     EXPECT_FALSE(res_doc["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject().HasMember(
         "time_zone_name"));
+  }
+}
+
+TEST(StandAlone, MatrixSecondPass) {
+  // from no-thru to no-thru should trigger a second pass
+  // JL has a forward destination-only,
+  //   so K -> I also triggers second pass (see oneway at HK), but I -> K doesn't (no oneway)
+  const std::string ascii_map = R"(
+    A---B           I---J
+    |   |           |   |
+    |   E---F---G---H   |
+    |   |           ↓   |
+    C---D           K---L
+  )";
+
+  gurka::ways ways;
+  for (const auto& node_pair :
+       {"AB", "BE", "AC", "CD", "DE", "EF", "FG", "GH", "HI", "IJ", "JL", "HK", "KL"}) {
+    ways[node_pair] = {{"highway", "residential"}};
+  }
+  ways["JL"].emplace("motor_vehicle", "destination");
+  ways["HK"].emplace("oneway", "true");
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 50);
+  const auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/matrix_second_pass",
+                                     {{"thor.costmatrix_allow_second_pass", "1"}});
+  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
+
+  // Make sure the relevant edges are actually built as no-thru
+  auto FE_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "F", "E"));
+  auto GH_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "G", "H"));
+  auto JL_edge = std::get<1>(gurka::findEdgeByNodes(graph_reader, layout, "J", "L"));
+  EXPECT_TRUE(FE_edge->not_thru());
+  EXPECT_TRUE(GH_edge->not_thru());
+  EXPECT_TRUE(JL_edge->destonly());
+
+  // Simple single route from no-thru to no-thru
+  {
+    auto api = gurka::do_action(valhalla::Options::sources_to_targets, map, {"A"}, {"J"}, "auto");
+    EXPECT_GT(api.matrix().times(0), 0.f);
+    EXPECT_TRUE(api.matrix().second_pass(0));
+    EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
+  }
+
+  // I -> K (idx 1) should pass on the first try
+  // K -> I (idx 2) should need a second pass
+  {
+    auto api =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"I", "K"}, {"I", "K"}, "auto");
+    EXPECT_GT(api.matrix().times(1), 0.f);
+    EXPECT_FALSE(api.matrix().second_pass(1));
+    EXPECT_GT(api.matrix().times(2), 0.f);
+    EXPECT_TRUE(api.matrix().second_pass(2));
+    EXPECT_GT(api.matrix().times(2), api.matrix().times(1));
+
+    // I -> I & K -> K shouldn't be processed a second time either
+    EXPECT_FALSE(api.matrix().second_pass(0));
+    EXPECT_FALSE(api.matrix().second_pass(3));
+    EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
   }
 }
