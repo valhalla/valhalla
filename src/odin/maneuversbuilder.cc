@@ -541,7 +541,8 @@ void ManeuversBuilder::Combine(std::list<Maneuver>& maneuvers) {
       }
       // Do not combine
       // if has node_type
-      else if (next_man_begin_edge->pedestrian_type() == PedestrianType::kBlind &&
+      else if ((curr_man->pedestrian_type() == PedestrianType::kBlind &&
+                next_man->pedestrian_type() == PedestrianType::kBlind) &&
                (curr_man->has_node_type() || next_man->has_node_type() || curr_man->is_steps() ||
                 next_man->is_steps() || curr_man->is_bridge() || next_man->is_bridge() ||
                 curr_man->is_tunnel() || next_man->is_tunnel())) {
