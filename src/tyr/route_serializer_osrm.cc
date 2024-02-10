@@ -96,7 +96,8 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
-const constexpr double SECONDS_BEFORE_MANEUVER_END_FOR_VOICE_INSTRUCTIONS = 15.0;
+const constexpr double SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION = 15.0;
+const constexpr double SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION = 5.0;
 const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
 
 inline double clamp(const double lat) {
@@ -1493,11 +1494,15 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
   // shortly (10 meters at the given speed) after the maneuver has started.
   // The voice_instruction_beginning starts shortly after the beginning of the step.
   // The voice_instruction_end starts shortly before the end of the step.
-  float distance_before_maneuver_end = -1;
+  float distance_before_verbal_transition_alert_instruction = -1;
+  float distance_before_verbal_pre_transition_instruction = -1;
   if (prev_maneuver) {
-    distance_before_maneuver_end =
+    distance_before_verbal_transition_alert_instruction =
         distance_along_geometry(prev_maneuver, etp, distance,
-                                SECONDS_BEFORE_MANEUVER_END_FOR_VOICE_INSTRUCTIONS);
+                                SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION);
+    distance_before_verbal_pre_transition_instruction =
+        distance_along_geometry(prev_maneuver, etp, distance,
+                                SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION);
     if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
       // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
       // right at the beginning of the navigation. This is something like:
@@ -1509,7 +1514,8 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_start->emplace("announcement",
                                        prev_maneuver->verbal_pre_transition_instruction());
       voice_instructions_array->emplace_back(std::move(voice_instruction_start));
-    } else if (distance > distance_before_maneuver_end + APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
+    } else if (distance > distance_before_verbal_transition_alert_instruction +
+                              APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
                !prev_maneuver->verbal_post_transition_instruction().empty()) {
       // In all other cases we want to play the verbal_post_transition_instruction shortly
       // after the maneuver has started but only if there is sufficient time to play both
@@ -1525,17 +1531,36 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
     }
   }
 
-  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+  if (!maneuver.verbal_transition_alert_instruction().empty()) {
     json::MapPtr voice_instruction_end = json::map({});
-    if (maneuver_index == 1 && distance_before_maneuver_end == distance) {
+    if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
       // For the depart maneuver we want to play both the verbal_post_transition_instruction and
-      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      // the verbal_transition_alert_instruction even if the maneuver is too short.
       voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 1});
     } else {
-      // In all other cases we use distance_before_maneuver_end value
+      // In all other cases we use distance_before_verbal_transition_alert_instruction value
+      // as it is capped to the maneuver length
+      voice_instruction_end
+          ->emplace("distanceAlongGeometry",
+                    json::fixed_t{distance_before_verbal_transition_alert_instruction, 1});
+    }
+    voice_instruction_end->emplace("announcement", maneuver.verbal_transition_alert_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+  }
+
+  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+    json::MapPtr voice_instruction_end = json::map({});
+    if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
+      // For the depart maneuver we want to play the verbal_post_transition_instruction,
+      // the verbal_transition_alert_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 4, 1});
+    } else {
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value
       // as it is capped to the maneuver length
       voice_instruction_end->emplace("distanceAlongGeometry",
-                                     json::fixed_t{distance_before_maneuver_end, 1});
+                                     json::fixed_t{distance_before_verbal_pre_transition_instruction,
+                                                   1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));
