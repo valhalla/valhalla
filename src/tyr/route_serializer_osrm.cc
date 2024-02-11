@@ -96,6 +96,10 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
+const constexpr double SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION = 15.0;
+const constexpr double SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION = 5.0;
+const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
+
 inline double clamp(const double lat) {
   return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
 }
@@ -1424,6 +1428,147 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
+// The idea is that the instructions come a fixed amount of seconds before the maneuver takes place.
+// For whatever reasons, a distance in meters from the end of the maneuver needs to be provided
+// though. When different speeds are used on the road, they all need to be taken into account. This
+// function calculates the distance before the end of the maneuver by checking the elapsed_cost
+// seconds of each edges and accumulates their distances until the seconds threshold is passed. The
+// speed of this last edge is then used to subtract the distance so that the the seconds until the end
+// are exactly the provided amount of seconds.
+float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                              valhalla::odin::EnhancedTripLeg* etp,
+                              const double distance,
+                              const uint32_t target_seconds) {
+  uint32_t node_index = prev_maneuver->end_path_index();
+  double end_node_elapsed_seconds = etp->node(node_index).cost().elapsed_cost().seconds();
+  double begin_node_elapsed_seconds =
+      etp->node(prev_maneuver->begin_path_index()).cost().elapsed_cost().seconds();
+
+  // If the maneuver is too short, simply return its distance.
+  if (end_node_elapsed_seconds - begin_node_elapsed_seconds < target_seconds) {
+    return distance;
+  }
+
+  float accumulated_distance_km = 0;
+  float previous_accumulated_distance_km = 0;
+  double accumulated_seconds = 0;
+  double previous_accumulated_seconds = 0;
+  // Find the node after which the instructions should be heard:
+  while (accumulated_seconds < target_seconds && node_index >= prev_maneuver->begin_path_index()) {
+    node_index -= 1;
+    // not really accumulating seconds ourselves, but it happens elsewhere:
+    previous_accumulated_seconds = accumulated_seconds;
+    accumulated_seconds =
+        end_node_elapsed_seconds - etp->node(node_index).cost().elapsed_cost().seconds();
+    previous_accumulated_distance_km = accumulated_distance_km;
+    accumulated_distance_km += etp->GetCurrEdge(node_index)->length_km();
+  }
+  // The node_index now indicates the node AFTER which the target_seconds will be reached
+  // we now have to subtract the surplus distance (based on seconds) of this edge from the
+  // accumulated_distance_km
+  auto surplus_percentage =
+      (accumulated_seconds - target_seconds) / (accumulated_seconds - previous_accumulated_seconds);
+  accumulated_distance_km -=
+      (accumulated_distance_km - previous_accumulated_distance_km) * surplus_percentage;
+  if (accumulated_distance_km * 1000 > distance) {
+    return distance;
+  } else {
+    return accumulated_distance_km * 1000; // in meters
+  }
+}
+
+// Populate the voiceInstructions within a step.
+json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                  const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                  const double distance,
+                                  const uint32_t maneuver_index,
+                                  valhalla::odin::EnhancedTripLeg* etp) {
+  // voiceInstructions is an array, because there may be similar voice instructions.
+  // When the step is long enough, there may be multiple voice instructions.
+  json::ArrayPtr voice_instructions_array = json::array({});
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // voice instruction should be played. It is measured from the end of the maneuver.
+  // Using the maneuver length (distance) as the distanceAlongGeometry plays
+  // right at the beginning of the maneuver. A distanceAlongGeometry of 10 is
+  // shortly (10 meters at the given speed) after the maneuver has started.
+  // The voice_instruction_beginning starts shortly after the beginning of the step.
+  // The voice_instruction_end starts shortly before the end of the step.
+  float distance_before_verbal_transition_alert_instruction = -1;
+  float distance_before_verbal_pre_transition_instruction = -1;
+  if (prev_maneuver) {
+    distance_before_verbal_transition_alert_instruction =
+        distance_along_geometry(prev_maneuver, etp, distance,
+                                SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION);
+    distance_before_verbal_pre_transition_instruction =
+        distance_along_geometry(prev_maneuver, etp, distance,
+                                SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION);
+    if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+      // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
+      // right at the beginning of the navigation. This is something like:
+      // Drive West on XYZ Street.
+      // This voice_instruction_start is only created once. It is always played, even when
+      // the maneuver would otherwise be too short.
+      json::MapPtr voice_instruction_start = json::map({});
+      voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
+      voice_instruction_start->emplace("announcement",
+                                       prev_maneuver->verbal_pre_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_start));
+    } else if (distance > distance_before_verbal_transition_alert_instruction +
+                              APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
+               !prev_maneuver->verbal_post_transition_instruction().empty()) {
+      // In all other cases we want to play the verbal_post_transition_instruction shortly
+      // after the maneuver has started but only if there is sufficient time to play both
+      // the upcoming verbal_pre_transition_instruction and the verbal_post_transition_instruction
+      // itself. The approximation here is that the verbal_post_transition_instruction takes 100
+      // meters to play + the 10 meters after the maneuver start which is added so that the
+      // instruction is not played directly on the intersection where the maneuver starts.
+      json::MapPtr voice_instruction_beginning = json::map({});
+      voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 10, 1});
+      voice_instruction_beginning->emplace("announcement",
+                                           prev_maneuver->verbal_post_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
+    }
+  }
+
+  if (!maneuver.verbal_transition_alert_instruction().empty()) {
+    json::MapPtr voice_instruction_end = json::map({});
+    if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
+      // For the depart maneuver we want to play both the verbal_post_transition_instruction and
+      // the verbal_transition_alert_instruction even if the maneuver is too short.
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 1});
+    } else {
+      // In all other cases we use distance_before_verbal_transition_alert_instruction value
+      // as it is capped to the maneuver length
+      voice_instruction_end
+          ->emplace("distanceAlongGeometry",
+                    json::fixed_t{distance_before_verbal_transition_alert_instruction, 1});
+    }
+    voice_instruction_end->emplace("announcement", maneuver.verbal_transition_alert_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+  }
+
+  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+    json::MapPtr voice_instruction_end = json::map({});
+    if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
+      // For the depart maneuver we want to play the verbal_post_transition_instruction,
+      // the verbal_transition_alert_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 4, 1});
+    } else {
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value
+      // as it is capped to the maneuver length
+      voice_instruction_end->emplace("distanceAlongGeometry",
+                                     json::fixed_t{distance_before_verbal_pre_transition_instruction,
+                                                   1});
+    }
+    voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+  }
+
+  return voice_instructions_array;
+}
+
 // Get the mode
 std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
@@ -1697,6 +1842,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
           step->emplace("bannerInstructions",
                         banner_instructions(name, dest, ref, prev_maneuver, maneuver, arrive_maneuver,
                                             &etp, mnvr_type, modifier, ex, distance, drive_side));
+        }
+      }
+
+      // Add voice instructions if the user requested them
+      if (options.voice_instructions()) {
+        if (prev_step) {
+          prev_step->emplace("voiceInstructions",
+                             voice_instructions(prev_maneuver, maneuver, prev_distance,
+                                                maneuver_index, &etp));
+        }
+        if (arrive_maneuver) {
+          step->emplace("voiceInstructions",
+                        voice_instructions(prev_maneuver, maneuver, distance, maneuver_index, &etp));
         }
       }
 
