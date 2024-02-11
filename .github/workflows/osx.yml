@@ -29,7 +29,7 @@ on:
         default: false
 
 jobs:
-  build_osx_tests:
+  build_osx:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
