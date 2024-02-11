@@ -271,12 +271,13 @@ Directions options should be specified at the top level of the JSON object.
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
 | `format` | Four options are available: <ul><li>`json` is default valhalla routing directions JSON format</li><li>`gpx` returns the route as a GPX (GPS exchange format) XML track</li><li>`osrm` creates a OSRM compatible route directions JSON</li><li>`pbf` formats the result using protocol buffers</li></ul> |
 | `banner_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `bannerInstructions` attribute, which can be displayed in some navigation system SDKs. |
+| `voice_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `voiceInstructions` attribute, which can be heard in some navigation system SDKs. |
 | `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
 
-For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions in the steps would use the following json:
+For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions and voiceInstructions in the steps would use the following json:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"language":"es-ES"}
+{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"voice_instructions":true,"language":"es-ES"}
 ```
 
 ##### Supported language tags

@@ -33,6 +33,8 @@
    * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
    * FIXED: Config singleton multiple instantiation issue [#4521](https://github.com/valhalla/valhalla/pull/4521)
    * FIXED: Prevent GetShortcut to run into an infinite loop [#4532](https://github.com/valhalla/valhalla/pull/4532)
+   * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
+   * FIXED: infinite loop or other random corruption in isochrones when retrieving partial shape of an edge [#4547](https://github.com/valhalla/valhalla/pull/4547)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -77,6 +79,7 @@
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
+   * ADDED: Support for `voiceInstructions` attribute in OSRM serializer via `voice_instructions` request parameter [#4506](https://github.com/valhalla/valhalla/pull/4506)
    * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded conan's boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
    * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
    * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
