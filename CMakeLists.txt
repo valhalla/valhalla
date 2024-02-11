@@ -31,7 +31,6 @@ option(ENABLE_ADDRESS_SANITIZER "Use memory sanitizer for Debug build" OFF)
 option(ENABLE_UNDEFINED_SANITIZER "Use UB sanitizer for Debug build" OFF)
 option(ENABLE_TESTS "Enable Valhalla tests" ON)
 option(ENABLE_WERROR "Convert compiler warnings to errors. Requires ENABLE_COMPILER_WARNINGS=ON to take effect" OFF)
-option(ENABLE_BENCHMARKS "Enable microbenchmarking" ON)
 option(ENABLE_THREAD_SAFE_TILE_REF_COUNT "If ON uses shared_ptr as tile reference(i.e. it is thread safe)" OFF)
 option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for single files" ON)
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
@@ -331,11 +330,6 @@ endif()
 
 if(ENABLE_TESTS)
   add_subdirectory(test)
-endif()
-
-# NOTE(mookerji): Windows CI seems to break on the gbench build, so shelve Win32 support for now.
-if(ENABLE_BENCHMARKS AND ENABLE_DATA_TOOLS AND NOT WIN32)
-  add_subdirectory(bench)
 endif()
 
 ## Coverage report targets

@@ -4,7 +4,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test/
@@ -15,7 +14,6 @@ on:
     paths-ignore:
       - '*.md'
       - .circleci/
-      - bench/
       - docs/
       - run_route_scripts/
       - test/
@@ -108,7 +106,6 @@ jobs:
             -DENABLE_TESTS=OFF \
             -DENABLE_CCACHE=OFF \
             -DENABLE_SERVICES=OFF \
-            -DENABLE_BENCHMARKS=OFF \
             -DPREFER_EXTERNAL_DEPS=ON
 
       - if: ${{ steps.vcpkg-restore.outputs.cache-hit != 'true' }}
