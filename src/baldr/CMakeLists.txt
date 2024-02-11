@@ -11,7 +11,7 @@ DEPENDS ${VALHALLA_SOURCE_DIR}/third_party/tz/leapseconds.awk)
 
 foreach(tz_db_file ${tz_db_files})
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
-    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+    COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
         ${VALHALLA_SOURCE_DIR}/third_party/tz/${tz_db_file}
         ${CMAKE_CURRENT_BINARY_DIR}/date_time_${tz_db_file}.h
         --variable-name date_time_${tz_db_file} --skip 1 --raw
@@ -22,7 +22,7 @@ endforeach()
 
 # Process the windowsZones.xml file
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
-  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -DMSVC=${MSVC} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
   ${VALHALLA_SOURCE_DIR}/date_time/windowsZones.xml
   ${CMAKE_CURRENT_BINARY_DIR}/date_time_windows_zones.h
   --variable-name date_time_windows_zones_xml --skip 1 --raw
@@ -35,16 +35,13 @@ file(GLOB headers ${VALHALLA_SOURCE_DIR}/valhalla/baldr/*.h)
 set(includes
     ${VALHALLA_SOURCE_DIR}
      ${VALHALLA_SOURCE_DIR}/valhalla
-     $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-     ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
      ${CMAKE_CURRENT_BINARY_DIR}/src/baldr
      )
 
-# treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+set(system_includes 
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>
+  ${rapidjson_include_dir})
 
 set(sources
     accessrestriction.cc
@@ -131,5 +128,5 @@ valhalla_module(NAME baldr
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    CURL::CURL
-    ZLIB::ZLIB)
+    ${curl_targets}
+    PkgConfig::ZLIB)

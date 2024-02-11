@@ -8,33 +8,14 @@
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
 
-namespace {
-static bool IsTrivial(const uint64_t& edgeid,
-                      const valhalla::Location& origin,
-                      const valhalla::Location& destination) {
-  for (const auto& destination_edge : destination.correlation().edges()) {
-    if (destination_edge.graph_id() == edgeid) {
-      for (const auto& origin_edge : origin.correlation().edges()) {
-        if (origin_edge.graph_id() == edgeid &&
-            origin_edge.percent_along() <= destination_edge.percent_along()) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-} // namespace
-
 namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
 TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
-    : settled_count_(0), current_cost_threshold_(0),
+    : MatrixAlgorithm(config), settled_count_(0), current_cost_threshold_(0),
       max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
                                                       kInitialEdgeLabelCountDijkstras)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
       mode_(travel_mode_t::kDrive) {
 }
 
@@ -192,11 +173,12 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 }
 
 template <const ExpansionType expansion_direction, const bool FORWARD>
-void TimeDistanceMatrix::ComputeMatrix(Api& request,
+bool TimeDistanceMatrix::ComputeMatrix(Api& request,
                                        baldr::GraphReader& graphreader,
-                                       const float max_matrix_distance,
-                                       const uint32_t matrix_locations,
-                                       const bool invariant) {
+                                       const float max_matrix_distance) {
+  bool invariant = request.options().date_time_type() == Options::invariant;
+  uint32_t matrix_locations = request.options().matrix_locations();
+
   uint32_t bucketsize = costing_->UnitSize();
 
   auto& origins = FORWARD ? *request.mutable_options()->mutable_sources()
@@ -206,13 +188,11 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
 
   size_t num_elements = origins.size() * destinations.size();
   auto time_infos = SetTime(origins, graphreader);
-  // thanks to protobuf not handling strings well, we have to collect those
-  std::vector<std::string> out_date_times(num_elements);
 
   // Initialize destinations once for all origins
   InitDestinations<expansion_direction>(graphreader, destinations);
   // reserve the PBF vectors
-  reserve_pbf_arrays(*request.mutable_matrix(), num_elements);
+  reserve_pbf_arrays(*request.mutable_matrix(), num_elements, costing_->pass());
 
   for (int origin_index = 0; origin_index < origins.size(); ++origin_index) {
     // reserve some space for the next dijkstras (will be cleared at the end of the loop)
@@ -230,6 +210,11 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
     SetOrigin<expansion_direction>(graphreader, origin, time_info);
     SetDestinationEdges();
 
+    uint32_t n = 0;
+    // Collect edge_ids used for settling a location to determine its time zone
+    std::unordered_map<uint32_t, baldr::GraphId> dest_edge_ids;
+    dest_edge_ids.reserve(destinations.size());
+
     // Find shortest path
     graph_tile_ptr tile;
     while (true) {
@@ -239,7 +224,7 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       if (predindex == kInvalidLabel) {
         // Can not expand any further...
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, GraphId{}, out_date_times);
+                               time_info.timezone_index, dest_edge_ids);
         break;
       }
 
@@ -261,10 +246,14 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
         // have been settled or the requested amount of destinations has been found
         tile = graphreader.GetGraphTile(pred.edgeid());
         const DirectedEdge* edge = tile->directededge(pred.edgeid());
+
+        for (auto& dest_id : destedge->second) {
+          dest_edge_ids[dest_id] = pred.edgeid();
+        }
         if (UpdateDestinations(origin, destinations, destedge->second, edge, tile, pred, time_info,
                                matrix_locations)) {
           FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                                 time_info.timezone_index, pred.edgeid(), out_date_times);
+                                 time_info.timezone_index, dest_edge_ids);
           break;
         }
       }
@@ -272,37 +261,35 @@ void TimeDistanceMatrix::ComputeMatrix(Api& request,
       // Terminate when we are beyond the cost threshold
       if (pred.cost().cost > current_cost_threshold_) {
         FormTimeDistanceMatrix(request, graphreader, FORWARD, origin_index, origin.date_time(),
-                               time_info.timezone_index, pred.edgeid(), out_date_times);
+                               time_info.timezone_index, dest_edge_ids);
         break;
       }
 
       // Expand forward from the end node of the predecessor edge.
       Expand<expansion_direction>(graphreader, pred.endnode(), pred, predindex, false, time_info,
                                   invariant);
+
+      // Allow this process to be aborted
+      if (interrupt_ && (n++ % kInterruptIterationsInterval) == 0) {
+        (*interrupt_)();
+      }
     }
 
     reset();
   }
 
-  // amend the date_time strings
-  for (auto& date_time : out_date_times) {
-    auto* pbf_dt = request.mutable_matrix()->mutable_date_times()->Add();
-    *pbf_dt = date_time;
-  }
+  // TODO(nils): implement second pass here too
+  return true;
 }
 
-template void
+template bool
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::forward, true>(Api& request,
                                                                 baldr::GraphReader& graphreader,
-                                                                const float max_matrix_distance,
-                                                                const uint32_t matrix_locations,
-                                                                const bool invariant);
-template void
+                                                                const float max_matrix_distance);
+template bool
 TimeDistanceMatrix::ComputeMatrix<ExpansionType::reverse, false>(Api& request,
                                                                  baldr::GraphReader& graphreader,
-                                                                 const float max_matrix_distance,
-                                                                 const uint32_t matrix_locations,
-                                                                 const bool invariant);
+                                                                 const float max_matrix_distance);
 
 // Add edges at the origin to the adjacency list
 template <const ExpansionType expansion_direction, const bool FORWARD>
@@ -564,28 +551,26 @@ void TimeDistanceMatrix::FormTimeDistanceMatrix(Api& request,
                                                 const uint32_t origin_index,
                                                 const std::string& origin_dt,
                                                 const uint64_t& origin_tz,
-                                                const GraphId& pred_id,
-                                                std::vector<std::string>& out_date_times) {
+                                                std::unordered_map<uint32_t, GraphId>& edge_ids) {
   // when it's forward, origin_index will be the source_index
   // when it's reverse, origin_index will be the target_index
   valhalla::Matrix& matrix = *request.mutable_matrix();
   graph_tile_ptr tile;
   for (uint32_t i = 0; i < destinations_.size(); i++) {
     auto& dest = destinations_[i];
-    float time = dest.best_cost.secs + .5f;
     auto pbf_idx = forward ? (origin_index * request.options().targets().size()) + i
                            : (i * request.options().targets().size()) + origin_index;
     matrix.mutable_from_indices()->Set(pbf_idx, forward ? origin_index : i);
     matrix.mutable_to_indices()->Set(pbf_idx, forward ? i : origin_index);
     matrix.mutable_distances()->Set(pbf_idx, dest.distance);
-    matrix.mutable_times()->Set(pbf_idx, time);
+    matrix.mutable_times()->Set(pbf_idx, dest.best_cost.secs);
 
-    // this logic doesn't work with string repeated fields, gotta collect them
-    // and process them later
-    auto date_time =
-        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(pred_id, tile),
-                              static_cast<uint64_t>(time));
-    out_date_times[pbf_idx] = date_time;
+    auto dt_info =
+        DateTime::offset_date(origin_dt, origin_tz, reader.GetTimezoneFromEdge(edge_ids[i], tile),
+                              static_cast<uint64_t>(dest.best_cost.secs));
+    *matrix.mutable_date_times(pbf_idx) = dt_info.date_time;
+    *matrix.mutable_time_zone_names(pbf_idx) = dt_info.time_zone_name;
+    *matrix.mutable_time_zone_offsets(pbf_idx) = dt_info.time_zone_offset;
   }
 }
 

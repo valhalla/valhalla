@@ -49,16 +49,15 @@ class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::v
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
-    : max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
+    : MatrixAlgorithm(config),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_bidir_dijkstras",
                                                       kInitialEdgeLabelCountBidirDijkstra)),
-      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)),
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0),
-      has_time_(false), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -86,7 +85,7 @@ float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
 
 // Clear the temporary information generated during time + distance matrix
 // construction.
-void CostMatrix::clear() {
+void CostMatrix::Clear() {
   // Clear the target edge markings
   targets_->clear();
   if (check_reverse_connections_)
@@ -128,23 +127,19 @@ void CostMatrix::clear() {
 
 // Form a time distance matrix from the set of source locations
 // to the set of target locations.
-void CostMatrix::SourceToTarget(Api& request,
+bool CostMatrix::SourceToTarget(Api& request,
                                 baldr::GraphReader& graphreader,
                                 const sif::mode_costing_t& mode_costing,
                                 const sif::travel_mode_t mode,
-                                const float max_matrix_distance,
-                                const bool has_time,
-                                const bool invariant,
-                                const ShapeFormat& shape_format) {
-
-  LOG_INFO("matrix::CostMatrix");
+                                const float max_matrix_distance) {
   request.mutable_matrix()->set_algorithm(Matrix::CostMatrix);
+  bool invariant = request.options().date_time_type() == Options::invariant;
+  auto shape_format = request.options().shape_format();
 
   // Set the mode and costing
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
-  has_time_ = has_time;
 
   auto& source_location_list = *request.mutable_options()->mutable_sources();
   auto& target_location_list = *request.mutable_options()->mutable_targets();
@@ -156,7 +151,7 @@ void CostMatrix::SourceToTarget(Api& request,
   // Initialize best connections and status. Any locations that are the
   // same get set to 0 time, distance and are not added to the remaining
   // location set.
-  Initialize(source_location_list, target_location_list);
+  Initialize(source_location_list, target_location_list, request.matrix());
 
   // Set the source and target locations
   // TODO: for now we only allow depart_at/current date_time
@@ -262,23 +257,30 @@ void CostMatrix::SourceToTarget(Api& request,
     }
   }
 
+  // resize/reserve all properties of Matrix on first pass only
+  valhalla::Matrix& matrix = *request.mutable_matrix();
+  reserve_pbf_arrays(matrix, best_connection_.size(), costing_->pass());
+
   // Form the matrix PBF output
   graph_tile_ptr tile;
-  uint32_t count = 0;
-  valhalla::Matrix& matrix = *request.mutable_matrix();
-  reserve_pbf_arrays(matrix, best_connection_.size());
-  for (auto& connection : best_connection_) {
-    uint32_t target_idx = count % target_location_list.size();
-    uint32_t source_idx = count / target_location_list.size();
+  bool connection_failed = false;
+  for (uint32_t connection_idx = 0; connection_idx < best_connection_.size(); connection_idx++) {
+    auto best_connection = best_connection_[connection_idx];
+    // if this is the second pass we don't have to process previously found ones again
+    if (costing_->pass() > 0 && !(matrix.second_pass(connection_idx))) {
+      continue;
+    }
+    uint32_t target_idx = connection_idx % target_location_list.size();
+    uint32_t source_idx = connection_idx / target_location_list.size();
 
     // first recost and form the path, if desired (either time and/or geometry requested)
-    const auto shape = RecostFormPath(graphreader, connection, source_location_list[source_idx],
+    const auto shape = RecostFormPath(graphreader, best_connection, source_location_list[source_idx],
                                       target_location_list[target_idx], source_idx, target_idx,
                                       time_infos[source_idx], invariant, shape_format);
 
-    float time = connection.cost.secs;
+    float time = best_connection.cost.secs;
     if (time < kMaxCost) {
-      auto date_time =
+      auto dt_info =
           DateTime::offset_date(source_location_list[source_idx].date_time(),
                                 time_infos[source_idx].timezone_index,
                                 graphreader.GetTimezoneFromEdge(edgelabel_[MATRIX_REV][target_idx]
@@ -286,17 +288,22 @@ void CostMatrix::SourceToTarget(Api& request,
                                                                     .edgeid(),
                                                                 tile),
                                 time);
-      auto* pbf_date_time = matrix.mutable_date_times()->Add();
-      *pbf_date_time = date_time;
+      *matrix.mutable_date_times(connection_idx) = dt_info.date_time;
+      *matrix.mutable_time_zone_offsets(connection_idx) = dt_info.time_zone_offset;
+      *matrix.mutable_time_zone_names(connection_idx) = dt_info.time_zone_name;
+    } else {
+      // let's try a second pass for this connection
+      matrix.mutable_second_pass()->Set(connection_idx, true);
+      connection_failed = true;
     }
-    matrix.mutable_from_indices()->Set(count, source_idx);
-    matrix.mutable_to_indices()->Set(count, target_idx);
-    matrix.mutable_distances()->Set(count, connection.distance);
-    matrix.mutable_times()->Set(count, time);
-    auto* pbf_shape = matrix.mutable_shapes()->Add();
-    *pbf_shape = shape;
-    count++;
+    matrix.mutable_from_indices()->Set(connection_idx, source_idx);
+    matrix.mutable_to_indices()->Set(connection_idx, target_idx);
+    matrix.mutable_distances()->Set(connection_idx, best_connection.distance);
+    matrix.mutable_times()->Set(connection_idx, time);
+    *matrix.mutable_shapes(connection_idx) = shape;
   }
+
+  return !connection_failed;
 }
 
 // Initialize all time distance to "not found". Any locations that
@@ -304,7 +311,8 @@ void CostMatrix::SourceToTarget(Api& request,
 // remaining locations set.
 void CostMatrix::Initialize(
     const google::protobuf::RepeatedPtrField<valhalla::Location>& source_locations,
-    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations) {
+    const google::protobuf::RepeatedPtrField<valhalla::Location>& target_locations,
+    const valhalla::Matrix& matrix) {
 
   locs_count_[MATRIX_FORW] = source_locations.size();
   locs_count_[MATRIX_REV] = target_locations.size();
@@ -342,10 +350,18 @@ void CostMatrix::Initialize(
   best_connection_.reserve(locs_count_[MATRIX_FORW] * locs_count_[MATRIX_REV]);
   for (uint32_t i = 0; i < locs_count_[MATRIX_FORW]; i++) {
     for (uint32_t j = 0; j < locs_count_[MATRIX_REV]; j++) {
+      const auto connection_idx = i * static_cast<uint32_t>(target_locations.size()) + j;
       if (equals(source_locations.Get(i).ll(), target_locations.Get(j).ll())) {
         best_connection_.emplace_back(empty, empty, trivial_cost, 0.0f);
         best_connection_.back().found = true;
+      } else if (costing_->pass() > 0 && !matrix.second_pass(connection_idx)) {
+        // we've found this connection in a previous pass, we only need the time & distance
+        best_connection_.emplace_back(empty, empty, Cost{0.0f, matrix.times(connection_idx)},
+                                      matrix.distances(connection_idx));
+        best_connection_.back().found = true;
       } else {
+        // in a second pass this block makes sure that if e.g. A -> B is found, but B -> A isn't,
+        // we still expand both A & B to get the bidirectional benefit
         best_connection_.emplace_back(empty, empty, max_cost, static_cast<uint32_t>(kMaxCost));
         locs_status_[MATRIX_FORW][i].unfound_connections.insert(j);
         locs_status_[MATRIX_REV][j].unfound_connections.insert(i);
@@ -355,15 +371,21 @@ void CostMatrix::Initialize(
 
   // Set the remaining number of sources and targets
   locs_remaining_[MATRIX_FORW] = 0;
-  for (const auto& s : locs_status_[MATRIX_FORW]) {
+  for (auto& s : locs_status_[MATRIX_FORW]) {
     if (!s.unfound_connections.empty()) {
       locs_remaining_[MATRIX_FORW]++;
+    } else {
+      // don't look at sources which don't have unfound connections, important for second pass
+      s.threshold = 0;
     }
   }
   locs_remaining_[MATRIX_REV] = 0;
-  for (const auto& t : locs_status_[MATRIX_REV]) {
+  for (auto& t : locs_status_[MATRIX_REV]) {
     if (!t.unfound_connections.empty()) {
       locs_remaining_[MATRIX_REV]++;
+    } else {
+      // don't look at targets which don't have unfound connections, important for second pass
+      t.threshold = 0;
     }
   }
 }
@@ -487,12 +509,17 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
     return false;
   }
 
+  // not_thru_pruning_ is only set to false on the 2nd pass in matrix_action.
+  // TODO(nils): one of these cases where I think reverse tree should look at the opposing edge,
+  //   not the expanding one, same for quite some attributes below (and same in bidir a*)
+  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, thru,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -501,7 +528,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()));
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                            pred_dist, thru,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
@@ -523,7 +550,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                         pred_dist, newcost.cost);
   }
 
-  return true;
+  return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>

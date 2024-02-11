@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
       std::cout << "valhalla_benchmark_admins " << VALHALLA_VERSION << "\n";
       return EXIT_SUCCESS;
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
