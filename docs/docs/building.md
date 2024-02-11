@@ -44,8 +44,8 @@ git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
 echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/x64-linux.cmake
 # windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
 # osx: echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/arm64-osx.cmake
-./vcpkg/vcpkg install
 
+# vcpkg will install everything during cmake configuration
 # if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
 cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICE=OFF
 cmake --build build -- -j$(nproc)
