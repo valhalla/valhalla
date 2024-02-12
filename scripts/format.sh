@@ -23,7 +23,7 @@ readonly CLANG_FORMAT=$(pwd)/mason_packages/.link/bin/clang-format
 
 echo "Using clang-format $CLANG_FORMAT_VERSION from ${CLANG_FORMAT}"
 
-find src valhalla test bench -type f -name '*.h' -o -name '*.cc' \
+find src valhalla test -type f -name '*.h' -o -name '*.cc' \
   | xargs -I{} -P ${NPROC} ${CLANG_FORMAT} -i -style=file {}
 
 # Python setup

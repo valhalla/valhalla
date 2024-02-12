@@ -40,7 +40,6 @@ jobs:
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
-      - run: make -C build -j8 benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
@@ -75,7 +74,7 @@ jobs:
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
-            -DBENCHMARK_ENABLE_WERROR=Off -DENABLE_SINGLE_FILES_WERROR=Off
+            -DENABLE_SINGLE_FILES_WERROR=Off
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
@@ -107,13 +106,12 @@ jobs:
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DCPACK_GENERATOR=DEB \
-            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DBENCHMARK_ENABLE_WERROR=Off -DENABLE_SINGLE_FILES_WERROR=Off
+            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SINGLE_FILES_WERROR=Off
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
       # leaks in glibc we cant control for
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
-      - run: make -C build -j8 benchmarks
       - save_cache:
           key: ccache-release-linux-arm_64-v3-{{ .Branch }}
           paths:
