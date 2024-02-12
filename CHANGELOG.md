@@ -2,6 +2,7 @@
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
+   * REMOVED: ./bench and related files/code [#4560](https://github.com/valhalla/valhalla/pull/4560)
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
@@ -79,6 +80,7 @@
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
+   * ADDED: Support for `voiceInstructions` attribute in OSRM serializer via `voice_instructions` request parameter [#4506](https://github.com/valhalla/valhalla/pull/4506)
    * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded conan's boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
    * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
    * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
