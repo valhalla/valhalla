@@ -89,6 +89,10 @@
 
 using namespace valhalla::midgard;
 
+namespace {
+enum class TimeRestriction : uint8_t { NO_TIME = 0, TIME_ALLOWED = 1, TIME_DENIED = 2 };
+}
+
 namespace valhalla {
 namespace sif {
 
@@ -576,15 +580,13 @@ public:
         tile->GetAccessRestrictions(edgeid.id(), access_mode);
 
     // do 2 loops to not disregard "maxaxles" (restrictions are sorted, see graphconstants.h)
-    for (const auto& restriction : restrictions) {
+
+    TimeRestriction time_type = TimeRestriction::NO_TIME;
+    for (size_t i = 0; i < restrictions.size(); ++i) {
+      const auto& restriction = restrictions[i];
       if (!ModeSpecificAllowed(restriction)) {
         return false;
       }
-    }
-
-    bool time_allowed = true;
-    for (size_t i = 0; i < restrictions.size(); ++i) {
-      const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions, unless ignore_restrictions=true
       baldr::AccessType access_type = restriction.type();
       if (!ignore_restrictions_ && (access_type == baldr::AccessType::kTimedAllowed ||
@@ -592,11 +594,11 @@ public:
                                     access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
 
-        // we assume that any edge only comes with one type of timed restriction, i.e.
-        // not mixing kTimedDenied & kDestinationAllowed!
-
-        if (access_type == baldr::AccessType::kTimedAllowed) {
-          time_allowed = false;
+        // IMPORTANT: we assume that any edge only comes with one type of timed restriction, i.e.
+        // not mixing kTimedAllowed & kDestinationAllowed!
+        if (access_type == baldr::AccessType::kTimedAllowed &&
+            time_type != TimeRestriction::TIME_ALLOWED) {
+          time_type = TimeRestriction::TIME_DENIED;
         }
 
         // mark the restriction even if no valid time was passed
@@ -609,12 +611,15 @@ public:
           // remember restrictions are sorted! see baldr/graphconstants.h
           switch (access_type) {
             case baldr::AccessType::kTimedAllowed:
-              return true;
+              time_type = TimeRestriction::TIME_ALLOWED;
+              break;
             case baldr::AccessType::kDestinationAllowed:
-              return allow_conditional_destination_ || is_dest;
+              time_type = (allow_conditional_destination_ || is_dest) ? TimeRestriction::TIME_ALLOWED
+                                                                      : TimeRestriction::TIME_DENIED;
+              break;
             default:
               // baldr::AccessType::kTimedDenied
-              return false;
+              time_type = TimeRestriction::TIME_DENIED;
           }
         }
       }
@@ -623,7 +628,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return time_allowed || (current_time == 0);
+    return time_type < TimeRestriction::TIME_DENIED || (current_time == 0);
   }
 
   /**
