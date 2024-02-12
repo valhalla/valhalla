@@ -1197,6 +1197,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   options.set_banner_instructions(
       rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
+  // whether to return voiceInstructions in OSRM serializer, default false
+  options.set_voice_instructions(
+      rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",
