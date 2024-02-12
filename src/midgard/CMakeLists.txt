@@ -22,8 +22,9 @@ valhalla_module(NAME midgard
       ${VALHALLA_SOURCE_DIR}/valhalla
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+      $<$<BOOL:${WIN32}>:${dirent_include_dir}>
     PRIVATE
+      ${robinhoodhashing_include_dir}
   DEPENDS
     Boost::boost
     absl::container_common)

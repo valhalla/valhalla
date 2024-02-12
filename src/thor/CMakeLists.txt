@@ -29,13 +29,9 @@ set(sources_with_warnings
   trace_route_action.cc
   triplegbuilder_utils.h)
 
-# treat date library as system
 set(system_includes
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME thor
   SOURCES ${sources}
@@ -51,7 +47,12 @@ valhalla_module(NAME thor
     PUBLIC
       ${system_includes}
     PRIVATE
+<<<<<<< HEAD
       ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+=======
+      ${rapidjson_include_dir}
+      ${robinhoodhashing_include_dir}
+>>>>>>> master
 
   DEPENDS
     valhalla::proto
