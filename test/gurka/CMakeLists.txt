@@ -20,7 +20,6 @@ if(ENABLE_DATA_TOOLS)
     test_guidance_views_signposts.cc
     test_instructions_named_roundabout.cc
     test_instructions_roundabout.cc
-    test_landmarks.cc
     test_languages.cc
     test_locate.cc
     test_match.cc
