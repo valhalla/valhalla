@@ -185,11 +185,6 @@ std::string serializeIsochrones(Api& request,
                                 bool polygons,
                                 bool show_locations) {
 
-  // if the user requested pbf output
-  if (request.options().format() == Options_Format_pbf) {
-    return serializeIsochronePbf(request, intervals, contours);
-  }
-
   switch (request.options().format()) {
     case Options_Format_pbf:
       return serializeIsochronePbf(request, intervals, contours);
