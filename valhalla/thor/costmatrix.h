@@ -12,6 +12,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/proto/common.pb.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/edgestatus.h>
@@ -98,7 +99,7 @@ public:
    * @param  mode                  Graph reader for accessing routing graph.
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    */
-  void SourceToTarget(Api& request,
+  bool SourceToTarget(Api& request,
                       baldr::GraphReader& graphreader,
                       const sif::mode_costing_t& mode_costing,
                       const sif::travel_mode_t mode,
@@ -109,6 +110,14 @@ public:
    * matrix construction.
    */
   void Clear() override;
+
+  /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  inline const std::string& name() override {
+    return MatrixAlgoToString(Matrix::CostMatrix);
+  }
 
 protected:
   uint32_t max_reserved_labels_count_;
@@ -164,7 +173,8 @@ protected:
    * @param  target_location_list   List of target/destination locations.
    */
   void Initialize(const google::protobuf::RepeatedPtrField<valhalla::Location>& source_location_list,
-                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list);
+                  const google::protobuf::RepeatedPtrField<valhalla::Location>& target_location_list,
+                  const valhalla::Matrix& matrix);
 
   /**
    * Iterate the forward search from the source/origin location.

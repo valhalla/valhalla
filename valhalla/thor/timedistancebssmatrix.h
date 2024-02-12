@@ -12,6 +12,7 @@
 #include <valhalla/baldr/graphid.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/pathlocation.h>
+#include <valhalla/proto_conversions.h>
 #include <valhalla/sif/dynamiccost.h>
 #include <valhalla/sif/edgelabel.h>
 #include <valhalla/thor/astarheuristic.h>
@@ -41,13 +42,12 @@ public:
    * @param  max_matrix_distance   Maximum arc-length distance for current mode.
    * @return time/distance from origin index to all other locations
    */
-  inline void SourceToTarget(Api& request,
+  inline bool SourceToTarget(Api& request,
                              baldr::GraphReader& graphreader,
                              const sif::mode_costing_t& mode_costing,
                              const sif::travel_mode_t /*mode*/,
                              const float max_matrix_distance) override {
 
-    LOG_INFO("matrix::TimeDistanceBSSMatrix");
     request.mutable_matrix()->set_algorithm(Matrix::TimeDistanceMatrix);
 
     if (request.options().shape_format() != no_shape)
@@ -80,6 +80,14 @@ public:
     destinations_.clear();
     dest_edges_.clear();
   };
+
+  /**
+   * Get the algorithm's name
+   * @return the name of the algorithm
+   */
+  inline const std::string& name() override {
+    return MatrixAlgoToString(Matrix::TimeDistanceBSSMatrix);
+  }
 
 protected:
   // Number of destinations that have been found and settled (least cost path
@@ -146,7 +154,7 @@ protected:
    */
   template <const ExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == ExpansionType::forward>
-  void ComputeMatrix(Api& request, baldr::GraphReader& graphreader, const float max_matrix_distance);
+  bool ComputeMatrix(Api& request, baldr::GraphReader& graphreader, const float max_matrix_distance);
 
   /**
    * Expand from the node along the forward search path. Immediately expands

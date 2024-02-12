@@ -1658,6 +1658,7 @@ function filter_tags_generic(kv)
      kv["link_type"] = kv["link_type"]
   end
 
+  --- TODO(nils): "private" also has directionality which we don't parse and handle yet
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
   kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
