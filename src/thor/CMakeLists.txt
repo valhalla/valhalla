@@ -47,12 +47,8 @@ valhalla_module(NAME thor
     PUBLIC
       ${system_includes}
     PRIVATE
-<<<<<<< HEAD
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-=======
       ${rapidjson_include_dir}
       ${robinhoodhashing_include_dir}
->>>>>>> master
 
   DEPENDS
     valhalla::proto
