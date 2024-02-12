@@ -13,7 +13,6 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "filesystem.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
@@ -125,10 +124,10 @@ void work(const boost::property_tree::ptree& config, std::promise<results_t>& pr
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
   size_t batch, isolated, radius;
   bool extrema = false;
   std::vector<std::string> input_files;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -156,13 +155,13 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("LOCATIONS.TXT");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "loki.logging"))
+    if (!parse_common_args(program, options, result, config, "loki.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("input_files")) {
-      throw cxxopts::OptionException("Input file is required\n\n" + options.help());
+      throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -207,10 +206,10 @@ int main(int argc, char** argv) {
 
   // start up the threads
   std::list<std::thread> pool;
-  const auto num_threads = pt.get<uint32_t>("mjolnir.concurrency");
+  const auto num_threads = config.get<uint32_t>("mjolnir.concurrency");
   std::vector<std::promise<results_t>> pool_results(num_threads);
   for (size_t i = 0; i < num_threads; ++i) {
-    pool.emplace_back(work, std::cref(pt), std::ref(pool_results[i]));
+    pool.emplace_back(work, std::cref(config), std::ref(pool_results[i]));
   }
 
   // let the threads finish up

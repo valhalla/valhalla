@@ -10,7 +10,6 @@ using namespace valhalla;
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
 using namespace valhalla::odin;
-using namespace valhalla::thor;
 
 namespace {
 
@@ -494,6 +493,20 @@ void append_trace_info(
 
   // Add edges
   serialize_edges(controller, options, trip_path, writer);
+
+  // Add elevation at the specified interval
+  if (options.elevation_interval() > 0.0f) {
+    float unit_factor = options.units() == Options::miles ? kFeetPerMeter : 1.0f;
+    float interval = options.elevation_interval();
+    writer.set_precision(1);
+    writer("elevation_interval", interval * unit_factor);
+    writer.start_array("elevation");
+    auto elevation = tyr::get_elevation(trip_path, interval);
+    for (const auto& h : elevation) {
+      writer(h * unit_factor);
+    }
+    writer.end_array();
+  }
 
   // Add matched points, if requested
   if (controller.category_attribute_enabled(kMatchedCategory) && !match_results.empty()) {

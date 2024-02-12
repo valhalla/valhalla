@@ -19,7 +19,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -240,9 +239,9 @@ void update_tiles(
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree config;
   filesystem::path traffic_tile_dir;
   bool summary = false;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -272,22 +271,13 @@ int main(int argc, char** argv) {
       return false;
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
-  }
-
-  // configure logging
-  auto logging_subtree = config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // queue up all the work we'll be doing
@@ -420,9 +410,9 @@ int main(int argc, char** argv) {
     }
   }
   LOG_INFO("Stats - excluding shortcut edges");
-  LOG_INFO("non driveable with speed = " + std::to_string(non_dr_with_speed));
+  LOG_INFO("non drivable with speed = " + std::to_string(non_dr_with_speed));
   LOG_INFO("Shortcuts with speed = " + std::to_string(shortcuts_with_speed));
-  uint32_t totaldriveable = 0, totalpt = 0, totalff = 0, totaldriveablelink = 0;
+  uint32_t totaldrivable = 0, totalpt = 0, totalff = 0, totaldrivablelink = 0;
   for (uint32_t i = 0; i < 8; i++) {
     float pct1 = 100.0f * (float)pred_road_class_edges[i] / dr_road_class_edges[i];
     float pct2 = 100.0f * (float)ff_road_class_edges[i] / dr_road_class_edges[i];
@@ -430,19 +420,18 @@ int main(int argc, char** argv) {
     std::stringstream ss_pct1, ss_pct2;
     ss_pct1 << std::setprecision(1) << std::fixed << pct1;
     ss_pct2 << std::setprecision(1) << std::fixed << pct2;
-    LOG_INFO("RC " + std::to_string(i) + ": driveable edges " +
+    LOG_INFO("RC " + std::to_string(i) + ": drivable edges " +
              std::to_string(dr_road_class_edges[i]) + " predtraffic " +
              std::to_string(pred_road_class_edges[i]) + " pct " + ss_pct1.str() + " ff " +
              std::to_string(ff_road_class_edges[i]) + " pct " + ss_pct2.str());
-    totaldriveable += dr_road_class_edges[i];
-    totaldriveablelink += dr_class_edges_links[i];
+    totaldrivable += dr_road_class_edges[i];
+    totaldrivablelink += dr_class_edges_links[i];
     totalpt += pred_road_class_edges[i];
     totalff += ff_road_class_edges[i];
   }
-  LOG_INFO("total driveable = " + std::to_string(totaldriveable) +
-           " total driveable ramps/links = " + std::to_string(totaldriveablelink));
-  LOG_INFO("total driveable non ramps/links = " +
-           std::to_string(totaldriveable - totaldriveablelink));
+  LOG_INFO("total drivable = " + std::to_string(totaldrivable) +
+           " total drivable ramps/links = " + std::to_string(totaldrivablelink));
+  LOG_INFO("total drivable non ramps/links = " + std::to_string(totaldrivable - totaldrivablelink));
   LOG_INFO("total pred " + std::to_string(totalpt));
   LOG_INFO("total ff " + std::to_string(totalff));
 

@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
 #include "worker.h"
 
 #include "baldr/graphid.h"
@@ -60,8 +59,8 @@ void print_edge(GraphReader& reader,
     auto node_id = pred_edge->endnode();
     auto node_tile = reader.GetGraphTile(node_id);
     auto node = node_tile->node(node_id);
-    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, 0.0f, static_cast<sif::TravelMode>(0), 0,
-                         {}, kInvalidRestriction, true, false, InternalTurn::kNoTurn);
+    EdgeLabel pred_label(0, pred_id, pred_edge, {}, 0.0f, static_cast<sif::TravelMode>(0), 0,
+                         kInvalidRestriction, true, false, InternalTurn::kNoTurn);
     std::cout << "-------Transition-------\n";
     std::cout << "Pred GraphId: " << pred_id << std::endl;
     Cost trans_cost = costing->TransitionCost(edge, node, pred_label);
@@ -156,7 +155,7 @@ void walk_edges(const std::string& shape,
 }
 
 // args
-std::string routetype, config;
+std::string routetype, route_config;
 std::string json_str = "";
 std::string shape = "";
 
@@ -164,7 +163,7 @@ std::string shape = "";
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -178,18 +177,17 @@ int main(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
       ("t,type", "Route Type: auto|bicycle|pedestrian|truck etc. Default auto.", cxxopts::value<std::string>()->default_value("auto"))
       ("s,shape", "", cxxopts::value<std::string>())
       ("j,json", R"(JSON Example: {"paths":"
         "[[{"lat":12.47,"lon":15.2},{"lat":12.46,"lon":15.21}],[{"lat":12.36,"lon":15.17},{"lat":12.37,"lon":15.18}]],"
-        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>())
-      ("config", "positional argument", cxxopts::value<std::string>());
+        "costing":"bicycle","costing_options":{"bicycle":{"use_roads":0.55,"use_hills":0.1}}})", cxxopts::value<std::string>());
     // clang-format on
 
-    options.parse_positional({"config"});
-    options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (result.count("json")) {
@@ -197,11 +195,11 @@ int main(int argc, char* argv[]) {
     } else if (result.count("shape")) {
       shape = result["shape"].as<std::string>();
     } else {
-      throw cxxopts::OptionException(
+      throw cxxopts::exceptions::exception(
           "The json parameter or shape parameter was not supplied but is required.\n\n" +
           options.help());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -267,7 +265,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   if (!map_match) {
     rapidjson::Document doc;
@@ -292,7 +290,7 @@ int main(int argc, char* argv[]) {
   }
 
   // If JSON is entered we do map matching
-  MapMatcherFactory map_matcher_factory(pt);
+  MapMatcherFactory map_matcher_factory(config);
   std::shared_ptr<valhalla::meili::MapMatcher> matcher(map_matcher_factory.Create(request.options()));
 
   uint32_t i = 0;

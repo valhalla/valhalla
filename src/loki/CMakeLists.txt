@@ -21,11 +21,9 @@ set(sources_with_warnings
   trace_route_action.cc
   worker.cc)
 
-# treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+set(system_includes 
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME loki
   SOURCES ${sources}
@@ -35,9 +33,8 @@ valhalla_module(NAME loki
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${rapidjson_include_dir}
       ${CMAKE_BINARY_DIR}
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
@@ -48,4 +45,4 @@ valhalla_module(NAME loki
     valhalla::proto
     ${valhalla_protobuf_targets}
     Boost::boost
-    libprime_server)
+    ${libprime_server_targets})

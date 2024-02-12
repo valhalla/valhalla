@@ -10,7 +10,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "mjolnir/elevationbuilder.h"
 
 #include "argparse_utils.h"
@@ -65,8 +64,8 @@ std::deque<GraphId> get_tile_ids(const boost::property_tree::ptree& pt,
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree config;
   std::vector<std::string> tiles;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -102,7 +101,7 @@ int main(int argc, char** argv) {
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
     auto result = options.parse(argc, argv);
     if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -108,17 +108,9 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  // configure logging
   config.get_child("mjolnir").erase("tile_extract");
   config.get_child("mjolnir").erase("tile_url");
   config.get_child("mjolnir").erase("traffic_extract");
-  auto logging_subtree = config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
 
   // queue some tiles up to modify
   std::deque<GraphId> tilequeue;

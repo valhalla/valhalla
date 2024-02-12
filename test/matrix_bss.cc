@@ -14,7 +14,7 @@
 
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
-#include "thor/matrix_common.h"
+#include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
 
 using namespace valhalla;
@@ -34,7 +34,7 @@ namespace {
 // of the existing way on which the bike share sation is projected. It would be advisable to not set
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
 // projected uniquely on the bss_connection.
-const auto config =
+const auto cfg =
     test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
 } // namespace
 
@@ -148,11 +148,11 @@ public:
   }
 
 private:
-  loki_worker_t loki_worker{config};
-  thor_worker_t thor_worker{config};
-  odin_worker_t odin_worker{config};
+  loki_worker_t loki_worker{cfg};
+  thor_worker_t thor_worker{cfg};
+  odin_worker_t odin_worker{cfg};
 
-  GraphReader reader{config.get_child("mjolnir")};
+  GraphReader reader{cfg.get_child("mjolnir")};
   mode_costing_t mode_costing;
   TimeDistanceBSSMatrix timedist_matrix_bss;
 };

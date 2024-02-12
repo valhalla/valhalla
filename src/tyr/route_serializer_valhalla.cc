@@ -193,6 +193,14 @@ void locations(const valhalla::Api& api, int route_index, rapidjson::writer_wrap
         writer("date_time", location->date_time());
       }
 
+      if (!location->time_zone_offset().empty()) {
+        writer("time_zone_offset", location->time_zone_offset());
+      }
+
+      if (!location->time_zone_name().empty()) {
+        writer("time_zone_name", location->time_zone_name());
+      }
+
       if (location->waiting_secs()) {
         writer("waiting", static_cast<uint64_t>(location->waiting_secs()));
       }
@@ -497,15 +505,30 @@ void legs(const valhalla::Api& api, int route_index, rapidjson::writer_wrapper_t
 
       //  man->emplace("hasGate", maneuver.);
       //  man->emplace("hasFerry", maneuver.);
-      //“portionsTollNote” : “<portionsTollNote>”,
-      //“portionsUnpavedNote” : “<portionsUnpavedNote>”,
-      //“gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
-      //“checkFerryInfoNote” : “<checkFerryInfoNote>”
+      // “portionsTollNote” : “<portionsTollNote>”,
+      // “portionsUnpavedNote” : “<portionsUnpavedNote>”,
+      // “gateAccessRequiredNote” : “<gateAccessRequiredNote>”,
+      // “checkFerryInfoNote” : “<checkFerryInfoNote>”
 
       writer.end_object(); // maneuver
     }
     if (directions_leg.maneuver_size()) {
       writer.end_array(); // maneuvers
+    }
+
+    // Store elevation for the leg
+    if (api.options().elevation_interval() > 0.0f) {
+      writer.set_precision(1);
+      float unit_factor = api.options().units() == Options::miles ? kFeetPerMeter : 1.0f;
+      float interval = api.options().elevation_interval();
+      writer("elevation_interval", interval * unit_factor);
+      auto elevation = tyr::get_elevation(*trip_leg_itr, interval);
+
+      writer.start_array("elevation");
+      for (const auto& h : elevation) {
+        writer(h * unit_factor);
+      }
+      writer.end_array(); // elevation
     }
 
     writer.start_object("summary");

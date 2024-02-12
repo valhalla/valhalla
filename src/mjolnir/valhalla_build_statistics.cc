@@ -23,7 +23,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/nodeinfo.h"
 #include "baldr/tilehierarchy.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/aabb2.h"
 #include "midgard/distanceapproximator.h"
@@ -573,7 +572,7 @@ void BuildStatistics(const boost::property_tree::ptree& pt) {
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  boost::property_tree::ptree pt;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -591,9 +590,9 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -602,7 +601,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  BuildStatistics(pt);
+  BuildStatistics(config);
 
   return EXIT_SUCCESS;
 }

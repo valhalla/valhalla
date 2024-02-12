@@ -45,7 +45,7 @@ struct LinkGraphNode {
   }
 };
 
-inline bool IsDriveableNonLink(const Edge& edge) {
+inline bool IsdrivableNonLink(const Edge& edge) {
   return !edge.attributes.link &&
          ((edge.fwd_access & kAutoAccess) || (edge.rev_access & kAutoAccess)) &&
          edge.attributes.importance != kServiceClass;
@@ -55,11 +55,11 @@ inline bool IsDriveForwardLink(const Edge& edge) {
   return edge.attributes.link && edge.attributes.driveforward;
 }
 
-// Get the best classification for any driveable non-link edges from a node.
+// Get the best classification for any drivable non-link edges from a node.
 uint32_t GetBestNonLinkClass(const std::map<Edge, size_t>& edges) {
   uint32_t bestrc = kAbsurdRoadClass;
   for (const auto& edge : edges) {
-    if (IsDriveableNonLink(edge.first)) {
+    if (IsdrivableNonLink(edge.first)) {
       bestrc = std::min<uint32_t>(bestrc, edge.first.attributes.importance);
     }
   }
@@ -113,12 +113,12 @@ nodelist_t FormExitNodes(sequence<Node>& nodes, sequence<Edge>& edges) {
     // If the node has a both links and non links at it
     auto bundle = collect_node_edges(node_itr, nodes, edges);
     if (bundle.node.link_edge_ && bundle.node.non_link_edge_) {
-      // Check if this node has a link edge that is driveable from the node
+      // Check if this node has a link edge that is drivable from the node
       for (const auto& edge : bundle.node_edges) {
         if (edge.first.attributes.link && (edge.first.attributes.driveforward)) {
           // Get the highest classification of non-link edges at this node.
           // Add to the exit node list if a valid classification...if no
-          // connecting edge is driveable the node will be skipped.
+          // connecting edge is drivable the node will be skipped.
           uint32_t rc = GetBestNonLinkClass(bundle.node_edges);
           if (rc < kMaxClassification) {
             exit_nodes[rc].push_back(node_itr);
@@ -215,7 +215,7 @@ bool IsDestinationNode(const node_bundle& node, const WayTags& link, Data& data)
     return false;
 
   for (const auto& edge : node.node_edges) {
-    if (IsDriveableNonLink(edge.first)) {
+    if (IsdrivableNonLink(edge.first)) {
       const auto road = WayTags::Parse(*data.ways[edge.first.wayindex_], data.osmdata);
       if (IsTheSameRoad(road, link) || IsDestinationRoad(road, link))
         return true;
@@ -324,7 +324,7 @@ struct LinkGraphBuilder {
     // Expand link edges from the exit node
     for (const auto& startedge : exit_bundle.node_edges) {
       // Get the edge information. Skip non-link edges, link edges that are
-      // not driveable in the forward direction, and link edges already
+      // not drivable in the forward direction, and link edges already
       // tested for reclassification
       if (!IsDriveForwardLink(startedge.first) || startedge.first.attributes.reclass_link) {
         continue;
@@ -519,7 +519,7 @@ private:
   }
 };
 
-bool IsEdgeDriveableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
+bool IsEdgedrivableInDirection(uint32_t from_node, const Edge& edge, bool forward) {
   bool right_direction = true;
   if (forward) {
     right_direction = (edge.sourcenode_ == from_node && (edge.fwd_access & kAutoAccess)) ||
@@ -567,7 +567,7 @@ std::vector<uint32_t> GoTowardsIntersection(uint32_t start_node,
     // looking for a non link edge with right direction
     for (const auto& node_edge : bundle.node_edges) {
       const Edge& edge = node_edge.first;
-      if (!edge.attributes.link && IsEdgeDriveableInDirection(node, edge, forward) &&
+      if (!edge.attributes.link && IsEdgedrivableInDirection(node, edge, forward) &&
           visited_nodes.find(EndNode(node, node_edge.first)) == visited_nodes.end()) {
         candidates.push_back(node_edge);
       }
@@ -675,7 +675,7 @@ SlipLaneInput GetSlipLaneInput(Data& data, const std::vector<uint32_t>& link_edg
     double origin_heading = edge_heading(node, edge);
     auto bundle = collect_node_edges(data.nodes[node], data.nodes, data.edges);
     for (auto to : bundle.node_edges) {
-      if (to.first.attributes.link || !IsEdgeDriveableInDirection(node, to.first, forward))
+      if (to.first.attributes.link || !IsEdgedrivableInDirection(node, to.first, forward))
         continue;
 
       double neighbour_heading = edge_heading(node, to.first);
@@ -747,6 +747,7 @@ bool IsTurnChannel(Data& data, const std::vector<uint32_t>& link_edges) {
 std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& link_graph,
                                                   uint32_t exit_classification,
                                                   Data& data,
+                                                  bool reclassify_links,
                                                   bool infer_turn_channels) {
   // number of reclassified edges
   uint32_t reclass_count = 0;
@@ -850,7 +851,8 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
         sequence<Edge>::iterator element = data.edges[edge_idx];
         auto edge = *element;
 
-        if (rc > edge.attributes.importance) {
+        // Reclassify edge (if reclassify_links is true).
+        if (reclassify_links && rc > edge.attributes.importance) {
           if (rc < static_cast<uint32_t>(RoadClass::kUnclassified))
             edge.attributes.importance = rc;
           else
@@ -858,6 +860,7 @@ std::pair<uint32_t, uint32_t> ReclassifyLinkGraph(std::vector<LinkGraphNode>& li
 
           ++reclass_count;
         }
+
         if (turn_channel) {
           edge.attributes.turn_channel = true;
           ++tc_count;
@@ -886,11 +889,12 @@ void ReclassifyLinks(const std::string& ways_file,
                      const std::string& edges_file,
                      const std::string& way_nodes_file,
                      const OSMData& osmdata,
+                     bool reclassify_links,
                      bool infer_turn_channels) {
   LOG_INFO("Reclassifying_V2 link graph edges...");
 
   Data data(nodes_file, edges_file, ways_file, way_nodes_file, osmdata);
-  // Find list of exit nodes - nodes where driveable outbound links connect to
+  // Find list of exit nodes - nodes where drivable outbound links connect to
   // non-link edges. Group by best road class of the non-link connecting edges.
   nodelist_t exit_nodes = FormExitNodes(data.nodes, data.edges);
 
@@ -905,14 +909,15 @@ void ReclassifyLinks(const std::string& ways_file,
       // build link graph
       auto link_graph = build_graph(node, classification);
       // reclassify links and infer turn channels
-      auto counts = ReclassifyLinkGraph(link_graph, classification, data, infer_turn_channels);
+      auto counts = ReclassifyLinkGraph(link_graph, classification, data, reclassify_links,
+                                        infer_turn_channels);
       // update counters
       reclass_count += counts.first;
       tc_count += counts.second;
     }
   }
 
-  LOG_INFO("Finished with " + std::to_string(reclass_count) + " reclassified. " +
+  LOG_INFO("Finished with " + std::to_string(reclass_count) + " link edges reclassified. " +
            " Turn channel count = " + std::to_string(tc_count));
 }
 

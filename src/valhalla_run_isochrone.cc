@@ -11,7 +11,6 @@
 #include "argparse_utils.h"
 #include "baldr/graphreader.h"
 #include "baldr/pathlocation.h"
-#include "config.h"
 #include "loki/search.h"
 #include "midgard/logging.h"
 #include "proto/options.pb.h"
@@ -34,7 +33,7 @@ int main(int argc, char* argv[]) {
   // args
   std::string json_str;
   std::string filename = "";
-  boost::property_tree::ptree pt;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -56,18 +55,19 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, pt, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
-      throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
+      throw cxxopts::exceptions::exception("A JSON format request must be present.\n\n" +
+                                           options.help());
     }
     json_str = result["json"].as<std::string>();
 
     if (result.count("file")) {
       filename = result["file"].as<std::string>();
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Construct costing
   CostFactory factory;

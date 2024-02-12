@@ -9,10 +9,10 @@ on:
       - '.gitignore'
       - '**.md'
       - 'test/'
-
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'valhalla' }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -29,13 +29,23 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build tagged image
+      - name: Build tag image
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          docker build -t ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
-          docker push ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }}
+          sudo apt update --yes
+          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name mybuilder
+          docker buildx use mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:${{ steps.extract_tag.outputs.tag }} .
       - name: Build latest image
         if: github.ref == 'refs/heads/master'
         run: |
-          docker build -t ghcr.io/valhalla/valhalla:latest .
-          docker push ghcr.io/valhalla/valhalla:latest
+          sudo apt update --yes
+          sudo apt install --yes --quiet binfmt-support qemu-user-static qemu-system
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name mybuilder
+          docker buildx use mybuilder
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64,linux/arm64 --tag ghcr.io/valhalla/valhalla:latest .
