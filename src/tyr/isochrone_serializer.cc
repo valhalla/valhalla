@@ -135,7 +135,8 @@ void addLocations(Api& request, valhalla::baldr::json::ArrayPtr& features) {
 std::string serializeIsochroneJson(Api& request,
                                    std::vector<contour_interval_t>& intervals,
                                    contours_t& contours,
-                                   bool show_locations) {
+                                   bool show_locations,
+                                   bool polygons) {
   // for each contour interval
   int i = 0;
   auto features = array({});
@@ -149,7 +150,7 @@ std::string serializeIsochroneJson(Api& request,
 
     // for each feature on that interval
     for (const auto& feature : interval_contours) {
-      grouped_contours_t groups = GroupContours(true, feature);
+      grouped_contours_t groups = GroupContours(polygons, feature);
       auto geom = array({});
       // each group is a polygon consisting of an exterior ring and possibly inner rings
       for (const auto& group : groups) {
@@ -159,7 +160,11 @@ std::string serializeIsochroneJson(Api& request,
           for (const auto& pair : *ring) {
             ring_coords->push_back(array({fixed_t{pair.lng(), 6}, fixed_t{pair.lat(), 6}}));
           }
-          poly->emplace_back(ring_coords);
+          if (polygons) {
+            poly->emplace_back(ring_coords);
+          } else {
+            poly = ring_coords;
+          }
         }
         geom->emplace_back(poly);
       }
@@ -169,9 +174,11 @@ std::string serializeIsochroneJson(Api& request,
           {"type", std::string("Feature")},
           {"geometry",
            map({
-               {"type", std::string(groups.size() > 1 ? "MultiPolygon" : "Polygon")},
+               {"type", std::string(polygons ? groups.size() > 1 ? "MultiPolygon" : "Polygon"
+                                             : "LineString")},
                {"coordinates",
-                geom->size() > 1 ? geom : geom->at(0)}, // unwrap polygon if there's only one
+                polygons && geom->size() > 1 ? geom : geom->at(0)}, // unwrap linestring, or polygon
+                                                                    // if there's only one
            })},
           {"properties", map({
                              {"metric", std::get<2>(interval)},
@@ -190,85 +197,6 @@ std::string serializeIsochroneJson(Api& request,
   if (show_locations)
     addLocations(request, features);
 
-  auto feature_collection = map({
-      {"type", std::string("FeatureCollection")},
-      {"features", features},
-  });
-
-  if (request.options().has_id_case()) {
-    feature_collection->emplace("id", request.options().id());
-  }
-
-  // add warnings to json response
-  if (request.info().warnings_size() >= 1) {
-    feature_collection->emplace("warnings", serializeWarnings(request));
-  }
-
-  std::stringstream ss;
-  ss << *feature_collection;
-
-  return ss.str();
-}
-
-std::string serializeIsochroneJson_Legacy(Api& request,
-                                          std::vector<contour_interval_t>& intervals,
-                                          contours_t& contours,
-                                          bool polygons,
-                                          bool show_locations) {
-  // for each contour interval
-  int i = 0;
-  auto features = array({});
-  assert(intervals.size() == contours.size());
-  for (size_t contour_index = 0; contour_index < intervals.size(); ++contour_index) {
-    const auto& interval = intervals[contour_index];
-    const auto& feature_collection = contours[contour_index];
-
-    std::stringstream hex = getIntervalColor(intervals, i);
-    ++i;
-
-    // for each feature on that interval
-    for (const auto& feature : feature_collection) {
-      // for each contour in that feature
-      auto geom = array({});
-      for (const auto& contour : feature) {
-        // make some geometry
-        auto coords = array({});
-        for (const auto& coord : contour) {
-          coords->push_back(array({fixed_t{coord.first, 6}, fixed_t{coord.second, 6}}));
-        }
-        // its either a ring
-        if (polygons) {
-          geom->emplace_back(coords);
-          // or a single line, if someone has more than one contour per feature they messed up
-        } else {
-          geom = coords;
-        }
-      }
-      // add a feature
-      features->emplace_back(map({
-          {"type", std::string("Feature")},
-          {"geometry", map({
-                           {"type", std::string(polygons ? "Polygon" : "LineString")},
-                           {"coordinates", geom},
-                       })},
-          {"properties", map({
-                             {"metric", std::get<2>(interval)},
-                             {"contour", baldr::json::float_t{std::get<1>(interval)}},
-                             {"color", hex.str()},               // lines
-                             {"fill", hex.str()},                // geojson.io polys
-                             {"fillColor", hex.str()},           // leaflet polys
-                             {"opacity", fixed_t{.33f, 2}},      // lines
-                             {"fill-opacity", fixed_t{.33f, 2}}, // geojson.io polys
-                             {"fillOpacity", fixed_t{.33f, 2}},  // leaflet polys
-                         })},
-      }));
-    }
-  }
-  // Add input and snapped locations to the geojson
-  if (show_locations)
-    addLocations(request, features);
-
-  // make the collection
   auto feature_collection = map({
       {"type", std::string("FeatureCollection")},
       {"features", features},
@@ -345,9 +273,7 @@ std::string serializeIsochrones(Api& request,
     case Options_Format_pbf:
       return serializeIsochronePbf(request, intervals, contours);
     case Options_Format_json:
-      if (polygons)
-        return serializeIsochroneJson(request, intervals, contours, show_locations);
-      return serializeIsochroneJson_Legacy(request, intervals, contours, polygons, show_locations);
+      return serializeIsochroneJson(request, intervals, contours, show_locations, polygons);
     default:
       throw;
   }
