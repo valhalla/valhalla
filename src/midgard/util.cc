@@ -48,7 +48,7 @@ resample_at_1hz(const std::vector<valhalla::midgard::gps_segment_t>& segments) {
 }
 
 /**
- *  determindes the quadrant of pt1 relative to pt2
+ *  determines the quadrant of pt1 relative to pt2
  *
  *  +-----+-----+
  *  |     |     |
