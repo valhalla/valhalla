@@ -56,4 +56,5 @@ valhalla_module(NAME thor
     valhalla::meili
     ${valhalla_protobuf_targets}
     Boost::boost
+    absl::container_common
     ${libprime_server_targets})

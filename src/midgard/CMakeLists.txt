@@ -26,4 +26,5 @@ valhalla_module(NAME midgard
     PRIVATE
       ${robinhoodhashing_include_dir}
   DEPENDS
-    Boost::boost)
+    Boost::boost
+    absl::container_common)

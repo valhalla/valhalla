@@ -19,6 +19,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     git \
     jq \
     lcov \
+    libabsl-dev \
     libboost-all-dev \
     libcurl4-openssl-dev \
     libczmq-dev \

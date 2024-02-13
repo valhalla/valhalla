@@ -9,7 +9,7 @@
 #include "thor/costmatrix.h"
 #include "worker.h"
 
-#include <robin_hood.h>
+#include <absl/container/flat_hash_map.h>
 
 using namespace valhalla::baldr;
 using namespace valhalla::sif;
@@ -45,7 +45,8 @@ inline const valhalla::PathEdge& find_correlated_edge(const valhalla::Location& 
 namespace valhalla {
 namespace thor {
 
-class CostMatrix::ReachedMap : public robin_hood::unordered_map<uint64_t, std::vector<uint32_t>> {};
+// segmented_map has much lower memory requirement; no re-allocation is happening
+class CostMatrix::ReachedMap : public absl::flat_hash_map<uint64_t, std::vector<uint32_t>> {};
 
 // Constructor with cost threshold.
 CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
