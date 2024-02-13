@@ -170,6 +170,41 @@ bool shapes_match(const std::vector<PointLL>& shape1, const std::vector<PointLL>
   }
 }
 
+/**
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
+ */
+uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
+                              const baldr::GraphId& startnode,
+                              const graph_tile_ptr& tile,
+                              const baldr::DirectedEdge& edge) {
+  // Get the nodeinfo at the end of the edge
+  const baldr::NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
+
+  // Iterate through the directed edges and return when the end node matches the specified
+  // node, the length matches, and the shape matches (or edgeinfo offset matches)
+  const baldr::DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
+  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
+    if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
+      // If in the same tile and the edgeinfo offset matches then the shape and names will match
+      if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
+        return i;
+      } else {
+        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
+        // names in opposing directions)
+        if (shapes_match(tile->edgeinfo(&edge).shape(),
+                         endnodetile->edgeinfo(directededge).shape())) {
+          return i;
+        }
+      }
+    }
+  }
+  LOG_ERROR("Could not find opposing edge index");
+  return baldr::kMaxEdgesPerNode;
+}
+
 std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   if (!handle) {
     return nullptr;
