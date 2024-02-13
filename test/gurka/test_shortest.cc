@@ -115,3 +115,9 @@ TEST_F(ShortestTest, AutoUseDistance) {
   doTests(costing, {"ABDE", "BFGD", "ABDE"},
           {{"/costing_options/" + costing + "/use_distance", "1"}});
 }
+
+TEST_F(ShortestTest, TruckUseDistance) {
+  std::string costing = "truck";
+  doTests(costing, {"ABDE", "BFGD", "ABDE"},
+          {{"/costing_options/" + costing + "/use_distance", "1"}});
+}

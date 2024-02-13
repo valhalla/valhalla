@@ -11,4 +11,5 @@
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck"}'
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck","costing_options":{"truck":{"height":"3.556"}}}'
 -j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616,"type":"break"}],"costing":"truck","costing_options":{"truck":{"height":"3.3528"}}}'
+-j '{"locations":[{"lat":35.9992011,"lon":-78.9100346,"type":"break"},{"lat":35.998932,"lon":-78.9102616}],"costing":"truck","costing_options":{"truck":{"use_distance":1.0}}}'
 
