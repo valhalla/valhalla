@@ -371,6 +371,7 @@ enum VehicleType {
 enum PedestrianType {
   kFoot = 0;
   kWheelchair = 1;
+  kBlind = 2;
 }
 
 enum BicycleType {

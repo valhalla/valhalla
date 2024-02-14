@@ -1,4 +1,4 @@
-## Release Date: 2023-??-?? Valhalla 3.4.1
+## Release Date: 2024-??-?? Valhalla 3.4.1
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
@@ -90,6 +90,7 @@
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
    * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
    * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
+   * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
