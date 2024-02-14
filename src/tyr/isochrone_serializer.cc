@@ -73,6 +73,7 @@ grouped_contours_t GroupContours(const bool polygons, const feature_t& contours)
       }
     }
 
+    // TODO: reverse winding and make it an exterior ring
     if (!found_exterior) {
       LOG_WARN("No exterior ring contour found for inner contour.");
     }
@@ -81,7 +82,7 @@ grouped_contours_t GroupContours(const bool polygons, const feature_t& contours)
   return results;
 }
 
-std::stringstream getIntervalColor(std::vector<contour_interval_t>& intervals, size_t interval_idx) {
+std::string getIntervalColor(std::vector<contour_interval_t>& intervals, size_t interval_idx) {
   std::stringstream hex;
   // color was supplied
   if (!std::get<3>(intervals[interval_idx]).empty()) {
@@ -98,7 +99,7 @@ std::stringstream getIntervalColor(std::vector<contour_interval_t>& intervals, s
         << static_cast<int>(std::get<1>(color) * 255 + .5f) << std::hex
         << static_cast<int>(std::get<2>(color) * 255 + .5f);
   }
-  return hex;
+  return hex.str();
 }
 
 void addLocations(Api& request, valhalla::baldr::json::ArrayPtr& features) {
@@ -146,7 +147,7 @@ std::string serializeIsochroneJson(Api& request,
     const auto& interval = intervals[contour_index];
     const auto& interval_contours = contours[contour_index];
 
-    std::stringstream hex = getIntervalColor(intervals, i);
+    std::string hex = getIntervalColor(intervals, i);
     ++i;
 
     // for each feature on that interval
@@ -184,9 +185,9 @@ std::string serializeIsochroneJson(Api& request,
           {"properties", map({
                              {"metric", std::get<2>(interval)},
                              {"contour", baldr::json::float_t{std::get<1>(interval)}},
-                             {"color", hex.str()},               // lines
-                             {"fill", hex.str()},                // geojson.io polys
-                             {"fillColor", hex.str()},           // leaflet polys
+                             {"color", hex},                     // lines
+                             {"fill", hex},                      // geojson.io polys
+                             {"fillColor", hex},                 // leaflet polys
                              {"opacity", fixed_t{.33f, 2}},      // lines
                              {"fill-opacity", fixed_t{.33f, 2}}, // geojson.io polys
                              {"fillOpacity", fixed_t{.33f, 2}},  // leaflet polys
