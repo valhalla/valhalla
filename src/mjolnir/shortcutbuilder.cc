@@ -271,16 +271,16 @@ bool CanContract(GraphReader& reader,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-uint32_t ConnectEdges(GraphReader& reader,
-                      const GraphId& startnode,
-                      const GraphId& edgeid,
-                      std::list<PointLL>& shape,
-                      GraphId& endnode,
-                      uint32_t& opp_local_idx,
-                      uint32_t& restrictions,
-                      float& average_density,
-                      float& total_duration,
-                      float& total_truck_duration) {
+void ConnectEdges(GraphReader& reader,
+                  const GraphId& startnode,
+                  const GraphId& edgeid,
+                  std::list<PointLL>& shape,
+                  GraphId& endnode,
+                  uint32_t& opp_local_idx,
+                  uint32_t& restrictions,
+                  float& average_density,
+                  float& total_duration,
+                  float& total_truck_duration) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -324,9 +324,8 @@ uint32_t ConnectEdges(GraphReader& reader,
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
 
-  // Update the end node and return the length
+  // Update the end node
   endnode = directededge->endnode();
-  return directededge->length();
 }
 
 // Check if the edge is entering a contracted node
@@ -379,18 +378,18 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
-      uint32_t length = newedge.length();
 
       // For computing weighted density and total turn duration along the shortcut
-      float average_density = length * newedge.density();
+      uint32_t edge_length = newedge.length();
+      float average_density = edge_length * newedge.density();
       uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
       assert(speed != 0);
-      float total_duration = length / (speed * kKPHtoMetersPerSec);
+      float total_duration = edge_length / (speed * kKPHtoMetersPerSec);
       uint32_t const truck_speed =
           std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
                    directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
       assert(truck_speed != 0);
-      float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
+      float total_truck_duration = edge_length / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -452,11 +451,16 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
-        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density, total_duration, total_truck_duration);
+        ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+                     average_density, total_duration, total_truck_duration);
       }
+
       // Names can be different in the forward and backward direction
       bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
+      // Get the length from the shape. This prevents roundoff issues when forming
+      // elevation.
+      uint32_t length = valhalla::midgard::length(shape);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.

@@ -1,4 +1,4 @@
-## Release Date: 2023-??-?? Valhalla 3.4.1
+## Release Date: 2024-??-?? Valhalla 3.4.1
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
@@ -35,6 +35,7 @@
    * FIXED: Prevent GetShortcut to run into an infinite loop [#4532](https://github.com/valhalla/valhalla/pull/4532)
    * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
    * FIXED: infinite loop or other random corruption in isochrones when retrieving partial shape of an edge [#4547](https://github.com/valhalla/valhalla/pull/4547)
+   * FIXED: Aggregation updates: update opposing local idx after aggregating the edges, added classification check for aggregation, and shortcut length changes [#4570](https://github.com/valhalla/valhalla/pull/4570)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -89,6 +90,7 @@
    * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
    * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
    * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
+   * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
