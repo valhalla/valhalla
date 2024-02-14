@@ -39,8 +39,7 @@ void check_coords(const rapidjson::Value& a, const rapidjson::Value& b) {
 }
 
 void test_iso_shape_equality(const rapidjson::GenericArray<false, rapidjson::Value>& actual_geom,
-                             const rapidjson::GenericArray<false, rapidjson::Value>& expected_geom,
-                             bool polygon) {
+                             const rapidjson::GenericArray<false, rapidjson::Value>& expected_geom) {
   // different platforms can end up having some slightly different floating point wobble
   // to avoid failing tests we measure shape similarity and fail if its too far out of whack
   std::vector<PointLL> actual, expected;
@@ -119,7 +118,7 @@ void try_isochrone(loki_worker_t& loki_worker,
                                    .Get(expected_response)
                                    ->GetArray();
 
-          test_iso_shape_equality(actual_geom, expected_geom, false);
+          test_iso_shape_equality(actual_geom, expected_geom);
         }
 
       } else {
@@ -143,7 +142,7 @@ void try_isochrone(loki_worker_t& loki_worker,
                     ->GetArray();
 
             // tests exterior ring equality
-            test_iso_shape_equality(actual_geom, expected_geom, true);
+            test_iso_shape_equality(actual_geom, expected_geom);
           }
         }
       }
