@@ -143,8 +143,6 @@ TEST_F(MatrixTrafficTest, TDMatrixWithLiveTraffic) {
   rapidjson::Document res_doc;
   res_doc.Parse(res.c_str());
   EXPECT_EQ(result.info().warnings().size(), 0);
-  auto msg = result.info().warnings(0).description();
-  std::cerr << msg << std::endl;
   check_matrix(res_doc, {0.0f, 2.8f, 2.8f, 0.0f}, true, Matrix::TimeDistanceMatrix);
 
   // forward tree, date_time on the locations, 2nd location has pointless date_time
