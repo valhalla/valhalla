@@ -566,7 +566,8 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
 
 void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
                                 const std::string& costing_options_key,
-                                Costing* c) {
+                                Costing* c,
+                                google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
   c->set_type(Costing::motorcycle);
   c->set_name(Costing_Enum_Name(c->type()));
   auto* co = c->mutable_options();
@@ -574,10 +575,10 @@ void ParseMotorcycleCostOptions(const rapidjson::Document& doc,
   rapidjson::Value dummy;
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
-  ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
-  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails);
+  ParseBaseCostOptions(json, c, kBaseCostOptsConfig, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls, warnings);
+  JSON_PBF_RANGED_DEFAULT(co, kUseTrailsRange, json, "/use_trails", use_trails, warnings);
 }
 
 cost_ptr_t CreateMotorcycleCost(const Costing& costing_options) {

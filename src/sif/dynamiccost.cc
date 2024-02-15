@@ -478,7 +478,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                           use_living_streets, warnings);
 
   // use_lit
-  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit);
+  JSON_PBF_RANGED_DEFAULT_V2(co, cfg.use_lit_, json, "/use_lit", use_lit, warnings);
 
   // closure_factor
   JSON_PBF_RANGED_DEFAULT(co, cfg.closure_factor_, json, "/closure_factor", closure_factor, warnings);
@@ -488,8 +488,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
-  co->set_fixed_speed(
-      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
+  // fixed_speed
+  JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed, warnings);
 }
 
 void ParseCosting(const rapidjson::Document& doc,

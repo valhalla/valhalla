@@ -48,13 +48,13 @@
                                                       : range.def),                                  \
               clamped));                                                                             \
     if (clamped) {                                                                                   \
-      auto warning = warnings                                                                        \
-                         .Add()                                                                    \ 
-      warning->set_description("'" + json_key + "' has been clamped to " +                           \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
                                std::to_string(range.def));                                           \
-      warning->set_code(300);                                                                        \
-    }
-}
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
+  }
 
 /**
  * same as above, but for costing options without pbf's awful oneof
@@ -66,13 +66,22 @@
  * @param option_name      the name of the option will be set on the costing options object
  */
 
-#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name)              \
+#define JSON_PBF_RANGED_DEFAULT_V2(costing_options, range, json, json_key, option_name, warnings)    \
   {                                                                                                  \
+    bool clamped = false;                                                                            \
     costing_options->set_##option_name(                                                              \
         range(rapidjson::get<decltype(range.def)>(json, json_key,                                    \
                                                   costing_options->option_name()                     \
                                                       ? costing_options->option_name()               \
-                                                      : range.def)));                                \
+                                                      : range.def),                                  \
+              clamped));                                                                             \
+    if (clamped) {                                                                                   \
+      auto warning = warnings.Add();                                                                 \
+      warning->set_description("'" + std::string(json_key) + "' has been clamped to " +              \
+                               std::to_string(range.def));                                           \
+                                                                                                     \
+      warning->set_code(500);                                                                        \
+    }                                                                                                \
   }
 
 /**
