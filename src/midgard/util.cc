@@ -609,20 +609,20 @@ template bool intersect<PointLL>(const PointLL& u,
 template bool
 intersect<Point2>(const Point2& u, const Point2& v, const Point2& a, const Point2& b, Point2& i);
 
-template <class coord_t, class container_t> bool point_in_poly(const coord_t& pt, container_t& poly) {
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly) {
   int8_t quad, next_quad, delta, angle;
-  coord_t& vertex = poly.front();
-  quad = quadrant_type(vertex, pt);
+  quad = quadrant_type(poly.front(), pt);
   angle = 0;
 
   auto it = poly.begin();
   for (size_t i = 0; i < poly.size(); ++i) {
-    vertex = *it;
+    const coord_t vertex = *it;
     it++;
     if (it == poly.end()) {
       it = poly.begin();
     }
-    coord_t& next_vertex = *it;
+    const coord_t& next_vertex = *it;
     next_quad = quadrant_type(next_vertex, pt);
     delta = next_quad - quad;
     adjust_delta(delta, vertex, next_vertex, pt);
@@ -634,7 +634,7 @@ template <class coord_t, class container_t> bool point_in_poly(const coord_t& pt
 
 template bool point_in_poly<valhalla::midgard::PointLL, std::list<valhalla::midgard::PointLL>>(
     const valhalla::midgard::PointLL&,
-    std::list<valhalla::midgard::PointLL>&);
+    const std::list<valhalla::midgard::PointLL>&);
 
 template <class container_t>
 typename container_t::value_type::first_type polygon_area(const container_t& polygon) {

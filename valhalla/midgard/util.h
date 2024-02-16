@@ -474,7 +474,8 @@ bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord
  *
  * @return true if the point lies within the given polygon
  */
-template <class coord_t, class container_t> bool point_in_poly(const coord_t& pt, container_t& poly);
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly);
 
 /**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting

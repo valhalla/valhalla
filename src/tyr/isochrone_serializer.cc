@@ -55,14 +55,14 @@ grouped_contours_t GroupContours(const bool polygons, const feature_t& contours)
 
   // iterate over outer rings and for each inner ring check if the inner ring is within the exterior
   // ring
-  for (const auto inner : inner_ptrs) {
+  for (const auto* inner : inner_ptrs) {
 
     // get the first point of the ring (could be any though)
-    PointLL inner_pt = inner->front();
+    const PointLL& inner_pt = inner->front();
     bool found_exterior = false;
     // go over exterior rings from smallest to largest
     for (size_t i = results.size(); i > 0; --i) {
-      contour_t ext = *results[i - 1][0];
+      const contour_t& ext = *results[i - 1][0];
 
       // inner is within exterior ring if any of its points lies within the exterior ring
       // if (inner_pt.WithinPolygon(ext)) {
