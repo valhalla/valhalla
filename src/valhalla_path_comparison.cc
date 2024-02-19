@@ -267,11 +267,6 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
-  if (!map_match) {
-    rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
-  }
-
   // Construct costing
   valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
