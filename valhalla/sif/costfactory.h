@@ -43,7 +43,7 @@ public:
     Register(Costing::pedestrian, CreatePedestrianCost);
     Register(Costing::truck, CreateTruckCost);
     Register(Costing::transit, CreateTransitCost);
-    Register(Costing::multimodal, CreateTransitCost); // dummy so it behaves like the rest
+    Register(Costing::multimodal, CreateNoCost); // dummy so it behaves like the rest
     Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
   }
