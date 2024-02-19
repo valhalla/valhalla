@@ -594,7 +594,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
     access_mask_ = kWheelchairAccess;
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
-    type_ = PedestrianType::kFoot;
+    type_ = type == "blind" ? PedestrianType::kBlind : PedestrianType::kFoot;
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }

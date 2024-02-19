@@ -52,8 +52,8 @@ message PbfFieldSelector {
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
+  bool isochrone = 6;
   // TODO: enable these once we have objects for them
-  // bool isochrone = 5;
   // bool locate = 7;
   // bool height = 8;
   // bool expansion = 9;

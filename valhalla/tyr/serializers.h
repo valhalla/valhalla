@@ -38,7 +38,7 @@ std::string serializeMatrix(Api& request);
  * @param grid_contours    the contours generated from the grid
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
-std::string serializeIsochrones(const Api& request,
+std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                 midgard::GriddedData<2>::contours_t& contours,
                                 bool polygons = true,

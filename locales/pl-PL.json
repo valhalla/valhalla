@@ -70,7 +70,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -135,7 +138,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -193,7 +199,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -225,7 +234,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "metric_lengths": [
         "<KILOMETERS> km",
@@ -279,7 +291,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -416,7 +431,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "ferry_label": "prom",
       "example_phrases": {
@@ -445,7 +463,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "ferry_label": "prom",
       "example_phrases": {
@@ -498,7 +519,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -595,7 +619,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -775,7 +802,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -803,7 +833,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -952,7 +985,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "lewej strony",
@@ -999,7 +1035,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "lewej strony",
@@ -1034,7 +1073,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "lewej strony",
@@ -1073,7 +1115,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "lewej strony",
@@ -1126,7 +1171,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -1166,7 +1214,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -1213,7 +1264,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "metric_lengths": [
         "<KILOMETERS> km",
@@ -1474,7 +1528,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -1539,7 +1596,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -1595,7 +1655,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "example_phrases": {
         "0": [
@@ -1683,7 +1746,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "metric_lengths": [
         "<KILOMETERS> km",
@@ -2048,8 +2114,8 @@
     "turn": {
       "phrases": {
         "0": "Skręć <RELATIVE_DIRECTION>.",
-        "1": "Skręć <RELATIVE_DIRECTION> w stronę: <STREET_NAMES>.",
-        "2": "Skręć <RELATIVE_DIRECTION> w stronę: <BEGIN_STREET_NAMES>. Kontynuuj wzdłuż: <STREET_NAMES>.",
+        "1": "Skręć <RELATIVE_DIRECTION> w <STREET_NAMES>.",
+        "2": "Skręć <RELATIVE_DIRECTION> w <BEGIN_STREET_NAMES>. Kontynuuj wzdłuż: <STREET_NAMES>.",
         "3": "Skręć <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>.",
         "4": "Skręć <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
         "5": "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>.",
@@ -2083,7 +2149,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -2113,8 +2182,8 @@
     "turn_verbal": {
       "phrases": {
         "0": "Skręć <RELATIVE_DIRECTION>.",
-        "1": "Skręć <RELATIVE_DIRECTION> w stronę: <STREET_NAMES>.",
-        "2": "Skręć <RELATIVE_DIRECTION> w stronę: <BEGIN_STREET_NAMES>.",
+        "1": "Skręć <RELATIVE_DIRECTION> w <STREET_NAMES>.",
+        "2": "Skręć <RELATIVE_DIRECTION> w <BEGIN_STREET_NAMES>.",
         "3": "Skręć <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>.",
         "4": "Skręć <RELATIVE_DIRECTION> na <JUNCTION_NAME>.",
         "5": "Skręć <RELATIVE_DIRECTION>, kierunek: <TOWARD_SIGN>.",
@@ -2148,7 +2217,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -2178,7 +2250,7 @@
     "uturn": {
       "phrases": {
         "0": "Zawróć <RELATIVE_DIRECTION>.",
-        "1": "Zawróć <RELATIVE_DIRECTION> w stronę: <STREET_NAMES>.",
+        "1": "Zawróć <RELATIVE_DIRECTION> w <STREET_NAMES>.",
         "2": "Zawróć <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>.",
         "3": "Zawróć <RELATIVE_DIRECTION> na: <CROSS_STREET_NAMES>.",
         "4": "Zawróć <RELATIVE_DIRECTION> na: <CROSS_STREET_NAMES> w stronę: <STREET_NAMES>.",
@@ -2214,7 +2286,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -2250,7 +2325,7 @@
     "uturn_verbal": {
       "phrases": {
         "0": "Zawróć <RELATIVE_DIRECTION>.",
-        "1": "Zawróć <RELATIVE_DIRECTION> w stronę: <STREET_NAMES>.",
+        "1": "Zawróć <RELATIVE_DIRECTION> w <STREET_NAMES>.",
         "2": "Zawróć <RELATIVE_DIRECTION>, pozostając na: <STREET_NAMES>.",
         "3": "Zawróć <RELATIVE_DIRECTION> na: <CROSS_STREET_NAMES>.",
         "4": "Zawróć <RELATIVE_DIRECTION> na: <CROSS_STREET_NAMES> w stronę: <STREET_NAMES>.",
@@ -2286,7 +2361,10 @@
         "chodnik",
         "ścieżka rowerowa",
         "górski szlak rowerowy",
-        "przejście dla pieszych"
+        "przejście dla pieszych",
+        "schody",
+        "most",
+        "tunel"
       ],
       "relative_directions": [
         "w lewo",
@@ -2371,6 +2449,22 @@
         ]
       }
     },
+    "pass": {
+      "phrases": {
+        "0": "Przejdź <OBJECT_LABEL>.",
+        "1": "Przejdź na światłach <OBJECT_LABEL>."
+      },
+      "object_labels": [
+        "bramę",
+        "słupki",
+        "skrzyżowanie dróg"
+      ],
+      "example_phrases": {
+        "0": [
+          "Pass the gate."
+        ]
+      }
+    },
     "elevator": {
       "phrases": {
         "0": "Skorzystaj z windy.",
@@ -2378,10 +2472,10 @@
       },
       "example_phrases": {
         "0": [
-          "Take the elevator."
+          "Wsiądź do windy."
         ],
         "1": [
-          "Take the elevator to Level 1."
+          "Wsiądź do windy i jedź na poziom 1."
         ]
       }
     },
@@ -2392,10 +2486,10 @@
       },
       "example_phrases": {
         "0": [
-          "Take the stairs."
+          "Wejdź na schody."
         ],
         "1": [
-          "Take the stairs to Level 2."
+          "Przejdź schodami na poziom 2."
         ]
       }
     },
