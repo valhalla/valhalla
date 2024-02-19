@@ -640,7 +640,8 @@ public:
 
 TestMotorScooterCost* make_motorscootercost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"motor_scooter":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "motor_scooter", "costing_options":{"motor_scooter":{")" << property << R"(":)"
+     << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorScooterCost(request.options().costings().find(Costing::motor_scooter)->second);

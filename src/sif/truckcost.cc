@@ -749,7 +749,8 @@ public:
 
 TestTruckCost* make_truckcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"truck":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "truck", "costing_options":{"truck":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestTruckCost(request.options().costings().find(Costing::truck)->second);
