@@ -784,7 +784,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
   else
     options.set_costing_type(costing);
-  sif::ParseCosting(doc, "/costing_options", options);
 
   // date_time
   auto date_time_type = rapidjson::get_optional<unsigned int>(doc, "/date_time/type");
@@ -874,6 +873,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       break;
     }
   }
+
+  // TODO(nils): if we parse the costing optionss before the ignore_closures logic,
+  //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
+  //   as in the above logic the costing options aren't even parsed yet,
+  //   so how can it determine "ignore_closures" there?
+  sif::ParseCosting(doc, "/costing_options", options);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
