@@ -874,7 +874,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     }
   }
 
-  // TODO(nils): if we parse the costing optionss before the ignore_closures logic,
+  // TODO(nils): if we parse the costing options before the ignore_closures logic,
   //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
   //   as in the above logic the costing options aren't even parsed yet,
   //   so how can it determine "ignore_closures" there?
