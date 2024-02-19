@@ -408,6 +408,13 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
                           mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
 
+  // grab the initial tile sizes
+  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  std::unordered_map<GraphId, uint32_t> sizes;
+  for (const auto& graph_id : gr.GetTileSet()){
+    sizes[graph_id] = gr.GetGraphTile(graph_id)->header()->end_offset();
+  }
+
   // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
                                    {pbf_filename_tile_test}));
@@ -415,9 +422,14 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   // add landmarks from db to tiles
   AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
-  // check data
-  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  // all of the tiles should have gotten larger
+  gr.Clear();
+  for (const auto& graph_id : gr.GetTileSet()){
+    auto new_size = gr.GetGraphTile(graph_id)->header()->end_offset();
+    ASSERT_LE(new_size, sizes[graph_id]);
+  }
 
+  // make sure to get fresh tiles
   CheckLandmarksInTiles(gr, GraphId("0/002025/0"));
   CheckLandmarksInTiles(gr, GraphId("1/032220/0"));
   CheckLandmarksInTiles(gr, GraphId("2/517680/0"));
@@ -526,6 +538,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
                           mjolnir::BuildStage::kValidate, false);
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
+
   // add landmarks to graphtile from the landmark database
   AddLandmarks(map.config.get_child("mjolnir"));
 
