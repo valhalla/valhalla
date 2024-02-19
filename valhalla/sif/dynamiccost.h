@@ -92,23 +92,20 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace sif {
 
-const std::unordered_map<valhalla::Costing::Type, std::vector<valhalla::Costing::Type>>
-    kCostingTypeMapping{
-        {valhalla::Costing::none_, {valhalla::Costing::none_}},
-        {valhalla::Costing::bicycle, {valhalla::Costing::bicycle}},
-        {valhalla::Costing::bus, {valhalla::Costing::bus}},
-        {valhalla::Costing::motor_scooter, {valhalla::Costing::motor_scooter}},
-        {valhalla::Costing::multimodal,
-         {valhalla::Costing::multimodal, valhalla::Costing::transit, valhalla::Costing::pedestrian}},
-        {valhalla::Costing::pedestrian, {valhalla::Costing::pedestrian}},
-        {valhalla::Costing::transit, {valhalla::Costing::transit, valhalla::Costing::pedestrian}},
-        {valhalla::Costing::truck, {valhalla::Costing::truck}},
-        {valhalla::Costing::motorcycle, {valhalla::Costing::motorcycle}},
-        {valhalla::Costing::taxi, {valhalla::Costing::taxi}},
-        {valhalla::Costing::auto_, {valhalla::Costing::auto_}},
-        {valhalla::Costing::bikeshare,
-         {valhalla::Costing::bikeshare, valhalla::Costing::pedestrian, valhalla::Costing::bicycle}},
-    };
+const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
+    {Costing::none_, {Costing::none_}},
+    {Costing::bicycle, {Costing::bicycle}},
+    {Costing::bus, {Costing::bus}},
+    {Costing::motor_scooter, {Costing::motor_scooter}},
+    {Costing::multimodal, {Costing::multimodal, Costing::transit, Costing::pedestrian}},
+    {Costing::pedestrian, {Costing::pedestrian}},
+    {Costing::transit, {Costing::transit, Costing::pedestrian}},
+    {Costing::truck, {Costing::truck}},
+    {Costing::motorcycle, {Costing::motorcycle}},
+    {Costing::taxi, {Costing::taxi}},
+    {Costing::auto_, {Costing::auto_}},
+    {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
+};
 
 const sif::Cost kNoCost(0.0f, 0.0f);
 
