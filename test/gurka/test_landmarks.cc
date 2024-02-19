@@ -86,6 +86,18 @@ void BuildPBFAddLandmarksToTiles() {
       I                           J
     )";
 
+  const gurka::ways ways = {
+      {"ae", // length 55, associated with ABFI
+       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
+      {"ab", // length 35, associated with ABCFG
+       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
+      {"bc", // length 30, associated with CDG
+       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
+  };
+
   const gurka::nodes nodes = {
       {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
       {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
@@ -107,17 +119,7 @@ void BuildPBFAddLandmarksToTiles() {
       {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
   };
 
-  const gurka::ways ways = {
-      {"ae", // length 55, associated with ABFI
-       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
-      {"ab", // length 35, associated with ABCFG
-       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
-      {"bc", // length 30, associated with CDG
-       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
-      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
-      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
-      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
-  };
+
 
   constexpr double gridsize = 5;
   landmark_map_tile_test.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {0, 0});
@@ -426,7 +428,7 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   gr.Clear();
   for (const auto& graph_id : gr.GetTileSet()){
     auto new_size = gr.GetGraphTile(graph_id)->header()->end_offset();
-    ASSERT_LE(new_size, sizes[graph_id]);
+    ASSERT_GE(new_size, sizes[graph_id]);
   }
 
   // make sure to get fresh tiles
