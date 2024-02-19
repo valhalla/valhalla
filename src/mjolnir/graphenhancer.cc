@@ -1252,45 +1252,6 @@ void ProcessEdgeTransitions(const uint32_t idx,
   }
 }
 
-/**
- * Get the index of the opposing edge at the end node. This is on the local hierarchy,
- * before adding transition and shortcut edges. Make sure that even if the end nodes
- * and lengths match that the correct edge is selected (match shape) since some loops
- * can have the same length and end node.
- * @param  endnodetile   Graph tile at the end node.
- * @param  startnode     Start node of the directed edge.
- * @param  tile          Graph tile of the edge
- * @param  directededge  Directed edge to match.
- */
-uint32_t GetOpposingEdgeIndex(const graph_tile_ptr& endnodetile,
-                              const GraphId& startnode,
-                              const graph_tile_ptr& tile,
-                              const DirectedEdge& edge) {
-  // Get the nodeinfo at the end of the edge
-  const NodeInfo* nodeinfo = endnodetile->node(edge.endnode().id());
-
-  // Iterate through the directed edges and return when the end node matches the specified
-  // node, the length matches, and the shape matches (or edgeinfo offset matches)
-  const DirectedEdge* directededge = endnodetile->directededge(nodeinfo->edge_index());
-  for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, directededge++) {
-    if (directededge->endnode() == startnode && directededge->length() == edge.length()) {
-      // If in the same tile and the edgeinfo offset matches then the shape and names will match
-      if (endnodetile == tile && directededge->edgeinfo_offset() == edge.edgeinfo_offset()) {
-        return i;
-      } else {
-        // Need to compare shape if not in the same tile or different EdgeInfo (could be different
-        // names in opposing directions)
-        if (shapes_match(tile->edgeinfo(&edge).shape(),
-                         endnodetile->edgeinfo(directededge).shape())) {
-          return i;
-        }
-      }
-    }
-  }
-  LOG_ERROR("Could not find opposing edge index");
-  return kMaxEdgesPerNode;
-}
-
 bool ConsistentNames(const std::string& country_code,
                      const std::vector<std::pair<std::string, bool>>& names1,
                      const std::vector<std::pair<std::string, bool>>& names2) {
