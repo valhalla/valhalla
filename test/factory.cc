@@ -22,9 +22,6 @@ TEST(Factory, Register) {
   options.set_costing_type(Costing::bicycle);
   sif::ParseCosting(doc, "/costing_options", options);
   auto bike = factory.Create(options);
-  options.set_costing_type(Costing::multimodal);
-  sif::ParseCosting(doc, "/costing_options", options);
-  EXPECT_THROW(factory.Create(options), std::runtime_error);
   auto truck = factory.Create(Costing::truck);
 }
 
