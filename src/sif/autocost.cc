@@ -1044,8 +1044,8 @@ template <class T>
 std::shared_ptr<TestAutoCost>
 make_autocost_from_json(const std::string& property, T testVal, const std::string& extra_json = "") {
   std::stringstream ss;
-  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}" << extra_json
-     << "}";
+  ss << R"({"costing": "auto", "costing_options":{"auto":{")" << property << R"(":)" << testVal
+     << "}}" << extra_json << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return std::make_shared<TestAutoCost>(request.options().costings().find(Costing::auto_)->second);
