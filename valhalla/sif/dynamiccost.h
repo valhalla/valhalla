@@ -101,7 +101,7 @@ const std::unordered_map<valhalla::Costing::Type, std::vector<valhalla::Costing:
         {valhalla::Costing::multimodal,
          {valhalla::Costing::multimodal, valhalla::Costing::transit, valhalla::Costing::pedestrian}},
         {valhalla::Costing::pedestrian, {valhalla::Costing::pedestrian}},
-        {valhalla::Costing::transit, {valhalla::Costing::transit}},
+        {valhalla::Costing::transit, {valhalla::Costing::transit, valhalla::Costing::pedestrian}},
         {valhalla::Costing::truck, {valhalla::Costing::truck}},
         {valhalla::Costing::motorcycle, {valhalla::Costing::motorcycle}},
         {valhalla::Costing::taxi, {valhalla::Costing::taxi}},
