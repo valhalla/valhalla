@@ -496,16 +496,16 @@ void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
                   Options& options,
                   google::protobuf::RepeatedPtrField<CodedDescription>& warnings) {
-  // if specified, get the costing options in there
-  for (auto i = Costing::Type_MIN; i <= Costing::Type_MAX; i = Costing::Type(i + 1)) {
+  // get the needed costing options in there
+  for (const auto& costing_type : kCostingTypeMapping.at(options.costing_type())) {
     // Create the costing options key
-    const auto& costing_str = valhalla::Costing_Enum_Name(i);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing_type);
     if (costing_str.empty())
       continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    auto& costing = (*options.mutable_costings())[i];
-    ParseCosting(doc, key, &costing, warnings, i);
+    auto& costing = (*options.mutable_costings())[costing_type];
+    ParseCosting(doc, key, &costing, warnings, costing_type);
   }
 }
 

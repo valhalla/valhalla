@@ -207,8 +207,8 @@ void make_tile() {
 void create_costing_options(Options& options, Costing::Type costing) {
   const rapidjson::Document doc;
   valhalla::Api api;
-  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
   options.set_costing_type(costing);
+  sif::ParseCosting(doc, "/costing_options", options, *api.mutable_info()->mutable_warnings());
 }
 // Convert locations to format needed by PathAlgorithm
 std::vector<valhalla::Location> ToPBFLocations(const std::vector<vb::Location>& locations,
