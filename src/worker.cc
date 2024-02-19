@@ -146,7 +146,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {100, R"(auto_shorter costing is deprecated, use "shortest" costing option instead)"},
   {101,
     R"(hov costing is deprecated, use "include_hov2" costing option instead)"},
-  {102, R"(auto_data_fix is deprecated, use the "ignore_*" costing options instead)"},
+  {102, R"(auto_data_fix costing is deprecated, use the "ignore_*" costing options instead)"},
   {103, R"(best_paths has been deprecated, use "alternates" instead)"},
   // 2xx is used for ineffective parameters, i.e. we ignore them because of reasons
   {200, R"(path distance exceeds the max distance limit for time-dependent matrix, ignoring date_time)"},
@@ -157,14 +157,14 @@ const std::unordered_map<int, std::string> warning_codes = {
   {205, R"("disable_hierarchy_pruning" exceeded the max distance, ignoring disable_hierarchy_pruning)"},
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
-  {208, R"(many:many matrix is using CostMatrix algorithm, ignoring "matrix_locations")"},
+  {208, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
-  // 500 is for clamped values: can't distinguish with a code
-  {500, R"(Value was clamped to: )"},
+  // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
+  // {500, R"(<option> was clamped to <value> )"},
 };
 // clang-format on
 
@@ -1050,13 +1050,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   auto matrix_locations = rapidjson::get_optional<int>(doc, "/matrix_locations");
   if (matrix_locations && (options.sources_size() == 1 || options.targets_size() == 1)) {
     options.set_matrix_locations(*matrix_locations);
-  } else if (!options.has_matrix_locations_case()) {
+  } else if (!options.has_matrix_locations_case() ||
+             (options.sources_size() != 1 && options.targets_size() != 1)) {
     options.set_matrix_locations(std::numeric_limits<uint32_t>::max());
   }
-
-  // Get the matrix_loctions option
-  options.set_matrix_locations(
-      rapidjson::get<int>(doc, "/matrix_locations", std::numeric_limits<uint32_t>::max()));
 
   // get the avoid polygons in there
   auto rings_req =

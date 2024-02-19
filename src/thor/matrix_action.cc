@@ -122,8 +122,9 @@ std::string thor_worker_t::matrix(Api& request) {
     return tyr::serializeMatrix(request);
   }
 
-  if (options.matrix_locations() == std::numeric_limits<uint32_t>::max()) {
-    add_warning(request, 203);
+  // no matrix_locations for CostMatrix
+  if (options.matrix_locations() != std::numeric_limits<uint32_t>::max()) {
+    add_warning(request, 208);
   }
 
   // for costmatrix try a second pass if the first didn't work out
