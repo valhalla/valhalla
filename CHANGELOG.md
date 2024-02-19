@@ -1,4 +1,4 @@
-## Release Date: 2024-??-?? Valhalla 3.4.1
+## Unreleased
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
