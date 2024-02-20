@@ -93,6 +93,7 @@
    * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
    * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
+   * ADDED: more warnings for clamped costing options, second pass, bidir fallback and matrix_locations for CostMatrix [#3833](https://github.com/valhalla/valhalla/pull/3833)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
