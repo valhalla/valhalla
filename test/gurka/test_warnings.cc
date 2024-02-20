@@ -10,7 +10,7 @@ using namespace valhalla;
 // NOTE, lots of warnings are also tested in other tests where they make more sense
 
 TEST(StandAlone, DeprecatedParams) {
-  for (const std::string& costing : {"auto_shorter", "hov", "auto_data_fix"}) {
+  for (const std::string costing : {"auto_shorter", "hov", "auto_data_fix"}) {
     Api request;
     std::string request_str =
         R"({"best_paths": 2, "locations": [{"lat": 0.0, "lon": 0.0},{"lat": 1.0, "lon": 1.0}], "costing": ")" +
