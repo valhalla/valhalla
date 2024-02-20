@@ -27,24 +27,27 @@ TEST(UtilMidgard, TestRangedDefaultT) {
 
   for (unsigned i = 0; i < 100; ++i) {
     ranged_default_t<float> testRange{lower, defaultDistributor(generator), upper};
+    bool clamped = false;
     float defaultVal = testRange.def;
     float testVal = testDistributor(generator);
 
-    float finalVal = testRange(testVal);
+    float finalVal = testRange(testVal, clamped);
 
     if (testVal < testRange.min || testVal > testRange.max) {
       // Was outside of range so finalVal should now be snapped to default
       EXPECT_EQ(finalVal, testRange.def) << "Final value did not snap to the range default value";
+      EXPECT_TRUE(clamped);
     } else {
       // Was inside of range so finalVal should still be the same number
       EXPECT_EQ(finalVal, testVal) << "Final value moved invalidly";
+      EXPECT_FALSE(clamped);
     }
 
     // Test Edge cases because random distribution is unlikely to land exactly on boundaries
-    finalVal = testRange(testRange.min);
+    finalVal = testRange(testRange.min, clamped);
     EXPECT_EQ(finalVal, testRange.min) << "Final value invalidly moves on lower bound";
 
-    finalVal = testRange(testRange.max);
+    finalVal = testRange(testRange.max, clamped);
     EXPECT_EQ(finalVal, testRange.max) << "Final value invalidly moves on upper bound";
   }
 }
