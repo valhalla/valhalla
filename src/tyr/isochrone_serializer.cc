@@ -356,14 +356,15 @@ std::string serializeIsochronePbf(Api& request,
 namespace valhalla {
 namespace tyr {
 
+#ifdef ENABLE_GDAL
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid
-#ifdef ENABLE_GDAL
-                                ,
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid,
                                 valhalla::thor::geotiff_driver_t geotiff_driver) {
 #else
-) {
+std::string serializeIsochrones(Api& request,
+                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid) {
 #endif
 
   // only generate if json or pbf output is requested
