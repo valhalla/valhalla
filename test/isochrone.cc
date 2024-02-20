@@ -14,6 +14,10 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
+
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
 using boost::geometry::within;
@@ -328,6 +332,51 @@ TEST(Isochrones, test_max_reserved_labels_count) {
   IsochroneTest isochrone(config);
   isochrone.Clear();
 }
+
+#ifdef ENABLE_GDAL
+TEST(Isochrones, test_geotiff_output) {
+  GDALRegister_GTiff();
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff.tif";
+  unsigned char buffer[geotiff.length()];
+  memcpy(buffer, geotiff.data(), geotiff.length());
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+  GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
+  uint16_t dataArray[x * y];
+  std::cerr << x << ", " << y << std::endl;
+  CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, dataArray, x, y, GDT_UInt16, 0, 0);
+  double min_max[2];
+
+  band->ComputeRasterMinMax(0, min_max);
+
+  ASSERT_EQ(err, CE_None);
+  ASSERT_EQ(x, 145);
+  ASSERT_EQ(y, 97);
+  ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+  size_t array_size = x * y;
+
+  // make sure there are some grid cells whose metric value is neither 0 nor the max
+  bool no_intermediate_values = true;
+  for (size_t i = 0; i < static_cast<size_t>(array_size); ++i) {
+    if (dataArray[i] > 0 && dataArray[i] < min_max[1])
+      no_intermediate_values = false;
+  }
+  ASSERT_EQ(no_intermediate_values, false);
+  VSIFCloseL(handle);
+}
+#endif
 
 } // namespace
 

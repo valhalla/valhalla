@@ -43,15 +43,12 @@ std::string thor_worker_t::isochrones(Api& request) {
   if (options.action() == Options_Action_expansion)
     return "";
 
-  // we have parallel vectors of contour properties and the actual geojson features
-  // this method sorts the contour specifications by metric (time or distance) and then by value
-  // with the largest values coming first. eg (60min, 30min, 10min, 40km, 10km)
-  auto contours =
-      grid->GenerateContours(intervals, options.polygons(), options.denoise(), options.generalize());
-
-  // make the final output (pbf or json)
-  std::string ret = tyr::serializeIsochrones(request, intervals, contours, options.polygons(),
-                                             options.show_locations());
+// make the final output (pbf or json)
+#ifdef ENABLE_GDAL
+  std::string ret = tyr::serializeIsochrones(request, intervals, grid, geotiff_driver);
+#else
+  std::string ret = tyr::serializeIsochrones(request, intervals, grid);
+#endif
 
   return ret;
 }

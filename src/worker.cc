@@ -138,6 +138,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
     {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
+    {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "wrong_number_of_legs"}},
+    {599, {599, "Unknown serialization error", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
 };
 
 // unordered map for warning pairs
