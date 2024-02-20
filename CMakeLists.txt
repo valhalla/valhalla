@@ -36,6 +36,7 @@ option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for singl
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
+option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" OFF)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -202,6 +203,15 @@ if(ENABLE_SERVICES)
     message(FATAL_ERROR "ENABLE_SERVICES=ON but prime_server not found...")
   endif()
 endif()
+
+# gdal
+set(gdal_target "")
+if (ENABLE_GDAL)
+  find_package(GDAL REQUIRED)
+  add_compile_definitions(ENABLE_GDAL)
+  set(gdal_target GDAL::GDAL)
+endif()
+
 
 ## Mjolnir and associated executables
 if(ENABLE_DATA_TOOLS)
