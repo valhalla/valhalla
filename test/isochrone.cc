@@ -334,7 +334,50 @@ TEST(Isochrones, test_max_reserved_labels_count) {
 }
 
 #ifdef ENABLE_GDAL
-TEST(Isochrones, test_geotiff_output) {
+TEST(Isochrones, test_geotiff_output_distance) {
+  GDALRegister_GTiff();
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"distance":1}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_d.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+  GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
+  uint16_t dataArray[x * y];
+  CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, dataArray, x, y, GDT_UInt16, 0, 0);
+  double min_max[2];
+
+  band->ComputeRasterMinMax(0, min_max);
+
+  ASSERT_EQ(err, CE_None);
+  ASSERT_EQ(x, 144);
+  ASSERT_EQ(y, 97);
+  ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 1100);
+  size_t array_size = x * y;
+
+  // make sure there are some grid cells whose metric value is neither 0 nor the max
+  bool no_intermediate_values = true;
+  for (size_t i = 0; i < array_size; ++i) {
+    if (dataArray[i] > 0 && dataArray[i] < min_max[1])
+      no_intermediate_values = false;
+  }
+  ASSERT_EQ(no_intermediate_values, false);
+  VSIFCloseL(handle);
+}
+
+TEST(Isochrones, test_geotiff_output_time) {
   GDALRegister_GTiff();
   loki_worker_t loki_worker(cfg);
   thor_worker_t thor_worker(cfg);
@@ -346,16 +389,15 @@ TEST(Isochrones, test_geotiff_output) {
   loki_worker.isochrones(request_pbf);
   std::string geotiff = thor_worker.isochrones(request_pbf);
 
-  std::string name = "/vsimem/test_isogrid_geotiff.tif";
+  std::string name = "/vsimem/test_isogrid_geotiff_t.tif";
   unsigned char buffer[geotiff.length()];
-  memcpy(buffer, geotiff.data(), geotiff.length());
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
   auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
   auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
   int x = geotiff_dataset->GetRasterXSize();
   int y = geotiff_dataset->GetRasterYSize();
   GDALRasterBand* band = geotiff_dataset->GetRasterBand(1);
   uint16_t dataArray[x * y];
-  std::cerr << x << ", " << y << std::endl;
   CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, dataArray, x, y, GDT_UInt16, 0, 0);
   double min_max[2];
 
@@ -365,15 +407,66 @@ TEST(Isochrones, test_geotiff_output) {
   ASSERT_EQ(x, 145);
   ASSERT_EQ(y, 97);
   ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 660);
   size_t array_size = x * y;
 
   // make sure there are some grid cells whose metric value is neither 0 nor the max
   bool no_intermediate_values = true;
-  for (size_t i = 0; i < static_cast<size_t>(array_size); ++i) {
+  for (size_t i = 0; i < array_size; ++i) {
     if (dataArray[i] > 0 && dataArray[i] < min_max[1])
       no_intermediate_values = false;
   }
   ASSERT_EQ(no_intermediate_values, false);
+  VSIFCloseL(handle);
+}
+
+// test request with two metrics
+TEST(Isochrones, test_geotiff_output_time_distance) {
+  GDALRegister_GTiff();
+  loki_worker_t loki_worker(cfg);
+  thor_worker_t thor_worker(cfg);
+
+  const auto request =
+      R"({"costing":"auto","locations":[{"lon":5.042799,"lat":52.093199}],"contours":[{"time":1},{"distance":2}], "format": "geotiff"})";
+  Api request_pbf;
+  ParseApi(request, Options::isochrone, request_pbf);
+  loki_worker.isochrones(request_pbf);
+  std::string geotiff = thor_worker.isochrones(request_pbf);
+
+  std::string name = "/vsimem/test_isogrid_geotiff_td.tif";
+  unsigned char buffer[geotiff.length()];
+  std::copy(geotiff.cbegin(), geotiff.cend(), buffer);
+  auto handle = VSIFileFromMemBuffer(name.c_str(), buffer, static_cast<int>(geotiff.size()), 0);
+  auto geotiff_dataset = GDALDataset::FromHandle(GDALOpen(name.c_str(), GA_ReadOnly));
+  int x = geotiff_dataset->GetRasterXSize();
+  int y = geotiff_dataset->GetRasterYSize();
+
+  // time, distance
+  std::array<int, 2> expected_max{660, 1200};
+
+  for (int i = 1; i <= 2; ++i) {
+    GDALRasterBand* band = geotiff_dataset->GetRasterBand(i);
+    uint16_t dataArray[x * y];
+    CPLErr err = band->RasterIO(GF_Read, 0, 0, x, y, dataArray, x, y, GDT_UInt16, 0, 0);
+    double min_max[2];
+
+    band->ComputeRasterMinMax(0, min_max);
+
+    ASSERT_EQ(err, CE_None);
+    ASSERT_EQ(x, 147);
+    ASSERT_EQ(y, 97);
+    ASSERT_EQ(static_cast<int>(min_max[0]), 0);
+    ASSERT_EQ(static_cast<int>(min_max[1]), expected_max[i - 1]);
+    size_t array_size = x * y;
+
+    // make sure there are some grid cells whose metric value is neither 0 nor the max
+    bool no_intermediate_values = true;
+    for (size_t j = 0; j < array_size; ++j) {
+      if (dataArray[j] > 0 && dataArray[j] < min_max[1])
+        no_intermediate_values = false;
+    }
+    ASSERT_EQ(no_intermediate_values, false);
+  }
   VSIFCloseL(handle);
 }
 #endif

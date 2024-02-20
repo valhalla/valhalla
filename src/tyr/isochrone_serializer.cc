@@ -189,25 +189,21 @@ std::string serializeGeoTIFF(Api& request,
   for (size_t metric_idx = 0; metric_idx < metrics.size(); ++metric_idx) {
     if (!metrics[metric_idx])
       continue; // only create bands for requested metrics
-    uint16_t dataArray[ext_x * ext_y];
+    uint16_t data[ext_x * ext_y];
 
     // seconds or 10 meter steps
-    float scale_factor = metric_idx == 0 ? 3600 : 100;
+    float scale_factor = metric_idx == 0 ? 60 : 100;
     for (int32_t i = 0; i < ext_y; ++i) {
       for (int32_t j = 0; j < ext_x; ++j) {
         auto tileid = isogrid->TileId(j + box[0], i + box[1]);
-        dataArray[i * ext_x + j] =
-            static_cast<uint16_t>(isogrid->getData(tileid, metric_idx) * scale_factor);
+        data[i * ext_x + j] =
+            static_cast<uint16_t>(isogrid->DataAt(tileid, metric_idx) * scale_factor);
       }
     }
     auto band = geotiff_dataset->GetRasterBand(nbands == 2 ? (metric_idx + 1) : 1);
     band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
 
-    CPLErr err =
-        band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, dataArray, ext_x, ext_y, GDT_UInt16, 0, 0);
-
-    // free some memory
-    delete[] geotiff_options;
+    CPLErr err = band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, data, ext_x, ext_y, GDT_UInt16, 0, 0);
 
     if (err != CE_None) {
       throw valhalla_exception_t{599, "Unknown error when writing GeoTIFF."};
@@ -218,7 +214,6 @@ std::string serializeGeoTIFF(Api& request,
   vsi_l_offset bufferlength;
   GByte* bytes = VSIGetMemFileBuffer(name.c_str(), &bufferlength, TRUE);
 
-  // TODO: there must be a way to do this without copying
   std::string data(reinterpret_cast<char*>(bytes), bufferlength);
 
   return data;

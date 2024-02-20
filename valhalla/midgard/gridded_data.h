@@ -61,12 +61,12 @@ public:
     }
   }
 
-  float getData(size_t tileid, size_t metricid) const {
+  float DataAt(size_t tileid, size_t metricid) const {
     return data_[tileid][metricid];
   }
 
-  float MaxValue(size_t metrix_idx) const {
-    return max_value_[metrix_idx];
+  float MaxValue(size_t metricidx) const {
+    return max_value_[metricidx];
   }
 
   using contour_t = std::list<PointLL>;
