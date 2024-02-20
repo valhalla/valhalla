@@ -78,15 +78,20 @@ TEST_F(TopSpeedTest, TaxiTopSpeed) {
 }
 
 TEST_F(TopSpeedTest, ClampMaxSpeed) {
-  Options options;
+  Api api;
+  auto& options = *api.mutable_options();
   rapidjson::Document dom;
   rapidjson::SetValueByPointer(dom, "/top_speed", 500);
 
   options.set_costing_type(Costing::auto_);
   auto& co = (*options.mutable_costings())[Costing::auto_];
-  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {});
+  sif::ParseBaseCostOptions(*rapidjson::GetValueByPointer(dom, ""), &co, {},
+                            *api.mutable_info()->mutable_warnings());
 
-  ASSERT_EQ(co.options().top_speed(), baldr::kMaxAssumedSpeed);
+  EXPECT_EQ(co.options().top_speed(), baldr::kMaxAssumedSpeed);
+  EXPECT_EQ(api.info().warnings().size(), 1);
+  EXPECT_EQ(api.info().warnings(0).code(), 500);
+  EXPECT_THAT(api.info().warnings(0).description(), testing::HasSubstr("top_speed"));
 }
 
 TEST(TopSpeed, CurrentLayerIsIgnored) {
