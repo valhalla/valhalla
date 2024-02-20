@@ -45,7 +45,7 @@ std::string serializeMatrix(Api& request);
  */
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                std::shared_ptr<const midgard::GriddedData<2>> isogrid
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid
 #ifdef ENABLE_GDAL
                                 ,
                                 valhalla::thor::geotiff_driver_t geotiff_driver);
