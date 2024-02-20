@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <vector>
 
+#ifdef ENABLE_GDAL
+#include "valhalla/thor/worker.h"
+#include <gdal_priv.h>
+#endif
+
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
@@ -40,10 +45,13 @@ std::string serializeMatrix(Api& request);
  */
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                midgard::GriddedData<2>::contours_t& contours,
-                                bool polygons = true,
-                                bool show_locations = false);
-
+                                std::shared_ptr<const midgard::GriddedData<2>> isogrid
+#ifdef ENABLE_GDAL
+                                ,
+                                valhalla::thor::geotiff_driver_t geotiff_driver);
+#else
+);
+#endif
 /**
  * Turn heights and ranges into a height response
  *

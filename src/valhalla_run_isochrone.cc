@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cxxopts.hpp>
 #include <fstream>
+#include <gdal_priv.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]) {
         "\"auto\",\"contours\":[{\"time\":15,\"color\":\"ff0000\"}]}'", cxxopts::value<std::string>())
       ("c,config", "Valhalla configuration file", cxxopts::value<std::string>())
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
-      ("f,file", "GeoJSON file name. If omitted program will print to stdout.", cxxopts::value<std::string>());
+      ("f,file", "file name. If omitted program will print to stdout.", cxxopts::value<std::string>());
     // clang-format on
 
     auto result = options.parse(argc, argv);
@@ -79,6 +80,12 @@ int main(int argc, char* argv[]) {
   // Process json request
   Api request;
   ParseApi(json_str, valhalla::Options::isochrone, request);
+
+#ifdef ENABLE_GDAL
+  if (request.options().format() == Options_Format_geotiff) {
+    GDALRegister_GTiff();
+  }
+#endif
   auto& options = *request.mutable_options();
 
   // Get the denoise parameter
@@ -182,7 +189,7 @@ int main(int argc, char* argv[]) {
   auto expansion_type = routetype == "multimodal"
                             ? ExpansionType::multimodal
                             : (reverse ? ExpansionType::reverse : ExpansionType::forward);
-  auto isotile = isochrone.Expand(expansion_type, request, reader, mode_costing, mode);
+  auto isogrid = isochrone.Expand(expansion_type, request, reader, mode_costing, mode);
 
   auto t2 = std::chrono::high_resolution_clock::now();
   uint32_t msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
@@ -190,27 +197,30 @@ int main(int argc, char* argv[]) {
 
   // Generate contours
   t2 = std::chrono::high_resolution_clock::now();
-  auto contours = isotile->GenerateContours(contour_times, polygons, denoise, generalize);
   auto t3 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
 
   // Serialize to GeoJSON
-  std::string geojson =
-      valhalla::tyr::serializeIsochrones(request, contour_times, contours, polygons, show_locations);
+  std::string res = valhalla::tyr::serializeIsochrones(request, contour_times, isogrid);
 
+#ifdef ENABLE_GDAL
+  if (request.options().format() == Options_Format_geotiff) {
+    GDALDestroyDriverManager();
+  }
+#endif
   auto t4 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
-  LOG_INFO("GeoJSON serialization took " + std::to_string(msecs) + " ms");
+  LOG_INFO("Isochrone serialization took " + std::to_string(msecs) + " ms");
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t1).count();
   LOG_INFO("Isochrone took " + std::to_string(msecs) + " ms");
 
   if (!filename.empty()) {
-    std::ofstream geojsonOut(filename, std::ofstream::out);
-    geojsonOut << geojson;
-    geojsonOut.close();
+    std::ofstream resOut(filename, std::ofstream::out);
+    resOut << res;
+    resOut.close();
   } else {
-    std::cout << "\n" << geojson << std::endl;
+    std::cout << "\n" << res << std::endl;
   }
 
   // Shutdown protocol buffer library

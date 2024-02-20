@@ -357,6 +357,12 @@ loki_worker_t::work(const std::list<zmq::message_t>& job,
         result.messages.emplace_back(request.SerializeAsString());
         break;
       case Options::isochrone:
+// return early if geotiff was requested but GDAL isn't enabled
+#ifndef ENABLE_GDAL
+        if (options.format() == Options_Format_geotiff) {
+          throw valhalla_exception_t{504};
+        }
+#endif
         isochrones(request);
         result.messages.emplace_back(request.SerializeAsString());
         break;

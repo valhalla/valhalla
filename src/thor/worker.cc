@@ -15,6 +15,10 @@
 
 #include <boost/property_tree/ptree.hpp>
 
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
+
 using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::midgard;
@@ -106,11 +110,19 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
   max_timedep_distance =
       config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
+#ifdef ENABLE_GDAL
+  auto driver_manager = GetGDALDriverManager();
+  geotiff_driver = driver_manager->GetDriverByName("GTiff");
+#endif
+
   // signal that the worker started successfully
   started();
 }
 
 thor_worker_t::~thor_worker_t() {
+#ifdef ENABLE_GDAL
+  GDALDestroyDriverManager();
+#endif
 }
 
 #ifdef ENABLE_SERVICES

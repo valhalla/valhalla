@@ -6,6 +6,9 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
 
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/directededge.h>
@@ -34,6 +37,10 @@
 
 namespace valhalla {
 namespace thor {
+
+#ifdef ENABLE_GDAL
+typedef struct GDALDriver* geotiff_driver_t;
+#endif
 
 #ifdef ENABLE_SERVICES
 void run_service(const boost::property_tree::ptree& config);
@@ -140,6 +147,10 @@ private:
   std::string service_name() const override {
     return "thor";
   }
+
+#ifdef ENABLE_GDAL
+  geotiff_driver_t geotiff_driver;
+#endif
 };
 
 } // namespace thor
