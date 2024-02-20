@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <cxxopts.hpp>
 #include <fstream>
-#include <gdal_priv.h>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -20,6 +19,10 @@
 #include "thor/isochrone.h"
 #include "tyr/serializers.h"
 #include "worker.h"
+
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
 
 using namespace valhalla;
 using namespace valhalla::midgard;
@@ -201,13 +204,17 @@ int main(int argc, char* argv[]) {
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count();
   LOG_INFO("Contour Generation took " + std::to_string(msecs) + " ms");
 
-  // Serialize to GeoJSON
-  std::string res = valhalla::tyr::serializeIsochrones(request, contour_times, isogrid);
-
 #ifdef ENABLE_GDAL
+  auto driver_manager = GetGDALDriverManager();
+  geotiff_driver_t driver = driver_manager->GetDriverByName("GTiff");
+  // Serialize to GeoTIFF
+  std::string res = valhalla::tyr::serializeIsochrones(request, contour_times, isogrid, driver);
   if (request.options().format() == Options_Format_geotiff) {
     GDALDestroyDriverManager();
   }
+#else
+  // Serialize to GeoJSON
+  std::string res = valhalla::tyr::serializeIsochrones(request, contour_times, isogrid);
 #endif
   auto t4 = std::chrono::high_resolution_clock::now();
   msecs = std::chrono::duration_cast<std::chrono::milliseconds>(t4 - t3).count();
