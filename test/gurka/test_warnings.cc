@@ -1,9 +1,13 @@
-#include "gurka.h"
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 #include <vector>
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
+#include "gurka.h"
+
 using namespace valhalla;
+
+// NOTE, lots of warnings are also tested in other tests where they make more sense
 
 TEST(StandAlone, DeprecatedParams) {
   for (const std::string& costing : {"auto_shorter", "hov", "auto_data_fix"}) {
@@ -32,5 +36,43 @@ TEST(StandAlone, ClampedParameters) {
     EXPECT_EQ(request.info().warnings().size(), 1);
     EXPECT_EQ(request.info().warnings(0).code(), 500);
     EXPECT_THAT(request.info().warnings(0).description(), testing::HasSubstr(option));
+  }
+}
+
+TEST(Standalone, BidirAstarFallback) {
+  constexpr double gridsize = 1000;
+
+  // ~ are approximate time zone crossings
+  const std::string ascii_map = R"(
+      A-----B-----C
+    )";
+
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"BC", {{"highway", "residential"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const auto map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/warnings_bidir_fallback",
+                        {{"service_limits.max_timedep_distance", "1000"},
+                         {"mjolnir.timezone", VALHALLA_BUILD_DIR "test/data/tz.sqlite"}});
+
+  // depart_at: falling back to bidir a* with time set
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
+                                {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.info().warnings().size(), 1);
+    EXPECT_EQ(api.info().warnings(0).code(), 402);
+    EXPECT_THAT(api.info().warnings(0).description(),
+                testing::HasSubstr("max_timedep_distance for depart_at"));
+  }
+
+  // arrive_by: falling back to bidir a* with time ignored
+  {
+    auto api = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "auto",
+                                {{"/date_time/type", "2"}, {"/date_time/value", "2020-10-30T09:00"}});
+    EXPECT_EQ(api.info().warnings().size(), 1);
+    EXPECT_EQ(api.info().warnings(0).code(), 209);
+    EXPECT_THAT(api.info().warnings(0).description(),
+                testing::HasSubstr("max_timedep_distance for arrive_by"));
   }
 }

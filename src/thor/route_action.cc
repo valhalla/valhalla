@@ -232,7 +232,7 @@ void thor_worker_t::route(Api& request) {
 thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
                                                        const valhalla::Location& origin,
                                                        const valhalla::Location& destination,
-                                                       const Options& options) {
+                                                       Api& request) {
   // make sure they are all cancelable
   for (auto* alg : std::vector<PathAlgorithm*>{
            &multi_modal_astar,
@@ -254,6 +254,7 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     return &bss_astar;
   }
 
+  const auto& options = request.options();
   // If the origin has date_time set use timedep_forward method if the distance
   // between location is below some maximum distance (TBD).
   if (!origin.date_time().empty() && options.date_time_type() != Options::invariant &&
@@ -262,6 +263,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_forward;
+    } else {
+      add_warning(request, 402);
     }
   }
 
@@ -272,6 +275,8 @@ thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routet
     PointLL ll2(destination.ll().lng(), destination.ll().lat());
     if (ll1.Distance(ll2) < max_timedep_distance) {
       return &timedep_reverse;
+    } else {
+      add_warning(request, 209);
     }
   }
 
@@ -365,7 +370,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
   auto route_two_locations = [&](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());
@@ -550,7 +555,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
   auto route_two_locations = [&, this](auto& origin, auto& destination) -> bool {
     // Get the algorithm type for this location pair
     thor::PathAlgorithm* path_algorithm =
-        this->get_path_algorithm(costing, *origin, *destination, options);
+        this->get_path_algorithm(costing, *origin, *destination, api);
     path_algorithm->Clear();
     algorithms.push_back(path_algorithm->name());
     LOG_INFO(std::string("algorithm::") + path_algorithm->name());

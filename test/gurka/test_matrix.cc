@@ -755,6 +755,7 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_GT(api.matrix().times(0), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(0));
     EXPECT_TRUE(api.info().warnings(0).description().find('0') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 
   // I -> K (idx 1) should pass on the first try
@@ -772,5 +773,6 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+    EXPECT_EQ(api.info().warnings(0).code(), 400);
   }
 }

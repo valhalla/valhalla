@@ -158,11 +158,13 @@ const std::unordered_map<int, std::string> warning_codes = {
   {206, R"(CostMatrix does not consider "targets" with "date_time" set, ignoring date_time)"},
   {207, R"(TimeDistanceMatrix does not consider "shape_format", ignoring shape_format)"},
   {208, R"(CostMatrix algorithm used, ignoring "matrix_locations")"},
+  {209, R"(Distance exceeded max_timedep_distance for arrive_by, probably ignoring date_time)"},
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {402, R"(Distance exceeded max_timedep_distance for depart_at, probably falling back to bidirectional A*)"},
   // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
   // {500, R"(<option> was clamped to <value> )"},
 };
