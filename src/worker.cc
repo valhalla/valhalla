@@ -164,6 +164,7 @@ const std::unordered_map<int, std::string> warning_codes = {
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
   // 4xx is used when we do sneaky important things the user should be aware of
   {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"},
+  {401, R"(Routing turned off destination-only and might have used filtered edges on a second pass)"},
   {402, R"(Distance exceeded max_timedep_distance for depart_at, probably falling back to bidirectional A*)"},
   // RESERVED: 500 is for clamped values, set in JSON_PBF_RANGED_DEFAULT* macros
   // {500, R"(<option> was clamped to <value> )"},

@@ -303,7 +303,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
                                                                  valhalla::Location& origin,
                                                                  valhalla::Location& destination,
                                                                  const std::string& costing,
-                                                                 const Options& options) {
+                                                                 Api& request) {
+  const Options& options = request.options();
   // Find the path.
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
 
@@ -332,6 +333,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // hierarchy transition limits, and retry with more candidate edges (add those filtered
   // by heading on first pass).
   if ((paths.empty() || ped_second_pass) && cost->AllowMultiPass()) {
+    add_warning(request, 401);
     // add filtered edges to candidate edges for origin and destination
     origin.mutable_correlation()->mutable_edges()->MergeFrom(origin.correlation().filtered_edges());
     destination.mutable_correlation()->mutable_edges()->MergeFrom(
@@ -383,7 +385,7 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     }
 
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
     for (auto& temp_path : temp_paths) {
@@ -567,7 +569,7 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
                         [&last_edge](const auto& edge) { return edge.graph_id() != last_edge; });
     }
     // Get best path and keep it
-    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, options);
+    auto temp_paths = this->get_path(path_algorithm, *origin, *destination, costing, api);
     if (temp_paths.empty())
       return false;
 
