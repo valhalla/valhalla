@@ -78,10 +78,10 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
-      matcher_factory(config, reader), controller{}
+      matcher_factory(config, reader), controller {
+}
 #ifdef ENABLE_GDAL
-      ,
-      geotiff_driver(geotiff_driver_t{})
+, geotiff_driver(geotiff_driver_t{})
 #endif
 {
 
