@@ -39,7 +39,22 @@ namespace valhalla {
 namespace thor {
 
 #ifdef ENABLE_GDAL
-typedef struct GDALDriver* geotiff_driver_t;
+
+class geotiff_driver_t {
+
+public:
+  geotiff_driver_t();
+  ~geotiff_driver_t();
+  GDALDataset* CreateDataSet(const char* pszName,
+                             int nXSize,
+                             int nYSize,
+                             int nBands,
+                             GDALDataType eType,
+                             CSLConstList papszOptions);
+
+private:
+  GDALDriver* geotiff_driver;
+};
 #endif
 
 #ifdef ENABLE_SERVICES

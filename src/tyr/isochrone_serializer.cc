@@ -172,7 +172,7 @@ std::string serializeGeoTIFF(Api& request,
   geotiff_options = CSLSetNameValue(geotiff_options, "COMPRESS", "PACKBITS");
 
   auto geotiff_dataset =
-      geotiff_driver->Create(name.c_str(), ext_x, ext_y, nbands, GDT_UInt16, geotiff_options);
+      geotiff_driver.CreateDataSet(name.c_str(), ext_x, ext_y, nbands, GDT_UInt16, geotiff_options);
 
   OGRSpatialReference spatial_ref;
   spatial_ref.SetWellKnownGeogCS("EPSG:4326");
