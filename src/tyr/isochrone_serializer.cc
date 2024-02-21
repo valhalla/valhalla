@@ -309,7 +309,7 @@ std::string serializeIsochronePbf(Api& request,
                                   std::vector<contour_interval_t>& intervals,
                                   const contours_t& contours) {
   // construct pbf output
-  Isochrone& isochrone = *request.mutable_isochrone();
+  valhalla::thor::Isochrone& isochrone = *request.mutable_isochrone();
 
   // construct contours
   for (size_t isoline_index = 0; isoline_index < contours.size(); ++isoline_index) {
@@ -317,7 +317,8 @@ std::string serializeIsochronePbf(Api& request,
     const auto& interval = intervals[isoline_index];
 
     auto* interval_pbf = isochrone.mutable_intervals()->Add();
-    interval_pbf->set_metric(std::get<2>(interval) == "time" ? Isochrone::time : Isochrone::distance);
+    interval_pbf->set_metric(std::get<2>(interval) == "time" ? valhalla::thor::Isochrone::time
+                                                             : valhalla::thor::Isochrone::distance);
 
     interval_pbf->set_metric_value(std::get<1>(interval));
 
