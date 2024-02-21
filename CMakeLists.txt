@@ -207,9 +207,9 @@ endif()
 # gdal
 set(gdal_target "")
 if (ENABLE_GDAL)
-  find_package(GDAL REQUIRED)
+  pkg_check_modules(GDAL REQUIRED IMPORTED_TARGET gdal)
   add_compile_definitions(ENABLE_GDAL)
-  set(gdal_target GDAL::GDAL)
+  set(gdal_target PkgConfig::GDAL)
 endif()
 
 
