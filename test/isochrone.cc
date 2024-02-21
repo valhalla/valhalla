@@ -180,7 +180,7 @@ std::vector<PointLL> polygon_from_geojson(const std::string& geojson) {
   return {};
 }
 
-TEST(Basic) {
+TEST(Isochrones, Basic) {
   // Test setup
   loki_worker_t loki_worker(cfg);
   thor_worker_t thor_worker(cfg);
@@ -229,7 +229,7 @@ TEST(Basic) {
   }
 }
 
-TEST(OriginEdge) {
+TEST(Isochrones, OriginEdge) {
   const std::string ascii_map = R"(
        a-b-c
      )";
@@ -259,7 +259,7 @@ TEST(OriginEdge) {
   EXPECT_EQ(within(WaypointToBoostPoint("c"), polygon), false);
 }
 
-TEST(LongEdge) {
+TEST(Isochrones, LongEdge) {
   const std::string ascii_map = R"(
           c----d
          /
@@ -317,7 +317,7 @@ public:
   }
 };
 
-TEST(test_clear_reserved_memory) {
+TEST(Isochrones, test_clear_reserved_memory) {
   boost::property_tree::ptree config;
   config.put("clear_reserved_memory", true);
 
@@ -325,7 +325,7 @@ TEST(test_clear_reserved_memory) {
   isochrone.Clear();
 }
 
-TEST(test_max_reserved_labels_count) {
+TEST(Isochrones, test_max_reserved_labels_count) {
   boost::property_tree::ptree config;
   config.put("max_reserved_labels_count_dijkstras", 10);
 
