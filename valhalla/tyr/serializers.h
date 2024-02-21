@@ -7,10 +7,6 @@
 #include <unordered_map>
 #include <vector>
 
-#ifdef ENABLE_GDAL
-#include <gdal_priv.h>
-#endif
-
 #include <valhalla/baldr/attributes_controller.h>
 #include <valhalla/baldr/graphreader.h>
 #include <valhalla/baldr/json.h>
