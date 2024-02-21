@@ -8,7 +8,6 @@
 #include <vector>
 
 #ifdef ENABLE_GDAL
-#include "valhalla/thor/worker.h"
 #include <gdal_priv.h>
 #endif
 

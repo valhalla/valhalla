@@ -697,6 +697,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.clear_jsonp();
     }
   }
+#ifndef ENABLE_GDAL
+  else if (options.format() == Options::geotiff) {
+    throw valhalla_exception_t{504};
+  }
+#endif
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units && ((*units == "miles") || (*units == "mi"))) {
