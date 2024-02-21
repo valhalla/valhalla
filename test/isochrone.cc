@@ -15,7 +15,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 
 #ifdef ENABLE_GDAL
-#include <gdal/gdal_priv.h>
+#include <gdal_priv.h>
 #endif
 
 using point_type = boost::geometry::model::d2::point_xy<double>;

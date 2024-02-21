@@ -139,7 +139,7 @@ When importing `libvalhalla` as a dependency in a project, it's important to kno
 
 To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or `pkg_check_modules` (in CMake).
 
-Currently, `rapidjson`, `date` & `dirent` (Win only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_pary/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
+Currently, `rapidjson`, `date` & `dirent` (Win only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_party/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
 
 ## Running Valhalla server on Unix
 

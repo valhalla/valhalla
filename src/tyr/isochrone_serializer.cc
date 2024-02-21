@@ -10,7 +10,7 @@
 #include <utility>
 
 #ifdef ENABLE_GDAL
-#include <gdal/gdal_priv.h>
+#include <gdal_priv.h>
 #endif
 
 using namespace valhalla::baldr::json;
