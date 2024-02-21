@@ -151,8 +151,8 @@ std::string GenerateTmpFName() {
 
 std::string serializeGeoTIFF(Api& request,
                              std::vector<contour_interval_t> intervals,
-                             std::shared_ptr<const GriddedData<2>> isogrid,
-                             valhalla::thor::geotiff_driver_t geotiff_driver) {
+                             std::shared_ptr<const GriddedData<2>> isogrid) {
+
   // time, distance
   std::vector<bool> metrics{false, false};
   for (auto& contour : request.options().contours()) {
@@ -171,8 +171,11 @@ std::string serializeGeoTIFF(Api& request,
   char** geotiff_options = NULL;
   geotiff_options = CSLSetNameValue(geotiff_options, "COMPRESS", "PACKBITS");
 
+  // TODO: check if there's an easy way to only instantiate the driver once
+  auto driver_manager = GetGDALDriverManager();
+  auto geotiff_driver = driver_manager->GetDriverByName("GTiff");
   auto geotiff_dataset =
-      geotiff_driver.CreateDataSet(name.c_str(), ext_x, ext_y, nbands, GDT_UInt16, geotiff_options);
+      geotiff_driver->Create(name.c_str(), ext_x, ext_y, nbands, GDT_UInt16, geotiff_options);
 
   OGRSpatialReference spatial_ref;
   spatial_ref.SetWellKnownGeogCS("EPSG:4326");
@@ -185,6 +188,13 @@ std::string serializeGeoTIFF(Api& request,
 
   geotiff_dataset->SetGeoTransform(geo_transform);
   geotiff_dataset->SetSpatialRef(const_cast<OGRSpatialReference*>(&spatial_ref));
+
+  // geotiff doesn't support different nodata values for each band, so we just get the larger one
+  float max_time = isogrid->MaxValue(0);
+  float max_distance = isogrid->MaxValue(1);
+
+  // they will be scaled to seconds/10 meters
+  float no_data_value = max_time > max_distance ? max_time * 60 : max_distance * 100;
 
   for (size_t metric_idx = 0; metric_idx < metrics.size(); ++metric_idx) {
     if (!metrics[metric_idx])
@@ -201,6 +211,7 @@ std::string serializeGeoTIFF(Api& request,
       }
     }
     auto band = geotiff_dataset->GetRasterBand(nbands == 2 ? (metric_idx + 1) : 1);
+    band->SetNoDataValue(static_cast<int>(no_data_value));
     band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
 
     CPLErr err = band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, data, ext_x, ext_y, GDT_UInt16, 0, 0);
@@ -214,6 +225,7 @@ std::string serializeGeoTIFF(Api& request,
   vsi_l_offset bufferlength;
   GByte* bytes = VSIGetMemFileBuffer(name.c_str(), &bufferlength, TRUE);
 
+  // TODO: there's gotta be way to do this without copying
   std::string data(reinterpret_cast<char*>(bytes), bufferlength);
 
   return data;
@@ -351,16 +363,9 @@ std::string serializeIsochronePbf(Api& request,
 namespace valhalla {
 namespace tyr {
 
-#ifdef ENABLE_GDAL
-std::string serializeIsochrones(Api& request,
-                                std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid,
-                                valhalla::thor::geotiff_driver_t geotiff_driver) {
-#else
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                 const std::shared_ptr<const midgard::GriddedData<2>>& isogrid) {
-#endif
 
   // only generate if json or pbf output is requested
   contours_t contours;
@@ -382,7 +387,7 @@ std::string serializeIsochrones(Api& request,
 
 #ifdef ENABLE_GDAL
     case Options_Format_geotiff:
-      return serializeGeoTIFF(request, intervals, isogrid, geotiff_driver);
+      return serializeGeoTIFF(request, intervals, isogrid);
 #endif
     default:
       throw;

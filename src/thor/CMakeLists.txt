@@ -56,5 +56,4 @@ valhalla_module(NAME thor
     valhalla::meili
     ${valhalla_protobuf_targets}
     Boost::boost
-    ${libprime_server_targets}
-    ${gdal_target})
+    ${libprime_server_targets})

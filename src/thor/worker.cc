@@ -15,10 +15,6 @@
 
 #include <boost/property_tree/ptree.hpp>
 
-#ifdef ENABLE_GDAL
-#include <gdal_priv.h>
-#endif
-
 using namespace valhalla;
 using namespace valhalla::tyr;
 using namespace valhalla::midgard;
@@ -78,12 +74,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
-      matcher_factory(config, reader), controller {
-}
-#ifdef ENABLE_GDAL
-, geotiff_driver(geotiff_driver_t{})
-#endif
-{
+      matcher_factory(config, reader), controller{} {
 
   // Select the matrix algorithm based on the conf file (defaults to
   // select_optimal if not present)
@@ -339,25 +330,5 @@ void thor_worker_t::set_interrupt(const std::function<void()>* interrupt_functio
   interrupt = interrupt_function;
   reader->SetInterrupt(interrupt);
 }
-
-#ifdef ENABLE_GDAL
-geotiff_driver_t::geotiff_driver_t() {
-  auto driver_manager = GetGDALDriverManager();
-  this->geotiff_driver = driver_manager->GetDriverByName("GTiff");
-}
-
-geotiff_driver_t::~geotiff_driver_t() {
-  // GDALDestroyDriverManager();
-}
-
-GDALDataset* geotiff_driver_t::CreateDataSet(const char* pszName,
-                                             int nXSize,
-                                             int nYSize,
-                                             int nBands,
-                                             GDALDataType eType,
-                                             CSLConstList papszOptions) {
-  return this->geotiff_driver->Create(pszName, nXSize, nYSize, nBands, eType, papszOptions);
-}
-#endif
 } // namespace thor
 } // namespace valhalla
