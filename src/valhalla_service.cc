@@ -18,7 +18,7 @@ using namespace prime_server;
 #endif
 
 #ifdef ENABLE_GDAL
-#include <gdal_priv.h>
+#include <gdal/gdal_priv.h>
 #endif
 
 #include "config.h"
