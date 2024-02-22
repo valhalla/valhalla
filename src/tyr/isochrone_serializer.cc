@@ -150,8 +150,8 @@ std::string GenerateTmpFName() {
 }
 
 std::string serializeGeoTIFF(Api& request,
-                             std::vector<contour_interval_t> intervals,
-                             std::shared_ptr<const GriddedData<2>> isogrid) {
+                             const std::vector<contour_interval_t> intervals,
+                             const std::shared_ptr<const GriddedData<2>>& isogrid) {
 
   // time, distance
   std::vector<bool> metrics{false, false};
