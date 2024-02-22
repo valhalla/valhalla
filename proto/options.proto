@@ -373,6 +373,7 @@ message Options {
     edge_status = 3;
     edge_id = 4;
     pred_edge_id = 5;
+    is_shortcut = 6;
   }
 
   Units units = 1;                                                 // kilometers or miles

@@ -100,21 +100,23 @@ std::string thor_worker_t::expansion(Api& request) {
     }
 
     // make the properties
-    if (exp_props.count(Options_ExpansionProperties_duration)) {
+    if (exp_props.count(Options::duration)) {
       writer("duration", static_cast<uint64_t>(duration));
     }
-    if (exp_props.count(Options_ExpansionProperties_distance)) {
+    if (exp_props.count(Options::distance)) {
       writer("distance", static_cast<uint64_t>(distance));
     }
-    if (exp_props.count(Options_ExpansionProperties_cost)) {
+    if (exp_props.count(Options::cost)) {
       writer("cost", static_cast<uint64_t>(cost));
     }
-    if (exp_props.count(Options_ExpansionProperties_edge_status))
+    if (exp_props.count(Options::edge_status))
       writer("edge_status", status);
-    if (exp_props.count(Options_ExpansionProperties_edge_id))
+    if (exp_props.count(Options::edge_id))
       writer("edge_id", static_cast<uint64_t>(edgeid));
-    if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
+    if (exp_props.count(Options::pred_edge_id))
       writer("pred_edge_id", static_cast<uint64_t>(prev_edgeid));
+    if (exp_props.count(Options::is_shortcut))
+      writer("is_shortcut", edge->is_shortcut());
 
     writer.end_object(); // properties
     writer.end_object(); // feature
