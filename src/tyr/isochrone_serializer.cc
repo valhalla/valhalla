@@ -149,9 +149,7 @@ std::string GenerateTmpFName() {
   return ss.str();
 }
 
-std::string serializeGeoTIFF(Api& request,
-                             const std::vector<contour_interval_t> intervals,
-                             const std::shared_ptr<const GriddedData<2>>& isogrid) {
+std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedData<2>>& isogrid) {
 
   // time, distance
   std::vector<bool> metrics{false, false};
@@ -389,7 +387,7 @@ std::string serializeIsochrones(Api& request,
 
 #ifdef ENABLE_GDAL
     case Options_Format_geotiff:
-      return serializeGeoTIFF(request, intervals, isogrid);
+      return serializeGeoTIFF(request, isogrid);
 #endif
     default:
       throw;
