@@ -48,7 +48,6 @@ TEST_F(UseLitTest, LitHighway) {
 
   valhalla::Api default_route =
       gurka::do_action(valhalla::Options::route, speed_map, {"A", "C"}, "pedestrian");
-  float default_time = getDuration(default_route);
 
   valhalla::Api lit_route =
       gurka::do_action(valhalla::Options::route, speed_map, {"A", "C"}, "pedestrian", options);
