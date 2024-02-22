@@ -165,3 +165,45 @@ TEST(TruckSpeed, MaxTruckSpeed) {
   // expect lower traffic speeds (< kMaxAssumedTruckSpeed ) to lead to a lower duration
   ASSERT_LT(traffic_time, traffic_low_speed_time);
 }
+
+TEST(TruckSpeed, IgnoreCommonRestrictions) {
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A----------B-----C----D
+    )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}}},
+      {"BC", {{"highway", "secondary"}}},
+      {"CD", {{"highway", "secondary"}}},
+  };
+  const gurka::relations relations = {{{
+                                           {gurka::way_member, "AB", "from"},
+                                           {gurka::way_member, "BC", "to"},
+                                           {gurka::node_member, "B", "via"},
+                                       },
+                                       {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, relations, "test/data/truck_ignore_common_restrictions");
+
+  try {
+    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck", {});
+    FAIL() << "Expected valhalla_exception_t.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  }
+
+  valhalla::Api route =
+      gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                       {
+                           {"/costing_options/truck/ignore_common_restrictions", "1"},
+                           {"/costing_options/truck/width", "2"}, // lil' cube truck
+                           {"/costing_options/truck/height", "2"},
+                           {"/costing_options/truck/length", "2"},
+                           {"/costing_options/truck/weight", "2"},
+                       });
+  gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+}
