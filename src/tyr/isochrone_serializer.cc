@@ -199,7 +199,7 @@ std::string serializeGeoTIFF(Api& request,
   for (size_t metric_idx = 0; metric_idx < metrics.size(); ++metric_idx) {
     if (!metrics[metric_idx])
       continue; // only create bands for requested metrics
-    uint16_t data[ext_x * ext_y];
+    uint16_t* data = new uint16_t[ext_x * ext_y];
 
     // seconds or 10 meter steps
     float scale_factor = metric_idx == 0 ? 60 : 100;
@@ -215,6 +215,8 @@ std::string serializeGeoTIFF(Api& request,
     band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
 
     CPLErr err = band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, data, ext_x, ext_y, GDT_UInt16, 0, 0);
+
+    delete[] data;
 
     if (err != CE_None) {
       throw valhalla_exception_t{599, "Unknown error when writing GeoTIFF."};
