@@ -7,7 +7,7 @@
 # This is secondary build configuration provided for convenient development
 # on Windows and using CMake-enabled IDEs.
 #
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 project(valhalla LANGUAGES CXX C)
 
 include(FindPkgConfig)
