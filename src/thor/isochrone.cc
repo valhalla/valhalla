@@ -323,7 +323,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // updating or pushing the label back
   // prune the edge if its start is above max contour
 
-  ExpansionRecommendation recommendation = time > max_seconds_ && dist > max_meters_
+  ExpansionRecommendation recommendation = (time > max_seconds_ && dist > max_meters_)
                                                ? ExpansionRecommendation::prune_expansion
                                                : ExpansionRecommendation::continue_expansion;
 
