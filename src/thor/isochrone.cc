@@ -322,8 +322,10 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   // max but need to consider others so we just continue here. Tells MMExpand function to skip
   // updating or pushing the label back
   // prune the edge if its start is above max contour
-  if (time > max_seconds_ && dist > max_meters_)
-    return ExpansionRecommendation::prune_expansion;
+
+  ExpansionRecommendation recommendation = (time > max_seconds_ && dist > max_meters_)
+                                               ? ExpansionRecommendation::prune_expansion
+                                               : ExpansionRecommendation::continue_expansion;
 
   // track expansion
   if (inner_expansion_callback_ && (time <= (max_seconds_ - METRIC_PADDING * kSecondsPerMinute) ||
@@ -334,8 +336,7 @@ ExpansionRecommendation Isochrone::ShouldExpand(baldr::GraphReader& /*graphreade
   } else if (expansion_callback_) {
     expansion_callback_ = nullptr;
   }
-
-  return ExpansionRecommendation::continue_expansion;
+  return recommendation;
 };
 
 void Isochrone::GetExpansionHints(uint32_t& bucket_count, uint32_t& edge_label_reservation) const {
