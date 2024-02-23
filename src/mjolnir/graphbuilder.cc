@@ -920,8 +920,8 @@ void BuildTileSet(const std::string& ways_file,
 
           bool has_guide =
               GraphBuilder::CreateSignInfoList(node, w, pronunciationMap, langMap, osmdata,
-                                               default_languages, linguistic_node, signs, linguistics, fork, forward,
-                                               (directededge.use() == Use::kRamp),
+                                               default_languages, linguistic_node, signs, linguistics,
+                                               fork, forward, (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
           // and directed edge if forward access and auto use
