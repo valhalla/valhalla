@@ -57,28 +57,11 @@ struct OSMNode {
   uint32_t cash_only_toll_ : 1;
   uint32_t spare1_ : 5;
 
-  // pronunciations / langs
-  uint32_t name_lang_index_;
-  uint32_t name_pronunciation_ipa_index_;
-  uint32_t name_pronunciation_ipa_lang_index_;
-  uint32_t name_pronunciation_nt_sampa_index_;
-  uint32_t name_pronunciation_nt_sampa_lang_index_;
-  uint32_t name_pronunciation_katakana_index_;
-  uint32_t name_pronunciation_katakana_lang_index_;
-  uint32_t name_pronunciation_jeita_index_;
-  uint32_t name_pronunciation_jeita_lang_index_;
-  uint32_t ref_lang_index_;
-  uint32_t ref_pronunciation_ipa_index_;
-  uint32_t ref_pronunciation_ipa_lang_index_;
-  uint32_t ref_pronunciation_nt_sampa_index_;
-  uint32_t ref_pronunciation_nt_sampa_lang_index_;
-  uint32_t ref_pronunciation_katakana_index_;
-  uint32_t ref_pronunciation_katakana_lang_index_;
-  uint32_t ref_pronunciation_jeita_index_;
-  uint32_t ref_pronunciation_jeita_lang_index_;
-
   // bss information
   uint32_t bss_info_;
+
+  // linguistic information
+  uint32_t linguistic_info_index_;
 
   // Lat,lng of the node at fixed 7digit precision
   uint32_t lng7_;
@@ -853,6 +836,22 @@ struct OSMNode {
    */
   uint32_t bss_info_index() const {
     return bss_info_;
+  }
+
+  /**
+   * Sets the index for the linguistic info
+   * @param  idx  Index for the linguistic info.
+   */
+  void set_linguistic_info_index(const uint32_t idx) {
+    linguistic_info_index_ = idx;
+  }
+
+  /**
+   * Get the linguistic info index.
+   * @return  Returns the index for the linguistic info.
+   */
+  uint32_t linguistic_info_index() const {
+    return linguistic_info_index_;
   }
 };
 
