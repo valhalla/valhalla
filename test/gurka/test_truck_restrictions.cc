@@ -171,12 +171,19 @@ TEST(TruckSpeed, IgnoreCommonRestrictions) {
 
   const std::string ascii_map = R"(
       A----------B-----C----D
+      |
+      E
+      |
+      |
+      F
     )";
 
   const gurka::ways ways = {
       {"AB", {{"highway", "secondary"}}},
       {"BC", {{"highway", "secondary"}}},
       {"CD", {{"highway", "secondary"}}},
+      {"AE", {{"highway", "secondary"}}},
+      {"EF", {{"highway", "secondary"}, {"hgv:conditional", "no @ (09:00-18:00)"}}},
   };
   const gurka::relations relations = {{{
                                            {gurka::way_member, "AB", "from"},
@@ -187,8 +194,10 @@ TEST(TruckSpeed, IgnoreCommonRestrictions) {
 
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, relations, "test/data/truck_ignore_common_restrictions");
+      gurka::buildtiles(layout, ways, {}, relations, "test/data/truck_ignore_common_restrictions",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
 
+  // first, route through turn restriction, should fail...
   try {
     valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck", {});
     FAIL() << "Expected valhalla_exception_t.";
@@ -196,14 +205,27 @@ TEST(TruckSpeed, IgnoreCommonRestrictions) {
     FAIL() << "Expected valhalla_exception_t.";
   }
 
+  // ...but succeed with ignore_common_restrictions
   valhalla::Api route =
       gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-                       {
-                           {"/costing_options/truck/ignore_common_restrictions", "1"},
-                           {"/costing_options/truck/width", "2"}, // lil' cube truck
-                           {"/costing_options/truck/height", "2"},
-                           {"/costing_options/truck/length", "2"},
-                           {"/costing_options/truck/weight", "2"},
-                       });
+                       {{"/costing_options/truck/ignore_common_restrictions", "1"}});
   gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
+
+  // second, route through time based access restrictions, should fail...
+  try {
+    valhalla::Api route =
+        gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
+                         {{"/date_time/type", "1"}, {"/date_time/value", "2020-10-10T13:00"}});
+    FAIL() << "Expected route to fail.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected different error code.";
+  }
+
+  //...but succeed with ignore_common_restrictions
+  valhalla::Api route_succeed =
+      gurka::do_action(valhalla::Options::route, map, {"A", "F"}, "truck",
+                       {{"/costing_options/truck/ignore_common_restrictions", "1"},
+                        {"/date_time/type", "1"},
+                        {"/date_time/value", "2020-10-10T13:00"}});
+  gurka::assert::raw::expect_path(route_succeed, {"AE", "EF"});
 }
