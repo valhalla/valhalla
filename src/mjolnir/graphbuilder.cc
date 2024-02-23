@@ -18,6 +18,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
@@ -394,6 +395,7 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& edges_file,
                   const std::string& complex_restriction_from_file,
                   const std::string& complex_restriction_to_file,
+                  const std::string& linguistic_node_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
                   std::map<GraphId, size_t>::const_iterator tile_start,
@@ -408,12 +410,14 @@ void BuildTileSet(const std::string& ways_file,
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
+  sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
+  bool process_linguistics = pt.get<bool>("data_processing.process_linguistics", true);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
@@ -916,7 +920,7 @@ void BuildTileSet(const std::string& ways_file,
 
           bool has_guide =
               GraphBuilder::CreateSignInfoList(node, w, pronunciationMap, langMap, osmdata,
-                                               default_languages, signs, linguistics, fork, forward,
+                                               default_languages, linguistic_node, signs, linguistics, fork, forward,
                                                (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
@@ -1144,9 +1148,12 @@ void BuildTileSet(const std::string& ways_file,
 
             std::vector<std::string> node_names;
             std::vector<valhalla::baldr::Language> node_langs;
-
+            OSMNodeLinguistic ling;
+            if (node.linguistic_info_index() != 0) {
+              ling = linguistic_node.at(node.linguistic_info_index());
+            }
             OSMWay::ProcessNamesPronunciations(osmdata.node_names, default_languages,
-                                               node.name_index(), node.name_lang_index(), node_names,
+                                               node.name_index(), ling.name_lang_index(), node_names,
                                                node_langs, false);
 
             std::vector<SignInfo> signs;
@@ -1157,14 +1164,14 @@ void BuildTileSet(const std::string& ways_file,
                 jeita_langs;
 
             GraphBuilder::GetPronunciationTokens(osmdata.node_names, default_languages,
-                                                 node.name_pronunciation_ipa_index(),
-                                                 node.name_pronunciation_ipa_lang_index(),
-                                                 node.name_pronunciation_nt_sampa_index(),
-                                                 node.name_pronunciation_nt_sampa_lang_index(),
-                                                 node.name_pronunciation_katakana_index(),
-                                                 node.name_pronunciation_katakana_lang_index(),
-                                                 node.name_pronunciation_jeita_index(),
-                                                 node.name_pronunciation_jeita_lang_index(),
+                                                 ling.name_pronunciation_ipa_index(),
+                                                 ling.name_pronunciation_ipa_lang_index(),
+                                                 ling.name_pronunciation_nt_sampa_index(),
+                                                 ling.name_pronunciation_nt_sampa_lang_index(),
+                                                 ling.name_pronunciation_katakana_index(),
+                                                 ling.name_pronunciation_katakana_lang_index(),
+                                                 ling.name_pronunciation_jeita_index(),
+                                                 ling.name_pronunciation_jeita_lang_index(),
                                                  ipa_tokens, ipa_langs, nt_sampa_tokens,
                                                  nt_sampa_langs, katakana_tokens, katakana_langs,
                                                  jeita_tokens, jeita_langs);
@@ -1283,6 +1290,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& edges_file,
                      const std::string& complex_from_restriction_file,
                      const std::string& complex_to_restriction_file,
+                     const std::string& linguistic_node_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1317,7 +1325,8 @@ void BuildLocalTiles(const unsigned int thread_count,
     threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
-                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
+                                     std::cref(complex_to_restriction_file),
+                                     std::cref(linguistic_node_file), std::cref(tile_dir),
                                      std::cref(osmdata), tile_start, tile_end, tile_creation_date,
                                      std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
   }
@@ -1413,6 +1422,7 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
+                         const std::string& linguistic_node_file,
                          const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
   // edge list needs to be modified. ReclassifyLinks also infers turn channels
@@ -1442,8 +1452,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
-                  pt);
+                  complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
+                  tiles, tile_dir, stats, pt);
   stats.LogStatistics();
 }
 
@@ -1705,6 +1715,7 @@ bool GraphBuilder::CreateSignInfoList(
     const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
     const OSMData& osmdata,
     const std::vector<std::pair<std::string, bool>>& default_languages,
+    sequence<OSMNodeLinguistic>& linguistic_node,
     std::vector<SignInfo>& exit_list,
     std::vector<std::string>& linguistics,
     bool fork,
@@ -1836,17 +1847,22 @@ bool GraphBuilder::CreateSignInfoList(
                            add_katakana, add_jeita);
 
   } else if (node.has_ref() && !fork && ramp) {
+    OSMNodeLinguistic ling;
+    if (node.linguistic_info_index() != 0) {
+      ling = linguistic_node.at(node.linguistic_info_index());
+    }
+
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.ref_index(),
-                                   node.ref_lang_index(), sign_names, sign_langs, false);
+                                   ling.ref_lang_index(), sign_names, sign_langs, false);
     has_phoneme =
-        get_pronunciations(osmdata.node_names, default_languages, node.ref_pronunciation_ipa_index(),
-                           node.ref_pronunciation_ipa_lang_index(),
-                           node.ref_pronunciation_nt_sampa_index(),
-                           node.ref_pronunciation_nt_sampa_lang_index(),
-                           node.ref_pronunciation_katakana_index(),
-                           node.ref_pronunciation_katakana_lang_index(),
-                           node.ref_pronunciation_jeita_index(),
-                           node.ref_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
+        get_pronunciations(osmdata.node_names, default_languages, ling.ref_pronunciation_ipa_index(),
+                           ling.ref_pronunciation_ipa_lang_index(),
+                           ling.ref_pronunciation_nt_sampa_index(),
+                           ling.ref_pronunciation_nt_sampa_lang_index(),
+                           ling.ref_pronunciation_katakana_index(),
+                           ling.ref_pronunciation_katakana_lang_index(),
+                           ling.ref_pronunciation_jeita_index(),
+                           ling.ref_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
                            nt_sampa_tokens, nt_sampa_langs, katakana_tokens, katakana_langs,
                            jeita_tokens, jeita_langs, add_ipa, add_nt_sampa, add_katakana, add_jeita);
   }
@@ -2127,17 +2143,22 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = Sign::Type::kExitName;
     // Get the name from OSMData using the name index
 
+    OSMNodeLinguistic ling;
+    if (node.linguistic_info_index() != 0) {
+      ling = linguistic_node.at(node.linguistic_info_index());
+    }
+
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.name_index(),
-                                   node.name_lang_index(), sign_names, sign_langs, false);
+                                   ling.name_lang_index(), sign_names, sign_langs, false);
     has_phoneme =
-        get_pronunciations(osmdata.node_names, default_languages, node.name_pronunciation_ipa_index(),
-                           node.name_pronunciation_ipa_lang_index(),
-                           node.name_pronunciation_nt_sampa_index(),
-                           node.name_pronunciation_nt_sampa_lang_index(),
-                           node.name_pronunciation_katakana_index(),
-                           node.name_pronunciation_katakana_lang_index(),
-                           node.name_pronunciation_jeita_index(),
-                           node.name_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
+        get_pronunciations(osmdata.node_names, default_languages, ling.name_pronunciation_ipa_index(),
+                           ling.name_pronunciation_ipa_lang_index(),
+                           ling.name_pronunciation_nt_sampa_index(),
+                           ling.name_pronunciation_nt_sampa_lang_index(),
+                           ling.name_pronunciation_katakana_index(),
+                           ling.name_pronunciation_katakana_lang_index(),
+                           ling.name_pronunciation_jeita_index(),
+                           ling.name_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
                            nt_sampa_tokens, nt_sampa_langs, katakana_tokens, katakana_langs,
                            jeita_tokens, jeita_langs, add_ipa, add_nt_sampa, add_katakana, add_jeita);
   }
