@@ -362,7 +362,7 @@ shortcut_stats AddShortcutEdges(GraphReader& reader,
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
-  int32_t total_edge_count = 0;
+  uint32_t total_edge_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
