@@ -430,7 +430,6 @@ shortcut_stats AddShortcutEdges(GraphReader& reader,
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
-        total_edge_count++;
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
@@ -459,6 +458,7 @@ shortcut_stats AddShortcutEdges(GraphReader& reader,
         // off of shortcuts work properly
         ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
                      average_density, total_duration, total_truck_duration);
+        total_edge_count++;
       }
 
       // Names can be different in the forward and backward direction
