@@ -29,6 +29,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+// total_shortcut_count and avg_edge_per_shortcut
+using shortcut_stats = std::pair<uint32_t, uint32_t>;
+
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
 struct EdgePairs {
@@ -427,6 +430,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
+        total_edge_count++;
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
