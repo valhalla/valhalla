@@ -29,9 +29,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// total_shortcut_count and total_superseded_edges
-using shortcut_stats = std::pair<uint32_t, uint32_t>;
-
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
 struct EdgePairs {
@@ -340,18 +337,18 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-shortcut_stats AddShortcutEdges(GraphReader& reader,
-                                const graph_tile_ptr& tile,
-                                GraphTileBuilder& tilebuilder,
-                                const GraphId& start_node,
-                                const uint32_t edge_index,
-                                const uint32_t edge_count,
-                                std::unordered_map<uint32_t, uint32_t>& shortcuts) {
+std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
+                                               const graph_tile_ptr& tile,
+                                               GraphTileBuilder& tilebuilder,
+                                               const GraphId& start_node,
+                                               const uint32_t edge_index,
+                                               const uint32_t edge_count,
+                                               std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted.
   EdgePairs edgepairs;
   if (CanContract(reader, tile, start_node, edgepairs)) {
-    return {0UL, 0UL};
+    return {uint32_t(0), uint32_t(0)};
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
@@ -564,7 +561,7 @@ shortcut_stats AddShortcutEdges(GraphReader& reader,
 }
 
 // Form shortcuts for tiles in this level.
-shortcut_stats FormShortcuts(GraphReader& reader, const TileLevel& level) {
+std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
@@ -745,7 +742,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
-    [[maybe_unused]] shortcut_stats stats = FormShortcuts(reader, *tile_level);
+    [[maybe_unused]] auto stats = FormShortcuts(reader, *tile_level);
     [[maybe_unused]] uint32_t avg = stats.first ? (stats.second / stats.first) : 0;
     LOG_INFO("Finished with " + std::to_string(stats.first) + " shortcuts superseding " +
              std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
