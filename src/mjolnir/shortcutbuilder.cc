@@ -51,6 +51,7 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
 
   // Make sure access matches. Need to consider opposite direction for one of
   // the edges since both edges are outbound from the node.
+  // TODO(nils): would make sense to take the "minimum" access, i.e. AND access masks?
   if (edge1->forwardaccess() != edge2->reverseaccess() ||
       edge1->reverseaccess() != edge2->forwardaccess()) {
     return false;
@@ -58,11 +59,15 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
 
   // Neither directed edge can have exit signs or be a roundabout.
   // TODO - other sign types?
+  // TODO(nils): not sure these make sense either anymore.. it's fine to have shortcuts _within_
+  //   roundabouts no? we won't ever contract nodes which have more than 2 outbound edges
   if (edge1->sign() || edge2->sign() || edge1->roundabout() || edge2->roundabout()) {
     return false;
   }
 
   // Neither edge can be part of a complex turn restriction or differ on access restrictions
+  // TODO(nils): complex restrictions make sense, but access restrictions: same as access masks
+  //   IMO, we should take the most restrictive value for the entire shortcut
   if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
       edge2->end_restriction() || edge1->access_restriction() != edge2->access_restriction()) {
     return false;
@@ -72,6 +77,11 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
   // bridge and tunnel here
+  // TODO(nils):
+  //   - links restriction could be removed? we don't care about it costing I think
+  //   - most other attributes (other than classification & surface) could also take the "most
+  //   restrictive"
+  //      for the entire shortcut
   if (edge1->classification() != edge2->classification() || edge1->link() != edge2->link() ||
       edge1->use() != edge2->use() || edge1->toll() != edge2->toll() ||
       edge1->destonly() != edge2->destonly() || edge1->destonly_hgv() != edge2->destonly_hgv() ||
@@ -80,17 +90,10 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Names must match
-  // TODO - this allows matches in any order. Do we need to maintain order?
-  // TODO - should allow near matches?
-  std::vector<std::string> edge1names = tile->GetNames(edge1);
-  std::vector<std::string> edge2names = tile->GetNames(edge2);
-  std::sort(edge1names.begin(), edge1names.end());
-  std::sort(edge2names.begin(), edge2names.end());
-  if (edge1names != edge2names)
-    return false;
-
   // if they have access restrictions those must match (for modes that use shortcuts)
+  // TODO(nils): same as above: same as access masks
+  //   IMO, we should take the most restrictive value for the entire shortcut
+  //   will be a bit harder to determine for timed restrictions though
   if (edge1->access_restriction()) {
     auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
     auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
@@ -217,12 +220,16 @@ bool CanContract(GraphReader& reader,
   const DirectedEdge* oppdiredge2 = reader.GetGraphTile(oppedge2)->directededge(oppedge2);
 
   // If either opposing directed edge has exit signs return false
+  // TODO(nils): can this be removed? if there's a third outbound edge involved to exit to
+  //   we won't look at this node anyways..
   if (oppdiredge1->sign() || oppdiredge2->sign()) {
     return false;
   }
 
   // Do not allow a shortcut on a ramp crossing at a traffic signal or where
   // more than 3 edges meet.
+  // TODO(nils): why? this doesn't seem important for costing/expansion, also we only allow exactly 2
+  // outbound edges.
   if (edge1->link() && edge2->link() && (nodeinfo->traffic_signal() || nodeinfo->edge_count() > 3)) {
     return false;
   }
@@ -231,11 +238,6 @@ bool CanContract(GraphReader& reader,
   // the other outbound edge
   if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
       ((oppdiredge2->restrictions() & (1 << edge1->localedgeidx())) != 0)) {
-    return false;
-  }
-
-  // Can not have different speeds in the same direction
-  if ((oppdiredge1->speed() != edge2->speed()) || (oppdiredge2->speed() != edge1->speed())) {
     return false;
   }
 
@@ -250,6 +252,8 @@ bool CanContract(GraphReader& reader,
   // Simple check for a possible maneuver where the continuation is a turn
   // and there are other edges at the node (forward intersecting edge or a
   // 'T' intersection
+  // TODO(nils): why look across hierarchies? seems like a relict from times where shortcuts where
+  // used in narration
   if (nodeinfo->local_edge_count() > 2) {
     // Find number of drivable edges
     uint32_t drivable = 0;
