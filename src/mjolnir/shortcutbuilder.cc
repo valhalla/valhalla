@@ -29,9 +29,6 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// total_shortcut_count and total_superseded_edges
-using shortcut_stats = std::pair<uint32_t, uint32_t>;
-
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
 struct EdgePairs {
