@@ -77,16 +77,6 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Names must match
-  // TODO - this allows matches in any order. Do we need to maintain order?
-  // TODO - should allow near matches?
-  std::vector<std::string> edge1names = tile->GetNames(edge1);
-  std::vector<std::string> edge2names = tile->GetNames(edge2);
-  std::sort(edge1names.begin(), edge1names.end());
-  std::sort(edge2names.begin(), edge2names.end());
-  if (edge1names != edge2names)
-    return false;
-
   // if they have access restrictions those must match (for modes that use shortcuts)
   if (edge1->access_restriction()) {
     auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
@@ -228,11 +218,6 @@ bool CanContract(GraphReader& reader,
   // the other outbound edge
   if (((oppdiredge1->restrictions() & (1 << edge2->localedgeidx())) != 0) ||
       ((oppdiredge2->restrictions() & (1 << edge1->localedgeidx())) != 0)) {
-    return false;
-  }
-
-  // Can not have different speeds in the same direction
-  if ((oppdiredge1->speed() != edge2->speed()) || (oppdiredge2->speed() != edge1->speed())) {
     return false;
   }
 
@@ -403,13 +388,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
 
-      // Get names - they apply over all edges of the shortcut
-      auto names = edgeinfo.GetNames();
-      auto tagged_values = edgeinfo.GetTaggedValues();
-      auto linguistics = edgeinfo.GetLinguisticTaggedValues();
-
-      auto types = edgeinfo.GetTypes();
-
       // Add any access restriction records. We don't contract if they differ, so if
       // there's any, they're the same for all involved edges
       if (newedge.access_restriction()) {
@@ -458,9 +436,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         total_edge_count++;
       }
 
-      // Names can be different in the forward and backward direction
-      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
-
       // Get the length from the shape. This prevents roundoff issues when forming
       // elevation.
       uint32_t length = valhalla::midgard::length(shape);
@@ -469,13 +444,13 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
       // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
-      // set it later if adding elevation to this dataset.
+      // set it later if adding elevation to this dataset. No need for names etc, shortcuts
+      // aren't used in guidance
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, linguistics,
-                                  types, forward, diff_names);
+                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0U, forward, false);
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 

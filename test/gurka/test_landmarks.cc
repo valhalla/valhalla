@@ -143,6 +143,9 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
 
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
+    if (e.is_shortcut()) {
+      continue;
+    }
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 
@@ -620,7 +623,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
           "Checking landmarks in maneuver failed: cannot find the maneuver in the expected result!");
     }
     ASSERT_EQ(result_landmarks.size(), expected->second.size());
-    for (auto i = 0; i < result_landmarks.size(); ++i) {
+    for (size_t i = 0; i < result_landmarks.size(); ++i) {
       EXPECT_EQ(result_landmarks[i], expected->second[i]);
     }
   }
