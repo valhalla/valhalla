@@ -29,7 +29,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// total_shortcut_count and avg_edge_per_shortcut
+// total_shortcut_count and total_superseded_edges
 using shortcut_stats = std::pair<uint32_t, uint32_t>;
 
 // Simple structure to hold the 2 pair of directed edges at a node.
@@ -341,12 +341,12 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 
 // Add shortcut edges (if they should exist) from the specified node
 shortcut_stats AddShortcutEdges(GraphReader& reader,
-                          const graph_tile_ptr& tile,
-                          GraphTileBuilder& tilebuilder,
-                          const GraphId& start_node,
-                          const uint32_t edge_index,
-                          const uint32_t edge_count,
-                          std::unordered_map<uint32_t, uint32_t>& shortcuts) {
+                                const graph_tile_ptr& tile,
+                                GraphTileBuilder& tilebuilder,
+                                const GraphId& start_node,
+                                const uint32_t edge_index,
+                                const uint32_t edge_count,
+                                std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted.
   EdgePairs edgepairs;
@@ -613,7 +613,7 @@ shortcut_stats FormShortcuts(GraphReader& reader, const TileLevel& level) {
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
       auto stats = AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
-                                         old_edge_count, shortcuts);
+                                    old_edge_count, shortcuts);
       shortcut_count += stats.first;
       total_edge_count += stats.second;
 
@@ -746,7 +746,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
     [[maybe_unused]] shortcut_stats stats = FormShortcuts(reader, *tile_level);
-    uint32_t avg = stats.first ? avg = stats.second / stats.first : 0;
+    [[maybe_unused]] uint32_t avg = stats.first ? (stats.second / stats.first) : 0;
     LOG_INFO("Finished with " + std::to_string(stats.first) + " shortcuts superseding " +
              std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
              " edges per shortcut");
