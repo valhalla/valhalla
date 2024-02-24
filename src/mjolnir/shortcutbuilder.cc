@@ -430,7 +430,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
-        total_edge_count++;
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
