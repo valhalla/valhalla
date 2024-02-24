@@ -29,7 +29,7 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
-// total_shortcut_count and avg_edge_per_shortcut
+// total_shortcut_count and total_superseded_edges
 using shortcut_stats = std::pair<uint32_t, uint32_t>;
 
 // Simple structure to hold the 2 pair of directed edges at a node.
@@ -752,7 +752,3 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
              std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
              " edges per shortcut");
   }
-}
-
-} // namespace mjolnir
-} // namespace valhalla
