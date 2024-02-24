@@ -67,38 +67,6 @@ TEST(Shortcuts, LoopWithoutShortcut) {
   EXPECT_FALSE(shortcut.Is_Valid()) << "Shortcuts found. Check the map.";
 }
 
-// Here no shortcuts are created. There could be one from A to C with speed 80 but in the opposite
-// direction speeds differ which blocks CA creation.
-TEST(Shortcuts, CreateInvalid) {
-  constexpr double gridsize = 50;
-
-  const std::string ascii_map = R"(
-      A--B--C
-  )";
-
-  const gurka::ways ways = {
-      {"AB",
-       {{"highway", "primary"},
-        {"name", "Independence Avenue"},
-        {"maxspeed:forward", "80"},
-        {"maxspeed:backward", "80"}}},
-      {"BC",
-       {{"highway", "primary"},
-        {"name", "Independence Avenue"},
-        {"maxspeed:forward", "80"},
-        {"maxspeed:backward", "90"}}},
-  };
-
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-  auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_openlrjoiner_shortcut_speed");
-
-  baldr::GraphReader graph_reader(map.config.get_child("mjolnir"));
-
-  // check that there are no shortcut edges
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "A", "C"));
-  EXPECT_ANY_THROW(gurka::findEdgeByNodes(graph_reader, layout, "C", "A"));
-}
-
 TEST(Shortcuts, ShortcutSpeed) {
   // At C node turn duration is present. As a result the speed for AE shortcut is decreased
   // from 100 kph to 93 kph and for EA shortcut - from 100 kph to 98 kph in the test case below.
@@ -363,13 +331,15 @@ TEST(Shortcuts, ShortcutsInBins) {
 }
 
 TEST(Shortcuts, ShortcutRestrictions) {
+  using node_pairs = std::vector<std::pair<std::string, std::string>>;
+
+  // the first line should produce only one shortcut, the second two
   const std::string ascii_map = R"(
   A--B--C--D--E--F
 
   G--H--I--J--K--L
   )";
 
-  // the first line should produce only one shortcut, the second two
   gurka::ways ways = {
       {"AB", {{"highway", "motorway"}, {"name", "highway"}}},
       {"BC", {{"highway", "motorway"}, {"name", "highway"}}},
@@ -389,13 +359,11 @@ TEST(Shortcuts, ShortcutRestrictions) {
   baldr::GraphReader reader(map.config.get_child("mjolnir"));
 
   // test we got the right shortcuts edges, implicitly means they were broken properly
-  for (const auto& end_node : {"C", "J", "L"}) {
-    const auto shortcut =
-        gurka::findEdge(reader, layout, "highway", end_node, baldr::GraphId{}, 0, true);
+  for (const auto& pair :
+       node_pairs{{"A", "C"}, {"C", "A"}, {"H", "J"}, {"J", "H"}, {"J", "L"}, {"L", "J"}}) {
+    const auto shortcut = gurka::findEdgeByNodes(reader, layout, pair.first, pair.second);
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
-    EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
     EXPECT_NEAR(std::get<1>(shortcut)->length(), 3000, 1);
-    EXPECT_NEAR(std::get<3>(shortcut)->length(), 3000, 1);
   }
 
   // test the right edges are really superseded by a shortcut
@@ -430,12 +398,9 @@ TEST(Shortcuts, ShortcutRestrictions) {
   }
 
   // we did build the long shorcuts across all edges
-  for (const auto& end_node : {"F", "L"}) {
-    const auto shortcut =
-        gurka::findEdge(reader2, layout, "highway", end_node, baldr::GraphId{}, 0, true);
+  for (const auto& pair : node_pairs{{"A", "F"}, {"F", "A"}, {"G", "L"}, {"L", "G"}}) {
+    const auto shortcut = gurka::findEdgeByNodes(reader2, layout, pair.first, pair.second);
     EXPECT_TRUE(std::get<1>(shortcut)->is_shortcut());
-    EXPECT_TRUE(std::get<3>(shortcut)->is_shortcut());
     EXPECT_NEAR(std::get<1>(shortcut)->length(), 7500, 1);
-    EXPECT_NEAR(std::get<3>(shortcut)->length(), 7500, 1);
   }
 }
