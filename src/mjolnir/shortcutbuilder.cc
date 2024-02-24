@@ -29,6 +29,9 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+// total_shortcut_count and avg_edge_per_shortcut
+using shortcut_stats = std::pair<uint32_t, uint32_t>;
+
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
 struct EdgePairs {
@@ -337,7 +340,7 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-uint32_t AddShortcutEdges(GraphReader& reader,
+shortcut_stats AddShortcutEdges(GraphReader& reader,
                           const graph_tile_ptr& tile,
                           GraphTileBuilder& tilebuilder,
                           const GraphId& start_node,
@@ -348,7 +351,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   // this node can be contracted.
   EdgePairs edgepairs;
   if (CanContract(reader, tile, start_node, edgepairs)) {
-    return 0;
+    return {0UL, 0UL};
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
@@ -359,6 +362,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
+  int32_t total_edge_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
@@ -376,6 +380,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
     if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
+      total_edge_count++;
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
 
@@ -425,6 +430,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
       uint32_t opp_local_idx = directededge->opp_local_idx();
       GraphId next_edge_id = edge_id;
       while (true) {
+        total_edge_count++;
         EdgePairs edgepairs;
         graph_tile_ptr tile = reader.GetGraphTile(end_node);
         if (last_edge(tile, end_node, edgepairs)) {
@@ -554,16 +560,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
-  return shortcut_count;
+  return {shortcut_count, total_edge_count};
 }
 
 // Form shortcuts for tiles in this level.
-uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
+shortcut_stats FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
   bool added = false;
   uint32_t shortcut_count = 0;
+  uint32_t total_edge_count = 0;
   uint32_t ntiles = level.tiles.TileCount();
   uint32_t tile_level = (uint32_t)level.level;
   graph_tile_ptr tile;
@@ -605,8 +612,10 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
+      auto stats = AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
                                          old_edge_count, shortcuts);
+      shortcut_count += stats.first;
+      total_edge_count += stats.second;
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -711,7 +720,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       reader.Trim();
     }
   }
-  return shortcut_count;
+  return {shortcut_count, total_edge_count};
 }
 
 } // namespace
@@ -736,8 +745,11 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
-    [[maybe_unused]] uint32_t count = FormShortcuts(reader, *tile_level);
-    LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
+    [[maybe_unused]] shortcut_stats stats = FormShortcuts(reader, *tile_level);
+    uint32_t avg = stats.first ? avg = stats.second / stats.first : 0;
+    LOG_INFO("Finished with " + std::to_string(stats.first) + " shortcuts superseding " +
+             std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
+             " edges per shortcut");
   }
 }
 
