@@ -1680,7 +1680,7 @@ TEST(BiDiAstar, test_recost_path) {
 }
 
 // TODO(nils): this test fails currently, because bidir A* has a problem with 2 shortcuts between the
-// same nodes
+// same nodes: https://github.com/valhalla/valhalla/issues/4609
 TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
   const std::string ascii_map = R"(
            X-----------Y
