@@ -1570,22 +1570,23 @@ TEST(BiDiAstar, test_recost_path) {
            3  4        5
   )";
   const gurka::ways ways = {
-      // make ABCDE to be a shortcut
-      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}}},
-      {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      // make ABC to be a shortcut
+      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}, {"maxweight", "3.5"}}},
+      // make CDE to be a shortcut
+      {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}, {"maxweight", "7"}}},
       {"1A", {{"highway", "secondary"}}},
       {"B3", {{"highway", "secondary"}}},
       {"C4", {{"highway", "secondary"}}},
       {"D5", {{"highway", "secondary"}}},
       // set speeds less than on ABCDE path to force the algorithm
       // to go through ABCDE nodes instead of AXY
-      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
-      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
-      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}, {"maxweight", "3.5"}}},
+      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}, {"maxweight", "7"}}},
+      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}, {"maxweight", "12"}}},
       {"E2", {{"highway", "secondary"}}},
   };
 
-  auto nodes = gurka::detail::map_to_coordinates(ascii_map, 5);
+  auto nodes = gurka::detail::map_to_coordinates(ascii_map, 1000);
 
   const std::string test_dir = "test/data/astar_shortcuts_recosting";
   const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
@@ -1593,8 +1594,11 @@ TEST(BiDiAstar, test_recost_path) {
   vb::GraphReader graphreader(map.config.get_child("mjolnir"));
 
   // before continue check that ABC is actually a shortcut
-  const auto ABCDE = gurka::findEdgeByNodes(graphreader, nodes, "A", "E");
-  ASSERT_TRUE(std::get<1>(ABCDE)->is_shortcut()) << "Expected ABCDE to be a shortcut";
+  const auto ABC = gurka::findEdgeByNodes(graphreader, nodes, "A", "C");
+  ASSERT_TRUE(std::get<1>(ABC)->is_shortcut()) << "Expected ABC to be a shortcut";
+  // before continue check that CDE is actually a shortcut
+  const auto CDE = gurka::findEdgeByNodes(graphreader, nodes, "C", "E");
+  ASSERT_TRUE(std::get<1>(CDE)->is_shortcut()) << "Expected CDE to be a shortcut";
 
   auto const set_constrained_speed = [&graphreader, &test_dir](const std::vector<GraphId>& edge_ids) {
     for (const auto& edgeid : edge_ids) {
@@ -1614,7 +1618,8 @@ TEST(BiDiAstar, test_recost_path) {
   };
   // set constrained speed for all superseded edges;
   // this speed will be used for them in costing model
-  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(ABCDE)));
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(ABC)));
+  set_constrained_speed(graphreader.RecoverShortcut(std::get<0>(CDE)));
   // reset cache to see updated speeds
   graphreader.Clear();
 
