@@ -1,1 +1,0 @@
-add_valhalla_benchmark(mapmatch)

@@ -1,4 +1,4 @@
-name: syntax
+name: lint
 on: [pull_request]
 
 jobs:

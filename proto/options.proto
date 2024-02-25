@@ -52,8 +52,8 @@ message PbfFieldSelector {
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
+  bool isochrone = 6;
   // TODO: enable these once we have objects for them
-  // bool isochrone = 5;
   // bool locate = 7;
   // bool height = 8;
   // bool expansion = 9;
@@ -488,7 +488,8 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
+  bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
   oneof has_isochrone_grid_size {
-    float isochrone_grid_size = 57;
+    float isochrone_grid_size = 58;                                // Grid size to calculate isochrone
   }
 }

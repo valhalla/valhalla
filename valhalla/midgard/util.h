@@ -469,6 +469,15 @@ template <class coord_t>
 bool intersect(const coord_t& u, const coord_t& v, const coord_t& a, const coord_t& b, coord_t& i);
 
 /**
+ * Check whether a given point lies within a polygon. Uses the simplified winding number algorithm
+ * (http://www.graphicsgems.org/gemsiv/ptpoly_weiler/)
+ *
+ * @return true if the point lies within the given polygon
+ */
+template <class coord_t, class container_t>
+bool point_in_poly(const coord_t& pt, const container_t& poly);
+
+/**
  * Compute the area of a polygon. If your polygon is not twisted or self intersecting
  * this will return a positive value for counterclockwise wound polygons and negative otherwise.
  * Works with rings where the polygons first and last points are the same or not

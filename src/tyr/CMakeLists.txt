@@ -5,23 +5,20 @@ set(sources
   height_serializer.cc
   isochrone_serializer.cc
   matrix_serializer.cc
+  route_serializer_osrm.cc
+  route_summary_cache.cc
   serializers.cc
   transit_available_serializer.cc)
 
 set(sources_with_warnings
   locate_serializer.cc
   route_serializer.cc
-  route_serializer_osrm.cc
   route_serializer_valhalla.cc
   trace_serializer.cc)
 
-# treat date library as system
 set(system_includes
-  ${VALHALLA_SOURCE_DIR}/third_party/date/include
-  $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>)
-if(APPLE)
-  list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
-endif()
+  ${date_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
 valhalla_module(NAME tyr
   SOURCES
@@ -40,7 +37,7 @@ valhalla_module(NAME tyr
     PUBLIC
       ${system_includes}
     PRIVATE
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
+      ${rapidjson_include_dir}
   DEPENDS
     valhalla::loki
     valhalla::thor

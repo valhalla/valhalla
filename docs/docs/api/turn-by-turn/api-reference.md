@@ -221,6 +221,7 @@ These options are available for pedestrian costing methods.
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
+| `type` | If set to `blind`, enables additional route instructions, especially usefull for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
 
 ##### Transit costing options
 
@@ -271,12 +272,13 @@ Directions options should be specified at the top level of the JSON object.
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
 | `format` | Four options are available: <ul><li>`json` is default valhalla routing directions JSON format</li><li>`gpx` returns the route as a GPX (GPS exchange format) XML track</li><li>`osrm` creates a OSRM compatible route directions JSON</li><li>`pbf` formats the result using protocol buffers</li></ul> |
 | `banner_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `bannerInstructions` attribute, which can be displayed in some navigation system SDKs. |
+| `voice_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `voiceInstructions` attribute, which can be heard in some navigation system SDKs. |
 | `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
 
-For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions in the steps would use the following json:
+For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions and voiceInstructions in the steps would use the following json:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"language":"es-ES"}
+{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"voice_instructions":true,"language":"es-ES"}
 ```
 
 ##### Supported language tags

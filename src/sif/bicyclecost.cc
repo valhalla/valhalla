@@ -909,7 +909,8 @@ public:
 
 TestBicycleCost* make_bicyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"bicycle":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "bicycle", "costing_options":{"bicycle":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestBicycleCost(request.options().costings().find(Costing::bicycle)->second);

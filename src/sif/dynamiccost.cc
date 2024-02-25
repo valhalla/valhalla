@@ -482,23 +482,22 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, cfg.include_hov2_, json, "/include_hov2", include_hov2);
   JSON_PBF_DEFAULT(co, cfg.include_hov3_, json, "/include_hov3", include_hov3);
 
-  co->set_fixed_speed(
-      kFixedSpeedRange(rapidjson::get<uint32_t>(json, "/fixed_speed", co->fixed_speed())));
+  JSON_PBF_RANGED_DEFAULT_V2(co, kFixedSpeedRange, json, "/fixed_speed", fixed_speed);
 }
 
 void ParseCosting(const rapidjson::Document& doc,
                   const std::string& costing_options_key,
                   Options& options) {
-  // if specified, get the costing options in there
-  for (auto i = Costing::Type_MIN; i <= Costing::Type_MAX; i = Costing::Type(i + 1)) {
+  // get the needed costing options in there
+  for (const auto& costing_type : kCostingTypeMapping.at(options.costing_type())) {
     // Create the costing options key
-    const auto& costing_str = valhalla::Costing_Enum_Name(i);
+    const auto& costing_str = valhalla::Costing_Enum_Name(costing_type);
     if (costing_str.empty())
       continue;
     const auto key = costing_options_key + "/" + costing_str;
     // Parse the costing options
-    auto& costing = (*options.mutable_costings())[i];
-    ParseCosting(doc, key, &costing, i);
+    auto& costing = (*options.mutable_costings())[costing_type];
+    ParseCosting(doc, key, &costing, costing_type);
   }
 }
 

@@ -586,6 +586,38 @@ void parse_contours(const rapidjson::Document& doc,
   }
 }
 
+// parse all costings needed to fulfill the request, including recostings
+void parse_recostings(const rapidjson::Document& doc,
+                      const std::string& key,
+                      valhalla::Options& options) {
+  // make sure we only have unique recosting names in the end
+  std::unordered_set<std::string> names;
+  auto check_name = [&names](const valhalla::Costing& recosting) -> void {
+    if (!recosting.has_name_case()) {
+      throw valhalla_exception_t{127};
+    } else if (!names.insert(recosting.name()).second) {
+      throw valhalla_exception_t{128};
+    }
+  };
+
+  // look either in JSON & PBF
+  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
+  if (recostings && recostings->IsArray()) {
+    names.reserve(recostings->GetArray().Size());
+    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
+      // parse the options
+      std::string key = "/recostings/" + std::to_string(i);
+      sif::ParseCosting(doc, key, options.add_recostings());
+      check_name(*options.recostings().rbegin());
+    }
+  } else if (options.recostings().size()) {
+    for (auto& recosting : *options.mutable_recostings()) {
+      check_name(recosting);
+      sif::ParseCosting(doc, key, &recosting, recosting.type());
+    }
+  }
+}
+
 /**
  * This function takes a json document and parses it into an options (request pbf) object.
  * The implementation is such that if you passed an already filled out options object the
@@ -653,7 +685,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
                                                           Options::centroid,
                                                           Options::trace_attributes,
                                                           Options::status,
-                                                          Options::sources_to_targets};
+                                                          Options::sources_to_targets,
+                                                          Options::isochrone};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -746,7 +779,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
-  // set the costing based on the name given, redundant for pbf input
+  // set the costing based on the name given and parse its costing options
   Costing::Type costing;
   if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
@@ -841,6 +874,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       break;
     }
   }
+
+  // TODO(nils): if we parse the costing options before the ignore_closures logic,
+  //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
+  //   as in the above logic the costing options aren't even parsed yet,
+  //   so how can it determine "ignore_closures" there?
+  sif::ParseCosting(doc, "/costing_options", options);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -970,27 +1009,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
   }
 
-  // Parse all of the costing options in their specified order
-  sif::ParseCosting(doc, "/costing_options", options);
-
   // parse any named costings for re-costing a given path
-  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
-  if (recostings && recostings->IsArray()) {
-    // make sure we only have unique recosting names in the end
-    std::unordered_set<std::string> names;
-    names.reserve(recostings->GetArray().Size());
-    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
-      // parse the options
-      std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
-      if (!options.recostings().rbegin()->has_name_case()) {
-        throw valhalla_exception_t{127};
-      } else if (!names.insert(options.recostings().rbegin()->name()).second) {
-        throw valhalla_exception_t{128};
-      }
-    }
-    // TODO: throw if not all names are unique?
-  }
+  parse_recostings(doc, "/recostings", options);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -1203,6 +1223,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // whether to return bannerInstructions in OSRM serializer, default false
   options.set_banner_instructions(
       rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
+
+  // whether to return voiceInstructions in OSRM serializer, default false
+  options.set_voice_instructions(
+      rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
 
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
