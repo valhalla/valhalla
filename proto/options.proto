@@ -488,4 +488,7 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
+  oneof has_isochrone_grid_size {
+    float isochrone_grid_size = 57;
+  }
 }

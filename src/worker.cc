@@ -1110,6 +1110,14 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   // if specified, get the show_locations boolean in there
   options.set_show_locations(rapidjson::get<bool>(doc, "/show_locations", options.show_locations()));
 
+  // if specified, get the isochrone_grid_size in there
+  auto isochrone_grid_size = rapidjson::get_optional<float>(doc, "/isochrone_grid_size");
+  if (isochrone_grid_size) {
+    options.set_isochrone_grid_size(*isochrone_grid_size);
+  } else {
+    options.set_isochrone_grid_size(0.0f);
+  }
+
   // if specified, get the shape_match in there
   auto shape_match_str = rapidjson::get_optional<std::string>(doc, "/shape_match");
   ShapeMatch shape_match;

@@ -115,17 +115,20 @@ void Isochrone::ConstructIsoTile(const bool multimodal,
   // Range of grids in longitude space
   float dlon = max_distance / DistanceApproximator<PointLL>::MetersPerLngDegree(center_ll.lat());
 
-  // Optimize for 600 cells in latitude (slightly larger for multimodal).
-  // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
-  float grid_size = multimodal ? dlat / 500.0f : dlat / 300.0f;
-  if (grid_size < 0.001f) {
-    grid_size = 0.001f;
-  } else if (grid_size > 0.005f) {
-    grid_size = 0.005f;
-  } else {
-    // Round to nearest 0.001
-    int r = std::round(grid_size * 1000.0f);
-    grid_size = static_cast<float>(r) * 0.001f;
+  float grid_size = api.options().isochrone_grid_size();
+  if (grid_size == 0.0) {
+    // Optimize for 600 cells in latitude (slightly larger for multimodal).
+    // Round off to nearest 0.001 degree. TODO - revisit min and max grid sizes
+    grid_size = multimodal ? dlat / 500.0f : dlat / 300.0f;
+    if (grid_size < 0.001f) {
+      grid_size = 0.001f;
+    } else if (grid_size > 0.005f) {
+      grid_size = 0.005f;
+    } else {
+      // Round to nearest 0.001
+      int r = std::round(grid_size * 1000.0f);
+      grid_size = static_cast<float>(r) * 0.001f;
+    }
   }
 
   // Set the shape interval in meters
