@@ -388,13 +388,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
 
-      // Get names - they apply over all edges of the shortcut
-      auto names = edgeinfo.GetNames();
-      auto tagged_values = edgeinfo.GetTaggedValues();
-      auto linguistics = edgeinfo.GetLinguisticTaggedValues();
-
-      auto types = edgeinfo.GetTypes();
-
       // Add any access restriction records. We don't contract if they differ, so if
       // there's any, they're the same for all involved edges
       if (newedge.access_restriction()) {
@@ -443,9 +436,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         total_edge_count++;
       }
 
-      // Names can be different in the forward and backward direction
-      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
-
       // Get the length from the shape. This prevents roundoff issues when forming
       // elevation.
       uint32_t length = valhalla::midgard::length(shape);
@@ -460,8 +450,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, linguistics,
-                                  types, forward, diff_names);
+                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
       ;
 
       newedge.set_edgeinfo_offset(edge_info_offset);
