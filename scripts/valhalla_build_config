@@ -33,6 +33,7 @@ config = {
         'concurrency': Optional(int),
         'tile_dir': '/data/valhalla',
         'tile_extract': '/data/valhalla/tiles.tar',
+        'tiling_layout_rows': [45, 180, 720, 720],
         'traffic_extract': '/data/valhalla/traffic.tar',
         'incident_dir': Optional(str),
         'incident_log': Optional(str),
@@ -168,9 +169,6 @@ config = {
         'service': {'proxy': 'ipc:///tmp/meili'},
         'grid': {'size': 500, 'cache_size': 100240},
     },
-    'baldr': {
-        'tilesizes': [4, 1, 0.25, 0.25],
-    },
     'httpd': {
         'service': {
             'listen': 'tcp://*:8002',
@@ -299,6 +297,7 @@ help_text = {
         'concurrency': 'How many threads to use in the concurrent parts of tile building',
         'tile_dir': 'Location to read/write tiles to/from',
         'tile_extract': 'Location to read tiles from tar',
+        'tiling_layout_rows': 'Total number of rows of the tiling grid of the whole map, at the different tile levels. (Levels are in this order: highway, arterial, local, transit) WARNING! If you modify this, old valhalla engines without this setting\'s support will be incompatible/broken!',
         'traffic_extract': 'Location to read traffic from tar',
         'incident_dir': 'Location to read incident tiles from',
         'incident_log': 'Location to read change events of incident tiles',
@@ -438,9 +437,6 @@ help_text = {
             'size': 'TODO: Resolution of the grid used in finding match candidates',
             'cache_size': 'TODO: number of grids to keep in cache',
         },
-    },
-    'baldr': {
-        'tilesizes': 'Size of a tile at the given level. (Levels are in this order: highway, arterial, local, transit)',
     },
     'httpd': {
         'service': {
