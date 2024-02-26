@@ -131,10 +131,9 @@ const std::string& TripLeg_VehicleType_Name(int v) {
 }
 
 const std::string& TripLeg_PedestrianType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kFoot"},
-      {1, "kWheelchair"},
-  };
+  static const std::unordered_map<int, std::string> values{{0, "kFoot"},
+                                                           {1, "kWheelchair"},
+                                                           {2, "kBlind"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf enum to string");

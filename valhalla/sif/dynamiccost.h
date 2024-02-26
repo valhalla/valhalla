@@ -92,6 +92,21 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace sif {
 
+const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
+    {Costing::none_, {Costing::none_}},
+    {Costing::bicycle, {Costing::bicycle}},
+    {Costing::bus, {Costing::bus}},
+    {Costing::motor_scooter, {Costing::motor_scooter}},
+    {Costing::multimodal, {Costing::multimodal, Costing::transit, Costing::pedestrian}},
+    {Costing::pedestrian, {Costing::pedestrian}},
+    {Costing::transit, {Costing::transit, Costing::pedestrian}},
+    {Costing::truck, {Costing::truck}},
+    {Costing::motorcycle, {Costing::motorcycle}},
+    {Costing::taxi, {Costing::taxi}},
+    {Costing::auto_, {Costing::auto_}},
+    {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
+};
+
 const sif::Cost kNoCost(0.0f, 0.0f);
 
 // Default unit size (seconds) for cost sorting.
@@ -1224,7 +1239,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                           const BaseCostingOptionsConfig& cfg);
 
 /**
- * Parses all the costing options for all supported costings
+ * Parses all the costing options for all needed costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing

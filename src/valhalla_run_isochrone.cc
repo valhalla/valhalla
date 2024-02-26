@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
 
   // Compute the isotile
   auto t1 = std::chrono::high_resolution_clock::now();
-  Isochrone isochrone;
+  valhalla::thor::Isochrone isochrone;
   auto expansion_type = routetype == "multimodal"
                             ? ExpansionType::multimodal
                             : (reverse ? ExpansionType::reverse : ExpansionType::forward);

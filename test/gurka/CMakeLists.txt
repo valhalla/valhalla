@@ -11,14 +11,8 @@ if(ENABLE_DATA_TOOLS)
   # "-Werror" flag
   # Avoid adding a filename to this list
   set(TESTS_WITH_WARNINGS
-    test_access.cc
-    test_admin_sidewalk_crossing_override.cc
-    test_admin_uk_override.cc
     test_elevation.cc
     test_gtfs.cc
-    test_guidance_views.cc
-    test_guidance_views_signposts.cc
-    test_instructions_named_roundabout.cc
     test_instructions_roundabout.cc
     test_landmarks.cc
     test_languages.cc
@@ -29,14 +23,10 @@ if(ENABLE_DATA_TOOLS)
     test_pbf_api.cc
     test_phonemes.cc
     test_phonemes_w_langs.cc
-    test_precision.cc
     test_recost.cc
-    test_simple_restrictions.cc
     test_time_tracking.cc
     test_traffic.cc
     test_traffic_smoothing.cc
-    test_use_direction_on_ways.cc
-    test_use_lit.cc
     )
 
   ## Add executable targets
