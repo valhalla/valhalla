@@ -427,6 +427,9 @@ public:
                   thor::EdgeStatus* edgestatus = nullptr,
                   const uint64_t current_time = 0,
                   const uint32_t tz_index = 0) const {
+    if (ignore_turn_restrictions_)
+      return false;
+
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
@@ -998,6 +1001,7 @@ protected:
 
   bool ignore_restrictions_{false};
   bool ignore_common_restrictions_{false};
+  bool ignore_turn_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
