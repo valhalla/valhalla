@@ -40,6 +40,14 @@ void getLevelsfromConfig() {
     ;
   }
 
+  if (bSizesInConfigOk) {
+    for (int lvl = 0; lvl < 3; lvl++) {
+      if ((tilerowsvector[lvl + 1] % tilerowsvector[lvl]) != 0)
+        throw std::runtime_error(
+            "Invalid tiling layout configuration. Number of rows in the tilegrid among adjacent levels must be an integer multiple of each other");
+    }
+  }
+
   if (!bSizesInConfigOk) {
     // Default OSM tile-grid
     tilerowsvector = {45, 180, 720, 720};
