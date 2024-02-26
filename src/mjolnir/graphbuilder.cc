@@ -417,7 +417,6 @@ void BuildTileSet(const std::string& ways_file,
       pt.get<bool>("data_processing.infer_internal_intersections", true);
   bool use_urban_tag = pt.get<bool>("data_processing.use_urban_tag", false);
   bool use_admin_db = pt.get<bool>("data_processing.use_admin_db", true);
-  bool process_linguistics = pt.get<bool>("data_processing.process_linguistics", true);
 
   // Initialize the admin DB (if it exists)
   sqlite3* admin_db_handle = (database && use_admin_db) ? GetDBHandle(*database) : nullptr;
