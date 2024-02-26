@@ -1,9 +1,7 @@
+#include "config.h"
 #include "baldr/tilehierarchy.h"
 #include "baldr/graphtileheader.h"
-#include "boost/foreach.hpp"
-#include "config.h"
 #include "midgard/vector2.h"
-#include <cassert>
 
 using namespace valhalla::midgard;
 
