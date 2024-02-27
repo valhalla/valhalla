@@ -1,3 +1,4 @@
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -11,6 +12,7 @@
 #include "midgard/util.h"
 #include "odin/enhancedtrippath.h"
 #include "odin/util.h"
+#include "route_serializer_osrm.h"
 #include "route_summary_cache.h"
 #include "tyr/serializer_constants.h"
 #include "tyr/serializers.h"
@@ -94,6 +96,10 @@ const constexpr PointLL::first_type DOUGLAS_PEUCKER_THRESHOLDS[19] = {
     2.6,      // z18
 };
 
+const constexpr double SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION = 15.0;
+const constexpr double SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION = 5.0;
+const constexpr double APPROXIMATE_VERBAL_POSTRANSITION_LENGTH = 110;
+
 inline double clamp(const double lat) {
   return std::max(std::min(lat, double(EPSG3857_MAX_LATITUDE)), double(-EPSG3857_MAX_LATITUDE));
 }
@@ -169,34 +175,6 @@ std::unordered_map<std::string, std::pair<std::string, std::string>> speed_limit
     {"WS", {kSpeedLimitSignVienna, kSpeedLimitUnitsMph}},
 };
 
-namespace osrm_serializers {
-/*
-OSRM output is described in: http://project-osrm.org/docs/v5.5.1/api/
-{
-    "code":"Ok"
-    "waypoints": [{ }, { }...],
-    "routes": [
-        {
-            "geometry":"....."
-            "distance":xxx.y
-            "duration":yyy.z
-            "legs":[
-                {
-                    "steps":[
-                        "intersections":[
-                        ]
-                        "geometry":" "
-                        "maneuver":{
-                        }
-                    ]
-                }
-            ]
-        },
-        ...
-    ]
-}
-*/
-
 std::string destinations(const valhalla::TripSign& sign);
 
 // Add OSRM route summary information: distance, duration
@@ -245,20 +223,6 @@ void route_summary(json::MapPtr& route, const valhalla::Api& api, bool imperial,
     }
     ++recosting_itr;
   }
-}
-
-// Generate leg shape in geojson format.
-json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
-  auto geojson = json::map({});
-  auto coords = json::array({});
-  coords->reserve(shape.size());
-  for (const auto& p : shape) {
-    coords->emplace_back(json::array(
-        {json::fixed_t{p.lng(), DIGITS_PRECISION}, json::fixed_t{p.lat(), DIGITS_PRECISION}}));
-  }
-  geojson->emplace("type", std::string("LineString"));
-  geojson->emplace("coordinates", std::move(coords));
-  return geojson;
 }
 
 // Generate full shape of the route.
@@ -316,6 +280,10 @@ std::vector<PointLL> simplified_shape(const valhalla::DirectionsRoute& direction
 void route_geometry(json::MapPtr& route,
                     const valhalla::DirectionsRoute& directions,
                     const valhalla::Options& options) {
+  if (options.shape_format() == no_shape) {
+    return;
+  }
+
   std::vector<PointLL> shape;
   if (options.has_generalize_case() && options.generalize() == 0.0f) {
     shape = simplified_shape(directions);
@@ -392,11 +360,8 @@ json::MapPtr serialize_annotations(const valhalla::TripLeg& trip_leg) {
 // the optimized sequence.
 json::ArrayPtr waypoints(google::protobuf::RepeatedPtrField<valhalla::Location>& locs) {
   // Create a vector of indexes.
-  uint32_t i = 0;
-  std::vector<uint32_t> indexes;
-  for (const auto& loc : locs) {
-    indexes.push_back(i++);
-  }
+  std::vector<uint32_t> indexes(locs.size());
+  std::iota(indexes.begin(), indexes.end(), 0);
 
   // Sort the the vector by the location's original index
   std::sort(indexes.begin(), indexes.end(), [&locs](const uint32_t a, const uint32_t b) -> bool {
@@ -485,7 +450,6 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
   count = 0;
   auto intersections = json::array({});
   uint32_t n = arrive_maneuver ? maneuver.end_path_index() + 1 : maneuver.end_path_index();
-  EnhancedTripLeg_Node* prev_node = nullptr;
   for (uint32_t i = maneuver.begin_path_index(); i < n; i++) {
     auto intersection = json::map({});
 
@@ -543,7 +507,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add rest_stop when passing by a rest_area or service_area
     if (i > 0 && !arrive_maneuver) {
       auto rest_stop = json::map({});
-      for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+      for (int m = 0; m < node->intersecting_edge_size(); m++) {
         auto intersecting_edge = node->GetIntersectingEdge(m);
         bool routeable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
 
@@ -584,7 +548,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     if (!arrive_maneuver) {
       edges.emplace_back(curr_edge->begin_heading(), true, false, true);
       if (i > 0) {
-        for (uint32_t m = 0; m < node->intersecting_edge_size(); m++) {
+        for (int m = 0; m < node->intersecting_edge_size(); m++) {
           auto intersecting_edge = node->GetIntersectingEdge(m);
           bool routable = intersecting_edge->IsTraversableOutbound(curr_edge->travel_mode());
           edges.emplace_back(intersecting_edge->begin_heading(), routable, false, false);
@@ -607,7 +571,7 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
 
     // Sort edges by increasing bearing and update the in/out edge indexes
     std::sort(edges.begin(), edges.end());
-    uint32_t incoming_index, outgoing_index;
+    uint32_t incoming_index = 0, outgoing_index = 0;
     for (uint32_t n = 0; n < edges.size(); ++n) {
       if (edges[n].in_edge) {
         incoming_index = n;
@@ -633,9 +597,9 @@ json::ArrayPtr intersections(const valhalla::DirectionsLeg::Maneuver& maneuver,
     // Add tunnel_name for tunnels
     if (!arrive_maneuver) {
       if (curr_edge->tunnel() && !curr_edge->tagged_value().empty()) {
-        for (uint32_t t = 0; t < curr_edge->tagged_value().size(); ++t) {
-          if (curr_edge->tagged_value().Get(t).type() == TaggedValue_Type_kTunnel) {
-            intersection->emplace("tunnel_name", curr_edge->tagged_value().Get(t).value());
+        for (const auto& e : curr_edge->tagged_value()) {
+          if (e.type() == TaggedValue_Type_kTunnel) {
+            intersection->emplace("tunnel_name", e.value());
           }
         }
       }
@@ -1325,7 +1289,9 @@ uint32_t calc_roundabout_turn_degrees(const valhalla::DirectionsLeg::Maneuver* p
     }
 
     uint32_t end_index = maneuver.end_path_index();
-    bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    if (etp->GetCurrEdge(end_index) != nullptr) {
+      bearing_after = etp->GetCurrEdge(end_index)->begin_heading();
+    }
   }
 
   if (prev_maneuver != nullptr && maneuver.type() == DirectionsLeg_Maneuver_Type_kRoundaboutExit) {
@@ -1462,6 +1428,147 @@ void maneuver_geometry(json::MapPtr& step,
   }
 }
 
+// The idea is that the instructions come a fixed amount of seconds before the maneuver takes place.
+// For whatever reasons, a distance in meters from the end of the maneuver needs to be provided
+// though. When different speeds are used on the road, they all need to be taken into account. This
+// function calculates the distance before the end of the maneuver by checking the elapsed_cost
+// seconds of each edges and accumulates their distances until the seconds threshold is passed. The
+// speed of this last edge is then used to subtract the distance so that the the seconds until the end
+// are exactly the provided amount of seconds.
+float distance_along_geometry(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                              valhalla::odin::EnhancedTripLeg* etp,
+                              const double distance,
+                              const uint32_t target_seconds) {
+  uint32_t node_index = prev_maneuver->end_path_index();
+  double end_node_elapsed_seconds = etp->node(node_index).cost().elapsed_cost().seconds();
+  double begin_node_elapsed_seconds =
+      etp->node(prev_maneuver->begin_path_index()).cost().elapsed_cost().seconds();
+
+  // If the maneuver is too short, simply return its distance.
+  if (end_node_elapsed_seconds - begin_node_elapsed_seconds < target_seconds) {
+    return distance;
+  }
+
+  float accumulated_distance_km = 0;
+  float previous_accumulated_distance_km = 0;
+  double accumulated_seconds = 0;
+  double previous_accumulated_seconds = 0;
+  // Find the node after which the instructions should be heard:
+  while (accumulated_seconds < target_seconds && node_index >= prev_maneuver->begin_path_index()) {
+    node_index -= 1;
+    // not really accumulating seconds ourselves, but it happens elsewhere:
+    previous_accumulated_seconds = accumulated_seconds;
+    accumulated_seconds =
+        end_node_elapsed_seconds - etp->node(node_index).cost().elapsed_cost().seconds();
+    previous_accumulated_distance_km = accumulated_distance_km;
+    accumulated_distance_km += etp->GetCurrEdge(node_index)->length_km();
+  }
+  // The node_index now indicates the node AFTER which the target_seconds will be reached
+  // we now have to subtract the surplus distance (based on seconds) of this edge from the
+  // accumulated_distance_km
+  auto surplus_percentage =
+      (accumulated_seconds - target_seconds) / (accumulated_seconds - previous_accumulated_seconds);
+  accumulated_distance_km -=
+      (accumulated_distance_km - previous_accumulated_distance_km) * surplus_percentage;
+  if (accumulated_distance_km * 1000 > distance) {
+    return distance;
+  } else {
+    return accumulated_distance_km * 1000; // in meters
+  }
+}
+
+// Populate the voiceInstructions within a step.
+json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_maneuver,
+                                  const valhalla::DirectionsLeg::Maneuver& maneuver,
+                                  const double distance,
+                                  const uint32_t maneuver_index,
+                                  valhalla::odin::EnhancedTripLeg* etp) {
+  // voiceInstructions is an array, because there may be similar voice instructions.
+  // When the step is long enough, there may be multiple voice instructions.
+  json::ArrayPtr voice_instructions_array = json::array({});
+
+  // distanceAlongGeometry is the distance along the current step from where on this
+  // voice instruction should be played. It is measured from the end of the maneuver.
+  // Using the maneuver length (distance) as the distanceAlongGeometry plays
+  // right at the beginning of the maneuver. A distanceAlongGeometry of 10 is
+  // shortly (10 meters at the given speed) after the maneuver has started.
+  // The voice_instruction_beginning starts shortly after the beginning of the step.
+  // The voice_instruction_end starts shortly before the end of the step.
+  float distance_before_verbal_transition_alert_instruction = -1;
+  float distance_before_verbal_pre_transition_instruction = -1;
+  if (prev_maneuver) {
+    distance_before_verbal_transition_alert_instruction =
+        distance_along_geometry(prev_maneuver, etp, distance,
+                                SECONDS_BEFORE_VERBAL_TRANSITION_ALERT_INSTRUCTION);
+    distance_before_verbal_pre_transition_instruction =
+        distance_along_geometry(prev_maneuver, etp, distance,
+                                SECONDS_BEFORE_VERBAL_PRE_TRANSITION_INSTRUCTION);
+    if (maneuver_index == 1 && !prev_maneuver->verbal_pre_transition_instruction().empty()) {
+      // For depart maneuver, we always want to hear the verbal_pre_transition_instruction
+      // right at the beginning of the navigation. This is something like:
+      // Drive West on XYZ Street.
+      // This voice_instruction_start is only created once. It is always played, even when
+      // the maneuver would otherwise be too short.
+      json::MapPtr voice_instruction_start = json::map({});
+      voice_instruction_start->emplace("distanceAlongGeometry", json::fixed_t{distance, 1});
+      voice_instruction_start->emplace("announcement",
+                                       prev_maneuver->verbal_pre_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_start));
+    } else if (distance > distance_before_verbal_transition_alert_instruction +
+                              APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
+               !prev_maneuver->verbal_post_transition_instruction().empty()) {
+      // In all other cases we want to play the verbal_post_transition_instruction shortly
+      // after the maneuver has started but only if there is sufficient time to play both
+      // the upcoming verbal_pre_transition_instruction and the verbal_post_transition_instruction
+      // itself. The approximation here is that the verbal_post_transition_instruction takes 100
+      // meters to play + the 10 meters after the maneuver start which is added so that the
+      // instruction is not played directly on the intersection where the maneuver starts.
+      json::MapPtr voice_instruction_beginning = json::map({});
+      voice_instruction_beginning->emplace("distanceAlongGeometry", json::fixed_t{distance - 10, 1});
+      voice_instruction_beginning->emplace("announcement",
+                                           prev_maneuver->verbal_post_transition_instruction());
+      voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
+    }
+  }
+
+  if (!maneuver.verbal_transition_alert_instruction().empty()) {
+    json::MapPtr voice_instruction_end = json::map({});
+    if (maneuver_index == 1 && distance_before_verbal_transition_alert_instruction == distance) {
+      // For the depart maneuver we want to play both the verbal_post_transition_instruction and
+      // the verbal_transition_alert_instruction even if the maneuver is too short.
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 2, 1});
+    } else {
+      // In all other cases we use distance_before_verbal_transition_alert_instruction value
+      // as it is capped to the maneuver length
+      voice_instruction_end
+          ->emplace("distanceAlongGeometry",
+                    json::fixed_t{distance_before_verbal_transition_alert_instruction, 1});
+    }
+    voice_instruction_end->emplace("announcement", maneuver.verbal_transition_alert_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+  }
+
+  if (!maneuver.verbal_pre_transition_instruction().empty()) {
+    json::MapPtr voice_instruction_end = json::map({});
+    if (maneuver_index == 1 && distance_before_verbal_pre_transition_instruction >= distance / 2) {
+      // For the depart maneuver we want to play the verbal_post_transition_instruction,
+      // the verbal_transition_alert_instruction and
+      // the verbal_pre_transition_instruction even if the maneuver is too short.
+      voice_instruction_end->emplace("distanceAlongGeometry", json::fixed_t{distance / 4, 1});
+    } else {
+      // In all other cases we use distance_before_verbal_pre_transition_instruction value
+      // as it is capped to the maneuver length
+      voice_instruction_end->emplace("distanceAlongGeometry",
+                                     json::fixed_t{distance_before_verbal_pre_transition_instruction,
+                                                   1});
+    }
+    voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
+    voice_instructions_array->emplace_back(std::move(voice_instruction_end));
+  }
+
+  return voice_instructions_array;
+}
+
 // Get the mode
 std::string get_mode(const valhalla::DirectionsLeg::Maneuver& maneuver,
                      const bool arrive_maneuver,
@@ -1578,7 +1685,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
 
     // #########################################################################
     //  Iterate through maneuvers - convert to OSRM steps
-    uint32_t maneuver_index = 0;
+    int maneuver_index = 0;
     uint32_t prev_intersection_count = 0;
     double prev_distance = 0;
     std::string drive_side = "right";
@@ -1738,6 +1845,19 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
         }
       }
 
+      // Add voice instructions if the user requested them
+      if (options.voice_instructions()) {
+        if (prev_step) {
+          prev_step->emplace("voiceInstructions",
+                             voice_instructions(prev_maneuver, maneuver, prev_distance,
+                                                maneuver_index, &etp));
+        }
+        if (arrive_maneuver) {
+          step->emplace("voiceInstructions",
+                        voice_instructions(prev_maneuver, maneuver, distance, maneuver_index, &etp));
+        }
+      }
+
       // Add junction_name if not the start maneuver
       std::string junction_name = get_sign_elements(sign.junction_names());
       if (!depart_maneuver && !junction_name.empty()) {
@@ -1783,7 +1903,7 @@ json::ArrayPtr serialize_legs(const google::protobuf::RepeatedPtrField<valhalla:
       maneuver_index++;
       steps->emplace_back(std::move(step));
     } // end maneuver loop
-    // #########################################################################
+      // #########################################################################
 
     // Add distance, duration, weight, and summary
     // Get a summary based on longest maneuvers.
@@ -1864,7 +1984,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   // Find the simplest summary for every leg of every route. Important note:
   // each route should have the same number of legs. Hence, we only need to make
   // unique the same leg (leg_idx) between all routes.
-  for (size_t route_i = 0; route_i < routes.size(); route_i++) {
+  for (int route_i = 0; route_i < routes.size(); route_i++) {
 
     size_t num_legs_i = routes.Get(route_i).legs_size();
     std::vector<std::string> leg_summaries;
@@ -1880,7 +2000,7 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
       // Compare every jth route/leg summary vs the current ith route/leg summary.
       // We desire to compute num_named_segs_needed, which is the number of named
       // segments needed to uniquely identify the ith's summary.
-      for (size_t route_j = 0; route_j < routes.size(); route_j++) {
+      for (int route_j = 0; route_j < routes.size(); route_j++) {
 
         // avoid self
         if (route_i == route_j)
@@ -1925,6 +2045,9 @@ summarize_route_legs(const google::protobuf::RepeatedPtrField<DirectionsRoute>& 
   return all_summaries;
 }
 
+} // namespace
+
+namespace osrm_serializers {
 // Serialize route response in OSRM compatible format.
 // Inputs are:
 //     directions options
@@ -2013,6 +2136,7 @@ std::string serialize(valhalla::Api& api) {
 
 using namespace osrm_serializers;
 
+namespace {
 /// Assert equality of two json documents
 //
 // TODO Improve the diffed view of mismatching documents
@@ -2312,9 +2436,4 @@ int main(int argc, char* argv[]) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
-
-#else
-
-} // namespace
-
 #endif

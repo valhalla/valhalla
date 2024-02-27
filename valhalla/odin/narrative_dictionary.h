@@ -76,6 +76,7 @@ constexpr auto kPostTransitionVerbalKey = "instructions.post_transition_verbal";
 constexpr auto kPostTransitTransitionVerbalKey = "instructions.post_transition_transit_verbal";
 constexpr auto kVerbalMultiCueKey = "instructions.verbal_multi_cue";
 constexpr auto kApproachVerbalAlertKey = "instructions.approach_verbal_alert";
+constexpr auto kPassKey = "instructions.pass";
 constexpr auto kElevatorKey = "instructions.elevator";
 constexpr auto kStepsKey = "instructions.steps";
 constexpr auto kEscalatorKey = "instructions.escalator";
@@ -95,6 +96,7 @@ constexpr auto kFerryLabelKey = "ferry_label";
 constexpr auto kStationLabelKey = "station_label";
 constexpr auto kEmptyTransitNameLabelsKey = "empty_transit_name_labels";
 constexpr auto kTransitStopCountLabelsKey = "transit_stop_count_labels";
+constexpr auto kObjectLabelsKey = "object_labels";
 
 constexpr auto kPluralCategoryZeroKey = "zero";
 constexpr auto kPluralCategoryOneKey = "one";
@@ -108,6 +110,14 @@ constexpr auto kWalkwayIndex = 0;
 constexpr auto kCyclewayIndex = 1;
 constexpr auto kMountainBikeTrailIndex = 2;
 constexpr auto kPedestrianCrossingIndex = 3;
+constexpr auto kStepsIndex = 4;
+constexpr auto kBridgeIndex = 5;
+constexpr auto kTunnelIndex = 6;
+
+// object label indexes
+constexpr auto kGateIndex = 0;
+constexpr auto kBollardIndex = 1;
+constexpr auto kStreetIntersectionIndex = 2;
 
 // Metric length indexes
 constexpr auto kKilometersIndex = 0;
@@ -134,6 +144,7 @@ constexpr auto kCrossStreetNamesTag = "<CROSS_STREET_NAMES>";
 constexpr auto kRoundaboutExitStreetNamesTag = "<ROUNDABOUT_EXIT_STREET_NAMES>";
 constexpr auto kRoundaboutExitBeginStreetNamesTag = "<ROUNDABOUT_EXIT_BEGIN_STREET_NAMES>";
 constexpr auto kRampExitNumbersVisualTag = "<EXIT_NUMBERS>";
+constexpr auto kObjectLabelTag = "<OBJECT_LABEL>";
 constexpr auto kLengthTag = "<LENGTH>";
 constexpr auto kDestinationTag = "<DESTINATION>";
 constexpr auto kCurrentVerbalCueTag = "<CURRENT_VERBAL_CUE>";
@@ -243,6 +254,10 @@ struct VerbalMultiCueSubset : PhraseSet {
 struct ApproachVerbalAlertSubset : PhraseSet {
   std::vector<std::string> metric_lengths;
   std::vector<std::string> us_customary_lengths;
+};
+
+struct PassSubset : PhraseSet {
+  std::vector<std::string> object_labels;
 };
 
 struct EnterBuildingSubset : PhraseSet {
@@ -376,6 +391,8 @@ public:
   // Approach verbal alert
   ApproachVerbalAlertSubset approach_verbal_alert_subset;
 
+  // Pass
+  PassSubset pass_subset;
   // Elevator
   PhraseSet elevator_subset;
 
@@ -593,6 +610,15 @@ protected:
    */
   void Load(ApproachVerbalAlertSubset& approach_verbal_alert_handle,
             const boost::property_tree::ptree& approach_verbal_alert_subset_pt);
+
+  /**
+   * Loads the specified 'pass' instruction subset with the localized
+   * narrative instructions contained in the specified property tree.
+   *
+   * @param  pass_handle  The 'pass' structure to populate.
+   * @param  pass_subset_pt  The 'pass' property tree.
+   */
+  void Load(PassSubset& pass_handle, const boost::property_tree::ptree& pass_subset_pt);
 
   /**
    * Loads the specified 'enter_building' instruction subset with the localized

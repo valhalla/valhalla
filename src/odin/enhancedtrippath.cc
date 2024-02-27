@@ -122,7 +122,7 @@ const std::string& TripLeg_TravelMode_Name(int v) {
 
 const std::string& TripLeg_VehicleType_Name(int v) {
   static const std::unordered_map<int, std::string> values{
-      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTractorTrailer"}, {4, "kMotorScooter"},
+      {0, "kCar"}, {1, "kMotorcycle"}, {2, "kAutoBus"}, {3, "kTruck"}, {4, "kMotorScooter"},
   };
   auto f = values.find(v);
   if (f == values.cend())
@@ -131,11 +131,9 @@ const std::string& TripLeg_VehicleType_Name(int v) {
 }
 
 const std::string& TripLeg_PedestrianType_Name(int v) {
-  static const std::unordered_map<int, std::string> values{
-      {0, "kFoot"},
-      {1, "kWheelchair"},
-      {2, "kSegway"},
-  };
+  static const std::unordered_map<int, std::string> values{{0, "kFoot"},
+                                                           {1, "kWheelchair"},
+                                                           {2, "kBlind"}};
   auto f = values.find(v);
   if (f == values.cend())
     throw std::runtime_error("Missing value in protobuf enum to string");
@@ -480,7 +478,7 @@ bool EnhancedTripLeg_Edge::IsUnnamedMountainBikeTrail() const {
 }
 
 bool EnhancedTripLeg_Edge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse()));
+  return ((road_class() == RoadClass::kMotorway) && (!IsRampUse() && !IsTurnChannelUse()));
 }
 
 bool EnhancedTripLeg_Edge::IsOneway() const {
@@ -1373,7 +1371,8 @@ bool EnhancedTripLeg_IntersectingEdge::IsTraversableOutbound(const TravelMode tr
 }
 
 bool EnhancedTripLeg_IntersectingEdge::IsHighway() const {
-  return ((road_class() == RoadClass::kMotorway) && !(use() == TripLeg_Use_kRampUse));
+  return ((road_class() == RoadClass::kMotorway) &&
+          !(use() == TripLeg_Use_kRampUse || use() == TripLeg_Use_kTurnChannelUse));
 }
 
 std::string EnhancedTripLeg_IntersectingEdge::ToString() const {

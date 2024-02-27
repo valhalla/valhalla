@@ -8,7 +8,6 @@
 #include "midgard/encoded.h"
 #include "midgard/logging.h"
 
-#include "config.h"
 #include <algorithm>
 #include <cxxopts.hpp>
 #include <iostream>
@@ -145,6 +144,7 @@ int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::string bbox;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -158,19 +158,18 @@ int main(int argc, char* argv[]) {
     options.add_options()
       ("h,help", "Print this help message.")
       ("v,version", "Print the version of this software.")
-      ("c,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"s))
+      ("c,config", "Path to the json configuration file.", cxxopts::value<std::string>())
+      ("i,inline-config", "Inline json config.", cxxopts::value<std::string>())
+      ("x,column", "What separator to use between columns [default=\\0].", cxxopts::value<std::string>(column_separator)->default_value("\0"s))
       ("r,row", "What separator to use between row [default=\\n].", cxxopts::value<std::string>(row_separator)->default_value("\n"))
       ("f,ferries", "Export ferries as well [default=false]", cxxopts::value<bool>(ferries)->default_value("false"))
-      ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"))
-      ("config", "positional argument", cxxopts::value<std::string>());
+      ("u,unnamed", "Export unnamed edges as well [default=false]", cxxopts::value<bool>(unnamed)->default_value("false"));
     // clang-format on
 
-    options.parse_positional({"config"});
-    options.positional_help("Config file path");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, ""))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -180,7 +179,10 @@ int main(int argc, char* argv[]) {
   }
 
   // get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(valhalla::config().get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
+
+  // configure logging here, we want it to go to stderr
+  valhalla::midgard::logging::Configure({{"type", "std_err"}, {"color", "true"}});
 
   // keep the global number of edges encountered at the point we encounter each tile
   // this allows an edge to have a sequential global id and makes storing it very small

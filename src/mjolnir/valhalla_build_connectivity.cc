@@ -12,7 +12,6 @@
 #include "baldr/connectivity_map.h"
 #include "baldr/rapidjson_utils.h"
 #include "baldr/tilehierarchy.h"
-#include "config.h"
 #include "filesystem.h"
 
 #include "argparse_utils.h"
@@ -46,6 +45,9 @@ struct RGB {
 // Main application to create a ppm image file of connectivity.
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
   try {
     // clang-format off
     cxxopts::Options options(
@@ -62,9 +64,9 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -74,7 +76,7 @@ int main(int argc, char** argv) {
   }
 
   // Get something we can use to fetch tiles
-  valhalla::baldr::connectivity_map_t connectivity_map(valhalla::config().get_child("mjolnir"));
+  valhalla::baldr::connectivity_map_t connectivity_map(config.get_child("mjolnir"));
 
   uint32_t transit_level = TileHierarchy::levels().back().level + 1;
   for (uint32_t level = 0; level <= transit_level; level++) {

@@ -1658,7 +1658,9 @@ function filter_tags_generic(kv)
      kv["link_type"] = kv["link_type"]
   end
 
-  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or "false"
+  --- TODO(nils): "private" also has directionality which we don't parse and handle yet
+  kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or "false"
+  kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"
   kv["ferry"] = tostring(ferry)
   kv["rail"] = tostring(kv["auto_forward"] == "true" and (kv["railway"] == "rail" or kv["route"] == "shuttle_train"))
@@ -2310,7 +2312,7 @@ function rels_proc (kv, nokeys)
        kv["restriction"] = nil
 
        return 0, kv
-  --has a restiction but type is not restriction...ignore
+  --has a restriction but type is not restriction...ignore
      elseif restrict ~= nil then
        return 1, kv
      else

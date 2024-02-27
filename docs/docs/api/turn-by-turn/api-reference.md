@@ -117,7 +117,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `country_crossing_penalty` | A penalty applied for a country crossing. This penalty can be used to create paths that avoid spanning country boundaries. The default penalty is 0. |
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `disable_hierarchy_pruning` | Disable hierarchies to calculate the actual optimal route. The default is `false`. **Note:** This could be quite a performance drainer so there is a upper limit of distance. If the upper limit is exceeded, this option will always be `false`. |
-| `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 140 KPH. |
+| `top_speed` | Top speed the vehicle can go. Also used to avoid roads with higher speeds than this value. `top_speed` must be between 10 and 252 KPH. The default value is 90 KPH for `truck` and 140 KPH for `auto` and `bus`. |
 | `fixed_speed` | Fixed speed the vehicle can go. Used to override the calculated speed. Can be useful if speed of vehicle is known. `fixed_speed` must be between 1 and 252 KPH. The default value is 0 KPH which disables fixed speed and falls back to the standard calculated speed based on the road attribution. |
 | `ignore_closures` | If set to `true`, ignores all closures, marked due to live traffic closures, during routing. **Note:** This option cannot be set if `location.search_filter.exclude_closures` is also specified in the request and will return an error if it is |
 | `closure_factor` | A factor that penalizes the cost when traversing a closed edge (eg: if `search_filter.exclude_closures` is `false` for origin and/or destination location and the route starts/ends on closed edges). Its value can range from `1.0` - don't penalize closed edges, to `10.0` - apply high cost penalty to closed edges. Default value is `9.0`. **Note:** This factor is applicable only for motorized modes of transport, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. |
@@ -221,6 +221,7 @@ These options are available for pedestrian costing methods.
 | `shortest` | Changes the metric to quasi-shortest, i.e. purely distance-based costing. Note, this will disable all other costings & penalties. Also note, `shortest` will not disable hierarchy pruning, leading to potentially sub-optimal routes for some costing models. The default is `false`. |
 | `transit_start_end_max_distance` | A pedestrian option that can be added to the request to extend the defaults (2145 meters or approximately 1.5 miles). This is the maximum walking distance at the beginning or end of a route.|
 | `transit_transfer_max_distance` | A pedestrian option that can be added to the request to extend the defaults (800 meters or 0.5 miles). This is the maximum walking distance between transfers.|
+| `type` | If set to `blind`, enables additional route instructions, especially usefull for blind users: Announcing crossed streets, the stairs, bridges, tunnels, gates and bollards, which need to be passed on route; information about traffic signals on crosswalks; route numbers not announced for named routes. Default `foot` |
 
 ##### Transit costing options
 
@@ -271,12 +272,13 @@ Directions options should be specified at the top level of the JSON object.
 | `directions_type` |  An enum with 3 values. <ul><li>`none` indicating no maneuvers or instructions should be returned.</li><li>`maneuvers` indicating that only maneuvers be returned.</li><li>`instructions` indicating that maneuvers with instructions should be returned (this is the default if not specified).</li></ul> |
 | `format` | Four options are available: <ul><li>`json` is default valhalla routing directions JSON format</li><li>`gpx` returns the route as a GPX (GPS exchange format) XML track</li><li>`osrm` creates a OSRM compatible route directions JSON</li><li>`pbf` formats the result using protocol buffers</li></ul> |
 | `banner_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `bannerInstructions` attribute, which can be displayed in some navigation system SDKs. |
+| `voice_instructions` | If the format is `osrm`, this boolean indicates if each step should have the additional `voiceInstructions` attribute, which can be heard in some navigation system SDKs. |
 | `alternates` |  A number denoting how many alternate routes should be provided. There may be no alternates or less alternates than the user specifies. Alternates are not yet supported on multipoint routes (that is, routes with more than 2 locations). They are also not supported on time dependent routes. |
 
-For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions in the steps would use the following json:
+For example a bus request with the result in Spanish using the OSRM (Open Source Routing Machine) format with the additional bannerInstructions and voiceInstructions in the steps would use the following json:
 
 ```json
-{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"language":"es-ES"}
+{"locations":[{"lat":40.730930,"lon":-73.991379},{"lat":40.749706,"lon":-73.991562}],"format":"osrm","costing":"bus","banner_instructions":true,"voice_instructions":true,"language":"es-ES"}
 ```
 
 ##### Supported language tags

@@ -15,8 +15,8 @@
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/meili/match_result.h>
 #include <valhalla/midgard/gridded_data.h>
+#include <valhalla/midgard/pointll.h>
 #include <valhalla/proto/api.pb.h>
-#include <valhalla/thor/matrix_common.h>
 #include <valhalla/tyr/actor.h>
 
 namespace valhalla {
@@ -38,7 +38,7 @@ std::string serializeMatrix(Api& request);
  * @param grid_contours    the contours generated from the grid
  * @param colors           the #ABC123 hex string color used in geojson fill color
  */
-std::string serializeIsochrones(const Api& request,
+std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
                                 midgard::GriddedData<2>::contours_t& contours,
                                 bool polygons = true,
@@ -122,6 +122,14 @@ std::string serializePbf(Api& request);
  */
 void serializeWarnings(const valhalla::Api& api, rapidjson::writer_wrapper_t& writer);
 baldr::json::ArrayPtr serializeWarnings(const valhalla::Api& api);
+
+/**
+ * Turns a line into a GeoJSON LineString geometry.
+ *
+ * @param shape  The points making up the line.
+ * @returns The GeoJSON geometry of the LineString
+ */
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape);
 
 // Elevation serialization support
 

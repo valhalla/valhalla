@@ -56,10 +56,14 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
   bool error = false;
   std::vector<int8_t> encoded = encode_elevation(heights, error);
   if (error) {
-    LOG_INFO("edge elevation wayid= " + std::to_string(wayid));
-    for (const auto h : heights) {
-      LOG_INFO("   " + std::to_string(h));
+    double diff = 0;
+    for (size_t i = 1; i < heights.size(); i++) {
+      auto d = std::abs(heights[i] - heights[i - 1]);
+      diff = d < diff ? diff : d;
+      LOG_DEBUG("  " + std::to_string(heights[i]));
     }
+    LOG_WARN("edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+             std::to_string(diff) + " meters.");
   }
   return encoded;
 }
@@ -69,7 +73,8 @@ std::vector<int8_t> encode_edge_elevation(const std::unique_ptr<valhalla::skadi:
  */
 std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::sample>& sample,
                                          const std::vector<PointLL>& shape,
-                                         const uint32_t length) {
+                                         const uint32_t length,
+                                         uint32_t wayid) {
   // Compute a uniform sampling interval along the edge based on its length.
   double interval = sampling_interval(length);
 
@@ -91,10 +96,14 @@ std::vector<int8_t> encode_btf_elevation(const std::unique_ptr<valhalla::skadi::
   bool error = false;
   auto e = encode_elevation(heights, error);
   if (error) {
-    LOG_INFO("BTF Elevation!");
-    for (const auto h : heights) {
-      LOG_INFO("   " + std::to_string(h));
+    double diff = 0;
+    for (size_t i = 1; i < heights.size(); i++) {
+      auto d = std::abs(heights[i] - heights[i - 1]);
+      diff = d < diff ? diff : d;
+      LOG_DEBUG("  " + std::to_string(heights[i]));
     }
+    LOG_WARN("BTF edge elevation wayid = " + std::to_string(wayid) + " exceeds difference with " +
+             std::to_string(diff) + " meters.");
   }
   return e;
 }
@@ -211,10 +220,10 @@ void add_elevations_to_single_tile(GraphReader& graphreader,
       // Encode elevation along the edge and add to EdgeInfo along with the mean elevation.
       // Bridges, tunnels, ferries are special cases. Increment the new edge info offset.
       std::vector<int8_t> encoded;
+      auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
       if (directededge.bridge() || directededge.tunnel() || directededge.use() == Use::kFerry) {
-        encoded = encode_btf_elevation(sample, shape, length);
+        encoded = encode_btf_elevation(sample, shape, length, wayid);
       } else {
-        auto wayid = tilebuilder.edgeinfo(&directededge).wayid();
         encoded = encode_edge_elevation(sample, shape, length, wayid);
       }
       ei_offset += tilebuilder.set_elevation(edge_info_offset, mean_elevation, encoded);

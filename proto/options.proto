@@ -41,6 +41,7 @@ enum ShapeFormat {
   polyline6 = 0;
   polyline5 = 1;
   geojson = 2;
+  no_shape = 3;  // to omit returning the geometry, e.g. default in matrix
 }
 
 // use this to select which top level fields should be present in the pbf output
@@ -51,8 +52,8 @@ message PbfFieldSelector {
   bool directions = 3; // /route /trace_route /optimized_route /centroid
   bool status = 4;     // /status
   bool matrix = 5;     // sources_to_targets
+  bool isochrone = 6;
   // TODO: enable these once we have objects for them
-  // bool isochrone = 5;
   // bool locate = 7;
   // bool height = 8;
   // bool expansion = 9;
@@ -378,11 +379,12 @@ message Options {
   }
 
   enum ExpansionProperties {
-    costs = 0;
-    durations = 1;
-    distances = 2;
-    statuses = 3;
-    edge_ids = 4;
+    cost = 0;
+    duration = 1;
+    distance = 2;
+    edge_status = 3;
+    edge_id = 4;
+    pred_edge_id = 5;
   }
 
   Units units = 1;                                                 // kilometers or miles
@@ -456,7 +458,9 @@ message Options {
   oneof has_use_timestamps {
     bool use_timestamps = 37;                                      // Use timestamps to compute elapsed time for trace_route and trace_attributes [default = false]
   }
-  ShapeFormat shape_format = 38;                                   // Shape format (defaults to polyline6 encoding)
+  oneof has_shape_format {
+    ShapeFormat shape_format = 38;                                 // Shape format, defaults to polyline6 encoding for OSRM/height, and no_shape for matrix
+  }
   oneof has_alternates {
     uint32 alternates = 39;                                        // Maximum number of alternate routes that can be returned
   }
@@ -496,4 +500,5 @@ message Options {
                                                                    // or when CostMatrix is the selected matrix mode.
   bool banner_instructions = 55;                                   // Whether to return bannerInstructions in the OSRM serializer response
   float elevation_interval = 56;                                   // Interval for sampling elevation along the route path.  [default = 0.0];
+  bool voice_instructions = 57;                                    // Whether to return voiceInstructions in the OSRM serializer response
 }

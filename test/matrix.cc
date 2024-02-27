@@ -220,7 +220,7 @@ TEST(Matrix, test_matrix) {
   CostMatrix cost_matrix;
   cost_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not close enough" +
                " to expected value for CostMatrix";
@@ -233,11 +233,11 @@ TEST(Matrix, test_matrix) {
 
   CostMatrix cost_matrix_abort_source;
   cost_matrix_abort_source.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive,
-                                          100000.0);
+                                          90000.0);
 
   matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
@@ -251,7 +251,7 @@ TEST(Matrix, test_matrix) {
 
   matrix = request.matrix();
   found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     if (matrix.distances()[i] < kMaxCost) {
       ++found;
     }
@@ -263,7 +263,7 @@ TEST(Matrix, test_matrix) {
   timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
 
   matrix = request.matrix();
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], matrix_answers[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -314,7 +314,7 @@ TEST(Matrix, test_timedistancematrix_forward) {
                                                       {2311, 2111}, {701, 641},   {0, 0},       {2821, 2626}};
   // clang-format on
 
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -366,7 +366,7 @@ TEST(Matrix, test_timedistancematrix_reverse) {
                                                       {5562, 5177}, {3952, 3707}, {4367, 4107}};
   // clang-format on
 
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     EXPECT_NEAR(matrix.distances()[i], expected_results[i][1], kThreshold)
         << "result " + std::to_string(i) + "'s distance is not equal" +
                " to expected value for TDMatrix";
@@ -433,11 +433,10 @@ TEST(Matrix, partial_matrix) {
       CreateSimpleCost(request.options().costings().find(request.options().costing_type())->second);
 
   TimeDistanceMatrix timedist_matrix;
-  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0,
-                                 request.options().matrix_locations());
+  timedist_matrix.SourceToTarget(request, reader, mode_costing, sif::TravelMode::kDrive, 400000.0);
   auto& matrix = request.matrix();
   uint32_t found = 0;
-  for (uint32_t i = 0; i < matrix.times().size(); ++i) {
+  for (int i = 0; i < matrix.times().size(); ++i) {
     if (matrix.distances()[i] > 0) {
       ++found;
     }
@@ -488,7 +487,7 @@ TEST(Matrix, default_matrix) {
   // first values in the object
   EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["distance"].GetDouble(),
                    5.88);
-  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 474);
+  EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["time"].GetInt64(), 473);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["to_index"].GetInt64(), 0);
   EXPECT_EQ(json["sources_to_targets"].GetArray()[0][0].GetObject()["from_index"].GetInt64(), 0);
 
@@ -540,7 +539,7 @@ TEST(Matrix, slim_matrix) {
   EXPECT_DOUBLE_EQ(json["sources_to_targets"].GetObject()["distances"][0][0].GetDouble(), 5.88);
 
   // first value of "durations" array
-  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 474);
+  EXPECT_EQ(json["sources_to_targets"].GetObject()["durations"][0][0].GetInt64(), 473);
 
   EXPECT_FALSE(json.HasMember("sources"));
   EXPECT_FALSE(json.HasMember("targets"));

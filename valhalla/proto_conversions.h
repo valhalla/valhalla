@@ -32,9 +32,8 @@ inline TripLeg_Surface GetTripLegSurface(const baldr::Surface surface) {
 // Associate vehicle types to TripLeg proto
 // TODO - why doesn't these use an enum input?
 constexpr VehicleType kTripLegVehicleType[] = {
-    VehicleType::kCar,          VehicleType::kMotorcycle,
-    VehicleType::kAutoBus,      VehicleType::kTractorTrailer,
-    VehicleType::kMotorScooter,
+    VehicleType::kCar,   VehicleType::kMotorcycle,   VehicleType::kAutoBus,
+    VehicleType::kTruck, VehicleType::kMotorScooter,
 };
 inline VehicleType GetTripLegVehicleType(const uint8_t type) {
   return (type <= static_cast<uint8_t>(sif::VehicleType::kMotorScooter)) ? kTripLegVehicleType[type]
@@ -42,14 +41,12 @@ inline VehicleType GetTripLegVehicleType(const uint8_t type) {
 }
 
 // Associate pedestrian types to TripLeg proto
-constexpr PedestrianType kTripLegPedestrianType[] = {
-    PedestrianType::kFoot,
-    PedestrianType::kWheelchair,
-    PedestrianType::kSegway,
-};
+constexpr PedestrianType kTripLegPedestrianType[] = {PedestrianType::kFoot,
+                                                     PedestrianType::kWheelchair,
+                                                     PedestrianType::kBlind};
 inline PedestrianType GetTripLegPedestrianType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(sif::PedestrianType::kSegway)) ? kTripLegPedestrianType[type]
-                                                                      : kTripLegPedestrianType[0];
+  return (type <= static_cast<uint8_t>(sif::PedestrianType::kBlind)) ? kTripLegPedestrianType[type]
+                                                                     : kTripLegPedestrianType[0];
 }
 
 // Associate bicycle types to TripLeg proto
@@ -518,7 +515,7 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 }
 
 // matrix algo to string
-std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
+const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact

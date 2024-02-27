@@ -19,7 +19,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/predictedspeeds.h"
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -242,6 +241,7 @@ int main(int argc, char** argv) {
   // args
   filesystem::path traffic_tile_dir;
   bool summary = false;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -263,7 +263,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"traffic-tile-dir"});
     options.positional_help("Traffic tile dir");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("traffic-tile-dir")) {
@@ -271,24 +271,13 @@ int main(int argc, char** argv) {
       return false;
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
     std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
               << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
-  }
-
-  auto config = valhalla::config();
-
-  // configure logging
-  auto logging_subtree = config.get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
   }
 
   // queue up all the work we'll be doing

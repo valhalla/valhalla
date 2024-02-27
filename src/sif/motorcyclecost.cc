@@ -444,7 +444,7 @@ Cost MotorcycleCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, idx);
+  c.secs += OSRMCarTurnDuration(edge, node, idx);
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -513,7 +513,7 @@ Cost MotorcycleCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -613,7 +613,8 @@ public:
 
 TestMotorcycleCost* make_motorcyclecost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"motorcycle":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "motorcycle", "costing_options":{"motorcycle":{")" << property << R"(":)"
+     << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestMotorcycleCost(request.options().costings().find(Costing::motorcycle)->second);

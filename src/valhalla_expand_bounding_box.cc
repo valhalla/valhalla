@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::string bbox;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -34,7 +35,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (!result.count("bounding-box")) {
@@ -42,7 +43,7 @@ int main(int argc, char** argv) {
       std::cerr << options.help() << std::endl;
       return EXIT_FAILURE;
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
 
   valhalla::midgard::AABB2<valhalla::midgard::PointLL> bb{{result[0], result[1]},
                                                           {result[2], result[3]}};
-  valhalla::baldr::GraphReader reader(valhalla::config().get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
   bb = reader.GetMinimumBoundingBox(bb);
 
   std::cout << std::fixed << std::setprecision(6) << bb.minx() << "," << bb.miny() << "," << bb.maxx()
