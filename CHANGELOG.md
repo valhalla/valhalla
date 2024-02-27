@@ -36,6 +36,7 @@
    * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
    * FIXED: infinite loop or other random corruption in isochrones when retrieving partial shape of an edge [#4547](https://github.com/valhalla/valhalla/pull/4547)
    * FIXED: Aggregation updates: update opposing local idx after aggregating the edges, added classification check for aggregation, and shortcut length changes [#4570](https://github.com/valhalla/valhalla/pull/4570)
+   * FIXED: Use helper function for only parsing out names from DirectedEdge when populating intersecting edges [#4604](https://github.com/valhalla/valhalla/pull/4604)  
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -254,6 +255,7 @@
    * FIXED: Building Valhalla as a submodule [#3781](https://github.com/valhalla/valhalla/issues/3781)
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
+   * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)
