@@ -52,6 +52,7 @@ const std::string tile_manifest_file = "tile_manifest.json";
 const std::string access_file = "access.bin";
 const std::string pronunciation_file = "pronunciation.bin";
 const std::string bss_nodes_file = "bss_nodes.bin";
+const std::string linguistic_node_file = "linguistics_node.bin";
 const std::string cr_from_file = "complex_from_restrictions.bin";
 const std::string cr_to_file = "complex_to_restrictions.bin";
 const std::string new_to_old_file = "new_nodes_to_old_nodes.bin";
@@ -271,6 +272,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
   std::string tile_manifest = tile_dir + tile_manifest_file;
   std::string access_bin = tile_dir + access_file;
   std::string bss_nodes_bin = tile_dir + bss_nodes_file;
+  std::string linguistic_node_bin = tile_dir + linguistic_node_file;
   std::string cr_from_bin = tile_dir + cr_from_file;
   std::string cr_to_bin = tile_dir + cr_to_file;
   std::string new_to_old_bin = tile_dir + new_to_old_file;
@@ -320,7 +322,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     // Read the OSM protocol buffer file. Callbacks for nodes
     // are defined within the PBFParser class
     PBFGraphParser::ParseNodes(config.get_child("mjolnir"), input_files, way_nodes_bin, bss_nodes_bin,
-                               osm_data);
+                               linguistic_node_bin, osm_data);
 
     // Free all protobuf memory - cannot use the protobuffer lib after this!
     if (release_osmpbf_memory) {
@@ -364,7 +366,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
 
     // Build the graph using the OSMNodes and OSMWays from the parser
     GraphBuilder::Build(config, osm_data, ways_bin, way_nodes_bin, nodes_bin, edges_bin, cr_from_bin,
-                        cr_to_bin, tiles);
+                        cr_to_bin, linguistic_node_bin, tiles);
   }
 
   // Enhance the local level of the graph. This adds information to the local
@@ -447,6 +449,7 @@ bool build_tile_set(const boost::property_tree::ptree& original_config,
     remove_temp_file(bss_nodes_bin);
     remove_temp_file(cr_from_bin);
     remove_temp_file(cr_to_bin);
+    remove_temp_file(linguistic_node_bin);
     remove_temp_file(new_to_old_bin);
     remove_temp_file(old_to_new_bin);
     remove_temp_file(tile_manifest);
