@@ -98,7 +98,81 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
   gurka::assert::raw::expect_path(route_succeed, {"AE", "EF"});
 }
 
-INSTANTIATE_TEST_SUITE_P(CommonRestrictionTest,
+// check that dimensional restrictions are not affected
+TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
+  const std::string& costing = GetParam();
+
+  if (costing == "motorcycle")
+    return; // no height for motorcycle
+  const gurka::ways ways = {
+      {"AB", {{"highway", "secondary"}}}, {"BC", {{"highway", "secondary"}, {"maxheight", "2.5"}}},
+      {"CD", {{"highway", "secondary"}}}, {"AE", {{"highway", "secondary"}}},
+      {"EF", {{"highway", "secondary"}}},
+  };
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_common_restrictions",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+  // should fail, too low
+  try {
+    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
+                                           {{"/costing_options/" + costing + "/height", "3"}});
+    FAIL() << "Expected valhalla_exception_t.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  }
+
+  // still too low
+  try {
+    valhalla::Api route =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
+                         {{"/costing_options/" + costing + "/ignore_common_restrictions", "1"},
+                          {"/costing_options/" + costing + "/height", "3"}});
+    FAIL() << "Expected valhalla_exception_t.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected valhalla_exception_t.";
+  }
+}
+INSTANTIATE_TEST_SUITE_P(CommonRestrictionsTest,
                          CommonRestrictionTest,
-                         ::testing::Values("auto", "truck", "motorcycle", "taxi", "bus") // no lit tag
-);
+                         ::testing::Values("auto", "truck", "motorcycle", "taxi", "bus"));
+
+// make sure truck weight restrictions are not affected by the request parameter
+TEST(CommonRestrictionsFail, Truck) {
+
+  constexpr double gridsize = 500;
+
+  const std::string ascii_map = R"(
+      A----------B-----C----D
+    )";
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
+  const gurka::ways ways = {{"AB", {{"highway", "residential"}}},
+                            {"BC", {{"highway", "residential"}, {"maxheight", "2.5"}}},
+                            {"CD", {{"highway", "residential"}}}};
+
+  gurka::map map =
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_common_restrictions_truck",
+                        {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
+
+  // too long
+  try {
+    valhalla::Api route = gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                                           {{"/costing_options/truck/height", "3"}});
+
+    FAIL() << "Expected valhalla_exception_t.";
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected to fail with a different error code.";
+  }
+
+  // ...still too long
+  try {
+    valhalla::Api route =
+        gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
+                         {{"/costing_options/truck/ignore_common_restrictions", "1"},
+                          {"/costing_options/truck/height", "3"}});
+    FAIL() << "Expected no route to be found.";
+
+  } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
+    FAIL() << "Expected to fail with a different error code.";
+  }
+}
