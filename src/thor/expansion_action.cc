@@ -74,12 +74,6 @@ std::string thor_worker_t::expansion(Api& request) {
     exp_props.insert(static_cast<Options_ExpansionProperties>(prop));
   }
 
-  // default the expansion geojson so its easy to add to as we go
-  writer_wrapper_t writer(1024 * 1024);
-  writer.start_object();
-  writer("type", "FeatureCollection");
-  writer.start_array("features");
-  writer.set_precision(6);
   auto* expansion = request.mutable_expansion();
   // a lambda that the path algorithm can call to add stuff to the dom
   // route and isochrone produce different GeoJSON properties
