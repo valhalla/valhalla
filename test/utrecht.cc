@@ -28,6 +28,7 @@ std::string access_file = "test_access_utrecht.bin";
 std::string from_restriction_file = "test_from_complex_restrictions_utrecht.bin";
 std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
 std::string bss_file = "test_bss_nodes_utrecht.bin";
+std::string linguistic_node_file = "test_linguistic_node_utrecht.bin";
 
 const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
   return a.node.osmid_ < b.node.osmid_;
@@ -228,7 +229,7 @@ public:
 
     PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                                {VALHALLA_SOURCE_DIR "test/data/utrecht_netherlands.osm.pbf"},
-                               way_nodes_file, bss_file, osmdata);
+                               way_nodes_file, bss_file, linguistic_node_file, osmdata);
   }
 
   void TearDown() override {
@@ -238,6 +239,7 @@ public:
     filesystem::remove(from_restriction_file);
     filesystem::remove(to_restriction_file);
     filesystem::remove(bss_file);
+    filesystem::remove(linguistic_node_file);
   }
 };
 
