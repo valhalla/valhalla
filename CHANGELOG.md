@@ -94,7 +94,7 @@
    * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
    * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
-
+   * ADDED: PBF support for expansion [#4614](https://github.com/valhalla/valhalla/pull/4614/) 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
    * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
