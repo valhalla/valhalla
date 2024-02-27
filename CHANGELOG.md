@@ -107,6 +107,7 @@
    * ADDED: `ignore_non_vehicular_restrictions` parameter for truck costing [#4606](https://github.com/valhalla/valhalla/pull/4606)
    * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
    * CHANGED: contract nodes if connecting edges have different names or speed [#4608](https://github.com/valhalla/valhalla/pull/4608)
+   * CHANGED: contract nodes if connecting edges have non-conditional access restrictions [#4613](https://github.com/valhalla/valhalla/pull/4613)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
