@@ -262,6 +262,34 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     }
   }
 
+  // Apply country specific toll factor
+  if (costing_->get_multi_cost_flag()) {
+    auto country_toll_map = costing_->get_toll_factor_per_country();
+    std::string admin_endnode;
+    if (FORWARD) {
+      auto endtile = graphreader.GetGraphTile(meta.edge->endnode());
+      if (endtile != nullptr) {
+        auto endnode_admin_idx = graphreader.GetEndNode(meta.edge, endtile)->admin_index();
+        admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      }
+    } else {
+      auto endtile = graphreader.GetGraphTile(opp_edge->endnode());
+      if (endtile != nullptr) {
+        auto endnode_admin_idx = graphreader.GetEndNode(opp_edge, endtile)->admin_index();
+        admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      }
+    }
+    auto it = country_toll_map.find(admin_endnode);
+    if (it != country_toll_map.end()) {
+      auto toll_factor_val = it->second;
+      costing_->set_toll_factor(toll_factor_val);
+    } else {
+      costing_->set_toll_factor(costing_->get_default_toll_factor());
+    }
+  } else {
+    costing_->set_toll_factor(costing_->get_default_toll_factor());
+  }
+
   // Get cost
   uint8_t flow_sources;
   sif::Cost newcost =
@@ -978,13 +1006,28 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     // Get the tile at the end node. Skip if tile not found as we won't be
     // able to expand from this origin edge.
     graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
-    if (!endtile) {
+    if (endtile == nullptr) {
       continue;
     }
 
     // Get cost and sort cost (based on distance from endnode of this edge
     // to the destination
     nodeinfo = endtile->node(directededge->endnode());
+    if (costing_->get_multi_cost_flag()) {
+      auto country_toll_map = costing_->get_toll_factor_per_country();
+      auto endnode_admin_idx = nodeinfo->admin_index();
+      auto admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      auto it = country_toll_map.find(admin_endnode);
+      if (it != country_toll_map.end()) {
+        auto toll_factor_val = it->second;
+        costing_->set_toll_factor(toll_factor_val);
+      } else {
+        auto toll_factor_val = costing_->get_default_toll_factor();
+        costing_->set_toll_factor(toll_factor_val);
+      }
+    } else {
+      costing_->set_toll_factor(costing_->get_default_toll_factor());
+    }
     uint8_t flow_sources;
     Cost cost = costing_->EdgeCost(directededge, tile, time_info, flow_sources) *
                 (1.0f - edge.percent_along());
@@ -1084,6 +1127,25 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     // directed edge for costing, as this is the forward direction along the
     // destination edge. Note that the end node of the opposing edge is in the
     // same tile as the directed edge.
+    graph_tile_ptr endtile = graphreader.GetGraphTile(directededge->endnode());
+    if (endtile == nullptr) {
+      continue;
+    }
+    if (costing_->get_multi_cost_flag()) {
+      auto country_toll_map = costing_->get_toll_factor_per_country();
+      auto endnode_admin_idx = endtile->node(directededge->endnode())->admin_index();
+      auto admin_endnode = endtile->admin(endnode_admin_idx)->country_iso();
+      auto it = country_toll_map.find(admin_endnode);
+      if (it != country_toll_map.end()) {
+        auto toll_factor_val = it->second;
+        costing_->set_toll_factor(toll_factor_val);
+      } else {
+        auto toll_factor_val = costing_->get_default_toll_factor();
+        costing_->set_toll_factor(toll_factor_val);
+      }
+    } else {
+      costing_->set_toll_factor(costing_->get_default_toll_factor());
+    }
     uint8_t flow_sources;
     Cost cost =
         costing_->EdgeCost(directededge, tile, time_info, flow_sources) * edge.percent_along();

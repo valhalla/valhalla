@@ -917,6 +917,36 @@ public:
     return speed_penalty;
   }
 
+  /**
+   * Override this in autocost Class.
+   * @param  toll_factor_value  set the toll_factor for edge cost calculations.
+   */
+  virtual void set_toll_factor(float toll_factor_value) {
+    static_cast<void>(toll_factor_value);
+  }
+
+  /**
+   * Return default toll factor
+   */
+  virtual float get_default_toll_factor() {
+    return 0;
+  }
+
+  /**
+   * Return toll factor per country map
+   */
+  virtual std::map<std::string, float> get_toll_factor_per_country() {
+    std::map<std::string, float> default_toll_factor_per_country;
+    return default_toll_factor_per_country;
+  }
+
+  /**
+   * Return true if multiple cost options is present in request
+   */
+  virtual bool get_multi_cost_flag() {
+    return false;
+  }
+
 protected:
   /**
    * Calculate `track` costs based on tracks preference.
