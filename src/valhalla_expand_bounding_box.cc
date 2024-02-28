@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
       std::cerr << options.help() << std::endl;
       return EXIT_FAILURE;
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

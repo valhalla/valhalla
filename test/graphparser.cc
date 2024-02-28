@@ -58,6 +58,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata =
       PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
@@ -70,7 +71,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/liechtenstein-latest.osm.pbf"},
-                             way_nodes_file, bss_nodes_file, osmdata);
+                             way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
@@ -211,6 +212,7 @@ void BollardsGatesAndAccess(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void RemovableBollards(const std::string& config_file) {
@@ -223,6 +225,7 @@ void RemovableBollards(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
@@ -234,7 +237,7 @@ void RemovableBollards(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
@@ -253,6 +256,7 @@ void RemovableBollards(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void Exits(const std::string& config_file) {
@@ -265,6 +269,7 @@ void Exits(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"},
@@ -276,7 +281,7 @@ void Exits(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/harrisburg.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
@@ -303,6 +308,7 @@ void Exits(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void Baltimore(const std::string& config_file) {
@@ -315,6 +321,7 @@ void Baltimore(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"},
@@ -326,7 +333,7 @@ void Baltimore(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/baltimore.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
@@ -429,6 +436,7 @@ void Baltimore(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void Bike(const std::string& config_file) {
@@ -441,6 +449,7 @@ void Bike(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"}, ways_file,
@@ -452,7 +461,7 @@ void Bike(const std::string& config_file) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/bike.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
@@ -524,6 +533,7 @@ void Bike(const std::string& config_file) {
   filesystem::remove(access_file);
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void Bus(const std::string& config_file) {
@@ -536,6 +546,7 @@ void Bus(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"}, ways_file,
@@ -546,7 +557,7 @@ void Bus(const std::string& config_file) {
                                  to_restriction_file, osmdata);
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/bus.osm.pbf"},
-                             way_nodes_file, bss_nodes_file, osmdata);
+                             way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWay> ways(ways_file, false);
   ways.sort(way_predicate);
@@ -605,6 +616,7 @@ void Bus(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void BicycleTrafficSignals(const std::string& config_file) {
@@ -617,6 +629,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"}, ways_file,
@@ -627,7 +640,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
                                  to_restriction_file, osmdata);
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"), {VALHALLA_SOURCE_DIR "test/data/nyc.osm.pbf"},
-                             way_nodes_file, bss_nodes_file, osmdata);
+                             way_nodes_file, bss_nodes_file, linguistic_node_file, osmdata);
 
   sequence<OSMWayNode> way_nodes(way_nodes_file, false);
   way_nodes.sort(node_predicate);
@@ -654,6 +667,7 @@ void BicycleTrafficSignals(const std::string& config_file) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 void DoConfig() {
@@ -720,6 +734,7 @@ TEST(GraphParser, TestImportBssNode) {
   std::string from_restriction_file = "test_from_complex_restrictions.bin";
   std::string to_restriction_file = "test_to_complex_restrictions.bin";
   std::string bss_nodes_file = "test_bss_nodes.bin";
+  std::string linguistic_node_file = "test_linguistic_node.bin";
 
   auto osmdata = PBFGraphParser::ParseWays(conf.get_child("mjolnir"),
                                            {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, ways_file,
@@ -731,7 +746,7 @@ TEST(GraphParser, TestImportBssNode) {
 
   PBFGraphParser::ParseNodes(conf.get_child("mjolnir"),
                              {VALHALLA_SOURCE_DIR "test/data/rome.osm.pbf"}, way_nodes_file,
-                             bss_nodes_file, osmdata);
+                             bss_nodes_file, linguistic_node_file, osmdata);
 
   GraphReader reader(conf.get_child("mjolnir"));
 
@@ -740,7 +755,7 @@ TEST(GraphParser, TestImportBssNode) {
                                edges_file);
 
   GraphBuilder::Build(conf, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
 
   BssBuilder::Build(conf, osmdata, bss_nodes_file);
 
@@ -818,6 +833,7 @@ TEST(GraphParser, TestImportBssNode) {
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
   filesystem::remove(bss_nodes_file);
+  filesystem::remove(linguistic_node_file);
 }
 
 } // namespace

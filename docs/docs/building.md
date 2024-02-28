@@ -26,11 +26,31 @@ Important build options include:
 | `-DENABLE_SANITIZERS` (`ON` / `OFF`) | Build with all the integrated sanitizers (defaults to off).|
 | `-DENABLE_ADDRESS_SANITIZER` (`ON` / `OFF`) | Build with address sanitizer (defaults to off).|
 | `-DENABLE_UNDEFINED_SANITIZER` (`ON` / `OFF`) | Build with undefined behavior sanitizer (defaults to off).|
+| `-DPREFER_SYSTEM_DEPS` (`ON` / `OFF`) | Whether to use internally vendored headers or find the equivalent external package (defaults to off).|
 
-If you're building on Apple Silicon and use the Rosetta terminal (see below), you might need to additionally specify the appropriate options:
+### Building with `vcpkg` - any platform
 
-```
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="x86_64"
+Instead of installing the dependencies system-wide, you can also opt to use [`vcpkg`](https://github.com/microsoft/vcpkg).
+
+The following commands should work on all platforms:
+
+```bash
+git clone --recurse-submodules https://github.com/valhalla/valhalla
+cd valhalla
+git clone https://github.com/microsoft/vcpkg && git -C vcpkg checkout <some-tag>
+./vcpkg/bootstrap-vcpkg.sh
+# windows: cmd.exe /c bootstrap-vcpkg.bat
+# only build Release versions of dependencies, not Debug
+echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/x64-linux.cmake
+# windows: echo.set(VCPKG_BUILD_TYPE release)>> .\vcpkg\triplets\x64-windows.cmake
+# osx: echo "VCPKG_BUILD_TYPE release" >> vcpkg/triplets/arm64-osx.cmake
+
+# vcpkg will install everything during cmake configuration
+# if you want to ENABLE_SERVICES=ON, install https://github.com/kevinkreiser/prime_server#build-and-install (no Windows)
+cmake -B build -DCMAKE_TOOLCHAIN_FILE=$PWD/vcpkg/scripts/buildsystems/vcpkg.cmake -DENABLE_SERVICE=OFF
+cmake --build build -- -j$(nproc)
+# windows: cmake --build build --config Release -- /clp:ErrorsOnly /p:BuildInParallel=true /m:4
+# osx: cmake --build build -- -j$(sysctl -n hw.physicalcpu)
 ```
 
 ### Building from Source - Linux
@@ -52,34 +72,9 @@ sudo make -C build install
 
 ### Building from Source - macOS
 
-#### Configuring Rosetta for ARM64 MacBook
+Both arm64 and x64 should build cleanly with the below commands.
 
-Check your architecture typing `arch` in the terminal. In case the result is `arm64` set up Rosetta terminal to emulate x86_64 behavior. Otherwise, skip this step.
-
-1. Go to `Finder > Application > Utilities`.
-2. Select `Terminal` and right-click on it, then choose `Duplicate`.
-3. Rename the duplicated app `Rosetta Terminal`.
-4. Now select `Rosetta Terminal` application, right-click and choose `Get Info` .
-5. Check the box for `Open using Rosetta`, then close the `Get Info` window.
-6. Make sure you get `i386` after typing `arch` command in  `Rosetta Terminal`.
-7. Now it fully supports Homebrew and other x86_64 command line applications.
-
-Install [Homebrew](http://brew.sh) in the `Rosetta Terminal` app and update the aliases.
-
-```
-echo "alias ibrew='arch -x86_64 /usr/local/bin/brew'" >> ~/.zshrc
-echo "alias mbrew='arch -arm64e /opt/homebrew/bin/brew'" >> ~/.zshrc
-```
-
-You will use them to specify the platform when installing a library. Note: use `ibrew` in `Rosetta Terminal` to install all dependencies for `valhalla` and `prime_server` projects.
-
-**_NOTE:_** If when installing packages below you get message `attempting to link with file built for macOS-arm64`, you can remove already installed packages for arm64 i.e. `mbrew uninstall ...`. Also, if there are problems with individual packages, you can install them from sources e.g. [geos](https://github.com/libgeos/geos) or [sqlite](https://www.sqlite.org/download.html).
-
-**_NOTE:_** It is possible to build Valhalla natively for Apple Silicon, but some dependencies(e.g. LuaJIT) don't have stable versions supporting Apple Silicon and have to be built and installed manually from source.
-
-#### Installing dependencies
-
-To install valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
+To install Valhalla on macOS, you need to install its dependencies with [Homebrew](http://brew.sh):
 
 ```bash
 # install dependencies (automake & czmq are required by prime_server)
@@ -117,8 +112,10 @@ It's recommended to work with the following toolset:
 1. Install the dependencies with `vcpkg`:
 ```
 git -C C:\path\to\vcpkg checkout f330a32
+# only build release versions for vcpkg packages
+echo.set(VCPKG_BUILD_TYPE release)>> path\to\vcpkg\triplets\x64-windows.cmake
 cd C:\path\to\valhalla
-C:\path\to\vcpkg.exe install
+C:\path\to\vcpkg.exe install --triple x64-windows
 ```
 2. Let CMake configure the build with the required modules enabled. The final command for `x64` could look like
 ```
@@ -130,6 +127,18 @@ cmake -B build -S C:\path\to\valhalla --config Release -- /clp:ErrorsOnly /p:Bui
 ```
 
 The artifacts will be built to `./build/Release`.
+
+#### Troubleshooting
+
+- if the build fails on something with `date_time`, chances are you don't have [`make`](https://gnuwin32.sourceforge.net/packages/make.htm) and/or [`awk`](https://gnuwin32.sourceforge.net/packages/gawk.htm) installed, which is needed to properly configure `third_party/tz`. Even so, it might still fail because the used MS shell can't handle `mv` properly. In that case simply mv `third_party/tz/leapseconds.out` to `third_party/tz/leapseconds` and start the build again
+
+### Include Valhalla as a project dependency
+
+When importing `libvalhalla` as a dependency in a project, it's important to know that we're using both CMake and `pkg-config` to resolve our own dependencies. Check the root `CMakeLists.txt` for details. This is important in case you'd like to bring your own dependencies, such as cURL or protobuf. It's always safe to use `PKG_CONFIG_PATH` environment variable to point CMake to custom installations, however, for dependencies we resolve with `find_package` you'll need to check CMake's built-in `Find*` modules on how to provide the proper paths.
+
+To resolve `libvalhalla`'s linker/library paths/options, we recommend to use `pkg-config` or `pkg_check_modules` (in CMake).
+
+Currently, `rapidjson`, `date` & `dirent` (Win only) headers are vendored in `third_party`. Consuming applications are encouraged to use `pkg-config` to resolve Valhalla and its dependencies which will automatically install those headers to `/path/to/include/valhalla/third_pary/{rapidjson, date, dirent.h}` and can be `#include`d appropriately.
 
 ## Running Valhalla server on Unix
 
@@ -144,8 +153,9 @@ mkdir -p valhalla_tiles
 valhalla_build_config --mjolnir-tile-dir ${PWD}/valhalla_tiles --mjolnir-tile-extract ${PWD}/valhalla_tiles.tar --mjolnir-timezone ${PWD}/valhalla_tiles/timezones.sqlite --mjolnir-admin ${PWD}/valhalla_tiles/admins.sqlite > valhalla.json
 # build timezones.sqlite to support time-dependent routing
 valhalla_build_timezones > valhalla_tiles/timezones.sqlite
+# build admins.sqlite to support admin-related properties such as access restrictions, driving side, ISO codes etc
+valhalla_build_admins -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # build routing tiles
-# TODO: run valhalla_build_admins?
 valhalla_build_tiles -c valhalla.json switzerland-latest.osm.pbf liechtenstein-latest.osm.pbf
 # tar it up for running the server
 # either run this to build a tile index for faster graph loading times

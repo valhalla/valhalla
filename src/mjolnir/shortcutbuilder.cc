@@ -271,16 +271,16 @@ bool CanContract(GraphReader& reader,
 }
 
 // Connect 2 edges shape and update the next end node in the new level
-uint32_t ConnectEdges(GraphReader& reader,
-                      const GraphId& startnode,
-                      const GraphId& edgeid,
-                      std::list<PointLL>& shape,
-                      GraphId& endnode,
-                      uint32_t& opp_local_idx,
-                      uint32_t& restrictions,
-                      float& average_density,
-                      float& total_duration,
-                      float& total_truck_duration) {
+void ConnectEdges(GraphReader& reader,
+                  const GraphId& startnode,
+                  const GraphId& edgeid,
+                  std::list<PointLL>& shape,
+                  GraphId& endnode,
+                  uint32_t& opp_local_idx,
+                  uint32_t& restrictions,
+                  float& average_density,
+                  float& total_duration,
+                  float& total_truck_duration) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -324,9 +324,8 @@ uint32_t ConnectEdges(GraphReader& reader,
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
 
-  // Update the end node and return the length
+  // Update the end node
   endnode = directededge->endnode();
-  return directededge->length();
 }
 
 // Check if the edge is entering a contracted node
@@ -338,18 +337,18 @@ bool IsEnteringEdgeOfContractedNode(GraphReader& reader, const GraphId& nodeid, 
 }
 
 // Add shortcut edges (if they should exist) from the specified node
-uint32_t AddShortcutEdges(GraphReader& reader,
-                          const graph_tile_ptr& tile,
-                          GraphTileBuilder& tilebuilder,
-                          const GraphId& start_node,
-                          const uint32_t edge_index,
-                          const uint32_t edge_count,
-                          std::unordered_map<uint32_t, uint32_t>& shortcuts) {
+std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
+                                               const graph_tile_ptr& tile,
+                                               GraphTileBuilder& tilebuilder,
+                                               const GraphId& start_node,
+                                               const uint32_t edge_index,
+                                               const uint32_t edge_count,
+                                               std::unordered_map<uint32_t, uint32_t>& shortcuts) {
   // Shortcut edges have to start at a node that is not contracted - return if
   // this node can be contracted.
   EdgePairs edgepairs;
   if (CanContract(reader, tile, start_node, edgepairs)) {
-    return 0;
+    return {uint32_t(0), uint32_t(0)};
   }
 
   // Check if this is the last edge in a shortcut (if the endnode cannot be contracted).
@@ -360,6 +359,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   // Iterate through directed edges of the base node
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
+  uint32_t total_edge_count = 0;
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
@@ -377,20 +377,21 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     // edge of the contracted node.
     GraphId end_node = directededge->endnode();
     if (IsEnteringEdgeOfContractedNode(reader, end_node, edge_id)) {
+      total_edge_count++;
       // Form a shortcut edge.
       DirectedEdge newedge = *directededge;
-      uint32_t length = newedge.length();
 
       // For computing weighted density and total turn duration along the shortcut
-      float average_density = length * newedge.density();
+      uint32_t edge_length = newedge.length();
+      float average_density = edge_length * newedge.density();
       uint32_t const speed = tile->GetSpeed(directededge, kNoFlowMask);
       assert(speed != 0);
-      float total_duration = length / (speed * kKPHtoMetersPerSec);
+      float total_duration = edge_length / (speed * kKPHtoMetersPerSec);
       uint32_t const truck_speed =
           std::min(tile->GetSpeed(directededge, kNoFlowMask, kInvalidSecondsOfWeek, true),
                    directededge->truck_speed() ? directededge->truck_speed() : kMaxAssumedTruckSpeed);
       assert(truck_speed != 0);
-      float total_truck_duration = directededge->length() / (truck_speed * kKPHtoMetersPerSec);
+      float total_truck_duration = edge_length / (truck_speed * kKPHtoMetersPerSec);
 
       // Get the shape for this edge. If this initial directed edge is not
       // forward - reverse the shape so the edge info stored is forward for
@@ -452,11 +453,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
         // end node in the new level). Keep track of the last restriction
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
-        length += ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                               average_density, total_duration, total_truck_duration);
+        ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
+                     average_density, total_duration, total_truck_duration);
+        total_edge_count++;
       }
+
       // Names can be different in the forward and backward direction
       bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
+
+      // Get the length from the shape. This prevents roundoff issues when forming
+      // elevation.
+      uint32_t length = valhalla::midgard::length(shape);
 
       // Add the edge info. Use length and number of shape points to match an
       // edge in case multiple shortcut edges exist between the 2 nodes.
@@ -550,16 +557,17 @@ uint32_t AddShortcutEdges(GraphReader& reader,
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
-  return shortcut_count;
+  return {shortcut_count, total_edge_count};
 }
 
 // Form shortcuts for tiles in this level.
-uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
+std::pair<uint32_t, uint32_t> FormShortcuts(GraphReader& reader, const TileLevel& level) {
   // Iterate through the tiles at this level (TODO - can we mark the tiles
   // the tiles that shortcuts end within?)
   reader.Clear();
   bool added = false;
   uint32_t shortcut_count = 0;
+  uint32_t total_edge_count = 0;
   uint32_t ntiles = level.tiles.TileCount();
   uint32_t tile_level = (uint32_t)level.level;
   graph_tile_ptr tile;
@@ -601,8 +609,10 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
 
       // Add shortcut edges first.
       std::unordered_map<uint32_t, uint32_t> shortcuts;
-      shortcut_count += AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
-                                         old_edge_count, shortcuts);
+      auto stats = AddShortcutEdges(reader, tile, tilebuilder, node_id, old_edge_index,
+                                    old_edge_count, shortcuts);
+      shortcut_count += stats.first;
+      total_edge_count += stats.second;
 
       // Copy the rest of the directed edges from this node
       GraphId edgeid(tileid, tile_level, old_edge_index);
@@ -707,7 +717,7 @@ uint32_t FormShortcuts(GraphReader& reader, const TileLevel& level) {
       reader.Trim();
     }
   }
-  return shortcut_count;
+  return {shortcut_count, total_edge_count};
 }
 
 } // namespace
@@ -732,8 +742,11 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
   for (; tile_level != TileHierarchy::levels().rend(); ++tile_level) {
     // Create shortcuts on this level
     LOG_INFO("Creating shortcuts on level " + std::to_string(tile_level->level));
-    [[maybe_unused]] uint32_t count = FormShortcuts(reader, *tile_level);
-    LOG_INFO("Finished with " + std::to_string(count) + " shortcuts");
+    [[maybe_unused]] auto stats = FormShortcuts(reader, *tile_level);
+    [[maybe_unused]] uint32_t avg = stats.first ? (stats.second / stats.first) : 0;
+    LOG_INFO("Finished with " + std::to_string(stats.first) + " shortcuts superseding " +
+             std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
+             " edges per shortcut");
   }
 }
 

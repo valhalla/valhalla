@@ -123,7 +123,7 @@ public:
    * @param   y   y coordinate
    * @return  Returns the tile row. Returns -1 if outside the tile system bounds.
    */
-  int32_t Row(const float y) const {
+  int32_t Row(const typename coord_t::value_type y) const {
     // Return -1 if outside the tile system bounds
     if (y < tilebounds_.miny() || y > tilebounds_.maxy()) {
       return -1;
@@ -139,7 +139,7 @@ public:
    * @param   x   x coordinate
    * @return  Returns the tile column. Returns -1 if outside the tile system bounds.
    */
-  int32_t Col(const float x) const {
+  int32_t Col(const typename coord_t::value_type x) const {
     // Return -1 if outside the tile system bounds
     if (x < tilebounds_.minx() || x > tilebounds_.maxx()) {
       return -1;

@@ -271,7 +271,7 @@ int main(int argc, char** argv) {
       return false;
     }
     traffic_tile_dir = filesystem::path(result["traffic-tile-dir"].as<std::string>());
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

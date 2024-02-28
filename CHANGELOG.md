@@ -1,7 +1,8 @@
-## Release Date: 2023-??-?? Valhalla 3.4.1
+## Unreleased
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
+   * REMOVED: ./bench and related files/code [#4560](https://github.com/valhalla/valhalla/pull/4560)
 * **Bug Fix**
    * FIXED: gcc13 was missing some std header includes [#4154](https://github.com/valhalla/valhalla/pull/4154)
    * FIXED: when reclassifying ferry edges, remove destonly from ways only if the connecting way was destonly [#4118](https://github.com/valhalla/valhalla/pull/4118)
@@ -30,6 +31,13 @@
    * FIXED: time distance matrix was always using time zone of last settled edge id [#4494](https://github.com/valhalla/valhalla/pull/4494)
    * FIXED: log to stderr in valhalla_export_edges [#4498](https://github.com/valhalla/valhalla/pull/4498)
    * FIXED: set capped speed for truck at 90 KPH [#4493](https://github.com/valhalla/valhalla/pull/4493)
+   * FIXED: Config singleton multiple instantiation issue [#4521](https://github.com/valhalla/valhalla/pull/4521)
+   * FIXED: Prevent GetShortcut to run into an infinite loop [#4532](https://github.com/valhalla/valhalla/pull/4532)
+   * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
+   * FIXED: infinite loop or other random corruption in isochrones when retrieving partial shape of an edge [#4547](https://github.com/valhalla/valhalla/pull/4547)
+   * FIXED: Aggregation updates: update opposing local idx after aggregating the edges, added classification check for aggregation, and shortcut length changes [#4570](https://github.com/valhalla/valhalla/pull/4570)
+   * FIXED: Use helper function for only parsing out names from DirectedEdge when populating intersecting edges [#4604](https://github.com/valhalla/valhalla/pull/4604)  
+   * FIXED: Osmnode size reduction: Fixed excessive disk space for planet build [#4605](https://github.com/valhalla/valhalla/pull/4605)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -74,6 +82,19 @@
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
+   * ADDED: Support for `voiceInstructions` attribute in OSRM serializer via `voice_instructions` request parameter [#4506](https://github.com/valhalla/valhalla/pull/4506)
+   * CHANGED: use pkg-config to find spatialite & geos and remove our cmake modules; upgraded conan's boost to 1.83.0 in the process [#4253](https://github.com/valhalla/valhalla/pull/4253)
+   * ADDED: Added aggregation logic to filter stage of tile building [#4512](https://github.com/valhalla/valhalla/pull/4512)
+   * UPDATED: tz to 2023d [#4519](https://github.com/valhalla/valhalla/pull/4519)
+   * FIXED: Fix segfault in costmatrix (date_time and time zone always added). [#4530](https://github.com/valhalla/valhalla/pull/4530)
+   * CHANGED: libvalhalla.pc generation to have finer controls; install third_party public headers; overhaul lots of CMake; remove conan support [#4516](https://github.com/valhalla/valhalla/pull/4516)
+   * CHANGED: refactored matrix code to include a base class for all matrix algorithms to prepare for second passes on matrix [#4535](https://github.com/valhalla/valhalla/pull/4535)
+   * ADDED: matrix second pass for connections not found in the first pass, analogous to /route [#4536](https://github.com/valhalla/valhalla/pull/4536)
+   * UPDATED: cxxopts to 3.1.1 [#4541](https://github.com/valhalla/valhalla/pull/4541)
+   * CHANGED: make use of vendored libraries optional (other than libraries which are not commonly in package managers or only used for testing) [#4544](https://github.com/valhalla/valhalla/pull/4544)
+   * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
+   * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
+   * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
@@ -240,6 +261,7 @@
    * FIXED: Building Valhalla as a submodule [#3781](https://github.com/valhalla/valhalla/issues/3781)
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
+   * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)

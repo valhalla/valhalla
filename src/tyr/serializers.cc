@@ -213,6 +213,9 @@ std::string serializePbf(Api& request) {
       case Options::sources_to_targets:
         selection.set_matrix(true);
         break;
+      case Options::isochrone:
+        selection.set_isochrone(true);
+        break;
       // should never get here, actions which dont have pbf yet return json
       default:
         throw std::logic_error("Requested action is not yet serializable as pbf");
@@ -238,6 +241,8 @@ std::string serializePbf(Api& request) {
     request.clear_options();
   if (!selection.matrix())
     request.clear_matrix();
+  if (!selection.isochrone())
+    request.clear_isochrone();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();
@@ -251,7 +256,7 @@ std::string serializePbf(Api& request) {
 }
 
 // Generate leg shape in geojson format.
-baldr::json::MapPtr geojson_shape(const std::vector<PointLL> shape) {
+baldr::json::MapPtr geojson_shape(const std::vector<midgard::PointLL> shape) {
   auto geojson = baldr::json::map({});
   auto coords = baldr::json::array({});
   coords->reserve(shape.size());

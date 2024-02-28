@@ -594,7 +594,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
     access_mask_ = kWheelchairAccess;
     minimal_allowed_surface_ = Surface::kCompacted;
   } else {
-    type_ = PedestrianType::kFoot;
+    type_ = type == "blind" ? PedestrianType::kBlind : PedestrianType::kFoot;
     access_mask_ = kPedestrianAccess;
     minimal_allowed_surface_ = Surface::kPath;
   }
@@ -910,7 +910,8 @@ TestPedestrianCost* make_pedestriancost_from_json(const std::string& property,
                                                   float testVal,
                                                   const std::string& /*type*/) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"pedestrian":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "pedestrian", "costing_options":{"pedestrian":{")" << property << R"(":)"
+     << testVal << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TestPedestrianCost(request.options().costings().find(Costing::pedestrian)->second);

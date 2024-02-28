@@ -1,8 +1,0 @@
-curl
-protobuf
-zlib
-sqlite3
-proj4
-luajit
-libspatialite
-geos

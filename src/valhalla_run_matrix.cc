@@ -125,14 +125,15 @@ int main(int argc, char* argv[]) {
       return EXIT_SUCCESS;
 
     if (!result.count("json")) {
-      throw cxxopts::OptionException("A JSON format request must be present.\n\n" + options.help());
+      throw cxxopts::exceptions::exception("A JSON format request must be present.\n\n" +
+                                           options.help());
     }
 
     json_str = result["json"].as<std::string>();
     iterations = result["multi-run"].as<uint32_t>();
     log_details = result["log-details"].as<bool>();
     optimize = result["optimize"].as<bool>();
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -218,7 +219,7 @@ int main(int argc, char* argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     matrix.SourceToTarget(request, reader, mode_costing, mode, max_distance);
-    matrix.clear();
+    matrix.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();
@@ -231,7 +232,7 @@ int main(int argc, char* argv[]) {
   for (uint32_t n = 0; n < iterations; n++) {
     request.clear_matrix();
     tdm.SourceToTarget(request, reader, mode_costing, mode, max_distance);
-    tdm.clear();
+    tdm.Clear();
   }
   t1 = std::chrono::high_resolution_clock::now();
   ms = std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count();

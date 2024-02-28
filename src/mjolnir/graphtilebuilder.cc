@@ -180,9 +180,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
-      LOG_WARN("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
-               " offset stored in directed edge: = " + std::to_string(offset) +
-               " current ei offset= " + std::to_string(edge_info_offset_));
+      LOG_ERROR("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
+                " offset stored in directed edge: = " + std::to_string(offset) +
+                " current ei offset= " + std::to_string(edge_info_offset_));
+      throw std::runtime_error("EdgeInfo offsets incorrect when reading GraphTile");
     }
 
     // At this time, encoded elevation is empty and does not need to be serialized...

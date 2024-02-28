@@ -34,7 +34,8 @@ TEST(pbf_api, pbf_in_out) {
                                                   Options::centroid,
                                                   Options::trace_attributes,
                                                   Options::status,
-                                                  Options::sources_to_targets};
+                                                  Options::sources_to_targets,
+                                                  Options::isochrone};
 
   PbfFieldSelector select_all;
   select_all.set_directions(true);
@@ -42,10 +43,11 @@ TEST(pbf_api, pbf_in_out) {
   select_all.set_status(true);
   select_all.set_options(true);
   select_all.set_matrix(true);
+  select_all.set_isochrone(true);
 
   for (int action = Options::no_action + 1; action <= Options::Action_MAX; ++action) {
     // don't have convenient support of these in gurka yet
-    if (action == Options::isochrone || action == Options::expansion)
+    if (action == Options::expansion)
       continue;
 
     // do the regular request with json in and out
@@ -54,6 +56,10 @@ TEST(pbf_api, pbf_in_out) {
     if (action == Options::sources_to_targets) {
       expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C"}, {"I", "G"},
                                       "pedestrian", {}, {}, &expected_json, &request_json);
+    } else if (action == Options::isochrone) {
+      expected_pbf =
+          gurka::do_action(Options::Action(action), map, {"A"}, "pedestrian",
+                           {{"/contours/0/time", "10"}}, {}, &expected_json, "break", &request_json);
     } else {
       expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C", "I", "G"},
                                       "pedestrian", {}, {}, &expected_json, "break", &request_json);
@@ -78,19 +84,19 @@ TEST(pbf_api, pbf_in_out) {
       pbf_out.mutable_options()->set_format(Options::pbf);
       pbf_out.mutable_options()->mutable_pbf_field_selector()->CopyFrom(select_all);
 
-      auto format = pbf_out.options().format();
       auto pbf_bytes = gurka::do_action(map, pbf_out);
       Api actual_pbf;
       EXPECT_TRUE(actual_pbf.ParseFromString(pbf_bytes));
       EXPECT_EQ(actual_pbf.trip().SerializeAsString(), expected_pbf.trip().SerializeAsString());
       EXPECT_TRUE(actual_pbf.has_options());
       EXPECT_TRUE(actual_pbf.has_trip() || action == Options::status ||
-                  action == Options::sources_to_targets);
+                  action == Options::sources_to_targets || action == Options::isochrone);
       EXPECT_TRUE(actual_pbf.has_directions() || action != Options::trace_route ||
                   action != Options::route);
       EXPECT_TRUE(actual_pbf.has_status() || action != Options::status);
       EXPECT_TRUE(actual_pbf.has_info() || action == Options::status);
       EXPECT_TRUE(actual_pbf.has_matrix() || action != Options::sources_to_targets);
+      EXPECT_TRUE(actual_pbf.has_isochrone() || action != Options::isochrone);
 
       // lets try it again but this time we'll disable all the fields but one
       Api slimmed;
@@ -103,7 +109,7 @@ TEST(pbf_api, pbf_in_out) {
       EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
       EXPECT_FALSE(actual_slimmed.has_options());
       EXPECT_TRUE(actual_slimmed.has_trip() || action == Options::status ||
-                  action == Options::sources_to_targets);
+                  action == Options::sources_to_targets || action == Options::isochrone);
       EXPECT_FALSE(actual_slimmed.has_directions());
       EXPECT_FALSE(actual_slimmed.has_status());
       EXPECT_TRUE(actual_slimmed.has_info() || action == Options::status);
@@ -117,7 +123,8 @@ TEST(pbf_api, pbf_in_out) {
       actual_slimmed.Clear();
       EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
       EXPECT_FALSE(actual_slimmed.has_options());
-      EXPECT_TRUE(actual_slimmed.has_trip() || action != Options::trace_attributes);
+      EXPECT_TRUE(actual_slimmed.has_trip() || action != Options::trace_attributes ||
+                  action != Options::isochrone);
       EXPECT_TRUE(actual_slimmed.has_directions() || action != Options::trace_route ||
                   action != Options::route);
       EXPECT_TRUE(actual_slimmed.has_status() || action != Options::status);

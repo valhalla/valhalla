@@ -11,15 +11,8 @@ if(ENABLE_DATA_TOOLS)
   # "-Werror" flag
   # Avoid adding a filename to this list
   set(TESTS_WITH_WARNINGS
-    test_access.cc
-    test_admin_sidewalk_crossing_override.cc
-    test_admin_uk_override.cc
     test_elevation.cc
-    test_ferry_connections.cc
     test_gtfs.cc
-    test_guidance_views.cc
-    test_guidance_views_signposts.cc
-    test_instructions_named_roundabout.cc
     test_instructions_roundabout.cc
     test_landmarks.cc
     test_languages.cc
@@ -30,15 +23,10 @@ if(ENABLE_DATA_TOOLS)
     test_pbf_api.cc
     test_phonemes.cc
     test_phonemes_w_langs.cc
-    test_precision.cc
     test_recost.cc
-    test_simple_restrictions.cc
-    test_shortcut.cc
     test_time_tracking.cc
     test_traffic.cc
     test_traffic_smoothing.cc
-    test_use_direction_on_ways.cc
-    test_use_lit.cc
     )
 
   ## Add executable targets
@@ -60,7 +48,7 @@ if(ENABLE_DATA_TOOLS)
       VALHALLA_BUILD_DIR="${VALHALLA_BUILD_DIR}/")
     create_source_groups("Source Files" ${FILENAME})
     target_link_libraries(${TESTNAME} valhalla_test)
-    if (LUAJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    if (LuaJIT_FOUND AND APPLE AND CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "x86_64")
       # Using LuaJIT on macOS on Intel processors requires a couple of extra linker flags
       target_link_options(${TESTNAME} PUBLIC -pagezero_size 10000 -image_base 100000000)
     endif()
