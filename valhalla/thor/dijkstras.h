@@ -74,7 +74,7 @@ public:
                                                   const baldr::GraphId,
                                                   const baldr::GraphId,
                                                   const char*,
-                                                  const char*,
+                                                  const Expansion::EdgeStatus,
                                                   float,
                                                   uint32_t,
                                                   float)>;
