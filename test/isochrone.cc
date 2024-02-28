@@ -384,8 +384,8 @@ TEST(Isochrones, test_geotiff_output_distance) {
   ASSERT_NE(x, 0);
   ASSERT_NE(y, 0);
   ASSERT_EQ(static_cast<int>(min_max[0]), 0);
-  ASSERT_EQ(static_cast<int>(min_max[1]), 1099);
-  ASSERT_EQ(band->GetNoDataValue(), 1100);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 1100);
+  ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
   size_t array_size = x * y;
 
   check_raster_edges(x, y, data_array);
@@ -430,8 +430,8 @@ TEST(Isochrones, test_geotiff_output_time) {
   ASSERT_GT(x, 0);
   ASSERT_GT(y, 0);
   ASSERT_EQ(static_cast<int>(min_max[0]), 0);
-  ASSERT_EQ(static_cast<int>(min_max[1]), 659); // nodata value is excluded from min/max
-  ASSERT_EQ(band->GetNoDataValue(), 660);
+  ASSERT_EQ(static_cast<int>(min_max[1]), 660);
+  ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
   size_t array_size = x * y;
 
   check_raster_edges(x, y, data_array);
@@ -468,7 +468,7 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
   int y = geotiff_dataset->GetRasterYSize();
 
   // time, distance
-  std::array<int, 2> expected_max{660, 1199};
+  std::array<int, 2> expected_max{660, 1200};
 
   for (int b = 1; b <= 2; ++b) {
     GDALRasterBand* band = geotiff_dataset->GetRasterBand(b);
@@ -483,7 +483,7 @@ TEST(Isochrones, test_geotiff_output_time_distance) {
     ASSERT_NE(y, 0);
     ASSERT_EQ(static_cast<int>(min_max[0]), 0);
     ASSERT_EQ(static_cast<int>(min_max[1]), expected_max[b - 1]);
-    ASSERT_EQ(band->GetNoDataValue(), 1200); // set for the whole dataset
+    ASSERT_EQ(band->GetNoDataValue(), std::numeric_limits<uint16_t>::max());
     size_t array_size = x * y;
 
     check_raster_edges(x, y, data_array);

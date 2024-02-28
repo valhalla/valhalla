@@ -187,13 +187,6 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   geotiff_dataset->SetGeoTransform(geo_transform);
   geotiff_dataset->SetSpatialRef(const_cast<OGRSpatialReference*>(&spatial_ref));
 
-  // geotiff doesn't support different nodata values for each band, so we just get the larger one
-  float max_time = isogrid->MaxValue(0);
-  float max_distance = isogrid->MaxValue(1);
-
-  // they will be scaled to seconds/10 meters
-  float no_data_value = max_time > max_distance ? max_time * 60 : max_distance * 100;
-
   for (size_t metric_idx = 0; metric_idx < metrics.size(); ++metric_idx) {
     if (!metrics[metric_idx])
       continue; // only create bands for requested metrics
@@ -209,7 +202,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
       }
     }
     auto band = geotiff_dataset->GetRasterBand(nbands == 2 ? (metric_idx + 1) : 1);
-    band->SetNoDataValue(static_cast<int>(no_data_value));
+    band->SetNoDataValue(std::numeric_limits<uint16_t>::max());
     band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
 
     CPLErr err = band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, data, ext_x, ext_y, GDT_UInt16, 0, 0);
