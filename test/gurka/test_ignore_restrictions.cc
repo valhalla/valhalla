@@ -5,10 +5,6 @@
 
 using namespace valhalla;
 
-// we should parameterize this test
-//   - costing mode (auto, truck, motorcycle, taxi, bus?)
-//   - restriction type (turn, conditional, dimension)
-
 std::string get_access_mode(const std::string& costing_mode) {
   if (costing_mode == "auto") {
     return "motorcar";
@@ -20,6 +16,10 @@ std::string get_access_mode(const std::string& costing_mode) {
     return "taxi";
   } else if (costing_mode == "bus") {
     return "bus";
+  } else if (costing_mode == "motor_scooter") {
+    return "moped";
+  } else if (costing_mode == "bicycle") {
+    return "bicycle";
   }
 
   throw std::runtime_error("unexpected costing mode " + costing_mode + ".");
@@ -102,8 +102,9 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
 TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
   const std::string& costing = GetParam();
 
-  if (costing == "motorcycle")
-    return; // no height for motorcycle
+  if (costing == "motorcycle" || costing == "bicycle" || costing == "motor_scooter")
+    return; // no height restrictions for these
+
   const gurka::ways ways = {
       {"AB", {{"highway", "secondary"}}}, {"BC", {{"highway", "secondary"}, {"maxheight", "2.5"}}},
       {"CD", {{"highway", "secondary"}}}, {"AE", {{"highway", "secondary"}}},
@@ -132,9 +133,10 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
     FAIL() << "Expected valhalla_exception_t.";
   }
 }
-INSTANTIATE_TEST_SUITE_P(CommonRestrictionsTest,
-                         CommonRestrictionTest,
-                         ::testing::Values("auto", "truck", "motorcycle", "taxi", "bus"));
+INSTANTIATE_TEST_SUITE_P(
+    CommonRestrictionsTest,
+    CommonRestrictionTest,
+    ::testing::Values("auto", "truck", "motorcycle", "taxi", "bus", "bicycle", "motor_scooter"));
 
 // make sure truck weight restrictions are not affected by the request parameter
 TEST(CommonRestrictionsFail, Truck) {
