@@ -447,9 +447,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       ShortcutAccessRestriction access_restrictions{
           tile->GetAccessRestrictions(edge_id.id(), kAllAccess)};
 
-      // access mask will be only the modes which are on all base edges
-      auto access_mask = directededge->forwardaccess();
-
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
