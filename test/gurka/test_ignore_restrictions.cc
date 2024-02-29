@@ -63,7 +63,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
                                        },
                                        {{"type", "restriction"}, {"restriction", "no_straight_on"}}}};
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, relations, "test/data/ignore_common_restrictions",
+      gurka::buildtiles(layout, ways, {}, relations, "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // first, route through turn restriction, should fail...
   try {
@@ -73,10 +73,10 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
     FAIL() << "Expected valhalla_exception_t.";
   }
 
-  // ...but succeed with ignore_common_restrictions
+  // ...but succeed with ignore_non_vehicular_restrictions
   valhalla::Api route =
       gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
-                       {{"/costing_options/" + costing + "/ignore_common_restrictions", "1"}});
+                       {{"/costing_options/" + costing + "/ignore_non_vehicular_restrictions", "1"}});
   gurka::assert::raw::expect_path(route, {"AB", "BC", "CD"});
 
   // second, route through time based access restrictions, should fail...
@@ -89,10 +89,10 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictions) {
     FAIL() << "Expected different error code.";
   }
 
-  //...but succeed with ignore_common_restrictions
+  //...but succeed with ignore_non_vehicular_restrictions
   valhalla::Api route_succeed =
       gurka::do_action(valhalla::Options::route, map, {"A", "F"}, costing,
-                       {{"/costing_options/" + costing + "/ignore_common_restrictions", "1"},
+                       {{"/costing_options/" + costing + "/ignore_non_vehicular_restrictions", "1"},
                         {"/date_time/type", "1"},
                         {"/date_time/value", "2020-10-10T13:00"}});
   gurka::assert::raw::expect_path(route_succeed, {"AE", "EF"});
@@ -111,7 +111,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
       {"EF", {{"highway", "secondary"}}},
   };
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_common_restrictions",
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
   // should fail, too low
   try {
@@ -126,7 +126,7 @@ TEST_P(CommonRestrictionTest, IgnoreCommonRestrictionsFail) {
   try {
     valhalla::Api route =
         gurka::do_action(valhalla::Options::route, map, {"A", "D"}, costing,
-                         {{"/costing_options/" + costing + "/ignore_common_restrictions", "1"},
+                         {{"/costing_options/" + costing + "/ignore_non_vehicular_restrictions", "1"},
                           {"/costing_options/" + costing + "/height", "3"}});
     FAIL() << "Expected valhalla_exception_t.";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
@@ -153,7 +153,7 @@ TEST(CommonRestrictionsFail, Truck) {
                             {"CD", {{"highway", "residential"}}}};
 
   gurka::map map =
-      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_common_restrictions_truck",
+      gurka::buildtiles(layout, ways, {}, {}, "test/data/ignore_non_vehicular_restrictions_truck",
                         {{"mjolnir.timezone", {VALHALLA_BUILD_DIR "test/data/tz.sqlite"}}});
 
   // too long
@@ -170,7 +170,7 @@ TEST(CommonRestrictionsFail, Truck) {
   try {
     valhalla::Api route =
         gurka::do_action(valhalla::Options::route, map, {"A", "D"}, "truck",
-                         {{"/costing_options/truck/ignore_common_restrictions", "1"},
+                         {{"/costing_options/truck/ignore_non_vehicular_restrictions", "1"},
                           {"/costing_options/truck/height", "3"}});
     FAIL() << "Expected no route to be found.";
 

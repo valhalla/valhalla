@@ -608,7 +608,7 @@ public:
         if (access_type == baldr::AccessType::kTimedAllowed)
           time_allowed = true;
 
-        if (current_time == 0 || ignore_common_restrictions_) {
+        if (current_time == 0 || ignore_non_vehicular_restrictions_) {
           // No time supplied so ignore time-based restrictions
           // (but mark the edge  (`has_time_restrictions`)
           continue;
@@ -638,7 +638,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return (!time_allowed || (current_time == 0)) || ignore_common_restrictions_;
+    return (!time_allowed || (current_time == 0)) || ignore_non_vehicular_restrictions_;
   }
 
   /**
@@ -1000,7 +1000,7 @@ protected:
   bool shortest_;
 
   bool ignore_restrictions_{false};
-  bool ignore_common_restrictions_{false};
+  bool ignore_non_vehicular_restrictions_{false};
   bool ignore_turn_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};

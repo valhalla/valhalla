@@ -312,8 +312,8 @@ message Costing {
     uint32 axle_count = 81;
     float use_lit = 82;
     bool disable_hierarchy_pruning = 83;
-    oneof has_ignore_common_restrictions {
-      bool ignore_common_restrictions = 84;
+    oneof has_ignore_non_vehicular_restrictions {
+      bool ignore_non_vehicular_restrictions = 84;
     }
   }
 
