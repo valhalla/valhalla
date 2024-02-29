@@ -31,9 +31,12 @@ namespace {
 
 struct ShortcutAccessRestriction {
   std::unordered_map<AccessType, AccessRestriction> all_restrictions;
+  // important to set the edge's attribute
+  uint64_t modes = 0;
 
   ShortcutAccessRestriction(const std::vector<AccessRestriction>&& restrictions) {
     for (const auto& res : restrictions) {
+      modes |= res.modes();
       all_restrictions.emplace(res.type(), std::move(res));
     }
   };
@@ -44,6 +47,8 @@ struct ShortcutAccessRestriction {
   //   will be harder, there we'll have to merge overlapping time periods
   void update_nonconditional(const std::vector<AccessRestriction>&& other_restrictions) {
     for (const auto& new_ar : other_restrictions) {
+      // update the modes for the edge attribute regardless
+      modes |= new_ar.modes();
       if (new_ar.type() == AccessType::kTimedAllowed || new_ar.type() == AccessType::kTimedDenied ||
           new_ar.type() == AccessType::kDestinationAllowed) {
         continue;
@@ -442,6 +447,9 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       ShortcutAccessRestriction access_restrictions{
           tile->GetAccessRestrictions(edge_id.id(), kAllAccess)};
 
+      // access mask will be only the modes which are on all base edges
+      auto access_mask = directededge->forwardaccess();
+
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
       uint32_t rst = 0;
@@ -509,12 +517,17 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
 
-      // add new access restrictions
-      for (const auto& res : access_restrictions.all_restrictions) {
-        tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                           res.second.type(), res.second.modes(),
-                                                           res.second.value()));
+      // add new access restrictions if any and set the mask on the edge
+      if (access_restrictions.all_restrictions.size()) {
+        newedge.set_access_restriction(access_restrictions.modes);
+        for (const auto& res : access_restrictions.all_restrictions) {
+          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                             res.second.type(), res.second.modes(),
+                                                             res.second.value()));
+        }
       }
+
+      // set new access mask
 
       // Update the length, curvature, and end node
       newedge.set_length(length);
