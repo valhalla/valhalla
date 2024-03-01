@@ -138,6 +138,9 @@ BaseCostingOptionsConfig::BaseCostingOptionsConfig()
                                                                                   1.f},
       use_living_streets_{0.f, kDefaultUseLivingStreets, 1.f}, use_lit_{0.f, kDefaultUseLit, 1.f},
       closure_factor_{kClosureFactorRange}, exclude_unpaved_(false),
+      exclude_bridges_(false),
+      exclude_tunnels_(false),
+      exclude_tolls_(false),
       exclude_cash_only_tolls_(false), include_hot_{false}, include_hov2_{false}, include_hov3_{
                                                                                       false} {
 }
@@ -454,6 +457,10 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   }
 
   JSON_PBF_DEFAULT(co, cfg.exclude_unpaved_, json, "/exclude_unpaved", exclude_unpaved);
+
+  JSON_PBF_DEFAULT(co, cfg.exclude_bridges_, json, "/exclude_bridges", exclude_bridges);
+  JSON_PBF_DEFAULT(co, cfg.exclude_tunnels_, json, "/exclude_tunnels", exclude_tunnels);
+  JSON_PBF_DEFAULT(co, cfg.exclude_tolls_, json, "/exclude_tolls", exclude_tolls);
 
   JSON_PBF_DEFAULT(co, cfg.exclude_cash_only_tolls_, json, "/exclude_cash_only_tolls",
                    exclude_cash_only_tolls);
