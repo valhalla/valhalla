@@ -45,6 +45,7 @@ const std::string nodes_file = "test_nodes_harrisburg.bin";
 const std::string to_restriction_file = "test_to_complex_restrictions_harrisburg.bin";
 const std::string way_nodes_file = "test_way_nodes_harrisburg.bin";
 const std::string ways_file = "test_ways_harrisburg.bin";
+const std::string linguistic_node_file = "test_linguistic_node_harrisburg.bin";
 
 // Test output from construct edges and that the expected number of tiles are produced from the
 // build tiles step that follows.
@@ -64,7 +65,7 @@ TEST(GraphBuilder, TestConstructEdges) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 4);
   // Clear the tile directory so it doesn't interfere with the next test with graphreader.
@@ -86,7 +87,7 @@ TEST(Graphbuilder, TestConstructEdgesSubset) {
   // This directory should be empty
   filesystem::remove_all(tile_dir);
   GraphBuilder::Build(config, osm_data, ways_file, way_nodes_file, nodes_file, edges_file,
-                      from_restriction_file, to_restriction_file, tiles);
+                      from_restriction_file, to_restriction_file, linguistic_node_file, tiles);
   GraphReader reader(config.get_child("mjolnir"));
   EXPECT_EQ(reader.GetTileSet(2).size(), 1);
   EXPECT_TRUE(reader.DoesTileExist(GraphId{5993698}));
@@ -163,7 +164,8 @@ public:
                                                 way_nodes_file, access_file);
     PBFGraphParser::ParseRelations(mjolnir_config, input_files, from_restriction_file,
                                    to_restriction_file, osmdata);
-    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file, osmdata);
+    PBFGraphParser::ParseNodes(mjolnir_config, input_files, way_nodes_file, bss_file,
+                               linguistic_node_file, osmdata);
   }
 
   void TearDown() override {
@@ -173,6 +175,7 @@ public:
     filesystem::remove(from_restriction_file);
     filesystem::remove(to_restriction_file);
     filesystem::remove(bss_file);
+    filesystem::remove(linguistic_node_file);
   }
 };
 

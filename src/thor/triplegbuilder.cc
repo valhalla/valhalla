@@ -747,6 +747,37 @@ void SetElevation(TripLeg_Edge* trip_edge,
   }
 }
 
+void ProcessNonTaggedValue(valhalla::StreetName* trip_edge_name,
+                           const LinguisticMap& linguistics,
+                           const std::tuple<std::string, bool, uint8_t>& name_and_type,
+                           const uint8_t name_index) {
+  // Assign name and type
+  trip_edge_name->set_value(std::get<0>(name_and_type));
+  trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
+
+  const auto iter = linguistics.find(name_index);
+
+  if (iter != linguistics.end()) {
+
+    auto lang = static_cast<Language>(std::get<kLinguisticMapTupleLanguageIndex>(iter->second));
+    if (lang != Language::kNone) {
+      trip_edge_name->set_language_tag(GetTripLanguageTag(lang));
+    }
+
+    auto alphabet = static_cast<valhalla::baldr::PronunciationAlphabet>(
+        std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second));
+
+    if (alphabet != PronunciationAlphabet::kNone) {
+
+      auto* pronunciation = trip_edge_name->mutable_pronunciation();
+      pronunciation->set_alphabet(
+          GetTripPronunciationAlphabet(static_cast<valhalla::baldr::PronunciationAlphabet>(
+              std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second))));
+      pronunciation->set_value(std::get<kLinguisticMapTuplePronunciationIndex>(iter->second));
+    }
+  }
+}
+
 /**
  * Add trip intersecting edge.
  * @param  controller   Controller to determine which attributes to set.
@@ -824,16 +855,30 @@ void AddTripIntersectingEdge(const AttributesController& controller,
 
   // Add names to edge if requested
   if (controller.attributes.at(kEdgeNames)) {
-    // Get the edgeinfo
+
     auto edgeinfo = graphtile->edgeinfo(intersecting_de);
     auto names_and_types = edgeinfo.GetNamesAndTypes(true);
-    if (blind_instructions)
+    if (blind_instructions) {
       FilterUnneededStreetNumbers(names_and_types);
+    }
     intersecting_edge->mutable_name()->Reserve(names_and_types.size());
+    const auto linguistics = edgeinfo.GetLinguisticMap();
+
+    uint8_t name_index = 0;
     for (const auto& name_and_type : names_and_types) {
-      auto* trip_edge_name = intersecting_edge->mutable_name()->Add();
-      trip_edge_name->set_value(std::get<0>(name_and_type));
-      trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
+      switch (std::get<2>(name_and_type)) {
+        case kNotTagged: {
+          ProcessNonTaggedValue(intersecting_edge->mutable_name()->Add(), linguistics, name_and_type,
+                                name_index);
+          break;
+        }
+        default:
+          // Skip the rest tagged names
+          LOG_TRACE(std::string("skipped tagged value= ") +
+                    std::to_string(std::get<2>(name_and_type)));
+          break;
+      }
+      ++name_index;
     }
   }
 
@@ -959,37 +1004,6 @@ void AddIntersectingEdges(const AttributesController& controller,
                                 intersecting_edge2->localedgeidx(), nodeinfo2, trip_node,
                                 intersecting_edge2, blind_instructions);
       }
-    }
-  }
-}
-
-void ProcessNonTaggedValue(valhalla::StreetName* trip_edge_name,
-                           const LinguisticMap& linguistics,
-                           const std::tuple<std::string, bool, uint8_t>& name_and_type,
-                           const uint8_t name_index) {
-  // Assign name and type
-  trip_edge_name->set_value(std::get<0>(name_and_type));
-  trip_edge_name->set_is_route_number(std::get<1>(name_and_type));
-
-  const auto iter = linguistics.find(name_index);
-
-  if (iter != linguistics.end()) {
-
-    auto lang = static_cast<Language>(std::get<kLinguisticMapTupleLanguageIndex>(iter->second));
-    if (lang != Language::kNone) {
-      trip_edge_name->set_language_tag(GetTripLanguageTag(lang));
-    }
-
-    auto alphabet = static_cast<valhalla::baldr::PronunciationAlphabet>(
-        std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second));
-
-    if (alphabet != PronunciationAlphabet::kNone) {
-
-      auto* pronunciation = trip_edge_name->mutable_pronunciation();
-      pronunciation->set_alphabet(
-          GetTripPronunciationAlphabet(static_cast<valhalla::baldr::PronunciationAlphabet>(
-              std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second))));
-      pronunciation->set_value(std::get<kLinguisticMapTuplePronunciationIndex>(iter->second));
     }
   }
 }

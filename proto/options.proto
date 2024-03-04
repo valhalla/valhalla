@@ -341,6 +341,7 @@ message Options {
     gpx = 1;
     osrm = 2;
     pbf = 3;
+    geotiff = 4;
   }
 
   enum Action {
