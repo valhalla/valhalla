@@ -87,6 +87,26 @@
                                      : def));                                                        \
   }
 
+/**
+ * same as above, but for costing options without pbf's awful oneof
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param def              the default value which is used when neither json nor pbf is provided
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the json
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_DEFAULT_V2(costing_options, def, json, json_key, option_name)                       \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        rapidjson::get<std::remove_cv<                                                               \
+            std::remove_reference<decltype(def)>::type>::type>(json, json_key,                       \
+                                                               costing_options->option_name()        \
+                                                                   ? costing_options->option_name()  \
+                                                                   : def));                          \
+  }
+
 using namespace valhalla::midgard;
 
 namespace valhalla {
