@@ -620,4 +620,5 @@ The codes correspond to code returned from a particular [Valhalla project](https
 |**5xx** | **Tyr project codes** |
 |500 | Failed to parse intermediate request format |
 |501 | Failed to parse TripDirections |
+|504 | GeoTIFF serialization not supported by service |
 |599 | Unknown |
