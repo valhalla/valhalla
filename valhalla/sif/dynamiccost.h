@@ -599,16 +599,17 @@ public:
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if (access_type == baldr::AccessType::kTimedAllowed ||
-          access_type == baldr::AccessType::kTimedDenied ||
-          access_type == baldr::AccessType::kDestinationAllowed) {
+      if (!ignore_non_vehicular_restrictions_ &&
+          (access_type == baldr::AccessType::kTimedAllowed ||
+           access_type == baldr::AccessType::kTimedDenied ||
+           access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
         if (access_type == baldr::AccessType::kTimedAllowed)
           time_allowed = true;
 
-        if (current_time == 0 || ignore_non_vehicular_restrictions_) {
+        if (current_time == 0) {
           // No time supplied so ignore time-based restrictions
           // (but mark the edge  (`has_time_restrictions`)
           continue;
@@ -638,7 +639,7 @@ public:
     // if we have time allowed restrictions then these restrictions are
     // the only time we can route here.  Meaning all other time is restricted.
     // We looped over all the time allowed restrictions and we were never in range.
-    return (!time_allowed || (current_time == 0)) || ignore_non_vehicular_restrictions_;
+    return !time_allowed || (current_time == 0);
   }
 
   /**
@@ -1001,6 +1002,8 @@ protected:
 
   bool ignore_restrictions_{false};
   bool ignore_non_vehicular_restrictions_{false};
+  // not a requestion parameter, it's true if either ignore_restrictions_ or
+  // ignore_non_vehicular_restrictions_ is true
   bool ignore_turn_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};
