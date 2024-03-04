@@ -48,11 +48,11 @@ struct ShortcutAccessRestriction {
   void update_nonconditional(const std::vector<AccessRestriction>&& other_restrictions) {
     for (const auto& new_ar : other_restrictions) {
       // update the modes for the edge attribute regardless
-      modes |= new_ar.modes();
       if (new_ar.type() == AccessType::kTimedAllowed || new_ar.type() == AccessType::kTimedDenied ||
           new_ar.type() == AccessType::kDestinationAllowed) {
         continue;
       }
+      modes |= new_ar.modes();
       auto ar_inserted = all_restrictions.emplace(new_ar.type(), new_ar);
       if (!ar_inserted.second && new_ar.value() < ar_inserted.first->second.value()) {
         ar_inserted.first->second = std::move(new_ar);
