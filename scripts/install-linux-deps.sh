@@ -22,6 +22,7 @@ env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     libboost-all-dev \
     libcurl4-openssl-dev \
     libczmq-dev \
+    libgdal-dev \
     libgeos++-dev \
     libgeos-dev \
     libluajit-5.1-dev \

@@ -61,6 +61,14 @@ public:
     }
   }
 
+  float DataAt(size_t tileid, size_t metricid) const {
+    return data_[tileid][metricid];
+  }
+
+  float MaxValue(size_t metricidx) const {
+    return max_value_[metricidx];
+  }
+
   using contour_t = std::list<PointLL>;
   using feature_t = std::list<contour_t>;
   using contours_t = std::vector<std::list<feature_t>>;
@@ -365,7 +373,6 @@ public:
     }
 
     // some info about the area the image covers
-    auto c = this->TileBounds().Center();
     auto h = this->tilesize_ / 2;
     // for each contour
     for (auto& collection : contours) {
@@ -412,6 +419,33 @@ public:
     }
 
     return contours;
+  }
+
+  /**
+   * Determine the smallest subgrid that contains all valid (i.e. non-max) values
+
+   * @return array with 4 elements: minimum column, minimum row, maximum column, maximum row
+   */
+  const std::array<int32_t, 4> MinExtent() const {
+    // minx, miny, maxx, maxy
+    std::array<int32_t, 4> box = {this->ncolumns_ / 2, this->nrows_ / 2, this->ncolumns_ / 2,
+                                  this->nrows_ / 2};
+
+    for (int32_t i = 0; i < this->nrows_; ++i) {
+      for (int32_t j = 0; j < this->ncolumns_; ++j) {
+        if (data_[this->TileId(j, i)][0] < max_value_[0] ||
+            data_[this->TileId(j, i)][1] < max_value_[1]) {
+          // pad by 1 row/column as a sanity check
+          box[0] = std::min(std::max(j - 1, 0), box[0]);
+          box[1] = std::min(std::max(i - 1, 0), box[1]);
+          // +1 extra because range is exclusive
+          box[2] = std::max(std::min(j + 2, this->ncolumns_ - 1), box[2]);
+          box[3] = std::max(std::min(i + 2, this->ncolumns_ - 1), box[3]);
+        }
+      }
+    }
+
+    return box;
   }
 
 protected:
