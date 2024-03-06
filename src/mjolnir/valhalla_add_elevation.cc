@@ -10,7 +10,6 @@
 #include "baldr/graphreader.h"
 #include "baldr/graphtile.h"
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "mjolnir/elevationbuilder.h"
 
 #include "argparse_utils.h"
@@ -66,6 +65,7 @@ int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> tiles;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
     // clang-format on
 
     const auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     if (!result.count("tiles")) {
@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
       std::cerr << "All tile files are invalid\n\n" << options.help() << "\n\n";
       return EXIT_FAILURE;
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -111,13 +111,12 @@ int main(int argc, char** argv) {
   }
 
   // pass the deduplicated tiles
-  auto tile_ids =
-      get_tile_ids(valhalla::config(), std::unordered_set<std::string>(tiles.begin(), tiles.end()));
+  auto tile_ids = get_tile_ids(config, std::unordered_set<std::string>(tiles.begin(), tiles.end()));
   if (tile_ids.empty()) {
     std::cerr << "Failed to load tiles\n\n";
     return EXIT_FAILURE;
   }
 
-  ElevationBuilder::Build(valhalla::config(), tile_ids);
+  ElevationBuilder::Build(config, tile_ids);
   return EXIT_SUCCESS;
 }

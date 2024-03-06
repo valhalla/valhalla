@@ -142,8 +142,14 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
   auto* outer_ring = geos_helper_t::from_striped_container(polygon.outer());
   std::vector<GEOSGeometry*> inner_rings;
   inner_rings.reserve(polygon.inners().size());
-  for (const auto& inner : polygon.inners())
+
+  // annoying circleci apple clang bug, not reproducible on any other machine..
+  // https://github.com/valhalla/valhalla/pull/4500/files#r1445039739
+  auto unused_size = std::to_string(polygon.inners().size());
+
+  for (const auto& inner : polygon.inners()) {
     inner_rings.push_back(geos_helper_t::from_striped_container(inner));
+  }
   auto* geos_poly = GEOSGeom_createPolygon(outer_ring, &inner_rings.front(), inner_rings.size());
   auto* buffered = GEOSBuffer(geos_poly, 0, 8);
   GEOSNormalize(buffered);
@@ -163,7 +169,8 @@ void buffer_polygon(const polygon_t& polygon, multipolygon_t& multipolygon) {
       break;
     }
     default:
-      throw std::runtime_error("Unusable geometry type after buffering");
+      throw std::runtime_error("Unusable geometry type after buffering with inners size " +
+                               unused_size);
   }
   GEOSGeom_destroy(geos_poly);
   GEOSGeom_destroy(buffered);

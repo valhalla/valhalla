@@ -569,6 +569,18 @@ TEST(Tiles, test_intersect_bbox_rounding) {
   EXPECT_EQ(bin_id, 0);
 }
 
+TEST(Tiles, float_roundoff_issue) {
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
+  Tiles<PointLL> t(world_box, 0.25, 5);
+
+  PointLL ll(179.999978, -16.805363);
+  auto tile_id = t.TileId(ll);
+  EXPECT_EQ(tile_id, 421919);
+  auto base_ll = t.Base(tile_id);
+  EXPECT_EQ(base_ll.lat(), -17.0);
+  EXPECT_EQ(base_ll.lng(), 179.75);
+}
+
 } // namespace
 
 int main(int argc, char* argv[]) {

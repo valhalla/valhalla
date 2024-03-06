@@ -1,7 +1,4 @@
-#include <mutex>
 #include "config.h"
-#include <filesystem>
-#include "baldr/rapidjson_utils.h"
 
 namespace {
 struct config_singleton_t {
@@ -12,7 +9,7 @@ protected:
 
   config_singleton_t(const std::string& config_file_or_inline) {
     if (config_file_or_inline.empty()) {
-      throw valhalla::ConfigUninitializedException();
+      throw std::runtime_error("Config singleton was not initialized before usage");
     }
 
     try {
@@ -42,11 +39,9 @@ public:
 
 namespace valhalla {
 
-  const boost::property_tree::ptree& config(const std::string& config_file_or_inline)
-  {
-    static config_singleton_t instance(config_file_or_inline);
-    return instance.config_;
-  }
+const boost::property_tree::ptree& config(const std::string& config_file_or_inline) {
+  static config_singleton_t instance(config_file_or_inline);
+  return instance.config_;
+}
 
 }; // namespace valhalla
-

@@ -6,7 +6,6 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -31,6 +30,7 @@ int main(int argc, char** argv) {
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
+  boost::property_tree::ptree config;
 
   try {
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     // Convert stage strings to BuildStage
@@ -65,14 +65,14 @@ int main(int argc, char** argv) {
       start_stage = string_to_buildstage(result["start"].as<std::string>());
       if (start_stage == BuildStage::kInvalid) {
         list_stages();
-        throw cxxopts::OptionException("Invalid start stage, see above");
+        throw cxxopts::exceptions::exception("Invalid start stage, see above");
       }
     }
     if (result.count("end")) {
       end_stage = string_to_buildstage(result["end"].as<std::string>());
       if (end_stage == BuildStage::kInvalid) {
         list_stages();
-        throw cxxopts::OptionException("Invalid end stage, see above");
+        throw cxxopts::exceptions::exception("Invalid end stage, see above");
       }
     }
     LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
@@ -80,15 +80,15 @@ int main(int argc, char** argv) {
     // Make sure start stage < end stage
     if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {
       list_stages();
-      throw cxxopts::OptionException(
+      throw cxxopts::exceptions::exception(
           "Starting build stage is after ending build stage in pipeline, see above");
     }
 
     if (!result.count("input_files") && start_stage <= BuildStage::kParseNodes &&
         end_stage >= BuildStage::kParseWays) {
-      throw cxxopts::OptionException("Input file is required\n\n" + options.help() + "\n\n");
+      throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help() + "\n\n");
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
   }
 
   // Build some tiles!
-  if (build_tile_set(valhalla::config(), input_files, start_stage, end_stage)) {
+  if (build_tile_set(config, input_files, start_stage, end_stage)) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

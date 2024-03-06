@@ -3,7 +3,6 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/adminbuilder.h"
@@ -14,6 +13,7 @@ int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::vector<std::string> input_files;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -36,14 +36,14 @@ int main(int argc, char** argv) {
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     // input files are positional
     if (!result.count("input_files")) {
-      throw cxxopts::OptionException("Input file is required\n\n" + options.help());
+      throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help());
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -52,16 +52,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  // configure logging
-  auto logging_subtree = valhalla::config().get_child_optional("mjolnir.logging");
-  if (logging_subtree) {
-    auto logging_config =
-        valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                 std::unordered_map<std::string, std::string>>(logging_subtree.get());
-    valhalla::midgard::logging::Configure(logging_config);
-  }
-
-  if (!valhalla::mjolnir::BuildAdminFromPBF(valhalla::config().get_child("mjolnir"), input_files)) {
+  if (!valhalla::mjolnir::BuildAdminFromPBF(config.get_child("mjolnir"), input_files)) {
     return EXIT_FAILURE;
   };
 

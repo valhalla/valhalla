@@ -1,13 +1,14 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "mjolnir/ingest_transit.h"
 
 #include "argparse_utils.h"
 
 int main(int argc, char** argv) {
   const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -25,9 +26,9 @@ int main(int argc, char** argv) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -36,14 +37,12 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  const auto& pt = valhalla::config();
-
   // spawn threads to download all the tiles returning a list of
   // tiles that ended up having dangling stop pairs
-  auto dangling_tiles = valhalla::mjolnir::ingest_transit(pt);
+  auto dangling_tiles = valhalla::mjolnir::ingest_transit(config);
 
   // spawn threads to connect dangling stop pairs to adjacent tiles' stops
-  valhalla::mjolnir::stitch_transit(pt, dangling_tiles);
+  valhalla::mjolnir::stitch_transit(config, dangling_tiles);
 
   return 0;
 }

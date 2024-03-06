@@ -92,6 +92,21 @@ using namespace valhalla::midgard;
 namespace valhalla {
 namespace sif {
 
+const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
+    {Costing::none_, {Costing::none_}},
+    {Costing::bicycle, {Costing::bicycle}},
+    {Costing::bus, {Costing::bus}},
+    {Costing::motor_scooter, {Costing::motor_scooter}},
+    {Costing::multimodal, {Costing::multimodal, Costing::transit, Costing::pedestrian}},
+    {Costing::pedestrian, {Costing::pedestrian}},
+    {Costing::transit, {Costing::transit, Costing::pedestrian}},
+    {Costing::truck, {Costing::truck}},
+    {Costing::motorcycle, {Costing::motorcycle}},
+    {Costing::taxi, {Costing::taxi}},
+    {Costing::auto_, {Costing::auto_}},
+    {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
+};
+
 const sif::Cost kNoCost(0.0f, 0.0f);
 
 // Default unit size (seconds) for cost sorting.
@@ -771,6 +786,12 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const;
+
+  /**
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
@@ -1138,7 +1159,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost += destination_only_penalty_ *
+              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1228,7 +1250,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                           const BaseCostingOptionsConfig& cfg);
 
 /**
- * Parses all the costing options for all supported costings
+ * Parses all the costing options for all needed costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing

@@ -16,7 +16,6 @@
 
 #include "baldr/graphreader.h"
 #include "baldr/tilehierarchy.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
@@ -368,6 +367,7 @@ int main(int argc, char* argv[]) {
   double o_lng, o_lat, d_lng, d_lat;
   std::string o_onestop_id, d_onestop_id, time;
   int tripid;
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -391,16 +391,16 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging", true))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true))
       return EXIT_SUCCESS;
 
     for (const auto& arg : std::vector<std::string>{"o_onestop_id", "o_lat", "o_lng"}) {
       if (result.count(arg) == 0) {
         const std::string msg = "The <" + arg + "> argument was not provided, but is mandatory\n\n";
-        throw cxxopts::OptionException(msg + options.help());
+        throw cxxopts::exceptions::exception(msg + options.help());
       }
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -412,7 +412,7 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Read config");
 
   // Bail if no transit dir
-  auto transit_dir = valhalla::config().get_optional<std::string>("mjolnir.transit_dir");
+  auto transit_dir = config.get_optional<std::string>("mjolnir.transit_dir");
   if (!transit_dir || !filesystem::exists(*transit_dir) || !filesystem::is_directory(*transit_dir)) {
     LOG_INFO("Transit directory not found.");
     return 0;

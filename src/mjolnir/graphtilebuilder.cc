@@ -180,9 +180,10 @@ GraphTileBuilder::GraphTileBuilder(const std::string& tile_dir,
 
     // Verify the offsets match as we create the edge info builder list
     if (offset != edge_info_offset_) {
-      LOG_WARN("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
-               " offset stored in directed edge: = " + std::to_string(offset) +
-               " current ei offset= " + std::to_string(edge_info_offset_));
+      LOG_ERROR("GraphTileBuilder TileID: " + std::to_string(header_->graphid().tileid()) +
+                " offset stored in directed edge: = " + std::to_string(offset) +
+                " current ei offset= " + std::to_string(edge_info_offset_));
+      throw std::runtime_error("EdgeInfo offsets incorrect when reading GraphTile");
     }
 
     // At this time, encoded elevation is empty and does not need to be serialized...
@@ -1336,6 +1337,22 @@ void GraphTileBuilder::AddLandmark(const GraphId& edge_id, const Landmark& landm
     }
   }
   edgeinfo_offset_map_ = std::move(new_edgeinfo_offset_map_);
+}
+
+bool GraphTileBuilder::OpposingEdgeInfoDiffers(const graph_tile_ptr& tile, const DirectedEdge* edge) {
+  if (edge->endnode().tile_value() == tile->header()->graphid().tile_value()) {
+    // Get the nodeinfo at the end of the edge. Iterate through the directed edges and return
+    // true if a matching edgeinfo offset if found.
+    const NodeInfo* nodeinfo = tile->node(edge->endnode().id());
+    const DirectedEdge* de = tile->directededge(nodeinfo->edge_index());
+    for (uint32_t i = 0; i < nodeinfo->edge_count(); i++, de++) {
+      // Return true if the edge info matches (same name, shape, etc.)
+      if (de->edgeinfo_offset() == edge->edgeinfo_offset()) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 } // namespace mjolnir

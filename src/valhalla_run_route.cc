@@ -40,7 +40,6 @@
 #include "proto/trip.pb.h"
 
 #include "argparse_utils.h"
-#include "config.h"
 
 using namespace valhalla::midgard;
 using namespace valhalla::baldr;
@@ -228,7 +227,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
     if (ret) {
       LOG_INFO("RouteMatcher succeeded");
     } else {
-      LOG_ERROR("RouteMatcher failed");
+      LOG_ERROR("RouteMatcher failed.");
     }
   }
 
@@ -467,6 +466,7 @@ int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
   // args
   std::string json_str, json_file;
+  boost::property_tree::ptree config;
 
   bool match_test, verbose_lanes;
   bool multi_run = false;
@@ -500,7 +500,7 @@ int main(int argc, char* argv[]) {
     // clang-format on
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
 
     if (iterations > 1) {
@@ -515,9 +515,9 @@ int main(int argc, char* argv[]) {
     } else if (result.count("json")) {
       json_str = result["json"].as<std::string>();
     } else {
-      throw cxxopts::OptionException("Either json or json-file args must be set.");
+      throw cxxopts::exceptions::exception("Either json or json-file args must be set.");
     }
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {
@@ -541,9 +541,6 @@ int main(int argc, char* argv[]) {
     throw;
   }
 
-  // Get the config
-  boost::property_tree::ptree pt = valhalla::config();
-
   // Something to hold the statistics
   uint32_t n = locations.size() - 1;
   PathStatistics data({locations[0].latlng_.lat(), locations[0].latlng_.lng()},
@@ -554,11 +551,11 @@ int main(int argc, char* argv[]) {
     d1 += locations[i].latlng_.Distance(locations[i + 1].latlng_) * kKmPerMeter;
   }
   // Get something we can use to fetch tiles
-  valhalla::baldr::GraphReader reader(pt.get_child("mjolnir"));
+  valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
   // Get the maximum distance for time dependent routes
   float max_timedep_distance =
-      pt.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
+      config.get<float>("service_limits.max_timedep_distance", kDefaultMaxTimeDependentDistance);
 
   auto t0 = std::chrono::high_resolution_clock::now();
 
@@ -570,7 +567,7 @@ int main(int argc, char* argv[]) {
 
   // Find path locations (loki) for sources and targets
   auto tw0 = std::chrono::high_resolution_clock::now();
-  loki_worker_t lw(pt);
+  loki_worker_t lw(config);
   auto tw1 = std::chrono::high_resolution_clock::now();
   auto msw = std::chrono::duration_cast<std::chrono::milliseconds>(tw1 - tw0).count();
   LOG_INFO("Location Worker construction took " + std::to_string(msw) + " ms");
@@ -582,11 +579,11 @@ int main(int argc, char* argv[]) {
   LOG_INFO("Location Processing took " + std::to_string(ms) + " ms");
 
   // Get the route
-  BidirectionalAStar bd(pt.get_child("thor"));
-  MultiModalPathAlgorithm mm(pt.get_child("thor"));
-  TimeDepForward timedep_forward(pt.get_child("thor"));
-  TimeDepReverse timedep_reverse(pt.get_child("thor"));
-  MarkupFormatter markup_formatter(pt);
+  BidirectionalAStar bd(config.get_child("thor"));
+  MultiModalPathAlgorithm mm(config.get_child("thor"));
+  TimeDepForward timedep_forward(config.get_child("thor"));
+  TimeDepReverse timedep_reverse(config.get_child("thor"));
+  MarkupFormatter markup_formatter(config);
   for (uint32_t i = 0; i < n; i++) {
     // Set origin and destination for this segment
     valhalla::Location origin = options.locations(i);

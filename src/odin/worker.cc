@@ -50,7 +50,7 @@ std::string odin_worker_t::narrate(Api& request) const {
 }
 
 void odin_worker_t::status(Api&) const {
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
   // if we are in the process of shutting down we signal that here
   // should react by draining traffic (though they are likely doing this as they are usually the ones
   // who sent us the request to shutdown)
@@ -60,7 +60,7 @@ void odin_worker_t::status(Api&) const {
 #endif
 }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 prime_server::worker_t::result_t
 odin_worker_t::work(const std::list<zmq::message_t>& job,
                     void* request_info,

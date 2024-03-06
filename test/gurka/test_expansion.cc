@@ -61,14 +61,14 @@ protected:
     // get the MultiLineString feature
     rapidjson::Document res_doc;
     res_doc.Parse(res.c_str());
+    ASSERT_EQ(res_doc["features"].GetArray().Size(), exp_feats);
     auto feat = res_doc["features"][0].GetObject();
-    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("MultiLineString"));
+    ASSERT_EQ(feat["geometry"]["type"].GetString(), std::string("LineString"));
+    ASSERT_TRUE(feat.HasMember("properties"));
 
-    auto coords_size = feat["geometry"]["coordinates"].GetArray().Size();
-    ASSERT_EQ(coords_size, exp_feats);
-
+    ASSERT_EQ(feat["properties"].MemberCount(), props.size());
     for (const auto& prop : props) {
-      ASSERT_EQ(feat["properties"][prop].GetArray().Size(), coords_size);
+      ASSERT_TRUE(feat["properties"].HasMember(prop));
     }
   }
 };
@@ -137,7 +137,8 @@ TEST_F(ExpansionTest, NoAction) {
 
 INSTANTIATE_TEST_SUITE_P(ExpandPropsTest,
                          ExpansionTest,
-                         ::testing::Values(std::vector<std::string>{"statuses"},
-                                           std::vector<std::string>{"distances", "durations"},
-                                           std::vector<std::string>{"edge_ids", "costs"},
+                         ::testing::Values(std::vector<std::string>{"edge_status"},
+                                           std::vector<std::string>{"distance", "duration",
+                                                                    "pred_edge_id"},
+                                           std::vector<std::string>{"edge_id", "cost"},
                                            std::vector<std::string>{}));

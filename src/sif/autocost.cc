@@ -68,7 +68,6 @@ constexpr float kMinFactor = 0.1f;
 constexpr float kMaxFactor = 100000.0f;
 
 // Default auto attributes
-const std::string kDefaultAutoType = "car";
 constexpr float kDefaultAutoHeight = 1.6f; // Meters (62.9921 inches)
 constexpr float kDefaultAutoWidth = 1.9f;  // Meters (74.8031 inches)
 
@@ -352,20 +351,7 @@ AutoCost::AutoCost(const Costing& costing, uint32_t access_mask)
   // Get the vehicle type - enter as string and convert to enum.
   // Used to set the surface factor - penalize some roads based on surface type.
   surface_factor_ = 0.5f;
-  const std::string& type = costing_options.transport_type();
-  if (type == "motorcycle") {
-    type_ = VehicleType::kMotorcycle;
-    surface_factor_ = 1.0f;
-  } else if (type == "bus") {
-    type_ = VehicleType::kBus;
-  } else if (type == "tractor_trailer") {
-    type_ = VehicleType::kTractorTrailer;
-  } else if (type == "four_wheel_drive") {
-    type_ = VehicleType::kFourWheelDrive;
-    surface_factor_ = 0.0f;
-  } else {
-    type_ = VehicleType::kCar;
-  }
+  type_ = VehicleType::kCar;
 
   // Get the base transition costs
   get_base_costs(costing);
@@ -440,7 +426,7 @@ bool AutoCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) || 
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -471,7 +457,7 @@ bool AutoCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -576,7 +562,7 @@ Cost AutoCost::TransitionCost(const baldr::DirectedEdge* edge,
   // destination only, alley, maneuver penalty
   uint32_t idx = pred.opp_local_idx();
   Cost c = base_transition_cost(node, edge, &pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred.opp_local_idx());
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -644,7 +630,7 @@ Cost AutoCost::TransitionCostReverse(const uint32_t idx,
   // Get the transition cost for country crossing, ferry, gate, toll booth,
   // destination only, alley, maneuver penalty
   Cost c = base_transition_cost(node, edge, pred, idx);
-  c.secs = OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
+  c.secs += OSRMCarTurnDuration(edge, node, pred->opp_local_idx());
 
   // Transition time = turncost * stopimpact * densityfactor
   if (edge->stopimpact(idx) > 0 && !shortest_) {
@@ -709,7 +695,6 @@ void ParseAutoCostOptions(const rapidjson::Document& doc,
   const auto& json = rapidjson::get_child(doc, costing_options_key.c_str(), dummy);
 
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
-  JSON_PBF_DEFAULT(co, kDefaultAutoType, json, "/type", transport_type);
   JSON_PBF_RANGED_DEFAULT(co, kAlleyFactorRange, json, "/alley_factor", alley_factor);
   JSON_PBF_RANGED_DEFAULT(co, kUseHighwaysRange, json, "/use_highways", use_highways);
   JSON_PBF_RANGED_DEFAULT(co, kUseTollsRange, json, "/use_tolls", use_tolls);
@@ -815,7 +800,7 @@ bool BusCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -846,7 +831,7 @@ bool BusCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -1006,7 +991,7 @@ bool TaxiCost::Allowed(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved()) || !IsHOVAllowed(edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((edge->classification() == baldr::RoadClass::kMotorway) || (edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && edge->use() == Use::kRailFerry) ||
@@ -1037,7 +1022,7 @@ bool TaxiCost::AllowedReverse(const baldr::DirectedEdge* edge,
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved()) || !IsHOVAllowed(opp_edge) ||
-      (exclude_highways_ && !((pred.classification() == baldr::RoadClass::kMotorway) || (pred.classification() == baldr::RoadClass::kTrunk)) && ((opp_edge->classification() == baldr::RoadClass::kMotorway) || (opp_edge->classification() == baldr::RoadClass::kTrunk))) ||
+      (exclude_highways_ && !(pred.classification() == baldr::RoadClass::kMotorway) && (opp_edge->classification() == baldr::RoadClass::kMotorway)) ||
       (exclude_tunnels_ && !pred.tunnel() && opp_edge->tunnel()) ||
       (exclude_ferries_ && !(pred.use() == Use::kFerry) && opp_edge->use() == Use::kFerry) ||
       (exclude_ferries_ && !(pred.use() == Use::kRailFerry) && opp_edge->use() == Use::kRailFerry) ||
@@ -1095,8 +1080,8 @@ template <class T>
 std::shared_ptr<TestAutoCost>
 make_autocost_from_json(const std::string& property, T testVal, const std::string& extra_json = "") {
   std::stringstream ss;
-  ss << R"({"costing_options":{"auto":{")" << property << R"(":)" << testVal << "}}" << extra_json
-     << "}";
+  ss << R"({"costing": "auto", "costing_options":{"auto":{")" << property << R"(":)" << testVal
+     << "}}" << extra_json << "}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return std::make_shared<TestAutoCost>(request.options().costings().find(Costing::auto_)->second);

@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "sif/edgelabel.h"
@@ -106,6 +105,8 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 
 int main(int argc, char* argv[]) {
   const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
 
   try {
     // clang-format off
@@ -120,9 +121,9 @@ int main(int argc, char* argv[]) {
       ("v,version", "Print the version of this software.");
 
     auto result = options.parse(argc, argv);
-    if (!parse_common_args(program, options, result, "mjolnir.logging"))
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
-  } catch (cxxopts::OptionException& e) {
+  } catch (cxxopts::exceptions::exception& e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
   } catch (std::exception& e) {

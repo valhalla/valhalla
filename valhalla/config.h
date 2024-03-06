@@ -39,13 +39,7 @@
 #define PACKAGE_VERSION VALHALLA_VERSION
 
 namespace valhalla {
+
 const boost::property_tree::ptree& config(const std::string& config_file_or_inline = "");
 
-class ConfigUninitializedException : std::exception {
-public:
-  const char* what() const throw() {
-    return "Config singleton was not initialized before usage";
-  }
-};
 } // namespace valhalla
-

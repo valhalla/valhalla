@@ -43,11 +43,16 @@ namespace {
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
-  // Sort nodes by graphid then by osmid, so its basically a set of tiles
+  // Sort nodes by graphid then by grid within the tile. This sorts nodes geo-spatially which
+  // helps performance by improving memory coherence.
   sequence<Node> nodes(nodes_file, false);
   nodes.sort([](const Node& a, const Node& b) {
     if (a.graph_id == b.graph_id) {
-      return a.node.osmid_ < b.node.osmid_;
+      if (a.grid_id == b.grid_id) {
+        return a.node.osmid_ < b.node.osmid_;
+      } else {
+        return a.grid_id < b.grid_id;
+      }
     }
     return a.graph_id < b.graph_id;
   });
@@ -149,6 +154,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
+                    const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
                     const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
@@ -200,7 +206,7 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.link_edge_ = way.link();
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
-                     graph_id_predicate(way_node.node)});
+                     graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -220,8 +226,8 @@ void ConstructEdges(const std::string& ways_file,
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
-        nodes.push_back(
-            {way_node.node, static_cast<uint32_t>(-1), end_of, graph_id_predicate(way_node.node)});
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), end_of,
+                         graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -486,12 +492,9 @@ void BuildTileSet(const std::string& ways_file,
       }
 
       bool tile_within_one_tz = false;
-      std::multimap<uint32_t, multi_polygon_type> tz_polys;
-      if (tz_db_handle) {
-        tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
-        if (tz_polys.size() == 1) {
-          tile_within_one_tz = true;
-        }
+      auto tz_polys = GetTimeZones(tz_db_handle, tiling.TileBounds(id));
+      if (tz_polys.size() == 1) {
+        tile_within_one_tz = true;
       }
 
       // Iterate through the nodes
@@ -1346,16 +1349,56 @@ void BuildLocalTiles(const unsigned int thread_count,
 namespace valhalla {
 namespace mjolnir {
 
+// Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
+// The grid Id within the tile is used to sort nodes spatially.
+uint32_t GetGridId(const midgard::PointLL& pointll,
+                   const midgard::Tiles<midgard::PointLL>& tiling,
+                   const uint32_t grid_divisions) {
+  // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
+  if (grid_divisions == 0) {
+    return 0;
+  }
+
+  auto tile_id = tiling.TileId(pointll);
+  if (tile_id >= 0) {
+    auto base_ll = tiling.Base(tile_id);
+    float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
+    uint32_t row = static_cast<uint32_t>((pointll.lat() - base_ll.lat()) / grid_size);
+    uint32_t col = static_cast<uint32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+    if (row > grid_divisions || col > grid_divisions) {
+      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
+      return 0;
+    }
+    return (row * grid_divisions + col);
+  } else {
+    LOG_ERROR("GetGridId: Invalid tile id");
+    return 0;
+  }
+}
+
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
                                                    const std::string& ways_file,
                                                    const std::string& way_nodes_file,
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
+  auto tiling = TileHierarchy::get_tiling(level);
+  uint32_t grid_divisions =
+      pt.get<unsigned int>("mjolnir.data_processing.grid_divisions_within_tile", 0);
+  if (grid_divisions > 0) {
+    LOG_INFO("Sort nodes spatially within each tile using nxn grids where n = " +
+             std::to_string(grid_divisions));
+  } else {
+    LOG_INFO("Spatial sorting of nodes within each tile is disabled");
+  }
+
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
+      [&tiling, &grid_divisions](const OSMNode& node) {
+        return GetGridId(node.latlng(), tiling, grid_divisions);
+      },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
@@ -1372,22 +1415,31 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& complex_to_restriction_file,
                          const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
-  // edge list needs to be modified
-  DataQuality stats;
-  if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
-                    pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  // edge list needs to be modified. ReclassifyLinks also infers turn channels
+  // so we always want to do this unless reclassify_links and infer_turn_channels
+  // are both false.
+  bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
+  bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
+  if (reclassify_links || infer_turn_channels) {
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, reclassify_links,
+                    infer_turn_channels);
   } else {
-    LOG_WARN("Not reclassifying link graph edges");
+    LOG_WARN("Not reclassifying link graph edges or inferring turn channels");
   }
 
-  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
-  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  // Do not reclassify ferry connection edges if no hierarchies are built. If reclassifying,
+  // we use RoadClass::kPrimary (highway classification) as cutoff.
+  if (pt.get<bool>("mjolnir.hierarchy", true)) {
+    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  } else {
+    LOG_WARN("Not reclassifying ferry connections since no hierarches are being created");
+  }
+
+  // Build tiles at the local level. Form connected graph from nodes and edges.
+  DataQuality stats;
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-
-  // Build tiles at the local level. Form connected graph from nodes and edges.
   std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
