@@ -1,3 +1,5 @@
+#include <boost/format.hpp>
+
 #include "gurka.h"
 #include "test.h"
 
