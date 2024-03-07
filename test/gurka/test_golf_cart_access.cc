@@ -133,7 +133,7 @@ protected:
                                }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
-    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/golf_cart_access");
+    map = gurka::buildtiles(layout, ways, {}, {}, "test/data/lsv_access");
   }
 };
 
@@ -142,7 +142,9 @@ gurka::map GolfCartAccess::map = {};
 /*************************************************************/
 
 TEST_F(GolfCartAccess, CheckGolfCartAccess) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart");
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/low_speed_vehicle/vehicle_type", "golf_cart"}};
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "low_speed_vehicle", options);
   gurka::assert::osrm::expect_steps(result, {"AB", "GK", "KL", "HL", "HI", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TV", "UV"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE", "EF", "FG", "GK", "KL", "HL", "HI", "IJ", "JN", "MN", "MO", "OP", "PR", "QR", "QT", "TV", "UV"});
 }
@@ -150,8 +152,9 @@ TEST_F(GolfCartAccess, CheckGolfCartAccess) {
 TEST_F(GolfCartAccess, CheckGolfCartAccessReducedSpeedLimit) {
   try {
     std::unordered_map<std::string, std::string> options = {
-      {"/costing_options/golf_cart/max_allowed_speed_limit", "47"}};
-    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "golf_cart", options);
+      {"/costing_options/low_speed_vehicle/max_allowed_speed_limit", "47"},
+      {"/costing_options/low_speed_vehicle/vehicle_type", "golf_cart"}};
+    auto result = gurka::do_action(valhalla::Options::route, map, {"A", "U"}, "low_speed_vehicle", options);
     gurka::assert::raw::expect_path(result, {"Unexpected path found"});
   } catch (const std::runtime_error& e) {
     EXPECT_STREQ(e.what(), "No path could be found for input");
@@ -173,8 +176,8 @@ TEST(Standalone, HighwayCrossing) {
       // Tertiary highway
       {"AB", {{"highway", "tertiary"}}}, {"BC", {{"highway", "tertiary"}}},
       {"CD", {{"highway", "tertiary"}}}, {"DE", {{"highway", "tertiary"}}},
-      // Primary highway
-      {"FC", {{"highway", "primary"}}}, {"CG", {{"highway", "primary"}}},
+      // Motorway (not allowed for golf carts)
+      {"FC", {{"highway", "motorway"}}}, {"CG", {{"highway", "motorway"}}},
 
   };
 
@@ -186,9 +189,11 @@ TEST(Standalone, HighwayCrossing) {
   const auto layout =
       gurka::detail::map_to_coordinates(ascii_map, gridsize, {5.1079374, 52.0887174});
   auto map =
-      gurka::buildtiles(layout, ways, nodes, {}, "test/data/golf_cart_access_highway_crossing");
+      gurka::buildtiles(layout, ways, nodes, {}, "test/data/lsv_access_highway_crossing");
 
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "golf_cart");
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/low_speed_vehicle/vehicle_type", "golf_cart"}};
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "E"}, "low_speed_vehicle", options);
   gurka::assert::osrm::expect_steps(result, {"AB"});
   gurka::assert::raw::expect_path(result, {"AB", "BC", "CD", "DE"});
 }

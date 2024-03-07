@@ -13,7 +13,7 @@ const std::unordered_map<std::string, std::string> build_config{
 
 const std::vector<std::string>& costing = {"auto",    "taxi",          "bus",        "truck",
                                            "bicycle", "motor_scooter", "motorcycle", "pedestrian",
-                                           "golf_cart"};
+                                           "low_speed_vehicle"};
 
 TEST(Standalone, AccessPsvWay) {
   constexpr double gridsize_metres = 10;
@@ -526,7 +526,7 @@ TEST(Standalone, NodeAccess) {
   auto map = gurka::buildtiles(layout, ways, nodes, {}, "test/data/gurka_node_access");
 
   for (auto& c : costing) {
-    if (c == "auto" || c == "taxi" || c == "golf_cart")
+    if (c == "auto" || c == "taxi" || c == "low_speed_vehicle")
       validate_path(gurka::do_action(valhalla::Options::route, map, {"A", "I"}, c),
                     {"AB", "BC", "CD", "DE", "EH", "HL", "KL", "JK", "IJ"});
     else if (c == "bicycle" || c == "pedestrian")

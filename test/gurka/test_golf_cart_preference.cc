@@ -47,11 +47,10 @@ protected:
                                {"golf_cart", "destination"},
                                }},
 
-                              // Cart path
+                              // Cart paths (tagged with several variations)
                               {"EG",
                                {{"highway", "path"},
                                    {"surface", "paved"},
-                                   {"golf_cart", "designated"},
                                }},
                               {"GH",
                                {{"highway", "path"},
@@ -60,8 +59,7 @@ protected:
                                }},
                               {"FH",
                                {{"highway", "path"},
-                                   {"surface", "paved"},
-                                   {"golf_cart", "designated"},
+                                   {"golf", "cartpath"},
                                }}};
 
     const auto layout = gurka::detail::map_to_coordinates(ascii_map, gridsize);
@@ -74,7 +72,9 @@ gurka::map GolfCartPreference::map = {};
 /*************************************************************/
 
 TEST_F(GolfCartPreference, CheckGolfCartPreference) {
-  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "golf_cart");
+  std::unordered_map<std::string, std::string> options = {
+      {"/costing_options/low_speed_vehicle/vehicle_type", "golf_cart"}};
+  auto result = gurka::do_action(valhalla::Options::route, map, {"A", "C"}, "low_speed_vehicle", options);
   gurka::assert::osrm::expect_steps(result, {"AB", "BD", "DE", "EG", "GH", "FH"});
   gurka::assert::raw::expect_path(result, {"AB", "BD", "DE", "EG", "GH", "FH", "CF"});
 }

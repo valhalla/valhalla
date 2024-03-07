@@ -1736,7 +1736,7 @@ TEST(ParseRequest, test_filter_attributes) {
 std::vector<Costing::Type> get_all_motor_costings() {
   return {Costing::auto_,         Costing::bicycle,    Costing::bus,   Costing::taxi,
           Costing::motor_scooter, Costing::pedestrian, Costing::truck, Costing::motorcycle,
-          Costing::golf_cart};
+          Costing::low_speed_vehicle};
 }
 
 std::vector<Costing::Type> get_base_auto_costing_list() {

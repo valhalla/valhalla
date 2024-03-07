@@ -337,7 +337,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
           "max_transit_walking_distance": 10000,
           "min_transit_walking_distance": 1
         },
-        "golf_cart": {
+        "low_speed_vehicle": {
           "max_distance": 250000.0,
           "max_locations": 50,
           "max_matrix_distance": 200000.0,

@@ -5,7 +5,6 @@
 #include <map>
 #include <memory>
 
-#include "golfcartcost.h"
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/proto/options.pb.h>
 #include <valhalla/proto_conversions.h>
@@ -18,6 +17,7 @@
 #include <valhalla/sif/pedestriancost.h>
 #include <valhalla/sif/transitcost.h>
 #include <valhalla/sif/truckcost.h>
+#include <valhalla/sif/lowspeedvehiclecost.h>
 
 namespace valhalla {
 namespace sif {
@@ -46,7 +46,7 @@ public:
     Register(Costing::transit, CreateTransitCost);
     Register(Costing::none_, CreateNoCost);
     Register(Costing::bikeshare, CreateBikeShareCost);
-    Register(Costing::golf_cart, CreateGolfCartCost);
+    Register(Costing::low_speed_vehicle, CreateLowSpeedVehicleCost);
   }
 
   /**

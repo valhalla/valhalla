@@ -1,4 +1,4 @@
-#include "sif/golfcartcost.h"
+#include "sif/lowspeedvehiclecost.h"
 #include "baldr/directededge.h"
 #include "baldr/graphconstants.h"
 #include "baldr/nodeinfo.h"
@@ -23,7 +23,7 @@ constexpr float kDefaultUseLivingStreets = 0.5f;  // Factor between 0 and 1
 constexpr float kParkingAislePenalty = 30.0f;     // Seconds
 
 // Minimum acceptable surface class
-constexpr Surface kMinimumGolfCartSurface = Surface::kCompacted;
+constexpr Surface kMinimumAcceptableSurface = Surface::kCompacted;
 
 // Default turn costs
 constexpr float kTCStraight = 0.5f;
@@ -43,7 +43,7 @@ constexpr float kLeftSideTurnCosts[] = {kTCStraight,         kTCSlight,  kTCUnfa
                                         kTCUnfavorableSharp, kTCReverse, kTCFavorableSharp,
                                         kTCFavorable,        kTCSlight};
 
-// Minimum and maximum golf cart top speed (to validate input).
+// Allowed vehicle speed ranges (for input validation).
 constexpr uint32_t kMinimumTopSpeed = 20; // KPH
 constexpr uint32_t kDefaultTopSpeed = 35; // KPH (21.75mph)
 constexpr uint32_t kMaximumTopSpeed = 60; // KPH
@@ -54,24 +54,27 @@ constexpr ranged_default_t<uint32_t> kTopSpeedRange{kMinimumTopSpeed, kDefaultTo
 // Bounds on max allowed speed limits (to validate input).
 // In the presence of a maxspeed tag, it will be compared against this value. If the maxspeed
 // value is greater than this tunable, the road will be inaccessible.
-// 57kph is 35.42mph. In the US, LSV regulations typically state that golf carts may drive
-// on roads having speed limits up to 35mph. Block any road having an
-// *explicitly tagged* higher speed limit (implicit ones just get a penalty).
+// 57kph is 35.42mph. In the US, LSV regulations typically state that LSVs may drive
+// on roads having speed limits up to 35mph.
+// We block any roads having an *explicitly tagged* higher speed limit
+// (higher inferred speeds are merely penalized).
 constexpr uint32_t kMinimumAllowedSpeedLimit = 20; // KPH (12.43mph)
 constexpr uint32_t kDefaultAllowedSpeedLimit = 57; // KPH (35.42mph)
 constexpr uint32_t kMaximumAllowedSpeedLimit = 80; // KPH
 constexpr ranged_default_t<uint32_t> kMaxAllowedSpeedLimit{kMinimumAllowedSpeedLimit, kDefaultAllowedSpeedLimit,
                                                            kMaximumAllowedSpeedLimit};
 
-// Weighting factor based on road class. These apply penalties to higher class
-// roads. These penalties are additive based on other penalties.
-constexpr float kRoadClassPenaltyFactor[] = {
-    1.0f,  // Motorway
-    1.0f,  // Trunk
-    1.0f, // Primary
-    1.0f, // Secondary
-    0.75f,  // Tertiary
-    0.5f,  // Unclassified
+// Weighting factor based on road class. See the EdgeCost method for details.
+// TODO: As a future improvement, we can tune willingness to use higher class roads.
+// LSVs are not entirely homogenous, and current weights are tuned for golf carts.
+// We may introduce a second table of weights / different EdgeCost logic for LSVs later.
+constexpr float kRoadClassFactor[] = {
+    3.0f,  // Motorway
+    2.0f,  // Trunk
+    0.75f, // Primary
+    0.5f, // Secondary
+    0.3f,  // Tertiary
+    0.3f,  // Unclassified
     0.25f,  // Residential
     0.0f  // Service, other
 };
@@ -87,23 +90,28 @@ BaseCostingOptionsConfig GetBaseCostOptsConfig() {
   return cfg;
 }
 
+const std::string kDefaultVehicleType = "low_speed_vehicle";
+
 const BaseCostingOptionsConfig kBaseCostOptsConfig = GetBaseCostOptsConfig();
 
 } // namespace
 
 /**
- * Derived class providing dynamic edge costing for street-legal golf carts.
+ * Derived class providing dynamic edge costing for street-legal low-speed vehicles (LSVs)
+ * such as golf carts and neighborhood electric vehicles.
  */
-class GolfCartCost : public DynamicCost {
+class LowSpeedVehicleCost : public DynamicCost {
 public:
+  VehicleType type_;
+
 /**
-   * Construct golf cart costing. Pass in cost type and costing_options using protocol buffer(pbf).
+   * Construct LSV costing. Pass in cost type and costing_options using protocol buffer(pbf).
    * @param  costing_options pbf with request costing_options.
    */
-  GolfCartCost(const Costing& costing_options);
+  LowSpeedVehicleCost(const Costing& costing_options);
 
   // virtual destructor
-  virtual ~GolfCartCost() {
+  virtual ~LowSpeedVehicleCost() {
   }
 
   /**
@@ -177,7 +185,7 @@ public:
   virtual Cost EdgeCost(const baldr::DirectedEdge*,
                         const baldr::TransitDeparture*,
                         const uint32_t) const override {
-    throw std::runtime_error("GolfCartCost::EdgeCost does not support transit edges");
+    throw std::runtime_error("LowSpeedVehicle::EdgeCost does not support transit edges");
   }
 
   /**
@@ -241,7 +249,7 @@ public:
    * @return  Returns the current travel type.
    */
   virtual uint8_t travel_type() const override {
-    return static_cast<uint8_t>(VehicleType::kGolfCart);
+    return static_cast<uint8_t>(type_);
   }
 
   /**
@@ -249,7 +257,7 @@ public:
    * exclude and allow ranking results from the search by looking at each
    * edges attribution and suitability for use as a location by the travel
    * mode used by the costing method. It's also used to filter
-   * edges not usable / inaccessible by golf cart.
+   * edges not usable / inaccessible by the vehicle type.
    */
   bool Allowed(const baldr::DirectedEdge* edge,
                const graph_tile_ptr& tile,
@@ -274,8 +282,8 @@ public:
   uint32_t max_allowed_speed_limit_;
 };
 
-GolfCartCost::GolfCartCost(const Costing& costing)
-    : DynamicCost(costing, TravelMode::kDrive, kGolfCartAccess),
+LowSpeedVehicleCost::LowSpeedVehicleCost(const Costing& costing)
+    : DynamicCost(costing, TravelMode::kDrive, kAutoAccess),
       trans_density_factor_{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.1f, 1.2f, 1.3f,
                             1.4f, 1.6f, 1.9f, 2.2f, 2.5f, 2.8f, 3.1f, 3.5f} {
   const auto& costing_options = costing.options();
@@ -289,6 +297,16 @@ GolfCartCost::GolfCartCost(const Costing& costing)
   // Get the base costs
   get_base_costs(costing);
 
+  // Get the vehicle type
+  const std::string& type = costing_options.transport_type();
+  if (type == "golf_cart") {
+    type_ = VehicleType::kGolfCart;
+    access_mask_ = kGolfCartAccess;
+  } else {
+    type_ = VehicleType::kLowSpeedVehicle;
+    access_mask_ = kAutoAccess;
+  }
+
   // Create speed cost table
   speedfactor_[0] = kSecPerHour; // TODO - what to make speed=0?
   for (uint32_t s = 1; s <= kMaxSpeedKph; s++) {
@@ -301,7 +319,7 @@ GolfCartCost::GolfCartCost(const Costing& costing)
 }
 
 // Check if access is allowed on the specified edge.
-bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
+bool LowSpeedVehicleCost::Allowed(const baldr::DirectedEdge* edge,
                            const bool is_dest,
                            const EdgeLabel& pred,
                            const graph_tile_ptr& tile,
@@ -313,9 +331,10 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_restrictions_) ||
-      (edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(edgeid) ||
-      // NOTE: Parking aisles are baked as destination-only, but for golf carts we actually need
-      // to ignore this (per the GIS department of Peachtree City, GA).
+      (edge->surface() > kMinimumAcceptableSurface) || IsUserAvoidEdge(edgeid) ||
+      // NOTE: Parking aisles are baked as destination-only, but many LSVs/NEVs are explicitly allowed
+      // to travel through these as a shortcut (per the GIS department of Peachtree City, GA;).
+      // TODO: Probably should make this configurable as local laws may vary
       (!allow_destination_only_ && !pred.destonly() && edge->destonly() && edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (edge->speed_type() == SpeedType::kTagged && edge->speed() > max_allowed_speed_limit_)) {
@@ -328,7 +347,7 @@ bool GolfCartCost::Allowed(const baldr::DirectedEdge* edge,
 
 // Checks if access is allowed for an edge on the reverse path (from
 // destination towards origin). Both opposing edges are provided.
-bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
+bool LowSpeedVehicleCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                   const EdgeLabel& pred,
                                   const baldr::DirectedEdge* opp_edge,
                                   const graph_tile_ptr& tile,
@@ -340,7 +359,7 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
   // Allow U-turns at dead-end nodes.
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_restrictions_) ||
-      (opp_edge->surface() > kMinimumGolfCartSurface) || IsUserAvoidEdge(opp_edgeid) ||
+      (opp_edge->surface() > kMinimumAcceptableSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly() && opp_edge->use() != Use::kParkingAisle) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (opp_edge->speed_type() == SpeedType::kTagged && edge->speed() > max_allowed_speed_limit_)) {
@@ -351,7 +370,7 @@ bool GolfCartCost::AllowedReverse(const baldr::DirectedEdge* edge,
                                            tz_index, restriction_idx);
 }
 
-Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
+Cost LowSpeedVehicleCost::EdgeCost(const baldr::DirectedEdge* edge,
                             const graph_tile_ptr& tile,
                             const baldr::TimeInfo& time_info,
                             uint8_t& flow_sources) const {
@@ -369,20 +388,11 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
     return Cost(edge->length(), sec);
   }
 
-  // Represents negative traits without looking at special accommodations for golf carts
-  float avoidance_factor = 1.0f;
+  // Factor which accumulates for negative traits and is added in later.
+  // It starts with the road class, since we want to prefer lower class roads in many scenarios.
+  float avoidance_factor = kRoadClassFactor[static_cast<uint32_t>(edge->classification())];
 
-  // Parking aisles get special treatment in golf cart costing.
-  // Confirming with several sources including the municipality of Peachtree City, GA,
-  // these should be routable without much penalty.
-  bool is_parking_aisle = edge->use() == Use::kParkingAisle;
-
-  // Add penalties based on road class.
-  // The dest only penalty (for private roads) is normally just a one-time fixed penalty on transitions.
-  // However, in the case of golf cart routing, this is usually not sufficient to avoid large areas such as private golf courses which are not routable except as a destination.
-  avoidance_factor += kRoadClassPenaltyFactor[static_cast<uint32_t>(edge->classification())] + (edge->destonly() * !is_parking_aisle * 10);
-
-  // Multiply by speed so that roads are more severely punished for having traffic faster than the golf cart's speed.
+  // Roads are more severely punished for having traffic faster than the vehicle's top speed.
   // Use the speed assigned to the directed edge. Even if we had traffic information we shouldn't use it here.
   avoidance_factor *= speedpenalty_[edge->speed()];
 
@@ -399,7 +409,7 @@ Cost GolfCartCost::EdgeCost(const baldr::DirectedEdge* edge,
 }
 
 // Returns the time (in seconds) to make the transition from the predecessor
-Cost GolfCartCost::TransitionCost(const baldr::DirectedEdge* edge,
+Cost LowSpeedVehicleCost::TransitionCost(const baldr::DirectedEdge* edge,
                                   const baldr::NodeInfo* node,
                                   const EdgeLabel& pred) const {
   // Get the transition cost for country crossing, ferry, gate, toll booth,
@@ -460,7 +470,7 @@ Cost GolfCartCost::TransitionCost(const baldr::DirectedEdge* edge,
 // when using a reverse search (from destination towards the origin).
 // pred is the opposing current edge in the reverse tree
 // edge is the opposing predecessor in the reverse tree
-Cost GolfCartCost::TransitionCostReverse(const uint32_t idx,
+Cost LowSpeedVehicleCost::TransitionCostReverse(const uint32_t idx,
                                          const baldr::NodeInfo* node,
                                          const baldr::DirectedEdge* pred,
                                          const baldr::DirectedEdge* edge,
@@ -525,10 +535,10 @@ Cost GolfCartCost::TransitionCostReverse(const uint32_t idx,
   return c;
 }
 
-void ParseGolfCartCostOptions(const rapidjson::Document& doc,
+void ParseLowSpeedVehicleCostOptions(const rapidjson::Document& doc,
                               const std::string& costing_options_key,
                               Costing* c) {
-  c->set_type(Costing::golf_cart);
+  c->set_type(Costing::low_speed_vehicle);
   c->set_name(Costing_Enum_Name(c->type()));
   auto* co = c->mutable_options();
 
@@ -538,10 +548,11 @@ void ParseGolfCartCostOptions(const rapidjson::Document& doc,
   ParseBaseCostOptions(json, c, kBaseCostOptsConfig);
   JSON_PBF_RANGED_DEFAULT(co, kTopSpeedRange, json, "/top_speed", top_speed);
   JSON_PBF_RANGED_DEFAULT(co, kMaxAllowedSpeedLimit, json, "/max_allowed_speed_limit", max_allowed_speed_limit);
+  JSON_PBF_DEFAULT(co, kDefaultVehicleType, json, "/vehicle_type", transport_type);
 }
 
-cost_ptr_t CreateGolfCartCost(const Costing& costing_options) {
-  return std::make_shared<GolfCartCost>(costing_options);
+cost_ptr_t CreateLowSpeedVehicleCost(const Costing& costing_options) {
+  return std::make_shared<LowSpeedVehicleCost>(costing_options);
 }
 
 } // namespace sif

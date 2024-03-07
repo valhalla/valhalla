@@ -1,5 +1,6 @@
 #include "gurka.h"
 #include "test.h"
+#include <boost/format.hpp>
 
 #include "baldr/graphreader.h"
 #include "baldr/traffictile.h"

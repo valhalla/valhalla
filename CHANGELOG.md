@@ -68,7 +68,7 @@
    * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
    * CHANGED: Adjustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
-   * ADDED: Golf cart costing [#4492](https://github.com/valhalla/valhalla/pull/4492)
+   * ADDED: Low-speed vehicle (LSV) costing for things like golf carts, LSVs, and NEVs [#4492](https://github.com/valhalla/valhalla/pull/4492)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
