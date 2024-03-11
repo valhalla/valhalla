@@ -1895,9 +1895,8 @@ public:
     bool is_toll_node = is_barrier_toll_booth || is_highway_toll_gantry;
     bool named_toll_node = false;
 
-    OSMNode n;
+    OSMNode n{osmid};
     OSMNodeLinguistic linguistics;
-    n.set_id(osmid);
     n.set_latlng(lng, lat);
     bool intersection = false;
     if (is_highway_junction) {
