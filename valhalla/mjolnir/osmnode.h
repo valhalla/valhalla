@@ -68,7 +68,6 @@ struct OSMNode {
   uint32_t lat7_;
 
   OSMNode() {
-    std::cout << "here" << std::endl;
     memset(this, 0, sizeof(OSMNode));
   }
 
