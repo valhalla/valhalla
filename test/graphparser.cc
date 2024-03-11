@@ -533,6 +533,7 @@ void Bike(const std::string& config_file) {
   filesystem::remove(access_file);
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
+  filesystem::remove(bss_nodes_file);
   filesystem::remove(linguistic_node_file);
 }
 
@@ -677,7 +678,7 @@ void DoConfig() {
     file << "{ \
       \"mjolnir\": { \
       \"id_table_size\": 1000, \
-      \"tile_dir\": \"test/data/parser_tiles\" \
+      \"tile_dir\": \"test/data/graph_parser_tiles\" \
       } \
     }";
   } catch (...) {}
@@ -828,7 +829,6 @@ TEST(GraphParser, TestImportBssNode) {
 
   filesystem::remove(ways_file);
   filesystem::remove(way_nodes_file);
-  filesystem::remove(bss_nodes_file);
   filesystem::remove(access_file);
   filesystem::remove(from_restriction_file);
   filesystem::remove(to_restriction_file);
