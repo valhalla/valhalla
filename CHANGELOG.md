@@ -96,6 +96,7 @@
    * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
    * ADDED: return isotile grid as geotiff  [#4594](https://github.com/valhalla/valhalla/pull/4594)
+   * FIXED: updated path location so that we don't share the same as utrecht.cc test [#4625](https://github.com/valhalla/valhalla/pull/4625)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
