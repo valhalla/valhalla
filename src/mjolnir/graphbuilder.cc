@@ -1149,7 +1149,6 @@ void BuildTileSet(const std::string& ways_file,
             std::vector<valhalla::baldr::Language> node_langs;
             OSMNodeLinguistic ling;
             if (node.linguistic_info_index() != 0) {
-              std::cout << "here1 " << node.linguistic_info_index() << std::endl;
               ling = linguistic_node.at(node.linguistic_info_index());
             }
             OSMWay::ProcessNamesPronunciations(osmdata.node_names, default_languages,
@@ -1849,7 +1848,6 @@ bool GraphBuilder::CreateSignInfoList(
   } else if (node.has_ref() && !fork && ramp) {
     OSMNodeLinguistic ling;
     if (node.linguistic_info_index() != 0) {
-      std::cout << "here2 " << node.linguistic_info_index() << std::endl;
       ling = linguistic_node.at(node.linguistic_info_index());
     }
 
@@ -2146,7 +2144,6 @@ bool GraphBuilder::CreateSignInfoList(
 
     OSMNodeLinguistic ling;
     if (node.linguistic_info_index() != 0) {
-      std::cout << "here3 " << node.linguistic_info_index() << std::endl;
       ling = linguistic_node.at(node.linguistic_info_index());
     }
 
