@@ -65,30 +65,11 @@ void DoConfig() {
     file << "{ \
       \"mjolnir\": { \
       \"id_table_size\": 1000, \
-      \"tile_dir\": \"test/data/parser_tiles\" \
+      \"tile_dir\": \"test/data/graph_parser_tiles\" \
       } \
     }";
   } catch (...) {}
   file.close();
-
-  boost::property_tree::ptree conf;
-  rapidjson::read_json(config_file, conf);
-
-  // Get the tile directory (make sure it ends with the preferred separator
-  std::string tile_dir = conf.get<std::string>("mjolnir.tile_dir");
-  if (tile_dir.back() != filesystem::path::preferred_separator) {
-    tile_dir.push_back(filesystem::path::preferred_separator);
-  }
-
-  ways_file = tile_dir + ways_file;
-  way_nodes_file = tile_dir + way_nodes_file;
-  nodes_file = tile_dir + nodes_file;
-  edges_file = tile_dir + edges_file;
-  access_file = tile_dir + access_file;
-  from_restriction_file = tile_dir + from_restriction_file;
-  to_restriction_file = tile_dir + to_restriction_file;
-  bss_nodes_file = tile_dir + bss_nodes_file;
-  linguistic_node_file = tile_dir + linguistic_node_file;
 }
 
 // must do clean up here vs TearDown() as we are building data
@@ -778,7 +759,6 @@ TEST(GraphParser, TestImportBssNode) {
                        kPedestrianAccess);
   check_edge_attribute(local_tile->directededge(edge_idx_2 + count_2 - 2), kPedestrianAccess,
                        kBicycleAccess);
-
   CleanUp();
 }
 
