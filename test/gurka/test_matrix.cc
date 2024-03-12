@@ -766,8 +766,6 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(1));
     EXPECT_GT(api.matrix().times(2), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(2));
-    std::cout << api.matrix().distances(1);
-    std::cout << api.matrix().distances(2);
     EXPECT_GT(api.matrix().distances(2), api.matrix().distances(1));
     EXPECT_GT(api.matrix().times(2), api.matrix().times(1));
 
