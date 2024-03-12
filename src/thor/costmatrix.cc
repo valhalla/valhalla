@@ -166,6 +166,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   // search from all source locations. Connections between the 2 search
   // spaces is checked during the forward search.
   uint32_t n = 0;
+  uint32_t interrupt_n = 0;
   while (true) {
     // First iterate over all targets, then over all sources: we only for sure
     // check the connection between both trees on the forward search, so reverse
@@ -252,7 +253,7 @@ bool CostMatrix::SourceToTarget(Api& request,
       throw valhalla_exception_t{430};
     }
     // Allow this process to be aborted
-    if (interrupt_ && (n % kInterruptIterationsInterval) == 0) {
+    if (interrupt_ && (interrupt_n++ % kInterruptIterationsInterval) == 0) {
       (*interrupt_)();
     }
     n++;
