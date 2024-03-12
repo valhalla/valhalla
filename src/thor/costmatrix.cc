@@ -1121,8 +1121,7 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       uint32_t idx = edgelabel_[MATRIX_REV][index].size();
       edgelabel_[MATRIX_REV][index].push_back(std::move(edge_label));
       adjacency_[MATRIX_REV][index].add(idx);
-      edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx,
-                                         graphreader.GetGraphTile(opp_edge_id));
+      edgestatus_[MATRIX_REV][index].Set(opp_edge_id, EdgeSet::kUnreachedOrReset, idx, opp_tile);
       (*targets_)[opp_edge_id].push_back(index);
     }
     index++;
