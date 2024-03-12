@@ -65,7 +65,7 @@ void DoConfig() {
     file << "{ \
       \"mjolnir\": { \
       \"id_table_size\": 1000, \
-      \"tile_dir\": \"test/data/graph_parser_tiles\" \
+      \"tile_dir\": \"test/data/parser_tiles\" \
       } \
     }";
   } catch (...) {}
