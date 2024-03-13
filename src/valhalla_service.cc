@@ -17,10 +17,6 @@
 using namespace prime_server;
 #endif
 
-#ifdef ENABLE_GDAL
-#include <gdal_priv.h>
-#endif
-
 #include "config.h"
 #include "midgard/logging.h"
 
@@ -41,10 +37,6 @@ int main(int argc, char** argv) {
     LOG_ERROR("Usage: " + std::string(argv[0]) + " config/file.json action json_request");
     return 1;
   }
-#endif
-
-#ifdef ENABLE_GDAL
-  GDALRegister_GTiff();
 #endif
 
   // config file
