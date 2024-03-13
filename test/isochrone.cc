@@ -355,7 +355,6 @@ void check_raster_edges(size_t x, size_t y, uint16_t* data) {
 }
 
 TEST(Isochrones, test_geotiff_output_distance) {
-  GDALRegister_GTiff();
   loki_worker_t loki_worker(cfg);
   thor_worker_t thor_worker(cfg);
 
@@ -401,7 +400,6 @@ TEST(Isochrones, test_geotiff_output_distance) {
 }
 
 TEST(Isochrones, test_geotiff_output_time) {
-  GDALRegister_GTiff();
   loki_worker_t loki_worker(cfg);
   thor_worker_t thor_worker(cfg);
 
@@ -448,7 +446,6 @@ TEST(Isochrones, test_geotiff_output_time) {
 
 // test request with two metrics
 TEST(Isochrones, test_geotiff_output_time_distance) {
-  GDALRegister_GTiff();
   loki_worker_t loki_worker(cfg);
   thor_worker_t thor_worker(cfg);
 

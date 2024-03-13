@@ -20,8 +20,6 @@ set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
-
-
 valhalla_module(NAME tyr
   SOURCES
     ${sources}
@@ -46,6 +44,6 @@ valhalla_module(NAME tyr
     valhalla::odin
     valhalla::proto
     ${valhalla_protobuf_targets}
-    Boost::boost 
-    ${gdal_target}
+    Boost::boost
+    ${GDAL_TARGET}
     )

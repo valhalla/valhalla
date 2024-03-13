@@ -36,7 +36,7 @@ option(ENABLE_SINGLE_FILES_WERROR "Convert compiler warnings to errors for singl
 option(PREFER_EXTERNAL_DEPS "Whether to use internally vendored headers or find the equivalent external package" OFF)
 # useful to workaround issues likes this https://stackoverflow.com/questions/24078873/cmake-generated-xcode-project-wont-compile
 option(ENABLE_STATIC_LIBRARY_MODULES "If ON builds Valhalla modules as STATIC library targets" OFF)
-option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" OFF)
+option(ENABLE_GDAL "Whether to include GDAL; currently only used for raster serialization of isotile grid" ON)
 
 set(LOGGING_LEVEL "" CACHE STRING "Logging level, default is INFO")
 set_property(CACHE LOGGING_LEVEL PROPERTY STRINGS "NONE;ALL;ERROR;WARN;INFO;DEBUG;TRACE")
@@ -191,12 +191,17 @@ else()
   message(FATAL_ERROR "Required target protobuf::libprotobuf-lite or protobuf::libprotobuf is not defined")
 endif()
 
-# gdal
-set(gdal_target "")
+# unless you said you didnt want gdal we try to turn it on, if we cant we tell you
+set(GDAL_TARGET "")
 if (ENABLE_GDAL)
-  find_package(GDAL REQUIRED)
-  add_compile_definitions(ENABLE_GDAL)
-  set(gdal_target GDAL::GDAL)
+  find_package(GDAL QUIET)
+  if (GDAL_FOUND)
+    set(GDAL_TARGET GDAL::GDAL)
+    add_compile_definitions(ENABLE_GDAL)
+    message(STATUS "Gdal support is enabled")
+  else()
+    message(WARNING "Unable to enable gdal support")
+  endif()
 endif()
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG OFF)

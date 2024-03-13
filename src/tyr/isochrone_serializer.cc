@@ -16,6 +16,23 @@
 using namespace valhalla::baldr::json;
 
 namespace {
+
+// allows us to only ever register the driver once per process without having to put it
+// in every executable that might call into this code
+struct gdal_singleton_t {
+  static const gdal_singleton_t& get() {
+    static const gdal_singleton_t instance;
+    return instance;
+  }
+
+private:
+  gdal_singleton_t() {
+#ifdef ENABLE_GDAL
+    GDALRegister_GTiff();
+#endif
+  }
+};
+
 using rgba_t = std::tuple<float, float, float>;
 
 using namespace valhalla;
@@ -169,7 +186,7 @@ std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedDa
   char** geotiff_options = NULL;
   geotiff_options = CSLSetNameValue(geotiff_options, "COMPRESS", "PACKBITS");
 
-  // TODO: check if there's an easy way to only instantiate the driver once
+  gdal_singleton_t::get();
   auto driver_manager = GetGDALDriverManager();
   auto geotiff_driver = driver_manager->GetDriverByName("GTiff");
   auto geotiff_dataset =
