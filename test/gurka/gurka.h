@@ -26,6 +26,7 @@
 #include "tyr/actor.h"
 #include "tyr/serializers.h"
 
+#include <boost/format.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
