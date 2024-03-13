@@ -20,8 +20,6 @@ set(system_includes
   ${date_include_dir}
   $<$<BOOL:${WIN32}>:${dirent_include_dir}>)
 
-set(tyr_dependencies )
-
 valhalla_module(NAME tyr
   SOURCES
     ${sources}
