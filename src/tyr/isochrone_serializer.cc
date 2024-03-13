@@ -24,6 +24,7 @@ struct gdal_singleton_t {
     static const gdal_singleton_t instance;
     return instance;
   }
+
 private:
   gdal_singleton_t() {
 #ifdef ENABLE_GDAL
