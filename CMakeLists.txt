@@ -192,9 +192,11 @@ else()
 endif()
 
 # unless you said you didnt want gdal we try to turn it on, if we cant we tell you
+set(GDAL_TARGET "")
 if (ENABLE_GDAL)
   find_package(GDAL QUIET)
   if (GDAL_FOUND)
+    set(GDAL_TARGET GDAL::GDAL)
     add_compile_definitions(ENABLE_GDAL)
     message(STATUS "Gdal support is enabled")
   else()

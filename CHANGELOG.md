@@ -39,6 +39,7 @@
    * FIXED: Use helper function for only parsing out names from DirectedEdge when populating intersecting edges [#4604](https://github.com/valhalla/valhalla/pull/4604)  
    * FIXED: Osmnode size reduction: Fixed excessive disk space for planet build [#4605](https://github.com/valhalla/valhalla/pull/4605)
    * FIXED: CostMatrix for trivial routes with oneways [#4626](https://github.com/valhalla/valhalla/pull/4626)
+   * FIXED: some entry points to creating geotiff isochrones output did not register the geotiff driver before attempting to use it [#4628](https://github.com/valhalla/valhalla/pull/4628)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
