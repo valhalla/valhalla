@@ -360,6 +360,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
   uint32_t shortcut = 0;
   uint32_t shortcut_count = 0;
   uint32_t total_edge_count = 0;
+  std::unordered_set<uint64_t> end_nodes; // detect shortcuts with same start/end node
   GraphId edge_id(start_node.tileid(), start_node.level(), edge_index);
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
@@ -547,6 +548,15 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       tilebuilder.directededges().emplace_back(std::move(newedge));
       shortcut_count++;
       shortcut++;
+      if (!end_nodes.insert(newedge.endnode()).second) {
+        PointLL start_ll = tile->get_node_ll(start_node);
+        PointLL end_ll = tile->get_node_ll(end_node);
+        LOG_WARN("Node " + std::to_string(start_node) +
+                 " has outbound shortcuts with same start/end nodes starting at node at LL = " +
+                 std::to_string(start_ll.lat()) + "," + std::to_string(start_ll.lng()) +
+                 " and ending at node at LL = " + std::to_string(end_ll.lat()) + "," +
+                 std::to_string(end_ll.lng()));
+      }
     }
   }
 
