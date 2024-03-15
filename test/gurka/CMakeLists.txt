@@ -17,7 +17,6 @@ if(ENABLE_DATA_TOOLS)
     test_landmarks.cc
     test_languages.cc
     test_locate.cc
-    test_match.cc
     test_multi_level_loki.cc
     test_osrm_serializer.cc
     test_pbf_api.cc
