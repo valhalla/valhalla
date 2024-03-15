@@ -25,7 +25,6 @@ if(ENABLE_DATA_TOOLS)
     test_phonemes_w_langs.cc
     test_recost.cc
     test_time_tracking.cc
-    test_traffic.cc
     )
 
   ## Add executable targets
