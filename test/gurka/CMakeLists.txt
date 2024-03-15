@@ -26,7 +26,6 @@ if(ENABLE_DATA_TOOLS)
     test_recost.cc
     test_time_tracking.cc
     test_traffic.cc
-    test_traffic_smoothing.cc
     )
 
   ## Add executable targets
