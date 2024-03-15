@@ -11,7 +11,6 @@ if(ENABLE_DATA_TOOLS)
   # "-Werror" flag
   # Avoid adding a filename to this list
   set(TESTS_WITH_WARNINGS
-    test_elevation.cc
     test_gtfs.cc
     test_instructions_roundabout.cc
     test_languages.cc
