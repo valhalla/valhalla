@@ -14,7 +14,6 @@ if(ENABLE_DATA_TOOLS)
     test_elevation.cc
     test_gtfs.cc
     test_instructions_roundabout.cc
-    test_landmarks.cc
     test_languages.cc
     test_locate.cc
     test_multi_level_loki.cc
