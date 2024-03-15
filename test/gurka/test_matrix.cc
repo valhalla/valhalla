@@ -788,14 +788,23 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
       {"CD", {{"highway", "residential"}}}, {"BE", {{"highway", "residential"}}},
       {"EF", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
   };
-  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map =
       gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_trivial");
 
   // test the against-oneway case
   {
-    auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto");
+    std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", options);
     EXPECT_EQ(matrix.matrix().distances(0), 2200);
+
+    std::vector<PointLL> oneway_vertices;
+    for (auto& node : {"1", "C", "F", "E", "B", "2"}) {
+      oneway_vertices.push_back(layout[node]);
+    }
+    auto encoded = encode<std::vector<PointLL>>(oneway_vertices, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
   }
 
   // test the normal trivial case
