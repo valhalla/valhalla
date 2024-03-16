@@ -2,15 +2,37 @@
 #include "baldr/json.h"
 #include "midgard/point2.h"
 #include "midgard/pointll.h"
+#include "thor/worker.h"
 #include "tyr/serializers.h"
 
 #include <cmath>
 #include <sstream>
 #include <utility>
 
+#ifdef ENABLE_GDAL
+#include <gdal_priv.h>
+#endif
+
 using namespace valhalla::baldr::json;
 
 namespace {
+
+// allows us to only ever register the driver once per process without having to put it
+// in every executable that might call into this code
+struct gdal_singleton_t {
+  static const gdal_singleton_t& get() {
+    static const gdal_singleton_t instance;
+    return instance;
+  }
+
+private:
+  gdal_singleton_t() {
+#ifdef ENABLE_GDAL
+    GDALRegister_GTiff();
+#endif
+  }
+};
+
 using rgba_t = std::tuple<float, float, float>;
 
 using namespace valhalla;
@@ -21,6 +43,7 @@ using feature_t = std::list<contour_t>;               // rings per interval
 using contours_t = std::vector<std::list<feature_t>>; // all rings
 using contour_group_t = std::vector<const contour_t*>;
 using grouped_contours_t = std::vector<contour_group_t>;
+// dimension, value (seconds/meters), name (time/distance), color
 using contour_interval_t = std::tuple<size_t, float, std::string, std::string>;
 
 grouped_contours_t GroupContours(const bool polygons, const feature_t& contours) {
@@ -133,6 +156,91 @@ void addLocations(Api& request, valhalla::baldr::json::ArrayPtr& features) {
     idx++;
   }
 }
+
+#ifdef ENABLE_GDAL
+// get a temporary file name suffix for GDAL's virtual file system
+std::string GenerateTmpFName() {
+  std::stringstream ss;
+  ss << "/vsimem/" << std::this_thread::get_id() << "_"
+     << std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  return ss.str();
+}
+
+std::string serializeGeoTIFF(Api& request, const std::shared_ptr<const GriddedData<2>>& isogrid) {
+
+  // time, distance
+  std::vector<bool> metrics{false, false};
+  for (auto& contour : request.options().contours()) {
+    metrics[0] = metrics[0] || contour.has_time_case();
+    metrics[1] = metrics[1] || contour.has_distance_case();
+  }
+
+  auto box = isogrid->MinExtent();
+  int32_t ext_x = box[2] - box[0];
+  int32_t ext_y = box[3] - box[1];
+
+  // for GDALs virtual fs
+  std::string name = GenerateTmpFName();
+
+  auto nbands = std::count(metrics.begin(), metrics.end(), true);
+  char** geotiff_options = NULL;
+  geotiff_options = CSLSetNameValue(geotiff_options, "COMPRESS", "PACKBITS");
+
+  gdal_singleton_t::get();
+  auto driver_manager = GetGDALDriverManager();
+  auto geotiff_driver = driver_manager->GetDriverByName("GTiff");
+  auto geotiff_dataset =
+      geotiff_driver->Create(name.c_str(), ext_x, ext_y, nbands, GDT_UInt16, geotiff_options);
+
+  OGRSpatialReference spatial_ref;
+  spatial_ref.SetWellKnownGeogCS("EPSG:4326");
+  double geo_transform[6] = {isogrid->TileBounds(isogrid->TileId(box[0], box[1])).minx(), // minx
+                             isogrid->TileSize(),
+                             0,
+                             isogrid->TileBounds(isogrid->TileId(box[0], box[1])).miny(), // miny
+                             0,
+                             isogrid->TileSize()};
+
+  geotiff_dataset->SetGeoTransform(geo_transform);
+  geotiff_dataset->SetSpatialRef(const_cast<OGRSpatialReference*>(&spatial_ref));
+
+  for (size_t metric_idx = 0; metric_idx < metrics.size(); ++metric_idx) {
+    if (!metrics[metric_idx])
+      continue; // only create bands for requested metrics
+    uint16_t* data = new uint16_t[ext_x * ext_y];
+
+    // seconds or 10 meter steps
+    float scale_factor = metric_idx == 0 ? 60 : 100;
+    for (int32_t i = 0; i < ext_y; ++i) {
+      for (int32_t j = 0; j < ext_x; ++j) {
+        auto tileid = isogrid->TileId(j + box[0], i + box[1]);
+        data[i * ext_x + j] =
+            static_cast<uint16_t>(isogrid->DataAt(tileid, metric_idx) * scale_factor);
+      }
+    }
+    auto band = geotiff_dataset->GetRasterBand(nbands == 2 ? (metric_idx + 1) : 1);
+    band->SetNoDataValue(std::numeric_limits<uint16_t>::max());
+    band->SetDescription(metric_idx == 0 ? "Time (seconds)" : "Distance (10m)");
+
+    CPLErr err = band->RasterIO(GF_Write, 0, 0, ext_x, ext_y, data, ext_x, ext_y, GDT_UInt16, 0, 0);
+
+    delete[] data;
+
+    if (err != CE_None) {
+      throw valhalla_exception_t{599, "Unknown error when writing GeoTIFF."};
+    }
+  }
+
+  GDALClose(geotiff_dataset);
+  vsi_l_offset bufferlength;
+  GByte* bytes = VSIGetMemFileBuffer(name.c_str(), &bufferlength, TRUE);
+
+  // TODO: there's gotta be way to do this without copying
+  std::string data(reinterpret_cast<char*>(bytes), bufferlength);
+
+  return data;
+};
+#endif
 
 std::string serializeIsochroneJson(Api& request,
                                    std::vector<contour_interval_t>& intervals,
@@ -267,15 +375,30 @@ namespace tyr {
 
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                midgard::GriddedData<2>::contours_t& contours,
-                                bool polygons,
-                                bool show_locations) {
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid) {
+
+  // only generate if json or pbf output is requested
+  contours_t contours;
 
   switch (request.options().format()) {
     case Options_Format_pbf:
-      return serializeIsochronePbf(request, intervals, contours);
     case Options_Format_json:
-      return serializeIsochroneJson(request, intervals, contours, show_locations, polygons);
+      // we have parallel vectors of contour properties and the actual geojson features
+      // this method sorts the contour specifications by metric (time or distance) and then by value
+      // with the largest values coming first. eg (60min, 30min, 10min, 40km, 10km)
+      contours =
+          isogrid->GenerateContours(intervals, request.options().polygons(),
+                                    request.options().denoise(), request.options().generalize());
+      return request.options().format() == Options_Format_json
+                 ? serializeIsochroneJson(request, intervals, contours,
+                                          request.options().show_locations(),
+                                          request.options().polygons())
+                 : serializeIsochronePbf(request, intervals, contours);
+
+#ifdef ENABLE_GDAL
+    case Options_Format_geotiff:
+      return serializeGeoTIFF(request, isogrid);
+#endif
     default:
       throw;
   }

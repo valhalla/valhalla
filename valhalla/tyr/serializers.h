@@ -40,10 +40,7 @@ std::string serializeMatrix(Api& request);
  */
 std::string serializeIsochrones(Api& request,
                                 std::vector<midgard::GriddedData<2>::contour_interval_t>& intervals,
-                                midgard::GriddedData<2>::contours_t& contours,
-                                bool polygons = true,
-                                bool show_locations = false);
-
+                                const std::shared_ptr<const midgard::GriddedData<2>>& isogrid);
 /**
  * Turn heights and ranges into a height response
  *

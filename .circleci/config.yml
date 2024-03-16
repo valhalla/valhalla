@@ -35,7 +35,7 @@ jobs:
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
             -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On
       - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
@@ -74,7 +74,7 @@ jobs:
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
             -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
-            -DENABLE_SINGLE_FILES_WERROR=Off
+            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
@@ -106,7 +106,7 @@ jobs:
           mkdir build
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DCPACK_GENERATOR=DEB \
-            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SINGLE_FILES_WERROR=Off
+            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
