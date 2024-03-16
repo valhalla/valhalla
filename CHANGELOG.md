@@ -148,7 +148,6 @@
    * ADDED: Support for configuring a universal request timeout [#3966](https://github.com/valhalla/valhalla/pull/3966)
    * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
    * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
-   * ADDED: source & target index in error/warning when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
    * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
    * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
    * ADDED: An option to slim down matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
@@ -162,7 +161,7 @@
    * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
    * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
    * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
-   * ADDED: source & target index when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
+   * ADDED: source & target index in error/warning when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**
