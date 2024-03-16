@@ -1,6 +1,6 @@
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/admin.lua
       ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
       --variable-name lua_admin_lua
@@ -10,7 +10,7 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/admin_lua_proc.h
   VERBATIM)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
-  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/Binary2Header.cmake
+  COMMAND ${CMAKE_COMMAND} -P ${VALHALLA_SOURCE_DIR}/cmake/ValhallaBin2Header.cmake
       ${VALHALLA_SOURCE_DIR}/lua/graph.lua
       ${CMAKE_CURRENT_BINARY_DIR}/graph_lua_proc.h
       --variable-name lua_graph_lua
@@ -42,6 +42,7 @@ set(sources
   graphvalidator.cc
   hierarchybuilder.cc
   ingest_transit.cc
+  landmarks.cc
   linkclassification.cc
   luatagtransform.cc
   node_expander.cc
@@ -61,8 +62,11 @@ set(sources
   util.cc
   validatetransit.cc)
 
-# treat date library as system
-set(system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include)
+set(system_includes
+  ${date_include_dir}
+  ${rapidjson_include_dir}
+  $<$<BOOL:${WIN32}>:${dirent_include_dir}>
+  ${PROTOBUF_INCLUDE_DIR})
 if(APPLE)
   list(APPEND system_includes ${VALHALLA_SOURCE_DIR}/third_party/date/include/date)
 endif()
@@ -74,23 +78,21 @@ valhalla_module(NAME mjolnir
     PUBLIC
       ${VALHALLA_SOURCE_DIR}
       ${VALHALLA_SOURCE_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-      $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
-      ${PROTOBUF_INCLUDE_DIR}
    PRIVATE
       ${CMAKE_CURRENT_BINARY_DIR}
       ${CMAKE_CURRENT_BINARY_DIR}/valhalla
-      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
   SYSTEM_INCLUDE_DIRECTORIES
     PUBLIC
       ${system_includes}
+    PRIVATE
+      ${VALHALLA_SOURCE_DIR}/third_party/just_gtfs/include
+      ${robinhoodhashing_include_dir}
   DEPENDS
     valhalla::proto
     valhalla::baldr
-    SpatiaLite::SpatiaLite
+    PkgConfig::SpatiaLite
     SQLite3::SQLite3
     Boost::boost
-    Lua::Lua
+    PkgConfig::LuaJIT
     Threads::Threads
-    ZLIB::ZLIB
-    robin_hood::robin_hood)
+    PkgConfig::ZLIB)

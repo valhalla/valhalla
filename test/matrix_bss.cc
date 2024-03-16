@@ -14,7 +14,7 @@
 
 #include "sif/costfactory.h"
 #include "sif/dynamiccost.h"
-#include "thor/matrix_common.h"
+#include "thor/matrixalgorithm.h"
 #include "thor/timedistancebssmatrix.h"
 
 using namespace valhalla;
@@ -34,7 +34,7 @@ namespace {
 // of the existing way on which the bike share sation is projected. It would be advisable to not set
 // radius to 0 so that the algorithm will choose the best projection. Otherwise, the location may be
 // projected uniquely on the bss_connection.
-const auto config =
+const auto cfg =
     test::make_config("test/data/paris_bss_tiles", {{"loki.service_defaults.radius", "10"}});
 } // namespace
 
@@ -114,10 +114,8 @@ public:
     ParseApi(make_matrix_request(sources, targets), Options::sources_to_targets, matrix_request);
     loki_worker.matrix(matrix_request);
 
-    auto matrix_results =
-        timedist_matrix_bss.SourceToTarget(matrix_request.options().sources(),
-                                           matrix_request.options().targets(), reader, mode_costing,
-                                           sif::TravelMode::kPedestrian, 400000.0);
+    timedist_matrix_bss.SourceToTarget(matrix_request, reader, mode_costing,
+                                       sif::TravelMode::kPedestrian, 400000.0);
 
     auto s_size = sources.size();
     auto t_size = targets.size();
@@ -140,8 +138,8 @@ public:
         int route_length = legs.begin()->summary().length() * 1000;
 
         size_t m_result_idx = i * t_size + j;
-        int matrix_time = matrix_results[m_result_idx].time;
-        int matrix_length = matrix_results[m_result_idx].dist;
+        int matrix_time = matrix_request.matrix().times()[m_result_idx];
+        int matrix_length = matrix_request.matrix().distances()[m_result_idx];
 
         EXPECT_NEAR(matrix_time, route_time, kTimeThreshold);
         EXPECT_NEAR(matrix_length, route_length, route_length * kDistancePercentThreshold);
@@ -150,11 +148,11 @@ public:
   }
 
 private:
-  loki_worker_t loki_worker{config};
-  thor_worker_t thor_worker{config};
-  odin_worker_t odin_worker{config};
+  loki_worker_t loki_worker{cfg};
+  thor_worker_t thor_worker{cfg};
+  odin_worker_t odin_worker{cfg};
 
-  GraphReader reader{config.get_child("mjolnir")};
+  GraphReader reader{cfg.get_child("mjolnir")};
   mode_costing_t mode_costing;
   TimeDistanceBSSMatrix timedist_matrix_bss;
 };

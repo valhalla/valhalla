@@ -237,7 +237,7 @@ public:
   }
 
   /**This method adds to the exclude list based on the
-   * user inputed exclude and include lists.
+   * user-provided exclude and include lists.
    */
   virtual void AddToExcludeList(const graph_tile_ptr& tile) override;
 
@@ -716,7 +716,8 @@ namespace {
 
 TransitCost* make_transitcost_from_json(const std::string& property, float testVal) {
   std::stringstream ss;
-  ss << R"({"costing_options":{"transit":{")" << property << R"(":)" << testVal << "}}}";
+  ss << R"({"costing": "transit", "costing_options":{"transit":{")" << property << R"(":)" << testVal
+     << "}}}";
   Api request;
   ParseApi(ss.str(), valhalla::Options::route, request);
   return new TransitCost(request.options().costings().find(Costing::transit)->second);

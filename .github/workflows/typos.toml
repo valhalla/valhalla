@@ -1,0 +1,58 @@
+# See https://github.com/crate-ci/typos/blob/master/docs/reference.md
+# for an explanation of the available settings.
+
+[default]
+extend-ignore-identifiers-re = [
+   "OTSs", # mentioned in CHANGELOG ... ???
+]
+
+extend-ignore-re = [
+  '"shape": ?"[^"]+"',
+  '"encoded_polyline": ?"[^"]+"',
+  '"id": ?"[^"]+"',
+  'R"\([^)]+\)"',
+]
+
+[default.extend-words]
+segway = "segway"
+subtiles = "subtiles"
+nd = "nd" # node
+Thur = "Thur" # short for Thursday, found in timeparsing.cc
+
+# places
+Pont = "Pont"     # Rue du Pont
+Filles = "Filles" # Rue des Filles
+Unter = "Unter"   # Unter den Linden
+Calle = "Calle"   # street in Spanish
+
+# wrong but fixing it via substitution might make comments more confusing e.g. "index for the informations"
+informations = "informations"
+
+[default.extend-identifiers]
+O_WRONLY = "O_WRONLY"
+countr_zero = "countr_zero"
+skip_opps = "skip_opps"
+
+FO_DELETE = "FO_DELETE"
+FOF_NO_UI = "FOF_NO_UI"
+
+[files]
+extend-exclude = [
+    "*.osm",
+
+    "third_party/",
+    "date_time/",
+    "locales/",
+
+    # test files
+    "test_requests/",
+    "url_de_benchmark_routes.txt",
+
+    "test/gurka/", # contains a bunch of two-letter names to refer to edges
+    "src/baldr/admin.cc", # contains a bunch of two-letter country-codes
+
+    # the following files are excluded because they contain some split up
+    # polyline strings that cannot be easily detected with `extend-ignore-re`
+    "test/skadi_service.cc",
+    "test/util_midgard.cc",
+]

@@ -104,8 +104,8 @@ void TryGetDOW(const std::string& date_time, uint32_t expected_dow) {
 void TryGetDuration(const std::string& date_time,
                     uint32_t seconds,
                     const std::string& expected_date_time) {
-
-  auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
+  const auto* tz =
+      DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
 
   EXPECT_EQ(DateTime::get_duration(date_time, seconds, tz), expected_date_time)
       << std::string("Incorrect duration ") + DateTime::get_duration(date_time, seconds, tz) +
@@ -631,6 +631,46 @@ TEST(DateTime, TestDayOfWeek) {
   EXPECT_EQ(dow, 3) << "DateTime::day_of_week failed: 3 expected";
 }
 
+TEST(DateTime, TimezoneAliases) {
+  const auto& dt_db = DateTime::get_tz_db();
+  // map of alias and target names
+  // this can be old deprecated timezone name (pre-2023) or renamed timezones (after 2023)
+  std::vector<std::pair<std::string, std::string>> pairs =
+      {{"Etc/Zulu", "Etc/UTC"},
+       {"Etc/GMT-0", "Etc/GMT"},
+       {"ROC", "Asia/Taipei"},
+       {"GB", "Europe/London"},
+       {"NZ-CHAT", "Pacific/Chatham"},
+       {"Asia/Ujung_Pandang", "Asia/Makassar"},
+       {"Africa/Bamako", "Africa/Abidjan"},
+       {"Africa/Kampala", "Africa/Nairobi"},
+       {"Asia/Kuala_Lumpur", "Asia/Singapore"}, // ^ deprecated 2018 tz
+       {"America/Nuuk", "America/Godthab"},
+       {"Pacific/Kanton", "Pacific/Enderbury"},
+       {"Europe/Kyiv", "Europe/Kiev"}}; // ^ renamed 2023 tz
+
+  for (const auto& pair : pairs) {
+    auto alias_idx = dt_db.from_index(dt_db.to_index(pair.first));
+    EXPECT_EQ(alias_idx, dt_db.from_index(dt_db.to_index(pair.second)));
+  }
+}
+
+TEST(DateTime, TimezoneIndices) {
+  const auto& dt_db = DateTime::get_tz_db();
+
+  // test some official/current timezone names & indices
+  std::vector<std::pair<size_t, std::string>> pairs = {
+      {1, "Africa/Abidjan"},  {82, "America/Indiana/Tell_City"}, {323, "Europe/Samara"},
+      {387, "WET"},           {629, "America/Ciudad_Juarez"}, // new timezone since 2023c update
+      {726, "Asia/Qostanay"},                                 // new timezone since 2023c update
+  };
+
+  for (const auto& pair : pairs) {
+    EXPECT_EQ(pair.first, dt_db.to_index(pair.second));
+    EXPECT_EQ(pair.second, dt_db.from_index(pair.first)->name());
+  }
+}
+
 TEST(DateTime, TestSecondOfWeek) {
   auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
   // 2019-11-06T17:15
@@ -686,19 +726,24 @@ TEST(DateTime, DiffCaching) {
       tc{123, 335, 7},      tc{2, 335, 8},
   };
 
-  // for each test case
+  // some of the above tz indices point to the same tz bcs of deprecations
+  // and how we handle them
+  std::unordered_set<const date::time_zone*> unique_tzs;
   uint64_t total_offset = 0;
+  // for each test case
   for (const auto& test_case : test_cases) {
     // the first part is how many iterations/calls to the diff method
     for (int i = 0; i < std::get<0>(test_case); ++i) {
       // the second two parts of the tuple are the origin tz index and the destination tz index
+      unique_tzs.insert(tzdb.from_index(std::get<1>(test_case)));
+      unique_tzs.insert(tzdb.from_index(std::get<2>(test_case)));
       total_offset +=
           DateTime::timezone_diff(1586579654 + i * 15, tzdb.from_index(std::get<1>(test_case)),
                                   tzdb.from_index(std::get<2>(test_case)), &cache);
     }
   }
   EXPECT_NE(total_offset, 0);
-  EXPECT_GE(cache.size(), test_cases.size());
+  EXPECT_GE(cache.size(), unique_tzs.size());
 }
 
 } // namespace

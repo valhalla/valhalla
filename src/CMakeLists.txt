@@ -1,46 +1,13 @@
 include(GNUInstallDirs)
+include(ValhallaVersion)
+include(ValhallaWarnings)
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-
-## Set relative to the current source and binary paths
+## Set relative binary path
 set(VALHALLA_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-if(NOT VALHALLA_SOURCE_DIR)
-  set(VALHALLA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+if (ENABLE_COMPILER_WARNINGS)
+  message(STATUS "Enabling compiler warning flags")
 endif()
-
-## Get Valhalla version
-file(STRINGS "${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h" version_lines REGEX "VALHALLA_VERSION_(MAJOR|MINOR|PATCH)")
-foreach(line ${version_lines})
-  if("${line}" MATCHES "(VALHALLA_VERSION_(MAJOR|MINOR|PATCH))[\t ]+([0-9]+)")
-    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3})
-    set(${CMAKE_MATCH_1} ${CMAKE_MATCH_3} PARENT_SCOPE)
-  endif()
-endforeach()
-if(DEFINED VALHALLA_VERSION_MAJOR)
-  set(VERSION "${VALHALLA_VERSION_MAJOR}")
-  if(DEFINED VALHALLA_VERSION_MINOR)
-    set(VERSION "${VERSION}.${VALHALLA_VERSION_MINOR}")
-    if(DEFINED VALHALLA_VERSION_PATCH)
-      set(VERSION "${VERSION}.${VALHALLA_VERSION_PATCH}")
-    endif()
-  endif()
-else()
-  message(FATAL_ERROR "No Valhalla major version")
-endif()
-
-## Declare C++ build configuration variables as part of HandleLibcxxFlags.
-#
-# - LIBCXX_COMPILE_FLAGS: flags used to compile libc++
-# - LIBCXX_LINK_FLAGS: flags used to link libc++
-# - LIBCXX_LIBRARIES: libraries to link libc++ to
-set(LIBCXX_COMPILE_FLAGS "")
-set(LIBCXX_LINK_FLAGS "")
-set(LIBCXX_LIBRARIES "")
-
-# Inlclude build macros for updating configuration variables
-include(HandleLibcxxFlags)
-
-## Define libvalhalla sub-modules as OBJECT libraries
 
 # TODO: Remove workaround after switching to CMake 3.11
 # with fixed  https://gitlab.kitware.com/cmake/cmake/issues/14778
@@ -53,20 +20,7 @@ set(libvalhalla_include_directories "" CACHE INTERNAL "")
 set(libvalhalla_link_objects "" CACHE INTERNAL  "")
 set(libvalhalla_link_libraries "" CACHE INTERNAL  "")
 
-# Setup warning flags. Note that these are only added to libvalhalla_compile_options if
-# ENABLE_COMPILER_WARNINGS=ON. Note that this needs to be done before the definition of
-# valhalla_module, otherwise LIBCXX_COMPILE_FLAGS will not available for downstream targets.
-
-if (ENABLE_COMPILER_WARNINGS)
-  message(STATUS "Enabling compiler warning flags")
-endif()
-
-function (cxx_add_warning_flags target)
-  target_add_compile_flags_if_supported(${target} PRIVATE -Wall -Wextra)
-  if (ENABLE_WERROR)
-   target_add_compile_flags_if_supported(${target} PRIVATE -Werror)
-  endif()
-endfunction()
+## Define libvalhalla sub-modules as OBJECT libraries
 
 function(valhalla_module)
   set(oneValueArgs NAME)
@@ -82,6 +36,7 @@ function(valhalla_module)
   endif()
   list(APPEND MODULE_SOURCES ${MODULE_SOURCES_WITH_WARNINGS})
 
+  # add object or static library
   set(library valhalla-${MODULE_NAME})
   if (ENABLE_STATIC_LIBRARY_MODULES)
     add_library(${library} STATIC ${MODULE_SOURCES} ${MODULE_HEADERS})
@@ -161,10 +116,6 @@ function(valhalla_module)
   endif()
 endfunction()
 
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/robin-hood-hashing ${CMAKE_BINARY_DIR}/third_party/robin-hood-hashing)
-SET(CPP_STATSD_STANDALONE OFF CACHE BOOL "ignore test targets" FORCE)
-add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client ${CMAKE_BINARY_DIR}/third_party/cpp-statsd-client)
-
 add_subdirectory(../proto ${CMAKE_CURRENT_BINARY_DIR}/valhalla/proto)
 add_subdirectory(baldr)
 add_subdirectory(loki)
@@ -184,15 +135,17 @@ endif()
 set(valhalla_hdrs
     ${VALHALLA_SOURCE_DIR}/valhalla/valhalla.h
     ${VALHALLA_SOURCE_DIR}/valhalla/worker.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${VALHALLA_SOURCE_DIR}/valhalla/filesystem.h
     ${VALHALLA_SOURCE_DIR}/valhalla/proto_conversions.h
+    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     )
 
 set(valhalla_src
+    config.cc
     worker.cc
     filesystem.cc
     proto_conversions.cc
-    ${VALHALLA_SOURCE_DIR}/valhalla/config.h
     ${valhalla_hdrs}
     ${libvalhalla_link_objects})
 
@@ -229,27 +182,39 @@ endif()
 target_include_directories(valhalla
   PUBLIC
     ${VALHALLA_SOURCE_DIR}
+    ${VALHALLA_SOURCE_DIR}/src      # For private headers in /src
     ${VALHALLA_SOURCE_DIR}/valhalla # TODO: this path must be removed and changed to #include <valhalla/...> in headers
     ${VALHALLA_BINARY_DIR}
     ${VALHALLA_BINARY_DIR}/valhalla  # TODO: this path must be removed and changed to #include <valhalla/...> in headers
-    ${VALHALLA_SOURCE_DIR}/third_party/rapidjson/include
-    ${VALHALLA_SOURCE_DIR}/third_party/date/include
+    ${rapidjson_include_dir}
+    ${date_include_dir}
     ${VALHALLA_SOURCE_DIR}/third_party/cpp-statsd-client/include
-    $<$<BOOL:${WIN32}>:${VALHALLA_SOURCE_DIR}/third_party/dirent/include>
+    $<$<BOOL:${WIN32}>:${dirent_include_dir}>
   PRIVATE
     ${libvalhalla_include_directories})
 
 target_link_libraries(valhalla
   PUBLIC
     ${libvalhalla_link_libraries}
+    $<$<BOOL:${WIN32}>:ws2_32>
   PRIVATE
     $<$<BOOL:${ENABLE_COVERAGE}>:gcov>
-    Threads::Threads
-    cpp-statsd-client)
+    Threads::Threads)
 
 set_target_properties(valhalla PROPERTIES
   VERSION "${VERSION}"
   SOVERSION "${VALHALLA_VERSION_MAJOR}")
+
+# pkg-config installation
+if(PKG_CONFIG_FOUND)
+  include(ValhallaPkgConfig)
+  
+  configure_valhalla_pc()
+
+  install(FILES
+    ${CMAKE_BINARY_DIR}/libvalhalla.pc
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
+endif()
 
 
 install(TARGETS valhalla
@@ -281,20 +246,3 @@ install(FILES ${VALHALLA_SOURCE_DIR}/COPYING ${VALHALLA_SOURCE_DIR}/CHANGELOG.md
 install(FILES ${valhalla_hdrs}
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/valhalla"
   COMPONENT development)
-
-if(PKG_CONFIG_FOUND)
-  ## Configure libvalhalla.pc file with valhalla target linking options via PkgConfig linker
-  set(CMAKE_PkgConfig_LINK_EXECUTABLE "<CMAKE_COMMAND> -DINPUT=${VALHALLA_SOURCE_DIR}/libvalhalla.pc.in -DOUTPUT=<TARGET> -DVERSION=${VERSION} -Dprefix=${CMAKE_INSTALL_PREFIX} -Dexec_prefix=${CMAKE_INSTALL_PREFIX} -Dlibdir=${CMAKE_INSTALL_LIBDIR} -Dincludedir=${CMAKE_INSTALL_INCLUDEDIR} -Ddeplibs=\"<FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>\" -P ${CMAKE_SOURCE_DIR}/cmake/PkgConfig.cmake")
-
-  add_executable(libvalhalla.pc EXCLUDE_FROM_ALL ../libvalhalla.pc.in)
-  target_link_libraries(libvalhalla.pc valhalla)
-  set_target_properties(libvalhalla.pc PROPERTIES LINKER_LANGUAGE PkgConfig)
-  set_target_properties(libvalhalla.pc PROPERTIES FOLDER "Library")
-  install(CODE "execute_process(COMMAND ${CMAKE_COMMAND} --build . --target libvalhalla.pc OUTPUT_QUIET ERROR_VARIABLE _err RESULT_VARIABLE _res)
-  if(NOT \${_res} EQUAL 0)
-    message(FATAL_ERROR \"Configuring libvalhalla.pc failed: \${_err}\")
-  endif()")
-  install(FILES ${VALHALLA_BINARY_DIR}/libvalhalla.pc
-    DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
-    COMPONENT development)
-endif()

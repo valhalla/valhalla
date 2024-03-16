@@ -10,7 +10,9 @@ set(protobuf_descriptors
   transit.proto
   transit_fetch.proto
   incidents.proto
-  status.proto)
+  status.proto
+  matrix.proto
+  isochrone.proto)
 
 if(ENABLE_DATA_TOOLS)
   # Only mjolnir needs the OSM PBF descriptors
@@ -18,6 +20,7 @@ if(ENABLE_DATA_TOOLS)
     ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/fileformat.proto
     ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
 endif()
+
 
 protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 

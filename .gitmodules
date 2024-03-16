@@ -22,9 +22,6 @@
 [submodule "third_party/microtar"]
 	path = third_party/microtar
 	url = https://github.com/rxi/microtar.git
-[submodule "third_party/benchmark"]
-	path = third_party/benchmark
-	url = https://github.com/google/benchmark
 [submodule "third_party/robin-hood-hashing"]
 	path = third_party/robin-hood-hashing
 	url = https://github.com/martinus/robin-hood-hashing.git
@@ -37,12 +34,12 @@
 [submodule "third_party/cpp-statsd-client"]
 	path = third_party/cpp-statsd-client
 	url = https://github.com/vthiery/cpp-statsd-client
-[submodule "third_party/lz4"]
-	path = third_party/lz4
-	url = https://github.com/lz4/lz4
 [submodule "third_party/cxxopts"]
 	path = third_party/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
 [submodule "third_party/just_gtfs"]
 	path = third_party/just_gtfs
-	url = https://github.com/mesozoic-drones/just_gtfs.git
+	url = https://github.com/valhalla/just_gtfs
+[submodule "third_party/tz"]
+	path = third_party/tz
+	url = https://github.com/eggert/tz.git

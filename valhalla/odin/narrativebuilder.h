@@ -436,6 +436,8 @@ protected:
       size_t stop_count,
       const std::unordered_map<std::string, std::string>& transit_platform_count_labels);
 
+  std::string FormPassInstruction(Maneuver& maneuver);
+
   /**
    * Returns the plural category based on the value of the specified
    * count and the language rules.

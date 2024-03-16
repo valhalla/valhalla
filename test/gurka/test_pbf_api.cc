@@ -28,28 +28,42 @@ TEST(pbf_api, pbf_in_out) {
   const auto layout = gurka::detail::map_to_coordinates(ascii_map, 10);
   auto map = gurka::buildtiles(layout, ways, {}, {}, "test/data/gurka_api_minimal");
 
-  std::unordered_set<Options::Action> pbf_actions{
-      Options::route,    Options::trace_route,      Options::optimized_route,
-      Options::centroid, Options::trace_attributes, Options::status,
-  };
+  std::unordered_set<Options::Action> pbf_actions{Options::route,
+                                                  Options::trace_route,
+                                                  Options::optimized_route,
+                                                  Options::centroid,
+                                                  Options::trace_attributes,
+                                                  Options::status,
+                                                  Options::sources_to_targets,
+                                                  Options::isochrone};
 
   PbfFieldSelector select_all;
   select_all.set_directions(true);
   select_all.set_trip(true);
   select_all.set_status(true);
   select_all.set_options(true);
+  select_all.set_matrix(true);
+  select_all.set_isochrone(true);
 
   for (int action = Options::no_action + 1; action <= Options::Action_MAX; ++action) {
     // don't have convenient support of these in gurka yet
-    if (action == Options::sources_to_targets || action == Options::isochrone ||
-        action == Options::expansion)
+    if (action == Options::expansion)
       continue;
 
     // do the regular request with json in and out
     std::string expected_json, request_json;
-    auto expected_pbf =
-        gurka::do_action(Options::Action(action), map, {"A", "C", "I", "G"}, "pedestrian", {}, {},
-                         &expected_json, "break", &request_json);
+    Api expected_pbf;
+    if (action == Options::sources_to_targets) {
+      expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C"}, {"I", "G"},
+                                      "pedestrian", {}, {}, &expected_json, &request_json);
+    } else if (action == Options::isochrone) {
+      expected_pbf =
+          gurka::do_action(Options::Action(action), map, {"A"}, "pedestrian",
+                           {{"/contours/0/time", "10"}}, {}, &expected_json, "break", &request_json);
+    } else {
+      expected_pbf = gurka::do_action(Options::Action(action), map, {"A", "C", "I", "G"},
+                                      "pedestrian", {}, {}, &expected_json, "break", &request_json);
+    }
 
     // get some clean input options for pbf requests
     Api clean_pbf;
@@ -69,16 +83,20 @@ TEST(pbf_api, pbf_in_out) {
       pbf_out.mutable_options()->clear_costings();
       pbf_out.mutable_options()->set_format(Options::pbf);
       pbf_out.mutable_options()->mutable_pbf_field_selector()->CopyFrom(select_all);
+
       auto pbf_bytes = gurka::do_action(map, pbf_out);
       Api actual_pbf;
       EXPECT_TRUE(actual_pbf.ParseFromString(pbf_bytes));
       EXPECT_EQ(actual_pbf.trip().SerializeAsString(), expected_pbf.trip().SerializeAsString());
       EXPECT_TRUE(actual_pbf.has_options());
-      EXPECT_TRUE(actual_pbf.has_trip() || action == Options::status);
-      EXPECT_TRUE(actual_pbf.has_directions() || action == Options::trace_attributes ||
-                  action == Options::status);
+      EXPECT_TRUE(actual_pbf.has_trip() || action == Options::status ||
+                  action == Options::sources_to_targets || action == Options::isochrone);
+      EXPECT_TRUE(actual_pbf.has_directions() || action != Options::trace_route ||
+                  action != Options::route);
       EXPECT_TRUE(actual_pbf.has_status() || action != Options::status);
       EXPECT_TRUE(actual_pbf.has_info() || action == Options::status);
+      EXPECT_TRUE(actual_pbf.has_matrix() || action != Options::sources_to_targets);
+      EXPECT_TRUE(actual_pbf.has_isochrone() || action != Options::isochrone);
 
       // lets try it again but this time we'll disable all the fields but one
       Api slimmed;
@@ -90,7 +108,8 @@ TEST(pbf_api, pbf_in_out) {
       Api actual_slimmed;
       EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
       EXPECT_FALSE(actual_slimmed.has_options());
-      EXPECT_TRUE(actual_slimmed.has_trip() || action == Options::status);
+      EXPECT_TRUE(actual_slimmed.has_trip() || action == Options::status ||
+                  action == Options::sources_to_targets || action == Options::isochrone);
       EXPECT_FALSE(actual_slimmed.has_directions());
       EXPECT_FALSE(actual_slimmed.has_status());
       EXPECT_TRUE(actual_slimmed.has_info() || action == Options::status);
@@ -104,11 +123,13 @@ TEST(pbf_api, pbf_in_out) {
       actual_slimmed.Clear();
       EXPECT_TRUE(actual_slimmed.ParseFromString(pbf_bytes));
       EXPECT_FALSE(actual_slimmed.has_options());
-      EXPECT_TRUE(actual_slimmed.has_trip() || action != Options::trace_attributes);
-      EXPECT_TRUE(actual_slimmed.has_directions() || action == Options::trace_attributes ||
-                  action == Options::status);
+      EXPECT_TRUE(actual_slimmed.has_trip() || action != Options::trace_attributes ||
+                  action != Options::isochrone);
+      EXPECT_TRUE(actual_slimmed.has_directions() || action != Options::trace_route ||
+                  action != Options::route);
       EXPECT_TRUE(actual_slimmed.has_status() || action != Options::status);
       EXPECT_TRUE(actual_slimmed.has_info() || action == Options::status);
+      EXPECT_TRUE(actual_slimmed.has_matrix() || action != Options::sources_to_targets);
     }
   }
 }
@@ -131,6 +152,7 @@ TEST(pbf_api, pbf_error) {
       EXPECT_FALSE(actual.has_trip());
       EXPECT_FALSE(actual.has_directions());
       EXPECT_FALSE(actual.has_status());
+      EXPECT_FALSE(actual.has_matrix());
       EXPECT_EQ(actual.info().errors().size(), 1);
     }
     // try again with an action but no locations

@@ -67,6 +67,14 @@ public:
       return *this;
     return path(path_name_.substr(separators_.back() + 1));
   }
+  path stem() const {
+    auto file_name = filename().string();
+    auto pos = file_name.rfind('.');
+    if (pos == std::string::npos || pos == 0 || file_name == "..") {
+      return path("");
+    }
+    return path(file_name.substr(0, pos));
+  }
   const char* c_str() const {
     return path_name_.c_str();
   }

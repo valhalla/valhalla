@@ -25,6 +25,8 @@ const std::string way_ref_rev_file = "osmdata_way_refs_rev.bin";
 const std::string node_names_file = "osmdata_node_names.bin";
 const std::string unique_names_file = "osmdata_unique_strings.bin";
 const std::string lane_connectivity_file = "osmdata_lane_connectivity.bin";
+const std::string pronunciation_file = "osmdata_pronunciation_file.bin";
+const std::string language_file = "osmdata_language_file.bin";
 
 // Data structures to assist writing and reading data
 struct TempRestriction {
@@ -69,6 +71,15 @@ struct TempLaneConnectivity {
   TempLaneConnectivity() : way_id(0), lane(OSMLaneConnectivity()) {
   }
   TempLaneConnectivity(const uint64_t w, const OSMLaneConnectivity& l) : way_id(w), lane(l) {
+  }
+};
+
+struct TempLinguistic {
+  uint64_t way_id;
+  OSMLinguistic linguistic;
+  TempLinguistic() : way_id(0), linguistic(OSMLinguistic()) {
+  }
+  TempLinguistic(const uint64_t w, const OSMLinguistic& l) : way_id(w), linguistic(l) {
   }
 };
 
@@ -276,6 +287,28 @@ bool write_lane_connectivity(const std::string& filename,
   return true;
 }
 
+bool write_linguistic(const std::string& filename, const LinguisticMultiMap& ling_map) {
+  // Open file and truncate
+  std::ofstream file(filename.c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+  if (!file.is_open()) {
+    LOG_ERROR("write_linguistic failed to open output file: " + filename);
+    return false;
+  }
+
+  // Convert the multi map into a vector of TempLinguistic
+  std::vector<TempLinguistic> ling;
+  for (auto it = ling_map.cbegin(); it != ling_map.cend(); ++it) {
+    ling.emplace_back(it->first, it->second);
+  }
+
+  // Write the count and then the via ids
+  uint32_t sz = ling.size();
+  file.write(reinterpret_cast<const char*>(&sz), sizeof(uint32_t));
+  file.write(reinterpret_cast<const char*>(ling.data()), ling.size() * sizeof(TempLinguistic));
+  file.close();
+  return true;
+}
+
 bool read_restrictions(const std::string& filename, RestrictionsMultiMap& res_map) {
   // Open file and truncate
   std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -471,6 +504,28 @@ bool read_lane_connectivity(const std::string& filename, OSMLaneConnectivityMult
   return true;
 }
 
+bool read_linguistic(const std::string& filename, LinguisticMultiMap& ling_map) {
+  // Open file and truncate
+  std::ifstream file(filename, std::ios::in | std::ios::binary);
+  if (!file.is_open()) {
+    LOG_ERROR("read_linguistic failed to open input file: " + filename);
+    return false;
+  }
+
+  // Read the count and then the temporary access restriction list
+  uint32_t count = 0;
+  file.read(reinterpret_cast<char*>(&count), sizeof(uint32_t));
+  std::vector<TempLinguistic> ling(count);
+  file.read(reinterpret_cast<char*>(ling.data()), count * sizeof(TempLinguistic));
+  file.close();
+
+  // Iterate through the temporary access restriction list and add to the restriction multi-map
+  for (const auto& l : ling) {
+    ling_map.insert({l.way_id, l.linguistic});
+  }
+  return true;
+}
+
 } // namespace
 
 namespace valhalla {
@@ -496,6 +551,7 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
   file.write(reinterpret_cast<const char*>(&node_ref_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&node_name_count), sizeof(uint64_t));
   file.write(reinterpret_cast<const char*>(&node_exit_to_count), sizeof(uint64_t));
+  file.write(reinterpret_cast<const char*>(&node_linguistic_count), sizeof(uint64_t));
   file.close();
 
   // Write the rest of OSMData
@@ -507,7 +563,9 @@ bool OSMData::write_to_temp_files(const std::string& tile_dir) {
                 write_way_refs(tile_dir + way_ref_rev_file, way_ref_rev) &&
                 write_node_names(tile_dir + node_names_file, node_names) &&
                 write_unique_names(tile_dir + unique_names_file, name_offset_map) &&
-                write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map);
+                write_lane_connectivity(tile_dir + lane_connectivity_file, lane_connectivity_map) &&
+                write_linguistic(tile_dir + pronunciation_file, pronunciations) &&
+                write_linguistic(tile_dir + language_file, langs);
   LOG_INFO("Done");
   return status;
 }
@@ -537,6 +595,7 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
   file.read(reinterpret_cast<char*>(&node_ref_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&node_name_count), sizeof(uint64_t));
   file.read(reinterpret_cast<char*>(&node_exit_to_count), sizeof(uint64_t));
+  file.read(reinterpret_cast<char*>(&node_linguistic_count), sizeof(uint64_t));
   file.close();
 
   // Read the other data
@@ -549,7 +608,9 @@ bool OSMData::read_from_temp_files(const std::string& tile_dir) {
       read_way_refs(tile_directory + way_ref_rev_file, way_ref_rev) &&
       read_node_names(tile_directory + node_names_file, node_names) &&
       read_unique_names(tile_directory + unique_names_file, name_offset_map) &&
-      read_lane_connectivity(tile_directory + lane_connectivity_file, lane_connectivity_map);
+      read_lane_connectivity(tile_directory + lane_connectivity_file, lane_connectivity_map) &&
+      read_linguistic(tile_directory + pronunciation_file, pronunciations) &&
+      read_linguistic(tile_directory + language_file, langs);
   LOG_INFO("Done");
   initialized = status;
   return status;
@@ -617,6 +678,8 @@ void OSMData::cleanup_temp_files(const std::string& tile_dir) {
   remove_temp_file(tile_dir + node_names_file);
   remove_temp_file(tile_dir + unique_names_file);
   remove_temp_file(tile_dir + lane_connectivity_file);
+  remove_temp_file(tile_dir + pronunciation_file);
+  remove_temp_file(tile_dir + language_file);
 }
 
 } // namespace mjolnir

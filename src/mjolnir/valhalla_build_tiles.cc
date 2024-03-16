@@ -6,11 +6,12 @@
 #include <cxxopts.hpp>
 
 #include "baldr/rapidjson_utils.h"
-#include "config.h"
 #include "filesystem.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "mjolnir/util.h"
+
+#include "argparse_utils.h"
 
 using namespace valhalla::mjolnir;
 
@@ -24,21 +25,22 @@ void list_stages() {
 }
 
 int main(int argc, char** argv) {
+  const auto program = filesystem::path(__FILE__).stem().string();
   // args
-  filesystem::path config_file_path;
   std::vector<std::string> input_files;
   BuildStage start_stage = BuildStage::kInitialize;
   BuildStage end_stage = BuildStage::kCleanup;
-  boost::property_tree::ptree pt;
+  boost::property_tree::ptree config;
 
   try {
 
     // ref:
     // https://github.com/jarro2783/cxxopts/blob/302302b30839505703d37fb82f536c53cf9172fa/src/example.cpp
     cxxopts::Options options(
-        "valhalla_build_tiles",
-        "valhalla_build_tiles " VALHALLA_VERSION
-        "\n\nvalhalla_build_tiles is a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
+        program,
+        program + " " + VALHALLA_VERSION +
+            "\n\n"
+            "a program that creates the route graph\nfrom one or multiple osm.pbf extract(s)\n");
 
     // clang-format off
     options.add_options()
@@ -48,86 +50,55 @@ int main(int argc, char** argv) {
       ("i,inline-config", "Inline JSON config", cxxopts::value<std::string>())
       ("s,start", "Starting stage of the build pipeline", cxxopts::value<std::string>()->default_value("initialize"))
       ("e,end", "End stage of the build pipeline", cxxopts::value<std::string>()->default_value("cleanup"))
-      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files));
+      ("input_files", "positional arguments", cxxopts::value<std::vector<std::string>>(input_files))
+      ("j,concurrency", "Number of threads to use. Defaults to all threads.", cxxopts::value<uint32_t>());
     // clang-format on
 
     options.parse_positional({"input_files"});
     options.positional_help("OSM PBF file(s)");
     auto result = options.parse(argc, argv);
-
-    if (result.count("version")) {
-      std::cout << "valhalla_build_tiles " << VALHALLA_VERSION << "\n";
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging", true, &list_stages))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
-      list_stages();
-      return EXIT_SUCCESS;
-    }
-
-    // Read the config file
-    if (result.count("inline-config")) {
-      std::stringstream ss;
-      ss << result["inline-config"].as<std::string>();
-      rapidjson::read_json(ss, pt);
-    } else if (result.count("config") &&
-               filesystem::is_regular_file(
-                   config_file_path = filesystem::path(result["config"].as<std::string>()))) {
-      rapidjson::read_json(config_file_path.string(), pt);
-    } else {
-      std::cerr << "Configuration is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
-    }
-
-    // configure logging
-    auto logging_subtree = pt.get_child_optional("mjolnir.logging");
-    if (logging_subtree) {
-      auto subtree = logging_subtree.get();
-      auto logging_config =
-          valhalla::midgard::ToMap<const boost::property_tree::ptree&,
-                                   std::unordered_map<std::string, std::string>>(subtree);
-      valhalla::midgard::logging::Configure(logging_config);
-    }
 
     // Convert stage strings to BuildStage
     if (result.count("start")) {
       start_stage = string_to_buildstage(result["start"].as<std::string>());
       if (start_stage == BuildStage::kInvalid) {
-        std::cerr << "Invalid start stage" << std::endl;
         list_stages();
-        return EXIT_FAILURE;
+        throw cxxopts::exceptions::exception("Invalid start stage, see above");
       }
     }
     if (result.count("end")) {
       end_stage = string_to_buildstage(result["end"].as<std::string>());
       if (end_stage == BuildStage::kInvalid) {
-        std::cerr << "Invalid end stage" << std::endl;
         list_stages();
-        return EXIT_FAILURE;
+        throw cxxopts::exceptions::exception("Invalid end stage, see above");
       }
     }
     LOG_INFO("Start stage = " + to_string(start_stage) + " End stage = " + to_string(end_stage));
 
     // Make sure start stage < end stage
     if (static_cast<int>(start_stage) > static_cast<int>(end_stage)) {
-      std::cerr << "Starting build stage is after ending build stage in pipeline. "
-                << " Please revise options!" << std::endl;
       list_stages();
-      return EXIT_FAILURE;
+      throw cxxopts::exceptions::exception(
+          "Starting build stage is after ending build stage in pipeline, see above");
     }
 
     if (!result.count("input_files") && start_stage <= BuildStage::kParseNodes &&
         end_stage >= BuildStage::kParseWays) {
-      std::cerr << "Input file is required\n\n" << options.help() << "\n\n";
-      return EXIT_FAILURE;
+      throw cxxopts::exceptions::exception("Input file is required\n\n" + options.help() + "\n\n");
     }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
+    return EXIT_FAILURE;
   }
 
   // Build some tiles!
-  if (build_tile_set(pt, input_files, start_stage, end_stage)) {
+  if (build_tile_set(config, input_files, start_stage, end_stage)) {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

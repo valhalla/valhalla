@@ -1,66 +1,51 @@
 version: 2.1
 
-executors:
-  macos:
-    macos:
-      xcode: 13.4.1
-    environment:
-      HOMEBREW_NO_AUTO_UPDATE: 1
-      CXXFLAGS: -DGEOS_INLINE
-
 commands:
-  install_macos_dependencies:
+  linux_deps:
     steps:
-      - run: brew install protobuf cmake ccache libtool libspatialite pkg-config luajit curl wget czmq lz4 spatialite-tools unzip
-      - run: /usr/bin/python3 -m pip install --user requests
-      - run: pip3 install shapely "conan<2.0.0"
-      - run: git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j8 && make install
-  install_linux_dependencies:
+      - run: ./scripts/install-linux-deps.sh
+  linux_lint_deps:
     steps:
-      - run: sudo bash ./scripts/install-linux-deps.sh
+      - run: |
+          apt-get update --assume-yes
+          env DEBIAN_FRONTEND=noninteractive apt install --yes --quiet sudo python3-pip python3-requests git curl file
+  check_ci_lint:
+    steps:
+      - run: ./scripts/format.sh && ./scripts/error_on_dirty.sh
 
 jobs:
   lint-build-debug:
-    machine:
-      image: ubuntu-2204:current
+    docker:
+      - image: ubuntu:23.04
     resource_class: xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_linux_dependencies
+      - linux_lint_deps
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-debug-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
-      - run: mkdir build
+            - ccache-debug-linux-x86_64-v3-{{ .Branch }}
+            - ccache-debug-linux-x86_64-v3-master
+            - ccache-debug-linux-x86_64-v3-
       - run: |
+          mkdir build
           # NOTE: -Werror disabled in CI, as we currently have >4k warnings.
-          cd build \
-            && cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
-                -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
-                -DCMAKE_CXX_FLAGS="-fuse-ld=lld" \
-                -DLOGGING_LEVEL=INFO \
-                -DENABLE_PYTHON_BINDINGS=On
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=On -DCPACK_GENERATOR=DEB \
+            -DENABLE_COMPILER_WARNINGS=On -DENABLE_WERROR=Off -DCMAKE_EXPORT_COMPILE_COMMANDS=On \
+            -DCMAKE_CXX_FLAGS="-fuse-ld=lld" -DLOGGING_LEVEL=INFO -DENABLE_PYTHON_BINDINGS=On -DENABLE_GDAL=On
       - run: python3 ./scripts/valhalla_build_config
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
-      - run: make -C build -j8 benchmarks
-      - run: make -C build -j8 run-benchmarks
       # Note: we save the cache here before doing linting so that if linting fails, we can rebuild quickly
       # for follow-up fixes
       - save_cache:
-          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-debug-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
-            - ~/.ccache
-            - ~/.conan
+            - ~/.cache/ccache
       - run: scripts/clang-tidy-only-diff.sh 4
       - run: sudo make -C build install
       - run: make -C build package
@@ -70,75 +55,69 @@ jobs:
       - run: .circleci/vendored-codecov.sh || echo "Codecov did not collect coverage reports"
 
   build-release:
-    machine:
-      image: ubuntu-2204:current
+    docker:
+      - image: ubuntu:23.04
     resource_class: xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_linux_dependencies
+      - linux_lint_deps
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-linux-x86_64-v3-{{ checksum "conanfile.txt" }}
-      - run: mkdir build
+            - ccache-release-linux-x86_64-v3-{{ .Branch }}
+            - ccache-release-linux-x86_64-v3-master
+            - ccache-release-linux-x86_64-v3
       - run: |
-          cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On \
-                -DLOGGING_LEVEL=TRACE \
-                -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DLOGGING_LEVEL=TRACE \
+            -DCPACK_GENERATOR=DEB -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SANITIZERS=ON \
+            -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
       # leaks in glibc we cant control for
       - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
-      - run: make -C build -j8 benchmarks
-      - run: make -C build -j8 run-benchmarks
       - save_cache:
-          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-x86_64-v3-{{ .Branch }}-{{ epoch }}
           paths:
-            - ~/.ccache
-            - ~/.conan
+            - ~/.cache/ccache
       - run: sudo make -C build install
       - run: make -C build package
 
-  build-osx:
-    executor: macos
-    resource_class: large
+  build-arm-release:
+    docker:
+      - image: arm64v8/ubuntu:23.04
+    resource_class: arm.xlarge
     steps:
       - checkout
-      - run: |
-            pip3 install requests
-            if [[ $(./scripts/needs_ci_run) == "skip CI" ]]; then
-                echo "Changes in last commit do not need CI. Skipping step"
-                circleci-agent step halt
-            fi
-      - run: sudo python3 -m pip install pre-commit && pre-commit run --all-files && ./scripts/error_on_dirty.sh
-      - install_macos_dependencies
+      - linux_lint_deps
+      - check_ci_lint
+      - linux_deps
       - run: git submodule sync && git submodule update --init
       - restore_cache:
           keys:
-            - ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}
-            - ccache-release-macos-{{ checksum "conanfile.txt" }}
-      - run: mkdir -p build
-      - run: cd build && cmake ..
+            - ccache-release-linux-arm_64-v3-{{ .Branch }}
+            - ccache-release-linux-arm_64-v3-master
+            - ccache-release-linux-arm_64-v3
+      - run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=On -DENABLE_PYTHON_BINDINGS=On -DCPACK_GENERATOR=DEB \
+            -DCPACK_PACKAGE_VERSION_SUFFIX="-0ubuntu1-$(lsb_release -sc)" -DENABLE_SINGLE_FILES_WERROR=Off -DENABLE_GDAL=On
       - run: make -C build -j8
       - run: make -C build utrecht_tiles
       - run: make -C build -j8 tests
-      - run: make -C build -j8 check
-      - run: make -C build -j8 benchmarks
-      - run: make -C build run-benchmarks
+      # leaks in glibc we cant control for
+      - run: export ASAN_OPTIONS=detect_leaks=0 && make -C build -j8 check
       - save_cache:
-          key: ccache-release-macos-{{ .Branch }}-{{ checksum "conanfile.txt" }}-{{ epoch }}
+          key: ccache-release-linux-arm_64-v3-{{ .Branch }}
           paths:
-            - ~/.ccache
-            - ~/.conan
+            - ~/.cache/ccache
+      - run: sudo make -C build install
+      - run: make -C build package
 
 workflows:
   version: 2
@@ -152,7 +131,7 @@ workflows:
           filters:
             tags:
               ignore: /.*/
-      - build-osx:
+      - build-arm-release:
           filters:
             tags:
               ignore: /.*/

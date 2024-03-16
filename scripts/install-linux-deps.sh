@@ -4,8 +4,8 @@
 set -x -o errexit -o pipefail -o nounset
 
 # Now, go through and install the build dependencies
-apt-get update --assume-yes
-env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
+sudo apt-get update --assume-yes
+env DEBIAN_FRONTEND=noninteractive sudo apt install --yes --quiet \
     autoconf \
     automake \
     ccache \
@@ -19,8 +19,10 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     git \
     jq \
     lcov \
+    libboost-all-dev \
     libcurl4-openssl-dev \
     libczmq-dev \
+    libgdal-dev \
     libgeos++-dev \
     libgeos-dev \
     libluajit-5.1-dev \
@@ -37,7 +39,7 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
     make \
     osmium-tool \
     parallel \
-    pkg-config \
+    pkgconf \
     protobuf-compiler \
     python3-all-dev \
     python3-shapely \
@@ -48,13 +50,17 @@ env DEBIAN_FRONTEND=noninteractive apt-get install --yes --quiet \
   
 # build prime_server from source
 # readonly primeserver_version=0.7.0
-readonly primeserver_dir=/usr/local/src/prime_server
+readonly primeserver_dir=/tmp/prime_server
 git clone --recurse-submodules https://github.com/kevinkreiser/prime_server $primeserver_dir
 pushd $primeserver_dir
-./autogen.sh && ./configure && \
-make -j${CONCURRENCY:-$(nproc)} install && \
-popd && \
-rm -r $primeserver_dir
+./autogen.sh && ./configure
+make -j${CONCURRENCY:-$(nproc)}
+sudo make install
+popd && rm -rf $primeserver_dir
 
-# for boost
-python3 -m pip install --upgrade "conan<2.0.0" requests shapely
+# for boost and scripts deps
+if [[ $(python3 -c 'import sys; print(int(sys.base_prefix != sys.prefix or hasattr(sys, "real_prefix")))') -eq 1 ]]; then
+  python3 -m pip install --upgrade requests shapely
+else
+  sudo PIP_BREAK_SYSTEM_PACKAGES=1 python3 -m pip install --upgrade requests shapely
+fi

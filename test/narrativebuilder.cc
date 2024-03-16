@@ -243,7 +243,7 @@ void PopulateTransitInfo(valhalla::odin::TransitRouteInfo* transit_info,
   transit_info->operator_url = operator_url;
 }
 
-// TOOD - remove is_parent_stop
+// TODO - remove is_parent_stop
 // TODO - add station_onestop_id and station_name
 TransitPlatformInfo GetTransitPlatformInfo(TransitPlatformInfo_Type type,
                                            const std::string& onestop_id,

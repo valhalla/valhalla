@@ -6,11 +6,11 @@
 #include <string>
 #include <vector>
 
-#include "config.h"
 #include "midgard/logging.h"
 #include "midgard/util.h"
 #include "sif/edgelabel.h"
 
+#include "argparse_utils.h"
 #include "baldr/double_bucket_queue.h"
 
 using namespace valhalla::midgard;
@@ -104,12 +104,16 @@ int Benchmark(const uint32_t n, const float maxcost, const float bucketsize) {
 }
 
 int main(int argc, char* argv[]) {
+  const auto program = filesystem::path(__FILE__).stem().string();
+  // args
+  boost::property_tree::ptree config;
+
   try {
     // clang-format off
     cxxopts::Options options(
-      "valhalla_benchmakr_adjacency_list",
-      "valhalla " VALHALLA_VERSION "\n\n"
-      "valhalla_benchmakr_adjacency_list is benchmark comparing performance of an STL priority_queue\n"
+      program,
+      program + " " + VALHALLA_VERSION + "\n\n"
+      "a program which is benchmark comparing performance of an STL priority_queue\n"
       "to the approximate double bucket adjacency list class supplied with Valhalla.\n\n");
 
     options.add_options()
@@ -117,18 +121,14 @@ int main(int argc, char* argv[]) {
       ("v,version", "Print the version of this software.");
 
     auto result = options.parse(argc, argv);
-
-    if (result.count("help")) {
-      std::cout << options.help() << "\n";
+    if (!parse_common_args(program, options, result, config, "mjolnir.logging"))
       return EXIT_SUCCESS;
-    }
-
-    if (result.count("version")) {
-      std::cout << "valhalla_benchmakr_adjacency_list " << VALHALLA_VERSION << "\n";
-      return EXIT_SUCCESS;
-    }
-  } catch (const cxxopts::OptionException& e) {
-    std::cout << "Unable to parse command line options because: " << e.what() << std::endl;
+  } catch (cxxopts::exceptions::exception& e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  } catch (std::exception& e) {
+    std::cerr << "Unable to parse command line options because: " << e.what() << "\n"
+              << "This is a bug, please report it at " PACKAGE_BUGREPORT << "\n";
     return EXIT_FAILURE;
   }
 

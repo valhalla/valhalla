@@ -9,7 +9,9 @@
 #include <vector>
 
 #include <valhalla/mjolnir/osmaccessrestriction.h>
+#include <valhalla/mjolnir/osmlinguistic.h>
 #include <valhalla/mjolnir/osmnode.h>
+#include <valhalla/mjolnir/osmnodelinguistic.h>
 #include <valhalla/mjolnir/osmrestriction.h>
 #include <valhalla/mjolnir/osmway.h>
 #include <valhalla/mjolnir/uniquenames.h>
@@ -48,6 +50,7 @@ using ViaSet = std::unordered_set<uint64_t>;
 using AccessRestrictionsMultiMap = std::unordered_multimap<uint64_t, OSMAccessRestriction>;
 using BikeMultiMap = std::unordered_multimap<uint64_t, OSMBike>;
 using OSMLaneConnectivityMultiMap = std::unordered_multimap<uint64_t, OSMLaneConnectivity>;
+using LinguisticMultiMap = std::unordered_multimap<uint64_t, OSMLinguistic>;
 
 // OSMString map uses the way Id as the key and the name index into UniqueNames as the value
 using OSMStringMap = std::unordered_map<uint64_t, uint32_t>;
@@ -88,15 +91,16 @@ struct OSMData {
    */
   static void cleanup_temp_files(const std::string& tile_dir);
 
-  uint64_t max_changeset_id_;  // The largest/newest changeset id encountered when parsing OSM data
-  uint64_t osm_node_count;     // Count of osm nodes
-  uint64_t osm_way_count;      // Count of osm ways
-  uint64_t osm_way_node_count; // Count of osm nodes on osm ways
-  uint64_t node_count;         // Count of all nodes in the graph
-  uint64_t edge_count;         // Estimated count of edges in the graph
-  uint64_t node_ref_count;     // Number of node with ref
-  uint64_t node_name_count;    // Number of nodes with names
-  uint64_t node_exit_to_count; // Number of nodes with exit_to
+  uint64_t max_changeset_id_;     // The largest/newest changeset id encountered when parsing OSM data
+  uint64_t osm_node_count;        // Count of osm nodes
+  uint64_t osm_way_count;         // Count of osm ways
+  uint64_t osm_way_node_count;    // Count of osm nodes on osm ways
+  uint64_t node_count;            // Count of all nodes in the graph
+  uint64_t edge_count;            // Estimated count of edges in the graph
+  uint64_t node_ref_count;        // Number of node with ref
+  uint64_t node_name_count;       // Number of nodes with names
+  uint64_t node_exit_to_count;    // Number of nodes with exit_to
+  uint64_t node_linguistic_count; // Number of nodes with linguistic info
 
   // Stores simple restrictions. Indexed by the from way Id
   RestrictionsMultiMap restrictions;
@@ -127,6 +131,12 @@ struct OSMData {
 
   // Lane connectivity, index by the to way Id
   OSMLaneConnectivityMultiMap lane_connectivity_map;
+
+  // Stores the pronunciations. Indexed by the way Id.
+  LinguisticMultiMap pronunciations;
+
+  // Stores the pronunciation languages. Indexed by the way Id.
+  LinguisticMultiMap langs;
 
   bool initialized = false;
 };

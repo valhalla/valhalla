@@ -1,0 +1,85 @@
+name: OSX CI
+on:
+  push:
+    paths-ignore:
+      - '*.md'
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
+  pull_request:
+    paths-ignore:
+      - '*.md'
+      - .circleci/
+      - docs/
+      - run_route_scripts/
+      - test_requests/
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+jobs:
+  build_osx:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' 
+      
+      - name: Install dependencies
+        run: |
+          HOMEBREW_NO_AUTO_UPDATE=1 brew install autoconf automake protobuf cmake ccache libtool sqlite3 libspatialite luajit curl wget czmq lz4 spatialite-tools unzip boost gdal
+          sudo python -m pip install --break-system-packages requests shapely
+          git clone https://github.com/kevinkreiser/prime_server --recurse-submodules && cd prime_server && ./autogen.sh && ./configure && make -j$(sysctl -n hw.logicalcpu) && sudo make install
+
+      - name: Get branch name
+        run: echo "VALHALLA_BRANCH=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_ENV
+
+      - name: Restore ccache
+        id: cache-ccache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ccache-osx-${{ env.VALHALLA_BRANCH }}
+          restore-keys: |
+            ccache-osx-master
+            ccache-osx-
+
+      - name: Configure CMake
+        run: cmake -B build -DENABLE_SINGLE_FILES_WERROR=OFF -DENABLE_GDAL=ON
+
+      - name: Build Valhalla
+        run: make -C build -j$(sysctl -n hw.logicalcpu)
+
+      - name: Build Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) tests
+
+      - name: Save ccache
+        uses: actions/cache/save@v4
+        with:
+          path: ~/Library/Caches/ccache
+          key: ${{ steps.cache-ccache-restore.outputs.cache-primary-key }}
+          
+      - name: Run Tests
+        run: make -C build -j$(sysctl -n hw.logicalcpu) check
+      
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        # only run this if manually invoked or a previous job failed
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.debug_enabled) || failure() }}
+        with:
+          detached: true
+          timeout-minutes: 15
+          

@@ -87,10 +87,45 @@
                                      : def));                                                        \
   }
 
+/**
+ * same as above, but for costing options without pbf's awful oneof
+ *
+ * @param costing_options  pointer to protobuf costing options object
+ * @param def              the default value which is used when neither json nor pbf is provided
+ * @param json             rapidjson value object which should contain user provided costing options
+ * @param json_key         the json key to use to pull a user provided value out of the json
+ * @param option_name      the name of the option will be set on the costing options object
+ */
+
+#define JSON_PBF_DEFAULT_V2(costing_options, def, json, json_key, option_name)                       \
+  {                                                                                                  \
+    costing_options->set_##option_name(                                                              \
+        rapidjson::get<std::remove_cv<                                                               \
+            std::remove_reference<decltype(def)>::type>::type>(json, json_key,                       \
+                                                               costing_options->option_name()        \
+                                                                   ? costing_options->option_name()  \
+                                                                   : def));                          \
+  }
+
 using namespace valhalla::midgard;
 
 namespace valhalla {
 namespace sif {
+
+const std::unordered_map<Costing::Type, std::vector<Costing::Type>> kCostingTypeMapping{
+    {Costing::none_, {Costing::none_}},
+    {Costing::bicycle, {Costing::bicycle}},
+    {Costing::bus, {Costing::bus}},
+    {Costing::motor_scooter, {Costing::motor_scooter}},
+    {Costing::multimodal, {Costing::multimodal, Costing::transit, Costing::pedestrian}},
+    {Costing::pedestrian, {Costing::pedestrian}},
+    {Costing::transit, {Costing::transit, Costing::pedestrian}},
+    {Costing::truck, {Costing::truck}},
+    {Costing::motorcycle, {Costing::motorcycle}},
+    {Costing::taxi, {Costing::taxi}},
+    {Costing::auto_, {Costing::auto_}},
+    {Costing::bikeshare, {Costing::bikeshare, Costing::pedestrian, Costing::bicycle}},
+};
 
 const sif::Cost kNoCost(0.0f, 0.0f);
 
@@ -412,6 +447,9 @@ public:
                   thor::EdgeStatus* edgestatus = nullptr,
                   const uint64_t current_time = 0,
                   const uint32_t tz_index = 0) const {
+    if (ignore_turn_restrictions_)
+      return false;
+
     // Lambda to get the next predecessor EdgeLabel (that is not a transition)
     auto next_predecessor = [&edge_labels](const EdgeLabel* label) {
       // Get the next predecessor - make sure it is valid. Continue to get
@@ -425,7 +463,7 @@ public:
           // A complex restriction spans multiple edges, e.g. from A to C via B.
           //
           // At the point of triggering a complex restriction, all edges leading up to C
-          // hav already been evaluated. I.e. B is now marked as kPermanent since
+          // have already been evaluated. I.e. B is now marked as kPermanent since
           // we didn't know at the time of B's evaluation that A to B would eventually
           // form a restricted path
           //
@@ -525,7 +563,7 @@ public:
             }
             continue;
           }
-          // TODO: If a user runs a non-time dependent route, we need to provide Manuever Notes for
+          // TODO: If a user runs a non-time dependent route, we need to provide Maneuver Notes for
           // the timed restriction.
           else if (!current_time && cr->has_dt()) {
             return false;
@@ -581,9 +619,10 @@ public:
       const auto& restriction = restrictions[i];
       // Compare the time to the time-based restrictions
       baldr::AccessType access_type = restriction.type();
-      if (access_type == baldr::AccessType::kTimedAllowed ||
-          access_type == baldr::AccessType::kTimedDenied ||
-          access_type == baldr::AccessType::kDestinationAllowed) {
+      if (!ignore_non_vehicular_restrictions_ &&
+          (access_type == baldr::AccessType::kTimedAllowed ||
+           access_type == baldr::AccessType::kTimedDenied ||
+           access_type == baldr::AccessType::kDestinationAllowed)) {
         // TODO: if(i > baldr::kInvalidRestriction) LOG_ERROR("restriction index overflow");
         restriction_idx = static_cast<uint8_t>(i);
 
@@ -771,6 +810,12 @@ public:
   virtual uint8_t travel_type() const;
 
   /**
+   * Is the current vehicle type HGV?
+   * @return  Returns whether it's a truck.
+   */
+  virtual bool is_hgv() const;
+
+  /**
    * Get the wheelchair required flag.
    * @return  Returns true if wheelchair is required.
    */
@@ -882,7 +927,7 @@ public:
                      const baldr::TimeInfo& time_info,
                      uint8_t flow_sources,
                      float edge_speed) const {
-    // TODO: speed_penality hasn't been extensively tested, might alter this in future
+    // TODO: speed_penalty hasn't been extensively tested, might alter this in future
     float average_edge_speed = edge_speed;
     // dont use current speed layer for penalties as live speeds might be too low/too high
     // better to use layers with smoothed/constant speeds
@@ -976,6 +1021,10 @@ protected:
   bool shortest_;
 
   bool ignore_restrictions_{false};
+  bool ignore_non_vehicular_restrictions_{false};
+  // not a requestion parameter, it's true if either ignore_restrictions_ or
+  // ignore_non_vehicular_restrictions_ is true
+  bool ignore_turn_restrictions_{false};
   bool ignore_oneways_{false};
   bool ignore_access_{false};
   bool ignore_closures_{false};
@@ -1131,7 +1180,8 @@ protected:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
-    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
+    c.cost += destination_only_penalty_ *
+              ((is_hgv() ? edge->destonly_hgv() : edge->destonly()) && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost += maneuver_penalty_ * (!edge->link() && !edge->name_consistency(idx));
@@ -1217,7 +1267,7 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
                           const BaseCostingOptionsConfig& cfg);
 
 /**
- * Parses all the costing options for all supported costings
+ * Parses all the costing options for all needed costings
  * @param doc                   json document
  * @param costing_options_key   the key in the json document where the options are located
  * @param options               where to store the parsed costing

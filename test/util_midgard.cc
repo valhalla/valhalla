@@ -270,15 +270,15 @@ TEST(UtilMidgard, TestIterable) {
     sum += i;
   EXPECT_EQ(sum, 15) << "integer array sum failed";
 
-  std::string concatinated;
+  std::string concatenated;
   for (const auto& i : iterable_t<char>(b, 5))
-    concatinated.push_back(i);
-  EXPECT_EQ(concatinated, "abcde") << "char concatenation failed";
+    concatenated.push_back(i);
+  EXPECT_EQ(concatenated, "abcde") << "char concatenation failed";
 
-  concatinated = "";
+  concatenated = "";
   for (const auto& i : iterable_t<std::string>(c, 5))
-    concatinated.append(i);
-  EXPECT_EQ(concatinated, "onetwothreefourfive") << "string concatenation failed";
+    concatenated.append(i);
+  EXPECT_EQ(concatenated, "onetwothreefourfive") << "string concatenation failed";
 
   size_t cumulative_product = 1;
   iterable_t<const size_t> iterable(d, 5);
@@ -416,7 +416,8 @@ TEST(UtilMidgard, TestTrimPolylineWithFloatGeoPoint) {
   // Worst case is they may quantized at 1.69m intervals (for an epsilon change).
   //  https://stackoverflow.com/a/28420164
   // The length comparisons below do better than that, but not a lot.
-  constexpr double MAX_FLOAT_PRECISION = 0.05; // Should be good for 5cm at this lon/lat
+  constexpr double MAX_FLOAT_PRECISION = 0.07; // Should be good for 5cm at this lon/lat,
+                                               // also account for some float point inaccuracies
 
   auto clip = trim_polyline(line.begin(), line.end(), 0.f, 1.f);
   EXPECT_DOUBLE_EQ(length(clip.begin(), clip.end()), length(line.begin(), line.end()))

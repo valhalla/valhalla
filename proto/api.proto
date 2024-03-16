@@ -7,6 +7,8 @@ import public "trip.proto";       // the paths, filled out by thor
 import public "directions.proto"; // the directions, filled out by odin
 import public "info.proto";       // statistics about the request, filled out by loki/thor/odin
 import public "status.proto";     // info for status endpoint
+import public "matrix.proto";     // the matrix results
+import public "isochrone.proto";  // the isochrone results
 
 message Api {
   // this is the request to the api
@@ -16,6 +18,8 @@ message Api {
   Trip trip = 2;              // trace_attributes
   Directions directions = 3;  // route, optimized_route, trace_route, centroid
   Status status = 4;          // status
+  Matrix matrix = 5;          // sources_to_targets
+  Isochrone isochrone = 6;    // isochrone
   //TODO: isochrone
   //TODO: matrix
   //TODO: locate

@@ -4,6 +4,7 @@
 #include "midgard/pointll.h"
 #include "midgard/util.h"
 
+#include <array>
 #include <random>
 
 #include "test.h"
@@ -34,7 +35,7 @@ TEST(Tiles, TestBase) {
   EXPECT_EQ(ll.lng(), -179);
   EXPECT_EQ(ll.lat(), -90);
 
-  // right bottm
+  // right bottom
   ll = tiles.Base(359);
   EXPECT_EQ(ll.lng(), 179);
   EXPECT_EQ(ll.lat(), -90);
@@ -56,6 +57,32 @@ TEST(Tiles, TestRowCol) {
   auto rc = tiles.GetRowColumn(tileid1);
   int32_t tileid2 = tiles.TileId(rc.second, rc.first);
   EXPECT_EQ(tileid1, tileid2) << "TileId does not match using row,col";
+}
+
+TEST(Tiles, TestTileBounds) {
+  Tiles tiles(AABB2(PointLL(-180, -90), PointLL(180, 90)), 1);
+  auto n_tiles = tiles.ncolumns() * tiles.nrows();
+  EXPECT_EQ(n_tiles, 360 * 180) << "Number of tiles not correct";
+  auto ids = std::array<int32_t, 11>{0,
+                                     1,
+                                     tiles.ncolumns() - 1,
+                                     tiles.ncolumns(),
+                                     n_tiles / 2 - 1,
+                                     n_tiles / 2,
+                                     n_tiles / 2 + 1,
+                                     n_tiles - tiles.ncolumns() - 1,
+                                     n_tiles - tiles.ncolumns(),
+                                     n_tiles - 2,
+                                     n_tiles - 1};
+  for (auto id : ids) {
+    auto bounds1 = tiles.TileBounds(id);
+    auto [row, col] = tiles.GetRowColumn(id);
+    auto bounds2 = tiles.TileBounds(col, row);
+    EXPECT_DOUBLE_EQ(bounds1.minx(), bounds2.minx()) << "Bounds of tile not equal";
+    EXPECT_DOUBLE_EQ(bounds1.maxx(), bounds2.maxx()) << "Bounds of tile not equal";
+    EXPECT_DOUBLE_EQ(bounds1.miny(), bounds2.miny()) << "Bounds of tile not equal";
+    EXPECT_DOUBLE_EQ(bounds1.miny(), bounds2.miny()) << "Bounds of tile not equal";
+  }
 }
 
 TEST(Tiles, TestNeighbors) {
@@ -342,7 +369,7 @@ TEST(Tiles, test_random_linestring) {
     auto answer = t.Intersect(linestring);
     for (const auto& tile : answer)
       for (auto sub : tile.second)
-        ASSERT_LE(sub, 24) << "Non-existant bin!";
+        ASSERT_LE(sub, 24) << "Non-existent bin!";
   }
 }
 
@@ -540,6 +567,18 @@ TEST(Tiles, test_intersect_bbox_rounding) {
 
   auto bin_id = *bins.begin();
   EXPECT_EQ(bin_id, 0);
+}
+
+TEST(Tiles, float_roundoff_issue) {
+  AABB2<PointLL> world_box{-180, -90, 180, 90};
+  Tiles<PointLL> t(world_box, 0.25, 5);
+
+  PointLL ll(179.999978, -16.805363);
+  auto tile_id = t.TileId(ll);
+  EXPECT_EQ(tile_id, 421919);
+  auto base_ll = t.Base(tile_id);
+  EXPECT_EQ(base_ll.lat(), -17.0);
+  EXPECT_EQ(base_ll.lng(), 179.75);
 }
 
 } // namespace

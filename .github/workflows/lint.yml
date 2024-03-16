@@ -1,0 +1,43 @@
+name: lint
+on: [pull_request]
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Validate changelog
+        shell: bash
+        run: |
+          # we dont enforce this on a draft
+          if [[ "$(jq --raw-output .pull_request.draft ${GITHUB_EVENT_PATH})" == "true" ]]; then
+            exit 0
+          fi
+
+          # get some info about the pr
+          PR_BASE=$(jq --raw-output .pull_request.base.ref ${GITHUB_EVENT_PATH})
+          PR_NUMBER=$(jq --raw-output .pull_request.number ${GITHUB_EVENT_PATH})
+          PR_TITLE=$(jq --raw-output .pull_request.title ${GITHUB_EVENT_PATH})
+
+          # check if anything has changed against the base branch for the changelog
+          git fetch origin ${PR_BASE} --depth 1
+          LINE_COUNT=$(git diff origin/${PR_BASE} -- CHANGELOG.md | wc -l)
+
+          # no entry in the changelog is bad in most cases, lets suggest an entry          
+          if [ ${LINE_COUNT} -eq 0 ]; then
+            printf "\x1b[31;1mNo CHANGELOG entries detected. Consider whether this PR warrents one, for example:\x1b[0m\n"
+            printf "\x1b[33;1m* ${PR_TITLE} [#${PR_NUMBER}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUMBER})\x1b[0m\n"
+            exit 1
+          fi
+
+          #TODO: validate changelog line format
+
+  spell-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Spell-check
+        uses: crate-ci/typos@v1.15.7
+        with:
+          config: ./.github/workflows/typos.toml

@@ -254,7 +254,7 @@ void DouglasPeucker(container_t& polyline,
     size_t j = e - 1, k = 0;
     coord_t tmp;
     for (auto i = std::prev(end); i != start; --i, --j) {
-      // special points we dont want to generalize no matter what take precidence
+      // special points we dont want to generalize no matter what take precedence
       if (exclusions.find(j) != exclusions.end()) {
         itr = i;
         dmax = epsilon;
@@ -314,6 +314,31 @@ void Polyline2<coord_t>::Generalize(container_t& polyline,
     DouglasPeucker<coord_t>(polyline, epsilon_m, exclusions);
 }
 
+template <typename coord_t>
+template <typename container_t>
+typename container_t::value_type::first_type
+Polyline2<coord_t>::HausdorffDistance(const container_t& l1, const container_t& l2) {
+  typename container_t::value_type::first_type hausdorff = 0;
+
+  // which point of l1 is furthest away from l2
+  for (const auto& p : l1) {
+    auto closest = p.ClosestPoint(l2);
+    auto min_distance = p.Distance(std::get<0>(closest));
+    if (min_distance > hausdorff)
+      hausdorff = min_distance;
+  }
+
+  // which point of l2 is furthest away from l1
+  for (const auto& p : l2) {
+    auto closest = p.ClosestPoint(l1);
+    auto min_distance = p.Distance(std::get<0>(closest));
+    if (min_distance > hausdorff)
+      hausdorff = min_distance;
+  }
+
+  return hausdorff;
+}
+
 // Explicit instantiation
 template class Polyline2<PointXY<float>>;
 template class Polyline2<PointXY<double>>;
@@ -361,6 +386,9 @@ template void Polyline2<GeoPoint<double>>::Generalize(std::list<GeoPoint<double>
                                                       double,
                                                       const std::unordered_set<size_t>&,
                                                       bool);
+
+template double Polyline2<GeoPoint<double>>::HausdorffDistance(const std::vector<GeoPoint<double>>&,
+                                                               const std::vector<GeoPoint<double>>&);
 
 } // namespace midgard
 } // namespace valhalla

@@ -18,7 +18,7 @@ This request provides detailed information about specific streets and intersecti
 
 There is an option to name your request. You can do this by adding and `id` key to your request. The `id` is returned with the response so a user could match to the corresponding request.
 
-Because the locate service is designed to work in tandem with the route service API, the inputs for the two APIs are identical. For detailed options regarding specifiying locations, costing models, costing options, directions options please see the relevant sections in the [routing API docs](../turn-by-turn/api-reference.md#inputs-of-a-route)
+Because the locate service is designed to work in tandem with the route service API, the inputs for the two APIs are identical. For detailed options regarding specifying locations, costing models, costing options, directions options please see the relevant sections in the [routing API docs](../turn-by-turn/api-reference.md#inputs-of-a-route)
 
 ### Other request options
 
@@ -31,7 +31,7 @@ Because the locate service is designed to work in tandem with the route service 
 
 If a request has been named using the optional `id` key, then this `id` key and value will be echoed in the JSON response object.
 
-The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections includding mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+The locate results are returned as a JSON array, with one JSON object per input location in the order specified. In `verbose` mode details about the streets and intersections including mode of travel access, names, way ids, shape, side of street as well as the closest point to the input along these features will be returned. If `verbose` was not enabled only the closest point, way id and side of street will be returned. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 Here are some sample results with `verbose` set to `false`:
 

@@ -12,7 +12,9 @@
 // needs to be after sqlite include
 #include <spatialite.h>
 
+#include <valhalla/baldr/directededge.h>
 #include <valhalla/baldr/graphid.h>
+#include <valhalla/baldr/graphtileptr.h>
 #include <valhalla/baldr/rapidjson_utils.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/pointll.h>
@@ -104,6 +106,14 @@ inline std::string to_string(BuildStage stg) {
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim = ';');
 
 /**
+ * Splits a tag into a vector of strings.
+ * @param  tag_value  tag to split
+ * @param  delim      delimiter
+ * @return the vector of strings
+ */
+std::vector<std::string> GetTagTokens(const std::string& tag_value, const std::string& delim_str);
+
+/**
  * Remove double quotes.
  * @param  s
  * @return string string with no quotes.
@@ -118,6 +128,21 @@ std::string remove_double_quotes(const std::string& s);
  */
 bool shapes_match(const std::vector<midgard::PointLL>& shape1,
                   const std::vector<midgard::PointLL>& shape2);
+
+/**
+ * Get the index of the opposing edge at the end node. This is on the local hierarchy,
+ * before adding transition and shortcut edges. Make sure that even if the end nodes
+ * and lengths match that the correct edge is selected (match shape) since some loops
+ * can have the same length and end node.
+ * @param  endnodetile   Graph tile at the end node.
+ * @param  startnode     Start node of the directed edge.
+ * @param  tile          Graph tile of the edge
+ * @param  directededge  Directed edge to match.
+ */
+uint32_t GetOpposingEdgeIndex(const baldr::graph_tile_ptr& endnodetile,
+                              const baldr::GraphId& startnode,
+                              const graph_tile_ptr& tile,
+                              const baldr::DirectedEdge& edge);
 
 /**
  * Compute a curvature metric given an edge shape.
