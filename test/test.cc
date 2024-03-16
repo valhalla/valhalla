@@ -309,6 +309,7 @@ boost::property_tree::ptree make_config(const std::string& path_prefix,
         "max_radius": 200,
         "max_reachability": 100,
         "max_timedep_distance": 500000,
+        "max_distance_disable_hierarchy_culling": 0,
         "motor_scooter": {
           "max_distance": 500000.0,
           "max_locations": 50,

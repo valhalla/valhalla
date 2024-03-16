@@ -71,7 +71,7 @@
 #    ifndef NTDDI_VERSION
 #      define NTDDI_VERSION 0x06000000
 #      ifndef _WIN32_WINNT
-#          define _WIN32_WINNT 
+#          define _WIN32_WINNT
 #      endif
 #      ifndef _WIN32_WINNT_VISTA
 #          define _WIN32_WINNT_VISTA
@@ -96,7 +96,7 @@
 #  include <windows.h>
 #endif  // _WIN32
 
-#include "date/tz_private.h"
+#include <date/tz_private.h>
 
 #include "date_time_africa.h"
 #include "date_time_antarctica.h"
@@ -429,7 +429,10 @@ get_tz_dir()
 static_assert(min_year <= max_year, "Configuration error");
 #endif
 
+#if 0
 static std::unique_ptr<tzdb> init_tzdb();
+#endif
+
 static std::unique_ptr<tzdb> init_tzdb_strings();
 
 tzdb_list::~tzdb_list()
@@ -2785,6 +2788,7 @@ leap_second::leap_second(const std::string& s, detail::undocumented)
     date_ = date.to_time_point(year(y));
 }
 
+#if 0
 static
 bool
 file_exists(const std::string& filename)
@@ -2795,6 +2799,7 @@ file_exists(const std::string& filename)
     return ::access(filename.c_str(), F_OK) == 0;
 #endif
 }
+#endif
 
 #if HAS_REMOTE_API
 
@@ -3357,6 +3362,7 @@ remote_install(const std::string& version)
 
 #endif  // HAS_REMOTE_API
 
+#if 0
 static
 std::string
 get_version(const std::string& path)
@@ -3384,6 +3390,14 @@ get_version(const std::string& path)
     }
     throw std::runtime_error("Unable to get Timezone database version from " + path);
 }
+#endif
+
+#if 0
+// warning: unused function 'init_tzdb' [-Wunused-function]
+// By removing from compilation the following functions are not used any more:
+// tz_alt.cpp:442: warning: unused function 'init_tzdb' [-Wunused-function]
+// tz_alt.cpp:2800: warning: unused function 'file_exists' [-Wunused-function]
+// tz_alt.cpp:3372: warning: unused function 'get_version' [-Wunused-function]
 
 static
 std::unique_ptr<tzdb>
@@ -3510,6 +3524,7 @@ init_tzdb()
 
     return db;
 }
+#endif
 
 const tzdb&
 reload_tzdb()

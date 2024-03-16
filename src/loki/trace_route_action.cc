@@ -16,9 +16,6 @@ using namespace valhalla::midgard;
 using namespace valhalla::loki;
 
 namespace {
-PointLL to_ll(const valhalla::Location& l) {
-  return PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_shape(const google::protobuf::RepeatedPtrField<valhalla::Location>& shape,
                  unsigned int max_shape,
@@ -113,6 +110,7 @@ void check_turn_penalty_factor(const float input_turn_penalty_factor) {
     throw valhalla_exception_t{158};
   }
 }
+
 } // namespace
 
 namespace valhalla {
@@ -121,6 +119,9 @@ namespace loki {
 void loki_worker_t::init_trace(Api& request) {
   parse_costing(request);
   auto& options = *request.mutable_options();
+
+  // check distance for hierarchy pruning
+  check_hierarchy_distance(request);
 
   // we require shape or encoded polyline but we dont know which at first
   if (!options.shape_size()) {

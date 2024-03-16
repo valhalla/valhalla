@@ -59,6 +59,12 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
+  // Neither edge can be part of a complex turn restriction
+  if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
+      edge2->end_restriction()) {
+    return false;
+  }
+
   // classification, link, use, and attributes must also match.
   // NOTE: might want "better" bridge attribution. Seems most overpasses
   // get marked as a bridge and lead to less shortcuts - so we don't consider
@@ -167,17 +173,8 @@ bool CanContract(GraphReader& reader,
                  const graph_tile_ptr& tile,
                  const GraphId& node,
                  EdgePairs& edgepairs) {
-  // Return false if only 1 edge
   const NodeInfo* nodeinfo = tile->node(node);
-  if (nodeinfo->edge_count() < 2) {
-    return false;
-  }
-
-  // Do not contract if the node is a gate or toll booth or toll gantry or sump buster or intersection
-  // type is a fork
-  if (nodeinfo->type() == NodeType::kGate || nodeinfo->type() == NodeType::kTollBooth ||
-      nodeinfo->type() == NodeType::kTollGantry || nodeinfo->type() == NodeType::kSumpBuster ||
-      nodeinfo->intersection() == IntersectionType::kFork) {
+  if (!nodeinfo->can_contract()) {
     return false;
   }
 
@@ -197,11 +194,7 @@ bool CanContract(GraphReader& reader,
   GraphId edgeid(node.tileid(), node.level(), nodeinfo->edge_index());
   for (uint32_t i = 0, n = nodeinfo->edge_count(); i < n; i++, ++edgeid) {
     const DirectedEdge* directededge = tile->directededge(edgeid);
-    if (!directededge->is_shortcut() && directededge->use() != Use::kTransitConnection &&
-        directededge->use() != Use::kEgressConnection &&
-        directededge->use() != Use::kPlatformConnection &&
-        directededge->use() != Use::kConstruction && !directededge->start_restriction() &&
-        !directededge->end_restriction()) {
+    if (directededge->can_form_shortcut()) {
       edges.push_back(edgeid);
     }
   }
@@ -386,10 +379,7 @@ uint32_t AddShortcutEdges(GraphReader& reader,
   for (uint32_t i = 0; i < edge_count; i++, ++edge_id) {
     // Skip transit connection edges.
     const DirectedEdge* directededge = tile->directededge(edge_id);
-    if (directededge->use() == Use::kTransitConnection ||
-        directededge->use() == Use::kEgressConnection ||
-        directededge->use() == Use::kPlatformConnection || directededge->bss_connection() ||
-        directededge->use() == Use::kConstruction) {
+    if (!directededge->can_form_shortcut()) {
       continue;
     }
 

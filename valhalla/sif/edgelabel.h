@@ -12,6 +12,11 @@
 namespace valhalla {
 namespace sif {
 
+constexpr uint32_t kInitialEdgeLabelCountAstar = 2000000;
+constexpr uint32_t kInitialEdgeLabelCountBidirAstar = 1000000;
+constexpr uint32_t kInitialEdgeLabelCountDijkstras = 4000000;
+constexpr uint32_t kInitialEdgeLabelCountBidirDijkstra = 2000000;
+
 /**
  * Labeling information for shortest path algorithm. Contains cost,
  * predecessor, current time, and assorted information required during
@@ -738,6 +743,7 @@ public:
    * @param dist             Distance meters to the destination
    * @param mode             Mode of travel along this edge.
    * @param path_distance    Accumulated distance.
+   * @param walking_distance Accumulated walking distance. Used to prune the expansion.
    * @param tripid           Trip Id for a transit edge.
    * @param prior_stopid     Prior transit stop Id.
    * @param blockid          Transit trip block Id.
@@ -756,6 +762,7 @@ public:
               const float dist,
               const sif::TravelMode mode,
               const uint32_t path_distance,
+              const uint32_t walking_distance,
               const uint32_t tripid,
               const baldr::GraphId& prior_stopid,
               const uint32_t blockid,
@@ -779,7 +786,8 @@ public:
                   InternalTurn::kNoTurn,
                   path_id),
         prior_stopid_(prior_stopid), tripid_(tripid), blockid_(blockid),
-        transit_operator_(transit_operator), has_transit_(has_transit) {
+        transit_operator_(transit_operator), has_transit_(has_transit),
+        walking_distance_(walking_distance) {
   }
 
   /**
@@ -791,6 +799,7 @@ public:
    * @param cost             True cost (and elapsed time in seconds) to the edge.
    * @param sortcost         Cost for sorting (includes A* heuristic).
    * @param path_distance    Accumulated path distance.
+   * @param walking_distance Accumulated walking distance. Used to prune the expansion.
    * @param tripid           Trip Id for a transit edge.
    * @param blockid          Transit trip block Id.
    * @param transition_cost  Transition cost
@@ -800,6 +809,7 @@ public:
               const sif::Cost& cost,
               const float sortcost,
               const uint32_t path_distance,
+              const uint32_t walking_distance,
               const uint32_t tripid,
               const uint32_t blockid,
               const Cost& transition_cost,
@@ -808,6 +818,7 @@ public:
     cost_ = cost;
     sortcost_ = sortcost;
     path_distance_ = path_distance;
+    walking_distance_ = walking_distance;
     tripid_ = tripid;
     blockid_ = blockid;
     transition_cost_ = transition_cost;
@@ -854,6 +865,13 @@ public:
     return has_transit_;
   }
 
+  /**
+   * Return the current walking distance in meters.
+   */
+  uint32_t walking_distance() const {
+    return walking_distance_;
+  }
+
 protected:
   // GraphId of the predecessor transit stop.
   baldr::GraphId prior_stopid_;
@@ -867,6 +885,9 @@ protected:
   uint32_t blockid_ : 21; // Really only needs 20 bits
   uint32_t transit_operator_ : 10;
   uint32_t has_transit_ : 1;
+
+  // Accumulated walking distance to prune the expansion
+  uint32_t walking_distance_;
 };
 
 } // namespace sif

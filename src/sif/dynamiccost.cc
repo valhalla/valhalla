@@ -161,7 +161,12 @@ DynamicCost::DynamicCost(const Costing& costing,
   // TODO - get the number of levels
   uint32_t n_levels = sizeof(kDefaultMaxUpTransitions) / sizeof(kDefaultMaxUpTransitions[0]);
   for (uint32_t level = 0; level < n_levels; level++) {
-    hierarchy_limits_.emplace_back(HierarchyLimits(level));
+    auto h = HierarchyLimits(level);
+    // Set max_up_transitions to kUnlimitedTransitions if disable_hierarchy_pruning
+    if (costing.options().disable_hierarchy_pruning()) {
+      h.max_up_transitions = kUnlimitedTransitions;
+    }
+    hierarchy_limits_.emplace_back(h);
   }
 
   // Add avoid edges to internal set
@@ -251,14 +256,6 @@ uint32_t DynamicCost::GetMaxTransferDistanceMM() {
 // the more the mode is favored.
 float DynamicCost::GetModeFactor() {
   return 1.0f;
-}
-
-// This method overrides the max_distance with the max_distance_mm per segment
-// distance. An example is a pure walking route may have a max distance of
-// 10000 meters (10km) but for a multi-modal route a lower limit of 5000
-// meters per segment (e.g. from origin to a transit stop or from the last
-// transit stop to the destination).
-void DynamicCost::UseMaxMultiModalDistance() {
 }
 
 // Gets the hierarchy limits.
@@ -391,6 +388,10 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);
+
+  // disable hierarchy pruning
+  co->set_disable_hierarchy_pruning(
+      rapidjson::get<bool>(json, "/disable_hierarchy_pruning", co->disable_hierarchy_pruning()));
 
   // top speed
   JSON_PBF_RANGED_DEFAULT(co, kVehicleSpeedRange, json, "/top_speed", top_speed);

@@ -47,14 +47,16 @@ namespace {
 
 // Struct to hold stats information during each threads work
 struct builder_stats {
-  uint32_t no_dir_edge_count;
-  uint32_t dep_count;
-  uint32_t midnight_dep_count;
+  uint32_t no_dir_edge_count = 0;
+  uint32_t dep_count = 0;
+  uint32_t midnight_dep_count = 0;
+  uint32_t invalid_service_dates = 0;
   // Accumulate stats from all threads
   void operator()(const builder_stats& other) {
     no_dir_edge_count += other.no_dir_edge_count;
     dep_count += other.dep_count;
     midnight_dep_count += other.midnight_dep_count;
+    invalid_service_dates += other.invalid_service_dates;
   }
 };
 
@@ -100,13 +102,14 @@ struct StopEdges {
   std::vector<TransitLine> lines;                     // Set of unique route/stop pairs
 };
 
-// Get scheduled departures for a stop
+// Get scheduled departures for a stop; here we also look at the .pbf.x files,
+// as there can be only stop pairs in the extended ones
 std::unordered_multimap<GraphId, Departure>
 ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
                  const uint32_t tile_date,
-                 const Transit& transit,
-                 std::unordered_map<GraphId, uint16_t>& stop_access,
-                 const std::string& file,
+                 const Transit& tile_pbf,
+                 std::unordered_map<GraphId, uint16_t>& stop_no_access,
+                 const std::string& pbf_fp,
                  std::mutex& lock,
                  builder_stats& stats) {
   // Check if there are no schedule stop pairs in this tile
@@ -116,11 +119,28 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
   uint32_t schedule_index = 0;
   std::map<TransitSchedule, uint32_t> schedules;
 
-  std::size_t slash_found = file.find_last_of("/\\");
-  std::string directory = file.substr(0, slash_found);
+  std::size_t slash_found = pbf_fp.find_last_of("/\\");
+  std::string directory = pbf_fp.substr(0, slash_found);
 
   filesystem::recursive_directory_iterator transit_file_itr(directory);
   filesystem::recursive_directory_iterator end_file_itr;
+
+  // lambda to add a schedule
+  auto add_schedule = [&schedule_index, &schedules,
+                       &transit_tilebuilder](Departure& dep, const uint64_t days, const uint32_t dow,
+                                             const uint32_t end_day) {
+    TransitSchedule sched(days, dow, end_day);
+    auto sched_itr = schedules.find(sched);
+    if (sched_itr == schedules.end()) {
+      transit_tilebuilder.AddTransitSchedule(sched);
+      // Add to the map and increment the index
+      schedules[sched] = schedule_index;
+      dep.schedule_index = schedule_index;
+      schedule_index++;
+    } else {
+      dep.schedule_index = sched_itr->second;
+    }
+  };
 
   // for each tile.
   for (; transit_file_itr != end_file_itr; ++transit_file_itr) {
@@ -130,23 +150,23 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
       std::string file_name = fname.substr(0, fname.size() - ext.size());
 
       // make sure we are looking at a pbf file
-      if ((ext == ".pbf" && fname == file) ||
-          (file_name.substr(file_name.size() - 4) == ".pbf" && file_name == file)) {
+      if ((ext == ".pbf" && fname == pbf_fp) ||
+          (file_name.substr(file_name.size() - 4) == ".pbf" && file_name == pbf_fp)) {
 
-        Transit spp;
+        Transit curr_tile_pbf;
         {
-          // already loaded
+          // already loaded or it's with a xxx.pbf.y extension
           if (ext == ".pbf") {
-            spp = transit;
+            curr_tile_pbf = tile_pbf;
           } else {
-            spp = read_pbf(fname, lock);
+            curr_tile_pbf = read_pbf(fname, lock);
           }
         }
 
-        if (spp.stop_pairs_size() == 0) {
-          if (transit.nodes_size() > 0) {
+        if (curr_tile_pbf.stop_pairs_size() == 0) {
+          if (tile_pbf.nodes_size() > 0) {
             LOG_ERROR("Tile " + fname + " has 0 schedule stop pairs but has " +
-                      std::to_string(transit.nodes_size()) + " stops");
+                      std::to_string(tile_pbf.nodes_size()) + " stops");
           }
           departures.clear();
           return departures;
@@ -154,52 +174,23 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 
         // Iterate through the stop pairs in this tile and form Valhalla departure
         // records
-        for (const auto& sp : spp.stop_pairs()) {
+        for (const auto& stop_pair : curr_tile_pbf.stop_pairs()) {
           // We do not know in this step if the end node is in a valid (non-empty)
           // Valhalla tile. So just add the stop pair and we will address this later
 
           // Use transit PBF graph Ids internally until adding to the graph tiles
           // TODO - wheelchair accessible, shape information
           Departure dep;
-          dep.orig_pbf_graphid = GraphId(sp.origin_graphid());
-          dep.dest_pbf_graphid = GraphId(sp.destination_graphid());
-          dep.route = sp.route_index();
-          dep.trip = sp.trip_id();
+          dep.orig_pbf_graphid = GraphId(stop_pair.origin_graphid());
+          dep.dest_pbf_graphid = GraphId(stop_pair.destination_graphid());
+          dep.route = stop_pair.route_index();
+          dep.trip = stop_pair.trip_id();
 
-          // if we have shape data then set everything else shapeid = 0;
-          if (sp.has_shape_id() && sp.has_destination_dist_traveled() &&
-              sp.has_origin_dist_traveled()) {
-            dep.shapeid = sp.shape_id();
-            dep.orig_dist_traveled = sp.origin_dist_traveled();
-            dep.dest_dist_traveled = sp.destination_dist_traveled();
-          } else {
-            dep.shapeid = 0;
-          }
-
-          dep.blockid = sp.has_block_id() ? sp.block_id() : 0;
-          dep.dep_time = sp.origin_departure_time();
-          dep.elapsed_time = sp.destination_arrival_time() - dep.dep_time;
-
-          dep.frequency_end_time = sp.has_frequency_end_time() ? sp.frequency_end_time() : 0;
-          dep.frequency = sp.has_frequency_headway_seconds() ? sp.frequency_headway_seconds() : 0;
-
-          if (!sp.bikes_allowed()) {
-            stop_access[dep.orig_pbf_graphid] |= kBicycleAccess;
-            stop_access[dep.dest_pbf_graphid] |= kBicycleAccess;
-          }
-
-          if (!sp.wheelchair_accessible()) {
-            stop_access[dep.orig_pbf_graphid] |= kWheelchairAccess;
-            stop_access[dep.dest_pbf_graphid] |= kWheelchairAccess;
-          }
-
-          dep.bicycle_accessible = sp.bikes_allowed();
-          dep.wheelchair_accessible = sp.wheelchair_accessible();
-
-          // Compute days of week mask
+          // Compute the valid days
+          // set the bits based on the dow.// Compute days of week mask
           uint32_t dow_mask = kDOWNone;
-          for (uint32_t x = 0; x < (uint32_t)sp.service_days_of_week_size(); x++) {
-            bool dow = sp.service_days_of_week(x);
+          for (uint32_t x = 0; x < (uint32_t)stop_pair.service_days_of_week_size(); x++) {
+            bool dow = stop_pair.service_days_of_week(x);
             if (dow) {
               switch (x) {
                 case 0:
@@ -227,31 +218,21 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
             }
           }
 
-          // Compute the valid days
-          // set the bits based on the dow.
-
+          // service_start_date are relative to our pivot date
           auto d = date::floor<date::days>(DateTime::pivot_date_);
-          date::sys_days start_date =
-              date::sys_days(date::year_month_day(d + date::days(sp.service_start_date())));
-          date::sys_days end_date =
-              date::sys_days(date::year_month_day(d + date::days(sp.service_end_date())));
+          date::sys_days start_date = date::sys_days(date::year_month_day(
+              d +
+              date::floor<date::days>(date::days(stop_pair.service_start_date() / kSecondsPerDay))));
+          date::sys_days end_date = date::sys_days(date::year_month_day(
+              d + date::ceil<date::days>(date::days(stop_pair.service_end_date() / kSecondsPerDay))));
 
           uint64_t days = get_service_days(start_date, end_date, tile_date, dow_mask);
 
           // if this is a service addition for one day, delete the dow_mask.
-          if (sp.service_start_date() == sp.service_end_date()) {
+          // TODO(nils): why? it's still valid for this one day right? So rather find out that dow?
+          if (stop_pair.service_start_date() == stop_pair.service_end_date()) {
             dow_mask = kDOWNone;
           }
-
-          // if dep.days == 0 then feed either starts after the end_date or tile_header_date >
-          // end_date
-          if (days == 0 && !sp.service_added_dates_size()) {
-            LOG_DEBUG("Feed rejected!  Start date: " + to_iso_extended_string(start_date) +
-                      " End date: " + to_iso_extended_string(end_date));
-            continue;
-          }
-
-          dep.headsign_offset = transit_tilebuilder.AddName(sp.trip_headsign());
 
           date::sys_days t_d = date::sys_days(date::year_month_day(d + date::days(tile_date)));
           uint32_t end_day = static_cast<uint32_t>((end_date - t_d).count());
@@ -261,34 +242,64 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
           }
 
           // if subtractions are between start and end date then turn off bit.
-          for (const auto& x : sp.service_except_dates()) {
-            date::sys_days rm_date = date::sys_days(date::year_month_day(d + date::days(x)));
+          for (const auto& x : stop_pair.service_except_dates()) {
+            date::sys_days rm_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = remove_service_day(days, end_date, tile_date, rm_date);
           }
 
           // if additions are between start and end date then turn on bit.
-          for (const auto& x : sp.service_added_dates()) {
-            date::sys_days add_date = date::sys_days(date::year_month_day(d + date::days(x)));
+          for (const auto& x : stop_pair.service_added_dates()) {
+            date::sys_days add_date =
+                date::sys_days(date::year_month_day(d + date::days(x / kSecondsPerDay)));
             days = add_service_day(days, end_date, tile_date, add_date);
           }
 
-          TransitSchedule sched(days, dow_mask, end_day);
-          auto sched_itr = schedules.find(sched);
-          if (sched_itr == schedules.end()) {
-            // Not in the map - add a new transit schedule to the tile
-            transit_tilebuilder.AddTransitSchedule(sched);
-
-            // Add to the map and increment the index
-            schedules[sched] = schedule_index;
-            dep.schedule_index = schedule_index;
-            schedule_index++;
-          } else {
-            dep.schedule_index = sched_itr->second;
+          // skip if no days are valid; this can happen a lot when there's a calendar.txt entry with
+          // no valid days but some calendar_dates.txt entries which add a date lying in the past
+          if (!days && !dow_mask) {
+            stats.invalid_service_dates++;
+            continue;
           }
 
-          // is this passed midnight?
+          // if we have shape data then set everything, else shapeid = 0;
+          if (stop_pair.has_shape_id() && stop_pair.has_destination_dist_traveled() &&
+              stop_pair.has_origin_dist_traveled()) {
+            dep.shapeid = stop_pair.shape_id();
+            dep.orig_dist_traveled = stop_pair.origin_dist_traveled();
+            dep.dest_dist_traveled = stop_pair.destination_dist_traveled();
+          } else {
+            dep.shapeid = 0;
+          }
+
+          dep.blockid = stop_pair.has_block_id() ? stop_pair.block_id() : 0;
+          dep.dep_time = stop_pair.origin_departure_time();
+          dep.elapsed_time = stop_pair.destination_arrival_time() - dep.dep_time;
+          dep.headsign_offset = transit_tilebuilder.AddName(stop_pair.trip_headsign());
+
+          dep.frequency_end_time =
+              stop_pair.has_frequency_end_time() ? stop_pair.frequency_end_time() : 0;
+          dep.frequency =
+              stop_pair.has_frequency_headway_seconds() ? stop_pair.frequency_headway_seconds() : 0;
+
+          if (!stop_pair.bikes_allowed()) {
+            stop_no_access[dep.orig_pbf_graphid] |= kBicycleAccess;
+            stop_no_access[dep.dest_pbf_graphid] |= kBicycleAccess;
+          }
+
+          if (!stop_pair.wheelchair_accessible()) {
+            stop_no_access[dep.orig_pbf_graphid] |= kWheelchairAccess;
+            stop_no_access[dep.dest_pbf_graphid] |= kWheelchairAccess;
+          }
+
+          dep.bicycle_accessible = stop_pair.bikes_allowed();
+          dep.wheelchair_accessible = stop_pair.wheelchair_accessible();
+
+          add_schedule(dep, days, dow_mask, end_day);
+
+          // is this past midnight?
           // create a departure for before midnight and one after
-          uint32_t origin_seconds = sp.origin_departure_time();
+          uint32_t origin_seconds = stop_pair.origin_departure_time();
           if (origin_seconds >= kSecondsPerDay) {
 
             // Add the current dep to the departures list
@@ -308,33 +319,20 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
               dow_mask =
                   ((dow_mask << 1) & kAllDaysOfWeek) | (dow_mask & kSaturday ? kSunday : kDOWNone);
 
-              TransitSchedule sched(days, dow_mask, end_day);
-              auto sched_itr = schedules.find(sched);
-              if (sched_itr == schedules.end()) {
-                // Not in the map - add a new transit schedule to the tile
-                transit_tilebuilder.AddTransitSchedule(sched);
-
-                // Add to the map and increment the index
-                schedules[sched] = schedule_index;
-                dep.schedule_index = schedule_index;
-                schedule_index++;
-              } else {
-                dep.schedule_index = sched_itr->second;
-              }
+              add_schedule(dep, days, dow_mask, end_day);
             }
 
             dep.dep_time = origin_seconds;
-            dep.frequency_end_time = 0;
-            dep.frequency = 0;
-            if (sp.has_frequency_end_time() && sp.has_frequency_headway_seconds()) {
-              uint32_t frequency_end_time = sp.frequency_end_time();
+            // if there used to be a frequency, there'll be one now
+            if (dep.frequency_end_time && dep.frequency) {
+              uint32_t frequency_end_time = stop_pair.frequency_end_time();
               // adjust the end time if it is after midnight.
               while (frequency_end_time >= kSecondsPerDay) {
                 frequency_end_time -= kSecondsPerDay;
               }
 
               dep.frequency_end_time = frequency_end_time;
-              dep.frequency = sp.frequency_headway_seconds();
+              dep.frequency = stop_pair.frequency_headway_seconds();
             }
           }
           // Add to the departures list
@@ -348,12 +346,12 @@ ProcessStopPairs(GraphTileBuilder& transit_tilebuilder,
 }
 
 // Add routes to the tile. Return a vector of route types.
-std::vector<uint32_t> AddRoutes(const Transit& transit, GraphTileBuilder& tilebuilder) {
+std::vector<uint32_t> AddRoutes(const Transit& pbf_tile, GraphTileBuilder& tilebuilder) {
   // Route types vs. index
   std::vector<uint32_t> route_types;
 
-  for (uint32_t i = 0; i < (uint32_t)transit.routes_size(); i++) {
-    const Transit_Route& r = transit.routes(i);
+  for (uint32_t i = 0; i < (uint32_t)pbf_tile.routes_size(); i++) {
+    const Transit_Route& r = pbf_tile.routes(i);
 
     // These should all be correctly set in the fetcher as it tosses types that we
     // don't support.  However, let's report an error if we encounter one.
@@ -416,9 +414,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
                             const float orig_dist_traveled,
                             const float dest_dist_traveled,
                             const std::vector<PointLL>& trip_shape,
-                            const std::vector<float>& distances,
-                            const std::string& origin_id,
-                            const std::string& dest_id) {
+                            const std::vector<float>& distances) {
 
   std::list<PointLL> shape;
   if (shapeid != 0 && trip_shape.size() && stop_ll != endstop_ll &&
@@ -515,7 +511,7 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
   }
 
   if (shape.size() == 0) {
-    LOG_ERROR("Invalid shape from " + origin_id + " to " + dest_id);
+    LOG_ERROR("Invalid shape between " + stop_ll.to_string() + " and " + endstop_ll.to_string());
     shape.push_back(stop_ll);
     shape.push_back(endstop_ll);
   }
@@ -531,11 +527,11 @@ std::list<PointLL> GetShape(const PointLL& stop_ll,
 //  until this is rectified
 void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 const GraphId& tileid,
-                const std::string& tile,
+                const Transit& tile_pbf,
                 const std::string& transit_dir,
                 std::mutex& lock,
                 const std::map<GraphId, StopEdges>& stop_edge_map,
-                const std::unordered_map<GraphId, uint16_t>& stop_access,
+                const std::unordered_map<GraphId, uint16_t>& stop_no_access,
                 const std::unordered_map<uint32_t, Shape>& shape_data,
                 const std::vector<float>& distances,
                 const std::vector<uint32_t>& route_types,
@@ -544,13 +540,10 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                 uint32_t& no_dir_edge_count) {
   auto t1 = std::chrono::high_resolution_clock::now();
 
-  // Get Transit PBF data for this tile
-  Transit transit = read_pbf(tile, lock);
-
   std::set<uint64_t> added_stations;
   std::set<uint64_t> added_egress;
 
-  // Data looks like the following.
+  // Data looks like the following.stop_index(
   // Egress1_for_Station_A
   // Egress2_for_Station_A
   // Station_A
@@ -574,8 +567,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
   for (const auto& stop_edges : stop_edge_map) {
     // Get the platform information
     GraphId platform_graphid = stop_edges.second.origin_pbf_graphid;
-    const Transit_Node& platform = transit.nodes(platform_graphid.id());
-    const std::string& origin_id = platform.onestop_id();
+    const Transit_Node& platform = tile_pbf.nodes(platform_graphid.id());
     if (GraphId(platform.graphid()) != platform_graphid) {
       LOG_ERROR("Platform key not equal!");
     }
@@ -587,7 +579,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     // the prev_type_graphid is actually the station or parent in
     // platforms
     GraphId parent(platform.prev_type_graphid());
-    const Transit_Node& station = transit.nodes(parent.id());
+    const Transit_Node& station = tile_pbf.nodes(parent.id());
 
     // Get the Valhalla graphId of the station node
     GraphId station_graphid(station.graphid());
@@ -598,8 +590,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
       // Build the station node
       uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-      auto s_access = stop_access.find(station_graphid);
-      if (s_access != stop_access.end()) {
+      auto s_access = stop_no_access.find(station_graphid);
+      if (s_access != stop_no_access.end()) {
         n_access &= ~s_access->second;
       }
 
@@ -636,7 +628,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       uint32_t index = eg.id();
 
       while (true) {
-        const Transit_Node& egress = transit.nodes(index);
+        const Transit_Node& egress = tile_pbf.nodes(index);
         if (static_cast<NodeType>(egress.type()) != NodeType::kTransitEgress) {
           break;
         }
@@ -649,8 +641,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
         // Build the egress node
         uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-        auto s_access = stop_access.find(egress_graphid);
-        if (s_access != stop_access.end()) {
+        auto s_access = stop_no_access.find(egress_graphid);
+        if (s_access != stop_no_access.end()) {
           n_access &= ~s_access->second;
         }
 
@@ -724,7 +716,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // index now points to the station.
       for (uint32_t j = eg.id(); j < index; j++) {
 
-        const Transit_Node& egress = transit.nodes(j);
+        const Transit_Node& egress = tile_pbf.nodes(j);
         PointLL egress_ll = {egress.lon(), egress.lat()};
 
         // Get the Valhalla graphId of the origin node (transit stop)
@@ -754,26 +746,21 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
             tilebuilder_transit.AddEdgeInfo(0, station_graphid, egress_graphid, 0, 0, 0, 0, shape,
                                             names, tagged_values, pronunciations, 0, added);
         directededge.set_edgeinfo_offset(edge_info_offset);
-        directededge.set_forward(true);
+        directededge.set_forward(false);
 
         // Add to list of directed edges
         tilebuilder_transit.directededges().emplace_back(std::move(directededge));
       }
 
-      // point to first platform
-      // there is always one platform
+      // advance the index to skip the station and point to the first platform
       index++;
-      // int count = 0;
-      // now add the DE from the station to all the platforms.
-      // the platforms follow the egresses in the pbf.
-      // index is currently set to the first platform for this station.
       while (true) {
 
-        if (index == (uint32_t)transit.nodes_size()) {
+        if (index == (uint32_t)tile_pbf.nodes_size()) {
           break;
         }
 
-        const Transit_Node& platform = transit.nodes(index);
+        const Transit_Node& platform = tile_pbf.nodes(index);
         if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform) {
           break;
         }
@@ -818,6 +805,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       uint32_t edge_count = tilebuilder_transit.directededges().size() - station_node.edge_index();
       if (edge_count == 0) {
         // Set the edge index to 0
+        // TODO: add ERROR log for no directed edges out of the station
         station_node.set_edge_index(0);
         no_dir_edge_count++;
       }
@@ -830,8 +818,8 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
 
     // Build the platform node
     uint32_t n_access = (kPedestrianAccess | kWheelchairAccess | kBicycleAccess);
-    auto s_access = stop_access.find(platform_graphid);
-    if (s_access != stop_access.end()) {
+    auto s_access = stop_no_access.find(platform_graphid);
+    if (s_access != stop_no_access.end()) {
       n_access &= ~s_access->second;
     }
 
@@ -886,7 +874,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
                                         names, tagged_values, pronunciations, 0, added);
 
     directededge.set_edgeinfo_offset(edge_info_offset);
-    directededge.set_forward(true);
+    directededge.set_forward(false);
 
     // Add to list of directed edges
     tilebuilder_transit.directededges().emplace_back(std::move(directededge));
@@ -906,13 +894,11 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // Find the lat,lng of the end stop
       PointLL endll;
       std::string endstopname;
-      std::string dest_id;
       if (end_platform_graphid.Tile_Base() == tileid) {
         // End stop is in the same pbf transit tile
-        const Transit_Node& endplatform = transit.nodes(end_platform_graphid.id());
+        const Transit_Node& endplatform = tile_pbf.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
-        dest_id = endplatform.onestop_id();
       } else {
         // Get Transit PBF data for this tile
         // Get transit pbf tile
@@ -925,7 +911,6 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
         const Transit_Node& endplatform = endtransit.nodes(end_platform_graphid.id());
         endstopname = endplatform.name();
         endll = {endplatform.lon(), endplatform.lat()};
-        dest_id = endplatform.onestop_id();
       }
 
       // Add the directed edge
@@ -969,7 +954,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
       // we will need to do something to differentiate edges (maybe use
       // lineid) so the shape doesn't get messed up.
       auto shape = GetShape(platform_ll, endll, transitedge.shapeid, transitedge.orig_dist_traveled,
-                            transitedge.dest_dist_traveled, points, distance, origin_id, dest_id);
+                            transitedge.dest_dist_traveled, points, distance);
 
       uint32_t edge_info_offset =
           tilebuilder_transit.AddEdgeInfo(transitedge.routeid, platform_graphid, end_platform_graphid,
@@ -985,6 +970,7 @@ void AddToGraph(GraphTileBuilder& tilebuilder_transit,
     }
 
     // Get the directed edge count, log an error if no directed edges are added
+    // TODO: log error
     uint32_t edge_count = tilebuilder_transit.directededges().size() - platform_node.edge_index();
     if (edge_count == 0) {
       // Set the edge index to 0
@@ -1014,9 +1000,6 @@ void build_tiles(const boost::property_tree::ptree& pt,
                  std::promise<builder_stats>& results) {
 
   builder_stats stats;
-  stats.no_dir_edge_count = 0;
-  stats.dep_count = 0;
-  stats.midnight_dep_count = 0;
 
   GraphReader reader(pt);
   auto database = pt.get_optional<std::string>("timezone");
@@ -1041,15 +1024,15 @@ void build_tiles(const boost::property_tree::ptree& pt,
     std::string file_name = GraphTile::FileSuffix(GraphId(tile_id.tileid(), tile_id.level(), 0));
     boost::algorithm::trim_if(file_name, boost::is_any_of(".gph"));
     file_name += ".pbf";
-    const std::string file = transit_dir + filesystem::path::preferred_separator + file_name;
+    const std::string pbf_fp = transit_dir + filesystem::path::preferred_separator + file_name;
 
     // Make sure it exists
-    if (!filesystem::exists(file)) {
-      LOG_ERROR("File not found.  " + file);
+    if (!filesystem::exists(pbf_fp)) {
+      LOG_ERROR("File not found.  " + pbf_fp);
       return;
     }
 
-    Transit transit = read_pbf(file, lock);
+    Transit tile_pbf = read_pbf(pbf_fp, lock);
     // Get Valhalla tile - get a read only instance for reference and
     // a writeable instance (deserialize it so we can add to it)
     lock.lock();
@@ -1058,6 +1041,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
     graph_tile_ptr transit_tile = reader.GetGraphTile(transit_tile_id);
     GraphTileBuilder tilebuilder_transit(transit_dir, transit_tile_id, false);
 
+    // normalize tile creation date on America/New_York timezone
     auto tz = DateTime::get_tz_db().from_index(DateTime::get_tz_db().to_index("America/New_York"));
     uint32_t tile_creation_date =
         DateTime::days_from_pivot_date(DateTime::get_formatted_date(DateTime::iso_date_time(tz)));
@@ -1069,27 +1053,24 @@ void build_tiles(const boost::property_tree::ptree& pt,
 
     lock.unlock();
 
-    std::unordered_map<GraphId, uint16_t> stop_access;
+    std::unordered_map<GraphId, uint16_t> stop_no_access;
     // add Transit nodes in order.
-    for (uint32_t i = 0; i < (uint32_t)transit.nodes_size(); i++) {
+    for (const auto& transit_node : tile_pbf.nodes()) {
 
-      const Transit_Node& node = transit.nodes(i);
-
-      if (!node.wheelchair_boarding()) {
-        stop_access[GraphId(node.graphid())] |= kWheelchairAccess;
+      if (!transit_node.wheelchair_boarding()) {
+        stop_no_access[GraphId(transit_node.graphid())] |= kWheelchairAccess;
       }
 
       // Store stop information in TransitStops
-      tilebuilder_transit.AddTransitStop({tilebuilder_transit.AddName(node.onestop_id()),
-                                          tilebuilder_transit.AddName(node.name()), node.generated(),
-                                          node.traversability()});
+      tilebuilder_transit.AddTransitStop({tilebuilder_transit.AddName(transit_node.onestop_id()),
+                                          tilebuilder_transit.AddName(transit_node.name()),
+                                          transit_node.generated(), transit_node.traversability()});
     }
 
     // Get all the shapes for this tile and calculate the distances
     std::unordered_map<uint32_t, Shape> shapes;
     std::vector<float> distances;
-    for (uint32_t i = 0; i < (uint32_t)transit.shapes_size(); i++) {
-      const Transit_Shape& shape = transit.shapes(i);
+    for (const auto& shape : tile_pbf.shapes()) {
       const std::vector<PointLL> trip_shape = decode7<std::vector<PointLL>>(shape.encoded_shape());
 
       float distance = 0.0f;
@@ -1118,16 +1099,14 @@ void build_tiles(const boost::property_tree::ptree& pt,
     uint32_t unique_lineid = 1;
     std::vector<TransitDeparture> transit_departures;
 
-    // Create a map of stop key to index in the stop vector
-
     // Process schedule stop pairs (departures)
     std::unordered_multimap<GraphId, Departure> departures =
-        ProcessStopPairs(tilebuilder_transit, tile_creation_date, transit, stop_access, file, lock,
-                         stats);
+        ProcessStopPairs(tilebuilder_transit, tile_creation_date, tile_pbf, stop_no_access, pbf_fp,
+                         lock, stats);
 
     // Form departures and egress/station/platform hierarchy
-    for (uint32_t i = 0; i < (uint32_t)transit.nodes_size(); i++) {
-      const Transit_Node& platform = transit.nodes(i);
+    // TODO: get pathways.txt or some other means to better correlate the intra-station edges
+    for (const auto& platform : tile_pbf.nodes()) {
       if (static_cast<NodeType>(platform.type()) != NodeType::kMultiUseTransitPlatform) {
         continue;
       }
@@ -1141,6 +1120,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
       // the end of the route line
       std::map<std::pair<uint32_t, GraphId>, uint32_t> unique_transit_edges;
       auto range = departures.equal_range(platform_pbf_graphid);
+
       for (auto key = range.first; key != range.second; ++key) {
         Departure dep = key->second;
 
@@ -1160,6 +1140,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
           lineid = m->second;
         }
 
+        // we prefer the frequency-based schedule if it was set
         try {
           if (dep.frequency == 0) {
             // Form transit departures -- fixed departure time
@@ -1170,6 +1151,11 @@ void build_tiles(const boost::property_tree::ptree& pt,
           } else {
 
             // Form transit departures -- frequency departure time
+            // TODO(nils): this doesn't differentiate between frequencies.txt entries with
+            // exact_times true/false; it's a bit random right now what departure_time represents:
+            // it's the time set by the stop_time's departure_time which might just be an example,
+            // but not represent an actual departure_time. can't we just take the service's start_time
+            // if it's exact_times=true or start_time + 0.5 * headway for exact_times=false?
             TransitDeparture td(lineid, dep.trip, dep.route, dep.blockid, dep.headsign_offset,
                                 dep.dep_time, dep.frequency_end_time, dep.frequency, dep.elapsed_time,
                                 dep.schedule_index, dep.wheelchair_accessible,
@@ -1179,8 +1165,7 @@ void build_tiles(const boost::property_tree::ptree& pt,
         } catch (const std::exception& e) { LOG_ERROR(e.what()); }
       }
 
-      // TODO Get any transfers from this stop (no transfers currently
-      // available from Transitland)
+      // TODO Get any transfers from this stop
       // AddTransfers(tilebuilder);
 
       // Add to stop edge map - track edges that need to be added. This is
@@ -1189,24 +1174,25 @@ void build_tiles(const boost::property_tree::ptree& pt,
     }
 
     // Add routes to the tile. Get vector of route types.
-    std::vector<uint32_t> route_types = AddRoutes(transit, tilebuilder_transit);
-    auto filter = tiles.TileBounds(tile_id.tileid());
+    std::vector<uint32_t> route_types = AddRoutes(tile_pbf, tilebuilder_transit);
+    auto tile_bounds = tiles.TileBounds(tile_id.tileid());
     bool tile_within_one_tz = false;
     std::multimap<uint32_t, multi_polygon_type> tz_polys;
     if (tz_db_handle) {
-      tz_polys = GetTimeZones(tz_db_handle, filter);
+      tz_polys = GetTimeZones(tz_db_handle, tile_bounds);
       if (tz_polys.size() == 1) {
         tile_within_one_tz = true;
       }
     }
 
     // Add nodes, directededges, and edgeinfo
-    AddToGraph(tilebuilder_transit, tile_id, file, transit_dir, lock, stop_edge_map, stop_access,
-               shapes, distances, route_types, tile_within_one_tz, tz_polys, stats.no_dir_edge_count);
+    AddToGraph(tilebuilder_transit, tile_id, tile_pbf, transit_dir, lock, stop_edge_map,
+               stop_no_access, shapes, distances, route_types, tile_within_one_tz, tz_polys,
+               stats.no_dir_edge_count);
 
     LOG_INFO("Tile " + std::to_string(tile_id.tileid()) + ": added " +
-             std::to_string(transit.nodes_size()) + " stops, " +
-             std::to_string(transit.shapes_size()) + " shapes, " +
+             std::to_string(tile_pbf.nodes_size()) + " stops, " +
+             std::to_string(tile_pbf.shapes_size()) + " shapes, " +
              std::to_string(route_types.size()) + " routes, and " +
              std::to_string(departures.size()) + " departures");
 
@@ -1241,8 +1227,6 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
     auto tile_path = transit_file_itr->path();
     if (filesystem::is_regular_file(transit_file_itr->path()) &&
         (tile_path.extension() == ".pbf" || std::isdigit(tile_path.string().back()))) {
-
-      LOG_INFO("tile: " + tile_path.string());
       all_tiles.emplace(GraphTile::GetTileId(tile_path.string()));
     }
   }
@@ -1303,6 +1287,7 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
   uint32_t total_no_dir_edge_count = 0;
   uint32_t total_dep_count = 0;
   uint32_t total_midnight_dep_count = 0;
+  uint32_t total_invalid_service_dates = 0;
 
   for (auto& result : results) {
     // If something bad went down this will rethrow it
@@ -1312,9 +1297,15 @@ std::unordered_set<GraphId> convert_transit(const ptree& pt) {
       total_no_dir_edge_count += stats.no_dir_edge_count;
       total_dep_count += stats.dep_count;
       total_midnight_dep_count += stats.midnight_dep_count;
+      total_invalid_service_dates += stats.invalid_service_dates;
     } catch (std::exception& e) {
       // TODO: throw further up the chain?
     }
+  }
+
+  if (total_invalid_service_dates) {
+    LOG_ERROR("There were " + std::to_string(total_invalid_service_dates) +
+              " stop pairs with invalid service dates");
   }
 
   if (total_no_dir_edge_count) {

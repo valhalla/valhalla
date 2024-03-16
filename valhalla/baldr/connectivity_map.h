@@ -24,6 +24,14 @@ public:
                      const std::shared_ptr<GraphReader>& graph_reader = {});
 
   /**
+   * Alternative to GetTiles() to query whether a level even exists, e.g. transit.#
+   *
+   * @param level  the level to query
+   * @return boolean indicating whether a level even exists
+   */
+  bool level_color_exists(const uint32_t level) const;
+
+  /**
    * Returns the color for the given graphid
    *
    * @param id      the graphid
@@ -39,8 +47,9 @@ public:
    * @param radius           the radius of the circle
    * @return colors          the colors of the tiles that intersect this circle at this level
    */
-  std::unordered_set<size_t>
-  get_colors(uint32_t hierarchy_level, const baldr::PathLocation& location, float radius) const;
+  std::unordered_set<size_t> get_colors(const baldr::TileLevel& hierarchy_level,
+                                        const baldr::PathLocation& location,
+                                        float radius) const;
 
   /**
    * Returns the geojson representing the connectivity map

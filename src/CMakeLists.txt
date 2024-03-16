@@ -70,7 +70,7 @@ endfunction()
 
 function(valhalla_module)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES)
+  set(multiValueArgs SOURCES SOURCES_WITH_WARNINGS HEADERS DEPENDS INCLUDE_DIRECTORIES SYSTEM_INCLUDE_DIRECTORIES)
   cmake_parse_arguments(MODULE "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   if (UNIX AND ENABLE_SINGLE_FILES_WERROR)
@@ -107,7 +107,10 @@ function(valhalla_module)
      PRIVATE
        ${VALHALLA_BINARY_DIR}
        ${VALHALLA_BINARY_DIR}/valhalla)
-  
+  if (MODULE_SYSTEM_INCLUDE_DIRECTORIES)
+    target_include_directories(${library} SYSTEM ${MODULE_SYSTEM_INCLUDE_DIRECTORIES})
+  endif()
+
   target_link_libraries(${library} Boost::boost)
 
   if(ENABLE_COVERAGE)
@@ -263,7 +266,7 @@ if(BUILD_SHARED_LIBS)
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${LIBVALHALLA_SO_LINK}
     DESTINATION "${CMAKE_INSTALL_LIBDIR}"
     COMPONENT development)
-  
+
   if(UNIX)
     add_custom_target(${LIBVALHALLA_SO_LINK} ALL
       COMMAND ${CMAKE_COMMAND} -E create_symlink "${LIBVALHALLA_SO_LINK}.${VALHALLA_VERSION_MAJOR}" ${LIBVALHALLA_SO_LINK})

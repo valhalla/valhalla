@@ -257,6 +257,10 @@ struct TimeInfo {
     return DateTime::seconds_to_date(local_time, dt::get_tz_db().from_index(timezone_index), false);
   }
 
+  uint32_t day_seconds() const {
+    return static_cast<uint32_t>(second_of_week) % midgard::kSecondsPerDay;
+  }
+
   // for unit tests
   bool operator==(const TimeInfo& ti) const {
     return valid == ti.valid && timezone_index == ti.timezone_index && local_time == ti.local_time &&

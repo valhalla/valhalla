@@ -1,5 +1,12 @@
-## Release Date: 2023-??-?? Valhalla 3.3.1
+## Release Date: 2022-??-?? Valhalla 3.4.1
 * **Removed**
+* **Bug Fix**
+* **Enhancement**
+
+## Release Date: 2023-05-11 Valhalla 3.4.0
+* **Removed**
+   * REMOVED: Docker image pushes to Dockerhub [#4033](https://github.com/valhalla/valhalla/pull/4033)
+   * REMOVED: transitland references and scripts and replace with info for raw GTFS feeds [#4033](https://github.com/valhalla/valhalla/pull/3906)
 * **Bug Fix**
    * FIXED: underflow of uint64_t cast for matrix time results [#3906](https://github.com/valhalla/valhalla/pull/3906)
    * FIXED: update vcpkg commit for Azure pipelines to fix libtool mirrors [#3915](https://github.com/valhalla/valhalla/pull/3915)
@@ -11,6 +18,24 @@
    * FIXED: parsing logic needed implicit order of stations/egresses/platforms in the GTFS feeds [#3949](https://github.com/valhalla/valhalla/pull/3949)
    * FIXED: segfault in TimeDistanceMatrix [#3964](https://github.com/valhalla/valhalla/pull/3949)
    * FIXED: write multiple PBFs if the protobuf object gets too big [#3954](https://github.com/valhalla/valhalla/pull/3954)
+   * FIXED: pin conan version to latest 1.x for now [#3990](https://github.com/valhalla/valhalla/pull/3990)
+   * FIXED: Fix matrix_locations when used in pbf request [#3997](https://github.com/valhalla/valhalla/pull/3997)
+   * FIXED: got to the point where the basic transit routing test works [#3988](https://github.com/valhalla/valhalla/pull/3988)
+   * FIXED: fix build with LOGGING_LEVEL=ALL [#3992](https://github.com/valhalla/valhalla/pull/3992)
+   * FIXED: transit stitching when determining whether a platform was generated [#4020](https://github.com/valhalla/valhalla/pull/4020)
+   * FIXED: multimodal isochrones [#4030](https://github.com/valhalla/valhalla/pull/4030)
+   * FIXED: duplicated recosting names should throw [#4042](https://github.com/valhalla/valhalla/pull/4042)
+   * FIXED: Remove arch specificity from strip command of Python bindings to make it more compatible with other archs [#4040](https://github.com/valhalla/valhalla/pull/4040)
+   * FIXED: GraphReader::GetShortcut no longer returns false positives or false negatives [#4019](https://github.com/valhalla/valhalla/pull/4019)
+   * FIXED: Tagging with bus=permit or taxi=permit did not override access=no [#4045](https://github.com/valhalla/valhalla/pull/4045)
+   * FIXED: Upgrade RapidJSON to address undefined behavior [#4051](https://github.com/valhalla/valhalla/pull/4051)
+   * FIXED: time handling for transit service [#4052](https://github.com/valhalla/valhalla/pull/4052)
+   * FIXED: multiple smaller bugs while testing more multimodal /route & /isochrones [#4055](https://github.com/valhalla/valhalla/pull/4055)
+   * FIXED: `FindLuaJit.cmake` to include Windows paths/library names [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * FIXED: Move complex turn restriction check out of can_form_shortcut() [#4047](https://github.com/valhalla/valhalla/pull/4047)
+   * FIXED: fix `clear` methods on matrix algorithms and reserve some space for labels with a new config [#4075](https://github.com/valhalla/valhalla/pull/4075)
+   * FIXED: fix `valhalla_build_admins` & `valhalla_ways_to_edges` argument parsing [#4097](https://github.com/valhalla/valhalla/pull/4097)
+   * FIXED: fail early in `valhalla_build_admins` if parent directory can't be created, also exit with failure [#4099](https://github.com/valhalla/valhalla/pull/4099)
 * **Enhancement**
    * CHANGED: replace boost::optional with C++17's std::optional where possible [#3890](https://github.com/valhalla/valhalla/pull/3890)
    * ADDED: parse `lit` tag on ways and add it to graph [#3893](https://github.com/valhalla/valhalla/pull/3893)
@@ -25,6 +50,20 @@
    * ADDED: optionally include highway=platform edges for pedestrian access [#3971](https://github.com/valhalla/valhalla/pull/3971)
    * ADDED: `use_lit` costing option for pedestrian costing [#3957](https://github.com/valhalla/valhalla/pull/3957)
    * ADDED: source & target index in error/warning when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
+   * CHANGED: Removed stray NULL values in log output[#3974](https://github.com/valhalla/valhalla/pull/3974)
+   * CHANGED: More conservative estimates for cost of walking slopes [#3982](https://github.com/valhalla/valhalla/pull/3982)
+   * ADDED: An option to slim down matrix response [#3987](https://github.com/valhalla/valhalla/pull/3987)
+   * CHANGED: Updated url for just_gtfs library [#3994](https://github.com/valhalla/valhalla/pull/3995)
+   * ADDED: Docker image pushes to Github's docker registry [#4033](https://github.com/valhalla/valhalla/pull/4033)
+   * ADDED: `disable_hierarchy_pruning` costing option to find the actual optimal route for motorized costing modes, i.e `auto`, `motorcycle`, `motor_scooter`, `bus`, `truck` & `taxi`. [#4000](https://github.com/valhalla/valhalla/pull/4000)
+   * CHANGED: baldr directory: remove warnings and C++17 adjustments [#4011](https://github.com/valhalla/valhalla/pull/4011)
+   * UPDATED: `vcpkg` to latest master, iconv wasn't building anymore [#4066](https://github.com/valhalla/valhalla/pull/4066)
+   * CHANGED: pybind11 upgrade for python 3.11 [#4067](https://github.com/valhalla/valhalla/pull/4067)
+   * CHANGED: added transit level to connectivity map [#4082](https://github.com/valhalla/valhalla/pull/4082)
+   * ADDED: "has_transit_tiles" & "osm_changeset" to verbose status response [#4062](https://github.com/valhalla/valhalla/pull/4062)
+   * ADDED: time awareness to CostMatrix for e.g. traffic support [#4071](https://github.com/valhalla/valhalla/pull/4071)
+   * UPDATED: transifex translations [#4102](https://github.com/valhalla/valhalla/pull/4102)
+   * ADDED: source & target index when exceeding max distance limit config [#3981](https://github.com/valhalla/valhalla/pull/3981)
 
 ## Release Date: 2023-01-03 Valhalla 3.3.0
 * **Removed**

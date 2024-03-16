@@ -22,45 +22,17 @@ static bool IsTrivial(const uint64_t& edgeid,
   }
   return false;
 }
-
-// Will return a destination's date_time string
-std::string GetDateTime(const std::string& origin_dt,
-                        const uint64_t& origin_tz,
-                        const GraphId& pred_id,
-                        GraphReader& reader,
-                        const uint64_t& offset) {
-  if (origin_dt.empty()) {
-    return "";
-  } else if (!offset) {
-    return origin_dt;
-  }
-  graph_tile_ptr tile = nullptr;
-  uint32_t dest_tz = 0;
-  if (pred_id.Is_Valid()) {
-    // get the timezone of the output location
-    auto out_nodes = reader.GetDirectedEdgeNodes(pred_id, tile);
-    if (const auto* node = reader.nodeinfo(out_nodes.first, tile))
-      dest_tz = node->timezone();
-    else if (const auto* node = reader.nodeinfo(out_nodes.second, tile))
-      dest_tz = node->timezone();
-  }
-
-  auto in_epoch =
-      DateTime::seconds_since_epoch(origin_dt, DateTime::get_tz_db().from_index(origin_tz));
-  uint64_t out_epoch = in_epoch + offset;
-  std::string out_dt =
-      DateTime::seconds_to_date(out_epoch, DateTime::get_tz_db().from_index(dest_tz), false);
-
-  return out_dt;
-}
 } // namespace
 
 namespace valhalla {
 namespace thor {
 
 // Constructor with cost threshold.
-TimeDistanceMatrix::TimeDistanceMatrix()
-    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0) {
+TimeDistanceMatrix::TimeDistanceMatrix(const boost::property_tree::ptree& config)
+    : mode_(travel_mode_t::kDrive), settled_count_(0), current_cost_threshold_(0),
+      max_reserved_labels_count_(config.get<uint32_t>("max_reserved_labels_count_dijkstras",
+                                                      kInitialEdgeLabelCountDijkstras)),
+      clear_reserved_memory_(config.get<bool>("clear_reserved_memory", false)) {
 }
 
 // Compute a cost threshold in seconds based on average speed for the travel mode.
@@ -231,14 +203,15 @@ std::vector<TimeDistance> TimeDistanceMatrix::ComputeMatrix(
 
   std::vector<TimeDistance> many_to_many(origins.size() * destinations.size());
   for (size_t origin_index = 0; origin_index < origins.size(); ++origin_index) {
+    // reserve some space for the next dijkstras (will be cleared at the end of the loop)
+    edgelabels_.reserve(max_reserved_labels_count_);
     auto& origin = origins.Get(origin_index);
     const auto& time_info = time_infos[origin_index];
 
     std::vector<TimeDistance> one_to_many;
     current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
 
-    // Construct adjacency list, edge status, and done set. Set bucket size and
-    // cost range based on DynamicCost.
+    // Construct adjacency list. Set bucket size and cost range based on DynamicCost.
     adjacencylist_.reuse(0.0f, current_cost_threshold_, bucketsize, &edgelabels_);
 
     // Initialize the origin and set the available destination edges
@@ -589,8 +562,8 @@ std::vector<TimeDistance> TimeDistanceMatrix::FormTimeDistanceMatrix(GraphReader
                                                                      const GraphId& pred_id) {
   std::vector<TimeDistance> td;
   for (auto& dest : destinations_) {
-    auto date_time = GetDateTime(origin_dt, origin_tz, pred_id, reader,
-                                 static_cast<uint64_t>(dest.best_cost.secs + .5f));
+    auto date_time = get_date_time(origin_dt, origin_tz, pred_id, reader,
+                                   static_cast<uint64_t>(dest.best_cost.secs + .5f));
     td.emplace_back(dest.best_cost.secs, dest.distance, date_time);
   }
   return td;

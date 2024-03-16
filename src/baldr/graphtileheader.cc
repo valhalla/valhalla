@@ -4,6 +4,7 @@
 #include "baldr/edgeinfo.h"
 #include "baldr/nodeinfo.h"
 #include "config.h"
+#include <algorithm>
 #include <string.h>
 
 using namespace valhalla::baldr;
@@ -12,16 +13,23 @@ namespace valhalla {
 namespace baldr {
 
 // Default constructor.
-GraphTileHeader::GraphTileHeader() {
-  memset(this, 0, sizeof(GraphTileHeader));
-  strncpy(version_, PACKAGE_VERSION, kMaxVersionSize);
-  version_[kMaxVersionSize - 1] = 0;
-  tile_size_ = 0;
+GraphTileHeader::GraphTileHeader()
+    : // initialization of bitfields done here in c++20 can be done in the class definition
+      graphid_(0), density_(0), name_quality_(0), speed_quality_(0), exit_quality_(0),
+      has_elevation_(0), has_ext_directededge_(0), nodecount_(0), directededgecount_(0),
+      predictedspeeds_count_(0), spare1_(0), transitioncount_(0), spare3_(0), turnlane_count_(0),
+      spare4_(0), transfercount_(0), spare2_(0), departurecount_(0), stopcount_(0), spare5_(0),
+      routecount_(0), schedulecount_(0), signcount_(0), spare6_(0), access_restriction_count_(0),
+      admincount_(0), spare7_(0) {
+  set_version(PACKAGE_VERSION);
 }
 
 // Set the version string.
 void GraphTileHeader::set_version(const std::string& version) {
-  strncpy(version_, version.c_str(), kMaxVersionSize);
+  // reinitializing the version array before copying
+  version_ = {};
+  std::copy(version.begin(), version.begin() + std::min(kMaxVersionSize, version.size()),
+            version_.data());
   version_[kMaxVersionSize - 1] = 0;
 }
 
@@ -72,7 +80,7 @@ void GraphTileHeader::set_transfercount(const uint32_t transfers) {
 
 // Sets the edge bin offsets
 void GraphTileHeader::set_edge_bin_offsets(const uint32_t (&offsets)[kBinCount]) {
-  memcpy(bin_offsets_, offsets, sizeof(bin_offsets_));
+  std::copy(std::begin(offsets), std::end(offsets), bin_offsets_.data());
 }
 
 // Get the offsets to the given bin in the 5x5 grid.

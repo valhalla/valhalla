@@ -8,9 +8,6 @@ using namespace valhalla;
 using namespace valhalla::baldr;
 
 namespace {
-midgard::PointLL to_ll(const valhalla::Location& l) {
-  return midgard::PointLL{l.ll().lng(), l.ll().lat()};
-}
 
 void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>& locations,
                     float max_iso_distance) {
@@ -26,6 +23,7 @@ void check_distance(const google::protobuf::RepeatedPtrField<valhalla::Location>
     }
   }
 }
+
 } // namespace
 
 namespace valhalla {
@@ -60,6 +58,7 @@ void loki_worker_t::init_isochrones(Api& request) {
 
   parse_costing(request);
 }
+
 void loki_worker_t::isochrones(Api& request) {
   // time this whole method and save that statistic
   auto _ = measure_scope_time(request);
