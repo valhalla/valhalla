@@ -1033,7 +1033,7 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
 
     pruning_disabled_at_origin_ =
         pruning_disabled_at_origin_ || !edgelabels_forward_.back().closure_pruning() ||
-        directededge->not_thru() || !edgelabels_reverse_.back().destonly_pruning();
+        directededge->not_thru() || !edgelabels_forward_.back().destonly_pruning();
   }
 
   // Set the origin timezone
