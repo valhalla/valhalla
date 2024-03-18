@@ -534,6 +534,7 @@ bool IsNotThruEdge(GraphReader& reader,
 
       // Return false if we get back to the start node or hit an
       // edge with higher classification
+      // TODO(nils): why does higher classification immediately tell it's not "not_thru"?
       if (diredge->classification() < RoadClass::kTertiary || diredge->endnode() == startnode) {
         return false;
       }

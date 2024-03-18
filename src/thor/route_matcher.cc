@@ -208,7 +208,9 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            mode,
                            0,
                            kInvalidRestriction,
+                           false,
                            true,
+                           !de->destonly() && !(costing->is_hgv() && de->destonly_hgv()),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
                            turn};
 
@@ -389,8 +391,8 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
 
         // Get the cost of traversing the edge
         uint8_t flow_sources;
-        elapsed += mode_costing[static_cast<int>(mode)]->EdgeCost(de, end_node_tile, offset_time_info,
-                                                                  flow_sources) *
+        auto costing = mode_costing[static_cast<int>(mode)];
+        elapsed += costing->EdgeCost(de, end_node_tile, offset_time_info, flow_sources) *
                    (1 - edge.percent_along());
         // overwrite time with timestamps
         if (options.use_timestamps())
@@ -399,10 +401,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
         // Add begin edge
         path_infos.emplace_back(mode, elapsed, graphid, 0, 0.f, -1);
 
-        InternalTurn turn =
-            nodeinfo ? mode_costing[static_cast<int>(mode)]->TurnType(prev_edge_label.opp_local_idx(),
-                                                                      nodeinfo, de)
-                     : InternalTurn::kNoTurn;
+        InternalTurn turn = nodeinfo
+                                ? costing->TurnType(prev_edge_label.opp_local_idx(), nodeinfo, de)
+                                : InternalTurn::kNoTurn;
         // Set previous edge label
         prev_edge_label = {kInvalidLabel,
                            graphid,
@@ -412,7 +413,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            mode,
                            0,
                            baldr::kInvalidRestriction,
+                           false,
                            true,
+                           !de->destonly() && !(costing->is_hgv() && de->destonly_hgv()),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
                            turn};
 
@@ -470,7 +473,6 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
           // get the cost of traversing the node and the remaining part of the edge
-          auto& costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
           uint8_t flow_sources;

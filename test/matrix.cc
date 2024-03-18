@@ -49,7 +49,7 @@ public:
     if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (pred.restrictions() & (1 << edge->localedgeidx())) ||
         edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
-        (!allow_destination_only_ && !pred.destonly() && edge->destonly())) {
+        (destination_only_pruning_ && !pred.destonly() && edge->destonly())) {
       return false;
     }
     return true;
@@ -67,7 +67,7 @@ public:
         (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
         (opp_edge->restrictions() & (1 << pred.opp_local_idx())) ||
         opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
-        (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly())) {
+        (destination_only_pruning_ && !pred.destonly() && opp_edge->destonly())) {
       return false;
     }
     return true;

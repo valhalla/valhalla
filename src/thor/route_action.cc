@@ -305,7 +305,8 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // If bidirectional A* disable use of destination-only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   // Other path algorithms can use destination-only edges on the first pass.
-  cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
+  // TODO(nils): why not others with destonly pruning? it gets a 2nd pass as well
+  cost->set_destination_only_pruning(path_algorithm == &bidir_astar ? true : false);
 
   cost->set_pass(0);
   auto paths = path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);
@@ -336,9 +337,9 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
     cost->set_pass(1);
     const bool using_bd = path_algorithm == &bidir_astar;
     cost->RelaxHierarchyLimits(using_bd);
-    cost->set_allow_destination_only(true);
-    cost->set_allow_conditional_destination(true);
-    path_algorithm->set_not_thru_pruning(false);
+    cost->set_destination_only_pruning(false);
+    cost->set_conditional_destination_only_pruning(false);
+    cost->set_not_thru_pruning(false);
     // Get the best path. Return if not empty (else return the original path)
     auto relaxed_paths =
         path_algorithm->GetBestPath(origin, destination, *reader, mode_costing, mode, options);

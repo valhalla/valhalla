@@ -178,7 +178,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = baldr::kInvalidRestriction;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
@@ -249,23 +249,21 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     if (FORWARD) {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
-                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 pred.closure_pruning() || !(costing_->IsClosed(directededge, tile)),
+                                 pred.destonly_pruning() || !directededge->destonly(),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
-                                 restriction_idx, pred.path_id(),
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 restriction_idx, pred.path_id());
 
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
-                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
+                                 pred.destonly_pruning() || !opp_edge->destonly(),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                     opp_pred_edge),
-                                 restriction_idx, pred.path_id(),
-                                 opp_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                 restriction_idx, pred.path_id());
     }
     adjacencylist_.add(idx);
   }
@@ -335,6 +333,8 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
+  // we want to expand into not_thru regions
+  costing_->set_not_thru_pruning(false);
 
   // Prepare for a graph traversal
   Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
@@ -821,10 +821,10 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
+                                 !directededge->destonly() &&
+                                     !(costing_->is_hgv() && directededge->destonly_hgv()),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -912,10 +912,10 @@ void Dijkstras::SetDestinationLocations(
       // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
+                                 !directededge->destonly() &&
+                                     !(costing_->is_hgv() && directededge->destonly_hgv()),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }

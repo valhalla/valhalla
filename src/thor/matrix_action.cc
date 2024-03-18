@@ -123,7 +123,7 @@ std::string thor_worker_t::matrix(Api& request) {
 
   // for costmatrix try a second pass if the first didn't work out
   valhalla::sif::cost_ptr_t cost = mode_costing[static_cast<uint32_t>(mode)];
-  cost->set_allow_destination_only(false);
+  cost->set_destination_only_pruning(true);
   cost->set_pass(0);
 
   if (!algo->SourceToTarget(request, *reader, mode_costing, mode,
@@ -135,9 +135,9 @@ std::string thor_worker_t::matrix(Api& request) {
     algo->Clear();
     cost->set_pass(1);
     cost->RelaxHierarchyLimits(true);
-    cost->set_allow_destination_only(true);
-    cost->set_allow_conditional_destination(true);
-    algo->set_not_thru_pruning(false);
+    cost->set_destination_only_pruning(false);
+    cost->set_conditional_destination_only_pruning(false);
+    cost->set_not_thru_pruning(false);
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
 
