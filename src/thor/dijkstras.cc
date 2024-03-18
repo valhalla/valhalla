@@ -250,7 +250,9 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
                                  pred.closure_pruning() || !(costing_->IsClosed(directededge, tile)),
-                                 pred.destonly_pruning() || !directededge->destonly(),
+                                 pred.destonly_pruning() ||
+                                     !(directededge->destonly() ||
+                                       (costing_->is_hgv() && directededge->destonly_hgv())),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                                  restriction_idx, pred.path_id());
@@ -259,7 +261,9 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
                                  pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
-                                 pred.destonly_pruning() || !opp_edge->destonly(),
+                                 pred.destonly_pruning() ||
+                                     !(opp_edge->destonly() ||
+                                       (costing_->is_hgv() && opp_edge->destonly_hgv())),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                     opp_pred_edge),
@@ -818,11 +822,11 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
+      int restriction_idx = kInvalidRestriction;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 !directededge->destonly() &&
-                                     !(costing_->is_hgv() && directededge->destonly_hgv()),
+                                 !(directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv())),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
@@ -902,7 +906,7 @@ void Dijkstras::SetDestinationLocations(
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
+      int restriction_idx = kInvalidRestriction;
       // TODO: When running expansion in reverse, handle the case where the
       // destination lies on a closure but the expansion started from an open
       // edge. Currently, we begin with closure prunning turned on and hence
@@ -912,8 +916,8 @@ void Dijkstras::SetDestinationLocations(
       // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 !directededge->destonly() &&
-                                     !(costing_->is_hgv() && directededge->destonly_hgv()),
+                                 !(directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv())),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       adjacencylist_.add(idx);

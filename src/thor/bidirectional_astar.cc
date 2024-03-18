@@ -321,7 +321,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
                                      pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile)),
-                                     pred.destonly_pruning() || !meta.edge->destonly(),
+                                     pred.destonly_pruning() ||
+                                         !(meta.edge->destonly() ||
+                                           (costing_->is_hgv() && meta.edge->destonly_hgv())),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                      restriction_idx, 0);
@@ -336,7 +338,9 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
                                      pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
-                                     pred.destonly_pruning() || !opp_edge->destonly(),
+                                     pred.destonly_pruning() ||
+                                         !(opp_edge->destonly() ||
+                                           (costing_->is_hgv() && opp_edge->destonly_hgv())),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
@@ -1006,8 +1010,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      baldr::kInvalidRestriction,
                                      !(costing_->IsClosed(directededge, tile)),
-                                     !directededge->destonly() &&
-                                         !(costing_->is_hgv() && directededge->destonly_hgv()),
+                                     !(directededge->destonly() ||
+                                       (costing_->is_hgv() && directededge->destonly_hgv())),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn);
     adjacencylist_forward_.add(idx);
@@ -1106,8 +1110,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
     }
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                                     !opp_dir_edge->destonly() &&
-                                         !(costing_->is_hgv() && opp_dir_edge->destonly_hgv()),
+                                     !(directededge->destonly() ||
+                                       (costing_->is_hgv() && directededge->destonly_hgv())),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction);
     adjacencylist_reverse_.add(idx);

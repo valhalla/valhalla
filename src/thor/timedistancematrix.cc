@@ -376,16 +376,16 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, false,
                                !costing_->IsClosed(directededge, tile),
-                               directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()),
+                               !(directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv())),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
                                baldr::kInvalidRestriction, false,
                                !costing_->IsClosed(directededge, tile),
-                               opp_dir_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()),
+                               !(directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv())),
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
                                InternalTurn::kNoTurn, 0);
     }
