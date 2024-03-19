@@ -243,12 +243,15 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
     }
 
+    // not_thru is the same for both trees
+    bool not_thru_pruning = pred.not_thru_pruning() || !directededge->not_thru();
+
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     if (FORWARD) {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                                 transition_cost, path_dist, false,
+                                 transition_cost, path_dist, not_thru_pruning,
                                  pred.closure_pruning() || !(costing_->IsClosed(directededge, tile)),
                                  pred.destonly_pruning() ||
                                      !(directededge->destonly() ||
@@ -259,7 +262,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                                 transition_cost, path_dist, false,
+                                 transition_cost, path_dist, not_thru_pruning,
                                  pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
                                  pred.destonly_pruning() ||
                                      !(opp_edge->destonly() ||
@@ -337,8 +340,6 @@ void Dijkstras::Compute(google::protobuf::RepeatedPtrField<valhalla::Location>& 
   mode_ = mode;
   costing_ = mode_costing[static_cast<uint32_t>(mode_)];
   access_mode_ = costing_->access_mode();
-  // we want to expand into not_thru regions
-  costing_->set_not_thru_pruning(false);
 
   // Prepare for a graph traversal
   Initialize(bdedgelabels_, adjacencylist_, costing_->UnitSize());
