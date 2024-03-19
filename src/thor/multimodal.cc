@@ -390,9 +390,15 @@ bool MultiModalPathAlgorithm::ExpandForward(GraphReader& graphreader,
         } else {
           if (pred.tripid() > 0) {
             // tripId > 0 means the prior edge was a transit edge and this
-            // is an "in-station" transfer. Add a small transfer time and
-            // call GetNextDeparture again if we cannot make the current
-            // departure.
+            // is an "in-station" transfer.
+            // This mean changing vehicle (unboard, wait, board again).
+            // So first check if the pedestrian costing allow traversing
+            // this node.
+            if (!pc->Allowed(nodeinfo)) {
+              continue;
+            }
+            // Then add a small transfer time and call GetNextDeparture again
+            // if we cannot make the current departure.
             // TODO - let's get the transfers.txt implemented!
             if (offset_time.day_seconds() + 30 > departure->departure_time()) {
               departure =
