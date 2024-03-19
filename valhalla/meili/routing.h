@@ -61,7 +61,7 @@ public:
                        restriction_idx,
                        !edge->not_thru(),
                        true,
-                       !edge->destonly(),
+                       false,
                        false,
                        sif::InternalTurn::kNoTurn),
         nodeid_(nodeid), dest_(dest), source_(source), target_(target), turn_cost_(turn_cost) {
