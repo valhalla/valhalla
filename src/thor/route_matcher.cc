@@ -208,9 +208,9 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            mode,
                            0,
                            kInvalidRestriction,
-                           false,
+                           !de->not_thru(),
                            true,
-                           !de->destonly() && !(costing->is_hgv() && de->destonly_hgv()),
+                           !(de->destonly() || (costing->is_hgv() && de->destonly_hgv())),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
                            turn};
 
@@ -413,9 +413,9 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            mode,
                            0,
                            baldr::kInvalidRestriction,
-                           false,
+                           !de->not_thru(),
                            true,
-                           !de->destonly() && !(costing->is_hgv() && de->destonly_hgv()),
+                           !(de->destonly() || (costing->is_hgv() && de->destonly_hgv())),
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
                            turn};
 
