@@ -252,7 +252,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     if (FORWARD) {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, not_thru_pruning,
-                                 pred.closure_pruning() || !(costing_->IsClosed(directededge, tile)),
+                                 pred.closure_pruning() || !costing_->IsClosed(directededge, tile),
                                  pred.destonly_pruning() ||
                                      !(directededge->destonly() ||
                                        (costing_->is_hgv() && directededge->destonly_hgv())),
@@ -263,7 +263,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, not_thru_pruning,
-                                 pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
+                                 pred.closure_pruning() || !costing_->IsClosed(opp_edge, tile),
                                  pred.destonly_pruning() ||
                                      !(opp_edge->destonly() ||
                                        (costing_->is_hgv() && opp_edge->destonly_hgv())),
