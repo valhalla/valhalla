@@ -518,26 +518,24 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
+    bool is_destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, not_thru_pruning,
                             pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile)),
-                            pred.destonly_pruning() ||
-                                !(meta.edge->destonly() ||
-                                  (costing_->is_hgv() && meta.edge->destonly_hgv())),
+                            pred.destonly_pruning() || !is_destonly,
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                            restriction_idx, 0);
+                            restriction_idx, 0, is_destonly);
   } else {
+    bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, not_thru_pruning,
                             pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
-                            pred.destonly_pruning() ||
-                                !(opp_edge->destonly() ||
-                                  (costing_->is_hgv() && opp_edge->destonly_hgv())),
+                            pred.destonly_pruning() || !is_destonly,
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
-                            restriction_idx, 0);
+                            restriction_idx, 0, is_destonly);
   }
   adj.add(idx);
   // mark the edge as settled for the connection check

@@ -318,15 +318,14 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
+    bool is_destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
                                      pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile)),
-                                     pred.destonly_pruning() ||
-                                         !(meta.edge->destonly() ||
-                                           (costing_->is_hgv() && meta.edge->destonly_hgv())),
+                                     pred.destonly_pruning() || !is_destonly,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                                     restriction_idx, 0);
+                                     restriction_idx, 0, is_destonly);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -335,6 +334,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
+    bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
                                      sortcost, dist, mode_, transition_cost, not_thru_pruning,
                                      pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
@@ -344,7 +344,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
-                                     restriction_idx, 0);
+                                     restriction_idx, 0, is_destonly);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -1007,13 +1007,13 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
+    bool is_destonly =
+        directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
                                      baldr::kInvalidRestriction,
-                                     !(costing_->IsClosed(directededge, tile)),
-                                     !(directededge->destonly() ||
-                                       (costing_->is_hgv() && directededge->destonly_hgv())),
+                                     !(costing_->IsClosed(directededge, tile)), !is_destonly,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn);
+                                     sif::InternalTurn::kNoTurn, is_destonly);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1108,12 +1108,13 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
+    bool is_destonly =
+        directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                      dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
-                                     !(directededge->destonly() ||
-                                       (costing_->is_hgv() && directededge->destonly_hgv())),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction);
+                                     !is_destonly, static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction,
+                                     is_destonly);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
