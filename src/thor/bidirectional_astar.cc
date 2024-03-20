@@ -365,7 +365,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
 
   // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
   // will be pruned. In that case we want to allow uturns.
-  return not_thru_pruning_ && !(pred.not_thru_pruning() && meta.edge->not_thru());
+  return !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 template <const ExpansionType expansion_direction>
@@ -428,10 +428,10 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     uturn_meta = is_uturn ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
-    disable_uturn =
-        !is_uturn && ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo,
-                                                      pred_idx, meta, shortcuts, tile, offset_time) ||
-        disable_uturn;
+    disable_uturn = (!is_uturn && ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge,
+                                                                   nodeinfo, pred_idx, meta,
+                                                                   shortcuts, tile, offset_time)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
