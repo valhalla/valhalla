@@ -36,8 +36,8 @@ public:
   EdgeLabel()
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
-        endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), origin_(0),
-        destination_(0), toll_(0), not_thru_pruning_(0), deadend_(0), on_complex_rest_(0),
+        endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
+        origin_(0), destination_(0), toll_(0), not_thru_pruning_(0), deadend_(0), on_complex_rest_(0),
         closure_pruning_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
         has_measured_speed_(0), dest_only_pruning_(0), cost_(0, 0), sortcost_(0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
