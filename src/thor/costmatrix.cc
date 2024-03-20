@@ -552,7 +552,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                         pred_dist, newcost.cost);
   }
 
-  return !(pred.not_thru_pruning() && meta.edge->not_thru());
+  return not_thru_pruning_ && !(pred.not_thru_pruning() && meta.edge->not_thru());
 }
 
 template <const MatrixExpansionType expansion_direction, const bool FORWARD>

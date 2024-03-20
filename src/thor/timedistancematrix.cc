@@ -151,7 +151,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
     if (FORWARD) {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx,
+                               path_distance, restriction_idx, false,
                                (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
@@ -159,7 +159,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
                                    (costing_->is_hgv() && directededge->destonly_hgv()));
     } else {
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx,
+                               path_distance, restriction_idx, false,
                                (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
