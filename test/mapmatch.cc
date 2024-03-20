@@ -115,18 +115,6 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
-  std::stringstream shape;
-  for (const auto& r : api.directions().routes()) {
-    shape << "new route" << std::endl;
-    for (const auto& l : r.legs()) {
-      shape << std::fixed << std::setprecision(3) << "Time : " << l.summary().time()
-            << ", length : " << l.summary().length() << ", shape : " << l.shape() << std::endl;
-    }
-  }
-  return shape.str();
-}
-
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
@@ -219,10 +207,11 @@ TEST(Mapmatch, test_matcher) {
 
     try {
       Api api;
-      walked_json = actor.trace_attributes(
+      auto req =
           R"({"date_time":{"type":1,"value":"2019-10-31T18:30"},"costing":"auto","shape_match":"edge_walk","encoded_polyline":")" +
-              json_escape(encoded_shape) + "\"}",
-          nullptr, &api);
+          json_escape(encoded_shape) + "\"}";
+      std::cerr << req << std::endl;
+      walked_json = actor.trace_attributes(req, nullptr, &api);
       EXPECT_NE(api.trip().routes(0).legs(0).location(0).correlation().edges_size(), 0);
       EXPECT_NE(api.trip().routes(0).legs(0).location().rbegin()->correlation().edges_size(), 0);
       walked = test::json_to_pt(walked_json);
@@ -1090,7 +1079,7 @@ TEST(Mapmatch, test_discontinuity_on_same_edge) {
   for (size_t i = 0; i < test_cases.size(); ++i) {
     auto result = tester.match(test_cases[i]);
     EXPECT_EQ(result.trip().routes_size(), test_ans_num_routes[i]);
-    int j = 0, k = 0;
+    int j = 0;
     for (const auto& route : result.trip().routes()) {
       ASSERT_EQ(route.legs_size(), test_ans_num_legs[i][j++])
           << "Expected " + std::to_string(test_ans_num_legs[i][j - 1]) + " legs but got " +

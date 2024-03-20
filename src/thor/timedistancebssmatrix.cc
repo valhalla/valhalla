@@ -136,9 +136,11 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     }
 
     // Add to the adjacency list and edge labels.
+    // TODO(nils): enable not_thru pruning if we ever get a second pass for this algo
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode,
-                             path_distance, restriction_idx, true, false, InternalTurn::kNoTurn);
+                             path_distance, restriction_idx, false, false, false, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -335,12 +337,12 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     // of the path. Set the origin flag
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
-                               false, InternalTurn::kNoTurn);
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
+                               false, false, false, InternalTurn::kNoTurn);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost,
-                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, true,
-                               false, InternalTurn::kNoTurn);
+                               travel_mode_t::kPedestrian, dist, baldr::kInvalidRestriction, false,
+                               false, false, false, InternalTurn::kNoTurn);
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);

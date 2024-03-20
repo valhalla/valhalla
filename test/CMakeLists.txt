@@ -79,7 +79,6 @@ set(tests_with_warnings
   gridded_data
   logging
   maneuversbuilder
-  mapmatch
   narrativebuilder
   node_search
   polyline2

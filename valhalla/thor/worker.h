@@ -92,7 +92,7 @@ protected:
   void path_arrive_by(Api& api, const std::string& costing);
   void path_depart_at(Api& api, const std::string& costing);
   void parse_measurements(const Api& request);
-  std::string parse_costing(const Api& request);
+  std::string parse_costing(const Api& request, const bool not_thru_pruning = true);
 
   void build_route(
       const std::deque<std::pair<std::vector<PathInfo>, std::vector<const meili::EdgeSegment*>>>&

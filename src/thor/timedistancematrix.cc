@@ -149,16 +149,33 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
 
     // Add to the adjacency list and edge labels.
     uint32_t idx = edgelabels_.size();
-    sif::InternalTurn turn_type =
-        FORWARD ? costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge)
-                : costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge, opp_pred_edge);
 
-    edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                             path_distance, restriction_idx,
-                             (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
-                             static_cast<bool>(flow_sources & kDefaultFlowMask), turn_type, 0,
-                             directededge->destonly() ||
-                                 (costing_->is_hgv() && directededge->destonly_hgv()));
+    // not_thru is the same for both trees
+    // TODO(nils): enable not_thru pruning if we ever get a second pass for this algo
+    // bool not_thru_pruning = pred.not_thru_pruning() || !directededge->not_thru();
+
+    if (FORWARD) {
+      bool is_destonly =
+          directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
+      edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                               path_distance, restriction_idx, false,
+                               (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
+                               pred.destonly_pruning() || !is_destonly,
+                               0 != (flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge), 0,
+                               is_destonly);
+    } else {
+      bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
+      edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
+                               path_distance, restriction_idx, false,
+                               (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2))),
+                               pred.destonly_pruning() || !is_destonly,
+                               0 != (flow_sources & kDefaultFlowMask),
+                               costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
+                                                  opp_pred_edge),
+                               0, is_destonly);
+    }
+
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -358,20 +375,20 @@ void TimeDistanceMatrix::SetOrigin(GraphReader& graphreader,
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
     // of the path. Set the origin flag
+    bool is_destonly =
+        directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
     if (FORWARD) {
       edgelabels_.emplace_back(kInvalidLabel, edgeid, directededge, cost, cost.cost, mode_, dist,
-                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               baldr::kInvalidRestriction, false,
+                               !costing_->IsClosed(directededge, tile), !is_destonly,
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn, 0,
-                               directededge->destonly() ||
-                                   (costing_->is_hgv() && directededge->destonly_hgv()));
+                               InternalTurn::kNoTurn, 0, is_destonly);
     } else {
       edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, opp_dir_edge, cost, cost.cost, mode_, dist,
-                               baldr::kInvalidRestriction, !costing_->IsClosed(directededge, tile),
+                               baldr::kInvalidRestriction, false,
+                               !costing_->IsClosed(directededge, tile), !is_destonly,
                                static_cast<bool>(flow_sources & kDefaultFlowMask),
-                               InternalTurn::kNoTurn, 0,
-                               opp_dir_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                               InternalTurn::kNoTurn, 0, is_destonly);
     }
     edgelabels_.back().set_origin();
     adjacencylist_.add(edgelabels_.size() - 1);

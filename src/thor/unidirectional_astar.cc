@@ -267,27 +267,28 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       best_path.second = cost.cost;
     }
 
+    // not_thru is the same for both trees
+    bool not_thru_pruning = pred.not_thru_pruning() || !meta.edge->not_thru();
+
     if (FORWARD) {
+      bool is_destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
-                               mode_, transition_cost,
-                               (pred.not_thru_pruning() || !meta.edge->not_thru()),
+                               mode_, transition_cost, not_thru_pruning,
                                (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                               pred.destonly_pruning() || !is_destonly,
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                               restriction_idx, 0,
-                               meta.edge->destonly() ||
-                                   (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                               restriction_idx, 0, is_destonly);
     } else {
+      bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
-                               mode_, transition_cost,
-                               (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                               (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                               mode_, transition_cost, not_thru_pruning,
+                               (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, endtile))),
+                               pred.destonly_pruning() || !is_destonly,
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
-                               restriction_idx, 0,
-                               opp_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                               restriction_idx, 0, is_destonly);
     }
 
     auto& edge_label = edgelabels_.back();
@@ -466,7 +467,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
                                    destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
-  float mindist = astarheuristic_.GetDistance(origin_new);
+  float mindist = astarheuristic_.GetDistance(FORWARD ? origin_new : destination_new);
 
   auto& startpoint = FORWARD ? origin : destination;
   auto& endpoint = FORWARD ? destination : origin;
@@ -751,31 +752,22 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
 
       // Add EdgeLabel to the adjacency list
       uint32_t idx = edgelabels_.size();
-
+      bool is_destonly =
+          directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
       if (FORWARD) {
         edgelabels_.emplace_back(kInvalidLabel, edgeid, GraphId(), directededge, cost, sortcost, dist,
                                  mode_, Cost{}, false, !(costing_->IsClosed(directededge, tile)),
-                                 0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction, 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 !is_destonly, 0 != (flow_sources & kDefaultFlowMask),
+                                 sif::InternalTurn::kNoTurn, kInvalidRestriction, 0, is_destonly);
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
-                                 !(costing_->IsClosed(directededge, tile)),
+                                 !(costing_->IsClosed(directededge, tile)), !is_destonly,
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
-                                 kInvalidRestriction, 0,
-                                 opp_dir_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                                 kInvalidRestriction, 0, is_destonly);
       }
 
       auto& edge_label = edgelabels_.back();
-
-      if (!FORWARD) {
-        // Set the initial not_thru flag to false. There is an issue with not_thru
-        // flags on small loops. Set this to false here to override this for now.
-        edge_label.set_not_thru(false);
-      }
 
       /* BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at
        * the same time - so we need to update immediately after to set path_distance */

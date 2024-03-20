@@ -89,8 +89,6 @@ void BidirectionalAStar::Clear() {
 
   // Set the ferry flag to false
   has_ferry_ = false;
-  // Set not thru pruning to true
-  set_not_thru_pruning(true);
   // reset origin & destination pruning states
   pruning_disabled_at_origin_ = false;
   pruning_disabled_at_destination_ = false;
@@ -237,7 +235,7 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
   // or if a complex restriction prevents transition onto this edge.
   // if its not time dependent set to 0 for Allowed and Restricted methods below
   const uint64_t localtime = time_info.valid ? time_info.local_time : 0;
-  uint8_t restriction_idx = -1;
+  uint8_t restriction_idx = baldr::kInvalidRestriction;
   if (FORWARD) {
     // Why is is_dest false?
     // We have to consider next cases:
@@ -308,8 +306,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                           ? astarheuristic_forward_.Get(t2->get_node_ll(meta.edge->endnode()), dist)
                           : astarheuristic_reverse_.Get(t2->get_node_ll(meta.edge->endnode()), dist));
 
-  // not_thru_pruning_ is only set to false on the 2nd pass in route_action.
-  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+  // not_thru is the same for both trees
+  bool not_thru_pruning = pred.not_thru_pruning() || !meta.edge->not_thru();
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = 0;
@@ -320,14 +318,14 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
+    bool is_destonly = meta.edge->destonly() || (costing_->is_hgv() && meta.edge->destonly_hgv());
     edgelabels_forward_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, thru,
-                                     (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
+                                     pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile)),
+                                     pred.destonly_pruning() || !is_destonly,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
-                                     restriction_idx, 0,
-                                     meta.edge->destonly() ||
-                                         (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                                     restriction_idx, 0, is_destonly);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -336,15 +334,17 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
+    bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
     edgelabels_reverse_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost,
-                                     sortcost, dist, mode_, transition_cost, thru,
-                                     (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                                     sortcost, dist, mode_, transition_cost, not_thru_pruning,
+                                     pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2)),
+                                     pred.destonly_pruning() ||
+                                         !(opp_edge->destonly() ||
+                                           (costing_->is_hgv() && opp_edge->destonly_hgv())),
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                         opp_pred_edge),
-                                     restriction_idx, 0,
-                                     opp_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                     restriction_idx, 0, is_destonly);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -361,9 +361,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                         pred.path_distance() + meta.edge->length(), newcost.cost);
   }
 
-  // we've just added this edge to the queue, but we won't expand from it if it's a not-thru edge that
-  // will be pruned. In that case we want to allow uturns.
-  return !(pred.not_thru_pruning() && meta.edge->not_thru());
+  // we've just added this edge to the queue
+  return true;
 }
 
 template <const ExpansionType expansion_direction>
@@ -422,14 +421,14 @@ void BidirectionalAStar::Expand(baldr::GraphReader& graphreader,
     // If so, it means we are attempting a u-turn. In that case, lets wait with evaluating
     // this edge until last. If any other edges were emplaced, it means we should not
     // even try to evaluate a u-turn since u-turns should only happen for deadends
-    uturn_meta = pred.opp_local_idx() == meta.edge->localedgeidx() ? meta : uturn_meta;
+    bool is_uturn = pred.opp_local_idx() == meta.edge->localedgeidx();
+    uturn_meta = is_uturn ? meta : uturn_meta;
 
     // Expand but only if this isnt the uturn, we'll try that later if nothing else works out
-    disable_uturn =
-        (pred.opp_local_idx() != meta.edge->localedgeidx() &&
-         ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge, nodeinfo, pred_idx, meta,
-                                          shortcuts, tile, offset_time)) ||
-        disable_uturn;
+    disable_uturn = (!is_uturn && ExpandInner<expansion_direction>(graphreader, pred, opp_pred_edge,
+                                                                   nodeinfo, pred_idx, meta,
+                                                                   shortcuts, tile, offset_time)) ||
+                    disable_uturn;
   }
 
   // Handle transitions - expand from the end node of each transition
@@ -709,8 +708,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 
       // Prune path if predecessor is not a through edge or if the maximum
       // number of upward transitions has been exceeded on this hierarchy level.
-      if ((fwd_pred.not_thru() && fwd_pred.not_thru_pruning()) ||
-          (!ignore_hierarchy_limits_ &&
+      if ((!ignore_hierarchy_limits_ &&
            hierarchy_limits_forward_[fwd_pred.endnode().level()].StopExpanding(
                fwd_pred.distance()))) {
         continue;
@@ -755,8 +753,7 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
       }
 
       // Prune path if predecessor is not a through edge
-      if ((rev_pred.not_thru() && rev_pred.not_thru_pruning()) ||
-          (!ignore_hierarchy_limits_ &&
+      if ((!ignore_hierarchy_limits_ &&
            hierarchy_limits_reverse_[rev_pred.endnode().level()].StopExpanding(
                rev_pred.distance()))) {
         continue;
@@ -1010,12 +1007,13 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_reverse_.GetDistance(nodeinfo->latlng(endtile->header()->base_ll()));
     }
+    bool is_destonly =
+        directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
     edgelabels_forward_.emplace_back(kInvalidLabel, edgeid, directededge, cost, sortcost, dist, mode_,
-                                     -1, !(costing_->IsClosed(directededge, tile)),
+                                     baldr::kInvalidRestriction,
+                                     !(costing_->IsClosed(directededge, tile)), !is_destonly,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, 0,
-                                     directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     sif::InternalTurn::kNoTurn, is_destonly);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1024,13 +1022,18 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost);
     }
 
-    // Set the initial not_thru flag to false. There is an issue with not_thru
-    // flags on small loops. Set this to false here to override this for now.
-    edgelabels_forward_.back().set_not_thru(false);
+    // TODO(nils): is this really still necessary? could imagine it's a problem when we snap on
+    // a oneway road leading only to a not-thru edge and a restricted edge and we'd HAVE TO take
+    // that not_thru edge, go the full circle inside the not_thru region and come back on the
+    // not_thru's opposite to take the now allowed turn. easily tested!
 
-    pruning_disabled_at_origin_ = pruning_disabled_at_origin_ ||
-                                  !edgelabels_forward_.back().closure_pruning() ||
-                                  !edgelabels_forward_.back().not_thru_pruning();
+    // Set the initial not_thru_pruning to false. There is an issue with not_thru
+    // flags on small loops. Set this to false here to override this for now.
+    edgelabels_forward_.back().set_not_thru_pruning(false);
+
+    pruning_disabled_at_origin_ =
+        pruning_disabled_at_origin_ || !edgelabels_forward_.back().closure_pruning() ||
+        directededge->not_thru() || !edgelabels_forward_.back().destonly_pruning();
   }
 
   // Set the origin timezone
@@ -1105,13 +1108,13 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
       // It will be used by hierarchy limits
       dist = astarheuristic_forward_.GetDistance(tile->get_node_ll(opp_dir_edge->endnode()));
     }
+    bool is_destonly =
+        directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
     edgelabels_reverse_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
-                                     dist, mode_, c, !opp_dir_edge->not_thru(),
-                                     !(costing_->IsClosed(directededge, tile)),
-                                     static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                     sif::InternalTurn::kNoTurn, -1,
-                                     opp_dir_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                                     dist, mode_, c, false, !(costing_->IsClosed(directededge, tile)),
+                                     !is_destonly, static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                     sif::InternalTurn::kNoTurn, baldr::kInvalidRestriction,
+                                     is_destonly);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree
@@ -1120,13 +1123,9 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                           static_cast<uint32_t>(edge.distance() + 0.5), cost.cost);
     }
 
-    // Set the initial not_thru flag to false. There is an issue with not_thru
-    // flags on small loops. Set this to false here to override this for now.
-    edgelabels_reverse_.back().set_not_thru(false);
-
-    pruning_disabled_at_destination_ = pruning_disabled_at_destination_ ||
-                                       !edgelabels_reverse_.back().closure_pruning() ||
-                                       !edgelabels_reverse_.back().not_thru_pruning();
+    pruning_disabled_at_destination_ =
+        pruning_disabled_at_destination_ || !edgelabels_reverse_.back().closure_pruning() ||
+        opp_dir_edge->not_thru() || !edgelabels_reverse_.back().destonly_pruning();
   }
 }
 

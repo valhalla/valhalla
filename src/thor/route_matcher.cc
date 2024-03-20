@@ -208,9 +208,13 @@ bool expand_from_node(const mode_costing_t& mode_costing,
                            mode,
                            0,
                            kInvalidRestriction,
+                           !de->not_thru(),
                            true,
+                           false,
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           turn};
+                           turn,
+                           0,
+                           de->destonly() || (costing->is_hgv() && de->destonly_hgv())};
 
         // Continue walking shape to find the end edge...
         if (expand_from_node(mode_costing, mode, reader, shape, distances, time_info, use_timestamps,
@@ -412,9 +416,14 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
                            mode,
                            0,
                            baldr::kInvalidRestriction,
+                           !de->not_thru(),
                            true,
+                           false,
                            static_cast<bool>(flow_sources & kDefaultFlowMask),
-                           turn};
+                           turn,
+                           0,
+                           de->destonly() || (mode_costing[static_cast<int>(mode)]->is_hgv() &&
+                                              de->destonly_hgv())};
 
         // Continue walking shape to find the end node
         GraphId end_node;
@@ -470,7 +479,7 @@ bool RouteMatcher::FormPath(const sif::mode_costing_t& mode_costing,
           const DirectedEdge* end_de = end_edge_tile->directededge(end_edge_graphid);
 
           // get the cost of traversing the node and the remaining part of the edge
-          auto& costing = mode_costing[static_cast<int>(mode)];
+          auto costing = mode_costing[static_cast<int>(mode)];
           nodeinfo = end_edge_tile->node(n->first);
           auto transition_cost = costing->TransitionCost(end_de, nodeinfo, prev_edge_label);
           uint8_t flow_sources;

@@ -222,12 +222,12 @@ void run_service(const boost::property_tree::ptree& config) {
 }
 #endif
 
-std::string thor_worker_t::parse_costing(const Api& request) {
+std::string thor_worker_t::parse_costing(const Api& request, const bool not_thru_pruning) {
   // Parse out the type of route - this provides the costing method to use
   const auto& options = request.options();
   auto costing = options.costing_type();
   auto costing_str = Costing_Enum_Name(costing);
-  mode_costing = factory.CreateModeCosting(options, mode);
+  mode_costing = factory.CreateModeCosting(options, mode, not_thru_pruning);
   return costing_str;
 }
 

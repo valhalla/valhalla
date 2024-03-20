@@ -219,9 +219,11 @@ void AStarBSSAlgorithm::ExpandForward(GraphReader& graphreader,
     }
 
     // Add to the adjacency list and edge labels.
+    // TODO(nils): no pruning is enabled for this algo for now, needs some investigation if a second
+    // pass is possible for this algo (bike doesn't allow that)
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, GraphId(), directededge, newcost, sortcost, dist, mode,
-                             transition_cost, false, true, false, InternalTurn::kNoTurn,
+                             transition_cost, false, false, false, false, InternalTurn::kNoTurn,
                              baldr::kInvalidRestriction);
     *current_es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
@@ -446,8 +448,8 @@ void AStarBSSAlgorithm::SetOrigin(GraphReader& graphreader,
     // of the path.
     uint32_t d = static_cast<uint32_t>(directededge->length() * (1.0f - edge.percent_along()));
     BDEdgeLabel edge_label(kInvalidLabel, edgeid, directededge, cost, sortcost, dist,
-                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, true, false,
-                           sif::InternalTurn::kNoTurn);
+                           travel_mode_t::kPedestrian, baldr::kInvalidRestriction, false, false,
+                           false, sif::InternalTurn::kNoTurn);
     // Set the origin flag and path distance
     edge_label.set_origin();
     edge_label.set_path_distance(d);

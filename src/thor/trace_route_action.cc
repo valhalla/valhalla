@@ -73,7 +73,7 @@ void thor_worker_t::trace_route(Api& request) {
   // Parse request
   auto& options = *request.mutable_options();
   adjust_scores(options);
-  parse_costing(request);
+  parse_costing(request, false);
   parse_measurements(request);
   controller = AttributesController(options);
 

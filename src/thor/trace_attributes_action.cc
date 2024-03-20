@@ -47,7 +47,7 @@ std::string thor_worker_t::trace_attributes(Api& request) {
 
   // Parse request
   adjust_scores(*request.mutable_options());
-  parse_costing(request);
+  parse_costing(request, false);
   parse_measurements(request);
   const auto& options = request.options();
   controller = AttributesController(options, true);

@@ -357,7 +357,8 @@ bool MotorcycleCost::Allowed(const baldr::DirectedEdge* edge,
   if (!IsAccessible(edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_turn_restrictions_) ||
       (edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && edge->destonly()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
+      (destination_only_pruning_ && pred.destonly_pruning() && edge->destonly()) ||
       (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
@@ -381,7 +382,8 @@ bool MotorcycleCost::AllowedReverse(const baldr::DirectedEdge* edge,
   if (!IsAccessible(opp_edge) || (!pred.deadend() && pred.opp_local_idx() == edge->localedgeidx()) ||
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       (opp_edge->surface() > kMinimumMotorcycleSurface) || IsUserAvoidEdge(opp_edgeid) ||
-      (!allow_destination_only_ && !pred.destonly() && opp_edge->destonly()) ||
+      (destination_only_pruning_ && !pred.destonly_pruning() && opp_edge->destonly()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }

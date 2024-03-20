@@ -178,7 +178,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = baldr::kInvalidRestriction;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
@@ -243,29 +243,33 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
       oppedgeid = graphreader.GetOpposingEdgeId(edgeid, t2);
     }
 
+    // not_thru is the same for both trees
+    bool not_thru_pruning = pred.not_thru_pruning() || !directededge->not_thru();
+
     // Add edge label, add to the adjacency list and set edge status
     uint32_t idx = bdedgelabels_.size();
     *es = {EdgeSet::kTemporary, idx};
     if (FORWARD) {
+      bool is_destonly =
+          directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                                 transition_cost, path_dist, false,
-                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 transition_cost, path_dist, not_thru_pruning,
+                                 pred.closure_pruning() || !costing_->IsClosed(directededge, tile),
+                                 pred.destonly_pruning() || !is_destonly,
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
-                                 restriction_idx, pred.path_id(),
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 restriction_idx, pred.path_id(), is_destonly);
 
     } else {
+      bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
-                                 transition_cost, path_dist, false,
-                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 transition_cost, path_dist, not_thru_pruning,
+                                 pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2),
+                                 pred.destonly_pruning() || !is_destonly,
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                     opp_pred_edge),
-                                 restriction_idx, pred.path_id(),
-                                 opp_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                 restriction_idx, pred.path_id(), is_destonly);
     }
     adjacencylist_.add(idx);
   }
@@ -818,13 +822,13 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
+      int restriction_idx = kInvalidRestriction;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
+                                 !(directededge->destonly() ||
+                                   (costing_->is_hgv() && directededge->destonly_hgv())),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -902,7 +906,9 @@ void Dijkstras::SetDestinationLocations(
       // to invalid to indicate the origin of the path. Make sure the opposing
       // edge (edgeid) is set.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
+      int restriction_idx = kInvalidRestriction;
+      bool is_destonly =
+          directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
       // TODO: When running expansion in reverse, handle the case where the
       // destination lies on a closure but the expansion started from an open
       // edge. Currently, we begin with closure prunning turned on and hence
@@ -912,10 +918,9 @@ void Dijkstras::SetDestinationLocations(
       // consecutive edges)
       bdedgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
-                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
+                                 !is_destonly, static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
-                                 directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 is_destonly);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }

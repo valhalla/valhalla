@@ -141,7 +141,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
   // If bidirectional A*, disable use of destination only edges on the first pass.
   // If there is a failure, we allow them on the second pass.
   if (using_bd) {
-    cost->set_allow_destination_only(false);
+    cost->set_destination_only_pruning(true);
   }
 
   cost->set_pass(0);
@@ -152,7 +152,7 @@ const valhalla::TripLeg* PathTest(GraphReader& reader,
       cost->set_pass(1);
       pathalgorithm->Clear();
       cost->RelaxHierarchyLimits(using_bd);
-      cost->set_allow_destination_only(true);
+      cost->set_destination_only_pruning(false);
       paths = pathalgorithm->GetBestPath(origin, dest, reader, mode_costing, mode, request.options());
       data.incPasses();
     }

@@ -643,7 +643,7 @@ public:
             if (access_type == baldr::AccessType::kTimedAllowed)
               return true;
             else if (access_type == baldr::AccessType::kDestinationAllowed)
-              return allow_conditional_destination_ || is_dest;
+              return !conditional_destination_only_pruning_ || is_dest;
             else
               return false;
           }
@@ -777,7 +777,7 @@ public:
    * Sets the flag indicating whether destination only edges are allowed.
    * Bidirectional path algorithms can (usually) disable access.
    */
-  virtual void set_allow_destination_only(const bool allow);
+  virtual void set_destination_only_pruning(const bool allow);
 
   /**
    * Set to allow use of transit connections.
@@ -789,7 +789,10 @@ public:
    * Sets the flag indicating whether edges with valid restriction conditional=destination are
    * allowed.
    */
-  void set_allow_conditional_destination(const bool allow);
+  void set_conditional_destination_only_pruning(const bool allow);
+
+  // Sets the flag indicating whether we should prune paths leading into not_thru regions.
+  void set_not_thru_pruning(const bool allow);
 
   /**
    * Set the current travel mode.
@@ -969,9 +972,12 @@ protected:
   // Allow entrance onto destination only edges. Bidirectional A* can (usually)
   // disable access onto destination only edges for driving routes. Pedestrian
   // and bicycle generally allow access (with small penalties).
-  bool allow_destination_only_;
+  bool destination_only_pruning_;
 
-  bool allow_conditional_destination_;
+  bool conditional_destination_only_pruning_;
+
+  // Prune edges which lead into not_thru regions
+  bool not_thru_pruning_;
 
   // Travel mode
   TravelMode travel_mode_;

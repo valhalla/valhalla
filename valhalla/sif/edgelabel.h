@@ -37,9 +37,9 @@ public:
       : predecessor_(baldr::kInvalidLabel), path_distance_(0), restrictions_(0),
         edgeid_(baldr::kInvalidGraphId), opp_index_(0), opp_local_idx_(0), mode_(0),
         endnode_(baldr::kInvalidGraphId), use_(0), classification_(0), shortcut_(0), dest_only_(0),
-        origin_(0), destination_(0), toll_(0), not_thru_(0), deadend_(0), on_complex_rest_(0),
+        origin_(0), destination_(0), toll_(0), not_thru_pruning_(0), deadend_(0), on_complex_rest_(0),
         closure_pruning_(0), path_id_(0), restriction_idx_(0), internal_turn_(0), unpaved_(0),
-        has_measured_speed_(0), cost_(0, 0), sortcost_(0) {
+        has_measured_speed_(0), dest_only_pruning_(0), cost_(0, 0), sortcost_(0) {
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
 
@@ -56,11 +56,12 @@ public:
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param closure_pruning     Should closure pruning be enabled on this path?
+   * @param destonly_pruning    Should destonly pruning be enabled on this path?
    * @param has_measured_speed  Do we have any of the measured speed types set?
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   EdgeLabel(const uint32_t predecessor,
             const baldr::GraphId& edgeid,
@@ -70,7 +71,9 @@ public:
             const TravelMode mode,
             const uint32_t path_distance,
             const uint8_t restriction_idx,
+            const bool not_thru_pruning,
             const bool closure_pruning,
+            const bool destonly_pruning,
             const bool has_measured_speed,
             const InternalTurn internal_turn,
             const uint8_t path_id = 0,
@@ -80,13 +83,14 @@ public:
         mode_(static_cast<uint32_t>(mode)), endnode_(edge->endnode()),
         use_(static_cast<uint32_t>(edge->use())),
         classification_(static_cast<uint32_t>(edge->classification())), shortcut_(edge->shortcut()),
-        origin_(0), destination_(0), toll_(edge->toll()), not_thru_(edge->not_thru()),
+        origin_(0), destination_(0), toll_(edge->toll()), not_thru_pruning_(not_thru_pruning),
         deadend_(edge->deadend()),
         on_complex_rest_(edge->part_of_complex_restriction() || edge->start_restriction() ||
                          edge->end_restriction()),
         closure_pruning_(closure_pruning), path_id_(path_id), restriction_idx_(restriction_idx),
         internal_turn_(static_cast<uint8_t>(internal_turn)), unpaved_(edge->unpaved()),
-        has_measured_speed_(has_measured_speed), cost_(cost), sortcost_(sortcost) {
+        has_measured_speed_(has_measured_speed), dest_only_pruning_(destonly_pruning), cost_(cost),
+        sortcost_(sortcost) {
     dest_only_ = destonly ? destonly : edge->destonly();
     assert(path_id_ <= baldr::kMaxMultiPathId);
   }
@@ -219,9 +223,16 @@ public:
   }
 
   /**
-   * Get the dest only flag.
-   * @return  Returns true if the edge is part of a private or no through road that allows access
-   *          only if required to get to a destination?
+   * Should we prune if we see a destonly edge?
+   * @return  Returns true if we don't want to expand on a destonly edge
+   */
+  bool destonly_pruning() const {
+    return dest_only_pruning_;
+  }
+
+  /**
+   * Is this label a destonly?
+   * @return  Returns true if this is a destonly edge
    */
   bool destonly() const {
     return dest_only_;
@@ -310,19 +321,19 @@ public:
   }
 
   /**
-   * Is this edge not-through
-   * @return  Returns true if the edge is not thru.
+   * Is not_thru pruning enabled
+   * @return  Returns true if this label has not_thru pruning enabled
    */
-  bool not_thru() const {
-    return not_thru_;
+  bool not_thru_pruning() const {
+    return not_thru_pruning_;
   }
 
   /**
-   * Set the not-through flag for this edge.
-   * @param  not_thru  True if the edge is not thru.
+   * Set the not-through pruning flag for this label.
+   * @param  prune  True if we should start pruning.
    */
-  void set_not_thru(const bool not_thru) {
-    not_thru_ = not_thru;
+  void set_not_thru_pruning(const bool prune) {
+    not_thru_pruning_ = prune;
   }
 
   /**
@@ -403,10 +414,10 @@ protected:
    * use_:                Use of the prior edge.
    * classification_:     Road classification
    * shortcut_:           Was the prior edge a shortcut edge?
-   * dest_only_:          Was the prior edge destination only?
+   * dest_only_:           Flag indicating edge is destonly; important for transition_cost
    * origin_:             True if this is an origin edge.
    * toll_:               Edge is toll.
-   * not_thru_:           Flag indicating edge is not_thru.
+   * not_thru_pruning_:   Should we prune on the next not_thru edge?
    * deadend_:            Flag indicating edge is a dead-end.
    * on_complex_rest_:    Part of a complex restriction.
    * closure_pruning_:    Was closure pruning active on prior edge?
@@ -419,7 +430,7 @@ protected:
   uint64_t origin_ : 1;
   uint64_t destination_ : 1;
   uint64_t toll_ : 1;
-  uint64_t not_thru_ : 1;
+  uint64_t not_thru_pruning_ : 1;
   uint64_t deadend_ : 1;
   uint64_t on_complex_rest_ : 1;
   uint64_t closure_pruning_ : 1;
@@ -433,7 +444,9 @@ protected:
   // Flag indicating edge is an unpaved road.
   uint32_t unpaved_ : 1;
   uint32_t has_measured_speed_ : 1;
-  uint32_t spare : 13;
+  // Should we prune on the next destonly edge?
+  uint32_t dest_only_pruning_ : 1;
+  uint32_t spare : 12;
 
   Cost cost_;      // Cost and elapsed time along the path.
   float sortcost_; // Sort cost - includes A* heuristic.
@@ -468,7 +481,7 @@ public:
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   PathEdgeLabel(const uint32_t predecessor,
                 const baldr::GraphId& edgeid,
@@ -492,7 +505,9 @@ public:
                   mode,
                   path_distance,
                   restriction_idx,
+                  false,
                   closure_pruning,
+                  false,
                   has_measured_speed,
                   internal_turn,
                   path_id,
@@ -542,13 +557,14 @@ public:
    * @param tc                  Transition cost entering this edge.
    * @param not_thru_pruning    Is not thru pruning enabled.
    * @param closure_pruning     Is closure pruning active.
+   * @param destonly_pruning    Should destonly pruning be enabled on this path?
    * @param has_measured_speed  Do we have any of the measured speed types set?
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -561,6 +577,7 @@ public:
               const sif::Cost& transition_cost,
               const bool not_thru_pruning,
               const bool closure_pruning,
+              const bool destonly_pruning,
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
@@ -574,13 +591,14 @@ public:
                   mode,
                   0,
                   restriction_idx,
+                  not_thru_pruning,
                   closure_pruning,
+                  destonly_pruning,
                   has_measured_speed,
                   internal_turn,
                   path_id,
                   destonly),
-        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning), distance_(dist) {
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid), distance_(dist) {
   }
 
   /**
@@ -597,13 +615,14 @@ public:
    * @param path_distance       Accumulated path distance.
    * @param not_thru_pruning    Is not thru pruning enabled.
    * @param closure_pruning     Is closure pruning active.
+   * @param destonly_pruning    Should destonly pruning be enabled on this path?
    * @param has_measured_speed  Do we have any of the measured speed types set?
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -615,6 +634,7 @@ public:
               const uint32_t path_distance,
               const bool not_thru_pruning,
               const bool closure_pruning,
+              const bool destonly_pruning,
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t restriction_idx,
@@ -628,13 +648,14 @@ public:
                   mode,
                   path_distance,
                   restriction_idx,
+                  not_thru_pruning,
                   closure_pruning,
+                  destonly_pruning,
                   has_measured_speed,
                   internal_turn,
                   path_id,
                   destonly),
-        transition_cost_(transition_cost), opp_edgeid_(oppedgeid),
-        not_thru_pruning_(not_thru_pruning), distance_(0.0f) {
+        transition_cost_(transition_cost), opp_edgeid_(oppedgeid), distance_(0.0f) {
   }
 
   /**
@@ -650,11 +671,12 @@ public:
    * @param restriction_idx     If this label has restrictions, the index where the restriction is
    * found
    * @param closure_pruning     Is closure pruning active.
+   * @param destonly_pruning    Should destonly pruning be enabled on this path?
    * @param has_measured_speed  Do we have any of the measured speed types set?
    * @param internal_turn       Did we make an turn on a short internal edge.
    * @param path_id             When searching more than one path at a time this denotes which path
    * the this label is tracking
-   * @param destonly            Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   BDEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -665,6 +687,7 @@ public:
               const sif::TravelMode mode,
               const uint8_t restriction_idx,
               const bool closure_pruning,
+              const bool destonly_pruning,
               const bool has_measured_speed,
               const sif::InternalTurn internal_turn,
               const uint8_t path_id = 0,
@@ -677,12 +700,14 @@ public:
                   mode,
                   0,
                   restriction_idx,
+                  !edge->not_thru(),
                   closure_pruning,
+                  destonly_pruning,
                   has_measured_speed,
                   internal_turn,
                   path_id,
                   destonly),
-        transition_cost_({}), not_thru_pruning_(!edge->not_thru()), distance_(dist) {
+        transition_cost_({}), distance_(dist) {
     opp_edgeid_ = {};
   }
 
@@ -759,14 +784,6 @@ public:
   }
 
   /**
-   * Should not thru pruning be enabled on this path?
-   * @return Returns true if not thru pruning should be enabled.
-   */
-  bool not_thru_pruning() const {
-    return not_thru_pruning_;
-  }
-
-  /**
    * Sets the path distance for this EdgeLabel.
    * @param distance  Path distance.
    */
@@ -819,7 +836,7 @@ public:
    * @param restriction_idx  If this label has restrictions, the index where the restriction is found
    * @param path_id          When searching more than one path at a time this denotes which path the
    *                         this label is tracking
-   * @param destonly         Destination only, either mode-specific or general
+   * @param destonly            Is this edge destonly? If omitted, will be set to edge->destonly()
    */
   MMEdgeLabel(const uint32_t predecessor,
               const baldr::GraphId& edgeid,
@@ -847,7 +864,9 @@ public:
                   mode,
                   path_distance,
                   restriction_idx,
-                  true,
+                  false,
+                  false,
+                  false,
                   false,
                   InternalTurn::kNoTurn,
                   path_id,
