@@ -99,11 +99,13 @@ public:
     return itr->second(costing);
   }
 
-  mode_costing_t CreateModeCosting(const Options& options, TravelMode& mode) {
+  mode_costing_t
+  CreateModeCosting(const Options& options, TravelMode& mode, const bool not_thru_pruning = true) {
     mode_costing_t mode_costing;
     // Set travel mode and construct costing(s) for this type
     for (const auto& costing : kCostingTypeMapping.at(options.costing_type())) {
       valhalla::sif::cost_ptr_t cost = Create(options.costings().find(costing)->second);
+      cost->set_not_thru_pruning(not_thru_pruning);
       mode = cost->travel_mode();
       mode_costing[static_cast<uint32_t>(mode)] = cost;
     }

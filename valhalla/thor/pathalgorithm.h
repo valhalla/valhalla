@@ -95,32 +95,6 @@ public:
   }
 
   /**
-   *
-   * There is a rare case where we may encounter only_restrictions with edges being
-   * marked as not_thru.  Basically the only way to get in this area is via one edge
-   * and all other edges are restricted, but this one edge is also marked as not_thru.
-   * Therefore, on the first pass the expansion stops as we cannot take the restricted
-   * turns and we cannot go into the not_thru region. On the 2nd pass, we now ignore
-   * not_thru flags and allow entry into the not_thru region due to the fact that
-   * not_thru_pruning_ is false.  See the gurka test not_thru_pruning_.
-   *
-   * Set the not_thru_pruning_
-   * @param pruning  set the not_thru_pruning_ to pruning value.
-   *                 only set on the second pass
-   */
-  void set_not_thru_pruning(const bool pruning) {
-    not_thru_pruning_ = pruning;
-  }
-
-  /**
-   * Get the not thru pruning
-   * @return  Returns not_thru_pruning_
-   */
-  bool not_thru_pruning() {
-    return not_thru_pruning_;
-  }
-
-  /**
    * Sets the functor which will track the algorithms expansion.
    *
    * @param  expansion_callback  the functor to call back when the algorithm makes progress

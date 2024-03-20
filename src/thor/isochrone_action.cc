@@ -14,17 +14,7 @@ std::string thor_worker_t::isochrones(Api& request) {
 
   auto& options = *request.mutable_options();
   adjust_scores(options);
-  auto costing = parse_costing(request);
-
-  // we don't need those for isochrones
-  for (auto c : mode_costing) {
-    if (!c) {
-      continue;
-    }
-    c->set_not_thru_pruning(false);
-    c->set_destination_only_pruning(false);
-    c->set_conditional_destination_only_pruning(true);
-  }
+  auto costing = parse_costing(request, false);
 
   // name of the metric (time/distance, value, color)
   std::vector<GriddedData<2>::contour_interval_t> intervals;

@@ -147,7 +147,7 @@ DynamicCost::DynamicCost(const Costing& costing,
                          uint32_t access_mask,
                          bool penalize_uturns)
     : pass_(0), allow_transit_connections_(false), destination_only_pruning_(false),
-      conditional_destination_only_pruning_(true), not_thru_pruning_(true), travel_mode_(mode),
+      conditional_destination_only_pruning_(true), not_thru_pruning_(false), travel_mode_(mode),
       access_mask_(access_mask), closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
       shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),

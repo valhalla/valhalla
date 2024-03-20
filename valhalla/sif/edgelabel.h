@@ -321,19 +321,19 @@ public:
   }
 
   /**
-   * Is this edge not-through
-   * @return  Returns true if the edge is not thru.
+   * Is not_thru pruning enabled
+   * @return  Returns true if this label has not_thru pruning enabled
    */
   bool not_thru_pruning() const {
     return not_thru_pruning_;
   }
 
   /**
-   * Set the not-through flag for this edge.
-   * @param  not_thru  True if the edge is not thru.
+   * Set the not-through pruning flag for this label.
+   * @param  prune  True if we should start pruning.
    */
-  void set_not_thru_pruning(const bool not_thru) {
-    not_thru_pruning_ = not_thru;
+  void set_not_thru_pruning(const bool prune) {
+    not_thru_pruning_ = prune;
   }
 
   /**
