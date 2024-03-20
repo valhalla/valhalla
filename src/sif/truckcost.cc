@@ -442,6 +442,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && (!ignore_turn_restrictions_)) ||
       edge->surface() == Surface::kImpassable || IsUserAvoidEdge(edgeid) ||
       (destination_only_pruning_ && pred.destonly_pruning() && edge->destonly_hgv()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
       (pred.closure_pruning() && IsClosed(edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && edge->unpaved())) {
     return false;
@@ -466,6 +467,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       opp_edge->surface() == Surface::kImpassable || IsUserAvoidEdge(opp_edgeid) ||
       (destination_only_pruning_ && pred.destonly_pruning() && opp_edge->destonly_hgv()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile)) ||
       (exclude_unpaved_ && !pred.unpaved() && opp_edge->unpaved())) {
     return false;

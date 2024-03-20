@@ -379,6 +379,7 @@ bool MotorScooterCost::Allowed(const baldr::DirectedEdge* edge,
       ((pred.restrictions() & (1 << edge->localedgeidx())) && !ignore_turn_restrictions_) ||
       (edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(edgeid) ||
       (destination_only_pruning_ && pred.destonly_pruning() && edge->destonly()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
       (pred.closure_pruning() && IsClosed(edge, tile))) {
     return false;
   }
@@ -403,6 +404,7 @@ bool MotorScooterCost::AllowedReverse(const baldr::DirectedEdge* edge,
       ((opp_edge->restrictions() & (1 << pred.opp_local_idx())) && !ignore_turn_restrictions_) ||
       (opp_edge->surface() > kMinimumScooterSurface) || IsUserAvoidEdge(opp_edgeid) ||
       (destination_only_pruning_ && pred.destonly_pruning() && opp_edge->destonly()) ||
+      (not_thru_pruning_ && pred.not_thru_pruning() && edge->not_thru()) ||
       (pred.closure_pruning() && IsClosed(opp_edge, tile))) {
     return false;
   }
