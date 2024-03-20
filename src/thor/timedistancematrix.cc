@@ -151,13 +151,14 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     uint32_t idx = edgelabels_.size();
 
     // not_thru is the same for both trees
-    bool not_thru_pruning = pred.not_thru_pruning() || !directededge->not_thru();
+    // TODO(nils): enable not_thru pruning if we ever get a second pass for this algo
+    // bool not_thru_pruning = pred.not_thru_pruning() || !directededge->not_thru();
 
     if (FORWARD) {
       bool is_destonly =
           directededge->destonly() || (costing_->is_hgv() && directededge->destonly_hgv());
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx, not_thru_pruning,
+                               path_distance, restriction_idx, false,
                                (pred.closure_pruning() || !(costing_->IsClosed(directededge, tile))),
                                pred.destonly_pruning() || !is_destonly,
                                0 != (flow_sources & kDefaultFlowMask),
@@ -166,7 +167,7 @@ void TimeDistanceMatrix::Expand(GraphReader& graphreader,
     } else {
       bool is_destonly = opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv());
       edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode_,
-                               path_distance, restriction_idx, not_thru_pruning,
+                               path_distance, restriction_idx, false,
                                (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, t2))),
                                pred.destonly_pruning() || !is_destonly,
                                0 != (flow_sources & kDefaultFlowMask),

@@ -136,11 +136,11 @@ void TimeDistanceBSSMatrix::Expand(GraphReader& graphreader,
     }
 
     // Add to the adjacency list and edge labels.
+    // TODO(nils): enable not_thru pruning if we ever get a second pass for this algo
     uint32_t idx = edgelabels_.size();
     edgelabels_.emplace_back(pred_idx, edgeid, directededge, newcost, newcost.cost, mode,
-                             path_distance, restriction_idx,
-                             pred.not_thru_pruning() || !directededge->not_thru(), false, false,
-                             false, InternalTurn::kNoTurn);
+                             path_distance, restriction_idx, false, false, false, false,
+                             InternalTurn::kNoTurn);
     *es = {EdgeSet::kTemporary, idx};
     adjacencylist_.add(idx);
   }
@@ -331,10 +331,6 @@ void TimeDistanceBSSMatrix::SetOrigin(GraphReader& graphreader, const valhalla::
     // We assume the slowest speed you could travel to cover that distance to start/end the route
     // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
     cost.cost += edge.distance();
-
-    // not_thru is the same for both trees
-    // TODO(nils): EdgeLabel should care about not_thru_pruning
-    // bool not_thru_pruning = pred.not_thru_pruning() || !meta.edge->not_thru();
 
     // Add EdgeLabel to the adjacency list (but do not set its status).
     // Set the predecessor edge index to invalid to indicate the origin
