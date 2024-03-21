@@ -1514,7 +1514,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_start->emplace("announcement",
                                        prev_maneuver->verbal_pre_transition_instruction());
       voice_instruction_start->emplace("ssmlAnnouncement",
-                                       "<speak>" + prev_maneuver->verbal_pre_transition_instruction() + "</speak>");                                 
+                                       "<speak>" +
+                                           prev_maneuver->verbal_pre_transition_instruction() +
+                                           "</speak>");
       voice_instructions_array->emplace_back(std::move(voice_instruction_start));
     } else if (distance > distance_before_verbal_transition_alert_instruction +
                               APPROXIMATE_VERBAL_POSTRANSITION_LENGTH &&
@@ -1530,7 +1532,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
       voice_instruction_beginning->emplace("announcement",
                                            prev_maneuver->verbal_post_transition_instruction());
       voice_instruction_beginning->emplace("ssmlAnnouncement",
-                                       "<speak>" + prev_maneuver->verbal_post_transition_instruction() + "</speak>"); 
+                                           "<speak>" +
+                                               prev_maneuver->verbal_post_transition_instruction() +
+                                               "</speak>");
       voice_instructions_array->emplace_back(std::move(voice_instruction_beginning));
     }
   }
@@ -1549,7 +1553,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
                     json::fixed_t{distance_before_verbal_transition_alert_instruction, 1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_transition_alert_instruction());
-    voice_instruction_end->emplace("ssmlAnnouncement", "<speak>" + maneuver.verbal_transition_alert_instruction() + "</speak>");
+    voice_instruction_end->emplace("ssmlAnnouncement",
+                                   "<speak>" + maneuver.verbal_transition_alert_instruction() +
+                                       "</speak>");
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));
   }
 
@@ -1568,7 +1574,9 @@ json::ArrayPtr voice_instructions(const valhalla::DirectionsLeg::Maneuver* prev_
                                                    1});
     }
     voice_instruction_end->emplace("announcement", maneuver.verbal_pre_transition_instruction());
-    voice_instruction_end->emplace("ssmlAnnouncement", "<speak>" + maneuver.verbal_pre_transition_instruction() + "</speak>");
+    voice_instruction_end->emplace("ssmlAnnouncement",
+                                   "<speak>" + maneuver.verbal_pre_transition_instruction() +
+                                       "</speak>");
     voice_instructions_array->emplace_back(std::move(voice_instruction_end));
   }
 

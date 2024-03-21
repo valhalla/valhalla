@@ -571,7 +571,8 @@ gurka::map VoiceInstructions::map = {};
 TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
   auto json = json_request("A", "F");
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
-  // Validate that each step (except the last one) has voiceInstructions with announcement, ssmlAnnouncement and distanceAlongGeometry
+  // Validate that each step (except the last one) has voiceInstructions with announcement,
+  // ssmlAnnouncement and distanceAlongGeometry
   for (int step = 0; step < steps.Size() - 1; ++step) {
     ASSERT_TRUE(steps[step].HasMember("voiceInstructions"));
     ASSERT_TRUE(steps[step]["voiceInstructions"].IsArray());
@@ -584,11 +585,10 @@ TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
     }
   }
 
-  //Validate the last step as empty voiceInstructions
+  // Validate the last step as empty voiceInstructions
   ASSERT_TRUE(steps[steps.Size() - 1].HasMember("voiceInstructions"));
   ASSERT_TRUE(steps[steps.Size() - 1]["voiceInstructions"].IsArray());
   EXPECT_EQ(steps[steps.Size() - 1]["voiceInstructions"].Size(), 0);
-
 }
 
 // depart_instruction
@@ -769,10 +769,10 @@ TEST(Standalone, BannerInstructions) {
       ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
     }
 
-  // Validate the last step has empty bannerInstructions
-  ASSERT_TRUE(steps[steps.Size()-1].HasMember("bannerInstructions"));
-  ASSERT_TRUE(steps[steps.Size()-1]["bannerInstructions"].IsArray());
-  EXPECT_EQ(steps[steps.Size()-1]["bannerInstructions"].GetArray().Size(), 0);
+    // Validate the last step has empty bannerInstructions
+    ASSERT_TRUE(steps[steps.Size() - 1].HasMember("bannerInstructions"));
+    ASSERT_TRUE(steps[steps.Size() - 1]["bannerInstructions"].IsArray());
+    EXPECT_EQ(steps[steps.Size() - 1]["bannerInstructions"].GetArray().Size(), 0);
   }
 
   // validate first step has two bannerInstruction
@@ -984,9 +984,9 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   }
 
   // Validate the last step has empty bannerInstructions
-  ASSERT_TRUE(steps[steps.Size()-1].HasMember("bannerInstructions"));
-  ASSERT_TRUE(steps[steps.Size()-1]["bannerInstructions"].IsArray());
-  EXPECT_EQ(steps[steps.Size()-1]["bannerInstructions"].GetArray().Size(), 0);
+  ASSERT_TRUE(steps[steps.Size() - 1].HasMember("bannerInstructions"));
+  ASSERT_TRUE(steps[steps.Size() - 1]["bannerInstructions"].IsArray());
+  EXPECT_EQ(steps[steps.Size() - 1]["bannerInstructions"].GetArray().Size(), 0);
 
   // validate first step's primary instructions
   auto primary_0 = steps[0]["bannerInstructions"][0]["primary"].GetObject();
