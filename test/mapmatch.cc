@@ -115,18 +115,6 @@ std::string json_escape(const std::string& unescaped) {
   return escaped;
 }
 
-std::string output_shape(const valhalla::Api& api) {
-  std::stringstream shape;
-  for (const auto& r : api.directions().routes()) {
-    shape << "new route" << std::endl;
-    for (const auto& l : r.legs()) {
-      shape << std::fixed << std::setprecision(3) << "Time : " << l.summary().time()
-            << ", length : " << l.summary().length() << ", shape : " << l.shape() << std::endl;
-    }
-  }
-  return shape.str();
-}
-
 void compare_results(const valhalla::Api& expected, const valhalla::Api& result) {
   // check the number of routes match
   ASSERT_EQ(result.trip().routes_size(), expected.trip().routes_size())
