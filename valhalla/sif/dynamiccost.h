@@ -233,7 +233,7 @@ public:
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  virtual uint32_t access_mode() const {
+  inline virtual uint32_t access_mode() const {
     return access_mask_;
   }
 
@@ -296,7 +296,7 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return ((node->access() & access_mask_) || ignore_access_) &&
+    return ((node->access() & access_mode()) || ignore_access_) &&
            !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
@@ -316,7 +316,7 @@ public:
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr&,
                               uint16_t disallow_mask = kDisallowNone) const {
-    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
+    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mode());
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
     bool assumed_restricted =
@@ -338,9 +338,9 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return ((edge->forwardaccess() & access_mask_) ||
+    return ((edge->forwardaccess() & access_mode()) ||
             (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-            (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
+            (ignore_oneways_ && (edge->reverseaccess() & access_mode()))) &&
            (edge->use() != baldr::Use::kConstruction);
   }
 
@@ -497,10 +497,10 @@ public:
 
     // If forward, check if the edge marks the end of a restriction, else check
     // if the edge marks the start of a complex restriction.
-    if ((forward && (edge->end_restriction() & access_mode())) ||
-        (!forward && (edge->start_restriction() & access_mode()))) {
+    if ((forward && (edge->end_restriction() & access_mask_)) ||
+        (!forward && (edge->start_restriction() & access_mask_))) {
       // Get complex restrictions. Return false if no restrictions are found
-      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mode());
+      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mask_);
       if (restrictions.size() == 0) {
         return false;
       }
@@ -599,6 +599,18 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  /***
+   * Evaluates mode-specific and time-dependent access restrictions, including a binary
+   * search to get the tile's access restrictions.
+   *
+   * @param access_mode        The access mode to get restrictions for
+   * @param edge               The edge to check for restrictions
+   * @param is_dest            Is there a destination on the edge?
+   * @param tile               The edge's tile
+   * @param current_time       Needed for time dependent restrictions
+   * @param tz_index           The current timezone index
+   * @param restriction_idx    Records the restriction in the tile for later retrieval
+   */
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const bool is_dest,
