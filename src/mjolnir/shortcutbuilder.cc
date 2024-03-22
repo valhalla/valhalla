@@ -549,8 +549,8 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       shortcut_count++;
       shortcut++;
       if (!end_nodes.insert(newedge.endnode()).second) {
-        PointLL start_ll = tile->get_node_ll(start_node);
-        PointLL end_ll = tile->get_node_ll(end_node);
+        [[maybe_unused]] PointLL start_ll = tile->get_node_ll(start_node);
+        [[maybe_unused]] PointLL end_ll = tile->get_node_ll(end_node);
         LOG_WARN("Node " + std::to_string(start_node) +
                  " has outbound shortcuts with same start/end nodes starting at node at LL = " +
                  std::to_string(start_ll.lat()) + "," + std::to_string(start_ll.lng()) +
@@ -563,7 +563,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
   // Log a warning (with the node lat,lon) if the max number of shortcuts from a node
   // is exceeded. This is not serious (see NOTE above) but good to know where it occurs.
   if (shortcut_count > kMaxShortcutsFromNode) {
-    PointLL ll = tile->get_node_ll(start_node);
+    [[maybe_unused]] PointLL ll = tile->get_node_ll(start_node);
     LOG_WARN("Exceeding max shortcut edges from a node at LL = " + std::to_string(ll.lat()) + "," +
              std::to_string(ll.lng()));
   }
