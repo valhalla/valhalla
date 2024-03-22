@@ -1243,9 +1243,10 @@ std::string CostMatrix::RecostFormPath(GraphReader& graphreader,
   auto source_vertex = PointLL{source_edge.ll().lng(), source_edge.ll().lat()};
   auto target_vertex = PointLL{target_edge.ll().lng(), target_edge.ll().lat()};
   std::vector<PointLL> points;
-  for (const auto& path_edge : path_edges) {
-    auto is_first_edge = path_edge == path_edges.front();
-    auto is_last_edge = path_edge == path_edges.back();
+  for (uint32_t i = 0; i < path_edges.size(); i++) {
+    auto& path_edge = path_edges[i];
+    auto is_first_edge = i == 0;
+    auto is_last_edge = i == (path_edges.size() - 1);
 
     const auto* de = graphreader.directededge(path_edge, tile);
     auto edge_shp = tile->edgeinfo(de).shape();
