@@ -441,7 +441,7 @@ protected:
 
 /**
  * Derived label class used for recosting paths within the LabelCallback.
- * transition_cost is added to the label for use when recoting a path.
+ * transition_cost is added to the label for use when recosting a path.
  */
 class PathEdgeLabel : public EdgeLabel {
 public:

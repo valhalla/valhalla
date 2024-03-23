@@ -504,8 +504,9 @@ TEST(StandAlone, CostMatrixShapes) {
   /*
   EXPECT_EQ(result.matrix().shapes(0), encoded);
   EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
-  encoded); res.erase();
+  encoded);
   */
+  res.erase();
 
   // trivial route reverse
   // has a bug: https://github.com/valhalla/valhalla/issues/4433, but it's band-aided for now
@@ -517,8 +518,9 @@ TEST(StandAlone, CostMatrixShapes) {
   /*
   EXPECT_EQ(result.matrix().shapes(0), encoded);
   EXPECT_EQ(res_doc.Parse(res.c_str())["sources_to_targets"].GetArray()[0].GetArray()[0].GetObject()["shape"],
-  encoded); res.erase();
+  encoded);
   */
+  res.erase();
 
   // timedistancematrix
 
@@ -766,11 +768,55 @@ TEST(StandAlone, MatrixSecondPass) {
     EXPECT_FALSE(api.matrix().second_pass(1));
     EXPECT_GT(api.matrix().times(2), 0.f);
     EXPECT_TRUE(api.matrix().second_pass(2));
+    EXPECT_GT(api.matrix().distances(2), api.matrix().distances(1));
     EXPECT_GT(api.matrix().times(2), api.matrix().times(1));
 
     // I -> I & K -> K shouldn't be processed a second time either
     EXPECT_FALSE(api.matrix().second_pass(0));
     EXPECT_FALSE(api.matrix().second_pass(3));
     EXPECT_TRUE(api.info().warnings(0).description().find('2') != std::string::npos);
+  }
+}
+
+TEST(StandAlone, CostMatrixTrivialRoutes) {
+  const std::string ascii_map = R"(
+    A---B--2->-1--C---D
+        |         |
+        |         |
+        E--3---4--F
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}}, {"BC", {{"highway", "residential"}, {"oneway", "yes"}}},
+      {"CD", {{"highway", "residential"}}}, {"BE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}}}, {"FC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map =
+      gurka::buildtiles(layout, ways, {}, {}, VALHALLA_BUILD_DIR "test/data/costmatrix_trivial");
+
+  std::unordered_map<std::string, std::string> options = {{"/shape_format", "polyline6"}};
+
+  // test the against-oneway case
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 2200);
+
+    std::vector<PointLL> oneway_vertices;
+    for (auto& node : {"1", "C", "F", "E", "B", "2"}) {
+      oneway_vertices.push_back(layout[node]);
+    }
+    auto encoded = encode<std::vector<PointLL>>(oneway_vertices, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
+  }
+
+  // test the normal trivial case
+  {
+    auto matrix =
+        gurka::do_action(valhalla::Options::sources_to_targets, map, {"3"}, {"4"}, "auto", options);
+    EXPECT_EQ(matrix.matrix().distances(0), 400);
+
+    auto encoded = encode<std::vector<PointLL>>({layout["3"], layout["4"]}, 1e6);
+    EXPECT_EQ(matrix.matrix().shapes(0), encoded);
   }
 }

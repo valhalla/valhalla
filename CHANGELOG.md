@@ -1,4 +1,4 @@
-## Release Date: 2024-??-?? Valhalla 3.4.1
+## Unreleased
 * **Removed**
    * REMOVED: needs_ci_run script [#4423](https://github.com/valhalla/valhalla/pull/4423)
    * REMOVED: unused vehicle types in AutoCost and segway; renamed kTruck to "truck" instead of "tractor_trailer" [#4430](https://github.com/valhalla/valhalla/pull/4430)
@@ -36,6 +36,13 @@
    * FIXED: fix config generator with thor.costmatrix_allow_second_pass [#4567](https://github.com/valhalla/valhalla/pull/4567)
    * FIXED: infinite loop or other random corruption in isochrones when retrieving partial shape of an edge [#4547](https://github.com/valhalla/valhalla/pull/4547)
    * FIXED: Aggregation updates: update opposing local idx after aggregating the edges, added classification check for aggregation, and shortcut length changes [#4570](https://github.com/valhalla/valhalla/pull/4570)
+   * FIXED: Use helper function for only parsing out names from DirectedEdge when populating intersecting edges [#4604](https://github.com/valhalla/valhalla/pull/4604)  
+   * FIXED: Osmnode size reduction: Fixed excessive disk space for planet build [#4605](https://github.com/valhalla/valhalla/pull/4605)
+   * FIXED: Conflict with signinfo's temporary linguistic node sequence file caused test failures. [#4625](https://github.com/valhalla/valhalla/pull/4625)
+   * FIXED: CostMatrix for trivial routes with oneways [#4626](https://github.com/valhalla/valhalla/pull/4626)
+   * FIXED: some entry points to creating geotiff isochrones output did not register the geotiff driver before attempting to use it [#4628](https://github.com/valhalla/valhalla/pull/4628)
+   * FIXED: libgdal wasn't installed in docker image, so it never worked in docker [#4629](https://github.com/valhalla/valhalla/pull/4629)
+   * FIXED: CostMatrix shapes for routes against trivial oneways [#4633](https://github.com/valhalla/valhalla/pull/4633)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
@@ -94,6 +101,9 @@
    * ADDED: Improved instructions for blind users [#3694](https://github.com/valhalla/valhalla/pull/3694)
    * FIXED: Fixed roundoff issue in Tiles Row and Col methods [#4585](https://github.com/valhalla/valhalla/pull/4585)
    * ADDED: isochrone proper polygon support & pbf output for isochrone [#4575](https://github.com/valhalla/valhalla/pull/4575)
+   * ADDED: return isotile grid as geotiff  [#4594](https://github.com/valhalla/valhalla/pull/4594)
+   * ADDED: `ignore_non_vehicular_restrictions` parameter for truck costing [#4606](https://github.com/valhalla/valhalla/pull/4606)
+   * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
@@ -254,6 +264,7 @@
    * FIXED: Building Valhalla as a submodule [#3781](https://github.com/valhalla/valhalla/issues/3781)
    * FIXED: Fixed invalid time detection in GetSpeed [#3800](https://github.com/valhalla/valhalla/pull/3800)
    * FIXED: Osmway struct update: added up to 33 and not 32 [#3808](https://github.com/valhalla/valhalla/pull/3808)
+   * FIXED: Fix out-of-range linestrings in expansion [#4603](https://github.com/valhalla/valhalla/pull/4603)
 
 * **Enhancement**
    * CHANGED: Pronunciation for names and destinations [#3132](https://github.com/valhalla/valhalla/pull/3132)

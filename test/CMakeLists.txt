@@ -77,25 +77,18 @@ set(tests_with_warnings
   graphparser
   graphtilebuilder
   gridded_data
-  logging
   maneuversbuilder
-  mapmatch
   narrativebuilder
   node_search
-  polyline2
   parse_request
-  routing
   sample
   search
   sequence
   statsd
   traffictile
-  util_midgard
   util_odin
   utrecht
   timedep_paths
-  vector2
-  viterbi_search
   worker
   )
 
