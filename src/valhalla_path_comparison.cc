@@ -267,11 +267,6 @@ int main(int argc, char* argv[]) {
   // Get something we can use to fetch tiles
   valhalla::baldr::GraphReader reader(config.get_child("mjolnir"));
 
-  if (!map_match) {
-    rapidjson::Document doc;
-    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
-  }
-
   // Construct costing
   valhalla::Costing::Type costing;
   if (valhalla::Costing_Enum_Parse(routetype, &costing)) {
@@ -279,6 +274,12 @@ int main(int argc, char* argv[]) {
   } else {
     throw std::runtime_error("No costing method found");
   }
+
+  if (!map_match) {
+    rapidjson::Document doc;
+    sif::ParseCosting(doc, "/costing_options", *request.mutable_options());
+  }
+
   valhalla::sif::TravelMode mode;
   auto mode_costings = valhalla::sif::CostFactory{}.CreateModeCosting(request.options(), mode);
   auto cost_ptr = mode_costings[static_cast<uint32_t>(mode)];

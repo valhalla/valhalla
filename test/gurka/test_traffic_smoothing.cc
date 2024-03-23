@@ -558,7 +558,7 @@ protected:
       traffic_speed->breakpoint1 = 255;
     });
 
-    test::customize_historical_traffic(map.config, [](DirectedEdge& e) {
+    test::customize_historical_traffic(map.config, [](DirectedEdge&) {
       // speeds for every 5 min bucket of the week
       std::array<float, kBucketsPerWeek> historical;
       historical.fill(6);

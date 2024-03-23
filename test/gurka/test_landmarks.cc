@@ -86,6 +86,18 @@ void BuildPBFAddLandmarksToTiles() {
       I                           J
     )";
 
+  const gurka::ways ways = {
+      {"ae", // length 55, associated with ABFI
+       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
+      {"ab", // length 35, associated with ABCFG
+       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
+      {"bc", // length 30, associated with CDG
+       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
+      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
+      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
+      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
+  };
+
   const gurka::nodes nodes = {
       {"A", {{"name", "lv_mo_li"}, {"amenity", "bar"}}},
       {"B", {{"name", "hai_di_lao"}, {"amenity", "restaurant"}}},
@@ -107,17 +119,7 @@ void BuildPBFAddLandmarksToTiles() {
       {"f", {{"name", "gong_ce"}, {"amenity", "toilets"}}},
   };
 
-  const gurka::ways ways = {
-      {"ae", // length 55, associated with ABFI
-       {{"highway", "primary"}, {"name", "G999"}, {"driving_side", "right"}, {"maxspeed", "120"}}},
-      {"ab", // length 35, associated with ABCFG
-       {{"highway", "secondary"}, {"name", "S1"}, {"driving_side", "right"}}},
-      {"bc", // length 30, associated with CDG
-       {{"highway", "secondary"}, {"name", "S2"}, {"lanes", "2"}, {"driving_side", "right"}}},
-      {"cd", {{"highway", "motorway"}, {"maxspeed", "100"}}},   // length 25, associated with CDEK
-      {"cf", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 55, associated with CDH
-      {"ef", {{"highway", "residential"}, {"maxspeed", "30"}}}, // length 65, associated with I
-  };
+
 
   constexpr double gridsize = 5;
   landmark_map_tile_test.nodes = gurka::detail::map_to_coordinates(ascii_map, gridsize, {0, 0});
@@ -408,6 +410,13 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   mjolnir::build_tile_set(landmark_map_tile_test.config, {pbf_filename_tile_test},
                           mjolnir::BuildStage::kInitialize, mjolnir::BuildStage::kValidate, false);
 
+  // grab the initial tile sizes
+  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  std::unordered_map<GraphId, uint32_t> sizes;
+  for (const auto& graph_id : gr.GetTileSet()){
+    sizes[graph_id] = gr.GetGraphTile(graph_id)->header()->end_offset();
+  }
+
   // build landmark database and parse landmarks
   EXPECT_TRUE(BuildLandmarkFromPBF(landmark_map_tile_test.config.get_child("mjolnir"),
                                    {pbf_filename_tile_test}));
@@ -415,9 +424,14 @@ TEST(LandmarkTest, TestAddLandmarksToTiles) {
   // add landmarks from db to tiles
   AddLandmarks(landmark_map_tile_test.config.get_child("mjolnir"));
 
-  // check data
-  GraphReader gr(landmark_map_tile_test.config.get_child("mjolnir"));
+  // all of the tiles should have gotten larger
+  gr.Clear();
+  for (const auto& graph_id : gr.GetTileSet()){
+    auto new_size = gr.GetGraphTile(graph_id)->header()->end_offset();
+    ASSERT_GE(new_size, sizes[graph_id]);
+  }
 
+  // make sure to get fresh tiles
   CheckLandmarksInTiles(gr, GraphId("0/002025/0"));
   CheckLandmarksInTiles(gr, GraphId("1/032220/0"));
   CheckLandmarksInTiles(gr, GraphId("2/517680/0"));
@@ -526,6 +540,7 @@ TEST(LandmarkTest, TestLandmarksInManeuvers) {
                           mjolnir::BuildStage::kValidate, false);
   // build landmark database and import landmarks to it
   EXPECT_TRUE(BuildLandmarkFromPBF(map.config.get_child("mjolnir"), {pbf}));
+
   // add landmarks to graphtile from the landmark database
   AddLandmarks(map.config.get_child("mjolnir"));
 
