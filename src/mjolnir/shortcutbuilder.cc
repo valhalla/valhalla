@@ -550,7 +550,7 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       shortcut++;
       if (!end_nodes.insert(newedge.endnode()).second) {
         [[maybe_unused]] PointLL start_ll = tile->get_node_ll(start_node);
-        [[maybe_unused]] PointLL end_ll = tile->get_node_ll(end_node);
+        [[maybe_unused]] PointLL end_ll = reader.GetGraphTile(end_node)->get_node_ll(end_node);
         LOG_WARN("Node " + std::to_string(start_node) +
                  " has outbound shortcuts with same start/end nodes starting at node at LL = " +
                  std::to_string(start_ll.lat()) + "," + std::to_string(start_ll.lng()) +
