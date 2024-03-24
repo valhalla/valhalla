@@ -466,7 +466,7 @@ std::vector<std::vector<PathInfo>> UnidirectionalAStar<expansion_direction, FORW
   midgard::PointLL destination_new(destination.correlation().edges(0).ll().lng(),
                                    destination.correlation().edges(0).ll().lat());
   Init(origin_new, destination_new);
-  float mindist = astarheuristic_.GetDistance(origin_new);
+  float mindist = astarheuristic_.GetDistance(FORWARD?origin_new:destination_new);
 
   auto& startpoint = FORWARD ? origin : destination;
   auto& endpoint = FORWARD ? destination : origin;
