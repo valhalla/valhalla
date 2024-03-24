@@ -43,6 +43,7 @@
    * FIXED: some entry points to creating geotiff isochrones output did not register the geotiff driver before attempting to use it [#4628](https://github.com/valhalla/valhalla/pull/4628)
    * FIXED: libgdal wasn't installed in docker image, so it never worked in docker [#4629](https://github.com/valhalla/valhalla/pull/4629)
    * FIXED: CostMatrix shapes for routes against trivial oneways [#4633](https://github.com/valhalla/valhalla/pull/4633)
+   * FIXED: unidirectional_astar.cc doesn't work for date_time type = 2 #4652(https://github.com/valhalla/valhalla/issues/4652)
 * **Enhancement**
    * UPDATED: French translations, thanks to @xlqian [#4159](https://github.com/valhalla/valhalla/pull/4159)
    * CHANGED: -j flag for multithreaded executables to override mjolnir.concurrency [#4168](https://github.com/valhalla/valhalla/pull/4168)
