@@ -18,7 +18,8 @@ namespace sif {
  */
 void ParseTruckCostOptions(const rapidjson::Document& doc,
                            const std::string& costing_options_key,
-                           Costing* pbf_costing);
+                           Costing* pbf_costing,
+                           google::protobuf::RepeatedPtrField<CodedDescription>& warnings);
 
 /**
  * Create a truckcost
