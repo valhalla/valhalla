@@ -128,14 +128,6 @@ public:
   virtual ~TruckCost();
 
   /**
-   * If we want to penalize HGV access, pretend we're driving a car so hgv=no edges are allowed.
-   * @return  Returns car access if we want to penalize hgv=no or truck access by default.
-   */
-  virtual uint32_t access_mode() const override {
-    return truck_access_mask_;
-  }
-
-  /**
    * Does the costing allow hierarchy transitions. Truck costing will allow
    * transitions by default.
    * @return  Returns true if the costing model allows hierarchy transitions).
@@ -323,7 +315,6 @@ public:
 
   // determine if we should allow hgv=no edges and penalize them instead
   float no_hgv_access_penalty_;
-  uint32_t truck_access_mask_;
 };
 
 // Constructor
@@ -385,7 +376,8 @@ TruckCost::TruckCost(const Costing& costing)
   // determine what to do with hgv=no edges
   bool no_hgv_access_penalty_active = !(costing_options.hgv_no_access_penalty() == kMaxPenalty);
   no_hgv_access_penalty_ = no_hgv_access_penalty_active * costing_options.hgv_no_access_penalty();
-  truck_access_mask_ = no_hgv_access_penalty_active ? kAutoAccess : kTruckAccess;
+  // set the access mask to both car & truck if that penalty is active
+  access_mask_ = no_hgv_access_penalty_active ? (kAutoAccess | kTruckAccess) : kTruckAccess;
 }
 
 // Destructor
@@ -465,7 +457,7 @@ inline bool TruckCost::Allowed(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, is_dest, tile, edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, is_dest, tile, edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 
@@ -489,7 +481,7 @@ bool TruckCost::AllowedReverse(const baldr::DirectedEdge* edge,
     return false;
   }
 
-  return DynamicCost::EvaluateRestrictions(kTruckAccess, edge, false, tile, opp_edgeid, current_time,
+  return DynamicCost::EvaluateRestrictions(access_mask_, edge, false, tile, opp_edgeid, current_time,
                                            tz_index, restriction_idx);
 }
 

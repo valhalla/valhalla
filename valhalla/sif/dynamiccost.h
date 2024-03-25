@@ -233,7 +233,7 @@ public:
    * Get the access mode used by this costing method.
    * @return  Returns access mode.
    */
-  inline virtual uint32_t access_mode() const {
+  virtual uint32_t access_mode() const {
     return access_mask_;
   }
 
@@ -296,7 +296,7 @@ public:
    * @return  Returns true if access is allowed, false if not.
    */
   inline virtual bool Allowed(const baldr::NodeInfo* node) const {
-    return ((node->access() & access_mode()) || ignore_access_) &&
+    return ((node->access() & access_mask_) || ignore_access_) &&
            !(exclude_cash_only_tolls_ && node->cash_only_toll());
   }
 
@@ -316,7 +316,7 @@ public:
   inline virtual bool Allowed(const baldr::DirectedEdge* edge,
                               const graph_tile_ptr&,
                               uint16_t disallow_mask = kDisallowNone) const {
-    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mode());
+    auto access_mask = (ignore_access_ ? baldr::kAllAccess : access_mask_);
     bool accessible = (edge->forwardaccess() & access_mask) ||
                       (ignore_oneways_ && (edge->reverseaccess() & access_mask));
     bool assumed_restricted =
@@ -338,9 +338,9 @@ public:
     // you have forward access for the mode you care about
     // you dont care about what mode has access so long as its forward
     // you dont care about the direction the mode has access to
-    return ((edge->forwardaccess() & access_mode()) ||
+    return ((edge->forwardaccess() & access_mask_) ||
             (ignore_access_ && (edge->forwardaccess() & baldr::kAllAccess)) ||
-            (ignore_oneways_ && (edge->reverseaccess() & access_mode()))) &&
+            (ignore_oneways_ && (edge->reverseaccess() & access_mask_))) &&
            (edge->use() != baldr::Use::kConstruction);
   }
 
