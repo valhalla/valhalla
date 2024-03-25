@@ -45,7 +45,7 @@ TEST(Vector2, TestCtorPoint2Point2) {
 }
 
 void TryCtorVector2(const Vector2& v, const Vector2& expected) {
-  Vector2 result(v);
+  const Vector2& result(v);
   EXPECT_EQ(expected, result);
 }
 
@@ -187,7 +187,7 @@ void TryOpMultiplication(const Vector2& v, const float scalar, const Vector2& ex
   EXPECT_EQ(expected, result) << "scalar pre";
 
   Vector2 result2 = scalar * v;
-  EXPECT_EQ(expected, result) << "scalar post";
+  EXPECT_EQ(expected, result2) << "scalar post";
 }
 
 TEST(Vector2, TestOpMultiplication) {
