@@ -281,7 +281,7 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
                                (pred.not_thru_pruning() || !meta.edge->not_thru()),
-                               (pred.closure_pruning() || !(costing_->IsClosed(meta.edge, tile))),
+                               (pred.closure_pruning() || !(costing_->IsClosed(opp_edge, endtile))),
                                0 != (flow_sources & kDefaultFlowMask),
                                costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                   opp_pred_edge),
@@ -765,8 +765,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  !(costing_->IsClosed(directededge, tile)),
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
                                  kInvalidRestriction, 0,
-                                 opp_dir_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                                 directededge->destonly() ||
+                                     (costing_->is_hgv() && directededge->destonly_hgv()));
       }
 
       auto& edge_label = edgelabels_.back();
