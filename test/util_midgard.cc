@@ -201,7 +201,6 @@ TEST(UtilMidgard, TestResample) {
     auto length = pl.Length();
     resampled = resample_polyline(input_shape, length, resolution);
     size_t n = std::round(length / resolution);
-    float sample_distance = length / n;
     EXPECT_EQ(resampled.size(), n + 1)
         << "resample_polyline - Sampled polyline is not the expected length";
   }
@@ -653,7 +652,7 @@ TEST(UtilMidgard, TestExpandLocation) {
   EXPECT_GE(area, 199.0f * 199.0f);
 
   // Should throw an exception if negative value is sent
-  EXPECT_THROW(AABB2<PointLL> box = ExpandMeters(loc, -10.0f);, std::invalid_argument)
+  EXPECT_THROW(ExpandMeters(loc, -10.0f);, std::invalid_argument)
       << "ExpandLocation: should throw exception with negative meters supplied";
 }
 

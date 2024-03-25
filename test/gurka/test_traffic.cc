@@ -296,8 +296,6 @@ TEST(Traffic, CutGeoms) {
                                          uint32_t index, baldr::TrafficSpeed* current) -> void {
         baldr::GraphId tile_id(tile.header->tile_id);
         auto BD = gurka::findEdge(reader, map.nodes, "BD", "D", tile_id);
-        baldr::TrafficSpeed* existing =
-            const_cast<valhalla::baldr::TrafficSpeed*>(tile.speeds + index);
         current->breakpoint1 = 255;
         if (std::get<1>(BD) != nullptr && std::get<0>(BD).id() == index) {
           current->overall_encoded_speed = 0;
