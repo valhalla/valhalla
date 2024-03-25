@@ -432,10 +432,6 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // forward - reverse the shape so the edge info stored is forward for
       // the first added edge info
       auto edgeinfo = tile->edgeinfo(directededge);
-      std::string name;
-      auto names = edgeinfo.GetNames();
-      if (names.size())
-        name = names[0];
       std::list<PointLL> shape =
           valhalla::midgard::decode7<std::list<PointLL>>(edgeinfo.encoded_shape());
       if (!directededge->forward()) {
