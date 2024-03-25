@@ -550,6 +550,7 @@ public:
          (edge->use() == baldr::Use::kRailFerry && pred->use() != baldr::Use::kRailFerry);
 
     // Additional penalties without any time cost
+    c.cost += destination_only_penalty_ * (edge->destonly() && !pred->destonly());
     c.cost +=
         alley_penalty_ * (edge->use() == baldr::Use::kAlley && pred->use() != baldr::Use::kAlley);
     c.cost +=
@@ -602,7 +603,7 @@ PedestrianCost::PedestrianCost(const Costing& costing)
   speed_ = costing_options.walking_speed();
   step_penalty_ = costing_options.step_penalty();
   elevator_penalty_ = costing_options.elevator_penalty();
-  max_grade_ = costing_options.max_grade();
+  max_grade_ = costing_options.max_grade();private
 
   if (type_ == PedestrianType::kFoot) {
     max_hiking_difficulty_ = static_cast<SacScale>(costing_options.max_hiking_difficulty());
