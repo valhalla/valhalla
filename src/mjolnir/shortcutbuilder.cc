@@ -781,3 +781,7 @@ void ShortcutBuilder::Build(const boost::property_tree::ptree& pt) {
              std::to_string(stats.second) + " edges, average ~" + std::to_string(avg) +
              " edges per shortcut");
   }
+}
+
+} // namespace mjolnir
+} // namespace valhalla
