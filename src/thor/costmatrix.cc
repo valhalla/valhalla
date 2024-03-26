@@ -775,7 +775,7 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     const BDEdgeLabel& rev_label = rev_edgelabels[rev_edgestatus.index()];
 
     // Special case - common edge for source and target are both initial edges
-    if (fwd_pred.predecessor() == kInvalidLabel && rev_predidx == kInvalidLabel) {
+    if (fwd_pred.predecessor() == kInvalidLabel && (rev_predidx == kInvalidLabel)) {
       // bail if either edge wasn't allowed (see notes in SetSources/Targets)
       if (!fwd_pred.path_id() || !rev_label.path_id()) {
         return;
@@ -796,20 +796,29 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
       // Update status and update threshold if this is the last location
       // to find for this source or target
       UpdateStatus(source, target);
+    } else if (rev_predidx == kInvalidLabel) {
+      // if this is a target's correlated edge, add its attributes to the fwd_pred's predecessor
+      auto& fwd_pred_pred = edgelabel_[MATRIX_FORW][source][fwd_pred.predecessor()];
+      auto dist = fwd_pred_pred.path_distance() + rev_label.path_distance();
+      auto cost = fwd_pred_pred.cost() + rev_label.cost();
+
+      // there can't be any cheaper connection
+      best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, cost, dist);
+      best_connection_[idx].found = true;
+
+      // Update status and update threshold if this is the last location
+      // to find for this source or target
+      UpdateStatus(source, target);
     } else {
-      float oppcost = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().cost;
-      float c = fwd_pred.cost().cost + oppcost + rev_label.transition_cost().cost;
+      auto& opp_pred_label = rev_edgelabels[rev_predidx];
+      Cost cost = fwd_pred.cost() + opp_pred_label.cost() + rev_label.transition_cost();
 
       // Check if best connection
-      if (c < best_connection_[idx].cost.cost) {
-        float oppsec = (rev_predidx == kInvalidLabel) ? 0.f : rev_edgelabels[rev_predidx].cost().secs;
-        uint32_t oppdist =
-            (rev_predidx == kInvalidLabel) ? 0U : rev_edgelabels[rev_predidx].path_distance();
-        float s = fwd_pred.cost().secs + oppsec + rev_label.transition_cost().secs;
-        uint32_t d = fwd_pred.path_distance() + oppdist;
+      if (cost.cost < best_connection_[idx].cost.cost) {
+        uint32_t dist = fwd_pred.path_distance() + opp_pred_label.path_distance();
 
         // Update best connection and set a threshold
-        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, Cost(c, s), d);
+        best_connection_[idx].Update(fwd_pred.edgeid(), rev_edgeid, cost, dist);
         if (best_connection_[idx].max_iterations == 0) {
           best_connection_[idx].max_iterations =
               n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
@@ -860,15 +869,14 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
 
   // Iterate through the sources
   for (auto source : sources->second) {
-    uint32_t source_idx = source * locs_count_[MATRIX_REV] + target;
-    if (best_connection_[source_idx].found) {
+    uint32_t idx = source * locs_count_[MATRIX_REV] + target;
+    if (best_connection_[idx].found) {
       continue;
     }
 
     // Update any targets whose threshold has been reached
-    if (best_connection_[source_idx].max_iterations > 0 &&
-        n > best_connection_[source_idx].max_iterations) {
-      best_connection_[source_idx].found = true;
+    if (best_connection_[idx].max_iterations > 0 && n > best_connection_[idx].max_iterations) {
+      best_connection_[idx].found = true;
       continue;
     }
 
@@ -896,29 +904,36 @@ void CostMatrix::CheckReverseConnections(const uint32_t target,
         uint32_t d = std::abs(static_cast<int>(rev_pred.path_distance()) +
                               static_cast<int>(fwd_label.path_distance()) -
                               static_cast<int>(fwd_label.transition_cost().secs));
-        best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(s, s), d);
-        best_connection_[source_idx].found = true;
+        best_connection_[idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(s, s), d);
+        best_connection_[idx].found = true;
+
+        // Update status and update threshold if this is the last location
+        // to find for this source or target
+        UpdateStatus(source, target);
+      } else if (fwd_predidx == kInvalidLabel) {
+        // if this is a source's correlated edge, add its attributes to the rev_pred's predecessor
+        auto& rev_pred_pred = edgelabel_[MATRIX_REV][source][rev_pred.predecessor()];
+        auto dist = rev_pred_pred.path_distance() + fwd_label.path_distance();
+        auto cost = rev_pred_pred.cost() + fwd_label.cost();
+
+        // there can't be any cheaper connection
+        best_connection_[idx].Update(fwd_edgeid, rev_pred.edgeid(), cost, dist);
+        best_connection_[idx].found = true;
 
         // Update status and update threshold if this is the last location
         // to find for this source or target
         UpdateStatus(source, target);
       } else {
-        float oppcost = (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().cost;
-        float c = rev_pred.cost().cost + oppcost + fwd_label.transition_cost().cost;
+        auto opp_pred_label = fwd_edgelabels[fwd_predidx];
+        auto cost = rev_pred.cost() + opp_pred_label.cost() + fwd_label.transition_cost();
 
         // Check if best connection
-        if (c < best_connection_[source_idx].cost.cost) {
-          float fwd_sec =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].cost().secs;
-          uint32_t fwd_dist =
-              (fwd_predidx == kInvalidLabel) ? 0 : fwd_edgelabels[fwd_predidx].path_distance();
-          float s = rev_pred.cost().secs + fwd_sec + fwd_label.transition_cost().secs;
-          uint32_t d = rev_pred.path_distance() + fwd_dist;
-
+        if (cost.cost < best_connection_[idx].cost.cost) {
           // Update best connection and set a threshold
-          best_connection_[source_idx].Update(fwd_edgeid, rev_pred.edgeid(), Cost(c, s), d);
-          if (best_connection_[source_idx].max_iterations == 0) {
-            best_connection_[source_idx].max_iterations =
+          uint32_t dist = rev_pred.path_distance() + opp_pred_label.path_distance();
+          best_connection_[idx].Update(fwd_edgeid, rev_pred.edgeid(), cost, dist);
+          if (best_connection_[idx].max_iterations == 0) {
+            best_connection_[idx].max_iterations =
                 n + GetThreshold(mode_, edgelabel_[MATRIX_FORW][source].size() +
                                             edgelabel_[MATRIX_REV][target].size());
           }
