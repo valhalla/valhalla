@@ -461,7 +461,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   auto& edgelabels = edgelabel_[FORWARD][index];
   // Skip this edge if no access is allowed (based on costing method)
   // or if a complex restriction prevents transition onto this edge.
-  uint8_t restriction_idx = -1;
+  uint8_t restriction_idx = kInvalidRestriction;
   if (FORWARD) {
     if (!costing_->Allowed(meta.edge, false, pred, tile, meta.edge_id, time_info.local_time,
                            time_info.timezone_index, restriction_idx) ||
@@ -512,16 +512,16 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
   }
 
   // not_thru_pruning_ is only set to false on the 2nd pass in matrix_action.
-  // TODO(nils): one of these cases where I think reverse tree should look at the opposing edge,
-  //   not the expanding one, same for quite some attributes below (and same in bidir a*)
-  bool thru = not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
+  // We allow settling not_thru edges so we can connect both trees on them.
+  bool not_thru_pruning =
+      not_thru_pruning_ ? (pred.not_thru_pruning() || !meta.edge->not_thru()) : false;
 
   // Add edge label, add to the adjacency list and set edge status
   uint32_t idx = edgelabels.size();
   *meta.edge_status = {EdgeSet::kTemporary, idx};
   if (FORWARD) {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, thru,
+                            pred_dist, not_thru_pruning,
                             (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
@@ -530,8 +530,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                 (costing_->is_hgv() && meta.edge->destonly_hgv()));
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
-                            pred_dist, thru,
-                            (pred.closure_pruning() || !costing_->IsClosed(meta.edge, tile)),
+                            pred_dist, not_thru_pruning,
+                            (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
                             static_cast<bool>(flow_sources & kDefaultFlowMask),
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
@@ -1024,9 +1024,10 @@ void CostMatrix::SetSources(GraphReader& graphreader,
       //   - "transition_cost" is used to store the traversed secs & length
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d, false,
-                             true, static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             InternalTurn::kNoTurn, -1,
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d,
+                             !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()));
@@ -1108,11 +1109,12 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
       BDEdgeLabel edge_label(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, mode_, ec, d,
-                             false, true, static_cast<bool>(flow_sources & kDefaultFlowMask),
-                             InternalTurn::kNoTurn, -1,
+                             !opp_dir_edge->not_thru(), !(costing_->IsClosed(directededge, tile)),
+                             static_cast<bool>(flow_sources & kDefaultFlowMask),
+                             InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(opp_dir_edge, opp_tile)),
-                             opp_dir_edge->destonly() ||
-                                 (costing_->is_hgv() && opp_dir_edge->destonly_hgv()));
+                             directededge->destonly() ||
+                                 (costing_->is_hgv() && directededge->destonly_hgv()));
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

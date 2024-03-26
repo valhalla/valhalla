@@ -178,7 +178,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
 
     // Check if the edge is allowed or if a restriction occurs
     EdgeStatus* todo = nullptr;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     // is_dest is false, because it is a traversal algorithm in this context, not a path search
     // algorithm. In other words, destination edges are not defined for this Dijkstra's algorithm.
     const bool is_dest = false;
@@ -259,7 +259,7 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
                                  transition_cost, path_dist, false,
-                                 (pred.closure_pruning() || !costing_->IsClosed(directededge, tile)),
+                                 (pred.closure_pruning() || !costing_->IsClosed(opp_edge, t2)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  costing_->TurnType(directededge->localedgeidx(), nodeinfo, opp_edge,
                                                     opp_pred_edge),
@@ -524,7 +524,7 @@ void Dijkstras::ExpandForwardMultiModal(GraphReader& graphreader,
     // costing - assume if you get a transit edge you walked to the transit stop
     uint32_t tripid = 0;
     uint32_t blockid = 0;
-    uint8_t restriction_idx = -1;
+    uint8_t restriction_idx = kInvalidRestriction;
     const bool is_dest = false;
     if (directededge->IsTransitLine()) {
       // Check if transit costing allows this edge
@@ -818,11 +818,10 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
       // Construct the edge label. Set the predecessor edge index to invalid
       // to indicate the origin of the path.
       uint32_t idx = bdedgelabels_.size();
-      int restriction_idx = -1;
       bdedgelabels_.emplace_back(kInvalidLabel, edgeid, opp_edge_id, directededge, cost, mode_,
                                  Cost{}, path_dist, false, !(costing_->IsClosed(directededge, tile)),
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
-                                 InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
+                                 InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? path_id : 0,
                                  directededge->destonly() ||
                                      (costing_->is_hgv() && directededge->destonly_hgv()));
       // Set the origin flag
