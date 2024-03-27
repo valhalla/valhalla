@@ -28,7 +28,7 @@
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/osm/object_comparisons.hpp>
 
-#include <filesystem.h>
+#include <filesystem>
 #include <regex>
 #include <string>
 #include <tuple>
