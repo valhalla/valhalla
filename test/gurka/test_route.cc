@@ -1153,3 +1153,85 @@ TEST_F(DateTimeTest, Invariant) {
     }
   }
 }
+
+TEST(StandAlone, HGVNoAccessPenalty) {
+  // if hgv_no_penalty is on we should still respect the maxweight restriction on CD
+  // so we should take the next-best hgv=no edge with JK
+  const std::string ascii_map = R"(
+    A-1--B----C----D----E--2-F----G----H--3-I
+              |    |
+              J----K
+              |    |             
+              |    |
+              L----M
+           )";
+
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"BC", {{"highway", "residential"}}},
+      {"CD", {{"highway", "residential"}, {"hgv", "no"}, {"maxweight", "3.5"}}},
+      {"DE", {{"highway", "residential"}}},
+      {"EF", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"FG", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"GH", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"HI", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"CJ", {{"highway", "residential"}}},
+      {"JK", {{"highway", "residential"}, {"hgv", "no"}}},
+      {"JLMK", {{"highway", "residential"}}},
+      {"KD", {{"highway", "residential"}}},
+  };
+
+  const auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  gurka::map map = gurka::buildtiles(layout, ways, {}, {}, "test/data/hgv_no_access_penalty");
+
+  std::unordered_map<std::string, std::string> no_time = {
+      {"/costing_options/truck/hgv_no_access_penalty", "2000"}};
+  std::unordered_map<std::string, std::string> with_depart_at =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/locations/0/date_time", "2024-03-20T09:00"}};
+  std::unordered_map<std::string, std::string> with_arrive_by =
+      {{"/costing_options/truck/hgv_no_access_penalty", "2000"},
+       {"/locations/1/date_time", "2024-03-20T09:00"}};
+
+  auto get_leg_cost = [](const valhalla::Api& response) {
+    return response.trip().routes(0).legs(0).node().rbegin()->cost().elapsed_cost().cost();
+  };
+
+  // do both bidirectional & both unidirectional a*
+  std::vector<std::unordered_map<std::string, std::string>> options = {no_time, with_depart_at,
+                                                                       with_arrive_by};
+  for (auto& truck_options : options) {
+
+    // by default, take the detour via LM
+    // NOTE, we're not snapping to the hgv=no edges either
+    {
+      auto route = gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck");
+      gurka::assert::raw::expect_path(route, {"BC", "CJ", "JLMK", "KD", "DE"});
+    }
+
+    // with a high hgv_no_penalty also take the detour via LM, but do snap to the hgv=no edges
+    {
+      auto route =
+          gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck", truck_options);
+      gurka::assert::raw::expect_path(route, {"AB", "BC", "CJ", "JLMK", "KD", "DE", "EF"});
+    }
+
+    // with a low hgv_no_penalty take the JK edge
+    {
+      truck_options["/costing_options/truck/hgv_no_access_penalty"] = "10";
+      auto route =
+          gurka::do_action(valhalla::Options::route, map, {"1", "2"}, "truck", truck_options);
+      gurka::assert::raw::expect_path(route, {"AB", "BC", "CJ", "JK", "KD", "DE", "EF"});
+    }
+
+    // if all hgv=no and a high hgv_no_penalty, truck should not trigger the penalty at all
+    // so cost should be similar to car
+    {
+      truck_options["/costing_options/truck/hgv_no_access_penalty"] = "2000";
+      auto route_car = gurka::do_action(valhalla::Options::route, map, {"2", "3"}, "auto");
+      auto route_truck =
+          gurka::do_action(valhalla::Options::route, map, {"2", "3"}, "truck", truck_options);
+      EXPECT_NEAR(get_leg_cost(route_car), get_leg_cost(route_truck), 300.0);
+    }
+  }
+}

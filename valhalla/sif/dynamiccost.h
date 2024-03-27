@@ -497,10 +497,10 @@ public:
 
     // If forward, check if the edge marks the end of a restriction, else check
     // if the edge marks the start of a complex restriction.
-    if ((forward && (edge->end_restriction() & access_mode())) ||
-        (!forward && (edge->start_restriction() & access_mode()))) {
+    if ((forward && (edge->end_restriction() & access_mask_)) ||
+        (!forward && (edge->start_restriction() & access_mask_))) {
       // Get complex restrictions. Return false if no restrictions are found
-      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mode());
+      auto restrictions = tile->GetRestrictions(forward, edgeid, access_mask_);
       if (restrictions.size() == 0) {
         return false;
       }
@@ -599,6 +599,18 @@ public:
                                                   baldr::DateTime::get_tz_db().from_index(tz_index));
   }
 
+  /***
+   * Evaluates mode-specific and time-dependent access restrictions, including a binary
+   * search to get the tile's access restrictions.
+   *
+   * @param access_mode        The access mode to get restrictions for
+   * @param edge               The edge to check for restrictions
+   * @param is_dest            Is there a destination on the edge?
+   * @param tile               The edge's tile
+   * @param current_time       Needed for time dependent restrictions
+   * @param tz_index           The current timezone index
+   * @param restriction_idx    Records the restriction in the tile for later retrieval
+   */
   inline bool EvaluateRestrictions(uint32_t access_mode,
                                    const baldr::DirectedEdge* edge,
                                    const bool is_dest,

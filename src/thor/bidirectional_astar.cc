@@ -329,7 +329,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                      costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                      restriction_idx, 0,
                                      meta.edge->destonly() ||
-                                         (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                                         (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                                     meta.edge->forwardaccess() & kTruckAccess);
     adjacencylist_forward_.add(idx);
   } else {
     idx = edgelabels_reverse_.size();
@@ -346,7 +347,8 @@ inline bool BidirectionalAStar::ExpandInner(baldr::GraphReader& graphreader,
                                                         opp_pred_edge),
                                      restriction_idx, 0,
                                      opp_edge->destonly() ||
-                                         (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                         (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                     opp_edge->forwardaccess() & kTruckAccess);
     adjacencylist_reverse_.add(idx);
   }
 
@@ -1017,7 +1019,8 @@ void BidirectionalAStar::SetOrigin(GraphReader& graphreader,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, 0,
                                      directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()));
+                                         (costing_->is_hgv() && directededge->destonly_hgv()),
+                                     directededge->forwardaccess() & kTruckAccess);
     adjacencylist_forward_.add(idx);
 
     // setting this edge as reached
@@ -1113,7 +1116,8 @@ void BidirectionalAStar::SetDestination(GraphReader& graphreader,
                                      static_cast<bool>(flow_sources & kDefaultFlowMask),
                                      sif::InternalTurn::kNoTurn, kInvalidRestriction,
                                      directededge->destonly() ||
-                                         (costing_->is_hgv() && directededge->destonly_hgv()));
+                                         (costing_->is_hgv() && directededge->destonly_hgv()),
+                                     directededge->forwardaccess() & kTruckAccess);
     adjacencylist_reverse_.add(idx);
 
     // setting this edge as reached, sending the opposing because this is the reverse tree

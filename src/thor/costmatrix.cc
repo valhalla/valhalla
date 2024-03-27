@@ -527,7 +527,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                             restriction_idx, 0,
                             meta.edge->destonly() ||
-                                (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                                (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                            meta.edge->forwardaccess() & kTruckAccess);
   } else {
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, mode_, tc,
                             pred_dist, not_thru_pruning,
@@ -536,7 +537,8 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                             costing_->TurnType(meta.edge->localedgeidx(), nodeinfo, opp_edge,
                                                opp_pred_edge),
                             restriction_idx, 0,
-                            opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                            opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                            opp_edge->forwardaccess() & kTruckAccess);
   }
   adj.add(idx);
   // mark the edge as settled for the connection check
@@ -1030,7 +1032,8 @@ void CostMatrix::SetSources(GraphReader& graphreader,
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
-                                 (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 (costing_->is_hgv() && directededge->destonly_hgv()),
+                             directededge->forwardaccess() & kTruckAccess);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -1114,7 +1117,8 @@ void CostMatrix::SetTargets(baldr::GraphReader& graphreader,
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(opp_dir_edge, opp_tile)),
                              directededge->destonly() ||
-                                 (costing_->is_hgv() && directededge->destonly_hgv()));
+                                 (costing_->is_hgv() && directededge->destonly_hgv()),
+                             directededge->forwardaccess() & kTruckAccess);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).

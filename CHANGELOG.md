@@ -106,6 +106,7 @@
    * ADDED: return isotile grid as geotiff  [#4594](https://github.com/valhalla/valhalla/pull/4594)
    * ADDED: `ignore_non_vehicular_restrictions` parameter for truck costing [#4606](https://github.com/valhalla/valhalla/pull/4606)
    * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
+   * ADDED: `hgv_no_penalty` costing option to allow penalized truck access to `hgv=no` edges [#4650](https://github.com/valhalla/valhalla/pull/4650)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
