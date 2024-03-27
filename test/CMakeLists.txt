@@ -67,11 +67,6 @@ endif()
 # "-Werror" flag
 # Avoid adding a test to this list
 set(tests_with_warnings
-  compression
-  countryaccess
-  encode
-  edgecollapser
-  edgeinfobuilder
   filesystem
   graphbuilder
   graphparser

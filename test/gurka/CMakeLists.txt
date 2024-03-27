@@ -12,7 +12,6 @@ if(ENABLE_DATA_TOOLS)
   # Avoid adding a filename to this list
   set(TESTS_WITH_WARNINGS
     test_gtfs.cc
-    test_instructions_roundabout.cc
     test_languages.cc
     test_locate.cc
     test_multi_level_loki.cc
