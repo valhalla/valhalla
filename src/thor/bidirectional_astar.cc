@@ -805,15 +805,15 @@ BidirectionalAStar::GetBestPath(valhalla::Location& origin,
 // search tree. Check if this is the best connection so far and set the
 // search threshold.
 bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BDEdgeLabel& pred) {
-  // Find pred on opposite side
-  GraphId oppedge = pred.opp_edgeid();
-  EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
-  auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
-
   // Disallow connections that are part of an uturn on an internal edge
   if (pred.internal_turn() != InternalTurn::kNoTurn) {
     return false;
   }
+
+  // Find pred on opposite side
+  GraphId oppedge = pred.opp_edgeid();
+  EdgeStatusInfo oppedgestatus = edgestatus_reverse_.Get(oppedge);
+  auto opp_pred = edgelabels_reverse_[oppedgestatus.index()];
 
   // Disallow connections that are part of a complex restriction
   if (pred.on_complex_rest()) {
@@ -837,8 +837,11 @@ bool BidirectionalAStar::SetForwardConnection(GraphReader& graphreader, const BD
   } else {
     // If no predecessor on the forward path get the predecessor on
     // the reverse path to form the cost.
-    uint32_t predidx = opp_pred.predecessor();
-    float oppcost = (predidx == kInvalidLabel) ? 0 : edgelabels_reverse_[predidx].cost().cost;
+    uint32_t opp_predidx = opp_pred.predecessor();
+    // TODO(nils): this can't be happen, it'd mean that this is a trivial route
+    // , which is not supposed to be here! same in SetReverseConnection
+    float oppcost =
+        (opp_predidx == kInvalidLabel) ? 0.f : edgelabels_reverse_[opp_predidx].cost().cost;
     c = pred.cost().cost + oppcost + opp_pred.transition_cost().cost;
   }
 

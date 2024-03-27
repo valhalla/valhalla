@@ -106,6 +106,7 @@
    * ADDED: return isotile grid as geotiff  [#4594](https://github.com/valhalla/valhalla/pull/4594)
    * ADDED: `ignore_non_vehicular_restrictions` parameter for truck costing [#4606](https://github.com/valhalla/valhalla/pull/4606)
    * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
+   * FIXED: connection check for costmatrix when the connection edge is on a correlated edge of origin OR target [#4663](https://github.com/valhalla/valhalla/pull/4663)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**

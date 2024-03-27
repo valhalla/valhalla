@@ -820,3 +820,23 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
     EXPECT_EQ(matrix.matrix().shapes(0), encoded);
   }
 }
+
+TEST(StandAlone, CostMatrixConnectedRoute) {
+  // see https://github.com/valhalla/valhalla/pull/4663#discussion_r1540245978
+  const std::string ascii_map = R"(
+    A1---B---2C
+  )";
+  const gurka::ways ways = {
+      {"AB", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
+  };
+  auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
+  auto map = gurka::buildtiles(layout, ways, {}, {},
+                               VALHALLA_BUILD_DIR "test/data/costmatrix_connectedroute");
+
+  // test the against-oneway case
+  auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto",
+                                 {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 800);
+  EXPECT_NEAR(matrix.matrix().times(0), 82.28f, 0.01f);
+}
