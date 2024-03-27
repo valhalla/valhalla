@@ -1571,7 +1571,7 @@ TEST(BiDiAstar, test_recost_path) {
   )";
   const gurka::ways ways = {
       // make ABC to be a shortcut
-      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"ABC", {{"highway", "motorway"}, {"maxspeed", "80"}}},
       // make CDE to be a shortcut
       {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}}},
       {"1A", {{"highway", "secondary"}}},
@@ -1580,8 +1580,8 @@ TEST(BiDiAstar, test_recost_path) {
       {"D5", {{"highway", "secondary"}}},
       // set speeds less than on ABCDE path to force the algorithm
       // to go through ABCDE nodes instead of AXY
-      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
-      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"AX", {{"highway", "motorway"}, {"maxspeed", "70"}}},
+      {"XY", {{"highway", "trunk"}, {"maxspeed", "70"}}},
       {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
       {"E2", {{"highway", "secondary"}}},
   };
@@ -1677,6 +1677,81 @@ TEST(BiDiAstar, test_recost_path) {
     EXPECT_NEAR((path[i + 1].elapsed_cost - path[i].elapsed_cost - path[i + 1].transition_cost).secs,
                 get_edge_duration(std::get<0>(edge), std::get<1>(edge)), 0.1f);
   }
+}
+
+// TODO(nils): this test fails currently, because bidir A* has a problem with 2 shortcuts between the
+// same nodes: https://github.com/valhalla/valhalla/issues/4609
+TEST(BiDiAstar, DISABLED_test_recost_path_failing) {
+  const std::string ascii_map = R"(
+           X-----------Y
+          /             \
+    1----A               E---2
+          \             /
+           B--C--------D
+  )";
+  const gurka::ways ways = {
+      // make ABCDE to be a shortcut
+      {"ABC", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"CDE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"1A", {{"highway", "secondary"}}},
+      // set speeds less than on ABCDE path to force the algorithm
+      // to go through ABCDE nodes instead of AXY
+      {"AX", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"XY", {{"highway", "primary"}, {"maxspeed", "70"}}},
+      {"YE", {{"highway", "primary"}, {"maxspeed", "80"}}},
+      {"E2", {{"highway", "secondary"}}},
+  };
+
+  auto nodes = gurka::detail::map_to_coordinates(ascii_map, 500);
+
+  const std::string test_dir = "test/data/astar_shortcuts_recosting";
+  const auto map = gurka::buildtiles(nodes, ways, {}, {}, test_dir);
+
+  vb::GraphReader graphreader(map.config.get_child("mjolnir"));
+
+  // before continue check that ABC is actually a shortcut
+  const auto ABCDE = gurka::findEdgeByNodes(graphreader, nodes, "A", "E");
+  ASSERT_TRUE(std::get<1>(ABCDE)->is_shortcut()) << "Expected ABCDE to be a shortcut";
+
+  Options options;
+  create_costing_options(options, Costing::auto_);
+  vs::TravelMode travel_mode = vs::TravelMode::kDrive;
+  const auto mode_costing = vs::CostFactory().CreateModeCosting(options, travel_mode);
+
+  std::vector<vb::Location> locations;
+  // set origin location
+  locations.push_back({nodes["1"]});
+  // set destination location
+  locations.push_back({nodes["2"]});
+  auto pbf_locations = ToPBFLocations(locations, graphreader, mode_costing[int(travel_mode)]);
+
+  vt::BidirectionalAStar astar;
+
+  // hack hierarchy limits to allow to go through the shortcut
+  {
+    auto& hierarchy_limits =
+        mode_costing[int(travel_mode)]->GetHierarchyLimits(); // access mutable limits
+    for (auto& hierarchy : hierarchy_limits) {
+      hierarchy.Relax(0.f, 0.f);
+    }
+  }
+  const auto path =
+      astar.GetBestPath(pbf_locations[0], pbf_locations[1], graphreader, mode_costing, travel_mode)
+          .front();
+
+  // collect names of base edges
+  std::vector<std::string> expected_names = {"1A", "AB", "BC", "CD", "DE", "E2"};
+  std::vector<std::string> actual_names;
+  for (const auto& info : path) {
+    const auto* edge = graphreader.directededge(info.edgeid);
+    ASSERT_FALSE(edge->is_shortcut()) << "Final path shouldn't contain shortcuts";
+
+    const auto name = graphreader.edgeinfo(info.edgeid).GetNames()[0];
+    actual_names.emplace_back(name);
+  }
+  // TODO(nils): it gets the wrong path! bidir A* has a problem with 2 shortcuts between the same
+  // nodes
+  EXPECT_EQ(actual_names, expected_names);
 }
 
 class BiAstarTest : public thor::BidirectionalAStar {

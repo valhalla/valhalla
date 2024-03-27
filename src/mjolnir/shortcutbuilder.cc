@@ -29,6 +29,50 @@ using namespace valhalla::mjolnir;
 
 namespace {
 
+struct ShortcutAccessRestriction {
+  std::unordered_map<AccessType, AccessRestriction> all_restrictions;
+  // important to set the edge's attribute
+  uint64_t modes = 0;
+
+  ShortcutAccessRestriction(const std::vector<AccessRestriction>&& restrictions) {
+    for (const auto& res : restrictions) {
+      modes |= res.modes();
+      all_restrictions.emplace(res.type(), std::move(res));
+    }
+  };
+
+  // updates non-conditional restrictions if their value is lower than the current value
+  // TODO(nils): we could also contract over conditional restrictions with a bit more work:
+  //   kTimeDenied is fine to just append all restrictions of the base edges, but kTimeAllowed
+  //   will be harder, there we'll have to merge overlapping time periods
+  void update_nonconditional(const std::vector<AccessRestriction>&& other_restrictions) {
+    for (const auto& new_ar : other_restrictions) {
+      // update the modes for the edge attribute regardless
+      if (new_ar.type() == AccessType::kTimedAllowed || new_ar.type() == AccessType::kTimedDenied ||
+          new_ar.type() == AccessType::kDestinationAllowed) {
+        continue;
+      }
+      modes |= new_ar.modes();
+      auto ar_inserted = all_restrictions.emplace(new_ar.type(), new_ar);
+      if (!ar_inserted.second && new_ar.value() < ar_inserted.first->second.value()) {
+        ar_inserted.first->second = std::move(new_ar);
+      }
+    }
+  }
+};
+
+// only keeps access restrictions which can fail contraction
+void remove_nonconditional_restrictions(std::vector<AccessRestriction>& access_restrictions) {
+  access_restrictions.erase(std::remove_if(std::begin(access_restrictions),
+                                           std::end(access_restrictions),
+                                           [](const AccessRestriction& elem) {
+                                             return elem.type() != AccessType::kDestinationAllowed &&
+                                                    elem.type() != AccessType::kTimedAllowed &&
+                                                    elem.type() != AccessType::kTimedDenied;
+                                           }),
+                            std::end(access_restrictions));
+}
+
 // Simple structure to hold the 2 pair of directed edges at a node.
 // First edge in the pair is incoming and second is outgoing
 struct EdgePairs {
@@ -59,9 +103,9 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Neither edge can be part of a complex turn restriction or differ on access restrictions
+  // Neither edge can be part of a complex turn restriction
   if (edge1->start_restriction() || edge1->end_restriction() || edge2->start_restriction() ||
-      edge2->end_restriction() || edge1->access_restriction() != edge2->access_restriction()) {
+      edge2->end_restriction()) {
     return false;
   }
 
@@ -77,20 +121,12 @@ bool EdgesMatch(const graph_tile_ptr& tile, const DirectedEdge* edge1, const Dir
     return false;
   }
 
-  // Names must match
-  // TODO - this allows matches in any order. Do we need to maintain order?
-  // TODO - should allow near matches?
-  std::vector<std::string> edge1names = tile->GetNames(edge1);
-  std::vector<std::string> edge2names = tile->GetNames(edge2);
-  std::sort(edge1names.begin(), edge1names.end());
-  std::sort(edge2names.begin(), edge2names.end());
-  if (edge1names != edge2names)
-    return false;
-
-  // if they have access restrictions those must match (for modes that use shortcuts)
-  if (edge1->access_restriction()) {
+  // if there's conditional access restrictions, they must match; others we can safely contract over
+  if (edge1->access_restriction() || edge2->access_restriction()) {
     auto res1 = tile->GetAccessRestrictions(edge1 - tile->directededge(0), kVehicularAccess);
+    remove_nonconditional_restrictions(res1);
     auto res2 = tile->GetAccessRestrictions(edge2 - tile->directededge(0), kVehicularAccess);
+    remove_nonconditional_restrictions(res2);
     if (res1.size() != res2.size())
       return false;
     for (size_t i = 0; i < res1.size(); ++i) {
@@ -231,11 +267,6 @@ bool CanContract(GraphReader& reader,
     return false;
   }
 
-  // Can not have different speeds in the same direction
-  if ((oppdiredge1->speed() != edge2->speed()) || (oppdiredge2->speed() != edge1->speed())) {
-    return false;
-  }
-
   // ISO country codes at the end nodes must equal this node
   std::string iso = tile->admininfo(nodeinfo->admin_index()).country_iso();
   std::string e1_iso = EndNodeIso(edge1, reader);
@@ -280,7 +311,8 @@ void ConnectEdges(GraphReader& reader,
                   uint32_t& restrictions,
                   float& average_density,
                   float& total_duration,
-                  float& total_truck_duration) {
+                  float& total_truck_duration,
+                  ShortcutAccessRestriction& access_restrictions) {
   // Get the tile and directed edge.
   auto tile = reader.GetGraphTile(startnode);
   const DirectedEdge* directededge = tile->directededge(edgeid);
@@ -323,6 +355,9 @@ void ConnectEdges(GraphReader& reader,
 
   // Add to the weighted average
   average_density += directededge->length() * directededge->density();
+
+  // Preserve the most restrictive access restrictions
+  access_restrictions.update_nonconditional(tile->GetAccessRestrictions(edgeid.id(), kAllAccess));
 
   // Update the end node
   endnode = directededge->endnode();
@@ -403,22 +438,10 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         std::reverse(shape.begin(), shape.end());
       }
 
-      // Get names - they apply over all edges of the shortcut
-      auto names = edgeinfo.GetNames();
-      auto tagged_values = edgeinfo.GetTaggedValues();
-      auto linguistics = edgeinfo.GetLinguisticTaggedValues();
-
-      auto types = edgeinfo.GetTypes();
-
-      // Add any access restriction records. We don't contract if they differ, so if
-      // there's any, they're the same for all involved edges
-      if (newedge.access_restriction()) {
-        auto restrictions = tile->GetAccessRestrictions(edge_id.id(), kAllAccess);
-        for (const auto& res : restrictions) {
-          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
-                                                             res.type(), res.modes(), res.value()));
-        }
-      }
+      // store all access_restrictions of the base edge: non-conditional ones will be updated while
+      // contracting, conditional ones are breaking contraction and are safe to simply copy
+      ShortcutAccessRestriction access_restrictions{
+          tile->GetAccessRestrictions(edge_id.id(), kAllAccess)};
 
       // Connect edges to the shortcut while the end node is marked as
       // contracted (contains edge pairs in the shortcut info).
@@ -454,12 +477,9 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
         // on the connected shortcut - need to set that so turn restrictions
         // off of shortcuts work properly
         ConnectEdges(reader, end_node, next_edge_id, shape, end_node, opp_local_idx, rst,
-                     average_density, total_duration, total_truck_duration);
+                     average_density, total_duration, total_truck_duration, access_restrictions);
         total_edge_count++;
       }
-
-      // Names can be different in the forward and backward direction
-      bool diff_names = tilebuilder.OpposingEdgeInfoDiffers(tile, directededge);
 
       // Get the length from the shape. This prevents roundoff issues when forming
       // elevation.
@@ -469,13 +489,14 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // edge in case multiple shortcut edges exist between the 2 nodes.
       // Test whether this shape is forward or reverse (in case an existing
       // edge exists). Shortcuts use way Id = 0.Set mean elevation to 0 as a placeholder,
-      // set it later if adding elevation to this dataset.
+      // set it later if adding elevation to this dataset. No need for names etc, shortcuts
+      // aren't used in guidance
       bool forward = true;
       uint32_t idx = ((length & 0xfffff) | ((shape.size() & 0xfff) << 20));
       uint32_t edge_info_offset =
           tilebuilder.AddEdgeInfo(idx, start_node, end_node, 0, 0, edgeinfo.bike_network(),
-                                  edgeinfo.speed_limit(), shape, names, tagged_values, linguistics,
-                                  types, forward, diff_names);
+                                  edgeinfo.speed_limit(), shape, {}, {}, {}, 0, forward, false);
+      ;
 
       newedge.set_edgeinfo_offset(edge_info_offset);
 
@@ -488,6 +509,18 @@ std::pair<uint32_t, uint32_t> AddShortcutEdges(GraphReader& reader,
       // directed edge in the shortcut chain
       newedge.set_opp_local_idx(opp_local_idx);
       newedge.set_restrictions(rst);
+
+      // add new access restrictions if any and set the mask on the edge
+      if (access_restrictions.all_restrictions.size()) {
+        newedge.set_access_restriction(access_restrictions.modes);
+        for (const auto& res : access_restrictions.all_restrictions) {
+          tilebuilder.AddAccessRestriction(AccessRestriction(tilebuilder.directededges().size(),
+                                                             res.second.type(), res.second.modes(),
+                                                             res.second.value()));
+        }
+      }
+
+      // set new access mask
 
       // Update the length, curvature, and end node
       newedge.set_length(length);

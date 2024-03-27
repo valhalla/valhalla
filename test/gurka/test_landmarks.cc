@@ -143,6 +143,9 @@ void CheckLandmarksInTiles(GraphReader& reader, const GraphId& graphid) {
 
   auto tile = reader.GetGraphTile(graphid);
   for (const auto& e : tile->GetDirectedEdges()) {
+    if (e.is_shortcut()) {
+      continue;
+    }
     auto ei = tile->edgeinfo(&e);
     auto tagged_values = ei.GetTags();
 

@@ -847,7 +847,7 @@ TEST(GtfsExample, MakeTile) {
   }
 
   EXPECT_EQ(transit_nodes, 15);
-  EXPECT_EQ(uses[Use::kRoad], 12);
+  EXPECT_EQ(uses[Use::kRoad], 14); // + 2 shortcuts
   EXPECT_EQ(uses[Use::kTransitConnection], 20);
   EXPECT_EQ(uses[Use::kPlatformConnection], 10);
   EXPECT_EQ(uses[Use::kEgressConnection], 10);
