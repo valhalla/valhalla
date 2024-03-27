@@ -822,23 +822,21 @@ TEST(StandAlone, CostMatrixTrivialRoutes) {
 }
 
 TEST(StandAlone, CostMatrixConnectedRoute) {
-  // make sure we have the correct properties when the connection is found on a correlated edge
-  // the reverse tree can't expand at all, so the forward tree finds it on the target's correlated
-  // edge
+  // see https://github.com/valhalla/valhalla/pull/4663#discussion_r1540245978
   const std::string ascii_map = R"(
-    A1---B----C---2D
+    A1---B---2C
   )";
   const gurka::ways ways = {
       {"AB", {{"highway", "residential"}}},
-      {"BC", {{"highway", "residential"}, {"oneway", "true"}}},
-      {"CD", {{"highway", "residential"}}},
+      {"BC", {{"highway", "residential"}}},
   };
   auto layout = gurka::detail::map_to_coordinates(ascii_map, 100);
   auto map = gurka::buildtiles(layout, ways, {}, {},
                                VALHALLA_BUILD_DIR "test/data/costmatrix_connectedroute");
 
   // test the against-oneway case
-  auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto");
-  EXPECT_EQ(matrix.matrix().distances(0), 1300);
-  EXPECT_EQ(matrix.matrix().times(0), 50.f);
+  auto matrix = gurka::do_action(valhalla::Options::sources_to_targets, map, {"1"}, {"2"}, "auto",
+                                 {{"/shape_format", "polyline6"}});
+  EXPECT_EQ(matrix.matrix().distances(0), 800);
+  EXPECT_NEAR(matrix.matrix().times(0), 82.28f, 0.01f);
 }
