@@ -494,11 +494,11 @@ void BuildTileSet(const std::string& ways_file,
       std::multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
-      std::vector<std::tuple<std::string, multi_polygon_type, bool>> language_ploys;
+      language_poly_index language_polys;
 
       if (admin_db_handle) {
         admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
-                                   language_ploys, tiling.TileBounds(id), graphtile);
+                                   language_polys, tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -546,7 +546,7 @@ void BuildTileSet(const std::string& ways_file,
           admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
                                                 : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
-          default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
+          default_languages = GetMultiPolyIndexes(language_polys, node_ll);
 
         } else {
           admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
