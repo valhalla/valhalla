@@ -1,5 +1,5 @@
-#ifndef VALHALLA_THOR_COSTMATRIX_H_
-#define VALHALLA_THOR_COSTMATRIX_H_
+#ifndef VALHALLA_THOR_COSTMATRIXASTAR_H_
+#define VALHALLA_THOR_COSTMATRIXASTAR_H_
 
 #include <cstdint>
 #include <map>
@@ -29,15 +29,15 @@ namespace thor {
  * Shortest Paths".
  * https://i11www.iti.uni-karlsruhe.de/_media/teaching/theses/files/da-sknopp-06.pdf
  */
-class CostMatrix : public MatrixAlgorithm {
+class CostMatrixAstar : public MatrixAlgorithm {
 public:
   /**
    * Default constructor. Most internal values are set when a query is made so
    * the constructor mainly just sets some internals to a default empty value.
    */
-  CostMatrix(const boost::property_tree::ptree& config = {});
+  CostMatrixAstar(const boost::property_tree::ptree& config = {});
 
-  ~CostMatrix();
+  ~CostMatrixAstar();
 
   /**
    * Forms a time distance matrix from the set of source locations
@@ -65,7 +65,7 @@ public:
    * @return the name of the algorithm
    */
   inline const std::string& name() override {
-    return MatrixAlgoToString(Matrix::CostMatrix);
+    return MatrixAlgoToString(Matrix::CostMatrixAStar);
   }
 
 protected:
@@ -305,4 +305,4 @@ private:
 } // namespace thor
 } // namespace valhalla
 
-#endif // VALHALLA_THOR_COSTMATRIX_H_
+#endif // VALHALLA_THOR_COSTMATRIXASTAR_H_

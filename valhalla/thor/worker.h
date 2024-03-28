@@ -23,6 +23,7 @@
 #include <valhalla/thor/bidirectional_astar.h>
 #include <valhalla/thor/centroid.h>
 #include <valhalla/thor/costmatrix.h>
+#include <valhalla/thor/costmatrix_astar.h>
 #include <valhalla/thor/isochrone.h>
 #include <valhalla/thor/multimodal.h>
 #include <valhalla/thor/timedistancebssmatrix.h>
@@ -122,6 +123,7 @@ protected:
 
   // Time distance matrix
   CostMatrix costmatrix_;
+  CostMatrixAstar costmatrix_astar_;
   TimeDistanceMatrix time_distance_matrix_;
   TimeDistanceBSSMatrix time_distance_bss_matrix_;
 
