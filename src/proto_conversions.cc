@@ -9,6 +9,7 @@ namespace valhalla {
 const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo) {
   static const std::unordered_map<valhalla::Matrix::Algorithm, const std::string> algos{
       {valhalla::Matrix::CostMatrix, "costmatrix"},
+      {valhalla::Matrix::CostMatrixAStar, "costmatrixastar"},
       {valhalla::Matrix::TimeDistanceMatrix, "timedistancematrix"},
       {valhalla::Matrix::TimeDistanceBSSMatrix, "timedistancbssematrix"},
   };
