@@ -305,11 +305,12 @@ protected:
    *
    * @param loc_idx  either the source or target index
    * @param node_ll  the current edge's end node's lat/lon
+   * @param dist     the distance from origin/destination, will be set
    * @returns The heuristic for the closest target/source of the passed node
    */
   template <const MatrixExpansionType expansion_direction,
             const bool FORWARD = expansion_direction == MatrixExpansionType::forward>
-  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll) const;
+  float GetAstarHeuristic(const uint32_t loc_idx, const PointLL& node_ll, float& dist) const;
 
 private:
   class ReachedMap;
