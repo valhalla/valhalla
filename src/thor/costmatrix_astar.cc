@@ -96,31 +96,34 @@ void CostMatrixAstar::Clear() {
   // Resize and shrink_to_fit so all capacity is reduced.
   auto label_reservation = clear_reserved_memory_ ? 0 : max_reserved_labels_count_;
   auto locs_reservation = clear_reserved_memory_ ? 0 : max_reserved_locations_count_;
-  for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
+  for (const auto is_fwd : {MATRIX_FORW, MATRIX_REV}) {
     // resize all relevant structures down to configured amount of locations (25 default)
-    if (locs_count_[exp_dir] > locs_reservation) {
-      edgelabel_[exp_dir].resize(locs_reservation);
-      edgelabel_[exp_dir].shrink_to_fit();
-      adjacency_[exp_dir].resize(locs_reservation);
-      adjacency_[exp_dir].shrink_to_fit();
-      edgestatus_[exp_dir].resize(locs_reservation);
-      edgestatus_[exp_dir].shrink_to_fit();
+    if (locs_count_[is_fwd] > locs_reservation) {
+      edgelabel_[is_fwd].resize(locs_reservation);
+      edgelabel_[is_fwd].shrink_to_fit();
+      adjacency_[is_fwd].resize(locs_reservation);
+      adjacency_[is_fwd].shrink_to_fit();
+      edgestatus_[is_fwd].resize(locs_reservation);
+      edgestatus_[is_fwd].shrink_to_fit();
+      astar_heuristics_[is_fwd].resize(locs_reservation);
+      astar_heuristics_[is_fwd].shrink_to_fit();
     }
-    for (auto& iter : edgelabel_[exp_dir]) {
+    for (auto& iter : edgelabel_[is_fwd]) {
       if (iter.size() > label_reservation) {
         iter.resize(label_reservation);
         iter.shrink_to_fit();
       }
       iter.clear();
     }
-    for (auto& iter : edgestatus_[exp_dir]) {
+    for (auto& iter : edgestatus_[is_fwd]) {
       iter.clear();
     }
-    for (auto& iter : adjacency_[exp_dir]) {
+    for (auto& iter : adjacency_[is_fwd]) {
       iter.clear();
     }
-    hierarchy_limits_[exp_dir].clear();
-    locs_status_[exp_dir].clear();
+    hierarchy_limits_[is_fwd].clear();
+    locs_status_[is_fwd].clear();
+    astar_heuristics_[is_fwd].clear();
   }
   best_connection_.clear();
   ignore_hierarchy_limits_ = false;
@@ -319,6 +322,8 @@ void CostMatrixAstar::Initialize(
 
   locs_count_[MATRIX_FORW] = source_locations.size();
   locs_count_[MATRIX_REV] = target_locations.size();
+  astar_heuristics_[MATRIX_FORW].resize(target_locations.size());
+  astar_heuristics_[MATRIX_REV].resize(source_locations.size());
 
   const auto& hlimits = costing_->GetHierarchyLimits();
   ignore_hierarchy_limits_ =
@@ -327,22 +332,40 @@ void CostMatrixAstar::Initialize(
                     return limits.max_up_transitions == kUnlimitedTransitions;
                   });
 
-  // Add initial sources status
-  for (const auto exp_dir : {MATRIX_FORW, MATRIX_REV}) {
-    const auto count = locs_count_[exp_dir];
-    locs_status_[exp_dir].reserve(count);
-    hierarchy_limits_[exp_dir].resize(count);
-    adjacency_[exp_dir].resize(count);
-    edgestatus_[exp_dir].resize(count);
-    edgelabel_[exp_dir].resize(count);
+  const uint32_t bucketsize = costing_->UnitSize();
+  const float range = kBucketCount * bucketsize;
+
+  // Add initial sources & targets properties
+  for (const auto is_fwd : {MATRIX_FORW, MATRIX_REV}) {
+    const auto count = locs_count_[is_fwd];
+    const auto other_count = locs_count_[!is_fwd];
+
+    const auto& locations = is_fwd ? source_locations : target_locations;
+    const auto& other_locations = is_fwd ? target_locations : source_locations;
+
+    locs_status_[is_fwd].reserve(count);
+    hierarchy_limits_[is_fwd].resize(count);
+    adjacency_[is_fwd].resize(count);
+    edgestatus_[is_fwd].resize(count);
+    edgelabel_[is_fwd].resize(count);
     for (uint32_t i = 0; i < count; i++) {
       // Allocate the adjacency list and hierarchy limits for this source.
       // Use the cost threshold to size the adjacency list.
-      edgelabel_[exp_dir][i].reserve(max_reserved_labels_count_);
-      adjacency_[exp_dir][i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
-                                   &edgelabel_[exp_dir][i]);
-      locs_status_[exp_dir].emplace_back(kMaxThreshold);
-      hierarchy_limits_[exp_dir][i] = hlimits;
+      edgelabel_[is_fwd][i].reserve(max_reserved_labels_count_);
+      locs_status_[is_fwd].emplace_back(kMaxThreshold);
+      hierarchy_limits_[is_fwd][i] = hlimits;
+      // for each source/target init the other direction's astar heuristic
+      auto& ll = locations[i].ll();
+      astar_heuristics_[!is_fwd][i].Init({ll.lng(), ll.lat()}, costing_->AStarCostFactor());
+
+      // get the min heuristic to all targets/sources for this source's/target's adjacency list
+      float min_heuristic = std::numeric_limits<float>::max();
+      for (uint32_t j = 0; j < other_count; j++) {
+        auto& other_ll = other_locations[j].ll();
+        auto heuristic = astar_heuristics_[!is_fwd][i].Get({other_ll.lng(), other_ll.lat()});
+        min_heuristic = std::min(min_heuristic, heuristic);
+      }
+      adjacency_[is_fwd][i].reuse(min_heuristic, range, bucketsize, &edgelabel_[is_fwd][i]);
     }
   }
 
@@ -443,6 +466,8 @@ bool CostMatrixAstar::ExpandInner(baldr::GraphReader& graphreader,
     return true;
   }
 
+  // TODO(nils): refactor this whole thing to only have a single if (FORWARD) {}
+
   const baldr::DirectedEdge* opp_edge = nullptr;
   if (!FORWARD) {
     // Check the access mode and skip this edge if access is not allowed in the reverse
@@ -491,17 +516,23 @@ bool CostMatrixAstar::ExpandInner(baldr::GraphReader& graphreader,
                                                 opp_pred_edge,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
+
+  if (pred.edgeid() == 3760982475657 && meta.edge_id == 3933821354889) {
+    std::cout << "bla";
+  }
   newcost += tc;
 
   const auto pred_dist = pred.path_distance() + meta.edge->length();
   auto& adj = adjacency_[FORWARD][index];
   // Check if edge is temporarily labeled and this path has less cost. If
-  // less cost the predecessor is updated along with new cost and distance.
+  // less cost the predecessor is updated and the sort cost is decremented
+  // by the difference in real cost (A* heuristic doesn't change)
   if (meta.edge_status->set() == EdgeSet::kTemporary) {
     BDEdgeLabel& lab = edgelabel_[FORWARD][index][meta.edge_status->index()];
     if (newcost.cost < lab.cost().cost) {
-      adj.decrease(meta.edge_status->index(), newcost.cost);
-      lab.Update(pred_idx, newcost, newcost.cost, tc, pred_dist, restriction_idx);
+      float newsortcost = lab.sortcost() - (lab.cost().cost - newcost.cost);
+      adj.decrease(meta.edge_status->index(), newsortcost);
+      lab.Update(pred_idx, newcost, newsortcost, tc, pred_dist, restriction_idx);
     }
     // Returning true since this means we approved the edge
     return true;
@@ -539,7 +570,11 @@ bool CostMatrixAstar::ExpandInner(baldr::GraphReader& graphreader,
                             restriction_idx, 0,
                             opp_edge->destonly() || (costing_->is_hgv() && opp_edge->destonly_hgv()));
   }
+  auto newsortcost =
+      GetAstarHeuristic<expansion_direction>(index, t2->get_node_ll(meta.edge->endnode()));
+  edgelabels.back().SetSortCost(newcost.cost + newsortcost);
   adj.add(idx);
+
   // mark the edge as settled for the connection check
   if (!FORWARD) {
     (*targets_)[meta.edge_id].push_back(index);
@@ -549,8 +584,8 @@ bool CostMatrixAstar::ExpandInner(baldr::GraphReader& graphreader,
 
   // setting this edge as reached
   if (expansion_callback_) {
-    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix", "r", newcost.secs,
-                        pred_dist, newcost.cost);
+    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrixastar", "r",
+                        newcost.secs, pred_dist, newcost.cost);
   }
 
   return !(pred.not_thru_pruning() && meta.edge->not_thru());
@@ -593,8 +628,8 @@ bool CostMatrixAstar::Expand(const uint32_t index,
   if (expansion_callback_) {
     auto prev_pred =
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
-    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
-                        pred.path_distance(), pred.cost().cost);
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrixastar", "s",
+                        pred.cost().secs, pred.path_distance(), pred.cost().cost);
   }
 
   if (FORWARD) {
@@ -827,7 +862,7 @@ void CostMatrixAstar::CheckForwardConnections(const uint32_t source,
       auto prev_pred = fwd_pred.predecessor() == kInvalidLabel
                            ? GraphId{}
                            : edgelabel_[MATRIX_FORW][source][fwd_pred.predecessor()].edgeid();
-      expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix", "c",
+      expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrixastar", "c",
                           fwd_pred.cost().secs, fwd_pred.path_distance(), fwd_pred.cost().cost);
     }
   }
@@ -934,7 +969,7 @@ void CostMatrixAstar::CheckReverseConnections(const uint32_t target,
         auto prev_pred = rev_pred.predecessor() == kInvalidLabel
                              ? GraphId{}
                              : edgelabel_[MATRIX_REV][source][rev_pred.predecessor()].edgeid();
-        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrix", "c",
+        expansion_callback_(graphreader, rev_pred.edgeid(), prev_pred, "costmatrixastar", "c",
                             rev_pred.cost().secs, rev_pred.path_distance(), rev_pred.cost().cost);
       }
     }
@@ -1006,8 +1041,9 @@ void CostMatrixAstar::SetSources(
 
       // Get the directed edge and the opposing edge Id
       graph_tile_ptr tile = graphreader.GetGraphTile(edgeid);
+      graph_tile_ptr opp_tile = tile;
       const DirectedEdge* directededge = tile->directededge(edgeid);
-      GraphId oppedge = graphreader.GetOpposingEdgeId(edgeid);
+      GraphId oppedgeid = graphreader.GetOpposingEdgeId(edgeid, opp_tile);
 
       // Get cost. Get distance along the remainder of this edge.
       uint8_t flow_sources;
@@ -1026,13 +1062,17 @@ void CostMatrixAstar::SetSources(
       //   - "transition_cost" is used to store the traversed secs & length
       //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
-      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedge, directededge, cost, mode_, ec, d,
+      BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, mode_, ec, d,
                              !directededge->not_thru(), !(costing_->IsClosed(directededge, tile)),
                              static_cast<bool>(flow_sources & kDefaultFlowMask),
                              InternalTurn::kNoTurn, kInvalidRestriction,
                              static_cast<uint8_t>(costing_->Allowed(directededge, tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()));
+      auto newsortcost =
+          GetAstarHeuristic<MatrixExpansionType::forward>(index, opp_tile->get_node_ll(
+                                                                     directededge->endnode()));
+      edge_label.SetSortCost(cost.cost + newsortcost);
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -1119,6 +1159,10 @@ void CostMatrixAstar::SetTargets(
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()));
       edge_label.set_not_thru(false);
+      auto newsortcost =
+          GetAstarHeuristic<MatrixExpansionType::reverse>(index,
+                                                          tile->get_node_ll(opp_dir_edge->endnode()));
+      edge_label.SetSortCost(cost.cost + newsortcost);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
@@ -1283,6 +1327,21 @@ std::string CostMatrixAstar::RecostFormPath(GraphReader& graphreader,
   // encode to 6 precision for geojson as well, which the serializer expects
   return encode<decltype(points)>(points, shape_format != polyline5 ? 1e6 : 1e5);
 }
+
+template <const MatrixExpansionType expansion_direction, const bool FORWARD>
+float CostMatrixAstar::GetAstarHeuristic(const uint32_t loc_idx, const PointLL& ll) const {
+  if (locs_status_[FORWARD][loc_idx].unfound_connections.empty()) {
+    return 0.f;
+  }
+
+  auto min_cost = std::numeric_limits<float>::max();
+  for (const auto other_idx : locs_status_[FORWARD][loc_idx].unfound_connections) {
+    const auto cost = astar_heuristics_[FORWARD][other_idx].Get(ll);
+    min_cost = std::min(cost, min_cost);
+  }
+
+  return min_cost;
+};
 
 } // namespace thor
 } // namespace valhalla

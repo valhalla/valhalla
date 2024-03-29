@@ -490,6 +490,10 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                                 opp_pred_edge,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
+
+  if (pred.edgeid() == 3760982475657 && meta.edge_id == 3933821354889) {
+    std::cout << "bla";
+  }
   newcost += tc;
 
   const auto pred_dist = pred.path_distance() + meta.edge->length();

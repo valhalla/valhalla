@@ -70,7 +70,7 @@ thor_worker_t::thor_worker_t(const boost::property_tree::ptree& config,
       bidir_astar(config.get_child("thor")), bss_astar(config.get_child("thor")),
       multi_modal_astar(config.get_child("thor")), timedep_forward(config.get_child("thor")),
       timedep_reverse(config.get_child("thor")), costmatrix_(config.get_child("thor")),
-      time_distance_matrix_(config.get_child("thor")),
+      costmatrix_astar_(config.get_child("mjolnir")), time_distance_matrix_(config.get_child("thor")),
       time_distance_bss_matrix_(config.get_child("thor")), isochrone_gen(config.get_child("thor")),
       reader(graph_reader ? graph_reader
                           : std::make_shared<baldr::GraphReader>(config.get_child("mjolnir"))),
@@ -316,6 +316,7 @@ void thor_worker_t::cleanup() {
   bss_astar.Clear();
   trace.clear();
   costmatrix_.Clear();
+  costmatrix_astar_.Clear();
   time_distance_matrix_.Clear();
   time_distance_bss_matrix_.Clear();
   isochrone_gen.Clear();
