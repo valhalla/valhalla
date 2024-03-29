@@ -5,6 +5,8 @@
 #include "loki/worker.h"
 #include "midgard/pointll.h"
 
+#include <filesystem>
+
 #include <gtest/gtest.h>
 #include <prime_server/http_protocol.hpp>
 #include <prime_server/prime_server.hpp>
@@ -125,8 +127,8 @@ TEST(Standalone, ElevationCompareToSkadi) {
     }
   }
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
