@@ -1,4 +1,5 @@
 #include <future>
+#include <memory>
 #include <set>
 #include <thread>
 #include <utility>
@@ -1322,20 +1323,20 @@ void BuildLocalTiles(const unsigned int thread_count,
   std::queue<std::pair<GraphId, size_t>> tile_queue;
   std::mutex tile_lock;
   for (auto id : tiles) {
-    tile_queue.push(id);
+    tile_queue.emplace(id);
   }
 
   // Atomically pass around stats info
   for (size_t i = 0; i < threads.size(); ++i) {
     // Make the thread
-    threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
+    threads[i] = std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
                                      std::cref(nodes_file), std::cref(edges_file),
                                      std::cref(complex_from_restriction_file),
                                      std::cref(complex_to_restriction_file),
                                      std::cref(linguistic_node_file), std::cref(tile_dir),
                                      std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
-                                     std::ref(results[i])));
+                                     std::ref(results[i]));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1362,8 +1363,8 @@ void BuildLocalTiles(const unsigned int thread_count,
 
 } // namespace
 
-namespace valhalla {
-namespace mjolnir {
+
+namespace valhalla::mjolnir {
 
 // Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
 // The grid Id within the tile is used to sort nodes spatially.
@@ -1572,7 +1573,7 @@ void GraphBuilder::AddLanguage(const size_t index,
                                     0,
                                     0};
     linguistics.emplace_back(
-        std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize));
+        reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
   }
 }
 
@@ -1599,7 +1600,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
     for (size_t i = 0; i < pronunciation_tokens.size(); i++) {
       auto& t = pronunciation_tokens[i];
 
-      if (indexMap.size() != 0) {
+      if (!indexMap.empty()) {
         auto index = indexMap.find(i);
         if (index != indexMap.end())
           header.name_index_ = index->second;
@@ -1607,9 +1608,9 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
           continue;
       }
 
-      if (!t.size()) { // pronunciation is blank.  just add the lang
+      if (t.empty()) { // pronunciation is blank.  just add the lang
 
-        if (!pronunciation_langs.size())
+        if (pronunciation_langs.empty())
           continue;
 
         header.language_ = static_cast<uint8_t>(pronunciation_langs.at(i));
@@ -1617,20 +1618,20 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
         header.phonetic_alphabet_ = static_cast<uint8_t>(baldr::PronunciationAlphabet::kNone);
 
         pronunciations.emplace_back(
-            std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize));
+            reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
       } else {
 
         header.phonetic_alphabet_ = static_cast<uint8_t>(verbal_type);
 
         header.length_ = t.size();
         header.language_ =
-            (pronunciation_langs.size() ? static_cast<uint8_t>(pronunciation_langs.at(i))
+            (!pronunciation_langs.empty() ? static_cast<uint8_t>(pronunciation_langs.at(i))
                                         : static_cast<uint8_t>(baldr::Language::kNone));
 
         pronunciations.emplace_back(
             (std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) + t));
       }
-      if (indexMap.size() == 0)
+      if (indexMap.empty())
         ++header.name_index_;
     }
     return pronunciations;
@@ -1640,17 +1641,17 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
   std::map<size_t, size_t> indexMap;
   size_t k = key;
 
-  if ((pronunciation_langs.size() == 0 && token_langs.size() == 0) ||
-      ((pronunciation_langs.size() != 0 && token_langs.size() == 0) &&
+  if ((pronunciation_langs.empty() && token_langs.empty()) ||
+      ((!pronunciation_langs.empty() && token_langs.empty()) &&
        (pronunciation_langs.size() <= token_size)))
     process = true;
   else {
     std::pair<std::map<size_t, size_t>::iterator, bool> ret;
-    for (size_t i = 0; i < token_langs.size(); i++) {
+    for (auto& token_lang : token_langs) {
       for (size_t j = 0; j < pronunciation_langs.size(); j++) {
-        if (token_langs[i] == pronunciation_langs[j]) {
+        if (token_lang == pronunciation_langs[j]) {
           ret = indexMap.insert(std::make_pair(j, k));
-          if (ret.second == false) // already used
+          if (!ret.second) // already used
             continue;
           else {
             k++;
@@ -1661,7 +1662,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
         }
       }
       if (!found) {
-        lang_map.emplace(k, token_langs[i]);
+        lang_map.emplace(k, token_lang);
         k++;
       }
       found = false;
@@ -1773,10 +1774,10 @@ bool GraphBuilder::CreateSignInfoList(
                                ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
                                katakana_langs, jeita_tokens, jeita_langs);
 
-        add_ipa = (ipa_tokens.size() != 0);
-        add_nt_sampa = (nt_sampa_tokens.size() != 0);
-        add_katakana = (katakana_tokens.size() != 0);
-        add_jeita = (jeita_tokens.size() != 0);
+        add_ipa = !ipa_tokens.empty();
+        add_nt_sampa = !nt_sampa_tokens.empty();
+        add_katakana = !katakana_tokens.empty();
+        add_jeita = !jeita_tokens.empty();
 
         return (add_ipa || add_nt_sampa || add_katakana || add_jeita);
       };
@@ -1802,7 +1803,7 @@ bool GraphBuilder::CreateSignInfoList(
     }
 
     for (size_t i = 0; i < refs.size(); ++i) {
-      if (lang_map.size() != 0) {
+      if (!lang_map.empty()) {
         // only add a language if it has not already been added during pronunciation processing
         auto itr = lang_map.find(key);
         if (itr != lang_map.end()) {
@@ -1832,17 +1833,17 @@ bool GraphBuilder::CreateSignInfoList(
   // NUMBER
   // Exit sign number
   bool has_phoneme = false;
-  const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
-  const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
-  const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
-  const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+  const auto ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+  const auto nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+  const auto katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+  const auto jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
 
   if (way.junction_ref_index() != 0) {
     way.ProcessNamesPronunciations(osmdata.name_offset_map, default_languages,
                                    way.junction_ref_index(), way.junction_ref_lang_index(),
                                    sign_names, sign_langs, false);
 
-    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionRef);
+    const auto t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionRef);
     has_phoneme =
         get_pronunciations(osmdata.name_offset_map, default_languages,
                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
@@ -2268,5 +2269,5 @@ bool GraphBuilder::CreateSignInfoList(
   return (has_guide || has_guidance_view_jct || has_guidance_view_signboard);
 }
 
-} // namespace mjolnir
-} // namespace valhalla
+} // namespace valhalla::mjolnir
+

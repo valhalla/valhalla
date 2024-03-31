@@ -18,8 +18,9 @@
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
 
-namespace valhalla {
-namespace mjolnir {
+namespace valhalla::mjolnir {
+
+namespace bg = boost::geometry;
 
 // Geometry types for admin queries
 typedef boost::geometry::model::d2::point_xy<double> point_type;
@@ -87,15 +88,14 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
  * default language set
  * @param  languages_only    should we only process the languages with this query
  */
-void GetData(
-    sqlite3* db_handle,
-    sqlite3_stmt* stmt,
-    const std::string& sql,
-    GraphTileBuilder& tilebuilder,
-    std::multimap<uint32_t, multi_polygon_type>& polys,
-    std::unordered_map<uint32_t, bool>& drive_on_right,
-    language_poly_index& language_polys,
-    bool languages_only);
+void GetData(sqlite3* db_handle,
+             sqlite3_stmt* stmt,
+             const std::string& sql,
+             GraphTileBuilder& tilebuilder,
+             std::multimap<uint32_t, multi_polygon_type>& polys,
+             std::unordered_map<uint32_t, bool>& drive_on_right,
+             language_poly_index& language_polys,
+             bool languages_only);
 
 /**
  * Get the admin polys that intersect with the tile bounding box.
@@ -111,13 +111,13 @@ void GetData(
  * @param  aabb              bb of the tile
  * @param  tilebuilder       Graph tile builder
  */
-std::multimap<uint32_t, multi_polygon_type> GetAdminInfo(
-    sqlite3* db_handle,
-    std::unordered_map<uint32_t, bool>& drive_on_right,
-    std::unordered_map<uint32_t, bool>& allow_intersection_names,
-    language_poly_index& language_polys,
-    const AABB2<PointLL>& aabb,
-    GraphTileBuilder& tilebuilder);
+std::multimap<uint32_t, multi_polygon_type>
+GetAdminInfo(sqlite3* db_handle,
+             std::unordered_map<uint32_t, bool>& drive_on_right,
+             std::unordered_map<uint32_t, bool>& allow_intersection_names,
+             language_poly_index& language_polys,
+             const AABB2<PointLL>& aabb,
+             GraphTileBuilder& tilebuilder);
 
 /**
  * Get all the country access records from the db and save them to a map.
@@ -125,6 +125,6 @@ std::multimap<uint32_t, multi_polygon_type> GetAdminInfo(
  */
 std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_handle);
 
-} // namespace mjolnir
-} // namespace valhalla
+} // namespace valhalla::mjolnir
+
 #endif // VALHALLA_MJOLNIR_ADMIN_H_
