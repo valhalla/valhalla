@@ -194,7 +194,7 @@ bool CostMatrixAstar::SourceToTarget(Api& request,
               if (targets.empty() && locs_status_[MATRIX_FORW][source].threshold > 0) {
                 // TODO(nils): shouldn't we extend the search here similar to bidir A*
                 //   i.e. if pruning was disabled we extend the search in the other direction
-                locs_status_[MATRIX_FORW][i].threshold = -1;
+                locs_status_[MATRIX_FORW][source].threshold = -1;
                 if (locs_remaining_[MATRIX_FORW] > 0) {
                   locs_remaining_[MATRIX_FORW]--;
                 }
@@ -229,7 +229,7 @@ bool CostMatrixAstar::SourceToTarget(Api& request,
               if (sources.empty() && locs_status_[MATRIX_REV][target].threshold > 0) {
                 // TODO(nils): shouldn't we extend the search here similar to bidir A*
                 //   i.e. if pruning was disabled we extend the search in the other direction
-                locs_status_[MATRIX_REV][i].threshold = -1;
+                locs_status_[MATRIX_REV][target].threshold = -1;
                 if (locs_remaining_[MATRIX_REV] > 0) {
                   locs_remaining_[MATRIX_REV]--;
                 }
@@ -1075,11 +1075,6 @@ void CostMatrixAstar::SetSources(
       // TODO: assumes 1m/s which is a maximum penalty this could vary per costing model
       cost.cost += edge.distance();
 
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
-      // 2 adjustments related only to properly handle trivial routes:
-      //   - "transition_cost" is used to store the traversed secs & length
-      //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       float dist = 0.f;
       auto sortcost =
           cost.cost + GetAstarHeuristic<MatrixExpansionType::forward>(index,
@@ -1087,6 +1082,9 @@ void CostMatrixAstar::SetSources(
                                                                           directededge->endnode()),
                                                                       dist);
 
+      // 2 adjustments related only to properly handle trivial routes:
+      //   - "transition_cost" is used to store the traversed secs & length
+      //   - "path_id" is used to store whether the edge is even allowed (e.g. no oneway)
       Cost ec(std::round(edgecost.secs), static_cast<uint32_t>(directededge->length()));
       BDEdgeLabel edge_label(kInvalidLabel, edgeid, oppedgeid, directededge, cost, sortcost, dist,
                              mode_, ec, !directededge->not_thru(),
@@ -1102,6 +1100,8 @@ void CostMatrixAstar::SetSources(
       // TODO(nils): either do one EdgeLabel per algo or _always_ recost the path so we don't need the
       // path distance at all. but this is a waste
       edge_label.Update(kInvalidLabel, cost, sortcost, ec, d, kInvalidRestriction);
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
       edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
@@ -1181,8 +1181,6 @@ void CostMatrixAstar::SetTargets(
                                                           tile->get_node_ll(opp_dir_edge->endnode()),
                                                           dist);
 
-      // Set the initial not_thru flag to false. There is an issue with not_thru
-      // flags on small loops. Set this to false here to override this for now.
       // 2 adjustments related only to properly handle trivial routes:
       //   - "transition_cost" is used to store the traversed secs & length
       //   - "path_id" is used to store whether the opp edge is even allowed (e.g. no oneway)
@@ -1195,13 +1193,15 @@ void CostMatrixAstar::SetTargets(
                              static_cast<uint8_t>(costing_->Allowed(opp_dir_edge, opp_tile)),
                              directededge->destonly() ||
                                  (costing_->is_hgv() && directededge->destonly_hgv()));
-      edge_label.set_not_thru(false);
 
       // BDEdgeLabel doesn't have a constructor that allows you to set dist and path_distance at
       // the same time - so we need to update immediately after to set path_distance
       // TODO(nils): either do one EdgeLabel per algo or _always_ recost the path so we don't need the
       // path distance at all. but this is a waste
       edge_label.Update(kInvalidLabel, cost, sortcost, ec, d, kInvalidRestriction);
+      // Set the initial not_thru flag to false. There is an issue with not_thru
+      // flags on small loops. Set this to false here to override this for now.
+      edge_label.set_not_thru(false);
 
       // Add EdgeLabel to the adjacency list (but do not set its status).
       // Set the predecessor edge index to invalid to indicate the origin
