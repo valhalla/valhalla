@@ -23,12 +23,13 @@ namespace valhalla::mjolnir {
 namespace bg = boost::geometry;
 
 // Geometry types for admin queries
-typedef boost::geometry::model::d2::point_xy<double> point_type;
-typedef boost::geometry::model::polygon<point_type> polygon_type;
-typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
-typedef boost::geometry::index::rtree<
-    std::tuple<boost::geometry::model::box<point_type>, multi_polygon_type, std::string, bool>,
-    boost::geometry::index::rstar<1000>> language_poly_index;
+typedef bg::model::d2::point_xy<double> point_type;
+typedef bg::model::polygon<point_type> polygon_type;
+typedef bg::model::multi_polygon<polygon_type> multi_polygon_type;
+typedef bg::index::rtree<
+    std::tuple<bg::model::box<point_type>, multi_polygon_type, std::vector<std::string>, bool>,
+    bg::index::rstar<16>>
+    language_poly_index;
 
 /**
  * Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
@@ -62,9 +63,8 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
  * @param  ll         point that needs to be checked.
  * @return  Returns the vector of pairs {language, is_default_language}
  */
-std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(
-    const language_poly_index& language_ploys,
-    const PointLL& ll);
+std::vector<std::pair<std::string, bool>>
+GetMultiPolyIndexes(const language_poly_index& language_ploys, const PointLL& ll);
 
 /**
  * Get the timezone polys from the db

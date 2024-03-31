@@ -37,7 +37,7 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
   uint32_t index = 0;
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
-    if (boost::geometry::covered_by(p, poly.second)) {
+    if (bg::covered_by(p, poly.second, bg::strategy::within::crossings_multiply<point_type>())) {
       const auto& admin = graphtile.admins_builder(poly.first);
       if (!admin.state_offset())
         index = poly.first;
@@ -55,8 +55,9 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
   point_type p(ll.lng(), ll.lat());
   for (const auto& poly : polys) {
     // TODO: we recently discovered that boost::geometry doesn't do bbox checks to speed things up
-    if (boost::geometry::covered_by(p, poly.second))
+    if (bg::covered_by(p, poly.second, bg::strategy::within::crossings_multiply<point_type>())) {
       return poly.first;
+    }
   }
   return index;
 }
@@ -70,50 +71,31 @@ uint32_t GetMultiPolyId(const std::multimap<uint32_t, multi_polygon_type>& polys
 // languages that will be considered for any name* or destination* keys.  Basically, we only support
 // the languages that are on the signs in that area. Note:  The first pair always contains an empty
 // language which makes the name key with no language the most important key.
-std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(
-    const language_poly_index& polys,
-    const PointLL& ll) {
-
-  auto process_languages = [](const std::vector<std::string>& langs, bool is_default,
-                              std::vector<std::pair<std::string, bool>>& languages) {
-    for (const auto& l : langs) {
-      if (stringLanguage(l) != Language::kNone) {
-        auto it = std::find_if(languages.begin(), languages.end(),
-                               [&l](const std::pair<std::string, bool>& p) { return p.first == l; });
-        if (it == languages.end()) {
-          languages.emplace_back(l, false);
-        } else if (is_default) { // fr - nl or fr;en in default lang column
-          it->second = false;
-        }
-      }
-    }
-  };
-
+std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_poly_index& polys,
+                                                              const PointLL& ll) {
   std::vector<std::pair<std::string, bool>> languages;
-  std::vector<std::pair<std::string, bool>>::iterator it;
-  std::string lang;
 
   // first entry is blank for the default name
   languages.emplace_back("", false);
 
   point_type p(ll.lng(), ll.lat());
 
-  for (auto poly = polys.qbegin(boost::geometry::index::contains(p)); poly != polys.qend(); ++poly) {
-    lang = std::get<2>(*poly);
-    auto is_default = std::get<3>(*poly);
-    it = std::find_if(languages.begin(), languages.end(),
-                      [&lang](const std::pair<std::string, bool>& p) { return p.first == lang; });
+  for (auto it = polys.qbegin(bg::index::covers(p)); it != polys.qend(); ++it) {
+    // Make sure the point is in the admin poly (not just its envelope)
+    if (bg::covered_by(p, std::get<1>(*it), bg::strategy::within::crossings_multiply<point_type>())) {
+      auto& langs = std::get<2>(*it);
+      bool is_default = std::get<3>(*it);
 
-    if (it == languages.end()) {
-      std::vector<std::string> langs = GetTagTokens(lang, " - ");
-      if (langs.size() >= 2) {
-        process_languages(langs, is_default, languages);
-      } else {
-        langs = GetTagTokens(lang);
-        if (langs.size() >= 2) {
-          process_languages(langs, is_default, languages);
-        } else {
-          languages.emplace_back(lang, is_default);
+      for (const auto& l : langs) {
+        if (stringLanguage(l) != Language::kNone) {
+          auto needle =
+              std::find_if(languages.begin(), languages.end(),
+                           [&l](const std::pair<std::string, bool>& p) { return p.first == l; });
+          if (needle == languages.end()) {
+            languages.emplace_back(l, false);
+          } else if (is_default) { // fr - nl or fr;en in default lang column
+            needle->second = false;
+          }
         }
       }
     }
@@ -176,6 +158,18 @@ std::multimap<uint32_t, multi_polygon_type> GetTimeZones(sqlite3* db_handle,
     stmt = 0;
   }
   return polys;
+}
+
+/***
+ * Parses a language tag into a vector of individual tokens.
+ */
+std::vector<std::string> ParseLanguageTokens(const std::string& lang_tag) {
+  auto langs = GetTagTokens(lang_tag, " - ");
+  if (langs.size() == 1) {
+    langs = GetTagTokens(langs.at(0));
+  }
+
+  return langs;
 }
 
 void GetData(sqlite3* db_handle,
@@ -250,17 +244,21 @@ void GetData(sqlite3* db_handle,
 
       uint32_t index = tilebuilder.AddAdmin(country_name, state_name, country_iso, state_iso);
       multi_polygon_type multi_poly;
-      boost::geometry::read_wkt(geom, multi_poly);
+      bg::read_wkt(geom, multi_poly);
       polys.emplace(index, multi_poly);
       drive_on_right.emplace(index, dor);
       allow_intersection_names.emplace(index, intersection_name);
 
-      boost::geometry::model::box<point_type> box;
-      boost::geometry::envelope(multi_poly, box);
-      if (!default_language.empty())
-        language_ploys.insert(std::make_tuple(box, multi_poly, default_language, true));
-      if (!supported_languages.empty())
-        language_ploys.insert(std::make_tuple(box, multi_poly, supported_languages, false));
+      bg::model::box<point_type> box{};
+      bg::envelope(multi_poly, box);
+      if (!default_language.empty()) {
+        auto langs = ParseLanguageTokens(default_language);
+        language_ploys.insert(std::make_tuple(box, multi_poly, langs, true));
+      }
+      if (!supported_languages.empty()) {
+        auto langs = ParseLanguageTokens(supported_languages);
+        language_ploys.insert(std::make_tuple(box, multi_poly, langs, false));
+      }
 
     } else {
 
@@ -280,14 +278,18 @@ void GetData(sqlite3* db_handle,
       }
 
       multi_polygon_type multi_poly;
-      boost::geometry::read_wkt(geom, multi_poly);
-      boost::geometry::model::box<point_type> box;
-      boost::geometry::envelope(multi_poly, box);
+      bg::read_wkt(geom, multi_poly);
+      bg::model::box<point_type> box{};
+      bg::envelope(multi_poly, box);
 
-      if (!default_language.empty())
-        language_ploys.insert(std::make_tuple(box, multi_poly, default_language, true));
-      if (!supported_languages.empty())
-        language_ploys.insert(std::make_tuple(box, multi_poly, supported_languages, false));
+      if (!default_language.empty()) {
+        auto langs = ParseLanguageTokens(default_language);
+        language_ploys.insert(std::make_tuple(box, multi_poly, langs, true));
+      }
+      if (!supported_languages.empty()) {
+        auto langs = ParseLanguageTokens(supported_languages);
+        language_ploys.insert(std::make_tuple(box, multi_poly, langs, false));
+      }
     }
 
     result = sqlite3_step(stmt);

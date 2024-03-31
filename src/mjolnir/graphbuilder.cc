@@ -1458,7 +1458,11 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care about marginal sqlite memory usage).
+  sqlite3_config(SQLITE_CONFIG_MEMSTATUS, false);
+
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
                   complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
                   tiles, tile_dir, stats, pt);
