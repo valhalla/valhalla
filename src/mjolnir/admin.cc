@@ -90,8 +90,9 @@ std::vector<std::pair<std::string, bool>> GetMultiPolyIndexes(const language_pol
           auto needle =
               std::find_if(languages.begin(), languages.end(),
                            [&l](const std::pair<std::string, bool>& p) { return p.first == l; });
+
           if (needle == languages.end()) {
-            languages.emplace_back(l, false);
+            languages.emplace_back(l, is_default);
           } else if (is_default) { // fr - nl or fr;en in default lang column
             needle->second = false;
           }
