@@ -1268,7 +1268,7 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first %
+      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile.first %
                  graphtile.header_builder().end_offset())
                     .str());
     } // Whatever happens in Vegas..
