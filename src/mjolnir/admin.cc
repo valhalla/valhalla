@@ -8,7 +8,6 @@
 
 #include <spatialite.h>
 
-
 namespace valhalla::mjolnir {
 
 // Get the dbhandle of a sqlite db.  Used for timezones and admins DBs.
@@ -464,4 +463,3 @@ std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_h
 }
 
 } // namespace valhalla::mjolnir
-

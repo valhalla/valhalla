@@ -1329,14 +1329,15 @@ void BuildLocalTiles(const unsigned int thread_count,
   // Atomically pass around stats info
   for (size_t i = 0; i < threads.size(); ++i) {
     // Make the thread
-    threads[i] = std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
-                                     std::cref(nodes_file), std::cref(edges_file),
-                                     std::cref(complex_from_restriction_file),
-                                     std::cref(complex_to_restriction_file),
-                                     std::cref(linguistic_node_file), std::cref(tile_dir),
-                                     std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
-                                     tile_creation_date, std::cref(pt.get_child("mjolnir")),
-                                     std::ref(results[i]));
+    threads[i] =
+        std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
+                                      std::cref(nodes_file), std::cref(edges_file),
+                                      std::cref(complex_from_restriction_file),
+                                      std::cref(complex_to_restriction_file),
+                                      std::cref(linguistic_node_file), std::cref(tile_dir),
+                                      std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
+                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
+                                      std::ref(results[i]));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1362,7 +1363,6 @@ void BuildLocalTiles(const unsigned int thread_count,
 }
 
 } // namespace
-
 
 namespace valhalla::mjolnir {
 
@@ -1460,7 +1460,8 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
   auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
-  // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care about marginal sqlite memory usage).
+  // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care
+  // about marginal sqlite memory usage).
   sqlite3_config(SQLITE_CONFIG_MEMSTATUS, false);
 
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
@@ -1576,8 +1577,7 @@ void GraphBuilder::AddLanguage(const size_t index,
                                     static_cast<uint8_t>(index),
                                     0,
                                     0};
-    linguistics.emplace_back(
-        reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
+    linguistics.emplace_back(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
   }
 }
 
@@ -1621,8 +1621,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
         header.length_ = 0;
         header.phonetic_alphabet_ = static_cast<uint8_t>(baldr::PronunciationAlphabet::kNone);
 
-        pronunciations.emplace_back(
-            reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
+        pronunciations.emplace_back(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
       } else {
 
         header.phonetic_alphabet_ = static_cast<uint8_t>(verbal_type);
@@ -1630,7 +1629,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
         header.length_ = t.size();
         header.language_ =
             (!pronunciation_langs.empty() ? static_cast<uint8_t>(pronunciation_langs.at(i))
-                                        : static_cast<uint8_t>(baldr::Language::kNone));
+                                          : static_cast<uint8_t>(baldr::Language::kNone));
 
         pronunciations.emplace_back(
             (std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) + t));
@@ -2274,4 +2273,3 @@ bool GraphBuilder::CreateSignInfoList(
 }
 
 } // namespace valhalla::mjolnir
-
