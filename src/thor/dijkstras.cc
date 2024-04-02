@@ -254,7 +254,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                  costing_->TurnType(pred.opp_local_idx(), nodeinfo, directededge),
                                  restriction_idx, pred.path_id(),
                                  directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
 
     } else {
       bdedgelabels_.emplace_back(pred_idx, edgeid, oppedgeid, directededge, newcost, mode_,
@@ -265,7 +266,8 @@ void Dijkstras::ExpandInner(baldr::GraphReader& graphreader,
                                                     opp_pred_edge),
                                  restriction_idx, pred.path_id(),
                                  opp_edge->destonly() ||
-                                     (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                     (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                                 opp_edge->forwardaccess() & kTruckAccess);
     }
     adjacencylist_.add(idx);
   }
@@ -823,7 +825,8 @@ void Dijkstras::SetOriginLocations(GraphReader& graphreader,
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, kInvalidRestriction, multipath_ ? path_id : 0,
                                  directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       // Set the origin flag
       bdedgelabels_.back().set_origin();
 
@@ -914,7 +917,8 @@ void Dijkstras::SetDestinationLocations(
                                  static_cast<bool>(flow_sources & kDefaultFlowMask),
                                  InternalTurn::kNoTurn, restriction_idx, multipath_ ? path_id : 0,
                                  directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       adjacencylist_.add(idx);
       edgestatus_.Set(opp_edge_id, EdgeSet::kTemporary, idx, opp_tile, multipath_ ? path_id : 0);
     }
