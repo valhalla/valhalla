@@ -276,7 +276,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                costing_->TurnType(pred.opp_local_idx(), nodeinfo, meta.edge),
                                restriction_idx, 0,
                                meta.edge->destonly() ||
-                                   (costing_->is_hgv() && meta.edge->destonly_hgv()));
+                                   (costing_->is_hgv() && meta.edge->destonly_hgv()),
+                               meta.edge->forwardaccess() & kTruckAccess);
     } else {
       edgelabels_.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, cost, sortcost, dist,
                                mode_, transition_cost,
@@ -287,7 +288,8 @@ inline bool UnidirectionalAStar<expansion_direction, FORWARD>::ExpandInner(
                                                   opp_pred_edge),
                                restriction_idx, 0,
                                opp_edge->destonly() ||
-                                   (costing_->is_hgv() && opp_edge->destonly_hgv()));
+                                   (costing_->is_hgv() && opp_edge->destonly_hgv()),
+                               opp_edge->forwardaccess() & kTruckAccess);
     }
 
     auto& edge_label = edgelabels_.back();
@@ -758,7 +760,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       } else {
         edgelabels_.emplace_back(kInvalidLabel, opp_edge_id, edgeid, opp_dir_edge, cost, sortcost,
                                  dist, mode_, Cost{}, false,
@@ -766,7 +769,8 @@ void UnidirectionalAStar<expansion_direction, FORWARD>::SetOrigin(
                                  0 != (flow_sources & kDefaultFlowMask), sif::InternalTurn::kNoTurn,
                                  kInvalidRestriction, 0,
                                  directededge->destonly() ||
-                                     (costing_->is_hgv() && directededge->destonly_hgv()));
+                                     (costing_->is_hgv() && directededge->destonly_hgv()),
+                                 directededge->forwardaccess() & kTruckAccess);
       }
 
       auto& edge_label = edgelabels_.back();
