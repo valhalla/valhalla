@@ -31,7 +31,7 @@ on:
 env:
   BUILD_TYPE: Release
   MSVC_VERSION: '2022'
-  VCPKG_VERSION: '8040303'
+  VCPKG_VERSION: 'a164ace'
   VCPKG_INSTALL_OPTIONS: --x-abi-tools-use-exact-versions
   VCPKG_DISABLE_COMPILER_TRACKING: ON
 
