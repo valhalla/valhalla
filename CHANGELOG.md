@@ -86,7 +86,7 @@
    * CHANGED: date_time refactor as a preparation to return DST/timezone related offset in the response [#4365](https://github.com/valhalla/valhalla/pull/4365)
    * ADDED: find connection on backward search for bidir matrix algo [#4329](https://github.com/valhalla/valhalla/pull/4329)
    * FIXED: Fix segfault in OSRM serializer with bannerInstructions when destination is on roundabout [#4480](https://github.com/valhalla/valhalla/pull/4481)
-   * CHANGED: Adujustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
+   * CHANGED: Adjustment of walk speed when walking on slight downhill [#4302](https://github.com/valhalla/valhalla/pull/4302)
    * CHANGED: Do not reclassify ferry connections when no hierarchies are to be generated [#4487](https://github.com/valhalla/valhalla/pull/4487)
    * ADDED: Added a config option to sort nodes spatially during graph building [#4455](https://github.com/valhalla/valhalla/pull/4455)
    * ADDED: Timezone info in route and matrix responses [#4491](https://github.com/valhalla/valhalla/pull/4491)
@@ -107,6 +107,7 @@
    * ADDED: `ignore_non_vehicular_restrictions` parameter for truck costing [#4606](https://github.com/valhalla/valhalla/pull/4606)
    * UPDATED: tz database to 2024a [#4643](https://github.com/valhalla/valhalla/pull/4643)
    * ADDED: `hgv_no_penalty` costing option to allow penalized truck access to `hgv=no` edges [#4650](https://github.com/valhalla/valhalla/pull/4650)
+   * CHANGED: Significantly improve performance of graphbuilder [#4669](https://github.com/valhalla/valhalla/pull/4669)
 
 ## Release Date: 2023-05-11 Valhalla 3.4.0
 * **Removed**
