@@ -31,10 +31,6 @@ std::string to_restriction_file = "test_to_complex_restrictions_utrecht.bin";
 std::string bss_file = "test_bss_nodes_utrecht.bin";
 std::string linguistic_node_file = "test_linguistic_node_utrecht.bin";
 
-const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid_ < b.node.osmid_;
-};
-
 auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
 
 OSMWay GetWay(uint32_t way_id, sequence<OSMWay>& ways) {

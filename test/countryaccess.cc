@@ -56,12 +56,6 @@ void write_config(const std::string& filename) {
   file.close();
 }
 
-const auto node_predicate = [](const OSMWayNode& a, const OSMWayNode& b) {
-  return a.node.osmid_ < b.node.osmid_;
-};
-
-auto way_predicate = [](const OSMWay& a, const OSMWay& b) { return a.osmwayid_ < b.osmwayid_; };
-
 void CountryAccess(const std::string& config_file) {
   boost::property_tree::ptree conf;
   rapidjson::read_json(config_file, conf);
