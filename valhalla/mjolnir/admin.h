@@ -17,10 +17,10 @@
 
 using namespace valhalla::baldr;
 using namespace valhalla::midgard;
-
-namespace valhalla::mjolnir {
-
 namespace bg = boost::geometry;
+
+namespace valhalla {
+namespace mjolnir {
 
 // Geometry types for admin queries
 typedef bg::model::d2::point_xy<double> point_type;
@@ -125,6 +125,7 @@ GetAdminInfo(sqlite3* db_handle,
  */
 std::unordered_map<std::string, std::vector<int>> GetCountryAccess(sqlite3* db_handle);
 
-} // namespace valhalla::mjolnir
+} // namespace mjolnir
+} // namespace valhalla
 
 #endif // VALHALLA_MJOLNIR_ADMIN_H_
