@@ -175,9 +175,11 @@ void create_tile() {
 
   // a place to store it
   auto tile_dir = cfg.get<std::string>("additional_data.elevation");
+  // remove a file with the same name
   if (std::filesystem::exists(tile_dir) && !std::filesystem::is_directory(tile_dir)) {
-    throw std::runtime_error("Couldnt make directory to store elevation");
-  } else if (!std::filesystem::exists(tile_dir) && !std::filesystem::create_directories(tile_dir)) {
+    std::filesystem.remove(tile_dir);
+  }
+  if (!std::filesystem::exists(tile_dir) && !std::filesystem::create_directories(tile_dir)) {
     throw std::runtime_error("Couldnt make directory to store elevation");
   }
 
