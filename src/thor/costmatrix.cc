@@ -515,10 +515,6 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
                                                 opp_pred_edge,
                                                 static_cast<bool>(flow_sources & kDefaultFlowMask),
                                                 pred.internal_turn());
-
-  if (pred.edgeid() == 3760982475657 && meta.edge_id == 3933821354889) {
-    std::cout << "bla";
-  }
   newcost += tc;
 
   const auto pred_dist = pred.path_distance() + meta.edge->length();
@@ -576,7 +572,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
         kUnlimitedTransitions) {
       // Override distance to the origin with a distance from the destination.
       // It will be used by hierarchy limits
-      dist = astar_heuristics_[MATRIX_REV][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
+      dist = astar_heuristics_[MATRIX_FORW][index].GetDistance(t2->get_node_ll(meta.edge->endnode()));
     }
     edgelabels.emplace_back(pred_idx, meta.edge_id, opp_edge_id, meta.edge, newcost, newsortcost,
                             dist, mode_, tc, not_thru_pruning,
@@ -604,7 +600,7 @@ bool CostMatrix::ExpandInner(baldr::GraphReader& graphreader,
 
   // setting this edge as reached
   if (expansion_callback_) {
-    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "CostMatrix", "r", newcost.secs,
+    expansion_callback_(graphreader, meta.edge_id, pred.edgeid(), "costmatrix", "r", newcost.secs,
                         pred_dist, newcost.cost);
   }
 
@@ -648,7 +644,7 @@ bool CostMatrix::Expand(const uint32_t index,
   if (expansion_callback_) {
     auto prev_pred =
         pred.predecessor() == kInvalidLabel ? GraphId{} : edgelabels[pred.predecessor()].edgeid();
-    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "CostMatrix", "s", pred.cost().secs,
+    expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix", "s", pred.cost().secs,
                         pred.path_distance(), pred.cost().cost);
   }
 

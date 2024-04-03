@@ -23,10 +23,6 @@
 namespace valhalla {
 namespace thor {
 
-// Default for time distance matrix is to find all locations
-constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
-constexpr float kMaxCost = 99999999.9999f;
-
 enum class MatrixExpansionType { reverse = 0, forward = 1 };
 constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
 constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
