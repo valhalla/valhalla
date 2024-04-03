@@ -15,61 +15,6 @@
 namespace valhalla {
 namespace thor {
 
-// Default for time distance matrix is to find all locations
-constexpr uint32_t kAllLocations = std::numeric_limits<uint32_t>::max();
-constexpr float kMaxCost = 99999999.9999f;
-
-enum class MatrixExpansionType { reverse = 0, forward = 1 };
-constexpr bool MATRIX_FORW = static_cast<bool>(MatrixExpansionType::forward);
-constexpr bool MATRIX_REV = static_cast<bool>(MatrixExpansionType::reverse);
-
-// These cost thresholds are in addition to the distance thresholds. If either forward or reverse
-// costs exceed the threshold the search is terminated.
-constexpr float kCostThresholdAutoDivisor =
-    56.0f; // 400 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-constexpr float kCostThresholdBicycleDivisor =
-    56.0f; // 200 km distance threshold will result in a cost threshold of ~3600 (1 hour)
-constexpr float kCostThresholdPedestrianDivisor =
-    28.0f; // 200 km distance threshold will result in a cost threshold of ~7200 (2 hours)
-
-/**
- * Status of a location. Tracks remaining locations to be found
- * and a threshold or iterations. When threshold goes to 0 expansion
- * stops for this location.
- */
-struct LocationStatus {
-  int threshold;
-  std::set<uint32_t> unfound_connections;
-
-  LocationStatus(const int t) : threshold(t) {
-  }
-};
-
-/**
- * Best connection. Information about the best connection found between
- * a source and target pair.
- */
-struct BestCandidate {
-  bool found;
-  baldr::GraphId edgeid;
-  baldr::GraphId opp_edgeid;
-  sif::Cost cost;
-  uint32_t distance;
-  uint32_t max_iterations;
-
-  BestCandidate(const baldr::GraphId& e1, baldr::GraphId& e2, const sif::Cost& c, const uint32_t d)
-      : found(false), edgeid(e1), opp_edgeid(e2), cost(c), distance(d), max_iterations(0) {
-  }
-
-  void
-  Update(const baldr::GraphId& e1, const baldr::GraphId& e2, const sif::Cost& c, const uint32_t d) {
-    edgeid = e1;
-    opp_edgeid = e2;
-    cost = c;
-    distance = d;
-  }
-};
-
 /**
  * Pure virtual class defining the interface for MatrixAlgorithm
  */
