@@ -57,13 +57,13 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
       access_mode_(kAutoAccess),
       mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      current_pathdist_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
 }
 
-float CostMatrix::GetCostThreshold(const float max_matrix_distance) {
+float CostMatrix::GetBucketRange(const float max_matrix_distance) {
   float cost_threshold;
   switch (mode_) {
     case travel_mode_t::kBicycle:
@@ -144,7 +144,7 @@ bool CostMatrix::SourceToTarget(Api& request,
   auto& source_location_list = *request.mutable_options()->mutable_sources();
   auto& target_location_list = *request.mutable_options()->mutable_targets();
 
-  current_cost_threshold_ = GetCostThreshold(max_matrix_distance);
+  current_pathdist_threshold_ = max_matrix_distance;
 
   auto time_infos = SetOriginTimes(source_location_list, graphreader);
 
@@ -338,8 +338,8 @@ void CostMatrix::Initialize(
       // Allocate the adjacency list and hierarchy limits for this source.
       // Use the cost threshold to size the adjacency list.
       edgelabel_[exp_dir][i].reserve(max_reserved_labels_count_);
-      adjacency_[exp_dir][i].reuse(0, current_cost_threshold_, costing_->UnitSize(),
-                                   &edgelabel_[exp_dir][i]);
+      adjacency_[exp_dir][i].reuse(0, GetBucketRange(current_pathdist_threshold_),
+                                   costing_->UnitSize(), &edgelabel_[exp_dir][i]);
       locs_status_[exp_dir].emplace_back(kMaxThreshold);
       hierarchy_limits_[exp_dir][i] = hlimits;
     }
@@ -583,7 +583,7 @@ bool CostMatrix::Expand(const uint32_t index,
 
   // Get edge label and check cost threshold
   auto pred = edgelabels[pred_idx];
-  if (pred.cost().secs > current_cost_threshold_) {
+  if (pred.path_distance() > current_pathdist_threshold_) {
     locs_status_[FORWARD][index].threshold = 0;
     return false;
   }
