@@ -70,9 +70,11 @@ namespace mjolnir {
  */
 std::vector<std::string> GetTagTokens(const std::string& tag_value, char delim) {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, tag_value,
-                          std::bind(std::equal_to<char>(), delim, std::placeholders::_1),
-                          boost::algorithm::token_compress_off);
+  boost::algorithm::split(
+      tokens, tag_value,
+      [delim](auto&& PH1) { return std::equal_to<char>()(delim, std::forward<decltype(PH1)>(PH1)); },
+      boost::algorithm::token_compress_off);
+
   return tokens;
 }
 
@@ -214,7 +216,7 @@ std::shared_ptr<void> make_spatialite_cache(sqlite3* handle) {
   spatialite_singleton_t::get_instance();
   void* conn = spatialite_alloc_connection();
   spatialite_init_ex(handle, conn, 0);
-  return std::shared_ptr<void>(conn, [](void* c) { spatialite_cleanup_ex(c); });
+  return {conn, [](void* c) { spatialite_cleanup_ex(c); }};
 }
 
 bool build_tile_set(const boost::property_tree::ptree& original_config,
