@@ -50,8 +50,7 @@ json::ArrayPtr serialize_shape(const valhalla::Matrix& matrix,
                                const ShapeFormat shape_format) {
   // TODO(nils): shapes aren't implemented yet in TDMatrix
   auto shapes = json::array({});
-  if (shape_format == no_shape ||
-      ((matrix.algorithm() != Matrix::CostMatrix) && (matrix.algorithm() != Matrix::CostMatrixAStar)))
+  if (shape_format == no_shape || (matrix.algorithm() != Matrix::CostMatrix))
     return shapes;
 
   for (size_t i = start_td; i < start_td + td_count; ++i) {
@@ -214,9 +213,7 @@ std::string serialize(const Api& request, double distance_scale) {
     }
     matrix->emplace("distances", distance);
     matrix->emplace("durations", time);
-    if (!(options.shape_format() == no_shape) &&
-        ((request.matrix().algorithm() == Matrix::CostMatrix) ||
-         (request.matrix().algorithm() == Matrix::CostMatrixAStar)))
+    if (!(options.shape_format() == no_shape) && (request.matrix().algorithm() == Matrix::CostMatrix))
       matrix->emplace("shapes", shapes);
 
     json->emplace("sources_to_targets", matrix);

@@ -1233,10 +1233,6 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
                            options.has_roundabout_exits_case() ? options.roundabout_exits() : true);
   options.set_roundabout_exits(roundabout_exits);
 
-  // Whether to use A* CostMatrix instead of Dijkstra CostMatrix, default false
-  options.set_use_costmatrix_astar(
-      rapidjson::get<bool>(doc, "/use_costmatrix_astar", options.use_costmatrix_astar()));
-
   // force these into the output so its obvious what we did to the user
   doc.AddMember({"language", allocator}, {options.language(), allocator}, allocator);
   doc.AddMember({"format", allocator},

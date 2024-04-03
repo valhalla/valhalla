@@ -5,7 +5,6 @@ set(sources
   alternates.cc
   bidirectional_astar.cc
   costmatrix.cc
-  costmatrix_astar.cc
   dijkstras.cc
   matrix_action.cc
   multimodal.cc

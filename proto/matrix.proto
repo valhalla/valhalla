@@ -8,7 +8,6 @@ message Matrix {
     TimeDistanceMatrix = 0;
     CostMatrix = 1;
     TimeDistanceBSSMatrix = 2;
-    CostMatrixAStar = 3;
   }
 
   repeated uint32 distances = 2;

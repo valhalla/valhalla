@@ -39,9 +39,7 @@ thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time, const std
     return &time_distance_bss_matrix_;
   }
 
-  bool use_costmatrix_astar = request.options().use_costmatrix_astar();
-
-  Matrix::Algorithm config_algo = use_costmatrix_astar ? Matrix::CostMatrixAStar : Matrix::CostMatrix;
+  Matrix::Algorithm config_algo = Matrix::CostMatrix;
   switch (source_to_target_algorithm) {
     case SELECT_OPTIMAL:
       // TODO - Do further performance testing to pick the best algorithm for the job
@@ -76,16 +74,10 @@ thor_worker_t::get_matrix_algorithm(Api& request, const bool has_time, const std
     return &time_distance_matrix_;
   } else if (has_time && request.options().prioritize_bidirectional() &&
              source_to_target_algorithm != TIME_DISTANCE_MATRIX) {
-    if (use_costmatrix_astar) {
-      return &costmatrix_astar_;
-    }
     return &costmatrix_;
-  } else if ((config_algo == Matrix::CostMatrix) || config_algo == Matrix::CostMatrixAStar) {
+  } else if (config_algo == Matrix::CostMatrix) {
     if (has_time && !request.options().prioritize_bidirectional()) {
       add_warning(request, 301);
-    }
-    if (use_costmatrix_astar) {
-      return &costmatrix_astar_;
     }
     return &costmatrix_;
   } else {
@@ -112,7 +104,6 @@ std::string thor_worker_t::matrix(Api& request) {
   // allow all algos to be cancelled
   for (auto* alg : std::vector<MatrixAlgorithm*>{
            &costmatrix_,
-           &costmatrix_astar_,
            &time_distance_matrix_,
            &time_distance_bss_matrix_,
        }) {
@@ -124,7 +115,7 @@ std::string thor_worker_t::matrix(Api& request) {
   LOG_INFO("matrix::" + std::string(algo->name()));
 
   // TODO(nils): TDMatrix doesn't care about either destonly or no_thru
-  if (algo->name().rfind("costmatrix") != 0) {
+  if (algo->name() != "costmatrix") {
     algo->SourceToTarget(request, *reader, mode_costing, mode,
                          max_matrix_distance.find(costing)->second);
     return tyr::serializeMatrix(request);
