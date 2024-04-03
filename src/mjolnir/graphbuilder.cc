@@ -1,4 +1,5 @@
 #include <future>
+#include <memory>
 #include <set>
 #include <thread>
 #include <utility>
@@ -18,6 +19,7 @@
 #include "midgard/logging.h"
 #include "midgard/pointll.h"
 #include "midgard/polyline2.h"
+#include "midgard/sequence.h"
 #include "midgard/tiles.h"
 #include "midgard/util.h"
 #include "mjolnir/admin.h"
@@ -43,11 +45,16 @@ namespace {
 std::map<GraphId, size_t> SortGraph(const std::string& nodes_file, const std::string& edges_file) {
   LOG_INFO("Sorting graph...");
 
-  // Sort nodes by graphid then by osmid, so its basically a set of tiles
+  // Sort nodes by graphid then by grid within the tile. This sorts nodes geo-spatially which
+  // helps performance by improving memory coherence.
   sequence<Node> nodes(nodes_file, false);
   nodes.sort([](const Node& a, const Node& b) {
     if (a.graph_id == b.graph_id) {
-      return a.node.osmid_ < b.node.osmid_;
+      if (a.grid_id == b.grid_id) {
+        return a.node.osmid_ < b.node.osmid_;
+      } else {
+        return a.grid_id < b.grid_id;
+      }
     }
     return a.graph_id < b.graph_id;
   });
@@ -149,6 +156,7 @@ void ConstructEdges(const std::string& ways_file,
                     const std::string& nodes_file,
                     const std::string& edges_file,
                     const std::function<GraphId(const OSMNode&)>& graph_id_predicate,
+                    const std::function<uint32_t(const OSMNode&)>& grid_id_predicate,
                     const bool infer_turn_channels) {
   LOG_INFO("Creating graph edges from ways...");
 
@@ -200,7 +208,7 @@ void ConstructEdges(const std::string& ways_file,
     way_node.node.link_edge_ = way.link();
     way_node.node.non_link_edge_ = !way.link() && (way.auto_forward() || way.auto_backward());
     nodes.push_back({way_node.node, static_cast<uint32_t>(edges.size()), static_cast<uint32_t>(-1),
-                     graph_id_predicate(way_node.node)});
+                     graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
     // Iterate through the nodes of the way until we find an intersection
     while (current_way_node_index < way_nodes.size()) {
@@ -220,8 +228,8 @@ void ConstructEdges(const std::string& ways_file,
         // remember what edge this node will end, its complicated by the fact that we delay adding the
         // edge until the next iteration of the loop, ie once the edge becomes prev_edge
         uint32_t end_of = static_cast<uint32_t>(edges.size() + prev_edge.is_valid());
-        nodes.push_back(
-            {way_node.node, static_cast<uint32_t>(-1), end_of, graph_id_predicate(way_node.node)});
+        nodes.push_back({way_node.node, static_cast<uint32_t>(-1), end_of,
+                         graph_id_predicate(way_node.node), grid_id_predicate(way_node.node)});
 
         // Mark the edge as ending a way if this is the last node in the way
         edge.attributes.way_end = current_way_node_index == last_way_node_index;
@@ -388,10 +396,11 @@ void BuildTileSet(const std::string& ways_file,
                   const std::string& edges_file,
                   const std::string& complex_restriction_from_file,
                   const std::string& complex_restriction_to_file,
+                  const std::string& linguistic_node_file,
                   const std::string& tile_dir,
                   const OSMData& osmdata,
-                  std::map<GraphId, size_t>::const_iterator tile_start,
-                  std::map<GraphId, size_t>::const_iterator tile_end,
+                  std::queue<std::pair<GraphId, size_t>>& tiles,
+                  std::mutex& tiles_lock,
                   const uint32_t tile_creation_date,
                   const boost::property_tree::ptree& pt,
                   std::promise<DataQuality>& result) {
@@ -402,6 +411,7 @@ void BuildTileSet(const std::string& ways_file,
   sequence<Node> nodes(nodes_file, false);
   sequence<OSMRestriction> complex_restrictions_from(complex_restriction_from_file, false);
   sequence<OSMRestriction> complex_restrictions_to(complex_restriction_to_file, false);
+  sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, false);
 
   auto database = pt.get_optional<std::string>("admin");
   bool infer_internal_intersections =
@@ -453,10 +463,21 @@ void BuildTileSet(const std::string& ways_file,
   std::map<std::pair<uint8_t, uint8_t>, uint32_t> langMap;
   ////////////////////////////////////////////////////////////////////////////
   // Iterate over tiles
-  for (; tile_start != tile_end; ++tile_start) {
+  while (true) {
+    tiles_lock.lock();
+    if (tiles.empty()) {
+      // all work done
+      tiles_lock.unlock();
+      break;
+    }
+
+    auto tile = tiles.front();
+    tiles.pop();
+    tiles_lock.unlock();
+
     try {
       // What actually writes the tile
-      GraphId tile_id = tile_start->first.Tile_Base();
+      GraphId tile_id = tile.first.Tile_Base();
       GraphTileBuilder graphtile(tile_dir, tile_id, false);
 
       // Information about tile creation
@@ -474,11 +495,11 @@ void BuildTileSet(const std::string& ways_file,
       std::multimap<uint32_t, multi_polygon_type> admin_polys;
       std::unordered_map<uint32_t, bool> drive_on_right;
       std::unordered_map<uint32_t, bool> allow_intersection_names;
-      std::vector<std::tuple<std::string, multi_polygon_type, bool>> language_ploys;
+      language_poly_index language_polys;
 
       if (admin_db_handle) {
         admin_polys = GetAdminInfo(admin_db_handle, drive_on_right, allow_intersection_names,
-                                   language_ploys, tiling.TileBounds(id), graphtile);
+                                   language_polys, tiling.TileBounds(id), graphtile);
         if (admin_polys.size() == 1) {
           // TODO - check if tile bounding box is entirely inside the polygon...
           tile_within_one_admin = true;
@@ -496,12 +517,12 @@ void BuildTileSet(const std::string& ways_file,
 
       ////////////////////////////////////////////////////////////////////////
       // Iterate over nodes in the tile
-      auto node_itr = nodes[tile_start->second];
+      auto node_itr = nodes[tile.second];
       // to avoid realloc we guess how many edges there might be in a given tile
       geo_attribute_cache.clear();
-      geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end
-                                           ? nodes.end() - node_itr
-                                           : std::next(tile_start)->second - tile_start->second));
+      // geo_attribute_cache.reserve(5 * (std::next(tile_start) == tile_end
+      //                                      ? nodes.end() - node_itr
+      //                                      : std::next(tile_start)->second - tile_start->second));
 
       while (node_itr != nodes.end() && (*node_itr).graph_id.Tile_Base() == tile_id) {
         // amalgamate all the node duplicates into one and the edges that connect to it
@@ -509,7 +530,7 @@ void BuildTileSet(const std::string& ways_file,
         auto bundle = collect_node_edges(node_itr, nodes, edges);
 
         // Make sure node has edges
-        if (bundle.node_edges.size() == 0) {
+        if (bundle.node_edges.empty()) {
           LOG_ERROR("Node has no edges - skip");
           continue;
         }
@@ -526,7 +547,7 @@ void BuildTileSet(const std::string& ways_file,
           admin_index = (tile_within_one_admin) ? admin_polys.begin()->first
                                                 : GetMultiPolyId(admin_polys, node_ll, graphtile);
           dor = drive_on_right[admin_index];
-          default_languages = GetMultiPolyIndexes(language_ploys, node_ll);
+          default_languages = GetMultiPolyIndexes(language_polys, node_ll);
 
         } else {
           admin_index = graphtile.AddAdmin("", "", osmdata.node_names.name(node.country_iso_index()),
@@ -910,8 +931,8 @@ void BuildTileSet(const std::string& ways_file,
 
           bool has_guide =
               GraphBuilder::CreateSignInfoList(node, w, pronunciationMap, langMap, osmdata,
-                                               default_languages, signs, linguistics, fork, forward,
-                                               (directededge.use() == Use::kRamp),
+                                               default_languages, linguistic_node, signs, linguistics,
+                                               fork, forward, (directededge.use() == Use::kRamp),
                                                (directededge.use() == Use::kTurnChannel));
           // add signs if signs exist
           // and directed edge if forward access and auto use
@@ -1138,9 +1159,12 @@ void BuildTileSet(const std::string& ways_file,
 
             std::vector<std::string> node_names;
             std::vector<valhalla::baldr::Language> node_langs;
-
+            OSMNodeLinguistic ling;
+            if (node.linguistic_info_index() != 0) {
+              ling = linguistic_node.at(node.linguistic_info_index());
+            }
             OSMWay::ProcessNamesPronunciations(osmdata.node_names, default_languages,
-                                               node.name_index(), node.name_lang_index(), node_names,
+                                               node.name_index(), ling.name_lang_index(), node_names,
                                                node_langs, false);
 
             std::vector<SignInfo> signs;
@@ -1151,14 +1175,14 @@ void BuildTileSet(const std::string& ways_file,
                 jeita_langs;
 
             GraphBuilder::GetPronunciationTokens(osmdata.node_names, default_languages,
-                                                 node.name_pronunciation_ipa_index(),
-                                                 node.name_pronunciation_ipa_lang_index(),
-                                                 node.name_pronunciation_nt_sampa_index(),
-                                                 node.name_pronunciation_nt_sampa_lang_index(),
-                                                 node.name_pronunciation_katakana_index(),
-                                                 node.name_pronunciation_katakana_lang_index(),
-                                                 node.name_pronunciation_jeita_index(),
-                                                 node.name_pronunciation_jeita_lang_index(),
+                                                 ling.name_pronunciation_ipa_index(),
+                                                 ling.name_pronunciation_ipa_lang_index(),
+                                                 ling.name_pronunciation_nt_sampa_index(),
+                                                 ling.name_pronunciation_nt_sampa_lang_index(),
+                                                 ling.name_pronunciation_katakana_index(),
+                                                 ling.name_pronunciation_katakana_lang_index(),
+                                                 ling.name_pronunciation_jeita_index(),
+                                                 ling.name_pronunciation_jeita_lang_index(),
                                                  ipa_tokens, ipa_langs, nt_sampa_tokens,
                                                  nt_sampa_langs, katakana_tokens, katakana_langs,
                                                  jeita_tokens, jeita_langs);
@@ -1244,14 +1268,14 @@ void BuildTileSet(const std::string& ways_file,
       graphtile.StoreTileData();
 
       // Made a tile
-      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile_start->first %
+      LOG_DEBUG((boost::format("Wrote tile %1%: %2% bytes") % tile.first %
                  graphtile.header_builder().end_offset())
                     .str());
     } // Whatever happens in Vegas..
     catch (std::exception& e) {
       // ..gets sent back to the main thread
       result.set_exception(std::current_exception());
-      LOG_ERROR((boost::format("Failed tile %1%: %2%") % tile_start->first % e.what()).str());
+      LOG_ERROR((boost::format("Failed tile %1%: %2%") % tile.first % e.what()).str());
       return;
     }
   }
@@ -1277,6 +1301,7 @@ void BuildLocalTiles(const unsigned int thread_count,
                      const std::string& edges_file,
                      const std::string& complex_from_restriction_file,
                      const std::string& complex_to_restriction_file,
+                     const std::string& linguistic_node_file,
                      const std::map<GraphId, size_t>& tiles,
                      const std::string& tile_dir,
                      DataQuality& stats,
@@ -1295,25 +1320,24 @@ void BuildLocalTiles(const unsigned int thread_count,
   std::vector<std::promise<DataQuality>> results(threads.size());
 
   // Divvy up the work
-  size_t floor = tiles.size() / threads.size();
-  size_t at_ceiling = tiles.size() - (threads.size() * floor);
-  std::map<GraphId, size_t>::const_iterator tile_start, tile_end = tiles.begin();
+  std::queue<std::pair<GraphId, size_t>> tile_queue;
+  std::mutex tile_lock;
+  for (auto id : tiles) {
+    tile_queue.emplace(id);
+  }
 
   // Atomically pass around stats info
   for (size_t i = 0; i < threads.size(); ++i) {
-    // Figure out how many this thread will work on (either ceiling or floor)
-    size_t tile_count = (i < at_ceiling ? floor + 1 : floor);
-    // Where the range begins
-    tile_start = tile_end;
-    // Where the range ends
-    std::advance(tile_end, tile_count);
     // Make the thread
-    threads[i].reset(new std::thread(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
-                                     std::cref(nodes_file), std::cref(edges_file),
-                                     std::cref(complex_from_restriction_file),
-                                     std::cref(complex_to_restriction_file), std::cref(tile_dir),
-                                     std::cref(osmdata), tile_start, tile_end, tile_creation_date,
-                                     std::cref(pt.get_child("mjolnir")), std::ref(results[i])));
+    threads[i] =
+        std::make_shared<std::thread>(BuildTileSet, std::cref(ways_file), std::cref(way_nodes_file),
+                                      std::cref(nodes_file), std::cref(edges_file),
+                                      std::cref(complex_from_restriction_file),
+                                      std::cref(complex_to_restriction_file),
+                                      std::cref(linguistic_node_file), std::cref(tile_dir),
+                                      std::cref(osmdata), std::ref(tile_queue), std::ref(tile_lock),
+                                      tile_creation_date, std::cref(pt.get_child("mjolnir")),
+                                      std::ref(results[i]));
   }
 
   // Join all the threads to wait for them to finish up their work
@@ -1340,8 +1364,34 @@ void BuildLocalTiles(const unsigned int thread_count,
 
 } // namespace
 
-namespace valhalla {
-namespace mjolnir {
+namespace valhalla::mjolnir {
+
+// Returns the grid Id within the tile. A tile is subdivided into a nxn grid.
+// The grid Id within the tile is used to sort nodes spatially.
+uint32_t GetGridId(const midgard::PointLL& pointll,
+                   const midgard::Tiles<midgard::PointLL>& tiling,
+                   const uint32_t grid_divisions) {
+  // By default grid_divisions is set to 0 to indicate no spatial sorting within a tile
+  if (grid_divisions == 0) {
+    return 0;
+  }
+
+  auto tile_id = tiling.TileId(pointll);
+  if (tile_id >= 0) {
+    auto base_ll = tiling.Base(tile_id);
+    float grid_size = tiling.TileSize() / static_cast<float>(grid_divisions);
+    uint32_t row = static_cast<uint32_t>((pointll.lat() - base_ll.lat()) / grid_size);
+    uint32_t col = static_cast<uint32_t>((pointll.lng() - base_ll.lng()) / grid_size);
+    if (row > grid_divisions || col > grid_divisions) {
+      LOG_ERROR("grid row = " + std::to_string(row) + " col = " + std::to_string(col));
+      return 0;
+    }
+    return (row * grid_divisions + col);
+  } else {
+    LOG_ERROR("GetGridId: Invalid tile id");
+    return 0;
+  }
+}
 
 std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::ptree& pt,
                                                    const std::string& ways_file,
@@ -1349,10 +1399,23 @@ std::map<GraphId, size_t> GraphBuilder::BuildEdges(const boost::property_tree::p
                                                    const std::string& nodes_file,
                                                    const std::string& edges_file) {
   uint8_t level = TileHierarchy::levels().back().level;
+  auto tiling = TileHierarchy::get_tiling(level);
+  uint32_t grid_divisions =
+      pt.get<unsigned int>("mjolnir.data_processing.grid_divisions_within_tile", 0);
+  if (grid_divisions > 0) {
+    LOG_INFO("Sort nodes spatially within each tile using nxn grids where n = " +
+             std::to_string(grid_divisions));
+  } else {
+    LOG_INFO("Spatial sorting of nodes within each tile is disabled");
+  }
+
   // Make the edges and nodes in the graph
   ConstructEdges(
       ways_file, way_nodes_file, nodes_file, edges_file,
       [&level](const OSMNode& node) { return TileHierarchy::GetGraphId(node.latlng(), level); },
+      [&tiling, &grid_divisions](const OSMNode& node) {
+        return GetGridId(node.latlng(), tiling, grid_divisions);
+      },
       pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
 
   return SortGraph(nodes_file, edges_file);
@@ -1367,28 +1430,43 @@ void GraphBuilder::Build(const boost::property_tree::ptree& pt,
                          const std::string& edges_file,
                          const std::string& complex_from_restriction_file,
                          const std::string& complex_to_restriction_file,
+                         const std::string& linguistic_node_file,
                          const std::map<GraphId, size_t>& tiles) {
   // Reclassify links (ramps). Cannot do this when building tiles since the
-  // edge list needs to be modified
-  DataQuality stats;
-  if (pt.get<bool>("mjolnir.reclassify_links", true)) {
-    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata,
-                    pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true));
+  // edge list needs to be modified. ReclassifyLinks also infers turn channels
+  // so we always want to do this unless reclassify_links and infer_turn_channels
+  // are both false.
+  bool reclassify_links = pt.get<bool>("mjolnir.reclassify_links", true);
+  bool infer_turn_channels = pt.get<bool>("mjolnir.data_processing.infer_turn_channels", true);
+  if (reclassify_links || infer_turn_channels) {
+    ReclassifyLinks(ways_file, nodes_file, edges_file, way_nodes_file, osmdata, reclassify_links,
+                    infer_turn_channels);
   } else {
-    LOG_WARN("Not reclassifying link graph edges");
+    LOG_WARN("Not reclassifying link graph edges or inferring turn channels");
   }
 
-  // Reclassify ferry connection edges - uses RoadClass::kPrimary (highway classification) as cutoff
-  ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  // Do not reclassify ferry connection edges if no hierarchies are built. If reclassifying,
+  // we use RoadClass::kPrimary (highway classification) as cutoff.
+  if (pt.get<bool>("mjolnir.hierarchy", true)) {
+    ReclassifyFerryConnections(ways_file, way_nodes_file, nodes_file, edges_file);
+  } else {
+    LOG_WARN("Not reclassifying ferry connections since no hierarches are being created");
+  }
+
+  // Build tiles at the local level. Form connected graph from nodes and edges.
+  DataQuality stats;
   unsigned int threads =
       std::max(static_cast<unsigned int>(1),
                pt.get<unsigned int>("mjolnir.concurrency", std::thread::hardware_concurrency()));
 
-  // Build tiles at the local level. Form connected graph from nodes and edges.
-  std::string tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  auto tile_dir = pt.get<std::string>("mjolnir.tile_dir");
+  // Disable sqlite3 internal memory tracking (results in a high-contention mutex, and we don't care
+  // about marginal sqlite memory usage).
+  sqlite3_config(SQLITE_CONFIG_MEMSTATUS, false);
+
   BuildLocalTiles(threads, osmdata, ways_file, way_nodes_file, nodes_file, edges_file,
-                  complex_from_restriction_file, complex_to_restriction_file, tiles, tile_dir, stats,
-                  pt);
+                  complex_from_restriction_file, complex_to_restriction_file, linguistic_node_file,
+                  tiles, tile_dir, stats, pt);
   stats.LogStatistics();
 }
 
@@ -1499,8 +1577,7 @@ void GraphBuilder::AddLanguage(const size_t index,
                                     static_cast<uint8_t>(index),
                                     0,
                                     0};
-    linguistics.emplace_back(
-        std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize));
+    linguistics.emplace_back(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
   }
 }
 
@@ -1527,7 +1604,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
     for (size_t i = 0; i < pronunciation_tokens.size(); i++) {
       auto& t = pronunciation_tokens[i];
 
-      if (indexMap.size() != 0) {
+      if (!indexMap.empty()) {
         auto index = indexMap.find(i);
         if (index != indexMap.end())
           header.name_index_ = index->second;
@@ -1535,30 +1612,29 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
           continue;
       }
 
-      if (!t.size()) { // pronunciation is blank.  just add the lang
+      if (t.empty()) { // pronunciation is blank.  just add the lang
 
-        if (!pronunciation_langs.size())
+        if (pronunciation_langs.empty())
           continue;
 
         header.language_ = static_cast<uint8_t>(pronunciation_langs.at(i));
         header.length_ = 0;
         header.phonetic_alphabet_ = static_cast<uint8_t>(baldr::PronunciationAlphabet::kNone);
 
-        pronunciations.emplace_back(
-            std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize));
+        pronunciations.emplace_back(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize);
       } else {
 
         header.phonetic_alphabet_ = static_cast<uint8_t>(verbal_type);
 
         header.length_ = t.size();
         header.language_ =
-            (pronunciation_langs.size() ? static_cast<uint8_t>(pronunciation_langs.at(i))
-                                        : static_cast<uint8_t>(baldr::Language::kNone));
+            (!pronunciation_langs.empty() ? static_cast<uint8_t>(pronunciation_langs.at(i))
+                                          : static_cast<uint8_t>(baldr::Language::kNone));
 
         pronunciations.emplace_back(
             (std::string(reinterpret_cast<const char*>(&header), kLinguisticHeaderSize) + t));
       }
-      if (indexMap.size() == 0)
+      if (indexMap.empty())
         ++header.name_index_;
     }
     return pronunciations;
@@ -1568,17 +1644,17 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
   std::map<size_t, size_t> indexMap;
   size_t k = key;
 
-  if ((pronunciation_langs.size() == 0 && token_langs.size() == 0) ||
-      ((pronunciation_langs.size() != 0 && token_langs.size() == 0) &&
+  if ((pronunciation_langs.empty() && token_langs.empty()) ||
+      ((!pronunciation_langs.empty() && token_langs.empty()) &&
        (pronunciation_langs.size() <= token_size)))
     process = true;
   else {
     std::pair<std::map<size_t, size_t>::iterator, bool> ret;
-    for (size_t i = 0; i < token_langs.size(); i++) {
+    for (auto& token_lang : token_langs) {
       for (size_t j = 0; j < pronunciation_langs.size(); j++) {
-        if (token_langs[i] == pronunciation_langs[j]) {
+        if (token_lang == pronunciation_langs[j]) {
           ret = indexMap.insert(std::make_pair(j, k));
-          if (ret.second == false) // already used
+          if (!ret.second) // already used
             continue;
           else {
             k++;
@@ -1589,7 +1665,7 @@ void GraphBuilder::AddPronunciationsWithLang(std::vector<std::string>& pronuncia
         }
       }
       if (!found) {
-        lang_map.emplace(k, token_langs[i]);
+        lang_map.emplace(k, token_lang);
         k++;
       }
       found = false;
@@ -1650,6 +1726,7 @@ bool GraphBuilder::CreateSignInfoList(
     const std::map<std::pair<uint8_t, uint8_t>, uint32_t>& langMap,
     const OSMData& osmdata,
     const std::vector<std::pair<std::string, bool>>& default_languages,
+    sequence<OSMNodeLinguistic>& linguistic_node,
     std::vector<SignInfo>& exit_list,
     std::vector<std::string>& linguistics,
     bool fork,
@@ -1700,10 +1777,10 @@ bool GraphBuilder::CreateSignInfoList(
                                ipa_langs, nt_sampa_tokens, nt_sampa_langs, katakana_tokens,
                                katakana_langs, jeita_tokens, jeita_langs);
 
-        add_ipa = (ipa_tokens.size() != 0);
-        add_nt_sampa = (nt_sampa_tokens.size() != 0);
-        add_katakana = (katakana_tokens.size() != 0);
-        add_jeita = (jeita_tokens.size() != 0);
+        add_ipa = !ipa_tokens.empty();
+        add_nt_sampa = !nt_sampa_tokens.empty();
+        add_katakana = !katakana_tokens.empty();
+        add_jeita = !jeita_tokens.empty();
 
         return (add_ipa || add_nt_sampa || add_katakana || add_jeita);
       };
@@ -1729,7 +1806,7 @@ bool GraphBuilder::CreateSignInfoList(
     }
 
     for (size_t i = 0; i < refs.size(); ++i) {
-      if (lang_map.size() != 0) {
+      if (!lang_map.empty()) {
         // only add a language if it has not already been added during pronunciation processing
         auto itr = lang_map.find(key);
         if (itr != lang_map.end()) {
@@ -1759,17 +1836,17 @@ bool GraphBuilder::CreateSignInfoList(
   // NUMBER
   // Exit sign number
   bool has_phoneme = false;
-  const uint8_t ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
-  const uint8_t nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
-  const uint8_t katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
-  const uint8_t jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
+  const auto ipa = static_cast<uint8_t>(PronunciationAlphabet::kIpa);
+  const auto nt_sampa = static_cast<uint8_t>(PronunciationAlphabet::kNtSampa);
+  const auto katakana = static_cast<uint8_t>(PronunciationAlphabet::kKatakana);
+  const auto jeita = static_cast<uint8_t>(PronunciationAlphabet::kJeita);
 
   if (way.junction_ref_index() != 0) {
     way.ProcessNamesPronunciations(osmdata.name_offset_map, default_languages,
                                    way.junction_ref_index(), way.junction_ref_lang_index(),
                                    sign_names, sign_langs, false);
 
-    const uint8_t t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionRef);
+    const auto t = static_cast<uint8_t>(OSMLinguistic::Type::kJunctionRef);
     has_phoneme =
         get_pronunciations(osmdata.name_offset_map, default_languages,
                            get_pronunciation_index(t, ipa), get_lang_index(t, ipa),
@@ -1781,17 +1858,22 @@ bool GraphBuilder::CreateSignInfoList(
                            add_katakana, add_jeita);
 
   } else if (node.has_ref() && !fork && ramp) {
+    OSMNodeLinguistic ling;
+    if (node.linguistic_info_index() != 0) {
+      ling = linguistic_node.at(node.linguistic_info_index());
+    }
+
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.ref_index(),
-                                   node.ref_lang_index(), sign_names, sign_langs, false);
+                                   ling.ref_lang_index(), sign_names, sign_langs, false);
     has_phoneme =
-        get_pronunciations(osmdata.node_names, default_languages, node.ref_pronunciation_ipa_index(),
-                           node.ref_pronunciation_ipa_lang_index(),
-                           node.ref_pronunciation_nt_sampa_index(),
-                           node.ref_pronunciation_nt_sampa_lang_index(),
-                           node.ref_pronunciation_katakana_index(),
-                           node.ref_pronunciation_katakana_lang_index(),
-                           node.ref_pronunciation_jeita_index(),
-                           node.ref_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
+        get_pronunciations(osmdata.node_names, default_languages, ling.ref_pronunciation_ipa_index(),
+                           ling.ref_pronunciation_ipa_lang_index(),
+                           ling.ref_pronunciation_nt_sampa_index(),
+                           ling.ref_pronunciation_nt_sampa_lang_index(),
+                           ling.ref_pronunciation_katakana_index(),
+                           ling.ref_pronunciation_katakana_lang_index(),
+                           ling.ref_pronunciation_jeita_index(),
+                           ling.ref_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
                            nt_sampa_tokens, nt_sampa_langs, katakana_tokens, katakana_langs,
                            jeita_tokens, jeita_langs, add_ipa, add_nt_sampa, add_katakana, add_jeita);
   }
@@ -2072,17 +2154,22 @@ bool GraphBuilder::CreateSignInfoList(
     sign_type = Sign::Type::kExitName;
     // Get the name from OSMData using the name index
 
+    OSMNodeLinguistic ling;
+    if (node.linguistic_info_index() != 0) {
+      ling = linguistic_node.at(node.linguistic_info_index());
+    }
+
     way.ProcessNamesPronunciations(osmdata.node_names, default_languages, node.name_index(),
-                                   node.name_lang_index(), sign_names, sign_langs, false);
+                                   ling.name_lang_index(), sign_names, sign_langs, false);
     has_phoneme =
-        get_pronunciations(osmdata.node_names, default_languages, node.name_pronunciation_ipa_index(),
-                           node.name_pronunciation_ipa_lang_index(),
-                           node.name_pronunciation_nt_sampa_index(),
-                           node.name_pronunciation_nt_sampa_lang_index(),
-                           node.name_pronunciation_katakana_index(),
-                           node.name_pronunciation_katakana_lang_index(),
-                           node.name_pronunciation_jeita_index(),
-                           node.name_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
+        get_pronunciations(osmdata.node_names, default_languages, ling.name_pronunciation_ipa_index(),
+                           ling.name_pronunciation_ipa_lang_index(),
+                           ling.name_pronunciation_nt_sampa_index(),
+                           ling.name_pronunciation_nt_sampa_lang_index(),
+                           ling.name_pronunciation_katakana_index(),
+                           ling.name_pronunciation_katakana_lang_index(),
+                           ling.name_pronunciation_jeita_index(),
+                           ling.name_pronunciation_jeita_lang_index(), ipa_tokens, ipa_langs,
                            nt_sampa_tokens, nt_sampa_langs, katakana_tokens, katakana_langs,
                            jeita_tokens, jeita_langs, add_ipa, add_nt_sampa, add_katakana, add_jeita);
   }
@@ -2185,5 +2272,4 @@ bool GraphBuilder::CreateSignInfoList(
   return (has_guide || has_guidance_view_jct || has_guidance_view_signboard);
 }
 
-} // namespace mjolnir
-} // namespace valhalla
+} // namespace valhalla::mjolnir

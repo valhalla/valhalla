@@ -60,6 +60,7 @@ CMakeLists.txt.user
 /CMakeSettings.json
 .idea
 /.tidytmp
+vcpkg*/
 
 # python
 .venv
@@ -69,5 +70,6 @@ CMakeLists.txt.user
 
 # documentation
 site/
+*.gph
 
 .DS_Store

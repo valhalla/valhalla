@@ -111,8 +111,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-82.68811, 40.22535});
 
@@ -675,8 +673,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {4.3516970, 50.8465573});
@@ -1283,8 +1279,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {27.56191, 53.90246});
 
@@ -1890,8 +1884,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-3.73895, 52.29282});
 
@@ -2436,8 +2428,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {4.3516970, 50.8465573});
 
@@ -2611,8 +2601,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -2764,8 +2752,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
@@ -3038,8 +3024,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {7.159328, 46.805244});
 
@@ -3186,8 +3170,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {9.65035, 46.46977});
@@ -3342,8 +3324,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {8.5355, 47.3726});
 
@@ -3482,8 +3462,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {6.03475, 50.62766});
@@ -3745,8 +3723,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {139.79079, 35.69194});
@@ -4555,8 +4531,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-75.6625, 45.3940});
 
@@ -5243,8 +5217,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-71.2593, 46.8111});
 
@@ -5839,8 +5811,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {103.87149, 1.32510});
 
@@ -6140,8 +6110,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {139.79079, 35.69194});
@@ -6633,8 +6601,6 @@ protected:
       EXPECT_TRUE(created);
     }
 
-    constexpr double gridsize = 100;
-
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});
 
@@ -6785,8 +6751,6 @@ protected:
       bool created = filesystem::create_directories(workdir);
       EXPECT_TRUE(created);
     }
-
-    constexpr double gridsize = 100;
 
     const auto layout =
         gurka::detail::map_to_coordinates(ascii_map, gridsize_metres, {-76.69980, 40.25882});

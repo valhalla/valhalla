@@ -127,7 +127,7 @@ function(BIN2H)
     endif()
 endfunction()
 
-if(CMAKE_SCRIPT_MODE_FILE AND "${CMAKE_SCRIPT_MODE_FILE}" MATCHES "Binary2Header.cmake$")
+if(CMAKE_SCRIPT_MODE_FILE AND "${CMAKE_SCRIPT_MODE_FILE}" MATCHES "ValhallaBin2Header.cmake$")
   # Parse command line argmuents
   set(ARG_NUM 1)
   set(conversion_type "HEADER")
@@ -136,7 +136,7 @@ if(CMAKE_SCRIPT_MODE_FILE AND "${CMAKE_SCRIPT_MODE_FILE}" MATCHES "Binary2Header
     set(CURRENT_ARG ${CMAKE_ARGV${ARG_NUM}})
     if(${CURRENT_ARG} MATCHES "^--usage$")
       message("Usage:
-       cmake -P cmake/Binary2Header.cmake [options] infile outfile
+       cmake -P cmake/ValhallaBin2Header.cmake [options] infile outfile
 Options:
     --header                convert to a header file
     --locales               convert locales json files to a header file

@@ -91,7 +91,7 @@ access = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -155,7 +155,7 @@ motor_vehicle = {
 ["forestry"] = "false",
 ["destination"] = "true",
 ["customers"] = "true",
-["official"] = "false",
+["official"] = "true",
 ["public"] = "true",
 ["restricted"] = "true",
 ["allowed"] = "true",
@@ -232,7 +232,7 @@ bus = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["permit"] = "true"
 }
 
@@ -245,7 +245,7 @@ taxi = {
 ["restricted"] = "true",
 ["destination"] = "true",
 ["delivery"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["permit"] = "true"
 }
 
@@ -270,10 +270,10 @@ truck = {
 ["agricultural"] = "false",
 ["private"] = "true",
 ["discouraged"] = "false",
-["permissive"] = "false",
+["permissive"] = "true",
 ["unsuitable"] = "false",
 ["agricultural;forestry"] = "false",
-["official"] = "false",
+["official"] = "true",
 ["forestry"] = "false",
 ["destination;delivery"] = "true",
 ["permit"] = "true",
@@ -556,7 +556,7 @@ motor_cycle_node = {
 ["forestry"] = 0,
 ["destination"] = 1024,
 ["customers"] = 1024,
-["official"] = 0,
+["official"] = 1024,
 ["public"] = 1024,
 ["restricted"] = 1024,
 ["allowed"] = 1024,
@@ -572,7 +572,7 @@ bus_node = {
 ["restricted"] = 64,
 ["destination"] = 64,
 ["delivery"] = 0,
-["official"] = 0,
+["official"] = 64,
 ["permit"] = 64
 }
 
@@ -585,7 +585,7 @@ taxi_node = {
 ["restricted"] = 32,
 ["destination"] = 32,
 ["delivery"] = 0,
-["official"] = 0,
+["official"] = 32,
 ["permit"] = 32
 }
 
@@ -599,10 +599,10 @@ truck_node = {
 ["agricultural"] = 0,
 ["private"] = 8,
 ["discouraged"] = 0,
-["permissive"] = 0,
+["permissive"] = 8,
 ["unsuitable"] = 0,
 ["agricultural;forestry"] = 0,
-["official"] = 0,
+["official"] = 8,
 ["forestry"] = 0,
 ["destination;delivery"] = 8,
 ["permit"] = 8,
@@ -1747,6 +1747,7 @@ function filter_tags_generic(kv)
      kv["link_type"] = kv["link_type"]
   end
 
+  --- TODO(nils): "private" also has directionality which we don't parse and handle yet
   kv["private"] = private[kv["access"]] or private[kv["motor_vehicle"]] or private[kv["motorcar"]] or private[kv["golf_cart"]] or "false"
   kv["private_hgv"] = private[kv["hgv"]] or kv["private"] or "false"
   kv["no_thru_traffic"] = no_thru_traffic[kv["access"]] or "false"

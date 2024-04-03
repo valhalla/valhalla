@@ -42,14 +42,12 @@ inline VehicleType GetTripLegVehicleType(const uint8_t type) {
 }
 
 // Associate pedestrian types to TripLeg proto
-constexpr PedestrianType kTripLegPedestrianType[] = {
-    PedestrianType::kFoot,
-    PedestrianType::kWheelchair,
-};
+constexpr PedestrianType kTripLegPedestrianType[] = {PedestrianType::kFoot,
+                                                     PedestrianType::kWheelchair,
+                                                     PedestrianType::kBlind};
 inline PedestrianType GetTripLegPedestrianType(const uint8_t type) {
-  return (type <= static_cast<uint8_t>(sif::PedestrianType::kWheelchair))
-             ? kTripLegPedestrianType[type]
-             : kTripLegPedestrianType[0];
+  return (type <= static_cast<uint8_t>(sif::PedestrianType::kBlind)) ? kTripLegPedestrianType[type]
+                                                                     : kTripLegPedestrianType[0];
 }
 
 // Associate bicycle types to TripLeg proto
@@ -518,7 +516,7 @@ inline TripLeg_Use GetTripLegUse(const baldr::Use use) {
 }
 
 // matrix algo to string
-std::string MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
+const std::string& MatrixAlgoToString(const valhalla::Matrix::Algorithm algo);
 // Get the string representing the incident-type
 std::string incidentTypeToString(const valhalla::IncidentsTile::Metadata::Type& incident_type);
 // Get the string representing the incident-Impact

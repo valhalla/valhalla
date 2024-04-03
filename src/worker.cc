@@ -22,7 +22,7 @@
 #include <cpp-statsd-client/StatsdClient.hpp>
 
 using namespace valhalla;
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 using namespace prime_server;
 #endif
 
@@ -138,6 +138,8 @@ const std::unordered_map<unsigned, valhalla::valhalla_exception_t> error_codes{
     {445, {445, "Shape match algorithm specification in api request is incorrect. Please see documentation for valid shape_match input.", 400, HTTP_400, OSRM_INVALID_URL, "wrong_match_type"}},
     {499, {499, "Unknown", 400, HTTP_400, OSRM_INVALID_URL, "unknown"}},
     {503, {503, "Leg count mismatch", 400, HTTP_400, OSRM_INVALID_URL, "wrong_number_of_legs"}},
+    {504, {504, "This service does not support GeoTIFF serialization.", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
+    {599, {599, "Unknown serialization error", 400, HTTP_400, OSRM_INVALID_VALUE, "unknown"}},
 };
 
 // unordered map for warning pairs
@@ -160,6 +162,8 @@ const std::unordered_map<int, std::string> warning_codes = {
   // 3xx is used when costing options were specified but we had to change them internally for some reason
   {300, R"(Many:Many CostMatrix was requested, but server only allows 1:Many TimeDistanceMatrix)"},
   {301, R"(1:Many TimeDistanceMatrix was requested, but server only allows Many:Many CostMatrix)"},
+  // 4xx is used when we do sneaky important things the user should be aware of
+  {400, R"(CostMatrix turned off destination-only on a second pass for connections: )"}
 };
 // clang-format on
 
@@ -584,6 +588,38 @@ void parse_contours(const rapidjson::Document& doc,
   }
 }
 
+// parse all costings needed to fulfill the request, including recostings
+void parse_recostings(const rapidjson::Document& doc,
+                      const std::string& key,
+                      valhalla::Options& options) {
+  // make sure we only have unique recosting names in the end
+  std::unordered_set<std::string> names;
+  auto check_name = [&names](const valhalla::Costing& recosting) -> void {
+    if (!recosting.has_name_case()) {
+      throw valhalla_exception_t{127};
+    } else if (!names.insert(recosting.name()).second) {
+      throw valhalla_exception_t{128};
+    }
+  };
+
+  // look either in JSON & PBF
+  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
+  if (recostings && recostings->IsArray()) {
+    names.reserve(recostings->GetArray().Size());
+    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
+      // parse the options
+      std::string key = "/recostings/" + std::to_string(i);
+      sif::ParseCosting(doc, key, options.add_recostings());
+      check_name(*options.recostings().rbegin());
+    }
+  } else if (options.recostings().size()) {
+    for (auto& recosting : *options.mutable_recostings()) {
+      check_name(recosting);
+      sif::ParseCosting(doc, key, &recosting, recosting.type());
+    }
+  }
+}
+
 /**
  * This function takes a json document and parses it into an options (request pbf) object.
  * The implementation is such that if you passed an already filled out options object the
@@ -651,7 +687,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
                                                           Options::centroid,
                                                           Options::trace_attributes,
                                                           Options::status,
-                                                          Options::sources_to_targets};
+                                                          Options::sources_to_targets,
+                                                          Options::isochrone};
     // if its not a pbf supported action we reset to json
     if (pbf_actions.count(options.action()) == 0) {
       options.set_format(Options::json);
@@ -660,6 +697,11 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       options.clear_jsonp();
     }
   }
+#ifndef ENABLE_GDAL
+  else if (options.format() == Options::geotiff) {
+    throw valhalla_exception_t{504};
+  }
+#endif
 
   auto units = rapidjson::get_optional<std::string>(doc, "/units");
   if (units && ((*units == "miles") || (*units == "mi"))) {
@@ -744,7 +786,7 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     rapidjson::SetValueByPointer(doc, "/costing_options/auto/ignore_closures", true);
   }
 
-  // set the costing based on the name given, redundant for pbf input
+  // set the costing based on the name given and parse its costing options
   Costing::Type costing;
   if (!valhalla::Costing_Enum_Parse(costing_str, &costing))
     throw valhalla_exception_t{125, "'" + costing_str + "'"};
@@ -839,6 +881,12 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
       break;
     }
   }
+
+  // TODO(nils): if we parse the costing options before the ignore_closures logic,
+  //   the gurka_closure_penalty test fails. investigate why.. intuitively it makes no sense,
+  //   as in the above logic the costing options aren't even parsed yet,
+  //   so how can it determine "ignore_closures" there?
+  sif::ParseCosting(doc, "/costing_options", options);
 
   // if any of the locations params have a date_time object in their locations, we'll remember
   // only /sources_to_targets will parse more than one location collection and there it's fine
@@ -968,27 +1016,8 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
     options.set_verbose(rapidjson::get(doc, "/verbose", options.verbose()));
   }
 
-  // Parse all of the costing options in their specified order
-  sif::ParseCosting(doc, "/costing_options", options);
-
   // parse any named costings for re-costing a given path
-  auto recostings = rapidjson::get_child_optional(doc, "/recostings");
-  if (recostings && recostings->IsArray()) {
-    // make sure we only have unique recosting names in the end
-    std::unordered_set<std::string> names;
-    names.reserve(recostings->GetArray().Size());
-    for (size_t i = 0; i < recostings->GetArray().Size(); ++i) {
-      // parse the options
-      std::string key = "/recostings/" + std::to_string(i);
-      sif::ParseCosting(doc, key, options.add_recostings());
-      if (!options.recostings().rbegin()->has_name_case()) {
-        throw valhalla_exception_t{127};
-      } else if (!names.insert(options.recostings().rbegin()->name()).second) {
-        throw valhalla_exception_t{128};
-      }
-    }
-    // TODO: throw if not all names are unique?
-  }
+  parse_recostings(doc, "/recostings", options);
 
   // get the locations in there
   parse_locations(doc, api, "locations", 130, ignore_closures, had_date_time);
@@ -1194,6 +1223,10 @@ void from_json(rapidjson::Document& doc, Options::Action action, Api& api) {
   options.set_banner_instructions(
       rapidjson::get<bool>(doc, "/banner_instructions", options.banner_instructions()));
 
+  // whether to return voiceInstructions in OSRM serializer, default false
+  options.set_voice_instructions(
+      rapidjson::get<bool>(doc, "/voice_instructions", options.voice_instructions()));
+
   // whether to include roundabout_exit maneuvers, default true
   auto roundabout_exits =
       rapidjson::get<bool>(doc, "/roundabout_exits",
@@ -1221,12 +1254,12 @@ valhalla_exception_t::valhalla_exception_t(unsigned code, const std::string& ext
 }
 
 // function to add warnings to proto info object
-void add_warning(valhalla::Api& api, unsigned code) {
-  auto message = warning_codes.find(code);
-  if (message != warning_codes.end()) {
-    auto* warning = api.mutable_info()->mutable_warnings()->Add();
-    warning->set_description(message->second);
-    warning->set_code(message->first);
+void add_warning(valhalla::Api& api, unsigned code, const std::string& extra) {
+  auto warning = warning_codes.find(code);
+  if (warning != warning_codes.end()) {
+    auto* warning_pbf = api.mutable_info()->mutable_warnings()->Add();
+    warning_pbf->set_description(warning->second + extra);
+    warning_pbf->set_code(warning->first);
   }
 }
 
@@ -1291,7 +1324,7 @@ void ParseApi(const std::string& request, Options::Action action, valhalla::Api&
   from_json(document, action, api);
 }
 
-#ifdef HAVE_HTTP
+#ifdef ENABLE_SERVICES
 void ParseApi(const http_request_t& request, valhalla::Api& api) {
   // block all but get and post
   if (request.method != method_t::POST && request.method != method_t::GET) {

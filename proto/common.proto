@@ -159,6 +159,8 @@ message Location {
 
   // This information will be ignored if provided in the request. Instead it will be filled in as the request is handled
   Correlation correlation = 90;
+  string time_zone_offset = 91;
+  string time_zone_name = 92;
 }
 
 message TransitEgressInfo {
@@ -371,6 +373,7 @@ enum VehicleType {
 enum PedestrianType {
   kFoot = 0;
   kWheelchair = 1;
+  kBlind = 2;
 }
 
 enum BicycleType {

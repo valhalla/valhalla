@@ -12,6 +12,7 @@ on:
 jobs:
   build_and_publish:
     runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'valhalla' }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3

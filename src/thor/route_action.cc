@@ -108,8 +108,8 @@ inline bool is_break_point(const valhalla::Location& l) {
 }
 
 inline bool is_highly_reachable(const valhalla::Location& loc, const valhalla::PathEdge& edge) {
-  return edge.inbound_reach() >= loc.minimum_reachability() &&
-         edge.outbound_reach() >= loc.minimum_reachability();
+  return static_cast<google::protobuf::uint32>(edge.inbound_reach()) >= loc.minimum_reachability() &&
+         static_cast<google::protobuf::uint32>(edge.outbound_reach()) >= loc.minimum_reachability();
 }
 
 template <typename Predicate> inline void remove_path_edges(valhalla::Location& loc, Predicate pred) {
@@ -305,6 +305,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
   // If bidirectional A* disable use of destination-only edges on the
   // first pass. If there is a failure, we allow them on the second pass.
   // Other path algorithms can use destination-only edges on the first pass.
+  // TODO(nils): why not others with destonly pruning? it gets a 2nd pass as well
   cost->set_allow_destination_only(path_algorithm == &bidir_astar ? false : true);
 
   cost->set_pass(0);
@@ -312,6 +313,7 @@ std::vector<std::vector<thor::PathInfo>> thor_worker_t::get_path(PathAlgorithm* 
 
   // Check if we should run a second pass pedestrian route with different A*
   // (to look for better routes where a ferry is taken)
+  // TODO(nils): how would a second pass find a better route, if it changes nothing ferry-related?
   bool ped_second_pass = false;
   if (!paths.empty() && (costing == "pedestrian" && path_algorithm->has_ferry())) {
     // DO NOT run a second pass on long routes due to performance issues
@@ -381,26 +383,29 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
     if (temp_paths.empty())
       return false;
     for (auto& temp_path : temp_paths) {
-      // back propagate time information
-      if (!destination->date_time().empty() &&
-          options.date_time_type() != valhalla::Options::invariant) {
-        auto origin_dt =
-            DateTime::offset_date(destination->date_time(),
-                                  reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile),
-                                  reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile),
-                                  -temp_path.back().elapsed_cost.secs);
-        origin->set_date_time(origin_dt);
+      auto out_tz = reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile);
+      auto in_tz = reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile);
+
+      // we add the timezone info if destination is the last location
+      // and add waiting_secs again from the final destination's datetime, so we output the departing
+      // time at intermediate locations, not the arrival time
+      if ((destination->correlation().original_index() ==
+               static_cast<google::protobuf::uint32>((options.locations().size() - 1)) &&
+           (in_tz || out_tz))) {
+        auto destination_dt = DateTime::offset_date(destination->date_time(), out_tz, out_tz,
+                                                    destination->waiting_secs());
+        destination->set_date_time(destination_dt.date_time);
+        destination->set_time_zone_offset(destination_dt.time_zone_offset);
+        destination->set_time_zone_name(destination_dt.time_zone_name);
       }
 
-      // add waiting_secs again from the final destination's datetime, so we output the departing time
-      // at intermediate locations, not the arrival time
-      if (destination->waiting_secs() && !destination->date_time().empty()) {
-        auto dest_dt =
-            DateTime::offset_date(destination->date_time(),
-                                  reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile),
-                                  reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile),
-                                  destination->waiting_secs());
-        destination->set_date_time(dest_dt);
+      // back propagate time information
+      if (!destination->date_time().empty()) {
+        auto origin_dt = DateTime::offset_date(destination->date_time(), out_tz, in_tz,
+                                               -temp_path.back().elapsed_cost.secs);
+        origin->set_date_time(origin_dt.date_time);
+        origin->set_time_zone_offset(origin_dt.time_zone_offset);
+        origin->set_time_zone_name(origin_dt.time_zone_name);
       }
 
       first_edge = temp_path.front().edgeid;
@@ -465,13 +470,12 @@ void thor_worker_t::path_arrive_by(Api& api, const std::string& costing) {
         // advance the time for the next destination (i.e. algo origin) by the waiting_secs
         // of this origin (i.e. algo destination)
         // TODO(nils): why do we do this twice? above we also do it for a destination..
-        if (origin->waiting_secs()) {
+        if (origin->waiting_secs() && !origin->date_time().empty()) {
           auto origin_dt =
-              DateTime::offset_date(origin->date_time(),
-                                    reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile),
-                                    reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile),
-                                    -origin->waiting_secs());
-          origin->set_date_time(origin_dt);
+              DateTime::offset_date(origin->date_time(), in_tz, in_tz, -origin->waiting_secs());
+          origin->set_date_time(origin_dt.date_time);
+          origin->set_time_zone_offset(origin_dt.time_zone_offset);
+          origin->set_time_zone_name(origin_dt.time_zone_name);
         }
         path.clear();
         edge_trimming.clear();
@@ -564,14 +568,25 @@ void thor_worker_t::path_depart_at(Api& api, const std::string& costing) {
       return false;
 
     for (auto& temp_path : temp_paths) {
+
+      auto in_tz = reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile);
+      auto out_tz = reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile);
+      if ((origin->correlation().original_index() == 0) && (in_tz || out_tz)) {
+        auto origin_dt = DateTime::offset_date(origin->date_time(), in_tz, in_tz, 0);
+
+        origin->set_date_time(origin_dt.date_time);
+        origin->set_time_zone_offset(origin_dt.time_zone_offset);
+        origin->set_time_zone_name(origin_dt.time_zone_name);
+      }
       // forward propagate time information
-      if (!origin->date_time().empty() && options.date_time_type() != valhalla::Options::invariant) {
-        auto destination_dt =
-            DateTime::offset_date(origin->date_time(),
-                                  reader->GetTimezoneFromEdge(temp_path.front().edgeid, tile),
-                                  reader->GetTimezoneFromEdge(temp_path.back().edgeid, tile),
-                                  temp_path.back().elapsed_cost.secs + destination->waiting_secs());
-        destination->set_date_time(destination_dt);
+      if (!origin->date_time().empty() && (in_tz || out_tz)) {
+        float offset = (options.date_time_type() != valhalla::Options::invariant)
+                           ? (temp_path.back().elapsed_cost.secs + destination->waiting_secs())
+                           : 0.0f;
+        auto destination_dt = DateTime::offset_date(origin->date_time(), in_tz, out_tz, offset);
+        destination->set_date_time(destination_dt.date_time);
+        destination->set_time_zone_offset(destination_dt.time_zone_offset);
+        destination->set_time_zone_name(destination_dt.time_zone_name);
       }
 
       last_edge = temp_path.back().edgeid;

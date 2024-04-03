@@ -11,7 +11,8 @@ set(protobuf_descriptors
   transit_fetch.proto
   incidents.proto
   status.proto
-  matrix.proto)
+  matrix.proto
+  isochrone.proto)
 
 if(ENABLE_DATA_TOOLS)
   # Only mjolnir needs the OSM PBF descriptors
@@ -20,7 +21,7 @@ if(ENABLE_DATA_TOOLS)
     ${VALHALLA_SOURCE_DIR}/third_party/OSM-binary/src/osmformat.proto)
 endif()
 
-# TODO: this seems to be deprecated, see https://github.com/valhalla/valhalla/pull/4207
+
 protobuf_generate_cpp(protobuf_srcs protobuf_hdrs ${protobuf_descriptors})
 
 valhalla_module(NAME proto

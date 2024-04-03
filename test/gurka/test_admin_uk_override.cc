@@ -1,7 +1,7 @@
+#include <filesystem>
 #include <gtest/gtest.h>
 
 #include "baldr/admin.h"
-#include "filesystem.h"
 #include "gurka.h"
 #include "mjolnir/admin.h"
 #include "mjolnir/adminbuilder.h"
@@ -66,8 +66,6 @@ void GetAdminData(const std::string& dbname,
   std::string sql = "SELECT admin_level, name from admins;";
 
   uint32_t result = 0;
-  bool dor = true;
-  bool intersection_name = false;
   ret = sqlite3_prepare_v2(db_handle, sql.c_str(), sql.length(), &stmt, 0);
 
   if (ret == SQLITE_OK || ret == SQLITE_ERROR) {
@@ -117,8 +115,8 @@ TEST(AdminTest, TestBuildAdminFromPBF) {
   // Create test/data/admin/map.pbf
   const std::string workdir = "test/data/admin_uk";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
