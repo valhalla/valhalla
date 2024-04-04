@@ -246,6 +246,8 @@ std::string serializePbf(Api& request) {
     request.clear_matrix();
   if (!selection.isochrone())
     request.clear_isochrone();
+  if (!selection.expansion())
+    request.clear_expansion();
 
   // serialize the bytes
   auto bytes = request.SerializeAsString();

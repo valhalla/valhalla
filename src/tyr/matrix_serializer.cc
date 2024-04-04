@@ -242,6 +242,11 @@ namespace tyr {
 
 std::string serializeMatrix(Api& request) {
   double distance_scale = (request.options().units() == Options::miles) ? kMilePerMeter : kKmPerMeter;
+
+  // dont bother serializing in case of /expansion request
+  if (request.options().action() == Options_Action_expansion)
+    return "";
+
   switch (request.options().format()) {
     case Options_Format_osrm:
       return osrm_serializers::serialize(request);

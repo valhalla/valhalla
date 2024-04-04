@@ -55,9 +55,9 @@ CostMatrix::CostMatrix(const boost::property_tree::ptree& config)
       max_reserved_locations_count_(
           config.get<uint32_t>("max_reserved_locations_costmatrix", kMaxLocationReservation)),
       check_reverse_connections_(config.get<bool>("costmatrix_check_reverse_connection", false)),
-      access_mode_(kAutoAccess),
-      mode_(travel_mode_t::kDrive), locs_count_{0, 0}, locs_remaining_{0, 0},
-      current_cost_threshold_(0), targets_{new ReachedMap}, sources_{new ReachedMap} {
+      access_mode_(kAutoAccess), mode_(travel_mode_t::kDrive), locs_count_{0, 0},
+      locs_remaining_{0, 0}, current_cost_threshold_(0), targets_{new ReachedMap},
+      sources_{new ReachedMap} {
 }
 
 CostMatrix::~CostMatrix() {
@@ -828,10 +828,10 @@ void CostMatrix::CheckForwardConnections(const uint32_t source,
     if (expansion_callback_) {
       auto prev_pred = fwd_pred.predecessor() == kInvalidLabel
                            ? GraphId{}
-                           : edgelabel_[MATRIX_FORW][source][pred.predecessor()].edgeid();
-      expansion_callback_(graphreader, pred.edgeid(), prev_pred, "costmatrix",
-                          Expansion_EdgeStatus_connected, fwd_pred.cost().secs, fwd_pred.path_distance(),
-                          fwd_pred.cost().cost);
+                           : edgelabel_[MATRIX_FORW][source][fwd_pred.predecessor()].edgeid();
+      expansion_callback_(graphreader, fwd_pred.edgeid(), prev_pred, "costmatrix",
+                          Expansion_EdgeStatus_connected, fwd_pred.cost().secs,
+                          fwd_pred.path_distance(), fwd_pred.cost().cost);
     }
   }
 
