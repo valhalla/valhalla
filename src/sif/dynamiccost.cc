@@ -151,6 +151,9 @@ DynamicCost::DynamicCost(const Costing& costing,
       closure_factor_(kDefaultClosureFactor), flow_mask_(kDefaultFlowMask),
       shortest_(costing.options().shortest()),
       ignore_restrictions_(costing.options().ignore_restrictions()),
+      ignore_non_vehicular_restrictions_(costing.options().ignore_non_vehicular_restrictions()),
+      ignore_turn_restrictions_(costing.options().ignore_restrictions() ||
+                                costing.options().ignore_non_vehicular_restrictions()),
       ignore_oneways_(costing.options().ignore_oneways()),
       ignore_access_(costing.options().ignore_access()),
       ignore_closures_(costing.options().ignore_closures()),
@@ -389,6 +392,8 @@ void ParseBaseCostOptions(const rapidjson::Value& json,
   JSON_PBF_DEFAULT(co, false, json, "/ignore_oneways", ignore_oneways);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_access", ignore_access);
   JSON_PBF_DEFAULT(co, false, json, "/ignore_closures", ignore_closures);
+  JSON_PBF_DEFAULT_V2(co, false, json, "/ignore_non_vehicular_restrictions",
+                      ignore_non_vehicular_restrictions);
 
   // shortest
   JSON_PBF_DEFAULT(co, false, json, "/shortest", shortest);

@@ -49,6 +49,7 @@ TEST_P(TruckRestrictionTest, NotAllowed) {
   try {
     gurka::do_action(Options::route, map, {"A", "D"}, "truck",
                      {{"/costing_options/truck/" + option, v}});
+    FAIL() << "Expected no path to be found";
   } catch (const valhalla_exception_t& err) { EXPECT_EQ(err.code, 442); } catch (...) {
     FAIL() << "Expected valhalla_exception_t.";
   };
@@ -65,7 +66,7 @@ INSTANTIATE_TEST_SUITE_P(TruckRestrictions,
                          ::testing::Values(std::pair<std::string, std::string>{"height", "6"},
                                            std::pair<std::string, std::string>{"width", "4"},
                                            std::pair<std::string, std::string>{"length", "30"},
-                                           std::pair<std::string, std::string>{"hazmat", "true"},
+                                           std::pair<std::string, std::string>{"hazmat", "1"},
                                            std::pair<std::string, std::string>{"axle_load", "11"},
                                            std::pair<std::string, std::string>{"axle_count", "10"}));
 

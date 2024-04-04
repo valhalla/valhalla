@@ -51,9 +51,9 @@ The isochrone service uses the `auto`, `bicycle`, `pedestrian`, and `multimodal`
 
 ## Outputs of the Isochrone service
 
-In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications.
+In the service response, the isochrone contours are returned as [GeoJSON](http://geojson.org/), which can be integrated into mapping applications. Alternatively, the grid data that underlies these contours can be returned as a [GeoTIFF](https://www.ogc.org/standard/geotiff/). 
 
-The contours are calculated using rasters and are returned as either polygon or line features, depending on your input setting for the `polygons` parameter. If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
+The isochrone service returns contours as GeoJSON line or polygon features for the requested intervals (depending on the value of the `polygons` request parameter). These contours are calculated using a two dimensional grid. If the `format` request parameter is set to `geotiff`, the underlying grid data is returned directly instead of the contours derived from it. It will return one band for each requested metric (i.e. one for `time` and one for `distance`). If an isochrone request has been named using the optional `&id=` input, then the `id` is returned as a name property for the feature collection within the GeoJSON response. A `metric` attribute lets you know whether it's a `distance` or `time` contour. A warnings array may also be included. This array may contain warning objects informing about deprecated request parameters, clamped values etc. | 
 
 See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-and-conditions) for more on messages you might receive from the service.
 
@@ -62,6 +62,8 @@ See the [HTTP return codes](../turn-by-turn/api-reference.md#http-status-codes-a
 Most JavaScript-based GeoJSON renderers, including [Leaflet](http://leafletjs.com/), can use the isochrone styling information directly from the response. At present, you cannot control the opacity through the API.
 
 When making a map, drawing the isochrone contours as lines is more straightforward than polygons, and, therefore, currently is the default and recommended method. When deciding between the output as lines and polygons, consider your use case and the additional styling considerations involved with polygons. For example, fills should be rendered as semi-transparent over the other map layers so they are visible, although you may have more flexibility when using a vector-based map. In addition, polygons from multiple contour levels do not have overlapping areas cut out or removed. In other words, the outer contours include the areas of any inner contours, causing the colors and transparencies to blend when multiple contour polygons are drawn at the same time.
+
+(TODO: write something about rendering the GeoTIFF output.)
 
 ## Future work on the isochrone service
 
@@ -75,7 +77,7 @@ Several other options are being considered as future service enhancements. These
 * ~~Removing self intersections from polygonal contours.~~
 * ~~Allowing multiple locations to compute the region reachable from any of the locations within a specified time.~~
 * ~~Generating contours with reverse access logic to see the region that can reach a specific location within the specified time.~~
-* Returning raster data for potential animation using OpenGL shaders. This also has analysis use for being able to query thousands of locations to determine the time to each location, including improvements with one-to-many requests to the Valhalla Time-Distance Matrix service.
+* ~~Returning raster data for potential animation using OpenGL shaders. This also has analysis use for being able to query thousands of locations to determine the time to each location, including improvements with one-to-many requests to the Valhalla Time-Distance Matrix service.~~
 
 ## Data credits
 

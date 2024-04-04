@@ -30,7 +30,7 @@ TEST(Signinfo, ExitToTest) {
   std::vector<SignInfo> signs;
   std::vector<std::string> linguistics;
   std::vector<std::pair<std::string, bool>> default_languages;
-  const std::string linguistic_node_file = "test_linguistic_node.bin";
+  const std::string linguistic_node_file = "test_sign_linguistic_node.bin";
   sequence<OSMNodeLinguistic> linguistic_node(linguistic_node_file, true);
 
   bool has_guide = GraphBuilder::CreateSignInfoList(exit_node, way, pronunciationMap, langMap,

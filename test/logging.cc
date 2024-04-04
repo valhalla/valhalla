@@ -61,7 +61,7 @@ TEST(Logging, FileLoggerTest) {
   int exit_code = 0;
   for (auto& result : results) {
     try {
-      size_t count = result.get();
+      result.get();
     } catch (std::exception& e) { exit_code++; }
   }
 
