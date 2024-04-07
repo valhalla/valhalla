@@ -103,6 +103,7 @@ These options are available for `auto`, `bus`, and `truck` costing methods.
 | `gate_cost` | A cost applied when a [gate](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with undefined or private access is encountered. This cost is added to the estimated time / elapsed time. The default gate cost is 30 seconds. |
 | `gate_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) with no access information is on the road. The default gate penalty is 300 seconds. |
 | `private_access_penalty` | A penalty applied when a [gate](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dgate) or [bollard](https://wiki.openstreetmap.org/wiki/Tag:barrier%3Dbollard) with `access=private` is encountered. The default private access penalty is 450 seconds. |
+| `destination_only_penalty` | A penalty applied when entering an road which is only allowed to enter if necessary to reach the destination.
 | `toll_booth_cost` | A cost applied when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This cost is added to the estimated and elapsed times. The default cost is 15 seconds. |
 | `toll_booth_penalty` | A penalty applied to the cost when a [toll booth](http://wiki.openstreetmap.org/wiki/Tag:barrier%3Dtoll_booth) is encountered. This penalty can be used to create paths that avoid toll roads. The default toll booth penalty is 0. |
 | `ferry_cost` | A cost applied when entering a ferry. This cost is added to the estimated and elapsed times. The default cost is 300 seconds (5 minutes). |
@@ -149,6 +150,8 @@ The following options are available for `truck` costing.
 | `axle_count` | The axle count of the truck. Default 5. |
 | `hazmat` | A value indicating if the truck is carrying hazardous materials. Default false. |
 | `hgv_no_access_penalty` | A penalty applied to roads with no HGV/truck access. If set to a value less than 43200 seconds, HGV will be allowed on these roads and the penalty applies. Default 43200, i.e. trucks are not allowed. |
+| `low_class_penalty` | A penalty (in seconds) which is applied when going to residential or service roads. |
+
 
 ##### Bicycle costing options
 The default bicycle costing is tuned toward road bicycles with a slight preference for using [cycleways](http://wiki.openstreetmap.org/wiki/Key:cycleway) or roads with bicycle lanes. Bicycle routes use regular roads where needed or where no direct bicycle lane options exist, but avoid roads without bicycle access. The costing model recognizes several factors unique to bicycle travel and offers several options for tuning bicycle routes. Several factors unique to travel by bicycle influence the resulting route.
@@ -158,7 +161,7 @@ The default bicycle costing is tuned toward road bicycles with a slight preferen
 * Bicyclists vary in their tolerance for riding on roads. Most novice bicyclists, and even other bicyclists, prefer cycleways and dedicated cycling paths and would rather avoid all but the quietest neighborhood roads. Other cyclists may be experienced riding on roads and prefer to take roadways because they often provide the fastest way to get between two places. The bicycle costing model accounts for this with a `use_roads` factor to indicate a cyclist's tolerance for riding on roads.
 * Bicyclists vary in their fitness level and experience level, and many want to avoid hilly roads, and especially roads with very steep uphill or even downhill sections. Even if the fastest path is over a mountain, many cyclists prefer a flatter path that avoids the climb and descent up and over the mountain.
 
-The following options described above for autos also apply to bicycle costing methods: `maneuver_penalty`, `gate_cost`, `gate_penalty`, `country_crossing_cost`, `country_costing_penalty`, and `service_penalty`.
+The following options described above for autos also apply to bicycle costing methods: `maneuver_penalty`, `gate_cost`, `gate_penalty`,  `destination_only_penalty` , `country_crossing_cost`, `country_costing_penalty`, and `service_penalty`.
 
 These additional options are available for bicycle costing methods.
 
@@ -220,6 +223,7 @@ These options are available for pedestrian costing methods.
 | `use_lit` | This value is a range of values from 0 to 1, where 0 indicates indifference towards lit streets, and 1 indicates that unlit streets should be avoided. Note that even with values near 1, there is no guarantee the returned route will include lit segments. The default value is 0. | 
 | `service_penalty` | A penalty applied for transition to generic service road. The default penalty is 0. |
 | `service_factor` | A factor that modifies (multiplies) the cost when generic service roads are encountered. The default `service_factor` is 1. |
+| `destination_only_penalty` | A penalty applied when entering an road which is only allowed to enter if necessary to reach the destination.
 | `max_hiking_difficulty` | This value indicates the maximum difficulty of hiking trails that is allowed. Values between 0 and 6 are allowed. The values correspond to *sac_scale* values within OpenStreetMap, see reference [here](https://wiki.openstreetmap.org/wiki/Key:sac_scale). The default value is 1 which means that well cleared trails that are mostly flat or slightly sloped are allowed. Higher difficulty trails can be allowed by specifying a higher value for max_hiking_difficulty.
 |`bss_rent_cost`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to give the time will be used to rent a bike from a bike share station. This value will be displayed in the final directions and used to calculate the whole duration. The default value is 120 seconds.|
 |`bss_rent_penalty`| This value is useful when `bikeshare` is chosen as travel mode. It is meant to describe the potential effort to rent a bike from a bike share station. This value won't be displayed and used only inside of the algorithm.|
