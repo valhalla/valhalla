@@ -20,7 +20,7 @@ void writeExpansionProgress(Expansion* expansion,
                             const baldr::GraphId& edgeid,
                             const baldr::GraphId& prev_edgeid,
                             const std::vector<midgard::PointLL>& shape,
-                            const std::unordered_set<Options::ExpansionProperties> exp_props,
+                            const std::unordered_set<Options::ExpansionProperties>& exp_props,
                             const Expansion_EdgeStatus& status,
                             const float& duration,
                             const uint32_t& distance,
@@ -48,9 +48,9 @@ void writeExpansionProgress(Expansion* expansion,
   if (exp_props.count(Options_ExpansionProperties_edge_status))
     expansion->add_edge_status(status);
   if (exp_props.count(Options_ExpansionProperties_edge_id))
-    expansion->add_edge_id(static_cast<uint32_t>(duration));
+    expansion->add_edge_id(static_cast<uint32_t>(edgeid));
   if (exp_props.count(Options_ExpansionProperties_pred_edge_id))
-    expansion->add_pred_edge_id(static_cast<uint32_t>(duration));
+    expansion->add_pred_edge_id(static_cast<uint32_t>(prev_edgeid));
 }
 } // namespace
 
