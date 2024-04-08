@@ -33,7 +33,7 @@ std::string serializeExpansion(Api& request, const std::string& algo) {
     writer.start_array("coordinates");
 
     // make the geom
-    auto geom = expansion.geometries(i);
+    const auto& geom = expansion.geometries(i);
     for (int j = 0; j < geom.coords().size() - 1; j += 2) {
       writer.start_array();
       writer(static_cast<double>((geom.coords(j) / 1e6)));
