@@ -13,6 +13,12 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+/*
+   The following file has warning:
+   third_party/just_gtfs/include/just_gtfs/just_gtfs.h
+   Therefore this file has warnings
+   TODO third_party header shuold be treated a system headers??
+*/
 using point_type = boost::geometry::model::d2::point_xy<double>;
 using polygon_type = boost::geometry::model::polygon<point_type>;
 using boost::geometry::within;
@@ -575,7 +581,7 @@ TEST(GtfsExample, MakeProto) {
   std::vector<float> last_dest_dist_traveled;
 
   // get the full shape length
-  float shape_length = 0;
+  [[maybe_unused]] float shape_length = 0;
 
   auto layout = create_layout();
   const std::vector<PointLL> transit_lls{layout["1"], layout["a"], layout["b"],
