@@ -1656,7 +1656,6 @@ TEST_P(PhonemesWithLangsTest, NamesPart2) {
 
 TEST_P(PhonemesWithLangsTest, OldDataDestination) {
   const auto& param_tag = std::get<0>(GetParam());
-  const auto& param_alphabet = std::get<1>(GetParam());
   CreateWorkdir();
 
   ways = {{"BC",
@@ -1718,8 +1717,6 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
 }
 
 TEST_P(PhonemesWithLangsTest, ForwardDestination) {
-  const auto& param_tag = std::get<0>(GetParam());
-  const auto& param_alphabet = std::get<1>(GetParam());
   CreateWorkdir();
 
   ways = {{"BC",
