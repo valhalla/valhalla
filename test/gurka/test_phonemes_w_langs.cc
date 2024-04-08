@@ -807,11 +807,10 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -826,7 +825,6 @@ TEST_P(PhonemesWithLangsTest, Destinations) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -866,11 +864,10 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -885,7 +882,6 @@ TEST_P(PhonemesWithLangsTest, DestinationStreet) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -925,11 +921,10 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
@@ -945,7 +940,6 @@ TEST_P(PhonemesWithLangsTest, DestinationStreetTo) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -990,11 +984,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1010,7 +1003,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(param_alphabet));
       }
-      ++sign_index;
     }
   }
 
@@ -1021,11 +1013,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
       std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
 
-      uint32_t sign_index = 0;
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& sign : signs) {
+      for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1042,7 +1033,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsFB) {
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(param_alphabet));
         }
-        ++sign_index;
       }
     }
   }
@@ -1084,11 +1074,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1112,7 +1101,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(param_alphabet));
       }
-      ++sign_index;
     }
   }
 
@@ -1123,11 +1111,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
       std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
 
-      uint32_t sign_index = 0;
       ASSERT_EQ(signs.size(), 2);
       ASSERT_EQ(linguistics.size(), 2);
 
-      for (const auto& sign : signs) {
+      for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
         ASSERT_NE(iter, linguistics.end());
@@ -1145,7 +1132,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
                     static_cast<int>(param_alphabet));
         } else if (sign_index == 1) {
           EXPECT_EQ(signs.at(sign_index).text(), "destination in dutch");
-
           EXPECT_EQ(to_string(static_cast<Language>(
                         std::get<kLinguisticMapTupleLanguageIndex>(iter->second))),
                     "nl");
@@ -1155,7 +1141,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsMultiLangs) {
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(param_alphabet));
         }
-        ++sign_index;
       }
     }
   }
@@ -1202,11 +1187,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(linguistics.size(), 1);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1222,7 +1206,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(param_alphabet));
       }
-      ++sign_index;
     }
   }
 
@@ -1233,11 +1216,10 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
       std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
 
-      uint32_t sign_index = 0;
       ASSERT_EQ(signs.size(), 1);
       ASSERT_EQ(linguistics.size(), 1);
 
-      for (const auto& sign : signs) {
+      for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
         std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
             linguistics.find(sign_index);
@@ -1254,7 +1236,6 @@ TEST_P(PhonemesWithLangsTest, DestinationsFBNoOptionalTag) {
                         std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                     static_cast<int>(param_alphabet));
         }
-        ++sign_index;
       }
     }
   }
@@ -1295,11 +1276,10 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1314,7 +1294,6 @@ TEST_P(PhonemesWithLangsTest, DestinationRef) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -1354,11 +1333,10 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1373,7 +1351,6 @@ TEST_P(PhonemesWithLangsTest, DestinationRefTo) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -1412,11 +1389,10 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 1);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1431,7 +1407,6 @@ TEST_P(PhonemesWithLangsTest, DestinationJunctionRef) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -1469,11 +1444,10 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 1);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
 
@@ -1490,7 +1464,6 @@ TEST_P(PhonemesWithLangsTest, NodeRef) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -1531,11 +1504,10 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(node_id.id(), linguistics, true);
 
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1559,7 +1531,6 @@ TEST_P(PhonemesWithLangsTest, NodeName) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(param_alphabet));
     }
-    ++sign_index;
   }
 }
 
@@ -1718,11 +1689,10 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
 
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1744,7 +1714,6 @@ TEST_P(PhonemesWithLangsTest, OldDataDestination) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(baldr::PronunciationAlphabet::kNone));
     }
-    ++sign_index;
   }
 }
 
@@ -1781,11 +1750,10 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(linguistics.size(), 2);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -1807,7 +1775,6 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(baldr::PronunciationAlphabet::kNone));
       }
-      ++sign_index;
     }
   }
   {
@@ -1815,7 +1782,6 @@ TEST_P(PhonemesWithLangsTest, ForwardDestination) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 0); // signs are only in the forward direction
     ASSERT_EQ(linguistics.size(), 0);
   }
@@ -1857,11 +1823,10 @@ TEST_P(PhonemesWithLangsTest, Junction) {
   auto tile = graph_reader.GetGraphTile(node_id);
   std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
   std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-  uint32_t sign_index = 0;
   ASSERT_EQ(signs.size(), 2);
   ASSERT_EQ(linguistics.size(), 2);
 
-  for (const auto& sign : signs) {
+  for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
         linguistics.find(sign_index);
     ASSERT_NE(iter, linguistics.end());
@@ -1883,14 +1848,12 @@ TEST_P(PhonemesWithLangsTest, Junction) {
       EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                 static_cast<int>(baldr::PronunciationAlphabet::kNone));
     }
-    ++sign_index;
   }
   {
     GraphId node_id = CB_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(),
               0); // signs are only in the forward direction due to trunk_link and oneway
     ASSERT_EQ(linguistics.size(), 0);
@@ -2099,11 +2062,10 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(BC_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -2144,7 +2106,6 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(param_alphabet));
       }
-      ++sign_index;
     }
   }
   {
@@ -2152,11 +2113,10 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
     auto tile = graph_reader.GetGraphTile(node_id);
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> linguistics;
     std::vector<SignInfo> signs = tile->GetSigns(CB_edge_id.id(), linguistics);
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(linguistics.size(), 4);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           linguistics.find(sign_index);
       ASSERT_NE(iter, linguistics.end());
@@ -2198,7 +2158,6 @@ TEST_P(PhonemesWithLangsTest, MultiPhonemes2) {
         EXPECT_EQ(static_cast<int>(std::get<kLinguisticMapTuplePhoneticAlphabetIndex>(iter->second)),
                   static_cast<int>(param_alphabet));
       }
-      ++sign_index;
     }
   }
 }

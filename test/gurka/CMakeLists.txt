@@ -17,8 +17,6 @@ if(ENABLE_DATA_TOOLS)
     test_multi_level_loki.cc
     test_osrm_serializer.cc
     test_pbf_api.cc
-    test_phonemes.cc
-    test_phonemes_w_langs.cc
     test_recost.cc
     test_time_tracking.cc
     )

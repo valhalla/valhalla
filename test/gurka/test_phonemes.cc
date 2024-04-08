@@ -1,8 +1,8 @@
 #include "baldr/graphreader.h"
-#include "filesystem.h"
 #include "mjolnir/util.h"
 
 #include "gurka.h"
+#include <filesystem>
 #include <gtest/gtest.h>
 
 #if !defined(VALHALLA_SOURCE_DIR)
@@ -239,8 +239,8 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
   const std::string workdir = "test/data/gurka_phonemes_alt_dir";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
@@ -372,10 +372,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> index_linguistic_map;
     std::vector<SignInfo> signs = tile->GetSigns(node_id.id(), index_linguistic_map, true);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 1);
     ASSERT_EQ(index_linguistic_map.size(), 1);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -394,7 +393,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-      ++sign_index;
     }
   }
   // Test the ref on the node katakana wins.  Also, test empty linguistics
@@ -408,11 +406,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(EF_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 4);
     ASSERT_EQ(index_linguistic_map.size(), 4);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -444,7 +441,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
                    << " Extra key. This should not happen.";
         }
       }
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -498,10 +494,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(FG_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -530,7 +525,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -585,10 +579,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(GH_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -620,7 +613,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -679,11 +671,10 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(HI_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
 
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -718,7 +709,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -778,10 +768,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(IJ_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (size_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -816,7 +805,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -875,10 +863,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(JK_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (size_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -913,7 +900,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
   }
 
@@ -928,10 +914,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(KL_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (size_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -962,7 +947,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
   }
 
@@ -977,10 +961,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(LM_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1011,7 +994,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
   }
 
@@ -1026,10 +1008,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     std::vector<SignInfo> signs = tile->GetSigns(MN_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 3);
     ASSERT_EQ(index_linguistic_map.size(), 3);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1064,7 +1045,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
           FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                  << " Extra key. This should not happen.";
       }
-      ++sign_index;
     }
   }
 
@@ -1150,16 +1130,15 @@ TEST(Standalone, PhonemesWithAltandDirection) {
   {
     GraphId node_id = BD_edge->endnode();
     auto tile = graph_reader.GetGraphTile(node_id);
-    const NodeInfo* node_info = tile->node(node_id);
+    [[maybe_unused]] const NodeInfo* node_info = tile->node(node_id);
 
     std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>> index_linguistic_map;
 
     std::vector<SignInfo> signs = tile->GetSigns(BD_edge_id.id(), index_linguistic_map);
 
-    uint32_t sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1198,8 +1177,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     node_id = DB_edge->endnode();
@@ -1210,10 +1187,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(DB_edge_id.id(), index_linguistic_map);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1252,8 +1228,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // more signs.  jeita wins.
@@ -1265,10 +1239,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(BC_edge_id.id(), index_linguistic_map);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 6);
     ASSERT_EQ(index_linguistic_map.size(), 6);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1307,8 +1280,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // ipa wins for the name.
@@ -1376,10 +1347,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
 
     signs = tile->GetSigns(DE_edge_id.id(), index_linguistic_map);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(index_linguistic_map.size(), 2);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1398,8 +1368,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
 
     // blank linguistics for names.
@@ -1456,10 +1424,9 @@ TEST(Standalone, PhonemesWithAltandDirection) {
     signs.clear();
     signs = tile->GetSigns(ED_edge_id.id(), index_linguistic_map);
 
-    sign_index = 0;
     ASSERT_EQ(signs.size(), 2);
     ASSERT_EQ(index_linguistic_map.size(), 2);
-    for (const auto& sign : signs) {
+    for (uint32_t sign_index = 0; sign_index < signs.size(); ++sign_index) {
 
       std::unordered_map<uint8_t, std::tuple<uint8_t, uint8_t, std::string>>::const_iterator iter =
           index_linguistic_map.find(sign_index);
@@ -1478,8 +1445,6 @@ TEST(Standalone, PhonemesWithAltandDirection) {
       } else
         FAIL() << std::get<kLinguisticMapTuplePronunciationIndex>(iter->second)
                << " Extra key. This should not happen.";
-
-      ++sign_index;
     }
   } // end test the signs
 }
@@ -1488,8 +1453,8 @@ TEST(Standalone, PhonemesWithNoAltandDirection) {
 
   const std::string workdir = "test/data/gurka_phonemes";
 
-  if (!filesystem::exists(workdir)) {
-    bool created = filesystem::create_directories(workdir);
+  if (!std::filesystem::exists(workdir)) {
+    bool created = std::filesystem::create_directories(workdir);
     EXPECT_TRUE(created);
   }
 
