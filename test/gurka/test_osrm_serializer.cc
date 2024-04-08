@@ -572,14 +572,14 @@ TEST_F(VoiceInstructions, VoiceInstructionsPresent) {
   auto json = json_request("A", "F");
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
   // Validate that each step has voiceInstructions with announcement and distanceAlongGeometry
-  for (int step = 0; step < steps.Size(); ++step) {
-    ASSERT_TRUE(steps[step].HasMember("voiceInstructions"));
-    ASSERT_TRUE(steps[step]["voiceInstructions"].IsArray());
+  for (const auto& step : steps) {
+    ASSERT_TRUE(step.HasMember("voiceInstructions"));
+    ASSERT_TRUE(step["voiceInstructions"].IsArray());
 
-    EXPECT_GT(steps[step]["voiceInstructions"].Size(), 0);
-    for (int instr = 0; instr < steps[step]["voiceInstructions"].GetArray().Size(); ++instr) {
-      ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("announcement"));
-      ASSERT_TRUE(steps[step]["voiceInstructions"][instr].HasMember("distanceAlongGeometry"));
+    EXPECT_GT(step["voiceInstructions"].Size(), 0);
+    for (const auto& instr : step["voiceInstructions"].GetArray()) {
+      ASSERT_TRUE(instr.HasMember("announcement"));
+      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
     }
   }
 }
@@ -750,17 +750,17 @@ TEST(Standalone, BannerInstructions) {
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
   // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
-    ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
-    ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
-    EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("text"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
+  for (const auto& step : steps) {
+    ASSERT_TRUE(step.HasMember("bannerInstructions"));
+    ASSERT_TRUE(step["bannerInstructions"].IsArray());
+    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
+    for (const auto& instr : step["bannerInstructions"].GetArray()) {
+      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
+      ASSERT_TRUE(instr.HasMember("primary"));
+      ASSERT_TRUE(instr["primary"].HasMember("type"));
+      ASSERT_TRUE(instr["primary"].HasMember("text"));
+      ASSERT_TRUE(instr["primary"].HasMember("components"));
+      ASSERT_TRUE(instr["primary"]["components"].IsArray());
     }
   }
 
@@ -841,9 +841,9 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_0.HasMember("components"));
   ASSERT_TRUE(sub_0["components"].IsArray());
   EXPECT_EQ(sub_0["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_0["components"].GetArray().Size(); ++component) {
-    EXPECT_STREQ(sub_0["components"][component]["type"].GetString(), "lane");
-    ASSERT_TRUE(sub_0["components"][component]["directions"].IsArray());
+  for (const auto& component : sub_0["components"].GetArray()) {
+    EXPECT_STREQ(component["type"].GetString(), "lane");
+    ASSERT_TRUE(component["directions"].IsArray());
   }
   EXPECT_STREQ(sub_0["components"][0]["directions"][0].GetString(), "straight");
   ASSERT_FALSE(sub_0["components"][0]["active"].GetBool());
@@ -895,9 +895,9 @@ TEST(Standalone, BannerInstructions) {
   ASSERT_TRUE(sub_1.HasMember("components"));
   ASSERT_TRUE(sub_1["components"].IsArray());
   EXPECT_EQ(sub_1["components"].GetArray().Size(), 2);
-  for (int component = 0; component < sub_1["components"].GetArray().Size(); ++component) {
-    EXPECT_STREQ(sub_1["components"][component]["type"].GetString(), "lane");
-    ASSERT_TRUE(sub_1["components"][component]["directions"].IsArray());
+  for (const auto& component : sub_1["components"].GetArray()) {
+    EXPECT_STREQ(component["type"].GetString(), "lane");
+    ASSERT_TRUE(component["directions"].IsArray());
   }
   EXPECT_STREQ(sub_1["components"][0]["directions"][0].GetString(), "left");
   ASSERT_TRUE(sub_1["components"][0]["active"].GetBool());
@@ -958,17 +958,17 @@ TEST(Standalone, BannerInstructionsRoundabout) {
   auto steps = json["routes"][0]["legs"][0]["steps"].GetArray();
 
   // Validate that each step has bannerInstructions with primary
-  for (int step = 0; step < steps.Size(); ++step) {
-    ASSERT_TRUE(steps[step].HasMember("bannerInstructions"));
-    ASSERT_TRUE(steps[step]["bannerInstructions"].IsArray());
-    EXPECT_GT(steps[step]["bannerInstructions"].GetArray().Size(), 0);
-    for (int instr = 0; instr < steps[step]["bannerInstructions"].GetArray().Size(); ++instr) {
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("distanceAlongGeometry"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr].HasMember("primary"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("type"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("text"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"].HasMember("components"));
-      ASSERT_TRUE(steps[step]["bannerInstructions"][instr]["primary"]["components"].IsArray());
+  for (const auto& step : steps) {
+    ASSERT_TRUE(step.HasMember("bannerInstructions"));
+    ASSERT_TRUE(step["bannerInstructions"].IsArray());
+    EXPECT_GT(step["bannerInstructions"].GetArray().Size(), 0);
+    for (const auto& instr : step["bannerInstructions"].GetArray()) {
+      ASSERT_TRUE(instr.HasMember("distanceAlongGeometry"));
+      ASSERT_TRUE(instr.HasMember("primary"));
+      ASSERT_TRUE(instr["primary"].HasMember("type"));
+      ASSERT_TRUE(instr["primary"].HasMember("text"));
+      ASSERT_TRUE(instr["primary"].HasMember("components"));
+      ASSERT_TRUE(instr["primary"]["components"].IsArray());
     }
   }
 
