@@ -1,4 +1,5 @@
 add_subdirectory(${VALHALLA_SOURCE_DIR}/third_party/googletest ${CMAKE_BINARY_DIR}/googletest)
+
 set_target_properties(gtest PROPERTIES FOLDER "Dependencies")
 set_target_properties(gtest_main PROPERTIES FOLDER "Dependencies")
 set_target_properties(gmock PROPERTIES FOLDER "Dependencies")
@@ -69,20 +70,16 @@ endif()
 set(tests_with_warnings
   filesystem
   graphbuilder
-  graphparser
   graphtilebuilder
   gridded_data
   maneuversbuilder
   narrativebuilder
-  node_search
   parse_request
   sample
-  search
   sequence
   statsd
   traffictile
   util_odin
-  utrecht
   timedep_paths
   worker
   )
