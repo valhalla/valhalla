@@ -16,7 +16,6 @@ if(ENABLE_DATA_TOOLS)
     test_locate.cc
     test_multi_level_loki.cc
     test_pbf_api.cc
-    test_recost.cc
     test_time_tracking.cc
     )
 
